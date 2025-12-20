@@ -121,34 +121,12 @@ export function StreamCourseDetailContent({
   const shareText = encodeURIComponent(course.title)
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: colors.background }}
-    >
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section className="mx-auto max-w-6xl px-4 py-12 lg:py-16">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 rtl:lg:grid-flow-dense">
           {/* Left Column: Content */}
           <div className="space-y-6 rtl:lg:col-start-2">
-            {/* Breadcrumbs */}
-            <nav className="flex items-center gap-2 text-sm rtl:flex-row-reverse">
-              <Link
-                href={`/${lang}/stream`}
-                className="hover:underline"
-                style={{ color: colors.muted }}
-              >
-                {dict?.stream?.courseDetail?.home ?? "Home"}
-              </Link>
-              <span style={{ color: colors.muted }}>/</span>
-              <Link
-                href={`/${lang}/stream/courses`}
-                className="hover:underline"
-                style={{ color: colors.muted }}
-              >
-                {dict?.stream?.courseDetail?.courses ?? "Courses"}
-              </Link>
-            </nav>
-
             {/* Title */}
             <h1
               className="text-start text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl"

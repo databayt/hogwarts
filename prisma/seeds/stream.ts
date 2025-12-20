@@ -296,259 +296,346 @@ const VIDEO_URLS = {
   history: "https://www.youtube.com/watch?v=placeholder-history",
 }
 
-const COURSES_DATA: CourseData[] = [
+// ============================================================================
+// LEGACY COURSES DATA - NOW BILINGUAL FORMAT
+// Each course creates TWO database records (one AR, one EN)
+// ============================================================================
+
+const BILINGUAL_LEGACY_COURSES: BilingualCourseData[] = [
   // ============================================================================
   // ISLAMIC STUDIES COURSES
   // ============================================================================
   {
-    title: "القرآن الكريم - التجويد | Quran Recitation with Tajweed",
     slug: "quran-tajweed",
-    description:
-      "تعلم أحكام التجويد وتلاوة القرآن الكريم بالطريقة الصحيحة. Learn proper Quran recitation with tajweed rules from expert reciters. This comprehensive course covers all major tajweed rules with practical examples from various surahs.",
+    titleAr: "القرآن الكريم - التجويد",
+    titleEn: "Quran Recitation with Tajweed",
+    descriptionAr:
+      "تعلم أحكام التجويد وتلاوة القرآن الكريم بالطريقة الصحيحة. دورة شاملة تغطي جميع أحكام التجويد الرئيسية مع أمثلة عملية من سور مختلفة.",
+    descriptionEn:
+      "Learn proper Quran recitation with tajweed rules from expert reciters. This comprehensive course covers all major tajweed rules with practical examples from various surahs.",
     price: 0,
-    categoryName: "Islamic Studies",
+    categoryKey: "Islamic Studies",
     level: StreamCourseLevel.BEGINNER,
     imageUrl:
       "https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "مقدمة في التجويد | Introduction to Tajweed",
-        description:
-          "أساسيات علم التجويد وأهميته | Foundation of tajweed science",
+        titleAr: "مقدمة في التجويد",
+        titleEn: "Introduction to Tajweed",
+        descriptionAr: "أساسيات علم التجويد وأهميته",
+        descriptionEn: "Foundation of tajweed science",
         lessons: [
           {
-            title: "أهمية التجويد | Importance of Tajweed",
+            titleAr: "أهمية التجويد",
+            titleEn: "Importance of Tajweed",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 25,
-            description: "لماذا نتعلم التجويد؟ | Why study tajweed?",
+            descriptionAr: "لماذا نتعلم التجويد؟",
+            descriptionEn: "Why study tajweed?",
           },
           {
-            title: "مخارج الحروف | Letter Articulation Points",
+            titleAr: "مخارج الحروف",
+            titleEn: "Letter Articulation Points",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 35,
-            description:
-              "تعلم نطق الحروف بشكل صحيح | Learn correct letter pronunciation",
+            descriptionAr: "تعلم نطق الحروف بشكل صحيح",
+            descriptionEn: "Learn correct letter pronunciation",
           },
           {
-            title: "صفات الحروف | Letter Characteristics",
+            titleAr: "صفات الحروف",
+            titleEn: "Letter Characteristics",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 40,
-            description: "خصائص كل حرف | Properties of each letter",
+            descriptionAr: "خصائص كل حرف",
+            descriptionEn: "Properties of each letter",
           },
           {
-            title: "تطبيق عملي | Practical Application",
+            titleAr: "تطبيق عملي",
+            titleEn: "Practical Application",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 30,
-            description: "تطبيق على سورة الفاتحة | Practice with Al-Fatiha",
+            descriptionAr: "تطبيق على سورة الفاتحة",
+            descriptionEn: "Practice with Al-Fatiha",
           },
         ],
       },
       {
-        title: "أحكام النون الساكنة | Rules of Noon Sakinah",
-        description:
-          "أحكام النون الساكنة والتنوين | Rules governing noon sakinah and tanween",
+        titleAr: "أحكام النون الساكنة",
+        titleEn: "Rules of Noon Sakinah",
+        descriptionAr: "أحكام النون الساكنة والتنوين",
+        descriptionEn: "Rules governing noon sakinah and tanween",
         lessons: [
           {
-            title: "الإظهار | Izhar (Clear Pronunciation)",
+            titleAr: "الإظهار",
+            titleEn: "Izhar (Clear Pronunciation)",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 30,
-            description:
-              "متى ننطق النون بوضوح | When to pronounce noon clearly",
+            descriptionAr: "متى ننطق النون بوضوح",
+            descriptionEn: "When to pronounce noon clearly",
           },
           {
-            title: "الإدغام | Idgham (Merging)",
+            titleAr: "الإدغام",
+            titleEn: "Idgham (Merging)",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 35,
-            description:
-              "دمج النون مع الحرف التالي | Merging noon with following letters",
+            descriptionAr: "دمج النون مع الحرف التالي",
+            descriptionEn: "Merging noon with following letters",
           },
           {
-            title: "الإقلاب | Iqlab (Conversion)",
+            titleAr: "الإقلاب",
+            titleEn: "Iqlab (Conversion)",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 25,
-            description: "تحويل النون إلى ميم | Converting noon to meem",
+            descriptionAr: "تحويل النون إلى ميم",
+            descriptionEn: "Converting noon to meem",
           },
           {
-            title: "الإخفاء | Ikhfa (Concealment)",
+            titleAr: "الإخفاء",
+            titleEn: "Ikhfa (Concealment)",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 35,
-            description: "إخفاء النون | Concealing the noon sound",
+            descriptionAr: "إخفاء النون",
+            descriptionEn: "Concealing the noon sound",
           },
         ],
       },
       {
-        title: "أحكام الميم الساكنة | Rules of Meem Sakinah",
-        description: "أحكام الميم الساكنة والشفوية | Meem sakinah rules",
+        titleAr: "أحكام الميم الساكنة",
+        titleEn: "Rules of Meem Sakinah",
+        descriptionAr: "أحكام الميم الساكنة والشفوية",
+        descriptionEn: "Meem sakinah rules",
         lessons: [
           {
-            title: "الإخفاء الشفوي | Oral Concealment",
+            titleAr: "الإخفاء الشفوي",
+            titleEn: "Oral Concealment",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 25,
-            description: "إخفاء الميم الساكنة",
+            descriptionAr: "إخفاء الميم الساكنة",
+            descriptionEn: "Concealing the silent meem",
           },
           {
-            title: "الإدغام الشفوي | Oral Merging",
+            titleAr: "الإدغام الشفوي",
+            titleEn: "Oral Merging",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 25,
-            description: "إدغام الميم في الميم",
+            descriptionAr: "إدغام الميم في الميم",
+            descriptionEn: "Merging meem with meem",
           },
           {
-            title: "الإظهار الشفوي | Oral Clear Pronunciation",
+            titleAr: "الإظهار الشفوي",
+            titleEn: "Oral Clear Pronunciation",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 25,
-            description: "إظهار الميم الساكنة",
+            descriptionAr: "إظهار الميم الساكنة",
+            descriptionEn: "Clear pronunciation of silent meem",
           },
         ],
       },
     ],
   },
   {
-    title: "السيرة النبوية | Life of Prophet Muhammad ﷺ",
     slug: "seerah-nabawiyyah",
-    description:
-      "دراسة شاملة لسيرة النبي محمد صلى الله عليه وسلم من الميلاد إلى الوفاة. Comprehensive study of the Prophet's life including historical context, key events, and timeless lessons.",
+    titleAr: "السيرة النبوية",
+    titleEn: "Life of Prophet Muhammad ﷺ",
+    descriptionAr:
+      "دراسة شاملة لسيرة النبي محمد صلى الله عليه وسلم من الميلاد إلى الوفاة. تتضمن السياق التاريخي والأحداث الرئيسية والدروس الخالدة.",
+    descriptionEn:
+      "Comprehensive study of the Prophet's life including historical context, key events, and timeless lessons.",
     price: 0,
-    categoryName: "Islamic Studies",
+    categoryKey: "Islamic Studies",
     level: StreamCourseLevel.INTERMEDIATE,
     imageUrl:
       "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "الفترة المكية | Meccan Period",
-        description: "من الميلاد إلى الهجرة | From birth to migration",
+        titleAr: "الفترة المكية",
+        titleEn: "Meccan Period",
+        descriptionAr: "من الميلاد إلى الهجرة",
+        descriptionEn: "From birth to migration",
         lessons: [
           {
-            title: "الميلاد والنشأة | Birth and Childhood",
+            titleAr: "الميلاد والنشأة",
+            titleEn: "Birth and Childhood",
             videoUrl: VIDEO_URLS.seerah,
             duration: 45,
-            description: "نشأة النبي في مكة",
+            descriptionAr: "نشأة النبي في مكة",
+            descriptionEn: "The Prophet's upbringing in Mecca",
           },
           {
-            title: "البعثة | The Revelation",
+            titleAr: "البعثة",
+            titleEn: "The Revelation",
             videoUrl: VIDEO_URLS.seerah,
             duration: 50,
-            description: "بدء الوحي في غار حراء",
+            descriptionAr: "بدء الوحي في غار حراء",
+            descriptionEn: "Beginning of revelation in Cave Hira",
           },
           {
-            title: "الدعوة السرية | Secret Call",
+            titleAr: "الدعوة السرية",
+            titleEn: "Secret Call",
             videoUrl: VIDEO_URLS.seerah,
             duration: 35,
-            description: "السنوات الأولى من الدعوة",
+            descriptionAr: "السنوات الأولى من الدعوة",
+            descriptionEn: "The early years of the call",
           },
           {
-            title: "الدعوة الجهرية | Public Call",
+            titleAr: "الدعوة الجهرية",
+            titleEn: "Public Call",
             videoUrl: VIDEO_URLS.seerah,
             duration: 40,
-            description: "الدعوة العلنية ومواجهة قريش",
+            descriptionAr: "الدعوة العلنية ومواجهة قريش",
+            descriptionEn: "Public call and confrontation with Quraish",
           },
           {
-            title: "الإسراء والمعراج | Night Journey",
+            titleAr: "الإسراء والمعراج",
+            titleEn: "Night Journey",
             videoUrl: VIDEO_URLS.seerah,
             duration: 45,
-            description: "رحلة الإسراء والمعراج",
+            descriptionAr: "رحلة الإسراء والمعراج",
+            descriptionEn: "The miraculous night journey",
           },
         ],
       },
       {
-        title: "الفترة المدنية | Medinan Period",
-        description: "من الهجرة إلى الوفاة | From migration to passing",
+        titleAr: "الفترة المدنية",
+        titleEn: "Medinan Period",
+        descriptionAr: "من الهجرة إلى الوفاة",
+        descriptionEn: "From migration to passing",
         lessons: [
           {
-            title: "الهجرة | The Migration",
+            titleAr: "الهجرة",
+            titleEn: "The Migration",
             videoUrl: VIDEO_URLS.seerah,
             duration: 50,
-            description: "الهجرة من مكة إلى المدينة",
+            descriptionAr: "الهجرة من مكة إلى المدينة",
+            descriptionEn: "Migration from Mecca to Medina",
           },
           {
-            title: "بناء الدولة | Building the State",
+            titleAr: "بناء الدولة",
+            titleEn: "Building the State",
             videoUrl: VIDEO_URLS.seerah,
             duration: 40,
-            description: "تأسيس الدولة الإسلامية",
+            descriptionAr: "تأسيس الدولة الإسلامية",
+            descriptionEn: "Establishing the Islamic state",
           },
           {
-            title: "غزوة بدر | Battle of Badr",
+            titleAr: "غزوة بدر",
+            titleEn: "Battle of Badr",
             videoUrl: VIDEO_URLS.seerah,
             duration: 55,
-            description: "أول معركة فاصلة",
+            descriptionAr: "أول معركة فاصلة",
+            descriptionEn: "The first decisive battle",
           },
           {
-            title: "غزوة أحد | Battle of Uhud",
+            titleAr: "غزوة أحد",
+            titleEn: "Battle of Uhud",
             videoUrl: VIDEO_URLS.seerah,
             duration: 45,
-            description: "دروس من غزوة أحد",
+            descriptionAr: "دروس من غزوة أحد",
+            descriptionEn: "Lessons from the Battle of Uhud",
           },
           {
-            title: "فتح مكة | Conquest of Mecca",
+            titleAr: "فتح مكة",
+            titleEn: "Conquest of Mecca",
             videoUrl: VIDEO_URLS.seerah,
             duration: 50,
-            description: "عودة الفاتحين",
+            descriptionAr: "عودة الفاتحين",
+            descriptionEn: "Return of the victors",
           },
           {
-            title: "حجة الوداع | Farewell Pilgrimage",
+            titleAr: "حجة الوداع",
+            titleEn: "Farewell Pilgrimage",
             videoUrl: VIDEO_URLS.seerah,
             duration: 40,
-            description: "آخر حج للنبي",
+            descriptionAr: "آخر حج للنبي",
+            descriptionEn: "The Prophet's final pilgrimage",
           },
         ],
       },
     ],
   },
   {
-    title: "الفقه الإسلامي: العبادات | Islamic Jurisprudence: Worship",
     slug: "fiqh-ibadat",
-    description:
-      "أحكام العبادات في الإسلام من الطهارة إلى الحج. Comprehensive study of Islamic worship rulings.",
+    titleAr: "الفقه الإسلامي: العبادات",
+    titleEn: "Islamic Jurisprudence: Worship",
+    descriptionAr:
+      "أحكام العبادات في الإسلام من الطهارة إلى الحج. دراسة شاملة لأحكام العبادات الإسلامية.",
+    descriptionEn:
+      "Comprehensive study of Islamic worship rulings from purification to pilgrimage.",
     price: 0,
-    categoryName: "Islamic Studies",
+    categoryKey: "Islamic Studies",
     level: StreamCourseLevel.BEGINNER,
     imageUrl:
       "https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "الطهارة والصلاة | Purification and Prayer",
-        description:
-          "أحكام الوضوء والغسل والصلاة | Ablution and prayer rulings",
+        titleAr: "الطهارة والصلاة",
+        titleEn: "Purification and Prayer",
+        descriptionAr: "أحكام الوضوء والغسل والصلاة",
+        descriptionEn: "Ablution and prayer rulings",
         lessons: [
           {
-            title: "أنواع الطهارة | Types of Purification",
+            titleAr: "أنواع الطهارة",
+            titleEn: "Types of Purification",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 30,
+            descriptionAr: "التعرف على أنواع الطهارة المختلفة",
+            descriptionEn: "Learning about different types of purification",
           },
           {
-            title: "الوضوء | Ablution (Wudu)",
+            titleAr: "الوضوء",
+            titleEn: "Ablution (Wudu)",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 35,
+            descriptionAr: "كيفية الوضوء الصحيح",
+            descriptionEn: "How to perform proper ablution",
           },
           {
-            title: "أركان الصلاة | Pillars of Prayer",
+            titleAr: "أركان الصلاة",
+            titleEn: "Pillars of Prayer",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 40,
+            descriptionAr: "الأركان الأساسية للصلاة",
+            descriptionEn: "Essential pillars of prayer",
           },
           {
-            title: "واجبات الصلاة | Obligations of Prayer",
+            titleAr: "واجبات الصلاة",
+            titleEn: "Obligations of Prayer",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 35,
+            descriptionAr: "الواجبات التي تجب في الصلاة",
+            descriptionEn: "Obligations required in prayer",
           },
         ],
       },
       {
-        title: "الصيام والزكاة | Fasting and Zakat",
-        description: "أحكام الصوم والزكاة | Fasting and charity rulings",
+        titleAr: "الصيام والزكاة",
+        titleEn: "Fasting and Zakat",
+        descriptionAr: "أحكام الصوم والزكاة",
+        descriptionEn: "Fasting and charity rulings",
         lessons: [
           {
-            title: "أحكام الصيام | Fasting Rulings",
+            titleAr: "أحكام الصيام",
+            titleEn: "Fasting Rulings",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 40,
+            descriptionAr: "قواعد وأحكام الصيام",
+            descriptionEn: "Rules and rulings of fasting",
           },
           {
-            title: "أركان الصيام ومبطلاته | Pillars and Invalidators",
+            titleAr: "أركان الصيام ومبطلاته",
+            titleEn: "Pillars and Invalidators",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 35,
+            descriptionAr: "ما يصح به الصوم وما يبطله",
+            descriptionEn: "What validates and invalidates fasting",
           },
           {
-            title: "الزكاة وأنصبتها | Zakat and Its Thresholds",
+            titleAr: "الزكاة وأنصبتها",
+            titleEn: "Zakat and Its Thresholds",
             videoUrl: VIDEO_URLS.tajweed,
             duration: 45,
+            descriptionAr: "أحكام الزكاة ومقاديرها",
+            descriptionEn: "Zakat rulings and amounts",
           },
         ],
       },
@@ -559,171 +646,224 @@ const COURSES_DATA: CourseData[] = [
   // LANGUAGE COURSES
   // ============================================================================
   {
-    title: "النحو العربي | Arabic Grammar",
     slug: "arabic-grammar",
-    description:
-      "أساسيات النحو العربي للمبتدئين والمتوسطين. Complete Arabic grammar course covering nominal and verbal sentences, cases, and advanced constructions.",
+    titleAr: "النحو العربي",
+    titleEn: "Arabic Grammar",
+    descriptionAr:
+      "أساسيات النحو العربي للمبتدئين والمتوسطين. دورة شاملة تغطي الجملة الاسمية والفعلية والإعراب والتراكيب المتقدمة.",
+    descriptionEn:
+      "Complete Arabic grammar course covering nominal and verbal sentences, cases, and advanced constructions.",
     price: 0,
-    categoryName: "Languages",
+    categoryKey: "Languages",
     level: StreamCourseLevel.INTERMEDIATE,
     imageUrl:
       "https://images.unsplash.com/photo-1579762715118-a6f1d4b934f1?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "الجملة الاسمية | Nominal Sentence",
-        description:
-          "بناء الجملة الاسمية ومكوناتها | Structure of nominal sentences",
+        titleAr: "الجملة الاسمية",
+        titleEn: "Nominal Sentence",
+        descriptionAr: "بناء الجملة الاسمية ومكوناتها",
+        descriptionEn: "Structure of nominal sentences",
         lessons: [
           {
-            title: "المبتدأ والخبر | Subject and Predicate",
+            titleAr: "المبتدأ والخبر",
+            titleEn: "Subject and Predicate",
             videoUrl: VIDEO_URLS.arabic,
             duration: 40,
-            description: "أساسيات الجملة الاسمية",
+            descriptionAr: "أساسيات الجملة الاسمية",
+            descriptionEn: "Basics of nominal sentence",
           },
           {
-            title: "أنواع الخبر | Types of Predicate",
+            titleAr: "أنواع الخبر",
+            titleEn: "Types of Predicate",
             videoUrl: VIDEO_URLS.arabic,
             duration: 35,
-            description: "الخبر المفرد والجملة وشبه الجملة",
+            descriptionAr: "الخبر المفرد والجملة وشبه الجملة",
+            descriptionEn: "Single, sentence, and semi-sentence predicates",
           },
           {
-            title: "كان وأخواتها | Kana and Sisters",
+            titleAr: "كان وأخواتها",
+            titleEn: "Kana and Sisters",
             videoUrl: VIDEO_URLS.arabic,
             duration: 45,
-            description: "الأفعال الناقصة",
+            descriptionAr: "الأفعال الناقصة",
+            descriptionEn: "Deficient verbs",
           },
           {
-            title: "إن وأخواتها | Inna and Sisters",
+            titleAr: "إن وأخواتها",
+            titleEn: "Inna and Sisters",
             videoUrl: VIDEO_URLS.arabic,
             duration: 40,
-            description: "الحروف المشبهة بالفعل",
+            descriptionAr: "الحروف المشبهة بالفعل",
+            descriptionEn: "Verb-like particles",
           },
         ],
       },
       {
-        title: "الجملة الفعلية | Verbal Sentence",
-        description: "بناء الجملة الفعلية | Structure of verbal sentences",
+        titleAr: "الجملة الفعلية",
+        titleEn: "Verbal Sentence",
+        descriptionAr: "بناء الجملة الفعلية",
+        descriptionEn: "Structure of verbal sentences",
         lessons: [
           {
-            title: "الفعل والفاعل | Verb and Subject",
+            titleAr: "الفعل والفاعل",
+            titleEn: "Verb and Subject",
             videoUrl: VIDEO_URLS.arabic,
             duration: 35,
-            description: "أساسيات الجملة الفعلية",
+            descriptionAr: "أساسيات الجملة الفعلية",
+            descriptionEn: "Basics of verbal sentence",
           },
           {
-            title: "المفعول به | Direct Object",
+            titleAr: "المفعول به",
+            titleEn: "Direct Object",
             videoUrl: VIDEO_URLS.arabic,
             duration: 30,
-            description: "المفاعيل في الجملة",
+            descriptionAr: "المفاعيل في الجملة",
+            descriptionEn: "Objects in the sentence",
           },
           {
-            title: "الفعل المبني للمجهول | Passive Voice",
+            titleAr: "الفعل المبني للمجهول",
+            titleEn: "Passive Voice",
             videoUrl: VIDEO_URLS.arabic,
             duration: 40,
-            description: "تحويل الفعل للمبني للمجهول",
+            descriptionAr: "تحويل الفعل للمبني للمجهول",
+            descriptionEn: "Converting verbs to passive voice",
           },
           {
-            title: "المفاعيل الخمسة | The Five Objects",
+            titleAr: "المفاعيل الخمسة",
+            titleEn: "The Five Objects",
             videoUrl: VIDEO_URLS.arabic,
             duration: 45,
-            description: "المفعول المطلق، فيه، له، معه",
+            descriptionAr: "المفعول المطلق، فيه، له، معه",
+            descriptionEn: "Absolute, locative, and other objects",
           },
         ],
       },
     ],
   },
   {
-    title: "English Language Mastery",
     slug: "english-language-mastery",
-    description:
+    titleAr: "إتقان اللغة الإنجليزية",
+    titleEn: "English Language Mastery",
+    descriptionAr:
+      "مهارات شاملة في اللغة الإنجليزية للنجاح الأكاديمي. إتقان القواعد والكتابة والفهم القرائي وبناء المفردات.",
+    descriptionEn:
       "Comprehensive English skills for academic success. Master grammar, writing, reading comprehension, and vocabulary building.",
     price: 0,
-    categoryName: "Languages",
+    categoryKey: "Languages",
     level: StreamCourseLevel.INTERMEDIATE,
     imageUrl:
       "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "Grammar Essentials",
-        description: "Core grammar rules and structures",
+        titleAr: "أساسيات القواعد",
+        titleEn: "Grammar Essentials",
+        descriptionAr: "قواعد وتراكيب اللغة الأساسية",
+        descriptionEn: "Core grammar rules and structures",
         lessons: [
           {
-            title: "Tenses Overview",
+            titleAr: "نظرة عامة على الأزمنة",
+            titleEn: "Tenses Overview",
             videoUrl: VIDEO_URLS.english,
             duration: 45,
-            description: "Understanding all English tenses",
+            descriptionAr: "فهم جميع أزمنة اللغة الإنجليزية",
+            descriptionEn: "Understanding all English tenses",
           },
           {
-            title: "Present & Past Tense",
+            titleAr: "المضارع والماضي",
+            titleEn: "Present & Past Tense",
             videoUrl: VIDEO_URLS.english,
             duration: 40,
-            description: "Simple, continuous, perfect forms",
+            descriptionAr: "الأشكال البسيطة والمستمرة والتامة",
+            descriptionEn: "Simple, continuous, perfect forms",
           },
           {
-            title: "Future & Conditional",
+            titleAr: "المستقبل والشرطي",
+            titleEn: "Future & Conditional",
             videoUrl: VIDEO_URLS.english,
             duration: 35,
-            description: "Future forms and conditionals",
+            descriptionAr: "أشكال المستقبل والجمل الشرطية",
+            descriptionEn: "Future forms and conditionals",
           },
           {
-            title: "Modal Verbs",
+            titleAr: "الأفعال الناقصة",
+            titleEn: "Modal Verbs",
             videoUrl: VIDEO_URLS.english,
             duration: 30,
-            description: "Can, could, should, must, etc.",
+            descriptionAr: "can, could, should, must وغيرها",
+            descriptionEn: "Can, could, should, must, etc.",
           },
         ],
       },
       {
-        title: "Academic Writing",
-        description: "Writing skills for academic success",
+        titleAr: "الكتابة الأكاديمية",
+        titleEn: "Academic Writing",
+        descriptionAr: "مهارات الكتابة للنجاح الأكاديمي",
+        descriptionEn: "Writing skills for academic success",
         lessons: [
           {
-            title: "Essay Structure",
+            titleAr: "هيكل المقال",
+            titleEn: "Essay Structure",
             videoUrl: VIDEO_URLS.english,
             duration: 40,
-            description: "Introduction, body, conclusion",
+            descriptionAr: "المقدمة والمتن والخاتمة",
+            descriptionEn: "Introduction, body, conclusion",
           },
           {
-            title: "Research Writing",
+            titleAr: "كتابة البحث",
+            titleEn: "Research Writing",
             videoUrl: VIDEO_URLS.english,
             duration: 45,
-            description: "Academic research papers",
+            descriptionAr: "أوراق البحث الأكاديمي",
+            descriptionEn: "Academic research papers",
           },
           {
-            title: "Citations & References",
+            titleAr: "الاستشهادات والمراجع",
+            titleEn: "Citations & References",
             videoUrl: VIDEO_URLS.english,
             duration: 35,
-            description: "APA and MLA formatting",
+            descriptionAr: "تنسيق APA و MLA",
+            descriptionEn: "APA and MLA formatting",
           },
           {
-            title: "Persuasive Writing",
+            titleAr: "الكتابة الإقناعية",
+            titleEn: "Persuasive Writing",
             videoUrl: VIDEO_URLS.english,
             duration: 40,
-            description: "Argumentative essays",
+            descriptionAr: "المقالات الجدلية",
+            descriptionEn: "Argumentative essays",
           },
         ],
       },
       {
-        title: "Reading Comprehension",
-        description: "Advanced reading skills",
+        titleAr: "الفهم القرائي",
+        titleEn: "Reading Comprehension",
+        descriptionAr: "مهارات القراءة المتقدمة",
+        descriptionEn: "Advanced reading skills",
         lessons: [
           {
-            title: "Active Reading Strategies",
+            titleAr: "استراتيجيات القراءة الفعالة",
+            titleEn: "Active Reading Strategies",
             videoUrl: VIDEO_URLS.english,
             duration: 35,
-            description: "How to read effectively",
+            descriptionAr: "كيفية القراءة بفعالية",
+            descriptionEn: "How to read effectively",
           },
           {
-            title: "Inference and Analysis",
+            titleAr: "الاستنتاج والتحليل",
+            titleEn: "Inference and Analysis",
             videoUrl: VIDEO_URLS.english,
             duration: 40,
-            description: "Reading between the lines",
+            descriptionAr: "القراءة بين السطور",
+            descriptionEn: "Reading between the lines",
           },
           {
-            title: "Critical Thinking",
+            titleAr: "التفكير النقدي",
+            titleEn: "Critical Thinking",
             videoUrl: VIDEO_URLS.english,
             duration: 45,
-            description: "Evaluating arguments and evidence",
+            descriptionAr: "تقييم الحجج والأدلة",
+            descriptionEn: "Evaluating arguments and evidence",
           },
         ],
       },
@@ -734,150 +874,214 @@ const COURSES_DATA: CourseData[] = [
   // MATHEMATICS COURSES
   // ============================================================================
   {
-    title: "الرياضيات المتقدمة | Advanced Mathematics",
     slug: "advanced-mathematics",
-    description:
-      "دورة شاملة في التفاضل والتكامل والجبر الخطي. Comprehensive course covering calculus, linear algebra, and differential equations for high school students.",
+    titleAr: "الرياضيات المتقدمة",
+    titleEn: "Advanced Mathematics",
+    descriptionAr:
+      "دورة شاملة في التفاضل والتكامل والجبر الخطي. مصممة لطلاب المرحلة الثانوية.",
+    descriptionEn:
+      "Comprehensive course covering calculus, linear algebra, and differential equations for high school students.",
     price: 0,
-    categoryName: "Mathematics",
+    categoryKey: "Mathematics",
     level: StreamCourseLevel.ADVANCED,
     imageUrl:
       "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "التفاضل | Calculus - Differentiation",
-        description: "مفاهيم التفاضل والمشتقات | Differentiation concepts",
+        titleAr: "التفاضل",
+        titleEn: "Calculus - Differentiation",
+        descriptionAr: "مفاهيم التفاضل والمشتقات",
+        descriptionEn: "Differentiation concepts",
         lessons: [
           {
-            title: "النهايات | Limits",
+            titleAr: "النهايات",
+            titleEn: "Limits",
             videoUrl: VIDEO_URLS.math,
             duration: 45,
-            description: "مفهوم النهاية وحسابها",
+            descriptionAr: "مفهوم النهاية وحسابها",
+            descriptionEn: "Concept and calculation of limits",
           },
           {
-            title: "المشتقات | Derivatives",
+            titleAr: "المشتقات",
+            titleEn: "Derivatives",
             videoUrl: VIDEO_URLS.math,
             duration: 50,
-            description: "قواعد الاشتقاق",
+            descriptionAr: "قواعد الاشتقاق",
+            descriptionEn: "Differentiation rules",
           },
           {
-            title: "قاعدة السلسلة | Chain Rule",
+            titleAr: "قاعدة السلسلة",
+            titleEn: "Chain Rule",
             videoUrl: VIDEO_URLS.math,
             duration: 40,
-            description: "اشتقاق الدوال المركبة",
+            descriptionAr: "اشتقاق الدوال المركبة",
+            descriptionEn: "Differentiating composite functions",
           },
           {
-            title: "تطبيقات المشتقات | Applications",
+            titleAr: "تطبيقات المشتقات",
+            titleEn: "Applications",
             videoUrl: VIDEO_URLS.math,
             duration: 45,
-            description: "المعدلات والأمثلة",
+            descriptionAr: "المعدلات والأمثلة",
+            descriptionEn: "Rates and optimization",
           },
         ],
       },
       {
-        title: "التكامل | Calculus - Integration",
-        description: "مفاهيم التكامل | Integration concepts",
+        titleAr: "التكامل",
+        titleEn: "Calculus - Integration",
+        descriptionAr: "مفاهيم التكامل",
+        descriptionEn: "Integration concepts",
         lessons: [
           {
-            title: "التكامل غير المحدد | Indefinite Integrals",
+            titleAr: "التكامل غير المحدد",
+            titleEn: "Indefinite Integrals",
             videoUrl: VIDEO_URLS.math,
             duration: 45,
+            descriptionAr: "التكامل بدون حدود",
+            descriptionEn: "Integrals without bounds",
           },
           {
-            title: "التكامل المحدد | Definite Integrals",
+            titleAr: "التكامل المحدد",
+            titleEn: "Definite Integrals",
             videoUrl: VIDEO_URLS.math,
             duration: 50,
+            descriptionAr: "التكامل مع الحدود",
+            descriptionEn: "Integrals with bounds",
           },
           {
-            title: "التكامل بالتعويض | Integration by Substitution",
+            titleAr: "التكامل بالتعويض",
+            titleEn: "Integration by Substitution",
             videoUrl: VIDEO_URLS.math,
             duration: 40,
+            descriptionAr: "طريقة التعويض في التكامل",
+            descriptionEn: "Substitution method for integration",
           },
           {
-            title: "المساحات والحجوم | Areas and Volumes",
+            titleAr: "المساحات والحجوم",
+            titleEn: "Areas and Volumes",
             videoUrl: VIDEO_URLS.math,
             duration: 55,
+            descriptionAr: "حساب المساحات والحجوم",
+            descriptionEn: "Calculating areas and volumes",
           },
         ],
       },
       {
-        title: "الجبر الخطي | Linear Algebra",
-        description: "المصفوفات والمتجهات | Matrices and vectors",
+        titleAr: "الجبر الخطي",
+        titleEn: "Linear Algebra",
+        descriptionAr: "المصفوفات والمتجهات",
+        descriptionEn: "Matrices and vectors",
         lessons: [
           {
-            title: "المصفوفات | Matrices",
+            titleAr: "المصفوفات",
+            titleEn: "Matrices",
             videoUrl: VIDEO_URLS.math,
             duration: 40,
+            descriptionAr: "أساسيات المصفوفات",
+            descriptionEn: "Matrix fundamentals",
           },
           {
-            title: "المحددات | Determinants",
+            titleAr: "المحددات",
+            titleEn: "Determinants",
             videoUrl: VIDEO_URLS.math,
             duration: 35,
+            descriptionAr: "حساب المحددات",
+            descriptionEn: "Calculating determinants",
           },
           {
-            title: "المتجهات | Vectors",
+            titleAr: "المتجهات",
+            titleEn: "Vectors",
             videoUrl: VIDEO_URLS.math,
             duration: 45,
+            descriptionAr: "أساسيات المتجهات",
+            descriptionEn: "Vector fundamentals",
           },
           {
-            title: "التحويلات الخطية | Linear Transformations",
+            titleAr: "التحويلات الخطية",
+            titleEn: "Linear Transformations",
             videoUrl: VIDEO_URLS.math,
             duration: 50,
+            descriptionAr: "فهم التحويلات الخطية",
+            descriptionEn: "Understanding linear transformations",
           },
         ],
       },
     ],
   },
   {
-    title: "الجبر للمرحلة المتوسطة | Algebra for Middle School",
     slug: "algebra-middle-school",
-    description:
-      "أساسيات الجبر للصفوف 7-9. Foundational algebra concepts for grades 7-9.",
+    titleAr: "الجبر للمرحلة المتوسطة",
+    titleEn: "Algebra for Middle School",
+    descriptionAr: "أساسيات الجبر للصفوف 7-9. مفاهيم الجبر التأسيسية.",
+    descriptionEn: "Foundational algebra concepts for grades 7-9.",
     price: 0,
-    categoryName: "Mathematics",
+    categoryKey: "Mathematics",
     level: StreamCourseLevel.BEGINNER,
     imageUrl:
       "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "المتغيرات والتعبيرات | Variables and Expressions",
-        description: "أساسيات الجبر | Algebra basics",
+        titleAr: "المتغيرات والتعبيرات",
+        titleEn: "Variables and Expressions",
+        descriptionAr: "أساسيات الجبر",
+        descriptionEn: "Algebra basics",
         lessons: [
           {
-            title: "ما هو المتغير؟ | What is a Variable?",
+            titleAr: "ما هو المتغير؟",
+            titleEn: "What is a Variable?",
             videoUrl: VIDEO_URLS.math,
             duration: 25,
+            descriptionAr: "فهم مفهوم المتغير",
+            descriptionEn: "Understanding the variable concept",
           },
           {
-            title: "التعبيرات الجبرية | Algebraic Expressions",
+            titleAr: "التعبيرات الجبرية",
+            titleEn: "Algebraic Expressions",
             videoUrl: VIDEO_URLS.math,
             duration: 30,
+            descriptionAr: "كتابة التعبيرات الجبرية",
+            descriptionEn: "Writing algebraic expressions",
           },
           {
-            title: "تبسيط التعبيرات | Simplifying Expressions",
+            titleAr: "تبسيط التعبيرات",
+            titleEn: "Simplifying Expressions",
             videoUrl: VIDEO_URLS.math,
             duration: 35,
+            descriptionAr: "تبسيط التعبيرات الجبرية",
+            descriptionEn: "Simplifying algebraic expressions",
           },
         ],
       },
       {
-        title: "المعادلات | Equations",
-        description: "حل المعادلات الخطية | Solving linear equations",
+        titleAr: "المعادلات",
+        titleEn: "Equations",
+        descriptionAr: "حل المعادلات الخطية",
+        descriptionEn: "Solving linear equations",
         lessons: [
           {
-            title: "المعادلات البسيطة | Simple Equations",
+            titleAr: "المعادلات البسيطة",
+            titleEn: "Simple Equations",
             videoUrl: VIDEO_URLS.math,
             duration: 30,
+            descriptionAr: "حل المعادلات بخطوة واحدة",
+            descriptionEn: "Solving one-step equations",
           },
           {
-            title: "معادلات بخطوتين | Two-Step Equations",
+            titleAr: "معادلات بخطوتين",
+            titleEn: "Two-Step Equations",
             videoUrl: VIDEO_URLS.math,
             duration: 35,
+            descriptionAr: "حل المعادلات بخطوتين",
+            descriptionEn: "Solving two-step equations",
           },
           {
-            title: "معادلات بمتغيرات على الجانبين | Variables on Both Sides",
+            titleAr: "معادلات بمتغيرات على الجانبين",
+            titleEn: "Variables on Both Sides",
             videoUrl: VIDEO_URLS.math,
             duration: 40,
+            descriptionAr: "حل المعادلات بمتغيرات على الجانبين",
+            descriptionEn: "Solving equations with variables on both sides",
           },
         ],
       },
@@ -888,178 +1092,265 @@ const COURSES_DATA: CourseData[] = [
   // SCIENCE COURSES
   // ============================================================================
   {
-    title: "الفيزياء: الميكانيكا | Physics: Mechanics",
     slug: "physics-mechanics",
-    description:
-      "دراسة الميكانيكا الكلاسيكية والقوى والحركة. Classical mechanics covering Newton's laws, energy, momentum, and real-world applications.",
+    titleAr: "الفيزياء: الميكانيكا",
+    titleEn: "Physics: Mechanics",
+    descriptionAr:
+      "دراسة الميكانيكا الكلاسيكية والقوى والحركة. تغطي قوانين نيوتن والطاقة والزخم والتطبيقات العملية.",
+    descriptionEn:
+      "Classical mechanics covering Newton's laws, energy, momentum, and real-world applications.",
     price: 0,
-    categoryName: "Science",
+    categoryKey: "Science",
     level: StreamCourseLevel.INTERMEDIATE,
     imageUrl:
       "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "قوانين نيوتن | Newton's Laws",
-        description:
-          "أساسيات الميكانيكا الكلاسيكية | Classical mechanics fundamentals",
+        titleAr: "قوانين نيوتن",
+        titleEn: "Newton's Laws",
+        descriptionAr: "أساسيات الميكانيكا الكلاسيكية",
+        descriptionEn: "Classical mechanics fundamentals",
         lessons: [
           {
-            title: "القانون الأول: القصور الذاتي | First Law: Inertia",
+            titleAr: "القانون الأول: القصور الذاتي",
+            titleEn: "First Law: Inertia",
             videoUrl: VIDEO_URLS.physics,
             duration: 35,
+            descriptionAr: "قانون القصور الذاتي",
+            descriptionEn: "Law of inertia",
           },
           {
-            title: "القانون الثاني: F=ma",
+            titleAr: "القانون الثاني: F=ma",
+            titleEn: "Second Law: F=ma",
             videoUrl: VIDEO_URLS.physics,
             duration: 40,
+            descriptionAr: "العلاقة بين القوة والكتلة والتسارع",
+            descriptionEn: "Relationship between force, mass, and acceleration",
           },
           {
-            title:
-              "القانون الثالث: الفعل ورد الفعل | Third Law: Action-Reaction",
+            titleAr: "القانون الثالث: الفعل ورد الفعل",
+            titleEn: "Third Law: Action-Reaction",
             videoUrl: VIDEO_URLS.physics,
             duration: 35,
+            descriptionAr: "لكل فعل رد فعل مساوٍ ومعاكس",
+            descriptionEn:
+              "For every action there is an equal and opposite reaction",
           },
           {
-            title: "تطبيقات عملية | Practical Applications",
+            titleAr: "تطبيقات عملية",
+            titleEn: "Practical Applications",
             videoUrl: VIDEO_URLS.physics,
             duration: 45,
+            descriptionAr: "تطبيق قوانين نيوتن في الحياة",
+            descriptionEn: "Applying Newton's laws in real life",
           },
         ],
       },
       {
-        title: "الطاقة والشغل | Energy and Work",
-        description: "مفاهيم الطاقة والحركة | Energy concepts",
+        titleAr: "الطاقة والشغل",
+        titleEn: "Energy and Work",
+        descriptionAr: "مفاهيم الطاقة والحركة",
+        descriptionEn: "Energy concepts",
         lessons: [
-          { title: "الشغل | Work", videoUrl: VIDEO_URLS.physics, duration: 30 },
           {
-            title: "الطاقة الحركية | Kinetic Energy",
+            titleAr: "الشغل",
+            titleEn: "Work",
             videoUrl: VIDEO_URLS.physics,
-            duration: 35,
+            duration: 30,
+            descriptionAr: "مفهوم الشغل الفيزيائي",
+            descriptionEn: "Physical work concept",
           },
           {
-            title: "الطاقة الكامنة | Potential Energy",
+            titleAr: "الطاقة الحركية",
+            titleEn: "Kinetic Energy",
             videoUrl: VIDEO_URLS.physics,
             duration: 35,
+            descriptionAr: "طاقة الحركة",
+            descriptionEn: "Energy of motion",
           },
           {
-            title: "حفظ الطاقة | Conservation of Energy",
+            titleAr: "الطاقة الكامنة",
+            titleEn: "Potential Energy",
+            videoUrl: VIDEO_URLS.physics,
+            duration: 35,
+            descriptionAr: "الطاقة المخزنة",
+            descriptionEn: "Stored energy",
+          },
+          {
+            titleAr: "حفظ الطاقة",
+            titleEn: "Conservation of Energy",
             videoUrl: VIDEO_URLS.physics,
             duration: 45,
+            descriptionAr: "قانون حفظ الطاقة",
+            descriptionEn: "Law of conservation of energy",
           },
         ],
       },
     ],
   },
   {
-    title: "الكيمياء: أساسيات | Chemistry Fundamentals",
     slug: "chemistry-fundamentals",
-    description:
-      "مقدمة في الكيمياء العامة. Introduction to general chemistry covering atomic structure, bonding, and reactions.",
+    titleAr: "الكيمياء: أساسيات",
+    titleEn: "Chemistry Fundamentals",
+    descriptionAr:
+      "مقدمة في الكيمياء العامة. تغطي بنية الذرة والروابط والتفاعلات الكيميائية.",
+    descriptionEn:
+      "Introduction to general chemistry covering atomic structure, bonding, and reactions.",
     price: 0,
-    categoryName: "Science",
+    categoryKey: "Science",
     level: StreamCourseLevel.BEGINNER,
     imageUrl:
       "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "بنية الذرة | Atomic Structure",
-        description: "فهم تركيب الذرة | Understanding atomic composition",
+        titleAr: "بنية الذرة",
+        titleEn: "Atomic Structure",
+        descriptionAr: "فهم تركيب الذرة",
+        descriptionEn: "Understanding atomic composition",
         lessons: [
           {
-            title: "مكونات الذرة | Components of an Atom",
+            titleAr: "مكونات الذرة",
+            titleEn: "Components of an Atom",
             videoUrl: VIDEO_URLS.chemistry,
             duration: 30,
+            descriptionAr: "البروتونات والنيوترونات والإلكترونات",
+            descriptionEn: "Protons, neutrons, and electrons",
           },
           {
-            title: "النموذج الذري | Atomic Models",
+            titleAr: "النموذج الذري",
+            titleEn: "Atomic Models",
             videoUrl: VIDEO_URLS.chemistry,
             duration: 35,
+            descriptionAr: "تطور النماذج الذرية",
+            descriptionEn: "Evolution of atomic models",
           },
           {
-            title: "التوزيع الإلكتروني | Electron Configuration",
+            titleAr: "التوزيع الإلكتروني",
+            titleEn: "Electron Configuration",
             videoUrl: VIDEO_URLS.chemistry,
             duration: 40,
+            descriptionAr: "توزيع الإلكترونات في الذرة",
+            descriptionEn: "Distribution of electrons in atoms",
           },
         ],
       },
       {
-        title: "الجدول الدوري | Periodic Table",
-        description: "فهم الجدول الدوري | Understanding the periodic table",
+        titleAr: "الجدول الدوري",
+        titleEn: "Periodic Table",
+        descriptionAr: "فهم الجدول الدوري",
+        descriptionEn: "Understanding the periodic table",
         lessons: [
           {
-            title: "تنظيم الجدول الدوري | Organization of the Periodic Table",
+            titleAr: "تنظيم الجدول الدوري",
+            titleEn: "Organization of the Periodic Table",
             videoUrl: VIDEO_URLS.chemistry,
             duration: 35,
+            descriptionAr: "كيفية ترتيب العناصر",
+            descriptionEn: "How elements are arranged",
           },
           {
-            title: "الاتجاهات الدورية | Periodic Trends",
+            titleAr: "الاتجاهات الدورية",
+            titleEn: "Periodic Trends",
             videoUrl: VIDEO_URLS.chemistry,
             duration: 40,
+            descriptionAr: "الأنماط في الجدول الدوري",
+            descriptionEn: "Patterns in the periodic table",
           },
           {
-            title: "المجموعات والدورات | Groups and Periods",
+            titleAr: "المجموعات والدورات",
+            titleEn: "Groups and Periods",
             videoUrl: VIDEO_URLS.chemistry,
             duration: 35,
+            descriptionAr: "فهم المجموعات والدورات",
+            descriptionEn: "Understanding groups and periods",
           },
         ],
       },
     ],
   },
   {
-    title: "الأحياء: علم الخلية | Biology: Cell Biology",
     slug: "biology-cell",
-    description:
-      "دراسة الخلية وعملياتها الحيوية. Comprehensive study of cell structure, function, and processes.",
+    titleAr: "الأحياء: علم الخلية",
+    titleEn: "Biology: Cell Biology",
+    descriptionAr:
+      "دراسة الخلية وعملياتها الحيوية. دراسة شاملة لتركيب الخلية ووظائفها وعملياتها.",
+    descriptionEn:
+      "Comprehensive study of cell structure, function, and processes.",
     price: 0,
-    categoryName: "Science",
+    categoryKey: "Science",
     level: StreamCourseLevel.INTERMEDIATE,
     imageUrl:
       "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "تركيب الخلية | Cell Structure",
-        description: "العضيات الخلوية ووظائفها | Cell organelles and functions",
+        titleAr: "تركيب الخلية",
+        titleEn: "Cell Structure",
+        descriptionAr: "العضيات الخلوية ووظائفها",
+        descriptionEn: "Cell organelles and functions",
         lessons: [
           {
-            title: "أنواع الخلايا | Types of Cells",
+            titleAr: "أنواع الخلايا",
+            titleEn: "Types of Cells",
             videoUrl: VIDEO_URLS.biology,
             duration: 30,
+            descriptionAr: "الخلايا حقيقية النواة وبدائية النواة",
+            descriptionEn: "Prokaryotic and eukaryotic cells",
           },
           {
-            title: "النواة | The Nucleus",
+            titleAr: "النواة",
+            titleEn: "The Nucleus",
             videoUrl: VIDEO_URLS.biology,
             duration: 35,
+            descriptionAr: "مركز التحكم في الخلية",
+            descriptionEn: "The cell's control center",
           },
           {
-            title: "العضيات الخلوية | Cell Organelles",
+            titleAr: "العضيات الخلوية",
+            titleEn: "Cell Organelles",
             videoUrl: VIDEO_URLS.biology,
             duration: 45,
+            descriptionAr: "الميتوكوندريا والريبوسومات وغيرها",
+            descriptionEn: "Mitochondria, ribosomes, and more",
           },
           {
-            title: "غشاء الخلية | Cell Membrane",
+            titleAr: "غشاء الخلية",
+            titleEn: "Cell Membrane",
             videoUrl: VIDEO_URLS.biology,
             duration: 35,
+            descriptionAr: "الحاجز الانتقائي للخلية",
+            descriptionEn: "The cell's selective barrier",
           },
         ],
       },
       {
-        title: "عمليات الخلية | Cell Processes",
-        description: "العمليات الحيوية في الخلية | Biological processes",
+        titleAr: "عمليات الخلية",
+        titleEn: "Cell Processes",
+        descriptionAr: "العمليات الحيوية في الخلية",
+        descriptionEn: "Biological processes",
         lessons: [
           {
-            title: "الانقسام الخلوي | Cell Division",
+            titleAr: "الانقسام الخلوي",
+            titleEn: "Cell Division",
             videoUrl: VIDEO_URLS.biology,
             duration: 45,
+            descriptionAr: "الانقسام المتساوي والاختزالي",
+            descriptionEn: "Mitosis and meiosis",
           },
           {
-            title: "التنفس الخلوي | Cellular Respiration",
+            titleAr: "التنفس الخلوي",
+            titleEn: "Cellular Respiration",
             videoUrl: VIDEO_URLS.biology,
             duration: 50,
+            descriptionAr: "إنتاج الطاقة في الخلية",
+            descriptionEn: "Energy production in cells",
           },
           {
-            title: "البناء الضوئي | Photosynthesis",
+            titleAr: "البناء الضوئي",
+            titleEn: "Photosynthesis",
             videoUrl: VIDEO_URLS.biology,
             duration: 45,
+            descriptionAr: "تحويل الضوء إلى طاقة",
+            descriptionEn: "Converting light to energy",
           },
         ],
       },
@@ -1070,154 +1361,233 @@ const COURSES_DATA: CourseData[] = [
   // PROGRAMMING COURSES
   // ============================================================================
   {
-    title: "مقدمة في البرمجة | Introduction to Programming",
     slug: "intro-programming",
-    description:
-      "تعلم أساسيات البرمجة باستخدام بايثون. Learn programming fundamentals with Python. Perfect for beginners with no prior experience.",
+    titleAr: "مقدمة في البرمجة",
+    titleEn: "Introduction to Programming",
+    descriptionAr:
+      "تعلم أساسيات البرمجة باستخدام بايثون. مثالي للمبتدئين بدون خبرة سابقة.",
+    descriptionEn:
+      "Learn programming fundamentals with Python. Perfect for beginners with no prior experience.",
     price: 0,
-    categoryName: "Programming",
+    categoryKey: "Programming",
     level: StreamCourseLevel.BEGINNER,
     imageUrl:
       "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "البداية مع بايثون | Getting Started with Python",
-        description:
-          "إعداد بيئة التطوير | Setting up your development environment",
+        titleAr: "البداية مع بايثون",
+        titleEn: "Getting Started with Python",
+        descriptionAr: "إعداد بيئة التطوير",
+        descriptionEn: "Setting up your development environment",
         lessons: [
           {
-            title: "ما هي البرمجة؟ | What is Programming?",
+            titleAr: "ما هي البرمجة؟",
+            titleEn: "What is Programming?",
             videoUrl: VIDEO_URLS.programming,
             duration: 20,
+            descriptionAr: "مقدمة عن عالم البرمجة",
+            descriptionEn: "Introduction to the programming world",
           },
           {
-            title: "تثبيت بايثون | Installing Python",
+            titleAr: "تثبيت بايثون",
+            titleEn: "Installing Python",
             videoUrl: VIDEO_URLS.programming,
             duration: 25,
+            descriptionAr: "كيفية تثبيت بايثون على جهازك",
+            descriptionEn: "How to install Python on your machine",
           },
           {
-            title: "برنامجك الأول | Your First Program",
+            titleAr: "برنامجك الأول",
+            titleEn: "Your First Program",
             videoUrl: VIDEO_URLS.programming,
             duration: 30,
+            descriptionAr: "كتابة أول برنامج بايثون",
+            descriptionEn: "Writing your first Python program",
           },
           {
-            title: "استخدام IDLE | Using IDLE",
+            titleAr: "استخدام IDLE",
+            titleEn: "Using IDLE",
             videoUrl: VIDEO_URLS.programming,
             duration: 25,
+            descriptionAr: "التعرف على بيئة IDLE",
+            descriptionEn: "Getting to know the IDLE environment",
           },
         ],
       },
       {
-        title: "أساسيات بايثون | Python Basics",
-        description: "المتغيرات والعمليات | Variables and operations",
+        titleAr: "أساسيات بايثون",
+        titleEn: "Python Basics",
+        descriptionAr: "المتغيرات والعمليات",
+        descriptionEn: "Variables and operations",
         lessons: [
           {
-            title: "المتغيرات | Variables",
+            titleAr: "المتغيرات",
+            titleEn: "Variables",
             videoUrl: VIDEO_URLS.programming,
             duration: 35,
+            descriptionAr: "تخزين البيانات في المتغيرات",
+            descriptionEn: "Storing data in variables",
           },
           {
-            title: "أنواع البيانات | Data Types",
+            titleAr: "أنواع البيانات",
+            titleEn: "Data Types",
             videoUrl: VIDEO_URLS.programming,
             duration: 40,
+            descriptionAr: "الأنواع المختلفة للبيانات",
+            descriptionEn: "Different types of data",
           },
           {
-            title: "العمليات الحسابية | Operators",
+            titleAr: "العمليات الحسابية",
+            titleEn: "Operators",
             videoUrl: VIDEO_URLS.programming,
             duration: 30,
+            descriptionAr: "العمليات الرياضية في بايثون",
+            descriptionEn: "Mathematical operations in Python",
           },
           {
-            title: "المدخلات والمخرجات | Input and Output",
+            titleAr: "المدخلات والمخرجات",
+            titleEn: "Input and Output",
             videoUrl: VIDEO_URLS.programming,
             duration: 35,
+            descriptionAr: "التفاعل مع المستخدم",
+            descriptionEn: "Interacting with the user",
           },
         ],
       },
       {
-        title: "التحكم بالتدفق | Control Flow",
-        description: "الشروط والحلقات | Conditions and loops",
+        titleAr: "التحكم بالتدفق",
+        titleEn: "Control Flow",
+        descriptionAr: "الشروط والحلقات",
+        descriptionEn: "Conditions and loops",
         lessons: [
           {
-            title: "جمل الشرط if | If Statements",
+            titleAr: "جمل الشرط if",
+            titleEn: "If Statements",
             videoUrl: VIDEO_URLS.programming,
             duration: 40,
+            descriptionAr: "اتخاذ القرارات في البرنامج",
+            descriptionEn: "Making decisions in your program",
           },
           {
-            title: "حلقة while | While Loops",
+            titleAr: "حلقة while",
+            titleEn: "While Loops",
             videoUrl: VIDEO_URLS.programming,
             duration: 35,
+            descriptionAr: "تكرار الأوامر",
+            descriptionEn: "Repeating commands",
           },
           {
-            title: "حلقة for | For Loops",
+            titleAr: "حلقة for",
+            titleEn: "For Loops",
             videoUrl: VIDEO_URLS.programming,
             duration: 40,
+            descriptionAr: "التكرار على المجموعات",
+            descriptionEn: "Iterating over collections",
           },
           {
-            title: "الدوال | Functions",
+            titleAr: "الدوال",
+            titleEn: "Functions",
             videoUrl: VIDEO_URLS.programming,
             duration: 45,
+            descriptionAr: "إنشاء دوال قابلة لإعادة الاستخدام",
+            descriptionEn: "Creating reusable functions",
           },
         ],
       },
     ],
   },
   {
-    title: "تطوير الويب | Web Development Basics",
     slug: "web-development",
-    description:
-      "تعلم HTML, CSS, JavaScript. Learn to build websites from scratch.",
+    titleAr: "تطوير الويب",
+    titleEn: "Web Development Basics",
+    descriptionAr:
+      "تعلم HTML, CSS, JavaScript. تعلم بناء مواقع الويب من الصفر.",
+    descriptionEn:
+      "Learn HTML, CSS, JavaScript. Learn to build websites from scratch.",
     price: 0,
-    categoryName: "Programming",
+    categoryKey: "Programming",
     level: StreamCourseLevel.BEGINNER,
     imageUrl:
       "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "HTML الأساسيات | HTML Fundamentals",
-        description: "بناء صفحات الويب | Building web pages",
+        titleAr: "أساسيات HTML",
+        titleEn: "HTML Fundamentals",
+        descriptionAr: "بناء صفحات الويب",
+        descriptionEn: "Building web pages",
         lessons: [
           {
-            title: "مقدمة في HTML | Introduction to HTML",
+            titleAr: "مقدمة في HTML",
+            titleEn: "Introduction to HTML",
             videoUrl: VIDEO_URLS.programming,
             duration: 30,
+            descriptionAr: "ما هي HTML؟",
+            descriptionEn: "What is HTML?",
           },
           {
-            title: "العناصر والوسوم | Elements and Tags",
+            titleAr: "العناصر والوسوم",
+            titleEn: "Elements and Tags",
             videoUrl: VIDEO_URLS.programming,
             duration: 35,
+            descriptionAr: "بناء الصفحات بالوسوم",
+            descriptionEn: "Building pages with tags",
           },
           {
-            title: "الروابط والصور | Links and Images",
+            titleAr: "الروابط والصور",
+            titleEn: "Links and Images",
             videoUrl: VIDEO_URLS.programming,
             duration: 30,
+            descriptionAr: "إضافة الروابط والصور",
+            descriptionEn: "Adding links and images",
           },
           {
-            title: "النماذج | Forms",
+            titleAr: "النماذج",
+            titleEn: "Forms",
             videoUrl: VIDEO_URLS.programming,
             duration: 40,
+            descriptionAr: "إنشاء نماذج المستخدم",
+            descriptionEn: "Creating user forms",
           },
         ],
       },
       {
-        title: "CSS التنسيق | CSS Styling",
-        description: "تنسيق صفحات الويب | Styling web pages",
+        titleAr: "تنسيق CSS",
+        titleEn: "CSS Styling",
+        descriptionAr: "تنسيق صفحات الويب",
+        descriptionEn: "Styling web pages",
         lessons: [
           {
-            title: "مقدمة في CSS | Introduction to CSS",
+            titleAr: "مقدمة في CSS",
+            titleEn: "Introduction to CSS",
             videoUrl: VIDEO_URLS.programming,
             duration: 35,
+            descriptionAr: "أساسيات التنسيق",
+            descriptionEn: "Styling basics",
           },
           {
-            title: "الألوان والخطوط | Colors and Fonts",
+            titleAr: "الألوان والخطوط",
+            titleEn: "Colors and Fonts",
             videoUrl: VIDEO_URLS.programming,
             duration: 30,
+            descriptionAr: "تخصيص المظهر",
+            descriptionEn: "Customizing appearance",
           },
           {
-            title: "Box Model",
+            titleAr: "نموذج الصندوق",
+            titleEn: "Box Model",
             videoUrl: VIDEO_URLS.programming,
             duration: 40,
+            descriptionAr: "فهم نموذج الصندوق",
+            descriptionEn: "Understanding the box model",
           },
-          { title: "Flexbox", videoUrl: VIDEO_URLS.programming, duration: 45 },
+          {
+            titleAr: "فلكس بوكس",
+            titleEn: "Flexbox",
+            videoUrl: VIDEO_URLS.programming,
+            duration: 45,
+            descriptionAr: "تخطيط مرن للصفحات",
+            descriptionEn: "Flexible page layouts",
+          },
         ],
       },
     ],
@@ -1227,66 +1597,96 @@ const COURSES_DATA: CourseData[] = [
   // HUMANITIES COURSES
   // ============================================================================
   {
-    title: "تاريخ السودان | Sudanese History",
     slug: "sudanese-history",
-    description:
-      "دراسة شاملة لتاريخ السودان من الممالك القديمة إلى العصر الحديث. Comprehensive study of Sudan's history from ancient kingdoms to modern era.",
+    titleAr: "تاريخ السودان",
+    titleEn: "Sudanese History",
+    descriptionAr:
+      "دراسة شاملة لتاريخ السودان من الممالك القديمة إلى العصر الحديث.",
+    descriptionEn:
+      "Comprehensive study of Sudan's history from ancient kingdoms to modern era.",
     price: 0,
-    categoryName: "Humanities",
+    categoryKey: "Humanities",
     level: StreamCourseLevel.INTERMEDIATE,
     imageUrl:
       "https://images.unsplash.com/photo-1590845947670-c009801ffa74?w=800&h=450&fit=crop",
     chapters: [
       {
-        title: "الممالك القديمة | Ancient Kingdoms",
-        description: "الحضارات القديمة في السودان | Ancient civilizations",
+        titleAr: "الممالك القديمة",
+        titleEn: "Ancient Kingdoms",
+        descriptionAr: "الحضارات القديمة في السودان",
+        descriptionEn: "Ancient civilizations",
         lessons: [
           {
-            title: "مملكة كوش | Kingdom of Kush",
+            titleAr: "مملكة كوش",
+            titleEn: "Kingdom of Kush",
             videoUrl: VIDEO_URLS.history,
             duration: 45,
+            descriptionAr: "تاريخ مملكة كوش العظيمة",
+            descriptionEn: "History of the great Kingdom of Kush",
           },
           {
-            title: "نبتة ومروي | Napata and Meroe",
+            titleAr: "نبتة ومروي",
+            titleEn: "Napata and Meroe",
             videoUrl: VIDEO_URLS.history,
             duration: 50,
+            descriptionAr: "العاصمتان القديمتان",
+            descriptionEn: "The ancient capitals",
           },
           {
-            title: "الممالك المسيحية | Christian Kingdoms",
+            titleAr: "الممالك المسيحية",
+            titleEn: "Christian Kingdoms",
             videoUrl: VIDEO_URLS.history,
             duration: 45,
+            descriptionAr: "فترة الممالك المسيحية",
+            descriptionEn: "Period of Christian kingdoms",
           },
           {
-            title: "الآثار السودانية | Sudanese Artifacts",
+            titleAr: "الآثار السودانية",
+            titleEn: "Sudanese Artifacts",
             videoUrl: VIDEO_URLS.history,
             duration: 40,
+            descriptionAr: "الكنوز الأثرية السودانية",
+            descriptionEn: "Sudanese archaeological treasures",
           },
         ],
       },
       {
-        title: "السودان الحديث | Modern Sudan",
-        description:
-          "من الدولة المهدية إلى الاستقلال | From Mahdist state to independence",
+        titleAr: "السودان الحديث",
+        titleEn: "Modern Sudan",
+        descriptionAr: "من الدولة المهدية إلى الاستقلال",
+        descriptionEn: "From Mahdist state to independence",
         lessons: [
           {
-            title: "الدولة المهدية | Mahdist State",
+            titleAr: "الدولة المهدية",
+            titleEn: "Mahdist State",
             videoUrl: VIDEO_URLS.history,
             duration: 50,
+            descriptionAr: "قيام الدولة المهدية",
+            descriptionEn: "Rise of the Mahdist state",
           },
           {
-            title: "الحكم الثنائي | Condominium Rule",
+            titleAr: "الحكم الثنائي",
+            titleEn: "Condominium Rule",
             videoUrl: VIDEO_URLS.history,
             duration: 45,
+            descriptionAr: "فترة الحكم الثنائي",
+            descriptionEn: "Period of Anglo-Egyptian rule",
           },
           {
-            title: "الاستقلال | Independence",
+            titleAr: "الاستقلال",
+            titleEn: "Independence",
             videoUrl: VIDEO_URLS.history,
             duration: 40,
+            descriptionAr: "استقلال السودان",
+            descriptionEn: "Sudan's independence",
           },
           {
-            title: "السودان المعاصر | Contemporary Sudan",
+            titleAr: "السودان المعاصر",
+            titleEn: "Contemporary Sudan",
             videoUrl: VIDEO_URLS.history,
             duration: 45,
+            descriptionAr: "السودان في العصر الحديث",
+            descriptionEn: "Sudan in the modern era",
           },
         ],
       },
@@ -2328,103 +2728,40 @@ export async function seedStream(
   console.log(`   ✅ K-12 Chapters: ${k12Stats.chapterCount}`)
   console.log(`   ✅ K-12 Lessons: ${k12Stats.lessonCount}`)
 
-  // Phase 3: Keep legacy courses (backward compatibility, single-lang for now)
-  // These use the old combined format - can be migrated later
-  console.log("   📖 Seeding legacy courses...")
-  let legacyCourseCount = 0
+  // Phase 3: Seed legacy courses (now bilingual using BILINGUAL_LEGACY_COURSES)
+  console.log("   📖 Seeding legacy courses (bilingual)...")
+  let legacyArCount = 0
+  let legacyEnCount = 0
   let legacyChapterCount = 0
   let legacyLessonCount = 0
-  const createdCourses: { id: string; title: string }[] = []
 
-  // Create legacy categories (for old courses that reference them)
-  const legacyCategories = new Map<string, string>()
-  const legacyCategoryNames = [
-    "Islamic Studies",
-    "Languages",
-    "Mathematics",
-    "Science",
-    "Programming",
-    "Humanities",
-  ]
-  for (const name of legacyCategoryNames) {
-    let cat = await prisma.streamCategory.findFirst({
-      where: { schoolId, name },
-    })
-    if (!cat) {
-      cat = await prisma.streamCategory.create({
-        data: { name, schoolId },
-      })
-    }
-    legacyCategories.set(name, cat.id)
-  }
-
-  for (const courseData of COURSES_DATA) {
-    const { chapters, categoryName, level, imageUrl, ...courseInfo } =
-      courseData
-
-    // Check if course already exists (any language)
-    let course = await prisma.streamCourse.findFirst({
-      where: { schoolId, slug: courseInfo.slug },
+  for (const courseData of BILINGUAL_LEGACY_COURSES) {
+    // Check if course already exists (both languages)
+    const existingCourse = await prisma.streamCourse.findFirst({
+      where: { schoolId, slug: courseData.slug },
     })
 
-    if (!course) {
-      // Assign teacher
-      const assignedTeacher = teachers[legacyCourseCount % teachers.length]
-
-      course = await prisma.streamCourse.create({
-        data: {
-          ...courseInfo,
-          schoolId,
-          userId: assignedTeacher?.userId,
-          categoryId: legacyCategories.get(categoryName),
-          isPublished: true,
-          imageUrl,
-          level: level || StreamCourseLevel.BEGINNER,
-          lang: "en", // Default to English for legacy
-        },
+    if (!existingCourse) {
+      // Create bilingual course (creates AR + EN versions)
+      await createBilingualCourse({
+        prisma,
+        schoolId,
+        course: courseData,
+        categoryMap,
+        teacherId,
       })
 
-      // Create chapters and lessons
-      for (let ci = 0; ci < chapters.length; ci++) {
-        const chapterData = chapters[ci]
-        const chapter = await prisma.streamChapter.create({
-          data: {
-            title: chapterData.title,
-            description: chapterData.description,
-            position: ci + 1,
-            isPublished: true,
-            courseId: course.id,
-          },
-        })
-        legacyChapterCount++
-
-        for (let li = 0; li < chapterData.lessons.length; li++) {
-          const lessonData = chapterData.lessons[li]
-          await prisma.streamLesson.create({
-            data: {
-              title: lessonData.title,
-              description:
-                lessonData.description ||
-                `Lesson ${li + 1} of ${chapterData.title}`,
-              position: li + 1,
-              duration:
-                lessonData.duration || faker.number.int({ min: 20, max: 50 }),
-              videoUrl: lessonData.videoUrl,
-              isPublished: true,
-              isFree: li === 0,
-              chapterId: chapter.id,
-            },
-          })
-          legacyLessonCount++
-        }
-      }
+      legacyArCount++
+      legacyEnCount++
+      legacyChapterCount += courseData.chapters.length * 2 // Both AR and EN
+      legacyLessonCount +=
+        courseData.chapters.reduce((sum, ch) => sum + ch.lessons.length, 0) * 2
     }
-
-    createdCourses.push({ id: course.id, title: course.title })
-    legacyCourseCount++
   }
 
-  console.log(`   ✅ Legacy courses: ${legacyCourseCount}`)
+  console.log(
+    `   ✅ Legacy courses: ${legacyArCount} AR + ${legacyEnCount} EN = ${legacyArCount + legacyEnCount} total`
+  )
   console.log(`   ✅ Legacy chapters: ${legacyChapterCount}`)
   console.log(`   ✅ Legacy lessons: ${legacyLessonCount}`)
 
@@ -2495,30 +2832,31 @@ export async function seedStream(
     console.log(`   ✅ Progress records: ${progressCount}`)
   }
 
-  // Summary
-  const totalCourses = k12Stats.arCount + k12Stats.enCount + legacyCourseCount
+  // Summary (all bilingual now)
+  const legacyTotal = legacyArCount + legacyEnCount
+  const totalCourses = k12Stats.arCount + k12Stats.enCount + legacyTotal
   const totalChapters = k12Stats.chapterCount + legacyChapterCount
   const totalLessons = k12Stats.lessonCount + legacyLessonCount
 
   console.log(`\n   📊 Bilingual LMS Summary:`)
-  console.log(`      ┌─────────────────────────────────────────┐`)
+  console.log(`      ┌─────────────────────────────────────────────────┐`)
   console.log(
-    `      │ K-12 Subject Courses: ${String(k12Stats.arCount + k12Stats.enCount).padStart(4)} (${k12Stats.arCount} AR + ${k12Stats.enCount} EN) │`
+    `      │ K-12 Subject Courses: ${String(k12Stats.arCount + k12Stats.enCount).padStart(4)} (${k12Stats.arCount} AR + ${k12Stats.enCount} EN)     │`
   )
   console.log(
-    `      │ Legacy Courses:       ${String(legacyCourseCount).padStart(4)}                    │`
+    `      │ Legacy Courses:       ${String(legacyTotal).padStart(4)} (${legacyArCount} AR + ${legacyEnCount} EN)     │`
   )
-  console.log(`      ├─────────────────────────────────────────┤`)
+  console.log(`      ├─────────────────────────────────────────────────┤`)
   console.log(
-    `      │ Total Courses:        ${String(totalCourses).padStart(4)}                    │`
-  )
-  console.log(
-    `      │ Total Chapters:       ${String(totalChapters).padStart(4)}                    │`
+    `      │ Total Courses:        ${String(totalCourses).padStart(4)}                        │`
   )
   console.log(
-    `      │ Total Lessons:        ${String(totalLessons).padStart(4)}                    │`
+    `      │ Total Chapters:       ${String(totalChapters).padStart(4)}                        │`
   )
-  console.log(`      └─────────────────────────────────────────┘\n`)
+  console.log(
+    `      │ Total Lessons:        ${String(totalLessons).padStart(4)}                        │`
+  )
+  console.log(`      └─────────────────────────────────────────────────┘\n`)
 }
 
 // ============================================================================

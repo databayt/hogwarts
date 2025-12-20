@@ -28,39 +28,48 @@ export function useBreadcrumbs() {
 
   useEffect(() => {
     setDynamicTitle(null)
-    // Resolve dynamic names for known resources (e.g., students/:id, grades/:id)
-    try {
-      // Students pattern
-      const studentsMatch = pathname.match(/\/students\/([^\/\?]+)$/)
-      if (studentsMatch) {
-        const id = studentsMatch[1]
-        const qs =
-          typeof window !== "undefined" ? window.location.search || "" : ""
-        void fetch(`/api/students/${id}${qs}`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data?.name) setDynamicTitle(data.name as string)
-          })
-          .catch(() => {})
-        return
-      }
 
-      // Grades pattern - exclude known sub-routes
-      const gradesMatch = pathname.match(/\/grades\/([^\/\?]+)$/)
-      if (
-        gradesMatch &&
-        !["analytics", "reports", "generate"].includes(gradesMatch[1])
-      ) {
-        const id = gradesMatch[1]
-        const qs =
-          typeof window !== "undefined" ? window.location.search || "" : ""
-        void fetch(`/api/grades/${id}${qs}`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data?.name) setDynamicTitle(data.name as string)
-          })
-          .catch(() => {})
-        return
+    // Entity patterns with their API endpoints and exclusions
+    const entityPatterns: Array<{
+      pattern: RegExp
+      api: string
+      exclude?: string[]
+    }> = [
+      { pattern: /\/students\/([^\/\?]+)$/, api: "students" },
+      { pattern: /\/teachers\/([^\/\?]+)$/, api: "teachers" },
+      { pattern: /\/parents\/([^\/\?]+)$/, api: "parents" },
+      { pattern: /\/classes\/([^\/\?]+)$/, api: "classes" },
+      { pattern: /\/subjects\/([^\/\?]+)$/, api: "subjects" },
+      { pattern: /\/lessons\/([^\/\?]+)$/, api: "lessons" },
+      { pattern: /\/announcements\/([^\/\?]+)$/, api: "announcements" },
+      { pattern: /\/assignments\/([^\/\?]+)$/, api: "assignments" },
+      { pattern: /\/events\/([^\/\?]+)$/, api: "events" },
+      {
+        pattern: /\/grades\/([^\/\?]+)$/,
+        api: "grades",
+        exclude: ["analytics", "reports", "generate"],
+      },
+    ]
+
+    // Resolve dynamic names for known resources
+    try {
+      for (const { pattern, api, exclude } of entityPatterns) {
+        const match = pathname.match(pattern)
+        if (match) {
+          const id = match[1]
+          // Skip if ID matches an excluded route segment
+          if (exclude?.includes(id)) continue
+
+          const qs =
+            typeof window !== "undefined" ? window.location.search || "" : ""
+          void fetch(`/api/${api}/${id}${qs}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+              if (data?.name) setDynamicTitle(data.name as string)
+            })
+            .catch(() => {})
+          return
+        }
       }
     } catch {}
   }, [pathname])

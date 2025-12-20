@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react"
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -182,7 +182,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-5xl flex-col">
+    <div className="mx-auto flex h-full w-full max-w-5xl flex-col pb-24">
       <div className="flex flex-1 items-center">
         <div className="w-full">
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
@@ -232,14 +232,14 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
         </div>
       </div>
 
-      {/* Bottom Section - respects general padding */}
-      <div className="w-full">
-        <Separator className="w-full" />
-        <div className="flex justify-end py-4 rtl:justify-start">
+      {/* Fixed footer - matches FormFooter positioning */}
+      <footer className="bg-background fixed right-0 bottom-0 left-0 px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20">
+        <Separator className="mx-auto mb-3 w-full max-w-5xl sm:mb-4" />
+        <div className="mx-auto flex w-full max-w-5xl justify-end rtl:justify-start">
           <Button onClick={handleGetStarted} disabled={isCreating}>
             {isCreating ? (
               <>
-                <Skeleton className="me-2 h-4 w-4" />
+                <Spinner className="me-2" />
                 {dictionary.creatingSchool}
               </>
             ) : (
@@ -247,7 +247,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
             )}
           </Button>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }
