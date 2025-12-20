@@ -8,7 +8,7 @@
     "dev:next": "next dev --turbopack",
     "dev:ws": "node server.js",
     "dev:full": "node server.js",
-    "build": "prisma generate && tsx prisma/seeds/ensure-demo.ts && NODE_OPTIONS='--max-old-space-size=6144' next build",
+    "build": "prisma generate && tsx prisma/seeds/ensure-demo.ts && NODE_OPTIONS='--max-old-space-size=6144' next build --webpack",
     "start": "NODE_ENV=production node server.js",
     "start:next": "next start",
     "lint": "next lint",
