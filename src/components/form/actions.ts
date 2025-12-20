@@ -18,7 +18,13 @@
  * ```
  */
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
+
+// Dynamic import to avoid module-level initialization issues
+// The auth module has side effects that can fail during bundling
+async function getAuth() {
+  const { auth } = await import("@/auth")
+  return auth
+}
 
 // =============================================================================
 // TYPES
@@ -76,7 +82,8 @@ export async function createFormAction<TInput, TOutput>(
     _prevState: ActionResponse<TOutput>,
     formData: FormData
   ): Promise<ActionResponse<TOutput>> => {
-    // 1. Authenticate and get schoolId
+    // 1. Authenticate and get schoolId (using dynamic import)
+    const auth = await getAuth()
     const session = await auth()
     const schoolId = session?.user?.schoolId
 
