@@ -36,6 +36,18 @@ async function requireSchoolOwnershipLazy(schoolId: string) {
   return requireSchoolOwnership(schoolId)
 }
 
+// Test action to verify server actions work in production
+export async function testServerAction(): Promise<ActionResponse> {
+  console.log("🧪 [TEST ACTION] Called at", new Date().toISOString())
+  return {
+    success: true,
+    data: {
+      message: "Server action works!",
+      timestamp: new Date().toISOString(),
+    },
+  }
+}
+
 // Types for listing actions
 export interface ListingFormData {
   id?: string
