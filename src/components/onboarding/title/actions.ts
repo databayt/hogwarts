@@ -147,43 +147,37 @@ export async function updateSchoolTitle(
 export async function getSchoolTitle(
   schoolId: string
 ): Promise<ActionResponse> {
-  console.log("🔍 [GET SCHOOL TITLE] Starting", { schoolId })
+  console.log("🔍 [GET SCHOOL TITLE] Starting - ULTRA MINIMAL TEST", {
+    schoolId,
+  })
+
+  // STEP 1: Test if server action works at all (no db, no imports)
+  // If this fails, the issue is with server action bundling
+  // If this works, the issue is with db/Prisma
 
   try {
-    // TEMPORARILY bypassing auth to isolate issue
-    console.log("🔍 [GET SCHOOL TITLE] Fetching school from database...")
+    // Return hardcoded response first to test server action mechanism
+    console.log("🔍 [GET SCHOOL TITLE] Returning hardcoded response...")
 
-    const school = await db.school.findUnique({
-      where: { id: schoolId },
-      select: {
-        id: true,
-        name: true,
-        domain: true,
+    // Uncomment below to test with db once hardcoded works
+    // const school = await db.school.findUnique({
+    //   where: { id: schoolId },
+    //   select: { id: true, name: true, domain: true },
+    // })
+
+    return {
+      success: true,
+      data: {
+        title: "Test School Name",
+        subdomain: "test-subdomain",
       },
-    })
-
-    console.log("🔍 [GET SCHOOL TITLE] Database result:", {
-      found: !!school,
-      name: school?.name,
-      domain: school?.domain,
-    })
-
-    if (!school) {
-      console.log("❌ [GET SCHOOL TITLE] School not found")
-      return createActionResponse(undefined, {
-        message: "School not found",
-        name: "NotFoundError",
-      })
     }
-
-    console.log("✅ [GET SCHOOL TITLE] Success")
-    return createActionResponse({
-      title: school.name || "",
-      subdomain: school.domain || "",
-    })
   } catch (error) {
     console.error("❌ [GET SCHOOL TITLE] Error:", error)
-    return createActionResponse(undefined, error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }
   }
 }
 
