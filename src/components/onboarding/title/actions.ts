@@ -9,6 +9,7 @@ import { db } from "@/lib/db"
 import { titleSchema } from "./validation"
 
 // TEMPORARILY using local createActionResponse to bypass auth-security import
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface ActionResponse<T = any> {
   success: boolean
   data?: T

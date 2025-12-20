@@ -108,9 +108,10 @@ model ExamResult {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  exam    Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  school      School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  exam        Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student     Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  certificate ExamCertificate? // One-to-one relation for exam certificate
 
   @@unique([examId, studentId])
   // Performance indexes
@@ -299,6 +300,243 @@ model GradeOverride {
   @@index([schoolId, markingResultId])
   @@index([schoolId, overriddenBy])
   @@map("grade_overrides")
+}
+
+// ========== EXAM PAPER SYSTEM ==========
+
+enum ExamPaperTemplate {
+  CLASSIC // Traditional academic style
+  MODERN // Clean, minimalist
+  FORMAL // Government/official exam style
+  CUSTOM // School-branded template
+}
+
+enum PaperLayout {
+  SINGLE_COLUMN // Questions stacked vertically
+  TWO_COLUMN // Questions in two columns
+  BOOKLET // Multi-page with answer sheet
+}
+
+enum AnswerSheetType {
+  NONE // Answers inline with questions
+  SEPARATE // Answer sheet as separate page
+  BUBBLE // OMR-style bubble sheet
+}
+
+// Paper configuration for generated exams
+model ExamPaperConfig {
+  id              String            @id @default(cuid())
+  schoolId        String
+  generatedExamId String            @unique
+
+  // Template & Layout
+  template        ExamPaperTemplate @default(CLASSIC)
+  layout          PaperLayout       @default(SINGLE_COLUMN)
+  answerSheetType AnswerSheetType   @default(SEPARATE)
+
+  // Header Configuration
+  showSchoolLogo     Boolean @default(true)
+  showExamTitle      Boolean @default(true)
+  showInstructions   Boolean @default(true)
+  customInstructions String? @db.Text
+  showStudentInfo    Boolean @default(true) // Name, ID fields
+
+  // Question Configuration
+  showQuestionNumbers   Boolean @default(true)
+  showPointsPerQuestion Boolean @default(true)
+  showQuestionType      Boolean @default(false)
+  shuffleQuestions      Boolean @default(false)
+  shuffleOptions        Boolean @default(false)
+
+  // Answer Space
+  answerLinesShort Int @default(3) // Lines for short answer
+  answerLinesEssay Int @default(12) // Lines for essay
+
+  // Footer & Print Settings
+  showPageNumbers Boolean @default(true)
+  showTotalPages  Boolean @default(true)
+  customFooter    String?
+  pageSize        String  @default("A4") // A4, Letter
+  orientation     String  @default("portrait")
+
+  // Versioning (for multiple exam versions A/B/C)
+  versionCount Int @default(1)
+
+  school        School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  generatedExam GeneratedExam   @relation(fields: [generatedExamId], references: [id], onDelete: Cascade)
+  papers        GeneratedPaper[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([schoolId, generatedExamId])
+  @@map("exam_paper_configs")
+}
+
+// Generated paper PDF instances
+model GeneratedPaper {
+  id       String @id @default(cuid())
+  schoolId String
+  configId String
+
+  versionCode   String? // A, B, C for different versions
+  pdfUrl        String? // Stored PDF URL
+  answerKeyUrl  String? // Answer key PDF URL
+  questionOrder Json // Array of question IDs in paper order
+  optionOrder   Json? // Map of question ID to shuffled option indices
+
+  generatedBy String
+  generatedAt DateTime @default(now())
+
+  school School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  config ExamPaperConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, configId])
+  @@index([generatedAt])
+  @@map("generated_papers")
+}
+
+// Answer key for generated exams
+model ExamAnswerKey {
+  id              String @id @default(cuid())
+  schoolId        String
+  generatedExamId String @unique
+
+  // Answer key data (JSON)
+  // [{questionId, order, questionType, correctAnswer, points, explanation}]
+  answers Json
+  pdfUrl  String? // Answer key PDF URL
+
+  generatedBy String
+  generatedAt DateTime @default(now())
+
+  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  generatedExam GeneratedExam @relation(fields: [generatedExamId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([schoolId, generatedExamId])
+  @@map("exam_answer_keys")
+}
+
+// ========== EXAM CERTIFICATE SYSTEM ==========
+
+enum CertificateType {
+  ACHIEVEMENT // For high scores
+  COMPLETION // For completing exam
+  PARTICIPATION // For participating
+  MERIT // For merit (top 10%)
+  EXCELLENCE // For excellence (top 3%)
+  CUSTOM // Custom certificate
+}
+
+// Certificate template configuration
+model ExamCertificateConfig {
+  id          String          @id @default(cuid())
+  schoolId    String
+  name        String
+  type        CertificateType
+  description String?         @db.Text
+
+  // Template Configuration
+  templateStyle String @default("elegant") // elegant, modern, classic, minimal
+  orientation   String @default("landscape")
+
+  // Content Configuration (supports placeholders)
+  titleText      String  @default("Certificate of Achievement")
+  titleTextAr    String?
+  bodyTemplate   String  @db.Text // Template with placeholders like {{studentName}}
+  bodyTemplateAr String? @db.Text
+
+  // Criteria for eligibility
+  minPercentage Float? // Minimum percentage to qualify
+  minGrade      String? // Minimum grade to qualify (e.g., "B")
+  topPercentile Float? // Top X% of class
+
+  // Signatures (JSON array)
+  // [{name: string, title: string, signatureUrl?: string}]
+  signatures Json
+
+  // Branding
+  useSchoolLogo Boolean @default(true)
+  customLogo    String?
+  borderStyle   String  @default("gold") // gold, silver, blue, custom
+
+  // Validity
+  expiryMonths Int? // Certificate expiry in months (null = permanent)
+
+  // Verification
+  enableVerification Boolean @default(true)
+  verificationPrefix String? // e.g., "CERT-" for CERT-ABC123
+
+  school       School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  certificates ExamCertificate[]
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, type])
+  @@index([schoolId, isActive])
+  @@map("exam_certificate_configs")
+}
+
+// Issued exam certificates
+model ExamCertificate {
+  id           String @id @default(cuid())
+  schoolId     String
+  configId     String
+  examResultId String @unique
+  studentId    String
+
+  // Certificate Details
+  certificateNumber String   @unique
+  issuedAt          DateTime @default(now())
+  expiresAt         DateTime?
+
+  // Frozen Content (snapshot at time of generation)
+  recipientName   String
+  recipientNameAr String?
+  examTitle       String
+  examDate        DateTime
+  score           Float
+  grade           String?
+  rank            Int?
+
+  // PDF Storage
+  pdfUrl       String?
+  thumbnailUrl String?
+
+  // Verification
+  verificationCode String  @unique
+  verificationUrl  String?
+
+  // Sharing
+  shareToken  String?   @unique // For public sharing
+  shareExpiry DateTime?
+  isPublic    Boolean   @default(false)
+  viewCount   Int       @default(0)
+
+  // Status
+  status        String    @default("active") // active, revoked, expired
+  revokedAt     DateTime?
+  revokedReason String?
+
+  school     School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  config     ExamCertificateConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  examResult ExamResult            @relation(fields: [examResultId], references: [id], onDelete: Cascade)
+  student    Student               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, studentId])
+  @@index([schoolId, configId])
+  @@index([verificationCode])
+  @@index([shareToken])
+  @@index([status])
+  @@index([issuedAt])
+  @@map("exam_certificates")
 }
 
 // ========== RESULTS & GRADING (RESULTS BLOCK) ==========

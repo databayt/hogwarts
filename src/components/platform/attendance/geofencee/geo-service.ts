@@ -267,14 +267,68 @@ export async function processGeofenceEvents(
 
     eventIds.push(event.id)
 
-    // Auto-mark attendance if student enters SCHOOL_GROUNDS
-    // NOTE: Disabled temporarily - requires classId from Attendance model
-    // TODO: Implement auto-attendance with proper class association
+    // Auto-mark attendance if student enters SCHOOL_GROUNDS during arrival window
     if (
       result.eventType === "ENTER" &&
       event.geofence.type === "SCHOOL_GROUNDS"
     ) {
-      // Mark event as processed (attendance creation happens separately)
+      const now = new Date()
+      const hour = now.getHours()
+      const isArrivalWindow = hour >= 6 && hour < 10 // 6:00 AM - 10:00 AM
+
+      if (isArrivalWindow) {
+        try {
+          // Find student's homeroom class (primary class for attendance)
+          const studentClass = await db.studentClass.findFirst({
+            where: {
+              studentId,
+              class: { schoolId },
+            },
+            include: {
+              class: { select: { id: true, name: true } },
+            },
+            orderBy: { createdAt: "asc" }, // Get earliest enrolled class (homeroom)
+          })
+
+          if (studentClass) {
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+
+            // Create/update attendance record via upsert
+            await db.attendance.upsert({
+              where: {
+                schoolId_studentId_classId_date_periodId: {
+                  schoolId,
+                  studentId,
+                  classId: studentClass.classId,
+                  date: today,
+                  periodId: null, // Daily attendance (not period-specific)
+                },
+              },
+              create: {
+                schoolId,
+                studentId,
+                classId: studentClass.classId,
+                date: today,
+                status: "PRESENT",
+                method: "GEOFENCE",
+                checkInTime: now,
+                location: { lat: location.lat, lon: location.lon },
+                notes: `Auto-marked via geofence: ${result.geofenceName}`,
+              },
+              update: {
+                // Only update if not already manually marked
+                // Keep existing status if already marked
+              },
+            })
+          }
+        } catch (attendanceError) {
+          // Log error but don't fail the geofence event
+          console.error("Failed to auto-mark attendance:", attendanceError)
+        }
+      }
+
+      // Mark event as processed
       await db.geoAttendanceEvent.update({
         where: { id: event.id },
         data: { processedAt: new Date() },

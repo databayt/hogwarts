@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 
-import { testAction } from "./test-action"
+import { getSchoolTitle } from "./actions"
 import { type TitleFormData } from "./validation"
 
 interface UseTitleReturn {
@@ -24,13 +24,15 @@ export function useTitle(schoolId: string): UseTitleReturn {
       setLoading(true)
       setError(null)
 
-      // TEST: Call minimal test action to isolate the issue
-      console.log("🧪 [USE TITLE] Calling testAction...")
-      const testResult = await testAction()
-      console.log("🧪 [USE TITLE] testAction result:", testResult)
+      console.log("🔍 [USE TITLE] Fetching school title for:", schoolId)
+      const result = await getSchoolTitle(schoolId)
+      console.log("🔍 [USE TITLE] Result:", result)
 
-      // Just return empty data for now
-      setData({ title: "Test Title", subdomain: "" })
+      if (result.success && result.data) {
+        setData(result.data)
+      } else {
+        setError(result.error || "Failed to load title")
+      }
     } catch (err) {
       setError("An unexpected error occurred")
       console.error("Error fetching title:", err)

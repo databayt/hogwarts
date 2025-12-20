@@ -39,7 +39,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { useCountdown } from "../shared/hooks"
 import type { QRCodeConfig } from "../shared/types"
-import { generateQRPayload } from "../shared/utils"
+import { generateAttendanceQR } from "./actions"
 
 interface QRGeneratorProps {
   classId: string
@@ -75,23 +75,23 @@ export function QRGenerator({
   const generateNewQR = useCallback(async () => {
     setIsGenerating(true)
     try {
-      // Generate unique payload
-      const payload = generateQRPayload(classId, config.validityPeriod)
-      const qrData = JSON.stringify({
-        payload,
+      // Call server action to create QR session in database
+      const result = await generateAttendanceQR({
         classId,
-        timestamp: Date.now(),
-        config: {
-          requireAuth: config.requireStudentAuth,
-          requireLocation: config.includeLocation,
-        },
+        validFor: config.refreshInterval,
+        includeLocation: config.includeLocation,
       })
 
-      setQRData(qrData)
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to generate QR code")
+      }
 
-      // Generate QR code
+      // Store the QR data for display and sharing
+      setQRData(result.data.payload)
+
+      // Generate QR code visual from server-provided code
       if (canvasRef.current) {
-        await QRCode.toCanvas(canvasRef.current, qrData, {
+        await QRCode.toCanvas(canvasRef.current, result.data.code, {
           width: 400,
           margin: 2,
           color: {
@@ -109,14 +109,21 @@ export function QRGenerator({
       // Reset timer
       resetTimer()
 
+      // Calculate seconds until expiration
+      const expiresIn = Math.round(
+        (new Date(result.data.expiresAt).getTime() - Date.now()) / 1000
+      )
+
       toast({
         title: "QR Code Generated",
-        description: `Valid for ${config.validityPeriod} seconds`,
+        description: `Valid for ${expiresIn} seconds. Stored in database.`,
       })
     } catch (error) {
       toast({
         title: "Generation Failed",
-        description: "Failed to generate QR code",
+        description:
+          error instanceof Error ? error.message : "Failed to generate QR code",
+        variant: "destructive",
       })
     } finally {
       setIsGenerating(false)

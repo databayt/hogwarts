@@ -513,11 +513,31 @@ export function AttendanceTracking({
                   />
                   <div className="flex gap-1">
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
                       onClick={() => markAllStudents("PRESENT")}
+                      className="bg-green-600 hover:bg-green-700"
                     >
+                      <CircleCheck className="mr-1 h-4 w-4" />
                       All Present
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => markAllStudents("ABSENT")}
+                      className="text-red-600 hover:bg-red-50"
+                    >
+                      <CircleX className="mr-1 h-4 w-4" />
+                      All Absent
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => markAllStudents("LATE")}
+                      className="text-yellow-600 hover:bg-yellow-50"
+                    >
+                      <Clock className="mr-1 h-4 w-4" />
+                      All Late
                     </Button>
                     <Button
                       variant="outline"

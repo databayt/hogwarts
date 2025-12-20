@@ -8,7 +8,8 @@ import { logger } from "@/lib/logger"
 
 // TEMPORARILY: Local ActionResponse to bypass auth-security import chain
 // This isolates the 500 error issue to the auth module
-interface ActionResponse<T = unknown> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface ActionResponse<T = any> {
   success: boolean
   data?: T
   error?: string
