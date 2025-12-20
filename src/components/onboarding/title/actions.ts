@@ -2,11 +2,10 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { z } from "zod"
 
 import { db } from "@/lib/db"
 
-import { titleSchema } from "./validation"
+// Removed zod import to isolate 500 error issue
 
 // TEMPORARILY using local createActionResponse to bypass auth-security import
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,7 +33,11 @@ function createActionResponse<T>(data?: T, error?: unknown): ActionResponse<T> {
   }
 }
 
-export type TitleFormData = z.infer<typeof titleSchema>
+// Inline type definition (removed zod dependency)
+export interface TitleFormData {
+  title: string
+  subdomain?: string
+}
 
 export async function updateSchoolTitle(
   schoolId: string,
@@ -50,7 +53,18 @@ export async function updateSchoolTitle(
     // TEMPORARILY bypassing auth to isolate issue
     console.log("🔐 [UPDATE SCHOOL TITLE] Bypassing auth check temporarily")
 
-    const validatedData = titleSchema.parse(data)
+    // Simple inline validation (removed zod dependency)
+    const title = data.title?.trim() || ""
+    const subdomain = data.subdomain?.trim() || ""
+
+    if (title.length < 3) {
+      return createActionResponse(undefined, {
+        message: "School name must be at least 3 characters",
+        name: "ValidationError",
+      })
+    }
+
+    const validatedData = { title, subdomain }
 
     // Check for duplicate subdomain (skip if subdomain matches current school's domain)
     if (validatedData.subdomain) {
@@ -112,14 +126,6 @@ export async function updateSchoolTitle(
     return createActionResponse(updatedSchool)
   } catch (error) {
     console.error("❌ [UPDATE SCHOOL TITLE] Error:", error)
-
-    if (error instanceof z.ZodError) {
-      return createActionResponse(undefined, {
-        message: "Validation failed",
-        name: "ValidationError",
-        issues: error.issues,
-      })
-    }
 
     // Check for Prisma unique constraint violation
     if (

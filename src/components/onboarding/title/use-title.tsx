@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 
-import { getSchoolTitle } from "./actions"
-import { type TitleFormData } from "./validation"
+import { getSchoolTitle, type TitleFormData } from "./actions"
 
 interface UseTitleReturn {
   data: TitleFormData | null
