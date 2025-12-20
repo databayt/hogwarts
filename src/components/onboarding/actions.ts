@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { db } from "@/lib/db"
-import { logger } from "@/lib/logger"
+
+// Removed logger import to isolate 500 error
 
 // TEMPORARILY: Local ActionResponse to bypass auth-security import chain
 // This isolates the 500 error issue to the auth module
@@ -131,9 +132,7 @@ export async function createListing(
     revalidatePath("/onboarding")
     return createActionResponse(listing)
   } catch (error) {
-    logger.error("Failed to create school listing", error, {
-      action: "createListing",
-    })
+    console.error("Failed to create school listing", error)
     return createActionResponse(undefined, error)
   }
 }
@@ -163,7 +162,7 @@ export async function updateListing(
 
 export async function getListing(id: string): Promise<ActionResponse> {
   try {
-    logger.debug("getListing called", { schoolId: id })
+    console.log("getListing called", { schoolId: id })
 
     // TEMPORARILY: Bypass auth and fetch school directly to isolate issue
     console.log("🧪 [GET LISTING] Bypassing auth temporarily...")
@@ -183,7 +182,7 @@ export async function getListing(id: string): Promise<ActionResponse> {
     })
     return createActionResponse(school)
   } catch (error) {
-    logger.error("Failed to get listing", error, { schoolId: id })
+    console.error("Failed to get listing", error, { schoolId: id })
     return createActionResponse(undefined, error)
   }
 }
@@ -191,14 +190,14 @@ export async function getListing(id: string): Promise<ActionResponse> {
 export async function getCurrentUserSchool(): Promise<ActionResponse> {
   try {
     const authContext = await getAuthContextLazy()
-    logger.debug("Getting current user school", {
+    console.log("Getting current user school", {
       userId: authContext.userId,
       hasSessionSchoolId: !!authContext.schoolId,
     })
 
     // If user has a schoolId in session, return it
     if (authContext.schoolId) {
-      logger.debug("Returning session schoolId", {
+      console.log("Returning session schoolId", {
         schoolId: authContext.schoolId,
       })
       return createActionResponse({ schoolId: authContext.schoolId })
@@ -210,23 +209,23 @@ export async function getCurrentUserSchool(): Promise<ActionResponse> {
       select: { id: true, schoolId: true, email: true },
     })
 
-    logger.debug("Database user lookup", {
+    console.log("Database user lookup", {
       userId: authContext.userId,
       hasSchoolId: !!user?.schoolId,
     })
 
     if (user?.schoolId) {
-      logger.debug("Returning database schoolId", { schoolId: user.schoolId })
+      console.log("Returning database schoolId", { schoolId: user.schoolId })
       return createActionResponse({ schoolId: user.schoolId })
     }
 
-    logger.debug("No schoolId found for user", { userId: authContext.userId })
+    console.log("No schoolId found for user", { userId: authContext.userId })
     return createActionResponse(null, {
       message: "No school found for user",
       code: "NO_SCHOOL",
     })
   } catch (error) {
-    logger.error("Failed to get current user school", error, {
+    console.error("Failed to get current user school", error, {
       action: "getCurrentUserSchool",
     })
     return createActionResponse(undefined, error)
@@ -289,7 +288,7 @@ export async function getUserSchools(): Promise<ActionResponse> {
 
     return createActionResponse({ schools, totalCount })
   } catch (error) {
-    logger.error("Failed to get user schools", error, {
+    console.error("Failed to get user schools", error, {
       userId: authContext?.userId,
     })
     return createActionResponse(undefined, error)
@@ -314,12 +313,12 @@ export async function getUserSchools(): Promise<ActionResponse> {
  */
 export async function initializeSchoolSetup(): Promise<ActionResponse> {
   const timestamp = new Date().toISOString()
-  logger.debug("initializeSchoolSetup started", { timestamp })
+  console.log("initializeSchoolSetup started", { timestamp })
 
   try {
-    logger.debug("Getting auth context")
+    console.log("Getting auth context")
     const authContext = await getAuthContextLazy()
-    logger.debug("Auth context received", {
+    console.log("Auth context received", {
       userId: authContext.userId,
       email: authContext.email,
       hasSessionSchoolId: !!authContext.schoolId,
@@ -330,14 +329,14 @@ export async function initializeSchoolSetup(): Promise<ActionResponse> {
     const schoolResult = await ensureUserSchool(authContext.userId)
 
     if (!schoolResult.success) {
-      logger.error("Failed to ensure user school:", schoolResult.error)
+      console.error("Failed to ensure user school:", schoolResult.error)
       return createActionResponse(undefined, {
         message: schoolResult.error || "Failed to initialize school",
         code: "SCHOOL_CREATION_FAILED",
       })
     }
 
-    logger.info("School ensured successfully", {
+    console.log("School ensured successfully", {
       schoolId: schoolResult.schoolId,
       schoolName: schoolResult.school?.name,
       userId: authContext.userId,
@@ -356,7 +355,7 @@ export async function initializeSchoolSetup(): Promise<ActionResponse> {
       _sessionRefreshRequired: true,
     })
   } catch (error) {
-    logger.error("initializeSchoolSetup FAILED:", {
+    console.error("initializeSchoolSetup FAILED:", {
       error: error instanceof Error ? error.message : "Unknown error",
       errorType: error?.constructor?.name,
       failureTimestamp: new Date().toISOString(),
@@ -468,7 +467,7 @@ export async function proceedToTitle(schoolId: string) {
 
     revalidatePath(`/onboarding/${schoolId}`)
   } catch (error) {
-    logger.error("Error proceeding to about-school:", error)
+    console.error("Error proceeding to about-school:", error)
     throw error
   }
 
