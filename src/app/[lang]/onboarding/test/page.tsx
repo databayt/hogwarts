@@ -10,6 +10,7 @@ import {
 // TEST: Import from title/actions.ts to isolate the issue
 import { getSchoolTitle as getTitleFromActions } from "@/components/onboarding/title/actions"
 
+// Force redeploy: v3
 export default function TestPage() {
   const [results, setResults] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
