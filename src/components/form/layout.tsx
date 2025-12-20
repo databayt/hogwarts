@@ -47,8 +47,9 @@ export function FormLayout({
   const childArray = React.Children.toArray(children)
 
   // Use flex-basis for proper edge-to-edge layout with justify-between
-  const leftBasis = split === "30/70" ? "lg:basis-[35%]" : "lg:basis-[45%]"
-  const rightBasis = split === "30/70" ? "lg:basis-[60%]" : "lg:basis-[45%]"
+  // 48% + 48% = 96% leaves minimal gap (4%) for better alignment with footer
+  const leftBasis = split === "30/70" ? "lg:basis-[35%]" : "lg:basis-[48%]"
+  const rightBasis = split === "30/70" ? "lg:basis-[60%]" : "lg:basis-[48%]"
 
   return (
     <div
