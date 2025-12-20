@@ -13,19 +13,17 @@ interface AdmissionCTAProps {
   dictionary?: Dictionary
 }
 
-export function AdmissionCTA({ lang }: AdmissionCTAProps) {
-  const isRTL = lang === "ar"
-
+export function AdmissionCTA({ lang, dictionary }: AdmissionCTAProps) {
   return (
     <SectionContainer className="bg-primary text-primary-foreground">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-heading mb-6 text-3xl font-bold md:text-4xl">
-          {isRTL ? "مستعد لبدء رحلتك؟" : "Ready to Begin Your Journey?"}
+          {dictionary?.marketing?.site?.admission?.cta?.title ||
+            "Ready to Begin Your Journey?"}
         </h2>
         <p className="mb-8 text-lg opacity-90 md:text-xl">
-          {isRTL
-            ? "انضم إلى آلاف الطلاب الذين اكتشفوا إمكاناتهم معنا"
-            : "Join thousands of students who have discovered their potential with us"}
+          {dictionary?.marketing?.site?.admission?.cta?.subtitle ||
+            "Join thousands of students who have discovered their potential with us"}
         </p>
 
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
@@ -36,7 +34,8 @@ export function AdmissionCTA({ lang }: AdmissionCTAProps) {
               "bg-background text-foreground hover:bg-background/90 gap-2"
             )}
           >
-            {isRTL ? "ابدأ التقديم" : "Start Application"}
+            {dictionary?.marketing?.site?.admission?.cta?.startApplication ||
+              "Start Application"}
             <AnthropicIcons.ArrowRight className="h-4 w-4" />
           </Link>
           <Link
@@ -47,7 +46,8 @@ export function AdmissionCTA({ lang }: AdmissionCTAProps) {
             )}
           >
             <AnthropicIcons.Chat className="h-4 w-4" />
-            {isRTL ? "تواصل معنا" : "Contact Admissions"}
+            {dictionary?.marketing?.site?.admission?.cta?.contactAdmissions ||
+              "Contact Admissions"}
           </Link>
         </div>
       </div>

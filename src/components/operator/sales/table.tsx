@@ -251,16 +251,25 @@ export function OperatorSalesTable({
               }
             />
           ) : (
-            <GridContainer columns={4}>
-              {data.map((lead) => (
-                <GridCard
-                  key={lead.id}
-                  icon="/anthropic/users.svg"
-                  title={lead.name}
-                  description={lead.company || lead.email || undefined}
-                  onClick={() => handleEdit(lead.id)}
-                />
-              ))}
+            <GridContainer columns={4} className="mt-4">
+              {data.map((lead) => {
+                const initials = lead.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase()
+                return (
+                  <GridCard
+                    key={lead.id}
+                    avatar={{ fallback: initials }}
+                    title={lead.name}
+                    description={lead.company || lead.email || undefined}
+                    subtitle={lead.status}
+                    onClick={() => handleEdit(lead.id)}
+                  />
+                )
+              })}
             </GridContainer>
           )}
           {hasMore && !isLoading && (

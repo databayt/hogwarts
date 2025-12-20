@@ -60,14 +60,9 @@ export function CourseCard({ course, lang }: CourseCardProps) {
       </div>
 
       {/* Content */}
-      <div className={cn("space-y-1.5 px-2 pt-3", isRTL && "text-right")}>
+      <div className="space-y-1.5 px-2 pt-3 text-start">
         {/* Provider */}
-        <div
-          className={cn(
-            "flex items-center gap-1.5",
-            isRTL && "flex-row-reverse"
-          )}
-        >
+        <div className="flex items-center gap-1.5 rtl:flex-row-reverse">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={providerLogo}
@@ -86,9 +81,7 @@ export function CourseCard({ course, lang }: CourseCardProps) {
         <p className="text-muted-foreground text-xs">{courseType}</p>
 
         {/* Rating */}
-        <div
-          className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}
-        >
+        <div className="flex items-center gap-1 rtl:flex-row-reverse">
           <Star className="text-foreground h-3 w-3 fill-current" />
           <span className="text-xs font-medium">4.8</span>
         </div>

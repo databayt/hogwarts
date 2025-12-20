@@ -9,74 +9,51 @@ interface AcademicCurriculumProps {
   dictionary?: Dictionary
 }
 
-export function AcademicCurriculum({ lang }: AcademicCurriculumProps) {
-  const isRTL = lang === "ar"
+export function AcademicCurriculum({ dictionary }: AcademicCurriculumProps) {
+  const curriculum = dictionary?.marketing?.site?.academic?.curriculum
 
   const levels = [
     {
-      title: isRTL ? "السنوات المبكرة (K-5)" : "Early Years (K-5)",
-      description: isRTL
-        ? "بناء الأساس من خلال التعلم العملي وتطوير القراءة والكتابة والمهارات الاجتماعية من خلال التعليم القائم على اللعب."
-        : "Foundation building with hands-on learning, literacy development, and social skills through play-based education.",
-      features: isRTL
-        ? [
-            "الصوتيات والقراءة",
-            "أسس الرياضيات",
-            "استكشاف العلوم",
-            "الدراسات الاجتماعية",
-            "الفنون والموسيقى",
-          ]
-        : [
-            "Phonics & Reading",
-            "Math Foundations",
-            "Science Exploration",
-            "Social Studies",
-            "Arts & Music",
-          ],
+      title: curriculum?.earlyYears?.title || "Early Years (K-5)",
+      description:
+        curriculum?.earlyYears?.description ||
+        "Foundation building with hands-on learning, literacy development, and social skills through play-based education.",
+      features: [
+        curriculum?.earlyYears?.features?.phonics || "Phonics & Reading",
+        curriculum?.earlyYears?.features?.math || "Math Foundations",
+        curriculum?.earlyYears?.features?.science || "Science Exploration",
+        curriculum?.earlyYears?.features?.social || "Social Studies",
+        curriculum?.earlyYears?.features?.arts || "Arts & Music",
+      ],
       icon: AnthropicIcons.Sparkle,
     },
     {
-      title: isRTL ? "المرحلة المتوسطة (6-8)" : "Middle School (6-8)",
-      description: isRTL
-        ? "سنوات انتقالية تركز على التفكير النقدي والتعلم المستقل والإعداد للدراسات المتقدمة."
-        : "Transitional years focusing on critical thinking, independent learning, and preparation for advanced studies.",
-      features: isRTL
-        ? [
-            "الرياضيات المتقدمة",
-            "تحليل الأدب",
-            "المنهج العلمي",
-            "تاريخ العالم",
-            "مهارات التكنولوجيا",
-          ]
-        : [
-            "Advanced Mathematics",
-            "Literature Analysis",
-            "Scientific Method",
-            "World History",
-            "Technology Skills",
-          ],
+      title: curriculum?.middleSchool?.title || "Middle School (6-8)",
+      description:
+        curriculum?.middleSchool?.description ||
+        "Transitional years focusing on critical thinking, independent learning, and preparation for advanced studies.",
+      features: [
+        curriculum?.middleSchool?.features?.math || "Advanced Mathematics",
+        curriculum?.middleSchool?.features?.literature || "Literature Analysis",
+        curriculum?.middleSchool?.features?.science || "Scientific Method",
+        curriculum?.middleSchool?.features?.history || "World History",
+        curriculum?.middleSchool?.features?.technology || "Technology Skills",
+      ],
       icon: AnthropicIcons.Book,
     },
     {
-      title: isRTL ? "المرحلة الثانوية (9-12)" : "High School (9-12)",
-      description: isRTL
-        ? "منهج إعدادي للكلية مع مسارات متخصصة ودورات AP وفرص استكشاف المهنة."
-        : "College preparatory curriculum with specialized tracks, AP courses, and career exploration opportunities.",
-      features: isRTL
-        ? [
-            "دورات التحضير للجامعة",
-            "فصول AP والشرف",
-            "المسارات المهنية",
-            "مشاريع البحث",
-            "تطوير القيادة",
-          ]
-        : [
-            "College Prep Courses",
-            "AP & Honors Classes",
-            "Career Pathways",
-            "Research Projects",
-            "Leadership Development",
-          ],
+      title: curriculum?.highSchool?.title || "High School (9-12)",
+      description:
+        curriculum?.highSchool?.description ||
+        "College preparatory curriculum with specialized tracks, AP courses, and career exploration opportunities.",
+      features: [
+        curriculum?.highSchool?.features?.prep || "College Prep Courses",
+        curriculum?.highSchool?.features?.honors || "AP & Honors Classes",
+        curriculum?.highSchool?.features?.career || "Career Pathways",
+        curriculum?.highSchool?.features?.research || "Research Projects",
+        curriculum?.highSchool?.features?.leadership ||
+          "Leadership Development",
+      ],
       icon: AnthropicIcons.Archive,
     },
   ]
@@ -85,12 +62,11 @@ export function AcademicCurriculum({ lang }: AcademicCurriculumProps) {
     <SectionContainer id="curriculum">
       <div className="mb-16">
         <h2 className="font-heading mb-4 text-3xl font-bold md:text-4xl">
-          {isRTL ? "نظرة عامة على المنهج" : "Curriculum Overview"}
+          {curriculum?.title || "Curriculum Overview"}
         </h2>
         <p className="text-muted-foreground max-w-3xl text-lg">
-          {isRTL
-            ? "منهجنا التدريجي مصمم لبناء المعرفة بشكل منهجي مع تعزيز التفكير النقدي والإبداع في كل مرحلة."
-            : "Our progressive curriculum is designed to build knowledge systematically while fostering critical thinking and creativity at every stage."}
+          {curriculum?.subtitle ||
+            "Our progressive curriculum is designed to build knowledge systematically while fostering critical thinking and creativity at every stage."}
         </p>
       </div>
 

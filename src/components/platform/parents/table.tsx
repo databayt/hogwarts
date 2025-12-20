@@ -273,16 +273,27 @@ function ParentsTableInner({
               }
             />
           ) : (
-            <GridContainer columns={4}>
-              {data.map((parent) => (
-                <GridCard
-                  key={parent.id}
-                  icon="/anthropic/users.svg"
-                  title={parent.name}
-                  description={parent.emailAddress}
-                  onClick={() => handleView(parent)}
-                />
-              ))}
+            <GridContainer columns={4} className="mt-4">
+              {data.map((parent) => {
+                const initials = parent.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase()
+                return (
+                  <GridCard
+                    key={parent.id}
+                    avatar={{ fallback: initials }}
+                    title={parent.name}
+                    description={parent.emailAddress}
+                    subtitle={
+                      parent.status === "active" ? t.active : t.inactive
+                    }
+                    onClick={() => handleView(parent)}
+                  />
+                )
+              })}
             </GridContainer>
           )}
 

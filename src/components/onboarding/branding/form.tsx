@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateSchoolBranding } from "./actions"
 import { brandingSchema, type BrandingFormData } from "./validation"
@@ -31,6 +32,7 @@ export function BrandingForm({
   initialData,
   onSuccess,
 }: BrandingFormProps) {
+  const { dictionary } = useDictionary()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string>("")
 
@@ -81,11 +83,17 @@ export function BrandingForm({
           name="brandName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>School Brand Name</FormLabel>
+              <FormLabel>
+                {dictionary?.marketing?.onboarding?.branding?.brandName ||
+                  "School Brand Name"}
+              </FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder="e.g., Al-Azhar Academy"
+                  placeholder={
+                    dictionary?.marketing?.onboarding?.branding
+                      ?.brandNamePlaceholder || "e.g., Al-Azhar Academy"
+                  }
                   disabled={isPending}
                 />
               </FormControl>
@@ -99,11 +107,17 @@ export function BrandingForm({
           name="tagline"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tagline (Optional)</FormLabel>
+              <FormLabel>
+                {dictionary?.marketing?.onboarding?.branding?.tagline ||
+                  "Tagline (Optional)"}
+              </FormLabel>
               <FormControl>
                 <Textarea
                   {...field}
-                  placeholder="e.g., Excellence in Education"
+                  placeholder={
+                    dictionary?.marketing?.onboarding?.branding
+                      ?.taglinePlaceholder || "e.g., Excellence in Education"
+                  }
                   disabled={isPending}
                   rows={2}
                 />
@@ -118,13 +132,19 @@ export function BrandingForm({
           name="logoUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>School Logo (Optional)</FormLabel>
+              <FormLabel>
+                {dictionary?.marketing?.onboarding?.branding?.logo ||
+                  "School Logo (Optional)"}
+              </FormLabel>
               <FormControl>
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <Input
                       {...field}
-                      placeholder="https://example.com/logo.png"
+                      placeholder={
+                        dictionary?.marketing?.onboarding?.branding
+                          ?.logoPlaceholder || "https://example.com/logo.png"
+                      }
                       disabled={isPending}
                     />
                     <label htmlFor="logo-upload">
@@ -201,7 +221,10 @@ export function BrandingForm({
             name="primaryColor"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Primary Color</FormLabel>
+                <FormLabel>
+                  {dictionary?.marketing?.onboarding?.branding?.primaryColor ||
+                    "Primary Color"}
+                </FormLabel>
                 <FormControl>
                   <div className="flex gap-2">
                     <Input
@@ -227,7 +250,10 @@ export function BrandingForm({
             name="secondaryColor"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Secondary Color</FormLabel>
+                <FormLabel>
+                  {dictionary?.marketing?.onboarding?.branding
+                    ?.secondaryColor || "Secondary Color"}
+                </FormLabel>
                 <FormControl>
                   <div className="flex gap-2">
                     <Input
@@ -250,7 +276,11 @@ export function BrandingForm({
         </div>
 
         <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? "Updating..." : "Update Branding"}
+          {isPending
+            ? dictionary?.marketing?.onboarding?.branding?.updating ||
+              "Updating..."
+            : dictionary?.marketing?.onboarding?.branding?.updateBranding ||
+              "Update Branding"}
         </Button>
       </form>
     </Form>

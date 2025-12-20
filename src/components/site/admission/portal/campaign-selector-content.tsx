@@ -91,9 +91,7 @@ export default function CampaignSelectorContent({
               <div className="bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10">
                 <GraduationCap className="text-foreground h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <div
-                className={`min-w-0 flex-1 ${isRTL ? "text-right" : "text-left"}`}
-              >
+              <div className="min-w-0 flex-1 text-start">
                 <p className="text-sm font-medium">
                   {lang === "ar" ? "ابدأ من الصفر" : "Start from scratch"}
                 </p>
@@ -122,9 +120,7 @@ export default function CampaignSelectorContent({
               <div className="bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10">
                 <BookOpen className="text-foreground h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <div
-                className={`min-w-0 flex-1 ${isRTL ? "text-right" : "text-left"}`}
-              >
+              <div className="min-w-0 flex-1 text-start">
                 <p className="text-sm font-medium">
                   {lang === "ar"
                     ? "استيراد من ملف شخصي"

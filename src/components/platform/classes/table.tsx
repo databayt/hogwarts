@@ -258,7 +258,7 @@ function ClassesTableInner({
               }
             />
           ) : (
-            <GridContainer columns={4}>
+            <GridContainer columns={4} className="mt-4">
               {data.map((classItem) => {
                 const displayName = getLocalizedClassName(classItem, lang)
                 const displaySubject = getLocalizedSubjectName(classItem, lang)
@@ -269,6 +269,7 @@ function ClassesTableInner({
                     icon="/anthropic/book-open.svg"
                     title={displayName}
                     description={displaySubject}
+                    subtitle={`${classItem.enrolledStudents} ${lang === "ar" ? "طالب" : "students"}`}
                     onClick={() => handleView(classItem.id)}
                   />
                 )

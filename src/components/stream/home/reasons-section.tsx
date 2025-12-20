@@ -29,10 +29,8 @@ export function ReasonsSection({
   dictionary,
   lang,
 }: Omit<StreamContentProps, "schoolId">) {
-  const isRTL = lang === "ar"
-
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 sm:py-20 md:py-24">
       {/* Title */}
       <div className="mb-12 text-center md:mb-16">
         <h2 className="text-2xl font-bold md:text-3xl lg:text-4xl">
@@ -41,14 +39,11 @@ export function ReasonsSection({
       </div>
 
       {/* Reasons Grid */}
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-12 lg:gap-16">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 md:gap-12 lg:gap-16">
         {reasons.map((reason, index) => (
           <div
             key={index}
-            className={cn(
-              "flex flex-col items-center text-center",
-              isRTL && "md:items-end md:text-right"
-            )}
+            className="flex flex-col items-center text-center rtl:md:items-end rtl:md:text-end"
           >
             {/* Icon Image */}
             <div className="mb-6">

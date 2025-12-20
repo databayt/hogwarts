@@ -263,13 +263,9 @@ export function FormFooter({
       </div>
 
       {/* Controls */}
-      <div
-        className={`flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-      >
+      <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20 rtl:flex-row-reverse">
         {/* Left side - Logo, Help, Save */}
-        <div
-          className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-        >
+        <div className="flex items-center gap-1 rtl:flex-row-reverse">
           {showLogo && (
             <div className="relative flex h-8 w-8 items-center justify-center">
               <div className="relative h-6 w-6">
@@ -314,9 +310,7 @@ export function FormFooter({
           {showSaveStatus && (
             <>
               {lastSaved && !isSaving && (
-                <div
-                  className={`text-muted-foreground hidden items-center gap-1 text-xs sm:flex ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-                >
+                <div className="text-muted-foreground hidden items-center gap-1 text-xs sm:flex rtl:flex-row-reverse">
                   <Check className="h-3 w-3 text-green-500" />
                   <span>
                     {(
@@ -336,9 +330,7 @@ export function FormFooter({
         </div>
 
         {/* Right side - Back and Next buttons */}
-        <div
-          className={`flex items-center gap-2 sm:gap-4 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-        >
+        <div className="flex items-center gap-2 sm:gap-4 rtl:flex-row-reverse">
           <Button
             variant="ghost"
             onClick={handleBack}

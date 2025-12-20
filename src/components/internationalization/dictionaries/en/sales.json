@@ -21,6 +21,11 @@
   "noLeadsFound": "No leads found",
   "confirmDelete": "Are you sure you want to delete this lead?",
   "leadScore": "Lead Score",
+  "exportCSV": "Export CSV",
+  "exporting": "Exporting...",
+  "deleteConfirm": "Delete {name}?",
+  "deleteFailed": "Failed to delete lead",
+  "deleteFailedGeneric": "Failed to delete",
   "form": {
     "title": "Lead Details",
     "createTitle": "Create Lead",

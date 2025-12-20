@@ -105,9 +105,7 @@ export function ApplicationCard({
                 {dict.draft || (isRTL ? "مسودة" : "Draft")}
               </Badge>
             </div>
-            <div
-              className={`mt-0.5 flex flex-col sm:flex-row sm:items-center sm:gap-2 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-            >
+            <div className="mt-0.5 flex flex-col sm:flex-row sm:items-center sm:gap-2 rtl:flex-row-reverse">
               <p className="text-muted-foreground flex items-center gap-1 text-xs">
                 {application.studentName && (
                   <>

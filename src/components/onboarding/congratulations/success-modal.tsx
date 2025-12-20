@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Modal } from "@/components/atom/modal"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface SuccessModalProps {
   schoolData: {
@@ -38,6 +39,7 @@ export default function SuccessModal({
   setShowModal,
   onGoToDashboard,
 }: SuccessModalProps) {
+  const { dictionary } = useDictionary()
   const [step, setStep] = useState<"celebration" | "nextSteps">("celebration")
 
   useEffect(() => {
@@ -93,29 +95,42 @@ export default function SuccessModal({
     {
       icon: Users,
       color: "blue",
-      title: "Invite Your Team",
+      title:
+        dictionary?.marketing?.onboarding?.success?.inviteTeam ||
+        "Invite Your Team",
       description:
-        "Add teachers, staff, and administrators to start collaborating",
+        dictionary?.marketing?.onboarding?.success?.inviteTeamDesc ||
+        "Add teachers and staff to your school",
     },
     {
       icon: GraduationCap,
       color: "purple",
-      title: "Add Students",
+      title:
+        dictionary?.marketing?.onboarding?.success?.addStudents ||
+        "Add Students",
       description:
-        "Import student data or add them individually to get started",
+        dictionary?.marketing?.onboarding?.success?.addStudentsDesc ||
+        "Import or manually add your students",
     },
     {
       icon: Calendar,
       color: "green",
-      title: "Set Up Classes",
+      title:
+        dictionary?.marketing?.onboarding?.success?.setUpClasses ||
+        "Set Up Classes",
       description:
-        "Create class schedules, assign teachers, and organize subjects",
+        dictionary?.marketing?.onboarding?.success?.setUpClassesDesc ||
+        "Create classes and assign teachers",
     },
     {
       icon: Settings2,
       color: "orange",
-      title: "Configure Settings",
-      description: "Customize your school preferences, policies, and branding",
+      title:
+        dictionary?.marketing?.onboarding?.success?.configureSettings ||
+        "Configure Settings",
+      description:
+        dictionary?.marketing?.onboarding?.success?.configureSettingsDesc ||
+        "Customize your school settings",
     },
   ]
 
@@ -158,7 +173,8 @@ export default function SuccessModal({
                 transition={{ delay: 0.3 }}
               >
                 <h1 className="from-primary to-secondary mb-4 bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent md:text-7xl">
-                  Congratulations!
+                  {dictionary?.marketing?.onboarding?.success
+                    ?.congratulations || "Congratulations!"}
                 </h1>
                 <div className="mb-6 flex items-center justify-center gap-2">
                   <Sparkles className="text-chart-4 h-6 w-6" />
@@ -169,7 +185,8 @@ export default function SuccessModal({
                   {schoolData.name}
                 </h2>
                 <p className="lead text-muted-foreground md:text-xl">
-                  Your school is now live and ready to transform education!
+                  {dictionary?.marketing?.onboarding?.success?.schoolLive ||
+                    "Your school is now live and ready to transform education!"}
                 </p>
               </motion.div>
 
@@ -200,7 +217,8 @@ export default function SuccessModal({
                   <Zap className="h-10 w-10 text-white" />
                 </div>
                 <h2 className="mb-4 text-4xl font-bold md:text-5xl">
-                  Let's Get Started!
+                  {dictionary?.marketing?.onboarding?.success?.letsGetStarted ||
+                    "Let's Get Started!"}
                 </h2>
                 <p className="lead text-muted-foreground">
                   Your next steps to set up {schoolData.name}
@@ -263,14 +281,16 @@ export default function SuccessModal({
                   onClick={() => setShowModal(false)}
                   className="px-8 py-6"
                 >
-                  Continue Setup Later
+                  {dictionary?.marketing?.onboarding?.success?.continueLater ||
+                    "Continue Setup Later"}
                 </Button>
                 <Button
                   size="lg"
                   onClick={onGoToDashboard}
                   className="from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 gap-2 bg-gradient-to-r px-8 py-6"
                 >
-                  Go to School Dashboard
+                  {dictionary?.marketing?.onboarding?.success?.goToDashboard ||
+                    "Go to School Dashboard"}
                   <ExternalLink className="h-5 w-5" />
                 </Button>
               </motion.div>

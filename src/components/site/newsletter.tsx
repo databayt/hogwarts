@@ -3,12 +3,17 @@
 import { useState } from "react"
 import Image from "next/image"
 
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+
 import SectionHeading from "../atom/section-heading"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 
 export default function Newsletter() {
   const [email, setEmail] = useState("")
+  const { dictionary } = useDictionary()
+
+  const newsletter = dictionary?.marketing?.site?.newsletter
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,8 +27,8 @@ export default function Newsletter() {
   return (
     <section className="py-16 md:py-24">
       <SectionHeading
-        title="Newsletter"
-        description="Stay Updated with Hogwarts"
+        title={newsletter?.title || "Newsletter"}
+        description={newsletter?.description || "Stay Updated with Hogwarts"}
       />
 
       <div className="mx-auto max-w-xs py-6">
@@ -39,14 +44,14 @@ export default function Newsletter() {
         <div className="flex items-center gap-2">
           <Input
             type="email"
-            placeholder="Email Address"
+            placeholder={newsletter?.emailPlaceholder || "Email Address"}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             className="flex-1"
           />
           <Button type="submit" onClick={handleSubmit}>
-            Subscribe
+            {newsletter?.subscribe || "Subscribe"}
           </Button>
         </div>
       </div>

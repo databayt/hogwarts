@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/form"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ImportCard } from "./card"
 import { IMPORT_TYPES, SUPPORTED_FORMATS } from "./config"
@@ -49,6 +50,7 @@ export function ImportForm({
   onBack,
   isSubmitting = false,
 }: ImportFormProps) {
+  const { dictionary } = useDictionary()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const form = useForm<ImportFormData>({
@@ -88,9 +90,13 @@ export function ImportForm({
           {/* Import Method Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Choose Import Method</CardTitle>
+              <CardTitle>
+                {dictionary?.marketing?.onboarding?.import?.chooseMethod ||
+                  "Choose Import Method"}
+              </CardTitle>
               <CardDescription>
-                How would you like to add your school data?
+                {dictionary?.marketing?.onboarding?.import?.howToAdd ||
+                  "How would you like to add your school data?"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -140,9 +146,13 @@ export function ImportForm({
           {selectedImportType === "csv" && (
             <Card>
               <CardHeader>
-                <CardTitle>Upload File</CardTitle>
+                <CardTitle>
+                  {dictionary?.marketing?.onboarding?.import?.uploadFile ||
+                    "Upload File"}
+                </CardTitle>
                 <CardDescription>
-                  Select your {selectedImportType.toUpperCase()} file to import
+                  {dictionary?.marketing?.onboarding?.import?.selectFile ||
+                    `Select your ${selectedImportType.toUpperCase()} file to import`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -163,15 +173,25 @@ export function ImportForm({
                       <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
                       <p className="text-sm">
                         {selectedFile ? (
-                          <>Selected: {selectedFile.name}</>
+                          <>
+                            {dictionary?.marketing?.onboarding?.import
+                              ?.selectedFile || "Selected"}
+                            : {selectedFile.name}
+                          </>
                         ) : (
-                          <>Click to upload or drag and drop</>
+                          <>
+                            {dictionary?.marketing?.onboarding?.import
+                              ?.clickToUpload ||
+                              "Click to upload or drag and drop"}
+                          </>
                         )}
                       </p>
                       <p className="text-muted-foreground mt-1 text-xs">
                         {selectedImportType === "csv"
-                          ? "CSV, Excel (.csv, .xlsx, .xls)"
-                          : "Select import type"}
+                          ? dictionary?.marketing?.onboarding?.import
+                              ?.fileTypes || "CSV, Excel (.csv, .xlsx, .xls)"
+                          : dictionary?.marketing?.onboarding?.import
+                              ?.selectImportType || "Select import type"}
                       </p>
                     </Label>
                   </div>
@@ -194,16 +214,34 @@ export function ImportForm({
           {selectedImportType === "manual" && (
             <Card>
               <CardHeader>
-                <CardTitle>Manual Entry</CardTitle>
+                <CardTitle>
+                  {dictionary?.marketing?.onboarding?.import?.manualEntry ||
+                    "Manual Entry"}
+                </CardTitle>
                 <CardDescription>
-                  You can add data manually after completing the setup
+                  {dictionary?.marketing?.onboarding?.import?.manualEntryDesc ||
+                    "You can add data manually after completing the setup"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-muted-foreground space-y-2 text-sm">
-                  <p>• Add students and teachers one by one</p>
-                  <p>• Import data later from your dashboard</p>
-                  <p>• Start with a small pilot group</p>
+                  <p>
+                    •{" "}
+                    {dictionary?.marketing?.onboarding?.import
+                      ?.addStudentsLater ||
+                      "Add students and teachers one by one"}
+                  </p>
+                  <p>
+                    •{" "}
+                    {dictionary?.marketing?.onboarding?.import
+                      ?.createClassesManually ||
+                      "Import data later from your dashboard"}
+                  </p>
+                  <p>
+                    •{" "}
+                    {dictionary?.marketing?.onboarding?.import?.setUpSchedule ||
+                      "Start with a small pilot group"}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -219,7 +257,7 @@ export function ImportForm({
                   onClick={onBack}
                   disabled={isSubmitting}
                 >
-                  Back
+                  {dictionary?.marketing?.onboarding?.import?.back || "Back"}
                 </Button>
               )}
               {onSkip && (
@@ -229,7 +267,8 @@ export function ImportForm({
                   onClick={onSkip}
                   disabled={isSubmitting}
                 >
-                  Skip for now
+                  {dictionary?.marketing?.onboarding?.import?.skip ||
+                    "Skip for now"}
                 </Button>
               )}
             </div>
@@ -243,9 +282,12 @@ export function ImportForm({
               {isSubmitting ? (
                 <>
                   <div className="me-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
-                  Processing...
+                  {dictionary?.marketing?.onboarding?.standOut?.continuing ||
+                    "Continuing"}
+                  ...
                 </>
               ) : (
+                dictionary?.marketing?.onboarding?.import?.continue ||
                 "Continue"
               )}
             </Button>

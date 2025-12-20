@@ -335,15 +335,17 @@ function AnnouncementsTableInner({
               }
             />
           ) : (
-            <GridContainer columns={4}>
+            <GridContainer columns={4} className="mt-4">
               {data.map((announcement) => {
                 const displayTitle = getLocalizedTitle(announcement, lang)
+                const scopeBadge = getScopeBadge(announcement.scope)
                 return (
                   <GridCard
                     key={announcement.id}
                     icon="/anthropic/news.svg"
                     title={displayTitle}
                     description={announcement.published ? t.published : t.draft}
+                    subtitle={scopeBadge.label}
                     onClick={() => handleView(announcement.id)}
                   />
                 )

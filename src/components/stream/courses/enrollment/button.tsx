@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { tryCatch } from "@/hooks/try-catch"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { enrollInCourseAction } from "./actions"
 
@@ -16,6 +17,7 @@ export function EnrollmentButton({
   courseId: string
   lang: string
 }) {
+  const { dictionary } = useDictionary()
   const [pending, startTransition] = useTransition()
 
   function onSubmit() {
@@ -33,8 +35,6 @@ export function EnrollmentButton({
     })
   }
 
-  const isRTL = lang === "ar"
-
   return (
     <Button
       onClick={onSubmit}
@@ -48,12 +48,11 @@ export function EnrollmentButton({
       {pending ? (
         <>
           <Loader2 className="size-4 animate-spin" />
-          {isRTL ? "جاري التحميل..." : "Loading..."}
+          {dictionary?.stream?.enrollmentButton?.loading ?? "Loading..."}
         </>
-      ) : isRTL ? (
-        "التسجيل في الدورة"
       ) : (
-        "Enroll in Course"
+        (dictionary?.stream?.enrollmentButton?.enrollInCourse ??
+        "Enroll in Course")
       )}
     </Button>
   )

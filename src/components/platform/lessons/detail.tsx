@@ -60,31 +60,7 @@ export function LessonDetailContent({
   const router = useRouter()
   const isRTL = lang === "ar"
 
-  const t = {
-    back: isRTL ? "رجوع" : "Back",
-    details: isRTL ? "تفاصيل الدرس" : "Lesson Details",
-    overview: isRTL ? "نظرة عامة" : "Overview",
-    materials: isRTL ? "المواد" : "Materials",
-    description: isRTL ? "الوصف" : "Description",
-    date: isRTL ? "التاريخ" : "Date",
-    time: isRTL ? "الوقت" : "Time",
-    status: isRTL ? "الحالة" : "Status",
-    objectives: isRTL ? "الأهداف" : "Objectives",
-    materialsLabel: isRTL ? "المواد التعليمية" : "Learning Materials",
-    activities: isRTL ? "الأنشطة" : "Activities",
-    assessment: isRTL ? "التقييم" : "Assessment",
-    notes: isRTL ? "ملاحظات" : "Notes",
-    createdAt: isRTL ? "تاريخ الإنشاء" : "Created",
-    updatedAt: isRTL ? "آخر تحديث" : "Last Updated",
-    errorTitle: isRTL ? "خطأ" : "Error",
-    notFound: isRTL ? "الدرس غير موجود" : "Lesson not found",
-    noDescription: isRTL ? "لا يوجد وصف" : "No description",
-    noObjectives: isRTL ? "لا توجد أهداف" : "No objectives defined",
-    noMaterials: isRTL ? "لا توجد مواد" : "No materials defined",
-    noActivities: isRTL ? "لا توجد أنشطة" : "No activities defined",
-    noAssessment: isRTL ? "لا يوجد تقييم" : "No assessment defined",
-    noNotes: isRTL ? "لا توجد ملاحظات" : "No notes",
-  }
+  const t = dictionary?.school?.lessons?.detail || {}
 
   // Get status badge variant
   const getStatusVariant = (status: string) => {
@@ -107,12 +83,14 @@ export function LessonDetailContent({
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t.back}
+          {t.back || "Back"}
         </Button>
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
-          <AlertTitle>{t.errorTitle}</AlertTitle>
-          <AlertDescription>{error || t.notFound}</AlertDescription>
+          <AlertTitle>{t.errorTitle || "Error"}</AlertTitle>
+          <AlertDescription>
+            {error || t.notFound || "Lesson not found"}
+          </AlertDescription>
         </Alert>
       </div>
     )
@@ -146,8 +124,10 @@ export function LessonDetailContent({
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">{t.overview}</TabsTrigger>
-          <TabsTrigger value="materials">{t.materials}</TabsTrigger>
+          <TabsTrigger value="overview">{t.overview || "Overview"}</TabsTrigger>
+          <TabsTrigger value="materials">
+            {t.materials || "Materials"}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -156,7 +136,7 @@ export function LessonDetailContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                {t.description}
+                {t.description || "Description"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -165,7 +145,7 @@ export function LessonDetailContent({
                   <p className="whitespace-pre-wrap">{data.description}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
-                    {t.noDescription}
+                    {t.noDescription || "No description"}
                   </p>
                 )}
               </div>
@@ -177,7 +157,9 @@ export function LessonDetailContent({
             {/* Date Card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t.date}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t.date || "Date"}
+                </CardTitle>
                 <Calendar className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
@@ -192,7 +174,9 @@ export function LessonDetailContent({
             {/* Time Card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t.time}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t.time || "Time"}
+                </CardTitle>
                 <Clock className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
@@ -206,7 +190,7 @@ export function LessonDetailContent({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  {t.createdAt}
+                  {t.createdAt || "Created"}
                 </CardTitle>
                 <Calendar className="text-muted-foreground h-4 w-4" />
               </CardHeader>
@@ -223,7 +207,7 @@ export function LessonDetailContent({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  {t.updatedAt}
+                  {t.updatedAt || "Last Updated"}
                 </CardTitle>
                 <Calendar className="text-muted-foreground h-4 w-4" />
               </CardHeader>
@@ -242,7 +226,7 @@ export function LessonDetailContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5" />
-                {t.objectives}
+                {t.objectives || "Objectives"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -251,7 +235,7 @@ export function LessonDetailContent({
                   <p className="whitespace-pre-wrap">{data.objectives}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
-                    {t.noObjectives}
+                    {t.noObjectives || "No objectives defined"}
                   </p>
                 )}
               </div>
@@ -264,7 +248,7 @@ export function LessonDetailContent({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <StickyNote className="h-5 w-5" />
-                  {t.notes}
+                  {t.notes || "Notes"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -282,7 +266,7 @@ export function LessonDetailContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                {t.materialsLabel}
+                {t.materialsLabel || "Learning Materials"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -291,7 +275,7 @@ export function LessonDetailContent({
                   <p className="whitespace-pre-wrap">{data.materials}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
-                    {t.noMaterials}
+                    {t.noMaterials || "No materials defined"}
                   </p>
                 )}
               </div>
@@ -303,7 +287,7 @@ export function LessonDetailContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
-                {t.activities}
+                {t.activities || "Activities"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -312,7 +296,7 @@ export function LessonDetailContent({
                   <p className="whitespace-pre-wrap">{data.activities}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
-                    {t.noActivities}
+                    {t.noActivities || "No activities defined"}
                   </p>
                 )}
               </div>
@@ -324,7 +308,7 @@ export function LessonDetailContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardCheck className="h-5 w-5" />
-                {t.assessment}
+                {t.assessment || "Assessment"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -333,7 +317,7 @@ export function LessonDetailContent({
                   <p className="whitespace-pre-wrap">{data.assessment}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
-                    {t.noAssessment}
+                    {t.noAssessment || "No assessment defined"}
                   </p>
                 )}
               </div>

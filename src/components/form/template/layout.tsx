@@ -61,7 +61,7 @@ export function FormLayout({
   return (
     <div
       className={cn(
-        "flex w-full flex-col lg:flex-row lg:justify-center",
+        "flex w-full flex-col lg:flex-row lg:justify-between",
         gapClasses[gap],
         alignClasses[align],
         className

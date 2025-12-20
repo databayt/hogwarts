@@ -363,18 +363,29 @@ function StudentsTableInner({
               }
             />
           ) : (
-            <GridContainer columns={4}>
-              {data.map((student) => (
-                <GridCard
-                  key={student.id}
-                  icon="/anthropic/users.svg"
-                  title={student.name}
-                  description={
-                    student.className !== "-" ? student.className : undefined
-                  }
-                  onClick={() => handleView(student)}
-                />
-              ))}
+            <GridContainer columns={4} className="mt-4">
+              {data.map((student) => {
+                const initials = student.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase()
+                return (
+                  <GridCard
+                    key={student.id}
+                    avatar={{ fallback: initials }}
+                    title={student.name}
+                    description={
+                      student.className !== "-" ? student.className : undefined
+                    }
+                    subtitle={
+                      student.status === "active" ? t.active : t.inactive
+                    }
+                    onClick={() => handleView(student)}
+                  />
+                )
+              })}
             </GridContainer>
           )}
 

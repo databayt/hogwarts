@@ -24,6 +24,7 @@ async function getCourses(schoolId: string) {
     where: { schoolId },
     orderBy: { createdAt: "desc" },
     include: {
+      category: true,
       chapters: {
         include: {
           lessons: true,

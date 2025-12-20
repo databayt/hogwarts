@@ -21,11 +21,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface NavItem {
   href: string
-  label: string
-  labelAr: string
+  labelKey: string
   icon: React.ReactNode
   requiresAuth?: boolean
   requiresAdmin?: boolean
@@ -43,8 +43,8 @@ interface Props {
 }
 
 export function StreamHeader({ lang, user }: Props) {
+  const { dictionary } = useDictionary()
   const pathname = usePathname()
-  const isRTL = lang === "ar"
 
   const isAdmin =
     user?.role === "ADMIN" ||
@@ -54,27 +54,23 @@ export function StreamHeader({ lang, user }: Props) {
   const navItems: NavItem[] = [
     {
       href: `/${lang}/stream`,
-      label: "Home",
-      labelAr: "الرئيسية",
+      labelKey: "home",
       icon: <GraduationCap className="size-4" />,
     },
     {
       href: `/${lang}/stream/courses`,
-      label: "Courses",
-      labelAr: "الدورات",
+      labelKey: "courses",
       icon: <BookOpen className="size-4" />,
     },
     {
       href: `/${lang}/stream/dashboard`,
-      label: "Favorite",
-      labelAr: "المفضلة",
+      labelKey: "favorite",
       icon: <Star className="size-4" />,
       requiresAuth: true,
     },
     {
       href: `/${lang}/stream/admin`,
-      label: "Dashboard",
-      labelAr: "لوحة التحكم",
+      labelKey: "dashboard",
       icon: <LayoutDashboard className="size-4" />,
       requiresAuth: true,
       requiresAdmin: true,
@@ -120,7 +116,9 @@ export function StreamHeader({ lang, user }: Props) {
             >
               {item.icon}
               <span className="hidden md:inline-block">
-                {isRTL ? item.labelAr : item.label}
+                {dictionary?.stream?.header?.[
+                  item.labelKey as keyof typeof dictionary.stream.header
+                ] ?? item.labelKey}
               </span>
             </Link>
           ))}
@@ -155,14 +153,14 @@ export function StreamHeader({ lang, user }: Props) {
                 <DropdownMenuItem asChild>
                   <Link href={`/${lang}/stream/dashboard`}>
                     <Star className="mr-2 size-4" />
-                    {isRTL ? "المفضلة" : "Favorite"}
+                    {dictionary?.stream?.header?.favorite ?? "Favorite"}
                   </Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link href={`/${lang}/stream/admin`}>
                       <LayoutDashboard className="mr-2 size-4" />
-                      {isRTL ? "لوحة التحكم" : "Dashboard"}
+                      {dictionary?.stream?.header?.dashboard ?? "Dashboard"}
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -170,7 +168,7 @@ export function StreamHeader({ lang, user }: Props) {
                 <DropdownMenuItem asChild>
                   <Link href={`/${lang}/profile`}>
                     <User className="mr-2 size-4" />
-                    {isRTL ? "الملف الشخصي" : "Profile"}
+                    {dictionary?.stream?.header?.profile ?? "Profile"}
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -182,7 +180,7 @@ export function StreamHeader({ lang, user }: Props) {
             >
               <LogIn className="size-4" />
               <span className="hidden sm:inline-block">
-                {isRTL ? "تسجيل الدخول" : "Sign In"}
+                {dictionary?.stream?.header?.signIn ?? "Sign In"}
               </span>
             </Link>
           )}

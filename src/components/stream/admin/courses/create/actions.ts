@@ -41,6 +41,7 @@ export async function createCourseAction(
     const title = formData.get("title") as string
     const description = formData.get("description") as string | null
     const categoryId = formData.get("categoryId") as string | null
+    const imageUrl = formData.get("imageUrl") as string | null
     const price = formData.get("price")
       ? parseFloat(formData.get("price") as string)
       : null
@@ -96,6 +97,7 @@ export async function createCourseAction(
         title,
         slug,
         description,
+        imageUrl,
         categoryId,
         price,
         userId: session.user.id,

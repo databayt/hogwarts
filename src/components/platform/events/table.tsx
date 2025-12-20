@@ -276,13 +276,14 @@ function EventsTableInner({
               }
             />
           ) : (
-            <GridContainer columns={4}>
+            <GridContainer columns={4} className="mt-4">
               {data.map((event) => (
                 <GridCard
                   key={event.id}
                   icon="/anthropic/category-01.svg"
                   title={event.title}
                   description={new Date(event.eventDate).toLocaleDateString()}
+                  subtitle={event.eventType?.replace("_", " ")}
                   onClick={() => handleView(event.id)}
                 />
               ))}

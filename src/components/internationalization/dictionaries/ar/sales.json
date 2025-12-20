@@ -21,6 +21,11 @@
   "noLeadsFound": "لم يتم العثور على عملاء محتملين",
   "confirmDelete": "هل أنت متأكد من حذف هذا العميل المحتمل؟",
   "leadScore": "نقاط العميل",
+  "exportCSV": "تصدير CSV",
+  "exporting": "جاري التصدير...",
+  "deleteConfirm": "حذف {name}؟",
+  "deleteFailed": "فشل حذف العميل المحتمل",
+  "deleteFailedGeneric": "فشل الحذف",
   "form": {
     "title": "تفاصيل العميل المحتمل",
     "createTitle": "إنشاء عميل محتمل",

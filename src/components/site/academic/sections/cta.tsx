@@ -21,7 +21,7 @@ export function AcademicCTA({ lang, dictionary }: AcademicCTAProps) {
     <SectionContainer>
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-heading mb-6 text-3xl font-bold md:text-4xl">
-          {t?.title || "Ready to Begin Your Academic Journey?"}
+          {t?.title || "Ready to Begin?"}
         </h2>
         <p className="text-muted-foreground mb-8 text-lg md:text-xl">
           {t?.subtitle ||

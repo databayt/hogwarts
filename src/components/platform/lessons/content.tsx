@@ -93,6 +93,7 @@ export default async function LessonsContent({
         initialData={data}
         total={total}
         dictionary={dictionary?.lessons}
+        common={dictionary?.common}
         lang={lang}
         perPage={sp.perPage}
       />

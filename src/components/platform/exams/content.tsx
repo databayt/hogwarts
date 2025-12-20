@@ -374,7 +374,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                 <span className="text-3xl font-bold">{upcomingExamsCount}</span>
                 {upcomingExamsCount > 3 && (
                   <Badge variant="secondary" className="text-xs">
-                    Active
+                    {d?.dashboard?.active || "Active"}
                   </Badge>
                 )}
               </div>
@@ -436,7 +436,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   {studentsEnrolledCount}
                 </span>
                 <Badge variant="outline" className="text-xs">
-                  Enrolled
+                  {d?.dashboard?.enrolled || "Enrolled"}
                 </Badge>
               </div>
               <p className="text-muted-foreground mt-1 text-xs">
@@ -543,10 +543,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             </p>
             <div className="mt-4 flex flex-wrap gap-1">
               <Badge variant="secondary" className="text-xs">
-                Reusable
+                {d?.dashboard?.reusable || "Reusable"}
               </Badge>
               <Badge variant="outline" className="text-xs">
-                Auto-generate
+                {d?.dashboard?.autoGenerate || "Auto-generate"}
               </Badge>
             </div>
             <p className="text-muted-foreground mt-2 text-sm">
@@ -612,7 +612,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </div>
               <Badge variant="secondary" className="text-xs">
                 <Zap className="mr-1 h-3 w-3" />
-                AI Powered
+                {d?.dashboard?.aiPowered || "AI Powered"}
               </Badge>
             </div>
             <CardTitle className="mt-4">

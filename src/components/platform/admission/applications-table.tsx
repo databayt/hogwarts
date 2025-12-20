@@ -179,13 +179,14 @@ export function ApplicationsTable({
               }
             />
           ) : (
-            <GridContainer columns={4}>
+            <GridContainer columns={4} className="mt-4">
               {data.map((application) => (
                 <GridCard
                   key={application.id}
                   icon="/anthropic/document.svg"
                   title={application.applicantName}
                   description={application.applyingForClass}
+                  subtitle={application.status}
                   onClick={() => handleView(application.id)}
                 />
               ))}

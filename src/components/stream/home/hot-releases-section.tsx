@@ -54,18 +54,11 @@ export function HotReleasesSection({
   dictionary,
   lang,
 }: Omit<StreamContentProps, "schoolId">) {
-  const isRTL = lang === "ar"
-
   return (
     <section className="mb-16 rounded-xl bg-[#BCD1CA] py-6">
       <div className="px-6">
         {/* Title Row */}
-        <div
-          className={cn(
-            "mb-4 flex items-center justify-between",
-            isRTL && "flex-row-reverse"
-          )}
-        >
+        <div className="mb-4 flex items-center justify-between rtl:flex-row-reverse">
           <h2 className="text-lg font-semibold">
             {dictionary?.hotReleases?.title || "Hot new releases"}
           </h2>
@@ -73,17 +66,12 @@ export function HotReleasesSection({
             href={`/${lang}/stream/courses`}
             className="text-foreground hover:text-primary transition-colors"
           >
-            <ArrowRight className={cn("h-5 w-5", isRTL && "rotate-180")} />
+            <ArrowRight className="h-5 w-5 rtl:rotate-180" />
           </Link>
         </div>
 
         {/* Cards Grid */}
-        <div
-          className={cn(
-            "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4",
-            isRTL && "direction-rtl"
-          )}
-        >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {hotReleases.map((course, index) => (
             <Link
               key={index}
@@ -101,14 +89,9 @@ export function HotReleasesSection({
               </div>
 
               {/* Content */}
-              <div className={cn("space-y-2 p-4", isRTL && "text-right")}>
+              <div className="space-y-2 p-4 text-start">
                 {/* Provider */}
-                <div
-                  className={cn(
-                    "flex items-center gap-1.5",
-                    isRTL && "flex-row-reverse"
-                  )}
-                >
+                <div className="flex items-center gap-1.5 rtl:flex-row-reverse">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={course.providerLogo}
@@ -129,12 +112,7 @@ export function HotReleasesSection({
                 <p className="text-muted-foreground text-xs">{course.type}</p>
 
                 {/* Rating */}
-                <div
-                  className={cn(
-                    "flex items-center gap-1",
-                    isRTL && "flex-row-reverse"
-                  )}
-                >
+                <div className="flex items-center gap-1 rtl:flex-row-reverse">
                   <Star className="text-foreground h-3 w-3 fill-current" />
                   <span className="text-xs font-medium">{course.rating}</span>
                 </div>

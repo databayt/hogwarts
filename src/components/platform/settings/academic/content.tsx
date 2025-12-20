@@ -326,7 +326,7 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
       )}
 
       {/* 3-Column Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {/* Column 1: Academic Years */}
         <Card>
           <CardHeader className="pb-3">

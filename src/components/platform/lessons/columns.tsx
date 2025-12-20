@@ -36,7 +36,10 @@ export interface LessonColumnCallbacks {
   onDelete?: (row: LessonRow) => void
 }
 
-const getStatusBadge = (status: string, lang?: Locale) => {
+const getStatusBadge = (
+  status: string,
+  statuses?: Dictionary["school"]["lessons"]["statuses"]
+) => {
   const variants: Record<
     string,
     "default" | "secondary" | "destructive" | "outline"
@@ -47,38 +50,48 @@ const getStatusBadge = (status: string, lang?: Locale) => {
     CANCELLED: "destructive",
   }
 
-  const labels: Record<string, { en: string; ar: string }> = {
-    PLANNED: { en: "Planned", ar: "مخطط" },
-    IN_PROGRESS: { en: "In Progress", ar: "قيد التنفيذ" },
-    COMPLETED: { en: "Completed", ar: "مكتمل" },
-    CANCELLED: { en: "Cancelled", ar: "ملغي" },
+  const labelMap: Record<string, string> = {
+    PLANNED: "planned",
+    IN_PROGRESS: "inProgress",
+    COMPLETED: "completed",
+    CANCELLED: "cancelled",
   }
 
-  const label = labels[status]?.[lang || "en"] || status.replace("_", " ")
+  const label =
+    (statuses &&
+      labelMap[status] &&
+      statuses[labelMap[status] as keyof typeof statuses]) ||
+    status.replace("_", " ")
 
   return <Badge variant={variants[status] || "default"}>{label}</Badge>
 }
 
-export const getLessonColumns = (
-  dictionary?: Dictionary["school"]["lessons"],
-  lang?: Locale,
+export interface GetLessonColumnsProps {
+  dictionary?: Dictionary["school"]["lessons"]
+  common?: Dictionary["school"]["common"]
+  lang?: Locale
   callbacks?: LessonColumnCallbacks
-): ColumnDef<LessonRow>[] => {
+}
+
+export const getLessonColumns = ({
+  dictionary,
+  common,
+  lang,
+  callbacks,
+}: GetLessonColumnsProps): ColumnDef<LessonRow>[] => {
   const t = {
-    title: dictionary?.title || (lang === "ar" ? "العنوان" : "Title"),
-    class: dictionary?.class || (lang === "ar" ? "الفصل" : "Class"),
-    teacher: dictionary?.teacher || (lang === "ar" ? "المعلم" : "Teacher"),
-    subject: dictionary?.subject || (lang === "ar" ? "المادة" : "Subject"),
-    date: dictionary?.date || (lang === "ar" ? "التاريخ" : "Date"),
-    startTime:
-      dictionary?.startTime || (lang === "ar" ? "وقت البدء" : "Start Time"),
-    endTime:
-      dictionary?.endTime || (lang === "ar" ? "وقت الانتهاء" : "End Time"),
-    status: dictionary?.status || (lang === "ar" ? "الحالة" : "Status"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
+    title: dictionary?.title || "Title",
+    class: dictionary?.class || "Class",
+    teacher: dictionary?.teacher || "Teacher",
+    subject: dictionary?.subject || "Subject",
+    date: dictionary?.date || "Date",
+    startTime: dictionary?.startTime || "Start Time",
+    endTime: dictionary?.endTime || "End Time",
+    status: dictionary?.status || "Status",
+    actions: "Actions",
+    view: common?.actions?.view || "View",
+    edit: common?.actions?.edit || "Edit",
+    delete: common?.actions?.delete || "Delete",
   }
 
   return [
@@ -161,24 +174,29 @@ export const getLessonColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.status} />
       ),
-      cell: ({ getValue }) => getStatusBadge(getValue<string>(), lang),
+      cell: ({ getValue }) =>
+        getStatusBadge(getValue<string>(), dictionary?.statuses),
       meta: {
         label: t.status,
         variant: "select",
-        options:
-          lang === "ar"
-            ? [
-                { label: "مخطط", value: "PLANNED" },
-                { label: "قيد التنفيذ", value: "IN_PROGRESS" },
-                { label: "مكتمل", value: "COMPLETED" },
-                { label: "ملغي", value: "CANCELLED" },
-              ]
-            : [
-                { label: "Planned", value: "PLANNED" },
-                { label: "In Progress", value: "IN_PROGRESS" },
-                { label: "Completed", value: "COMPLETED" },
-                { label: "Cancelled", value: "CANCELLED" },
-              ],
+        options: [
+          {
+            label: dictionary?.statuses?.planned || "Planned",
+            value: "PLANNED",
+          },
+          {
+            label: dictionary?.statuses?.inProgress || "In Progress",
+            value: "IN_PROGRESS",
+          },
+          {
+            label: dictionary?.statuses?.completed || "Completed",
+            value: "COMPLETED",
+          },
+          {
+            label: dictionary?.statuses?.cancelled || "Cancelled",
+            value: "CANCELLED",
+          },
+        ],
       },
       enableColumnFilter: true,
     },

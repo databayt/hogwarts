@@ -62,7 +62,7 @@ export default function TitleContent({ dictionary }: Props) {
     } else {
       console.warn("⚠️ [TITLE CONTENT] No form ref available")
     }
-  }, [schoolId])
+  }, [schoolId, router])
 
   // Enable/disable next button based on title and set custom navigation
   useEffect(() => {

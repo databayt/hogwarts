@@ -27,6 +27,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { FileUpload } from "@/components/stream/shared/file-upload"
 import { RichTextEditor } from "@/components/stream/shared/rich-text-editor"
 
 import { createCourseAction } from "./actions"
@@ -70,6 +71,7 @@ export function StreamCourseCreateForm({
       if (values.price !== undefined && values.price !== null) {
         formData.append("price", values.price.toString())
       }
+      if (values.imageUrl) formData.append("imageUrl", values.imageUrl)
 
       const { data: result, error } = await tryCatch(
         createCourseAction(subdomain, formData)
@@ -139,6 +141,26 @@ export function StreamCourseCreateForm({
                         value={field.value || ""}
                         onChange={field.onChange}
                         placeholder="Course description"
+                        disabled={pending}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="imageUrl"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Cover Image</FormLabel>
+                    <FormControl>
+                      <FileUpload
+                        accept="image"
+                        value={field.value || undefined}
+                        onChange={(url) => field.onChange(url)}
+                        onRemove={() => field.onChange("")}
                         disabled={pending}
                       />
                     </FormControl>

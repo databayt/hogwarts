@@ -4,6 +4,7 @@ import React from "react"
 import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface AboutSchoolFormProps {
   onContinue?: () => void
@@ -14,6 +15,13 @@ export function AboutSchoolForm({
   onContinue,
   isLoading = false,
 }: AboutSchoolFormProps) {
+  const { dictionary } = useDictionary()
+
+  const startingText =
+    dictionary?.marketing?.onboarding?.aboutSchool?.starting || "Starting..."
+  const startSetupText =
+    dictionary?.marketing?.onboarding?.aboutSchool?.startSetup || "Start Setup"
+
   return (
     <div className="flex justify-center pt-4">
       <Button
@@ -25,11 +33,11 @@ export function AboutSchoolForm({
         {isLoading ? (
           <>
             <div className="me-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
-            Starting...
+            {startingText}
           </>
         ) : (
           <>
-            Start Setup
+            {startSetupText}
             <ArrowRight className="ms-2 h-4 w-4" />
           </>
         )}

@@ -112,7 +112,7 @@ export default function TenantWelcome({
         </div>
 
         {/* Stats Grid */}
-        <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle>Students</CardTitle>
@@ -148,7 +148,7 @@ export default function TenantWelcome({
         </div>
 
         {/* Action Cards */}
-        <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Card className="cursor-pointer transition-shadow hover:shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -199,7 +199,7 @@ export default function TenantWelcome({
               <CardTitle>School Information</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {school.address && (
                   <div>
                     <h5 className="mb-1 text-gray-900">Address</h5>

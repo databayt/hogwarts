@@ -726,10 +726,78 @@
         },
         "programs": {
           "title": "Academic Programs",
-          "subtitle": "Comprehensive curriculum designed for excellence"
+          "subtitle": "Comprehensive educational pathways designed to unlock every student's potential and prepare them for future success.",
+          "items": {
+            "core": {
+              "title": "Core Academic Excellence",
+              "description": "Rigorous curriculum in Mathematics, Sciences, Literature, and Humanities that builds strong foundational knowledge."
+            },
+            "steam": {
+              "title": "STEAM Innovation",
+              "description": "Science, Technology, Engineering, Arts, and Mathematics programs that foster creativity and problem-solving skills."
+            },
+            "global": {
+              "title": "Global Studies",
+              "description": "International perspectives, language learning, and cultural exchange programs that prepare students for a connected world."
+            },
+            "ap": {
+              "title": "Advanced Placement",
+              "description": "College-level courses that challenge high-achieving students and provide college credit opportunities."
+            },
+            "arts": {
+              "title": "Arts & Creativity",
+              "description": "Comprehensive arts education including music, visual arts, drama, and creative writing to nurture artistic expression."
+            },
+            "character": {
+              "title": "Character Education",
+              "description": "Values-based learning that develops integrity, leadership, and social responsibility in every student."
+            }
+          }
         },
         "stats": {
-          "title": "By the Numbers"
+          "title": "Academic Excellence",
+          "subtitle": "Numbers that reflect our commitment to academic excellence and the transformative impact of our educational programs.",
+          "collegeAcceptance": "College Acceptance Rate",
+          "studentTeacherRatio": "Student-Teacher Ratio",
+          "apCourses": "AP Courses Offered",
+          "graduationRate": "Graduation Rate"
+        },
+        "curriculum": {
+          "title": "Curriculum Overview",
+          "subtitle": "Our progressive curriculum is designed to build knowledge systematically while fostering critical thinking and creativity at every stage.",
+          "earlyYears": {
+            "title": "Early Years (K-5)",
+            "description": "Foundation building with hands-on learning, literacy development, and social skills through play-based education.",
+            "features": {
+              "phonics": "Phonics & Reading",
+              "math": "Math Foundations",
+              "science": "Science Exploration",
+              "social": "Social Studies",
+              "arts": "Arts & Music"
+            }
+          },
+          "middleSchool": {
+            "title": "Middle School (6-8)",
+            "description": "Transitional years focusing on critical thinking, independent learning, and preparation for advanced studies.",
+            "features": {
+              "math": "Advanced Mathematics",
+              "literature": "Literature Analysis",
+              "science": "Scientific Method",
+              "history": "World History",
+              "technology": "Technology Skills"
+            }
+          },
+          "highSchool": {
+            "title": "High School (9-12)",
+            "description": "College preparatory curriculum with specialized tracks, AP courses, and career exploration opportunities.",
+            "features": {
+              "prep": "College Prep Courses",
+              "honors": "AP & Honors Classes",
+              "career": "Career Pathways",
+              "research": "Research Projects",
+              "leadership": "Leadership Development"
+            }
+          }
         }
       },
       "admission": {
@@ -738,6 +806,65 @@
           "subtitle": "Your Hogwarts letter will be delivered by owl post on your 11th birthday. If you haven't received it by then, please check with your local Ministry of Magic office.",
           "startApplication": "Start application",
           "learnMore": "Learn more"
+        },
+        "cta": {
+          "title": "Ready to Begin Your Journey?",
+          "subtitle": "Join thousands of students who have discovered their potential with us",
+          "startApplication": "Start Application",
+          "contactAdmissions": "Contact Admissions"
+        },
+        "portal": {
+          "step": "Step",
+          "of": "of",
+          "previous": "Previous",
+          "next": "Next",
+          "save": "Save",
+          "submit": "Submit Application",
+          "lastSaved": "Last saved:",
+          "errorSaving": "Please enter your email to save",
+          "saved": "Application saved",
+          "failedToSave": "Failed to save",
+          "failedToSubmit": "Failed to submit application"
+        },
+        "tour": {
+          "scheduleTour": "Schedule a Campus Tour",
+          "visitAndExplore": "Visit {schoolName} and explore our facilities",
+          "tourBooked": "Tour Booked!",
+          "bookingDetailsSent": "Booking details have been sent to your email",
+          "bookingNumber": "Booking Number",
+          "attendees": "attendee(s)",
+          "backToHome": "Back to Home",
+          "applyNow": "Apply Now",
+          "selectDate": "Select Date",
+          "selectTime": "Select Time",
+          "selectDatePrompt": "Select a date to see available times",
+          "noAvailableSlots": "No available slots for this date",
+          "spotsLeft": "spots left",
+          "bookingInformation": "Booking Information",
+          "enterDetailsPrompt": "Enter your details to complete the booking",
+          "parentGuardianName": "Parent/Guardian Name",
+          "enterYourName": "Enter your name",
+          "email": "Email",
+          "phone": "Phone",
+          "studentName": "Student Name",
+          "enterStudentName": "Enter student name",
+          "interestedGrade": "Interested Grade",
+          "selectGrade": "Select grade",
+          "numberOfAttendees": "Number of Attendees",
+          "specialRequests": "Special Requests",
+          "specialRequestsPlaceholder": "Any special requests or notes",
+          "booking": "Booking...",
+          "confirmBooking": "Confirm Booking",
+          "tourInformation": "Tour Information",
+          "tourDuration": "Tours typically last about 60 minutes",
+          "arriveEarly": "Please arrive 10 minutes before your scheduled time",
+          "cancellationPolicy": "You can cancel or reschedule up to 24 hours in advance",
+          "errors": {
+            "failedToFetchSlots": "Failed to fetch available slots",
+            "pleaseSelectSlot": "Please select a time slot",
+            "tourBookedSuccess": "Tour booked successfully",
+            "failedToBookTour": "Failed to book tour"
+          }
         }
       },
       "visit": {
@@ -773,6 +900,130 @@
         "messagePlaceholder": "Tell us about your educational needs or questions...",
         "submit": "Submit",
         "liveChat": "Live chat"
+      },
+      "newsletter": {
+        "title": "Newsletter",
+        "description": "Stay Updated with Hogwarts",
+        "emailPlaceholder": "Email Address",
+        "subscribe": "Subscribe"
+      },
+      "faqs": {
+        "title": "Frequently Asked Questions",
+        "subtitle": "Your guide to joining Hogwarts.",
+        "questions": [
+          {
+            "question": "How do I get my Hogwarts letter?",
+            "answer": "Your Hogwarts letter will be delivered by owl post on your 11th birthday. If you haven't received it by then, please check with your local Ministry of Magic office.",
+            "listItems": [
+              "Letters are automatically sent to all magical children on their birthday.",
+              "Muggle-born students may experience delays due to protective enchantments.",
+              "If your letter is lost, a Hogwarts representative will visit you personally."
+            ]
+          },
+          {
+            "question": "What house will I be sorted into?",
+            "answer": "The Sorting Hat will determine your house during the Welcome Feast. It considers your personality, values, and preferences to place you in Gryffindor, Hufflepuff, Ravenclaw, or Slytherin."
+          },
+          {
+            "question": "What supplies do I need for school?",
+            "answer": "Your Hogwarts letter includes a complete list of required books and equipment. You can purchase everything at Diagon Alley.",
+            "listItems": [
+              "Standard spell books, cauldron, and magical ingredients",
+              "A wand from Ollivanders (the wand chooses the wizard!)",
+              "Robes, pointed hat, and protective gloves",
+              "Optional: owl, cat, or toad as a pet"
+            ]
+          },
+          {
+            "question": "How do I contact the school?",
+            "answer": "You can send an owl to Hogwarts School, or use the Floo Network to speak with our admissions office. Muggle post is also accepted but may take longer to reach us."
+          }
+        ]
+      }
+    },
+    "onboarding": {
+      "aboutSchool": {
+        "title": "About Your School",
+        "description": "Welcome! Let's start building your school profile.",
+        "longDescription": "This is the first step of your school onboarding process. We'll help you set up everything you need to get started.",
+        "starting": "Starting...",
+        "startSetup": "Start Setup"
+      },
+      "branding": {
+        "brandName": "School Brand Name",
+        "brandNamePlaceholder": "e.g., Al-Azhar Academy",
+        "tagline": "Tagline (Optional)",
+        "taglinePlaceholder": "e.g., Excellence in Education",
+        "logo": "School Logo (Optional)",
+        "logoPlaceholder": "https://example.com/logo.png",
+        "primaryColor": "Primary Color",
+        "secondaryColor": "Secondary Color",
+        "updateBranding": "Update Branding",
+        "updating": "Updating..."
+      },
+      "pricing": {
+        "tuitionFee": "Tuition Fee",
+        "tuitionFeeDesc": "The base tuition fee for students.",
+        "registrationFee": "Registration Fee (optional)",
+        "registrationFeeDesc": "A one-time fee for new student registration.",
+        "applicationFee": "Application Fee (optional)",
+        "applicationFeeDesc": "A fee for processing student applications.",
+        "currency": "Currency",
+        "currencyDesc": "Select your preferred currency.",
+        "paymentSchedule": "Payment Schedule",
+        "paymentScheduleDesc": "Choose how often payments are collected.",
+        "monthly": "Monthly",
+        "quarterly": "Quarterly",
+        "perSemester": "Per Semester",
+        "annual": "Annual",
+        "feeBreakdown": "Fee breakdown",
+        "tuitionFeeLabel": "Tuition fee",
+        "registrationFeeLabel": "Registration fee",
+        "applicationFeeLabel": "Application fee",
+        "oneTime": "one-time",
+        "totalInitialPayment": "Total initial payment",
+        "saving": "Saving..."
+      },
+      "import": {
+        "chooseMethod": "Choose Import Method",
+        "howToAdd": "How would you like to add your school data?",
+        "uploadFile": "Upload File",
+        "selectFile": "Select your file to import",
+        "selectedFile": "Selected:",
+        "clickToUpload": "Click to upload or drag and drop",
+        "fileTypes": "CSV, Excel (.csv, .xlsx, .xls)",
+        "selectImportType": "Select import type",
+        "manualEntry": "Manual Entry",
+        "manualEntryDesc": "You can add data manually after completing the setup",
+        "addStudentsLater": "Add students one by one",
+        "createClassesManually": "Create classes manually",
+        "setUpSchedule": "Set up schedule step by step",
+        "back": "Back",
+        "skip": "Skip for now",
+        "continue": "Continue"
+      },
+      "standOut": {
+        "continuing": "Continuing...",
+        "continueSetup": "Continue to School Setup"
+      },
+      "finishSetup": {
+        "finishing": "Finishing...",
+        "completeSetup": "Complete Setup"
+      },
+      "success": {
+        "congratulations": "Congratulations!",
+        "schoolLive": "Your school is now live and ready to transform education!",
+        "letsGetStarted": "Let's Get Started!",
+        "continueLater": "Continue Setup Later",
+        "goToDashboard": "Go to School Dashboard",
+        "inviteTeam": "Invite Your Team",
+        "inviteTeamDesc": "Add teachers and staff to your school",
+        "addStudents": "Add Students",
+        "addStudentsDesc": "Import or manually add your students",
+        "setUpClasses": "Set Up Classes",
+        "setUpClassesDesc": "Create classes and assign teachers",
+        "configureSettings": "Configure Settings",
+        "configureSettingsDesc": "Customize your school settings"
       }
     }
   },

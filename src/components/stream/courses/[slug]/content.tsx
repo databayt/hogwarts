@@ -13,6 +13,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { EnrollmentButton } from "@/components/stream/courses/enrollment/button"
 import { IndividualCourseType } from "@/components/stream/data/course/get-course"
 
@@ -72,6 +73,7 @@ export function StreamCourseDetailContent({
   course,
   isEnrolled,
 }: Props) {
+  const { dictionary: dict } = useDictionary()
   const [expandedChapter, setExpandedChapter] = useState<string | null>(null)
 
   const totalLessons = course.chapters.reduce(
@@ -125,27 +127,17 @@ export function StreamCourseDetailContent({
     >
       {/* Hero Section */}
       <section className="mx-auto max-w-6xl px-4 py-12 lg:py-16">
-        <div
-          className={cn(
-            "grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12",
-            isRTL && "lg:grid-flow-dense"
-          )}
-        >
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 rtl:lg:grid-flow-dense">
           {/* Left Column: Content */}
-          <div className={cn("space-y-6", isRTL && "lg:col-start-2")}>
+          <div className="space-y-6 rtl:lg:col-start-2">
             {/* Breadcrumbs */}
-            <nav
-              className={cn(
-                "flex items-center gap-2 text-sm",
-                isRTL && "flex-row-reverse"
-              )}
-            >
+            <nav className="flex items-center gap-2 text-sm rtl:flex-row-reverse">
               <Link
                 href={`/${lang}/stream`}
                 className="hover:underline"
                 style={{ color: colors.muted }}
               >
-                {isRTL ? "الرئيسية" : "Home"}
+                {dict?.stream?.courseDetail?.home ?? "Home"}
               </Link>
               <span style={{ color: colors.muted }}>/</span>
               <Link
@@ -153,7 +145,7 @@ export function StreamCourseDetailContent({
                 className="hover:underline"
                 style={{ color: colors.muted }}
               >
-                {isRTL ? "الدورات" : "Courses"}
+                {dict?.stream?.courseDetail?.courses ?? "Courses"}
               </Link>
             </nav>
 
@@ -176,12 +168,7 @@ export function StreamCourseDetailContent({
             )}
 
             {/* CTA Row */}
-            <div
-              className={cn(
-                "flex flex-wrap items-center gap-4",
-                isRTL && "flex-row-reverse"
-              )}
-            >
+            <div className="flex flex-wrap items-center gap-4 rtl:flex-row-reverse">
               {isEnrolled ? (
                 <Link
                   href={`/${lang}/stream/dashboard/${course.slug}`}
@@ -194,7 +181,8 @@ export function StreamCourseDetailContent({
                       color: colors.background,
                     }}
                   >
-                    {isRTL ? "متابعة التعلم" : "Continue Learning"}
+                    {dict?.stream?.courseDetail?.continueLearning ??
+                      "Continue Learning"}
                   </Button>
                 </Link>
               ) : (
@@ -205,7 +193,7 @@ export function StreamCourseDetailContent({
                   className="text-sm font-medium"
                   style={{ color: colors.text }}
                 >
-                  {isRTL ? "مجاني" : "FREE"}
+                  {dict?.stream?.courseDetail?.free ?? "FREE"}
                 </span>
               )}
             </div>
@@ -213,57 +201,50 @@ export function StreamCourseDetailContent({
             {/* Already registered */}
             {!isEnrolled && (
               <p className="text-sm" style={{ color: colors.muted }}>
-                {isRTL ? "مسجل بالفعل؟" : "Already registered?"}{" "}
+                {dict?.stream?.courseDetail?.alreadyRegistered ??
+                  "Already registered?"}{" "}
                 <Link
                   href={`/${lang}/auth/login`}
                   className="underline hover:no-underline"
                   style={{ color: colors.text }}
                 >
-                  {isRTL ? "تسجيل الدخول" : "Sign In"}
+                  {dict?.stream?.courseDetail?.signIn ?? "Sign In"}
                 </Link>
               </p>
             )}
 
             {/* Share Buttons */}
-            <div
-              className={cn(
-                "flex items-center gap-4 pt-2",
-                isRTL && "flex-row-reverse"
-              )}
-            >
+            <div className="flex items-center gap-4 pt-2 rtl:flex-row-reverse">
               <a
                 href={`https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn(
-                  "flex items-center gap-2 text-sm hover:underline",
-                  isRTL && "flex-row-reverse"
-                )}
+                className="flex items-center gap-2 text-sm hover:underline rtl:flex-row-reverse"
                 style={{ color: colors.text }}
               >
                 <XIcon className="size-4" />
-                <span>{isRTL ? "مشاركة على X" : "Share on X"}</span>
+                <span>
+                  {dict?.stream?.courseDetail?.shareOnX ?? "Share on X"}
+                </span>
               </a>
               <a
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn(
-                  "flex items-center gap-2 text-sm hover:underline",
-                  isRTL && "flex-row-reverse"
-                )}
+                className="flex items-center gap-2 text-sm hover:underline rtl:flex-row-reverse"
                 style={{ color: colors.text }}
               >
                 <LinkedInIcon className="size-4" />
                 <span>
-                  {isRTL ? "مشاركة على LinkedIn" : "Share on LinkedIn"}
+                  {dict?.stream?.courseDetail?.shareOnLinkedIn ??
+                    "Share on LinkedIn"}
                 </span>
               </a>
             </div>
           </div>
 
           {/* Right Column: Video + Stats */}
-          <div className={cn("space-y-4", isRTL && "lg:col-start-1")}>
+          <div className="space-y-4 rtl:lg:col-start-1">
             {/* Video Preview */}
             <div
               className="group relative aspect-video cursor-pointer overflow-hidden rounded-xl"
@@ -297,10 +278,7 @@ export function StreamCourseDetailContent({
 
             {/* Stats Row */}
             <div
-              className={cn(
-                "flex flex-wrap items-center justify-center gap-6 rounded-lg p-4",
-                isRTL && "flex-row-reverse"
-              )}
+              className="flex flex-wrap items-center justify-center gap-6 rounded-lg p-4 rtl:flex-row-reverse"
               style={{ backgroundColor: colors.card }}
             >
               <div className="text-center">
@@ -311,7 +289,7 @@ export function StreamCourseDetailContent({
                   {totalLessons}
                 </span>
                 <span className="text-sm" style={{ color: colors.muted }}>
-                  {isRTL ? "محاضرة" : "lectures"}
+                  {dict?.stream?.courseDetail?.lectures ?? "lectures"}
                 </span>
               </div>
               <div className="text-center">
@@ -327,12 +305,13 @@ export function StreamCourseDetailContent({
                 </span>
                 <span className="text-sm" style={{ color: colors.muted }}>
                   {totalHours > 0
-                    ? isRTL
-                      ? `ساعة${totalHours !== 1 ? "ات" : ""} فيديو`
-                      : `hour${totalHours !== 1 ? "s" : ""} of video`
-                    : isRTL
-                      ? "دقيقة فيديو"
-                      : "min of video"}
+                    ? totalHours !== 1
+                      ? (dict?.stream?.courseDetail?.hoursOfVideo ??
+                        "hours of video")
+                      : (dict?.stream?.courseDetail?.hourOfVideo ??
+                        "hour of video")
+                    : (dict?.stream?.courseDetail?.minOfVideo ??
+                      "min of video")}
                 </span>
               </div>
               <div className="text-center">
@@ -343,7 +322,7 @@ export function StreamCourseDetailContent({
                   <Award className="mx-auto size-6" />
                 </span>
                 <span className="text-sm" style={{ color: colors.muted }}>
-                  {isRTL ? "شهادة إتمام" : "Certificate"}
+                  {dict?.stream?.courseDetail?.certificate ?? "Certificate"}
                 </span>
               </div>
             </div>
@@ -361,16 +340,15 @@ export function StreamCourseDetailContent({
             className="text-start text-2xl font-semibold sm:text-3xl"
             style={{ color: colors.text }}
           >
-            {isRTL ? "عن هذه الدورة" : "About this course"}
+            {dict?.stream?.courseDetail?.aboutThisCourse ?? "About this course"}
           </h2>
           <p
             className="mt-4 text-start leading-relaxed"
             style={{ color: colors.text }}
           >
             {course.description ||
-              (isRTL
-                ? "تم تصميم هذه الدورة الشاملة لنقلك من المستوى المبتدئ إلى المتقدم."
-                : "This comprehensive course is designed to take you from beginner to advanced level.")}
+              (dict?.stream?.courseDetail?.thisCourseDescription ??
+                "This comprehensive course is designed to take you from beginner to advanced level.")}
           </p>
 
           {/* Learning Objectives */}
@@ -378,21 +356,18 @@ export function StreamCourseDetailContent({
             className="mt-8 text-start text-xl font-semibold"
             style={{ color: colors.text }}
           >
-            {isRTL ? "أهداف التعلم" : "Learning objectives"}
+            {dict?.stream?.courseDetail?.learningObjectives ??
+              "Learning objectives"}
           </h3>
           <p className="mt-2 text-start" style={{ color: colors.muted }}>
-            {isRTL
-              ? "بنهاية هذه الدورة، ستكون قادرًا على:"
-              : "By the end of this course, you'll be able to:"}
+            {dict?.stream?.courseDetail?.byTheEnd ??
+              "By the end of this course, you'll be able to:"}
           </p>
           <ul className="mt-4 space-y-2 text-start">
             {learningObjectives.map((item, index) => (
               <li
                 key={index}
-                className={cn(
-                  "flex items-start gap-2",
-                  isRTL && "flex-row-reverse"
-                )}
+                className="flex items-start gap-2 rtl:flex-row-reverse"
               >
                 <span style={{ color: colors.muted }}>•</span>
                 <span style={{ color: colors.text }}>{item}</span>
@@ -405,16 +380,13 @@ export function StreamCourseDetailContent({
             className="mt-8 text-start text-xl font-semibold"
             style={{ color: colors.text }}
           >
-            {isRTL ? "المتطلبات" : "Prerequisites"}
+            {dict?.stream?.courseDetail?.prerequisites ?? "Prerequisites"}
           </h3>
           <ul className="mt-4 space-y-2 text-start">
             {prerequisites.map((item, index) => (
               <li
                 key={index}
-                className={cn(
-                  "flex items-start gap-2",
-                  isRTL && "flex-row-reverse"
-                )}
+                className="flex items-start gap-2 rtl:flex-row-reverse"
               >
                 <span style={{ color: colors.muted }}>•</span>
                 <span style={{ color: colors.text }}>{item}</span>
@@ -427,12 +399,12 @@ export function StreamCourseDetailContent({
             className="mt-8 text-start text-xl font-semibold"
             style={{ color: colors.text }}
           >
-            {isRTL ? "لمن هذه الدورة" : "Who this course is for"}
+            {dict?.stream?.courseDetail?.whoThisCourseIsFor ??
+              "Who this course is for"}
           </h3>
           <p className="mt-2 text-start" style={{ color: colors.text }}>
-            {isRTL
-              ? "المتعلمون الذين يرغبون في تسريع سير عملهم بمساعدة الذكاء الاصطناعي"
-              : "Learners who want to accelerate their workflow with AI assistance"}
+            {dict?.stream?.courseDetail?.learnersDescription ??
+              "Learners who want to accelerate their workflow with AI assistance"}
           </p>
         </div>
       </section>
@@ -443,7 +415,7 @@ export function StreamCourseDetailContent({
           className="text-start text-2xl font-semibold sm:text-3xl"
           style={{ color: colors.text }}
         >
-          {isRTL ? "أقسام الدورة" : "Course sections"}
+          {dict?.stream?.courseDetail?.courseSections ?? "Course sections"}
         </h2>
         <div className="mt-6 space-y-4">
           {course.chapters.map((chapter, index) => {
@@ -463,17 +435,9 @@ export function StreamCourseDetailContent({
                 {/* Chapter Header */}
                 <button
                   onClick={() => toggleChapter(chapter.id)}
-                  className={cn(
-                    "flex w-full items-center justify-between p-6 transition-colors hover:bg-gray-50",
-                    isRTL && "flex-row-reverse"
-                  )}
+                  className="flex w-full items-center justify-between p-6 transition-colors hover:bg-gray-50 rtl:flex-row-reverse"
                 >
-                  <div
-                    className={cn(
-                      "flex items-center gap-3",
-                      isRTL && "flex-row-reverse"
-                    )}
-                  >
+                  <div className="flex items-center gap-3 rtl:flex-row-reverse">
                     {isExpanded ? (
                       <ChevronDown
                         className="size-5"
@@ -499,13 +463,9 @@ export function StreamCourseDetailContent({
                       </h3>
                       <p className="text-sm" style={{ color: colors.muted }}>
                         {chapter.lessons.length}{" "}
-                        {isRTL
-                          ? chapter.lessons.length === 1
-                            ? "درس"
-                            : "دروس"
-                          : chapter.lessons.length === 1
-                            ? "lesson"
-                            : "lessons"}
+                        {chapter.lessons.length === 1
+                          ? (dict?.stream?.courseDetail?.lesson ?? "lesson")
+                          : (dict?.stream?.courseDetail?.lessons ?? "lessons")}
                       </p>
                     </div>
                   </div>
@@ -547,17 +507,9 @@ export function StreamCourseDetailContent({
                           {chapter.lessons.map((lesson) => (
                             <div
                               key={lesson.id}
-                              className={cn(
-                                "flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-gray-50",
-                                isRTL && "flex-row-reverse"
-                              )}
+                              className="flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-gray-50 rtl:flex-row-reverse"
                             >
-                              <div
-                                className={cn(
-                                  "flex items-center gap-3",
-                                  isRTL && "flex-row-reverse"
-                                )}
-                              >
+                              <div className="flex items-center gap-3 rtl:flex-row-reverse">
                                 <PlayCircle
                                   className="size-4"
                                   style={{ color: colors.muted }}
@@ -573,7 +525,8 @@ export function StreamCourseDetailContent({
                                     className="text-xs underline"
                                     style={{ color: colors.muted }}
                                   >
-                                    {isRTL ? "معاينة" : "Preview"}
+                                    {dict?.stream?.courseDetail?.preview ??
+                                      "Preview"}
                                   </span>
                                 )}
                               </div>
@@ -609,14 +562,9 @@ export function StreamCourseDetailContent({
           className="text-start text-2xl font-semibold sm:text-3xl"
           style={{ color: colors.text }}
         >
-          {isRTL ? "المدرب" : "Instructor"}
+          {dict?.stream?.courseDetail?.instructor ?? "Instructor"}
         </h2>
-        <div
-          className={cn(
-            "mt-6 flex items-start gap-4",
-            isRTL && "flex-row-reverse"
-          )}
-        >
+        <div className="mt-6 flex items-start gap-4 rtl:flex-row-reverse">
           <div
             className="size-16 shrink-0 overflow-hidden rounded-full"
             style={{ backgroundColor: colors.card }}
@@ -630,12 +578,12 @@ export function StreamCourseDetailContent({
           </div>
           <div className="text-start">
             <h3 className="font-semibold" style={{ color: colors.text }}>
-              {isRTL ? "مدرب الدورة" : "Course Instructor"}
+              {dict?.stream?.courseDetail?.courseInstructor ??
+                "Course Instructor"}
             </h3>
             <p className="mt-1 text-sm" style={{ color: colors.muted }}>
-              {isRTL
-                ? "تدريب المحترفين للغد"
-                : "Training Professionals of Tomorrow"}
+              {dict?.stream?.courseDetail?.trainingProfessionals ??
+                "Training Professionals of Tomorrow"}
             </p>
           </div>
         </div>
@@ -649,16 +597,11 @@ export function StreamCourseDetailContent({
           borderColor: colors.border,
         }}
       >
-        <div
-          className={cn(
-            "flex items-center justify-between gap-4",
-            isRTL && "flex-row-reverse"
-          )}
-        >
+        <div className="flex items-center justify-between gap-4 rtl:flex-row-reverse">
           <div>
             {(!course.price || course.price === 0) && (
               <span className="font-semibold" style={{ color: colors.text }}>
-                {isRTL ? "مجاني" : "FREE"}
+                {dict?.stream?.courseDetail?.free ?? "FREE"}
               </span>
             )}
           </div>
@@ -674,7 +617,8 @@ export function StreamCourseDetailContent({
                   color: colors.background,
                 }}
               >
-                {isRTL ? "متابعة التعلم" : "Continue Learning"}
+                {dict?.stream?.courseDetail?.continueLearning ??
+                  "Continue Learning"}
               </Button>
             </Link>
           ) : (

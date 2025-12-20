@@ -51,12 +51,7 @@ export function StreamCoursesContent({
     <div className="space-y-10 py-6">
       {/* Hero Section - Like "Come teach with us" */}
       <section className="py-8">
-        <div
-          className={cn(
-            "mx-auto flex max-w-2xl flex-col items-center justify-center gap-6 md:flex-row",
-            isRTL && "md:flex-row-reverse"
-          )}
-        >
+        <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-6 md:flex-row rtl:md:flex-row-reverse">
           {/* Hero Image */}
           <div className="relative flex size-28 shrink-0 items-center justify-center rounded-xl bg-[#D97757] p-4 md:size-32">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -68,9 +63,7 @@ export function StreamCoursesContent({
           </div>
 
           {/* Text Content */}
-          <div
-            className={cn("text-center md:text-left", isRTL && "md:text-right")}
-          >
+          <div className="text-center md:text-start">
             <h1 className="text-4xl leading-none font-bold md:text-5xl">
               {dictionary?.courses?.heroTitle || "Explore"}
               <br />

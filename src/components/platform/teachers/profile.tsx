@@ -38,6 +38,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface TeacherProfileProps {
   teacher: any // In production, use proper typed interface
@@ -46,6 +47,8 @@ interface TeacherProfileProps {
 
 export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
   const [activeTab, setActiveTab] = useState("overview")
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.teachers?.profile
 
   // Calculate profile completion
   const calculateProfileCompletion = () => {
@@ -184,11 +187,11 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                   className="gap-2"
                 >
                   <Pencil className="h-4 w-4" />
-                  Pencil Profile
+                  {t?.editProfile ?? "Edit Profile"}
                 </Button>
               )}
               <div className="text-muted-foreground text-sm">
-                Joined: {formatDate(teacher.joiningDate)}
+                {t?.joined ?? "Joined"}: {formatDate(teacher.joiningDate)}
               </div>
             </div>
           </div>
@@ -196,7 +199,9 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
           {/* Profile Completion */}
           <div className="mt-6 space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Profile Completion</span>
+              <span className="text-muted-foreground">
+                {t?.profileCompletion ?? "Profile Completion"}
+              </span>
               <span className="font-medium">
                 {Math.round(profileCompletion.percentage)}%
               </span>
@@ -207,25 +212,34 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
           {/* Quick Stats */}
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Total Experience</p>
+              <p className="text-muted-foreground text-sm">
+                {t?.totalExperience ?? "Total Experience"}
+              </p>
               <p className="text-xl font-semibold">
                 {calculateTotalExperience()}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Qualifications</p>
+              <p className="text-muted-foreground text-sm">
+                {dictionary?.school?.teachers?.qualification ||
+                  "Qualifications"}
+              </p>
               <p className="text-xl font-semibold">
                 {teacher.qualifications?.length || 0}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Subjects</p>
+              <p className="text-muted-foreground text-sm">
+                {dictionary?.school?.teachers?.subjects || "Subjects"}
+              </p>
               <p className="text-xl font-semibold">
                 {teacher.subjectExpertise?.length || 0}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Classes</p>
+              <p className="text-muted-foreground text-sm">
+                {dictionary?.school?.teachers?.classes || "Classes"}
+              </p>
               <p className="text-xl font-semibold">
                 {teacher.classes?.length || 0}
               </p>
@@ -237,11 +251,21 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
       {/* Tabs Section */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full max-w-2xl grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="qualifications">Qualifications</TabsTrigger>
-          <TabsTrigger value="experience">Experience</TabsTrigger>
-          <TabsTrigger value="schedule">Schedule</TabsTrigger>
-          <TabsTrigger value="workload">Workload</TabsTrigger>
+          <TabsTrigger value="overview">
+            {dictionary?.school?.teachers?.overview || "Overview"}
+          </TabsTrigger>
+          <TabsTrigger value="qualifications">
+            {dictionary?.school?.teachers?.qualification || "Qualifications"}
+          </TabsTrigger>
+          <TabsTrigger value="experience">
+            {dictionary?.school?.teachers?.experience || "Experience"}
+          </TabsTrigger>
+          <TabsTrigger value="schedule">
+            {dictionary?.school?.teachers?.schedule?.title || "Schedule"}
+          </TabsTrigger>
+          <TabsTrigger value="workload">
+            {dictionary?.school?.teachers?.workload || "Workload"}
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -252,24 +276,30 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <User className="h-4 w-4" />
-                  Personal Information
+                  {t?.personalInformation || "Personal Information"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-muted-foreground text-sm">Full Name</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t?.fullName || "Full Name"}
+                  </p>
                   <p className="font-medium">
                     {teacher.givenName} {teacher.surname}
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-sm">Gender</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t?.gender || "Gender"}
+                  </p>
                   <p className="font-medium capitalize">
-                    {teacher.gender || "Not specified"}
+                    {teacher.gender || t?.notSpecified || "Not specified"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-sm">Date of Birth</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t?.dateOfBirth || "Date of Birth"}
+                  </p>
                   <p className="font-medium">{formatDate(teacher.birthDate)}</p>
                 </div>
               </CardContent>
@@ -280,20 +310,22 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Mail className="h-4 w-4" />
-                  Contact Information
+                  {t?.contactInformation || "Contact Information"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-muted-foreground text-sm">Email</p>
+                  <p className="text-muted-foreground text-sm">
+                    {dictionary?.school?.teachers?.email || "Email"}
+                  </p>
                   <p className="font-medium">
-                    {teacher.emailAddress || "Not specified"}
+                    {teacher.emailAddress || t?.notSpecified || "Not specified"}
                   </p>
                 </div>
                 {getPrimaryPhone() && (
                   <div>
                     <p className="text-muted-foreground text-sm">
-                      Primary Phone
+                      {t?.primaryPhone || "Primary Phone"}
                     </p>
                     <p className="font-medium">
                       {getPrimaryPhone().phoneNumber}
@@ -306,7 +338,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                 {teacher.phoneNumbers && teacher.phoneNumbers.length > 1 && (
                   <div>
                     <p className="text-muted-foreground text-sm">
-                      Other Phones
+                      {t?.otherPhones || "Other Phones"}
                     </p>
                     <div className="space-y-1">
                       {teacher.phoneNumbers
@@ -330,25 +362,29 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Briefcase className="h-4 w-4" />
-                  Employment Details
+                  {t?.employmentDetails || "Employment Details"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-muted-foreground text-sm">Employee ID</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t?.employeeId || "Employee ID"}
+                  </p>
                   <p className="font-medium">
-                    {teacher.employeeId || "Not assigned"}
+                    {teacher.employeeId || t?.notSpecified || "Not assigned"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-sm">Joining Date</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t?.joiningDate || "Joining Date"}
+                  </p>
                   <p className="font-medium">
                     {formatDate(teacher.joiningDate)}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-sm">
-                    Employment Type
+                    {t?.employmentType || "Employment Type"}
                   </p>
                   <Badge variant="outline">
                     {teacher.employmentType?.replace("_", "-").toLowerCase() ||
@@ -359,7 +395,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                   <>
                     <div>
                       <p className="text-muted-foreground text-sm">
-                        Contract Period
+                        {t?.contractPeriod || "Contract Period"}
                       </p>
                       <p className="text-sm">
                         {formatDate(teacher.contractStartDate)} -{" "}
@@ -376,7 +412,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <BookOpen className="h-4 w-4" />
-                  Subject Expertise
+                  {t?.subjectExpertise || "Subject Expertise"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -405,7 +441,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                   </div>
                 ) : (
                   <p className="text-muted-foreground text-sm">
-                    No subjects specified
+                    {t?.noSubjects || "No subjects specified"}
                   </p>
                 )}
               </CardContent>
@@ -419,10 +455,11 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5" />
-                Qualifications & Certifications
+                {t?.qualifications || "Qualifications & Certifications"}
               </CardTitle>
               <CardDescription>
-                Educational background and professional certifications
+                {t?.educationalBackground ||
+                  "Educational background and professional certifications"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -461,7 +498,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                             {isExpired && (
                               <Badge variant="destructive" className="gap-1">
                                 <CircleAlert className="h-3 w-3" />
-                                Expired
+                                {t?.expired || "Expired"}
                               </Badge>
                             )}
                             {isExpiringSoon && (
@@ -470,18 +507,26 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                                 className="gap-1 text-yellow-600"
                               >
                                 <Clock className="h-3 w-3" />
-                                Expiring Soon
+                                {t?.expiringSoon || "Expiring Soon"}
                               </Badge>
                             )}
                           </div>
                         </div>
                         <div className="text-muted-foreground flex items-center gap-4 text-sm">
-                          <span>Obtained: {formatDate(qual.dateObtained)}</span>
+                          <span>
+                            {t?.obtained || "Obtained"}:{" "}
+                            {formatDate(qual.dateObtained)}
+                          </span>
                           {qual.expiryDate && (
-                            <span>Expires: {formatDate(qual.expiryDate)}</span>
+                            <span>
+                              {t?.expires || "Expires"}:{" "}
+                              {formatDate(qual.expiryDate)}
+                            </span>
                           )}
                           {qual.licenseNumber && (
-                            <span>License: {qual.licenseNumber}</span>
+                            <span>
+                              {t?.license || "License"}: {qual.licenseNumber}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -492,7 +537,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                 <div className="py-8 text-center">
                   <GraduationCap className="text-muted-foreground/50 mx-auto h-12 w-12" />
                   <p className="text-muted-foreground mt-2">
-                    No qualifications added
+                    {t?.noQualifications || "No qualifications added"}
                   </p>
                 </div>
               )}
@@ -506,10 +551,10 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5" />
-                Professional Experience
+                {t?.professionalExperience || "Professional Experience"}
               </CardTitle>
               <CardDescription>
-                Work history and teaching experience
+                {t?.workHistory || "Work history and teaching experience"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -572,7 +617,9 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                                 </p>
                               </div>
                               {exp.isCurrent && (
-                                <Badge variant="default">Current</Badge>
+                                <Badge variant="default">
+                                  {t?.current || "Current"}
+                                </Badge>
                               )}
                             </div>
                             <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -580,7 +627,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                               <span>
                                 {formatDate(exp.startDate)} -{" "}
                                 {exp.isCurrent
-                                  ? "Present"
+                                  ? (t?.present ?? "Present")
                                   : formatDate(exp.endDate)}
                               </span>
                               {duration && (
@@ -605,7 +652,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                 <div className="py-8 text-center">
                   <Briefcase className="text-muted-foreground/50 mx-auto h-12 w-12" />
                   <p className="text-muted-foreground mt-2">
-                    No experience added
+                    {t?.noExperience || "No experience added"}
                   </p>
                 </div>
               )}
@@ -619,17 +666,17 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Teaching Schedule
+                {t?.teachingSchedule || "Teaching Schedule"}
               </CardTitle>
               <CardDescription>
-                Weekly timetable and class assignments
+                {t?.weeklyTimetable || "Weekly timetable and class assignments"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="py-8 text-center">
                 <Calendar className="text-muted-foreground/50 mx-auto h-12 w-12" />
                 <p className="text-muted-foreground mt-2">
-                  Schedule view coming soon
+                  {t?.scheduleComingSoon || "Schedule view coming soon"}
                 </p>
               </div>
             </CardContent>
@@ -642,17 +689,17 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Workload Analysis
+                {t?.workloadAnalysis || "Workload Analysis"}
               </CardTitle>
               <CardDescription>
-                Teaching load and capacity metrics
+                {t?.capacityMetrics || "Teaching load and capacity metrics"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="py-8 text-center">
                 <TrendingUp className="text-muted-foreground/50 mx-auto h-12 w-12" />
                 <p className="text-muted-foreground mt-2">
-                  Workload analysis coming soon
+                  {t?.workloadComingSoon || "Workload analysis coming soon"}
                 </p>
               </div>
             </CardContent>

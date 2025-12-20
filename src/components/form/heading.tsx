@@ -3,7 +3,6 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { FormHeadingProps } from "./types"
 
@@ -28,16 +27,8 @@ export function FormHeading({
   titleClassName,
   descriptionClassName,
 }: FormHeadingProps) {
-  const { isRTL } = useLocale()
-
   return (
-    <div
-      className={cn(
-        "space-y-3 sm:space-y-4",
-        isRTL ? "text-right" : "text-left",
-        className
-      )}
-    >
+    <div className={cn("space-y-3 text-start sm:space-y-4", className)}>
       <h1 className={cn("text-3xl font-bold", titleClassName)}>{title}</h1>
       {description && (
         <p

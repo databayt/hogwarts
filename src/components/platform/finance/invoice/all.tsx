@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { formatCurrency, formatDueStatus, getInvoiceStatusColor } from "./util"
 
@@ -42,11 +43,13 @@ export function AllInvoices({
   onCreateNew,
   onViewInvoice,
 }: AllInvoicesProps) {
+  const { dictionary } = useDictionary()
   const [filters, setFilters] = useState({
     search: "",
     status: "",
   })
   const [sortBy, setSortBy] = useState<"date" | "amount" | "client">("date")
+  const d = dictionary?.finance
 
   const filteredInvoices = invoices.filter((invoice) => {
     if (filters.search) {
@@ -83,7 +86,7 @@ export function AllInvoices({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3>All Invoices</h3>
+          <h3>{d?.cards?.invoicing?.viewAll || "All Invoices"}</h3>
           <span className="bg-muted rounded-full px-2 py-1">
             <small>{sortedInvoices.length}</small>
           </span>
@@ -96,7 +99,7 @@ export function AllInvoices({
           {onCreateNew && (
             <Button size="sm" onClick={onCreateNew}>
               <Plus className="mr-2 size-4" />
-              New Invoice
+              {d?.cards?.invoicing?.create || "New Invoice"}
             </Button>
           )}
         </div>

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   getFollowUpStudents,
@@ -95,6 +96,7 @@ export function AttendanceOverviewContent({
   locale,
   subdomain,
 }: AttendanceOverviewContentProps) {
+  const { dictionary } = useDictionary()
   const [isPending, startTransition] = useTransition()
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
   const [classes, setClasses] = useState<ClassData | null>(null)
@@ -102,6 +104,7 @@ export function AttendanceOverviewContent({
   const [markingClass, setMarkingClass] = useState<string | null>(null)
 
   const basePath = `/${locale}/s/${subdomain}/attendance`
+  const d = dictionary?.school?.attendance
 
   useEffect(() => {
     loadData()
@@ -151,7 +154,7 @@ export function AttendanceOverviewContent({
             </span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">
-            Attendance Overview
+            {d?.overview || "Attendance Overview"}
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -162,7 +165,7 @@ export function AttendanceOverviewContent({
           <Button asChild>
             <Link href={`${basePath}/manual`}>
               <PlayCircle className="mr-2 h-4 w-4" />
-              Mark Attendance
+              {d?.markAttendance || "Mark Attendance"}
             </Link>
           </Button>
         </div>
@@ -174,7 +177,9 @@ export function AttendanceOverviewContent({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-xs">Present</p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.present || "Present"}
+                </p>
                 <p className="text-2xl font-bold text-emerald-600">
                   {dashboard?.stats.present || 0}
                 </p>
@@ -188,7 +193,9 @@ export function AttendanceOverviewContent({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-xs">Absent</p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.absent || "Absent"}
+                </p>
                 <p className="text-2xl font-bold text-red-600">
                   {dashboard?.stats.absent || 0}
                 </p>
@@ -202,7 +209,9 @@ export function AttendanceOverviewContent({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-xs">Late</p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.late || "Late"}
+                </p>
                 <p className="text-2xl font-bold text-amber-600">
                   {dashboard?.stats.late || 0}
                 </p>
@@ -216,7 +225,9 @@ export function AttendanceOverviewContent({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-xs">Rate</p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.attendanceRate || "Rate"}
+                </p>
                 <p className="text-2xl font-bold text-blue-600">
                   {dashboard?.stats.attendanceRate || 0}%
                 </p>
@@ -231,7 +242,9 @@ export function AttendanceOverviewContent({
       <Card>
         <CardContent className="p-4">
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Today's Progress</span>
+            <span className="text-muted-foreground">
+              {d?.stats?.overallRate || "Today's Progress"}
+            </span>
             <span className="font-medium">
               {dashboard?.stats.markedToday || 0} /{" "}
               {dashboard?.stats.totalStudents || 0} students marked
@@ -261,7 +274,7 @@ export function AttendanceOverviewContent({
               </Badge>
             </div>
             <CardDescription>
-              Click "Mark All Present" then adjust exceptions
+              Click "All Present" then adjust exceptions
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -319,7 +332,7 @@ export function AttendanceOverviewContent({
                         ) : (
                           <>
                             <Zap className="mr-1 h-3 w-3" />
-                            All Present
+                            {d?.allPresent || "All Present"}
                           </>
                         )}
                       </Button>
@@ -482,8 +495,13 @@ export function AttendanceOverviewContent({
       {dashboard?.recentActivity && dashboard.recentActivity.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Recent Activity</CardTitle>
-            <CardDescription>Latest attendance records today</CardDescription>
+            <CardTitle className="text-base">
+              {d?.recentActivity || "Recent Activity"}
+            </CardTitle>
+            <CardDescription>
+              {d?.recentActivityDescription ||
+                "Latest attendance records today"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -551,7 +569,9 @@ export function AttendanceOverviewContent({
         >
           <Link href={`${basePath}/bulk`}>
             <span className="text-lg">📋</span>
-            <span className="text-xs">Bulk Upload</span>
+            <span className="text-xs">
+              {d?.quickActions?.bulkImport || "Bulk Upload"}
+            </span>
           </Link>
         </Button>
         <Button
@@ -561,7 +581,7 @@ export function AttendanceOverviewContent({
         >
           <Link href={`${basePath}/reports`}>
             <span className="text-lg">📊</span>
-            <span className="text-xs">Reports</span>
+            <span className="text-xs">{d?.reports || "Reports"}</span>
           </Link>
         </Button>
         <Button
@@ -571,7 +591,7 @@ export function AttendanceOverviewContent({
         >
           <Link href={`${basePath}/config`}>
             <span className="text-lg">⚙️</span>
-            <span className="text-xs">Settings</span>
+            <span className="text-xs">{d?.settings || "Settings"}</span>
           </Link>
         </Button>
       </div>

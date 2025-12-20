@@ -168,13 +168,14 @@ export function CampaignsTable({
               }
             />
           ) : (
-            <GridContainer columns={4}>
+            <GridContainer columns={4} className="mt-4">
               {data.map((campaign) => (
                 <GridCard
                   key={campaign.id}
                   icon="/anthropic/document.svg"
                   title={campaign.name}
                   description={campaign.academicYear}
+                  subtitle={`${campaign.applicationsCount} ${t?.nav?.applications || "applications"}`}
                   onClick={() => handleView(campaign.id)}
                 />
               ))}

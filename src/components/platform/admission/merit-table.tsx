@@ -263,13 +263,14 @@ export function MeritTable({
               }
             />
           ) : (
-            <GridContainer columns={4}>
+            <GridContainer columns={4} className="mt-4">
               {data.map((merit) => (
                 <GridCard
                   key={merit.id}
                   icon="/anthropic/graduation-cap.svg"
                   title={merit.applicantName}
                   description={`#${merit.meritRank}`}
+                  subtitle={merit.status}
                   onClick={() => handleView(merit.id)}
                 />
               ))}

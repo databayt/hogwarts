@@ -17,8 +17,14 @@ export function FeatureCard({
   className,
   variant = "border",
   borderColor = "border-purple-500",
-  strokeColor = "#a855f7",
+  strokeColor,
 }: FeatureCardProps) {
+  // Use muted color for muted variant, otherwise use provided strokeColor or default
+  const effectiveStrokeColor =
+    variant === "muted"
+      ? "hsl(var(--muted-foreground))"
+      : strokeColor || "#a855f7"
+
   return (
     <div
       className={cn(
@@ -33,7 +39,7 @@ export function FeatureCard({
         <div
           className="text-5xl font-bold"
           style={{
-            WebkitTextStroke: `2px ${strokeColor}`,
+            WebkitTextStroke: `2px ${effectiveStrokeColor}`,
             color: "transparent",
           }}
         >

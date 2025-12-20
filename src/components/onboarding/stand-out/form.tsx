@@ -4,6 +4,7 @@ import React from "react"
 import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface StandOutFormProps {
   onContinue?: () => void
@@ -14,6 +15,8 @@ export function StandOutForm({
   onContinue,
   isLoading = false,
 }: StandOutFormProps) {
+  const { dictionary } = useDictionary()
+
   return (
     <div className="flex justify-center pt-4">
       <Button
@@ -25,11 +28,14 @@ export function StandOutForm({
         {isLoading ? (
           <>
             <div className="me-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
-            Continuing...
+            {dictionary?.marketing?.onboarding?.standOut?.continuing ||
+              "Continuing"}
+            ...
           </>
         ) : (
           <>
-            Continue to School Setup
+            {dictionary?.marketing?.onboarding?.standOut?.continueSetup ||
+              "Continue to School Setup"}
             <ArrowRight className="ms-2 h-4 w-4" />
           </>
         )}

@@ -220,19 +220,7 @@ export function StreamHomeContent({
                 {dictionary?.home?.exploreCourses || "Explore Courses"}
               </Link>
 
-              {isAuthenticated && (
-                <Link
-                  className={buttonVariants({
-                    size: "lg",
-                    variant: "outline",
-                  })}
-                  href={`/${lang}/stream/dashboard`}
-                >
-                  {isRTL ? "المفضلة" : "Favorite"}
-                </Link>
-              )}
-
-              {isAdmin && (
+              {isAdmin ? (
                 <Link
                   className={buttonVariants({
                     size: "lg",
@@ -240,9 +228,19 @@ export function StreamHomeContent({
                   })}
                   href={`/${lang}/stream/admin`}
                 >
-                  {isRTL ? "لوحة التحكم" : "Dashboard"}
+                  {dictionary?.stream?.header?.dashboard ?? "Dashboard"}
                 </Link>
-              )}
+              ) : isAuthenticated ? (
+                <Link
+                  className={buttonVariants({
+                    size: "lg",
+                    variant: "ghost",
+                  })}
+                  href={`/${lang}/stream/dashboard`}
+                >
+                  {dictionary?.stream?.header?.favorite ?? "Favorite"}
+                </Link>
+              ) : null}
             </div>
           </div>
 
@@ -253,7 +251,7 @@ export function StreamHomeContent({
         </div>
       </section>
 
-      <section className="mb-32 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <section className="mb-32 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {features.map((feature, index) => (
           <Card
             key={index}

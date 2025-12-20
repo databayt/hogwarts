@@ -226,9 +226,8 @@ export default function ApplicationFormContent({
   const handleSave = async () => {
     if (!formData.email) {
       toast.error(
-        lang === "ar"
-          ? "يرجى إدخال البريد الإلكتروني للحفظ"
-          : "Please enter your email to save"
+        dictionary?.marketing?.site?.admission?.portal?.errorSaving ||
+          "Please enter your email to save"
       )
       return
     }
@@ -249,12 +248,18 @@ export default function ApplicationFormContent({
       if (result.success && result.data) {
         setSessionToken(result.data.sessionToken)
         setLastSaved(new Date())
-        toast.success(lang === "ar" ? "تم حفظ الطلب" : "Application saved")
+        toast.success(
+          dictionary?.marketing?.site?.admission?.portal?.saved ||
+            "Application saved"
+        )
       } else {
         toast.error(result.error || "Failed to save")
       }
     } catch (error) {
-      toast.error(lang === "ar" ? "فشل في الحفظ" : "Failed to save")
+      toast.error(
+        dictionary?.marketing?.site?.admission?.portal?.failedToSave ||
+          "Failed to save"
+      )
     } finally {
       setIsSaving(false)
     }
@@ -283,7 +288,8 @@ export default function ApplicationFormContent({
       }
     } catch (error) {
       toast.error(
-        lang === "ar" ? "فشل في تقديم الطلب" : "Failed to submit application"
+        dictionary?.marketing?.site?.admission?.portal?.failedToSubmit ||
+          "Failed to submit application"
       )
     } finally {
       setIsSubmitting(false)
@@ -345,7 +351,9 @@ export default function ApplicationFormContent({
           <div className="space-y-3">
             <div className="text-muted-foreground flex justify-between text-sm">
               <span className="font-medium">
-                {lang === "ar" ? "الخطوة" : "Step"} {currentStep + 1} /{" "}
+                {dictionary?.marketing?.site?.admission?.portal?.step || "Step"}{" "}
+                {currentStep + 1}{" "}
+                {dictionary?.marketing?.site?.admission?.portal?.of || "of"}{" "}
                 {totalSteps}
               </span>
               <span>
@@ -406,7 +414,8 @@ export default function ApplicationFormContent({
               className="group"
             >
               <AnthropicIcons.ArrowRight className="me-2 h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />
-              {lang === "ar" ? "السابق" : "Previous"}
+              {dictionary?.marketing?.site?.admission?.portal?.previous ||
+                "Previous"}
             </Button>
 
             <div className="flex items-center gap-3">
@@ -423,7 +432,7 @@ export default function ApplicationFormContent({
                 ) : (
                   <AnthropicIcons.Archive className="me-2 h-4 w-4" />
                 )}
-                {lang === "ar" ? "حفظ" : "Save"}
+                {dictionary?.marketing?.site?.admission?.portal?.save || "Save"}
               </Button>
 
               {/* Next/Submit button */}
@@ -434,11 +443,13 @@ export default function ApplicationFormContent({
                   ) : (
                     <AnthropicIcons.Sparkle className="me-2 h-4 w-4" />
                   )}
-                  {lang === "ar" ? "تقديم الطلب" : "Submit Application"}
+                  {dictionary?.marketing?.site?.admission?.portal?.submit ||
+                    "Submit Application"}
                 </Button>
               ) : (
                 <Button type="button" onClick={handleNext} className="group">
-                  {lang === "ar" ? "التالي" : "Next"}
+                  {dictionary?.marketing?.site?.admission?.portal?.next ||
+                    "Next"}
                   <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                 </Button>
               )}
@@ -449,7 +460,8 @@ export default function ApplicationFormContent({
           {lastSaved && (
             <p className="text-muted-foreground pt-2 text-center text-xs">
               <AnthropicIcons.Checklist className="me-1 inline h-3 w-3" />
-              {lang === "ar" ? "آخر حفظ:" : "Last saved:"}{" "}
+              {dictionary?.marketing?.site?.admission?.portal?.lastSaved ||
+                "Last saved:"}{" "}
               {lastSaved.toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-US")}
             </p>
           )}

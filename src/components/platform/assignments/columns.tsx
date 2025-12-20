@@ -31,23 +31,29 @@ export interface AssignmentColumnCallbacks {
   onDelete?: (row: AssignmentRow) => void
 }
 
-export const getAssignmentColumns = (
-  dictionary?: Dictionary["school"]["assignments"],
-  lang?: Locale,
+export interface GetAssignmentColumnsProps {
+  dictionary?: Dictionary["school"]["assignments"]
+  common?: Dictionary["school"]["common"]
+  lang?: Locale
   callbacks?: AssignmentColumnCallbacks
-): ColumnDef<AssignmentRow>[] => {
+}
+
+export const getAssignmentColumns = ({
+  dictionary,
+  common,
+  lang,
+  callbacks,
+}: GetAssignmentColumnsProps): ColumnDef<AssignmentRow>[] => {
   const t = {
-    title: dictionary?.title || (lang === "ar" ? "العنوان" : "Title"),
-    type: dictionary?.type || (lang === "ar" ? "النوع" : "Type"),
-    points: dictionary?.points || (lang === "ar" ? "الدرجات" : "Points"),
-    dueDate:
-      dictionary?.dueDate || (lang === "ar" ? "تاريخ التسليم" : "Due Date"),
-    created:
-      dictionary?.created || (lang === "ar" ? "تاريخ الإنشاء" : "Created"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
+    title: dictionary?.title || "Title",
+    type: dictionary?.type || "Type",
+    points: dictionary?.points || "Points",
+    dueDate: dictionary?.dueDate || "Due Date",
+    created: dictionary?.created || "Created",
+    actions: "Actions",
+    view: common?.actions?.view || "View",
+    edit: common?.actions?.edit || "Edit",
+    delete: common?.actions?.delete || "Delete",
   }
 
   return [

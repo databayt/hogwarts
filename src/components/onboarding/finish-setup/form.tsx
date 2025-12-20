@@ -4,6 +4,7 @@ import React from "react"
 import { CheckCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface FinishSetupFormProps {
   onContinue?: () => void
@@ -14,6 +15,8 @@ export function FinishSetupForm({
   onContinue,
   isLoading = false,
 }: FinishSetupFormProps) {
+  const { dictionary } = useDictionary()
+
   return (
     <div className="flex justify-center pt-4">
       <Button
@@ -25,11 +28,14 @@ export function FinishSetupForm({
         {isLoading ? (
           <>
             <div className="me-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
-            Finishing...
+            {dictionary?.marketing?.onboarding?.finishSetup?.finishing ||
+              "Finishing"}
+            ...
           </>
         ) : (
           <>
-            Complete Setup
+            {dictionary?.marketing?.onboarding?.finishSetup?.completeSetup ||
+              "Complete Setup"}
             <CheckCircle className="ms-2 h-4 w-4" />
           </>
         )}

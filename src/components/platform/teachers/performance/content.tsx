@@ -115,46 +115,49 @@ export default function TeacherPerformanceContent({
   const [performanceFilter, setPerformanceFilter] = useState<string>("all")
 
   const t = {
-    title: lang === "ar" ? "تحليلات الأداء" : "Performance Analytics",
+    title: dictionary?.teachers?.analytics || "Performance Analytics",
     subtitle:
-      lang === "ar"
-        ? "تتبع وتحليل أداء المعلمين"
-        : "Track and analyze teacher performance",
-    search: lang === "ar" ? "بحث عن معلم..." : "Search for a teacher...",
-    allStatuses: lang === "ar" ? "جميع الحالات" : "All Statuses",
-    active: lang === "ar" ? "نشط" : "Active",
-    inactive: lang === "ar" ? "غير نشط" : "Inactive",
-    allPerformance: lang === "ar" ? "جميع المستويات" : "All Levels",
-    excellent: lang === "ar" ? "ممتاز" : "Excellent",
-    good: lang === "ar" ? "جيد" : "Good",
-    needsImprovement: lang === "ar" ? "يحتاج تحسين" : "Needs Improvement",
-    overview: lang === "ar" ? "نظرة عامة" : "Overview",
-    ranking: lang === "ar" ? "الترتيب" : "Ranking",
-    metrics: lang === "ar" ? "المقاييس" : "Metrics",
-    totalTeachers: lang === "ar" ? "إجمالي المعلمين" : "Total Teachers",
-    avgPerformance: lang === "ar" ? "متوسط الأداء" : "Avg. Performance",
-    avgWorkload: lang === "ar" ? "متوسط العبء" : "Avg. Workload",
-    topPerformers: lang === "ar" ? "أفضل المعلمين" : "Top Performers",
-    attendanceMarked: lang === "ar" ? "الحضور المسجل" : "Attendance Marked",
-    periods: lang === "ar" ? "الحصص" : "Periods",
-    classes: lang === "ar" ? "الفصول" : "Classes",
-    subjects: lang === "ar" ? "المواد" : "Subjects",
-    score: lang === "ar" ? "الدرجة" : "Score",
-    rank: lang === "ar" ? "الترتيب" : "Rank",
-    teacher: lang === "ar" ? "المعلم" : "Teacher",
-    department: lang === "ar" ? "القسم" : "Department",
-    workload: lang === "ar" ? "العبء" : "Workload",
-    performance: lang === "ar" ? "الأداء" : "Performance",
-    details: lang === "ar" ? "التفاصيل" : "Details",
-    noTeachers: lang === "ar" ? "لا يوجد معلمون" : "No teachers found",
-    exportReport: lang === "ar" ? "تصدير التقرير" : "Export Report",
-    underutilized: lang === "ar" ? "أقل من المطلوب" : "Underutilized",
-    normal: lang === "ar" ? "طبيعي" : "Normal",
-    overload: lang === "ar" ? "زائد" : "Overload",
+      dictionary?.teachers?.subtitle || "Track and analyze teacher performance",
+    search: dictionary?.teachers?.search || "Search for a teacher...",
+    allStatuses: dictionary?.teachers?.allStatuses || "All Statuses",
+    active: dictionary?.teachers?.active || "Active",
+    inactive: dictionary?.teachers?.inactive || "Inactive",
+    allPerformance: dictionary?.teachers?.allPerformance || "All Levels",
+    excellent: dictionary?.teachers?.excellent || "Excellent",
+    good: dictionary?.teachers?.good || "Good",
+    needsImprovement:
+      dictionary?.teachers?.needsImprovement || "Needs Improvement",
+    overview: dictionary?.teachers?.overview || "Overview",
+    ranking: dictionary?.teachers?.ranking || "Ranking",
+    metrics: dictionary?.teachers?.metrics || "Metrics",
+    totalTeachers: dictionary?.teachers?.totalTeachers || "Total Teachers",
+    avgPerformance: dictionary?.teachers?.avgPerformance || "Avg. Performance",
+    avgWorkload: dictionary?.teachers?.avgWorkload || "Avg. Workload",
+    topPerformers: dictionary?.teachers?.topPerformers || "Top Performers",
+    attendanceMarked:
+      dictionary?.teachers?.attendanceMarked || "Attendance Marked",
+    periods: dictionary?.teachers?.periods || "Periods",
+    classes: dictionary?.teachers?.classes || "Classes",
+    subjects: dictionary?.teachers?.subjects || "Subjects",
+    score: dictionary?.teachers?.score || "Score",
+    rank: dictionary?.teachers?.rank || "Rank",
+    teacher: dictionary?.teachers?.teacher || "Teacher",
+    department: dictionary?.teachers?.department || "Department",
+    workload: dictionary?.teachers?.workload || "Workload",
+    performance:
+      typeof dictionary?.teachers?.performance === "string"
+        ? dictionary?.teachers?.performance
+        : dictionary?.teachers?.performance?.title || "Performance",
+    details: dictionary?.teachers?.details || "Details",
+    noTeachers: dictionary?.teachers?.noTeachers || "No teachers found",
+    exportReport: dictionary?.teachers?.exportReport || "Export Report",
+    underutilized: dictionary?.teachers?.underutilized || "Underutilized",
+    normal: dictionary?.teachers?.normal || "Normal",
+    overload: dictionary?.teachers?.overload || "Overload",
     performanceBreakdown:
-      lang === "ar" ? "تحليل الأداء" : "Performance Breakdown",
+      dictionary?.teachers?.performanceBreakdown || "Performance Breakdown",
     workloadDistribution:
-      lang === "ar" ? "توزيع العبء" : "Workload Distribution",
+      dictionary?.teachers?.workloadDistribution || "Workload Distribution",
   }
 
   // Filter teachers based on search and filters

@@ -28,6 +28,7 @@ interface AssignmentsTableProps {
   initialData: AssignmentRow[]
   total: number
   dictionary?: Dictionary["school"]["assignments"]
+  common?: Dictionary["school"]["common"]
   lang: Locale
   perPage?: number
 }
@@ -36,13 +37,14 @@ function AssignmentsTableInner({
   initialData,
   total,
   dictionary,
+  common,
   lang,
   perPage = 20,
 }: AssignmentsTableProps) {
   // Translations with fallbacks
   const t = {
-    create: dictionary?.create || (lang === "ar" ? "إنشاء" : "Create"),
-    loading: lang === "ar" ? "جاري التحميل..." : "Loading...",
+    create: dictionary?.create || "Create",
+    loading: "Loading...",
   }
 
   // Data management with optimistic updates
@@ -74,10 +76,7 @@ function AssignmentsTableInner({
   const handleDelete = useCallback(
     async (assignment: AssignmentRow) => {
       try {
-        const deleteMsg =
-          lang === "ar"
-            ? `حذف "${assignment.title}"؟`
-            : `Delete "${assignment.title}"?`
+        const deleteMsg = `Delete "${assignment.title}"?`
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
 
@@ -90,31 +89,28 @@ function AssignmentsTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast(
-            lang === "ar" ? "فشل حذف الواجب" : "Failed to delete assignment"
-          )
+          ErrorToast("Failed to delete assignment")
         }
       } catch (e) {
         refresh()
-        ErrorToast(
-          e instanceof Error
-            ? e.message
-            : lang === "ar"
-              ? "فشل الحذف"
-              : "Failed to delete"
-        )
+        ErrorToast(e instanceof Error ? e.message : "Failed to delete")
       }
     },
-    [optimisticRemove, refresh, lang]
+    [optimisticRemove, refresh]
   )
 
   // Generate columns on the client side with dictionary, lang, and callbacks
   const columns = useMemo(
     () =>
-      getAssignmentColumns(dictionary, lang, {
-        onDelete: handleDelete,
+      getAssignmentColumns({
+        dictionary,
+        common,
+        lang,
+        callbacks: {
+          onDelete: handleDelete,
+        },
       }),
-    [dictionary, lang, handleDelete]
+    [dictionary, common, lang, handleDelete]
   )
 
   // Use pageCount of 1 since we're handling all data client-side

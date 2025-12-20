@@ -28,12 +28,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { GENDER_OPTIONS } from "./config"
 import { StudentFormStepProps } from "./types"
 import { studentCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: StudentFormStepProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.students?.information
   return (
     <div className="grid w-full grid-cols-3 gap-8">
       {/* Left Column - Names (2/3 width) */}
@@ -44,7 +47,11 @@ export function InformationStep({ form, isView }: StudentFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Given name" disabled={isView} {...field} />
+                <Input
+                  placeholder={t?.givenName ?? "Given name"}
+                  disabled={isView}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -57,7 +64,11 @@ export function InformationStep({ form, isView }: StudentFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Middle name" disabled={isView} {...field} />
+                <Input
+                  placeholder={t?.middleName ?? "Middle name"}
+                  disabled={isView}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,7 +81,11 @@ export function InformationStep({ form, isView }: StudentFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Surname" disabled={isView} {...field} />
+                <Input
+                  placeholder={t?.surname ?? "Surname"}
+                  disabled={isView}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,7 +114,7 @@ export function InformationStep({ form, isView }: StudentFormStepProps) {
                       {field.value ? (
                         format(new Date(field.value), "PPP")
                       ) : (
-                        <span>Date of birth</span>
+                        <span>{t?.dateOfBirth ?? "Date of birth"}</span>
                       )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
@@ -138,12 +153,16 @@ export function InformationStep({ form, isView }: StudentFormStepProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue
+                      placeholder={t?.selectGender ?? "Select gender"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="male">{t?.male ?? "Male"}</SelectItem>
+                  <SelectItem value="female">
+                    {t?.female ?? "Female"}
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

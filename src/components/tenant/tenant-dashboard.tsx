@@ -154,7 +154,7 @@ export default function TenantDashboard({
         </div>
 
         {/* Stats Overview */}
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
+        <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle>Total Students</CardTitle>
@@ -209,7 +209,7 @@ export default function TenantDashboard({
         {/* Quick Actions */}
         <div className="mb-8">
           <h3 className="mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {quickActions.map((action, index) => (
               <Card
                 key={index}
@@ -258,7 +258,7 @@ export default function TenantDashboard({
         {/* School Info */}
         <div className="mb-8">
           <h3 className="mb-4">School Information</h3>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Basic Details</CardTitle>
@@ -313,7 +313,7 @@ export default function TenantDashboard({
         {/* Navigation Links */}
         <div className="mb-8">
           <h3 className="mb-4">Quick Navigation</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             <Button
               variant="outline"
               className="h-auto justify-start p-4"

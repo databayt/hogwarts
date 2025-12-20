@@ -35,6 +35,7 @@ interface LessonsTableProps {
   initialData: LessonRow[]
   total: number
   dictionary?: Dictionary["school"]["lessons"]
+  common?: Dictionary["school"]["common"]
   lang: Locale
   perPage?: number
 }
@@ -43,6 +44,7 @@ function LessonsTableInner({
   initialData,
   total,
   dictionary,
+  common,
   lang,
   perPage = 20,
 }: LessonsTableProps) {
@@ -52,30 +54,24 @@ function LessonsTableInner({
 
   // Translations with fallbacks
   const t = {
-    title: dictionary?.title || (lang === "ar" ? "العنوان" : "Title"),
-    class: dictionary?.class || (lang === "ar" ? "الفصل" : "Class"),
-    teacher: dictionary?.teacher || (lang === "ar" ? "المعلم" : "Teacher"),
-    subject: dictionary?.subject || (lang === "ar" ? "المادة" : "Subject"),
-    date: dictionary?.date || (lang === "ar" ? "التاريخ" : "Date"),
-    time: dictionary?.time || (lang === "ar" ? "الوقت" : "Time"),
-    status: dictionary?.status || (lang === "ar" ? "الحالة" : "Status"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
-    allLessons:
-      dictionary?.allLessons || (lang === "ar" ? "جميع الدروس" : "All Lessons"),
+    title: dictionary?.title || "Title",
+    class: dictionary?.class || "Class",
+    teacher: dictionary?.teacher || "Teacher",
+    subject: dictionary?.subject || "Subject",
+    date: dictionary?.date || "Date",
+    time: dictionary?.time || "Time",
+    status: dictionary?.status || "Status",
+    actions: "Actions",
+    view: common?.actions?.view || "View",
+    edit: common?.actions?.edit || "Edit",
+    delete: common?.actions?.delete || "Delete",
+    allLessons: dictionary?.allLessons || "All Lessons",
     addNewLesson:
-      dictionary?.addNewLesson ||
-      (lang === "ar"
-        ? "خطط درسًا جديدًا لفصلك"
-        : "Plan a new lesson for your class"),
-    search:
-      dictionary?.search ||
-      (lang === "ar" ? "بحث في الدروس..." : "Search lessons..."),
-    create: dictionary?.create || (lang === "ar" ? "إنشاء" : "Create"),
-    export: dictionary?.export || (lang === "ar" ? "تصدير" : "Export"),
-    reset: dictionary?.reset || (lang === "ar" ? "إعادة تعيين" : "Reset"),
+      dictionary?.addNewLesson || "Plan a new lesson for your class",
+    search: dictionary?.search || "Search lessons...",
+    create: "Create",
+    export: dictionary?.export || "Export",
+    reset: dictionary?.reset || "Reset",
   }
 
   // View mode (table/grid)
@@ -122,8 +118,7 @@ function LessonsTableInner({
   const handleDelete = useCallback(
     async (lesson: LessonRow) => {
       try {
-        const deleteMsg =
-          lang === "ar" ? `حذف "${lesson.title}"؟` : `Delete "${lesson.title}"?`
+        const deleteMsg = `${t.delete} "${lesson.title}"?`
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
 
@@ -136,31 +131,28 @@ function LessonsTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast(
-            lang === "ar" ? "فشل حذف الدرس" : "Failed to delete lesson"
-          )
+          ErrorToast("Failed to delete lesson")
         }
       } catch (e) {
         refresh()
-        ErrorToast(
-          e instanceof Error
-            ? e.message
-            : lang === "ar"
-              ? "فشل الحذف"
-              : "Failed to delete"
-        )
+        ErrorToast(e instanceof Error ? e.message : "Failed to delete")
       }
     },
-    [optimisticRemove, refresh, lang]
+    [optimisticRemove, refresh, t.delete]
   )
 
   // Generate columns on the client side with dictionary, lang, and callbacks
   const columns = useMemo(
     () =>
-      getLessonColumns(dictionary, lang, {
-        onDelete: handleDelete,
+      getLessonColumns({
+        dictionary,
+        common,
+        lang,
+        callbacks: {
+          onDelete: handleDelete,
+        },
       }),
-    [dictionary, lang, handleDelete]
+    [dictionary, common, lang, handleDelete]
   )
 
   // Table instance
@@ -211,37 +203,14 @@ function LessonsTableInner({
     []
   )
 
-  // Get status badge variant
-  const getStatusBadge = (status: string) => {
-    const variants: Record<
-      string,
-      "default" | "secondary" | "destructive" | "outline"
-    > = {
-      PLANNED: "default",
-      IN_PROGRESS: "secondary",
-      COMPLETED: "outline",
-      CANCELLED: "destructive",
-    }
-    const labels: Record<string, { en: string; ar: string }> = {
-      PLANNED: { en: "Planned", ar: "مخطط" },
-      IN_PROGRESS: { en: "In Progress", ar: "قيد التنفيذ" },
-      COMPLETED: { en: "Completed", ar: "مكتمل" },
-      CANCELLED: { en: "Cancelled", ar: "ملغي" },
-    }
-    return {
-      label: labels[status]?.[lang] || status.replace("_", " "),
-      variant: variants[status] || "default",
-    }
-  }
-
   // Toolbar translations
   const toolbarTranslations = {
     search: t.search,
-    create: typeof t.create === "string" ? t.create : t.addNewLesson,
+    create: t.create || t.addNewLesson,
     reset: t.reset,
     export: t.export,
-    exportCSV: lang === "ar" ? "تصدير CSV" : "Export CSV",
-    exporting: lang === "ar" ? "جاري التصدير..." : "Exporting...",
+    exportCSV: "Export CSV",
+    exporting: "Exporting...",
   }
 
   return (
@@ -283,13 +252,14 @@ function LessonsTableInner({
               }
             />
           ) : (
-            <GridContainer columns={4}>
+            <GridContainer columns={4} className="mt-4">
               {data.map((lesson) => (
                 <GridCard
                   key={lesson.id}
                   icon="/anthropic/book-open.svg"
                   title={lesson.title}
                   description={lesson.subjectName}
+                  subtitle={lesson.className}
                   onClick={() => handleView(lesson.id)}
                 />
               ))}
@@ -304,13 +274,7 @@ function LessonsTableInner({
                 disabled={isLoading}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {isLoading
-                  ? lang === "ar"
-                    ? "جاري التحميل..."
-                    : "Loading..."
-                  : lang === "ar"
-                    ? "تحميل المزيد"
-                    : "Load More"}
+                {isLoading ? "Loading..." : "Load More"}
               </button>
             </div>
           )}

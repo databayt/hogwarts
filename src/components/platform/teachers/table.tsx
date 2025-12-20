@@ -363,16 +363,30 @@ function TeachersTableInner({
               }
             />
           ) : (
-            <GridContainer columns={4}>
-              {data.map((teacher) => (
-                <GridCard
-                  key={teacher.id}
-                  icon="/anthropic/users.svg"
-                  title={teacher.name}
-                  description={teacher.department || t.noDepartment}
-                  onClick={() => router.push(`/${lang}/teachers/${teacher.id}`)}
-                />
-              ))}
+            <GridContainer columns={4} className="mt-4">
+              {data.map((teacher) => {
+                const initials = teacher.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase()
+                return (
+                  <GridCard
+                    key={teacher.id}
+                    avatar={{
+                      src: teacher.profilePhotoUrl,
+                      fallback: initials,
+                    }}
+                    title={teacher.name}
+                    description={teacher.department || t.noDepartment}
+                    subtitle={`${teacher.subjectCount} ${t.subjects} • ${teacher.classCount} ${t.classes}`}
+                    onClick={() =>
+                      router.push(`/${lang}/teachers/${teacher.id}`)
+                    }
+                  />
+                )
+              })}
             </GridContainer>
           )}
 

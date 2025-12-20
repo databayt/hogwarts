@@ -14,7 +14,7 @@ export default function LetsWorkTogether() {
   const t = dictionary?.marketing?.letsWorkTogether
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 sm:py-20 md:py-24">
       <h2 className="font-heading pb-2 text-4xl font-extrabold md:text-5xl">
         {t?.title || "Let's Work Together"}
       </h2>

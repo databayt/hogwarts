@@ -47,10 +47,9 @@ export function HowToBeginSection({
   lang,
 }: Omit<StreamContentProps, "schoolId">) {
   const [activeStep, setActiveStep] = useState(0)
-  const isRTL = lang === "ar"
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 sm:py-20 md:py-24">
       {/* Section Title */}
       <div className="mb-12 text-center">
         <h2 className="font-serif text-3xl font-bold md:text-4xl lg:text-5xl">
@@ -60,12 +59,7 @@ export function HowToBeginSection({
 
       {/* Tabs with underline */}
       <div className="mb-16 flex justify-center">
-        <div
-          className={cn(
-            "border-border inline-flex gap-6 border-b md:gap-12",
-            isRTL && "flex-row-reverse"
-          )}
-        >
+        <div className="border-border inline-flex gap-6 border-b md:gap-12 rtl:flex-row-reverse">
           {steps.map((step, index) => (
             <button
               key={step.id}

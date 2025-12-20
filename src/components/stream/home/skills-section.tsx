@@ -69,12 +69,10 @@ export function SkillsSection({
   )
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 sm:py-20 md:py-24">
       <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
         {/* Left: Heading (3 cols) with more padding */}
-        <div
-          className={`lg:col-span-3 ${isRTL ? "text-right lg:order-2" : ""}`}
-        >
+        <div className="text-start lg:col-span-3 rtl:lg:order-2">
           <h2 className="text-2xl leading-tight font-bold md:text-[28px]">
             {dictionary?.skills?.title ||
               "Learn essential career and life skills"}
@@ -86,7 +84,7 @@ export function SkillsSection({
         </div>
 
         {/* Right: Carousel (9 cols) */}
-        <div className={`lg:col-span-9 ${isRTL ? "lg:order-1" : ""}`}>
+        <div className="lg:col-span-9 rtl:lg:order-1">
           <Carousel
             setApi={setApi}
             opts={{
@@ -124,27 +122,11 @@ export function SkillsSection({
 
                         {/* Title with Arrow */}
                         <div className="flex w-full flex-col gap-2">
-                          <h4
-                            className={cn(
-                              "text-foreground text-base font-medium",
-                              isRTL && "text-right"
-                            )}
-                          >
+                          <h4 className="text-foreground text-start text-base font-medium">
                             {skill.title}
                           </h4>
-                          <div
-                            className={cn(
-                              "flex",
-                              isRTL ? "justify-start" : "justify-end"
-                            )}
-                          >
-                            <ArrowRight
-                              className={cn(
-                                "text-muted-foreground h-5 w-5 transition-transform duration-300",
-                                "group-hover:translate-x-1",
-                                isRTL && "rotate-180 group-hover:-translate-x-1"
-                              )}
-                            />
+                          <div className="flex justify-end rtl:justify-start">
+                            <ArrowRight className="text-muted-foreground h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
                           </div>
                         </div>
                       </div>

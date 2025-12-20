@@ -54,41 +54,15 @@ export function AssignmentDetailContent({
   const router = useRouter()
   const isRTL = lang === "ar"
 
-  const t = {
-    back: isRTL ? "رجوع" : "Back",
-    details: isRTL ? "تفاصيل الواجب" : "Assignment Details",
-    overview: isRTL ? "نظرة عامة" : "Overview",
-    submissions: isRTL ? "التسليمات" : "Submissions",
-    description: isRTL ? "الوصف" : "Description",
-    instructions: isRTL ? "التعليمات" : "Instructions",
-    type: isRTL ? "النوع" : "Type",
-    dueDate: isRTL ? "تاريخ الاستحقاق" : "Due Date",
-    totalPoints: isRTL ? "الدرجة الكلية" : "Total Points",
-    weight: isRTL ? "الوزن" : "Weight",
-    status: isRTL ? "الحالة" : "Status",
-    createdAt: isRTL ? "تاريخ الإنشاء" : "Created",
-    updatedAt: isRTL ? "آخر تحديث" : "Last Updated",
-    errorTitle: isRTL ? "خطأ" : "Error",
-    notFound: isRTL ? "الواجب غير موجود" : "Assignment not found",
-    noDescription: isRTL ? "لا يوجد وصف" : "No description",
-    noInstructions: isRTL ? "لا توجد تعليمات" : "No instructions",
-    homework: isRTL ? "واجب منزلي" : "Homework",
-    quiz: isRTL ? "اختبار قصير" : "Quiz",
-    exam: isRTL ? "امتحان" : "Exam",
-    project: isRTL ? "مشروع" : "Project",
-    draft: isRTL ? "مسودة" : "Draft",
-    active: isRTL ? "نشط" : "Active",
-    closed: isRTL ? "مغلق" : "Closed",
-    graded: isRTL ? "مصحح" : "Graded",
-  }
+  const t = dictionary?.school?.assignments?.detail || {}
 
   // Get type label
   const getTypeLabel = (type: string) => {
     const types: Record<string, string> = {
-      HOMEWORK: t.homework,
-      QUIZ: t.quiz,
-      EXAM: t.exam,
-      PROJECT: t.project,
+      HOMEWORK: t.types?.homework || "Homework",
+      QUIZ: t.types?.quiz || "Quiz",
+      EXAM: t.types?.exam || "Exam",
+      PROJECT: t.types?.project || "Project",
     }
     return types[type] || type
   }
@@ -111,10 +85,10 @@ export function AssignmentDetailContent({
   // Get status label
   const getStatusLabel = (status: string) => {
     const statuses: Record<string, string> = {
-      DRAFT: t.draft,
-      ACTIVE: t.active,
-      CLOSED: t.closed,
-      GRADED: t.graded,
+      DRAFT: t.statuses?.draft || "Draft",
+      ACTIVE: t.statuses?.active || "Active",
+      CLOSED: t.statuses?.closed || "Closed",
+      GRADED: t.statuses?.graded || "Graded",
     }
     return statuses[status] || status
   }
@@ -125,12 +99,14 @@ export function AssignmentDetailContent({
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t.back}
+          {t.back || "Back"}
         </Button>
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
-          <AlertTitle>{t.errorTitle}</AlertTitle>
-          <AlertDescription>{error || t.notFound}</AlertDescription>
+          <AlertTitle>{t.errorTitle || "Error"}</AlertTitle>
+          <AlertDescription>
+            {error || t.notFound || "Assignment not found"}
+          </AlertDescription>
         </Alert>
       </div>
     )
@@ -150,7 +126,7 @@ export function AssignmentDetailContent({
           <div>
             <h1 className="text-2xl font-semibold">{data.title}</h1>
             <p className="text-muted-foreground text-sm">
-              {isRTL ? "استحقاق:" : "Due:"}{" "}
+              {t.due || "Due:"}{" "}
               {new Date(data.dueDate).toLocaleDateString(
                 isRTL ? "ar-SA" : "en-US",
                 {
@@ -168,7 +144,7 @@ export function AssignmentDetailContent({
           </Badge>
           <Badge variant="outline">{getTypeLabel(data.type)}</Badge>
           {isPastDue && data.status !== "GRADED" && (
-            <Badge variant="destructive">{isRTL ? "متأخر" : "Past Due"}</Badge>
+            <Badge variant="destructive">{t.pastDue || "Past Due"}</Badge>
           )}
         </div>
       </div>
@@ -176,8 +152,10 @@ export function AssignmentDetailContent({
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">{t.overview}</TabsTrigger>
-          <TabsTrigger value="submissions">{t.submissions}</TabsTrigger>
+          <TabsTrigger value="overview">{t.overview || "Overview"}</TabsTrigger>
+          <TabsTrigger value="submissions">
+            {t.submissions || "Submissions"}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -186,7 +164,7 @@ export function AssignmentDetailContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                {t.description}
+                {t.description || "Description"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -195,7 +173,7 @@ export function AssignmentDetailContent({
                   <p className="whitespace-pre-wrap">{data.description}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
-                    {t.noDescription}
+                    {t.noDescription || "No description"}
                   </p>
                 )}
               </div>
@@ -207,7 +185,9 @@ export function AssignmentDetailContent({
             {/* Type Card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t.type}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {dictionary?.school?.assignments?.type || "Type"}
+                </CardTitle>
                 <ClipboardList className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
@@ -219,7 +199,7 @@ export function AssignmentDetailContent({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  {t.dueDate}
+                  {dictionary?.school?.assignments?.dueDate || "Due Date"}
                 </CardTitle>
                 <Calendar className="text-muted-foreground h-4 w-4" />
               </CardHeader>
@@ -236,7 +216,7 @@ export function AssignmentDetailContent({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  {t.totalPoints}
+                  {t.totalPoints || "Total Points"}
                 </CardTitle>
                 <Target className="text-muted-foreground h-4 w-4" />
               </CardHeader>
@@ -249,7 +229,7 @@ export function AssignmentDetailContent({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  {t.weight}
+                  {t.weight || "Weight"}
                 </CardTitle>
                 <Percent className="text-muted-foreground h-4 w-4" />
               </CardHeader>
@@ -262,7 +242,7 @@ export function AssignmentDetailContent({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  {t.createdAt}
+                  {t.createdAt || "Created"}
                 </CardTitle>
                 <Calendar className="text-muted-foreground h-4 w-4" />
               </CardHeader>
@@ -279,7 +259,7 @@ export function AssignmentDetailContent({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  {t.updatedAt}
+                  {t.updatedAt || "Last Updated"}
                 </CardTitle>
                 <Calendar className="text-muted-foreground h-4 w-4" />
               </CardHeader>
@@ -298,7 +278,7 @@ export function AssignmentDetailContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5" />
-                {t.instructions}
+                {t.instructions || "Instructions"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -307,7 +287,7 @@ export function AssignmentDetailContent({
                   <p className="whitespace-pre-wrap">{data.instructions}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
-                    {t.noInstructions}
+                    {t.noInstructions || "No instructions"}
                   </p>
                 )}
               </div>
@@ -318,13 +298,12 @@ export function AssignmentDetailContent({
         <TabsContent value="submissions" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{t.submissions}</CardTitle>
+              <CardTitle>{t.submissions || "Submissions"}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                {isRTL
-                  ? "قائمة التسليمات ستظهر هنا"
-                  : "Submissions list will be displayed here"}
+                {t.submissionsListPlaceholder ||
+                  "Submissions list will be displayed here"}
               </p>
             </CardContent>
           </Card>

@@ -81,6 +81,7 @@ export default async function AssignmentsContent({
           initialData={data}
           total={total}
           dictionary={dictionary?.school?.assignments}
+          common={dictionary?.school?.common}
           lang={lang}
           perPage={sp.perPage}
         />

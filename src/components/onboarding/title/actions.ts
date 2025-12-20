@@ -33,21 +33,30 @@ export async function updateSchoolTitle(
 
     const validatedData = titleSchema.parse(data)
 
-    // Check for duplicate subdomain
+    // Check for duplicate subdomain (skip if subdomain matches current school's domain)
     if (validatedData.subdomain) {
-      const existingSchool = await db.school.findFirst({
-        where: {
-          domain: validatedData.subdomain,
-          NOT: { id: schoolId },
-        },
-        select: { id: true, domain: true },
+      // First get current school's domain to avoid false positives on drafts
+      const currentSchool = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { domain: true },
       })
 
-      if (existingSchool) {
-        return createActionResponse(undefined, {
-          message: "SUBDOMAIN_TAKEN",
-          name: "DuplicateError",
+      // Only check for duplicates if subdomain is different from current
+      if (currentSchool?.domain !== validatedData.subdomain) {
+        const existingSchool = await db.school.findFirst({
+          where: {
+            domain: validatedData.subdomain,
+            NOT: { id: schoolId },
+          },
+          select: { id: true, domain: true },
         })
+
+        if (existingSchool) {
+          return createActionResponse(undefined, {
+            message: "SUBDOMAIN_TAKEN",
+            name: "DuplicateError",
+          })
+        }
       }
     }
 

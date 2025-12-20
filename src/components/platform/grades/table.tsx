@@ -248,13 +248,14 @@ function ResultsTableInner({
               }
             />
           ) : (
-            <GridContainer columns={4}>
+            <GridContainer columns={4} className="mt-4">
               {data.map((result) => (
                 <GridCard
                   key={result.id}
                   icon="/anthropic/graduation-cap.svg"
                   title={result.studentName}
                   description={`${result.score}/${result.maxScore} (${result.percentage.toFixed(0)}%)`}
+                  subtitle={result.grade}
                   onClick={() => handleView(result.id)}
                 />
               ))}

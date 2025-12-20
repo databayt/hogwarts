@@ -52,30 +52,31 @@ export function AnnouncementDetailContent({
 }: AnnouncementDetailContentProps) {
   const router = useRouter()
   const isRTL = lang === "ar"
+  const d = dictionary?.school?.announcements
 
   const t = {
-    back: isRTL ? "رجوع" : "Back",
-    details: isRTL ? "تفاصيل الإعلان" : "Announcement Details",
-    title: isRTL ? "العنوان" : "Title",
-    content: isRTL ? "المحتوى" : "Content",
-    scope: isRTL ? "النطاق" : "Scope",
-    priority: isRTL ? "الأولوية" : "Priority",
-    status: isRTL ? "الحالة" : "Status",
-    published: isRTL ? "منشور" : "Published",
-    draft: isRTL ? "مسودة" : "Draft",
-    targetRole: isRTL ? "الفئة المستهدفة" : "Target Role",
-    createdAt: isRTL ? "تاريخ الإنشاء" : "Created",
-    updatedAt: isRTL ? "آخر تحديث" : "Last Updated",
-    errorTitle: isRTL ? "خطأ" : "Error",
-    notFound: isRTL ? "الإعلان غير موجود" : "Announcement not found",
-    schoolWide: isRTL ? "على مستوى المدرسة" : "School-wide",
-    classSpecific: isRTL ? "خاص بالفصل" : "Class-specific",
-    roleSpecific: isRTL ? "خاص بالدور" : "Role-specific",
-    high: isRTL ? "عالية" : "High",
-    medium: isRTL ? "متوسطة" : "Medium",
-    low: isRTL ? "منخفضة" : "Low",
-    normal: isRTL ? "عادية" : "Normal",
-    all: isRTL ? "الكل" : "All",
+    back: d?.back || "Back",
+    details: d?.details || "Announcement Details",
+    title: d?.announcementTitle || "Title",
+    content: d?.content || "Content",
+    scope: d?.scope || "Scope",
+    priority: d?.priority || "Priority",
+    status: d?.status || "Status",
+    published: d?.published || "Published",
+    draft: d?.draft || "Draft",
+    targetRole: d?.targetRole || "Target Role",
+    createdAt: d?.createdAt || "Created",
+    updatedAt: d?.updatedAt || "Last Updated",
+    errorTitle: d?.error || "Error",
+    notFound: d?.notFound || "Announcement not found",
+    schoolWide: d?.schoolWide || "School-wide",
+    classSpecific: d?.classSpecific || "Class-specific",
+    roleSpecific: d?.roleSpecific || "Role-specific",
+    high: d?.high || "High",
+    medium: d?.medium || "Medium",
+    low: d?.low || "Low",
+    normal: d?.normal || "Normal",
+    all: d?.all || "All",
   }
 
   // Error state
@@ -178,7 +179,7 @@ export function AnnouncementDetailContent({
               <p className="whitespace-pre-wrap">{body}</p>
             ) : (
               <p className="text-muted-foreground italic">
-                {isRTL ? "لا يوجد محتوى" : "No content"}
+                {d?.noContent || "No content"}
               </p>
             )}
           </div>

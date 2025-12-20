@@ -3,8 +3,6 @@
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
-import { cn } from "@/lib/utils"
-
 interface Neighbour {
   name: string
   url: string
@@ -30,10 +28,7 @@ export function DocsMobileNav({ neighbours, lang }: DocsMobileNavProps) {
       {neighbours.previous ? (
         <Link
           href={`/${lang}${neighbours.previous.url}`}
-          className={cn(
-            "text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm font-medium",
-            isRTL && "flex-row-reverse"
-          )}
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm font-medium rtl:flex-row-reverse"
         >
           {isRTL ? (
             <>
@@ -58,10 +53,7 @@ export function DocsMobileNav({ neighbours, lang }: DocsMobileNavProps) {
       {neighbours.next && (
         <Link
           href={`/${lang}${neighbours.next.url}`}
-          className={cn(
-            "text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm font-medium",
-            isRTL && "flex-row-reverse"
-          )}
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm font-medium rtl:flex-row-reverse"
         >
           {isRTL ? (
             <>

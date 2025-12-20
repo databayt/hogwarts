@@ -5,14 +5,22 @@ import Image from "next/image"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface GridCardProps {
   /** Icon element or path to SVG in /public/anthropic */
   icon?: React.ReactNode | string
+  /** Avatar for people cards - takes priority over icon */
+  avatar?: {
+    src?: string | null
+    fallback: string
+  }
   /** Main title */
   title: string
-  /** Description text */
+  /** Primary description text */
   description?: string
+  /** Secondary description for additional info */
+  subtitle?: string
   /** Click handler */
   onClick?: () => void
   /** Optional href for Link */
@@ -23,8 +31,10 @@ interface GridCardProps {
 
 function GridCardInner({
   icon,
+  avatar,
   title,
   description,
+  subtitle,
   onClick,
   href,
   className,
@@ -39,9 +49,16 @@ function GridCardInner({
       onClick={onClick}
     >
       <div className="flex h-[180px] flex-col justify-between rounded-sm p-6">
-        {/* Icon at top */}
+        {/* Avatar or Icon at top */}
         <div className="text-foreground">
-          {typeof icon === "string" ? (
+          {avatar ? (
+            <Avatar className="h-12 w-12">
+              {avatar.src && <AvatarImage src={avatar.src} alt={title} />}
+              <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                {avatar.fallback}
+              </AvatarFallback>
+            </Avatar>
+          ) : typeof icon === "string" ? (
             <Image
               src={icon}
               alt=""
@@ -55,12 +72,17 @@ function GridCardInner({
         </div>
 
         {/* Title + Description at bottom */}
-        <div className="space-y-2">
-          <h4 className="text-foreground font-medium">{title}</h4>
+        <div className="space-y-1">
+          <h4 className="text-foreground truncate font-medium">{title}</h4>
           {description && (
-            <small className="text-muted-foreground block font-light">
+            <p className="text-muted-foreground truncate text-sm">
               {description}
-            </small>
+            </p>
+          )}
+          {subtitle && (
+            <p className="text-muted-foreground/70 truncate text-xs">
+              {subtitle}
+            </p>
           )}
         </div>
       </div>

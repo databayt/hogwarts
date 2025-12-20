@@ -55,33 +55,44 @@ export function ClassDetailContent({
   const isRTL = lang === "ar"
 
   const t = {
-    back: isRTL ? "رجوع" : "Back",
-    classDetails: isRTL ? "تفاصيل الفصل" : "Class Details",
-    overview: isRTL ? "نظرة عامة" : "Overview",
-    students: isRTL ? "الطلاب" : "Students",
-    information: isRTL ? "المعلومات" : "Information",
-    enrolledStudents: isRTL ? "الطلاب المسجلين" : "Enrolled Students",
-    noStudents: isRTL ? "لا يوجد طلاب مسجلين" : "No students enrolled",
-    subject: isRTL ? "المادة" : "Subject",
-    teacher: isRTL ? "المعلم" : "Teacher",
-    term: isRTL ? "الفصل الدراسي" : "Term",
-    classroom: isRTL ? "الفصل" : "Classroom",
-    courseCode: isRTL ? "رمز المقرر" : "Course Code",
-    credits: isRTL ? "الساعات المعتمدة" : "Credits",
-    capacity: isRTL ? "السعة" : "Capacity",
-    evaluationType: isRTL ? "نوع التقييم" : "Evaluation Type",
-    createdAt: isRTL ? "تاريخ الإنشاء" : "Created",
-    viewProfile: isRTL ? "عرض الملف الشخصي" : "View Profile",
-    viewGrades: isRTL ? "عرض الدرجات" : "View Grades",
-    viewAttendance: isRTL ? "عرض الحضور" : "View Attendance",
-    unknown: isRTL ? "غير محدد" : "Unknown",
-    errorTitle: isRTL ? "خطأ" : "Error",
-    errorLoading: isRTL
-      ? "فشل تحميل بيانات الفصل"
-      : "Failed to load class data",
-    notFound: isRTL ? "الفصل غير موجود" : "Class not found",
-    enrolledAt: isRTL ? "تاريخ التسجيل" : "Enrolled",
-    subjectTeachers: isRTL ? "معلمو المادة" : "Subject Teachers",
+    back: dictionary?.school?.classes?.detail?.back || "Back",
+    classDetails:
+      dictionary?.school?.classes?.detail?.classDetails || "Class Details",
+    overview: dictionary?.school?.classes?.detail?.overview || "Overview",
+    students: dictionary?.school?.classes?.detail?.students || "Students",
+    information:
+      dictionary?.school?.classes?.detail?.information || "Information",
+    enrolledStudents:
+      dictionary?.school?.classes?.enrolledStudents || "Enrolled Students",
+    noStudents:
+      dictionary?.school?.classes?.detail?.noStudents || "No students enrolled",
+    subject: dictionary?.school?.classes?.subject || "Subject",
+    teacher: dictionary?.school?.classes?.teacher || "Teacher",
+    term: dictionary?.school?.classes?.term || "Term",
+    classroom: dictionary?.school?.classes?.detail?.classroom || "Classroom",
+    courseCode: dictionary?.school?.classes?.courseCode || "Course Code",
+    credits: dictionary?.school?.classes?.credits || "Credits",
+    capacity: dictionary?.school?.classes?.detail?.capacity || "Capacity",
+    evaluationType:
+      dictionary?.school?.classes?.detail?.evaluationType || "Evaluation Type",
+    createdAt: dictionary?.school?.classes?.detail?.createdAt || "Created",
+    viewProfile:
+      dictionary?.school?.classes?.detail?.viewProfile || "View Profile",
+    viewGrades:
+      dictionary?.school?.classes?.detail?.viewGrades || "View Grades",
+    viewAttendance:
+      dictionary?.school?.classes?.detail?.viewAttendance || "View Attendance",
+    unknown: dictionary?.school?.classes?.detail?.unknown || "Unknown",
+    errorTitle: dictionary?.school?.classes?.detail?.errorTitle || "Error",
+    errorLoading:
+      dictionary?.school?.classes?.detail?.errorLoading ||
+      "Failed to load class data",
+    notFound:
+      dictionary?.school?.classes?.detail?.notFound || "Class not found",
+    enrolledAt: dictionary?.school?.classes?.detail?.enrolledAt || "Enrolled",
+    subjectTeachers:
+      dictionary?.school?.classes?.detail?.subjectTeachers ||
+      "Subject Teachers",
   }
 
   // Error state
@@ -294,7 +305,8 @@ export function ClassDetailContent({
                 </CardHeader>
                 <CardContent>
                   <div className="text-muted-foreground text-sm">
-                    {isRTL ? "اضغط لعرض الدرجات" : "Click to view grades"}
+                    {dictionary?.school?.classes?.detail?.clickViewGrades ||
+                      "Click to view grades"}
                   </div>
                 </CardContent>
               </Card>
@@ -310,7 +322,8 @@ export function ClassDetailContent({
                 </CardHeader>
                 <CardContent>
                   <div className="text-muted-foreground text-sm">
-                    {isRTL ? "اضغط لعرض الحضور" : "Click to view attendance"}
+                    {dictionary?.school?.classes?.detail?.clickViewAttendance ||
+                      "Click to view attendance"}
                   </div>
                 </CardContent>
               </Card>

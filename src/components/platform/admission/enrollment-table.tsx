@@ -245,13 +245,14 @@ export function EnrollmentTable({
               }
             />
           ) : (
-            <GridContainer columns={4}>
+            <GridContainer columns={4} className="mt-4">
               {data.map((enrollment) => (
                 <GridCard
                   key={enrollment.id}
                   icon="/anthropic/document.svg"
                   title={enrollment.applicantName}
                   description={enrollment.applyingForClass}
+                  subtitle={enrollment.campaignName}
                   onClick={() => handleView(enrollment.id)}
                 />
               ))}

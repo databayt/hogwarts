@@ -57,35 +57,45 @@ export function LeadsTable({
 
   // Translations with fallbacks
   const t = {
-    leads: isRTL ? "العملاء المحتملين" : "Leads",
-    addNewLead: isRTL ? "أضف عميلاً محتملاً جديداً" : "Add a new lead to track",
-    search: isRTL ? "بحث في العملاء المحتملين..." : "Search leads...",
-    create: isRTL ? "إنشاء" : "Create",
-    export: isRTL ? "تصدير" : "Export",
-    reset: isRTL ? "إعادة تعيين" : "Reset",
-    actions: isRTL ? "إجراءات" : "Actions",
-    view: isRTL ? "عرض" : "View",
-    edit: isRTL ? "تعديل" : "Edit",
-    delete: isRTL ? "حذف" : "Delete",
-    status: isRTL ? "الحالة" : "Status",
-    priority: isRTL ? "الأولوية" : "Priority",
-    score: isRTL ? "النتيجة" : "Score",
-    loadMore: isRTL ? "تحميل المزيد" : "Load More",
-    loading: isRTL ? "جاري التحميل..." : "Loading...",
+    leads: dictionary?.leads ?? (isRTL ? "العملاء المحتملين" : "Leads"),
+    addNewLead:
+      dictionary?.addNewLead ??
+      (isRTL ? "أضف عميلاً محتملاً جديداً" : "Add a new lead to track"),
+    search:
+      dictionary?.search ??
+      (isRTL ? "بحث في العملاء المحتملين..." : "Search leads..."),
+    create: dictionary?.create ?? (isRTL ? "إنشاء" : "Create"),
+    export: dictionary?.export ?? (isRTL ? "تصدير" : "Export"),
+    reset: dictionary?.reset ?? (isRTL ? "إعادة تعيين" : "Reset"),
+    actions: dictionary?.actions ?? (isRTL ? "إجراءات" : "Actions"),
+    view: dictionary?.view ?? (isRTL ? "عرض" : "View"),
+    edit: dictionary?.edit ?? (isRTL ? "تعديل" : "Edit"),
+    delete: dictionary?.delete ?? (isRTL ? "حذف" : "Delete"),
+    status: dictionary?.table?.status ?? (isRTL ? "الحالة" : "Status"),
+    priority: dictionary?.table?.priority ?? (isRTL ? "الأولوية" : "Priority"),
+    score: dictionary?.table?.score ?? (isRTL ? "النتيجة" : "Score"),
+    loadMore: dictionary?.loadMore ?? (isRTL ? "تحميل المزيد" : "Load More"),
+    loading: dictionary?.loading ?? (isRTL ? "جاري التحميل..." : "Loading..."),
     // Status translations
-    NEW: isRTL ? "جديد" : "New",
-    CONTACTED: isRTL ? "تم التواصل" : "Contacted",
-    QUALIFIED: isRTL ? "مؤهل" : "Qualified",
-    PROPOSAL: isRTL ? "عرض" : "Proposal",
-    NEGOTIATION: isRTL ? "تفاوض" : "Negotiation",
-    CLOSED_WON: isRTL ? "تم الإغلاق (ربح)" : "Closed Won",
-    CLOSED_LOST: isRTL ? "تم الإغلاق (خسارة)" : "Closed Lost",
-    ARCHIVED: isRTL ? "مؤرشف" : "Archived",
+    NEW: dictionary?.status?.NEW ?? (isRTL ? "جديد" : "New"),
+    CONTACTED:
+      dictionary?.status?.CONTACTED ?? (isRTL ? "تم التواصل" : "Contacted"),
+    QUALIFIED: dictionary?.status?.QUALIFIED ?? (isRTL ? "مؤهل" : "Qualified"),
+    PROPOSAL: dictionary?.status?.PROPOSAL ?? (isRTL ? "عرض" : "Proposal"),
+    NEGOTIATION:
+      dictionary?.status?.NEGOTIATION ?? (isRTL ? "تفاوض" : "Negotiation"),
+    CLOSED_WON:
+      dictionary?.status?.CLOSED_WON ??
+      (isRTL ? "تم الإغلاق (ربح)" : "Closed Won"),
+    CLOSED_LOST:
+      dictionary?.status?.CLOSED_LOST ??
+      (isRTL ? "تم الإغلاق (خسارة)" : "Closed Lost"),
+    ARCHIVED: dictionary?.status?.ARCHIVED ?? (isRTL ? "مؤرشف" : "Archived"),
     // Priority translations
-    LOW: isRTL ? "منخفض" : "Low",
-    MEDIUM: isRTL ? "متوسط" : "Medium",
-    HIGH: isRTL ? "عالي" : "High",
-    URGENT: isRTL ? "عاجل" : "Urgent",
+    LOW: dictionary?.priority?.LOW ?? (isRTL ? "منخفض" : "Low"),
+    MEDIUM: dictionary?.priority?.MEDIUM ?? (isRTL ? "متوسط" : "Medium"),
+    HIGH: dictionary?.priority?.HIGH ?? (isRTL ? "عالي" : "High"),
+    URGENT: dictionary?.priority?.URGENT ?? (isRTL ? "عاجل" : "Urgent"),
   }
 
   // View mode (table/grid)
@@ -189,7 +199,10 @@ export function LeadsTable({
   const handleDelete = useCallback(
     async (lead: LeadRow) => {
       try {
-        const deleteMsg = isRTL ? `حذف ${lead.name}؟` : `Delete ${lead.name}?`
+        const deleteMsg = (
+          dictionary?.deleteConfirm ??
+          (isRTL ? "حذف {name}؟" : "Delete {name}?")
+        ).replace("{name}", lead.name)
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
 
@@ -200,20 +213,22 @@ export function LeadsTable({
           DeleteToast()
         } else {
           refresh()
-          ErrorToast(isRTL ? "فشل حذف العميل المحتمل" : "Failed to delete lead")
+          ErrorToast(
+            dictionary?.deleteFailed ??
+              (isRTL ? "فشل حذف العميل المحتمل" : "Failed to delete lead")
+          )
         }
       } catch (e) {
         refresh()
         ErrorToast(
           e instanceof Error
             ? e.message
-            : isRTL
-              ? "فشل الحذف"
-              : "Failed to delete"
+            : (dictionary?.deleteFailedGeneric ??
+                (isRTL ? "فشل الحذف" : "Failed to delete"))
         )
       }
     },
-    [optimisticRemove, refresh, isRTL]
+    [optimisticRemove, refresh, isRTL, dictionary]
   )
 
   // Handle edit
@@ -244,8 +259,9 @@ export function LeadsTable({
     create: t.create,
     reset: t.reset,
     export: t.export,
-    exportCSV: isRTL ? "تصدير CSV" : "Export CSV",
-    exporting: isRTL ? "جاري التصدير..." : "Exporting...",
+    exportCSV: dictionary?.exportCSV ?? (isRTL ? "تصدير CSV" : "Export CSV"),
+    exporting:
+      dictionary?.exporting ?? (isRTL ? "جاري التصدير..." : "Exporting..."),
   }
 
   // Get score color
@@ -298,16 +314,25 @@ export function LeadsTable({
               }
             />
           ) : (
-            <GridContainer columns={4}>
-              {data.map((lead) => (
-                <GridCard
-                  key={lead.id}
-                  icon="/anthropic/users.svg"
-                  title={lead.name}
-                  description={lead.company || undefined}
-                  onClick={() => handleView(lead)}
-                />
-              ))}
+            <GridContainer columns={4} className="mt-4">
+              {data.map((lead) => {
+                const initials = lead.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase()
+                return (
+                  <GridCard
+                    key={lead.id}
+                    avatar={{ fallback: initials }}
+                    title={lead.name}
+                    description={lead.company || undefined}
+                    subtitle={t[lead.status as keyof typeof t] || lead.status}
+                    onClick={() => handleView(lead)}
+                  />
+                )
+              })}
             </GridContainer>
           )}
 

@@ -9,28 +9,36 @@ interface AcademicStatsProps {
   dictionary?: Dictionary
 }
 
-export function AcademicStats({ lang }: AcademicStatsProps) {
+export function AcademicStats({ lang, dictionary }: AcademicStatsProps) {
   const isRTL = lang === "ar"
 
   const stats = [
     {
       number: isRTL ? "٩٥٪" : "95%",
-      label: isRTL ? "معدل القبول الجامعي" : "College Acceptance Rate",
+      label:
+        dictionary?.marketing?.site?.academic?.stats?.collegeAcceptance ||
+        "College Acceptance Rate",
       icon: AnthropicIcons.Archive,
     },
     {
       number: isRTL ? "١٢:١" : "12:1",
-      label: isRTL ? "نسبة الطلاب للمعلم" : "Student-Teacher Ratio",
+      label:
+        dictionary?.marketing?.site?.academic?.stats?.studentTeacherRatio ||
+        "Student-Teacher Ratio",
       icon: AnthropicIcons.Users,
     },
     {
       number: isRTL ? "+٢٥" : "25+",
-      label: isRTL ? "دورات متقدمة" : "AP Courses Offered",
+      label:
+        dictionary?.marketing?.site?.academic?.stats?.apCourses ||
+        "AP Courses Offered",
       icon: AnthropicIcons.Book,
     },
     {
       number: isRTL ? "٩٨٪" : "98%",
-      label: isRTL ? "معدل التخرج" : "Graduation Rate",
+      label:
+        dictionary?.marketing?.site?.academic?.stats?.graduationRate ||
+        "Graduation Rate",
       icon: AnthropicIcons.Checklist,
     },
   ]
@@ -39,12 +47,12 @@ export function AcademicStats({ lang }: AcademicStatsProps) {
     <SectionContainer id="stats">
       <div className="mb-16 text-center">
         <h2 className="font-heading mb-4 text-3xl font-bold md:text-4xl">
-          {isRTL ? "التميز الأكاديمي" : "Academic Excellence"}
+          {dictionary?.marketing?.site?.academic?.stats?.title ||
+            "Academic Excellence"}
         </h2>
         <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-          {isRTL
-            ? "أرقام تعكس التزامنا بالتميز الأكاديمي وتأثير برامجنا التعليمية التحويلي."
-            : "Numbers that reflect our commitment to academic excellence and the transformative impact of our educational programs."}
+          {dictionary?.marketing?.site?.academic?.stats?.subtitle ||
+            "Numbers that reflect our commitment to academic excellence and the transformative impact of our educational programs."}
         </p>
       </div>
 
