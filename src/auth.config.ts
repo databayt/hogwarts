@@ -11,24 +11,30 @@ import { LoginSchema } from "@/components/auth/validation"
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROVIDER CONFIGURATION LOGGING (runs at startup)
+// Wrapped in try-catch to prevent module load failures
 // ═══════════════════════════════════════════════════════════════════════════
-authLogger.config("check", {
-  step: "Loading auth providers",
-  environment: process.env.NODE_ENV,
-  google: {
-    configured: !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET,
-    hasClientId: !!env.GOOGLE_CLIENT_ID,
-    hasClientSecret: !!env.GOOGLE_CLIENT_SECRET,
-  },
-  facebook: {
-    configured:
-      !!process.env.FACEBOOK_CLIENT_ID && !!process.env.FACEBOOK_CLIENT_SECRET,
-    hasClientId: !!process.env.FACEBOOK_CLIENT_ID,
-    hasClientSecret: !!process.env.FACEBOOK_CLIENT_SECRET,
-    appId: process.env.FACEBOOK_CLIENT_ID || "NOT_SET",
-  },
-  credentials: true,
-})
+try {
+  authLogger.config("check", {
+    step: "Loading auth providers",
+    environment: process.env.NODE_ENV,
+    google: {
+      configured: !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET,
+      hasClientId: !!env.GOOGLE_CLIENT_ID,
+      hasClientSecret: !!env.GOOGLE_CLIENT_SECRET,
+    },
+    facebook: {
+      configured:
+        !!process.env.FACEBOOK_CLIENT_ID &&
+        !!process.env.FACEBOOK_CLIENT_SECRET,
+      hasClientId: !!process.env.FACEBOOK_CLIENT_ID,
+      hasClientSecret: !!process.env.FACEBOOK_CLIENT_SECRET,
+      appId: process.env.FACEBOOK_CLIENT_ID || "NOT_SET",
+    },
+    credentials: true,
+  })
+} catch {
+  // Silently ignore logging errors to prevent module load failures
+}
 
 export default {
   // Ensure we have at least one provider
@@ -132,10 +138,14 @@ export default {
   ],
 } satisfies NextAuthConfig
 
-// Log provider summary
-authLogger.info("Auth providers loaded", {
-  google: !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET,
-  facebook:
-    !!process.env.FACEBOOK_CLIENT_ID && !!process.env.FACEBOOK_CLIENT_SECRET,
-  credentials: true,
-})
+// Log provider summary (wrapped to prevent module load failures)
+try {
+  authLogger.info("Auth providers loaded", {
+    google: !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET,
+    facebook:
+      !!process.env.FACEBOOK_CLIENT_ID && !!process.env.FACEBOOK_CLIENT_SECRET,
+    credentials: true,
+  })
+} catch {
+  // Silently ignore logging errors
+}

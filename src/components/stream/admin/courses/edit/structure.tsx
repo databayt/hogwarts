@@ -46,6 +46,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { SortableList } from "@/components/stream/shared/sortable-list"
 
+import { VideoInput } from "../video-input"
 import {
   createChapter,
   createLesson,
@@ -660,12 +661,11 @@ export function CourseStructure({ data }: CourseStructureProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lesson-video">Video URL (optional)</Label>
-              <Input
-                id="lesson-video"
+              <Label>Video (optional)</Label>
+              <VideoInput
                 value={lessonVideoUrl}
-                onChange={(e) => setLessonVideoUrl(e.target.value)}
-                placeholder="https://..."
+                onChange={(url) => setLessonVideoUrl(url || "")}
+                disabled={isPending}
               />
             </div>
           </div>

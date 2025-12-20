@@ -43,6 +43,19 @@ async function getCourses(schoolId: string) {
   return courses
 }
 
+async function getCategories(schoolId: string) {
+  const categories = await db.streamCategory.findMany({
+    where: { schoolId },
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+    },
+  })
+
+  return categories
+}
+
 export default async function StreamAdminCoursesPage({ params }: Props) {
   const { lang, subdomain } = await params
   const dictionary = await getDictionary(lang)
@@ -62,14 +75,17 @@ export default async function StreamAdminCoursesPage({ params }: Props) {
     redirect(`/${lang}/s/${subdomain}/stream/not-admin`)
   }
 
-  // Fetch courses
-  const courses = schoolId ? await getCourses(schoolId) : []
+  // Fetch courses and categories in parallel
+  const [courses, categories] = schoolId
+    ? await Promise.all([getCourses(schoolId), getCategories(schoolId)])
+    : [[], []]
 
   return (
     <AdminCoursesContent
       dictionary={dictionary.stream}
       lang={lang}
       courses={courses}
+      categories={categories}
     />
   )
 }

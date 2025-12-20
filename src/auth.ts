@@ -433,9 +433,16 @@ export const {
         session.user.id = token.id as string
 
         // Check for preview role from cookies
-        const cookieStore = await cookies()
-        const previewRoleCookie = cookieStore.get("preview-role")
-        const previewModeCookie = cookieStore.get("preview-mode")
+        // Wrapped in try-catch because cookies() may not be available in all contexts
+        let previewRoleCookie: { value?: string } | undefined
+        let previewModeCookie: { value?: string } | undefined
+        try {
+          const cookieStore = await cookies()
+          previewRoleCookie = cookieStore.get("preview-role")
+          previewModeCookie = cookieStore.get("preview-mode")
+        } catch {
+          // cookies() not available in this context - skip preview mode check
+        }
 
         // Apply role from preview or token
         if (previewModeCookie?.value === "true" && previewRoleCookie?.value) {

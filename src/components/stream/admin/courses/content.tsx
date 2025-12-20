@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookOpen, Edit, MoreHorizontal, PlusIcon } from "lucide-react"
+import { BookOpen, Edit, Layers, MoreHorizontal, PlusIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -14,11 +14,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useModal } from "@/components/atom/modal/context"
+import Modal from "@/components/atom/modal/modal"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { DeleteCourseDialog } from "./delete-dialog"
+import { StreamCourseForm } from "./form"
 
 interface Course {
   id: string
@@ -38,10 +42,16 @@ interface Course {
   }
 }
 
+interface Category {
+  id: string
+  name: string
+}
+
 interface Props {
   dictionary: any
   lang: string
   courses: Course[]
+  categories?: Category[]
 }
 
 // Course types based on chapter count
@@ -59,11 +69,13 @@ function AdminCourseCard({
   lang,
   dictionary,
   onDelete,
+  onEdit,
 }: {
   course: Course
   lang: string
   dictionary: any
   onDelete: () => void
+  onEdit: () => void
 }) {
   const isRTL = lang === "ar"
   const chaptersCount = course.chapters.length
@@ -104,12 +116,18 @@ function AdminCourseCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onEdit}>
+                <Edit className="mr-2 size-4" />
+                {dictionary?.stream?.adminCourses?.editInfo ?? "Edit Info"}
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/stream/admin/courses/${course.id}/edit`}>
-                  <Edit className="mr-2 size-4" />
-                  {dictionary?.stream?.adminCourses?.edit ?? "Edit"}
+                  <Layers className="mr-2 size-4" />
+                  {dictionary?.stream?.adminCourses?.manageChapters ??
+                    "Manage Chapters"}
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DeleteCourseDialog
                 courseId={course.id}
                 courseTitle={course.title}
@@ -174,13 +192,19 @@ export default function AdminCoursesContent({
   dictionary,
   lang,
   courses,
+  categories = [],
 }: Props) {
   const { dictionary: dict } = useDictionary()
   const router = useRouter()
+  const { openModal } = useModal()
   const isRTL = lang === "ar"
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const handleDelete = () => {
+    router.refresh()
+  }
+
+  const handleSuccess = () => {
     router.refresh()
   }
 
@@ -196,13 +220,10 @@ export default function AdminCoursesContent({
               "courses in your library"}
           </p>
         </div>
-        <Link
-          className={buttonVariants()}
-          href={`/${lang}/stream/admin/courses/create`}
-        >
+        <Button onClick={() => openModal()}>
           <PlusIcon className="size-4" />
           {dict?.stream?.adminCourses?.createCourse ?? "Create Course"}
-        </Link>
+        </Button>
       </div>
 
       {/* Grid with hover effect like public courses */}
@@ -218,14 +239,11 @@ export default function AdminCoursesContent({
                 {dict?.stream?.adminCourses?.createFirstCourse ??
                   "Create your first course to get started with Stream LMS"}
               </p>
-              <Link
-                className={buttonVariants()}
-                href={`/${lang}/stream/admin/courses/create`}
-              >
+              <Button onClick={() => openModal()}>
                 <PlusIcon className="size-4" />
                 {dict?.stream?.adminCourses?.createYourFirstCourse ??
                   "Create Your First Course"}
-              </Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -261,12 +279,25 @@ export default function AdminCoursesContent({
                   lang={lang}
                   dictionary={dict}
                   onDelete={handleDelete}
+                  onEdit={() => openModal(course.id)}
                 />
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Course Create/Edit Modal */}
+      <Modal
+        content={
+          <StreamCourseForm
+            dictionary={dict}
+            lang={lang}
+            categories={categories}
+            onSuccess={handleSuccess}
+          />
+        }
+      />
     </div>
   )
 }
