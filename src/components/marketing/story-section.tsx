@@ -2,13 +2,16 @@
 
 import { useVideoScrollControl } from "@/hooks/use-video-scroll-control"
 import { Icons } from "@/components/icons"
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface StorySectionProps {
   dictionary?: Dictionary
+  lang?: Locale
 }
 
-export default function StorySection({ dictionary }: StorySectionProps) {
+export default function StorySection({ dictionary, lang }: StorySectionProps) {
+  const isRTL = lang === "ar"
   const { containerRef, videoRef, visibilityRatio, isInView } =
     useVideoScrollControl({
       playThreshold: 0.2,
@@ -26,7 +29,7 @@ export default function StorySection({ dictionary }: StorySectionProps) {
   const videoOpacity = Math.min(1, 0.7 + visibilityRatio * 0.3)
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 md:py-24" dir={isRTL ? "rtl" : "ltr"}>
       <div className="grid items-center gap-8 lg:grid-cols-3 lg:gap-12">
         {/* Video - Left side (2/3 width) */}
         <div

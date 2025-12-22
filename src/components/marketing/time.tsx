@@ -1,22 +1,27 @@
 import React from "react"
 
 import { GradientAnimation } from "@/components/atom/gradient-animation"
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import Clock from "./clock"
 
 interface TimeProps {
   dictionary: Dictionary
+  lang?: Locale
 }
 
-const Time = ({ dictionary }: TimeProps) => {
-  const timeDict = (dictionary as any).time || {
-    title: "Time",
-    subtitle: "We sell the origin of value.",
-  }
+const Time = ({ dictionary, lang }: TimeProps) => {
+  const isRTL = lang === "ar"
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const timeDict = (dictionary?.marketing as any)?.time ||
+    (dictionary as any).time || {
+      title: "Time",
+      subtitle: "We sell the origin of value.",
+    }
 
   return (
-    <section>
+    <section dir={isRTL ? "rtl" : "ltr"}>
       <GradientAnimation
         height="h-[280px] md:h-[240px]"
         containerClassName="!w-full rounded-xl overflow-hidden"

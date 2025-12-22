@@ -8,13 +8,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface FAQsProps {
   dictionary?: Dictionary
+  lang?: Locale
 }
 
-export default function FAQs({ dictionary }: FAQsProps) {
+export default function FAQs({ dictionary, lang }: FAQsProps) {
+  const isRTL = lang === "ar"
   const faqsDict = dictionary?.marketing?.faqs || {
     title: "Frequently Asked Questions",
     titleBreak: "FAQ",
@@ -74,7 +77,7 @@ export default function FAQs({ dictionary }: FAQsProps) {
   const items = faqsDict.items?.length > 0 ? faqsDict.items : defaultItems
 
   return (
-    <section className="py-16 md:py-32">
+    <section className="py-16 md:py-32" dir={isRTL ? "rtl" : "ltr"}>
       <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
         <div className="text-center lg:text-start">
           <h1 className="font-heading mb-4 text-4xl font-extrabold whitespace-pre-line md:text-5xl">

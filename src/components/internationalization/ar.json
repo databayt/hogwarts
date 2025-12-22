@@ -299,6 +299,11 @@
         }
       ]
     },
+    "footer": {
+      "inspiredBy": "مستوحى من",
+      "builtBy": "بناء",
+      "sourceCode": "الكود المصدري متاح على"
+    },
     "parallax": {
       "design": "تصميم",
       "automate": "أتمتة",

@@ -1,12 +1,14 @@
 import Image from "next/image"
 import Link from "next/link"
 
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import "@/styles/animation-box.css"
 
 interface MissionCardsProps {
   dictionary?: Dictionary
+  lang?: Locale
 }
 
 const cards = [
@@ -30,7 +32,8 @@ const cards = [
   },
 ]
 
-export default function MissionCards({ dictionary }: MissionCardsProps) {
+export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
+  const isRTL = lang === "ar"
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dict = (dictionary?.marketing as any)?.missionCards || {
     heading: "A restoration of time, elimination of repetitive.",
@@ -41,7 +44,7 @@ export default function MissionCards({ dictionary }: MissionCardsProps) {
   }
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 md:py-24" dir={isRTL ? "rtl" : "ltr"}>
       <div className="grid gap-y-12 lg:grid-cols-12 lg:gap-x-8">
         {/* Left column - Heading */}
         <div className="lg:col-span-4">

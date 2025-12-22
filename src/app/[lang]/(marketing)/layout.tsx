@@ -26,7 +26,7 @@ export default async function MarketingLayout({
       </Suspense>
       <SiteHeader dictionary={dictionary} locale={lang} />
       <main className="flex-1">{children}</main>
-      <SiteFooter dictionary={dictionary} />
+      <SiteFooter dictionary={dictionary} locale={lang} />
       <Chatbot lang={lang as Locale} promptType="saasMarketing" />
     </div>
   )

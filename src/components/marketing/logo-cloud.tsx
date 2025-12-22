@@ -2,6 +2,7 @@ import Image from "next/image"
 
 import { InfiniteSlider } from "@/components/atom/infinite-slider"
 import { ProgressiveBlur } from "@/components/atom/progressive-blur"
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 const sponsors = [
@@ -58,15 +59,20 @@ const sponsors = [
 
 interface LogoCloudProps {
   dictionary?: Dictionary
+  lang?: Locale
 }
 
-export default function LogoCloud({ dictionary }: LogoCloudProps) {
+export default function LogoCloud({ dictionary, lang }: LogoCloudProps) {
+  const isRTL = lang === "ar"
   const text =
     dictionary?.marketing?.logoCloud?.trustedBy ||
     "Trusted by amazing\nsponsors"
 
   return (
-    <section className="bg-background overflow-hidden py-16">
+    <section
+      className="bg-background overflow-hidden py-16"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
       <div className="group relative">
         <div className="flex flex-col items-center md:flex-row">
           <div className="shrink-0 md:border-r md:pr-6">

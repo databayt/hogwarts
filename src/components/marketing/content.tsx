@@ -24,23 +24,28 @@ interface Props {
 
 export default function HomeContent(props: Props) {
   const { dictionary, lang } = props
+  const isRTL = lang === "ar"
+
   return (
-    <main className="bg-background flex min-h-screen flex-col">
+    <main
+      className="bg-background flex min-h-screen flex-col"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
       <Hero dictionary={dictionary} lang={lang} />
-      <StorySection dictionary={dictionary} />
-      <MissionCards dictionary={dictionary} />
+      <StorySection dictionary={dictionary} lang={lang} />
+      <MissionCards dictionary={dictionary} lang={lang} />
       {/* <Gallery />
       <Stack />
       <Automated />
       <Codebase /> */}
-      <Time dictionary={dictionary} />
+      <Time dictionary={dictionary} lang={lang} />
       {/* <Wizard /> */}
-      <Testimonial dictionary={dictionary} />
-      <LogoCloud dictionary={dictionary} />
-      <OpenSource dictionary={dictionary} />
-      <FAQs dictionary={dictionary} />
-      <LetsWorkTogether dictionary={dictionary} />
-      <Boost dictionary={dictionary} />
+      <Testimonial dictionary={dictionary} lang={lang} />
+      <LogoCloud dictionary={dictionary} lang={lang} />
+      <OpenSource dictionary={dictionary} lang={lang} />
+      <FAQs dictionary={dictionary} lang={lang} />
+      <LetsWorkTogether dictionary={dictionary} lang={lang} />
+      <Boost dictionary={dictionary} lang={lang} />
     </main>
   )
 }

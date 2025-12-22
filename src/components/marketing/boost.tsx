@@ -2,15 +2,18 @@ import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import SectionHeading from "../atom/section-heading"
 
 interface BoostProps {
   dictionary?: Dictionary
+  lang?: Locale
 }
 
-const Boost = ({ dictionary }: BoostProps) => {
+const Boost = ({ dictionary, lang }: BoostProps) => {
+  const isRTL = lang === "ar"
   const boostDict = dictionary?.marketing?.boost || {
     title: "Boost",
     subtitle: "Thank you for the boost",
@@ -18,7 +21,7 @@ const Boost = ({ dictionary }: BoostProps) => {
     buyMeCoffee: "Buy me a coffee",
   }
   return (
-    <section className="py-14">
+    <section className="py-14" dir={isRTL ? "rtl" : "ltr"}>
       <SectionHeading
         title={boostDict.title}
         description={boostDict.subtitle}
@@ -36,7 +39,7 @@ const Boost = ({ dictionary }: BoostProps) => {
             rel="noopener noreferrer"
             aria-label="Become a Patron"
           >
-            <Icons.patreon className="mr-2 size-4" />
+            <Icons.patreon className="me-2 size-4" />
             <span>{boostDict.becomePatron}</span>
           </Link>
           <Link
@@ -50,7 +53,7 @@ const Boost = ({ dictionary }: BoostProps) => {
             rel="noopener noreferrer"
             aria-label="Buy me a coffee"
           >
-            <Icons.coffee className="mr-2 size-5" />
+            <Icons.coffee className="me-2 size-5" />
             <span>{boostDict.buyMeCoffee}</span>
           </Link>
         </div>

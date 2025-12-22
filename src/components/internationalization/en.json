@@ -293,6 +293,11 @@
         }
       ]
     },
+    "footer": {
+      "inspiredBy": "Inspired by",
+      "builtBy": "Built by",
+      "sourceCode": "The source code is available on"
+    },
     "parallax": {
       "design": "Design",
       "automate": "Automate",

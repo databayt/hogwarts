@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 const GITHUB_URL = "https://github.com/databayt/hogwarts"
@@ -15,6 +16,7 @@ interface Contributor {
 
 interface OpenSourceProps {
   dictionary?: Dictionary
+  lang?: Locale
 }
 
 async function getContributors(): Promise<Contributor[]> {
@@ -30,8 +32,12 @@ async function getContributors(): Promise<Contributor[]> {
   }
 }
 
-export default async function OpenSource({ dictionary }: OpenSourceProps) {
+export default async function OpenSource({
+  dictionary,
+  lang,
+}: OpenSourceProps) {
   const contributors = await getContributors()
+  const isRTL = lang === "ar"
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dict = (dictionary?.marketing as any)?.openSource || {
@@ -41,7 +47,7 @@ export default async function OpenSource({ dictionary }: OpenSourceProps) {
   }
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 md:py-24" dir={isRTL ? "rtl" : "ltr"}>
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="font-heading mb-4 text-4xl font-extrabold md:text-5xl">
           {dict.title}

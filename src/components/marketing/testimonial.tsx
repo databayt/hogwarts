@@ -1,13 +1,16 @@
 import Image from "next/image"
 
 import SectionHeading from "@/components/atom/section-heading"
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface TestimonialProps {
   dictionary?: Dictionary
+  lang?: Locale
 }
 
-export default function Testimonial({ dictionary }: TestimonialProps) {
+export default function Testimonial({ dictionary, lang }: TestimonialProps) {
+  const isRTL = lang === "ar"
   const testDict = dictionary?.marketing?.testimonial || {
     title: "Testimonials",
     subtitle:
@@ -68,7 +71,7 @@ export default function Testimonial({ dictionary }: TestimonialProps) {
       : defaultTestimonials
 
   return (
-    <section id="features">
+    <section id="features" dir={isRTL ? "rtl" : "ltr"}>
       <SectionHeading title={testDict.title} description={testDict.subtitle} />
       <div className="grid justify-center gap-4 sm:grid-cols-2 md:grid-cols-3">
         {testimonials.map((testimonial, index) => (

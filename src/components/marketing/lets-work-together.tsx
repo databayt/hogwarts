@@ -4,15 +4,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface LetsWorkTogetherProps {
   dictionary?: Dictionary
+  lang?: Locale
 }
 
 export default function LetsWorkTogether({
   dictionary,
+  lang,
 }: LetsWorkTogetherProps) {
+  const isRTL = lang === "ar"
   const dict = dictionary?.marketing?.letsWorkTogether || {
     title: "Let's Work Together",
     description:
@@ -24,7 +28,7 @@ export default function LetsWorkTogether({
     liveChat: "Live chat",
   }
   return (
-    <section className="">
+    <section dir={isRTL ? "rtl" : "ltr"}>
       <h1 className="font-heading mb-8 text-4xl font-extrabold md:text-5xl">
         {dict.title}
       </h1>
