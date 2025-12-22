@@ -82,11 +82,12 @@
   },
   "marketing": {
     "hero": {
-      "title": "Automate Education,\nelevate the curiosity.",
-      "titleMobile": "Automate\nEducation\nelevate\nthe curiosity.",
+      "title": "Automate\nthe boring,\nelevate the\nwonder.",
+      "titleMobile": "Automate\nthe boring,\nelevate the\nwonder.",
       "subtitle": "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
       "badge": "700+ School automated",
       "appointment": "Get Started",
+      "liveDemo": "Live Demo",
       "services": "GitHub"
     },
     "features": {

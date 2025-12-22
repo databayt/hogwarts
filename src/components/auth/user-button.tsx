@@ -65,7 +65,7 @@ export const UserButton = ({
         asChild
       >
         <Link href={loginUrl}>
-          <LogIn className="size-4" />
+          <LogIn className="size-4 rtl:-scale-x-100" />
           <span className="sr-only">Login</span>
         </Link>
       </Button>

@@ -15,11 +15,13 @@ interface HeroProps {
 }
 
 const Hero = ({ dictionary, lang }: HeroProps) => {
+  const isRTL = lang === "ar"
   const heroDict = dictionary?.marketing?.hero || {
-    title: "Automate Education,",
+    title: "Automate\nthe boring,\nelevate the\nwonder.",
     subtitle:
       "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
     appointment: "Get Started",
+    liveDemo: "Live Demo",
     services: "GitHub",
   }
 
@@ -48,16 +50,24 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
     return `${protocol}://demo.${baseDomain}/${lang || "en"}`
   }
 
+  // Split title by newlines to render each line as a block
+  const titleLines = (heroDict.title || "").split("\n")
+
   return (
-    <section id="hero" className="bg-background min-h-[calc(100vh-3.5rem)]">
+    <section
+      id="hero"
+      className="bg-background min-h-[calc(100vh-3.5rem)]"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
       <div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
-        {/* Left: Content */}
+        {/* Content */}
         <div className="space-y-6 py-12 lg:py-0">
           <h1 className="font-heading text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl">
-            <span className="block">Automate</span>
-            <span className="block">the boring,</span>
-            <span className="block">elevate the</span>
-            <span className="block">wonder.</span>
+            {titleLines.map((line, index) => (
+              <span key={index} className="block">
+                {line}
+              </span>
+            ))}
           </h1>
 
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -76,12 +86,12 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
                 "w-full sm:w-auto"
               )}
             >
-              Live Demo
+              {heroDict.liveDemo || "Live Demo"}
             </Link>
           </div>
         </div>
 
-        {/* Right: Illustration - hidden on mobile/tablet for performance */}
+        {/* Illustration - hidden on mobile/tablet for performance */}
         <div className="hidden items-center justify-center lg:flex lg:justify-end">
           <HeroIllustration />
         </div>
