@@ -1,51 +1,36 @@
 "use client"
 
-import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { Languages } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 export function LangSwitcher() {
   const router = useRouter()
   const pathname = usePathname()
 
-  const switchLanguage = (lang: string) => {
+  const currentLang = pathname.split("/")[1] || "en"
+  const nextLang = currentLang === "ar" ? "en" : "ar"
+
+  const switchLanguage = () => {
     const segments = pathname.split("/")
-    segments[1] = lang
+    segments[1] = nextLang
+    // Set cookie to persist locale preference
+    document.cookie = `NEXT_LOCALE=${nextLang}; path=/; max-age=31536000; samesite=lax`
     router.push(segments.join("/"))
   }
 
-  const currentLang = pathname.split("/")[1] || "en"
-
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-8">
-          <Languages className="size-4" aria-hidden="true" />
-          <span className="sr-only">Change language</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => switchLanguage("en")}
-          className={currentLang === "en" ? "font-semibold" : ""}
-        >
-          English
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => switchLanguage("ar")}
-          className={currentLang === "ar" ? "font-semibold" : ""}
-        >
-          العربية
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="size-8 cursor-pointer transition-opacity hover:opacity-70"
+      onClick={switchLanguage}
+    >
+      <Languages className="size-4" />
+      <span className="sr-only">
+        Switch to {nextLang === "ar" ? "Arabic" : "English"}
+      </span>
+    </Button>
   )
 }
