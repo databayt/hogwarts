@@ -16,6 +16,8 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
+  const isRTL = locale === "ar"
+
   // Transform nav items for MobileNav
   const navItems = marketingConfig.mainNav.map((item) => ({
     href: item.href,
@@ -41,7 +43,10 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
   ]
 
   return (
-    <header className="bg-background sticky top-0 z-50 w-full">
+    <header
+      className="bg-background sticky top-0 z-50 w-full"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
       <div className="flex h-14 items-center gap-2 **:data-[slot=separator]:!h-4 md:gap-4">
         {/* Left: Nav items */}
         <MainNav dictionary={dictionary} />
