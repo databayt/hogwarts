@@ -210,7 +210,7 @@
     "@types/negotiator": "^0.6.4",
     "@types/node": "^20.19.9",
     "@types/papaparse": "^5.5.2",
-    "@types/pg": "^8.15.6",
+    "@types/pg": "^8.16.0",
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "@types/react-dropzone": "^5.1.0",
