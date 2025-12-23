@@ -54,15 +54,16 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
   const titleLines = (heroDict.title || "").split("\n")
 
   return (
-    <section
-      id="hero"
-      className="bg-background min-h-[calc(100vh-3.5rem)]"
-      dir={isRTL ? "rtl" : "ltr"}
-    >
-      <div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
+    <section id="hero" className="bg-background" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-6 py-8 md:gap-8 lg:flex-row lg:gap-16 lg:py-0">
+        {/* Illustration - shown first on mobile (column), second on desktop (row) */}
+        <div className="flex items-center justify-center lg:order-2 lg:flex-1 lg:justify-end">
+          <HeroIllustration />
+        </div>
+
         {/* Content */}
-        <div className="space-y-6 py-12 lg:py-0">
-          <h1 className="font-heading text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl">
+        <div className="flex flex-col items-center space-y-6 text-center lg:order-1 lg:flex-1 lg:items-start lg:text-start">
+          <h1 className="font-heading text-4xl font-black tracking-tight sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
             {titleLines.map((line, index) => (
               <span key={index} className="block">
                 {line}
@@ -89,11 +90,6 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
               {heroDict.liveDemo || "Live Demo"}
             </Link>
           </div>
-        </div>
-
-        {/* Illustration - hidden on mobile/tablet for performance */}
-        <div className="hidden items-center justify-center lg:flex lg:justify-end">
-          <HeroIllustration />
         </div>
       </div>
     </section>

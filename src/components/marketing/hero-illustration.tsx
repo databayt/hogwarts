@@ -5,7 +5,7 @@ import Lottie from "lottie-react"
 
 export function HeroIllustration() {
   return (
-    <div className="relative h-[300px] w-[300px] sm:h-[350px] sm:w-[350px] lg:h-[450px] lg:w-[450px]">
+    <div className="relative h-[200px] w-[200px] sm:h-[280px] sm:w-[280px] md:h-[320px] md:w-[320px] lg:h-[400px] lg:w-[400px] xl:h-[480px] xl:w-[480px]">
       {/* Apply dark mode inversion filter to the hand portion of the animation */}
       <div className="h-full w-full dark:mix-blend-difference dark:[filter:invert(1)_hue-rotate(180deg)]">
         <Lottie
