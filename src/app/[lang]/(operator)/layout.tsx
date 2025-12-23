@@ -10,6 +10,9 @@ import { PageHeadingDisplay } from "@/components/platform/context/page-heading-d
 import SaasHeader from "@/components/template/saas-header/content"
 import SaasSidebar from "@/components/template/saas-sidebar/content"
 
+// All operator pages are dynamic - they require auth and query the database
+export const dynamic = "force-dynamic"
+
 interface OperatorLayoutProps {
   children: React.ReactNode
   params: Promise<{ lang: string }>

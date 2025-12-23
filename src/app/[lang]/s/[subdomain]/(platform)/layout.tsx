@@ -13,6 +13,9 @@ import { SchoolProvider } from "@/components/platform/context/school-context"
 import PlatformHeader from "@/components/template/platform-header/content"
 import PlatformSidebar from "@/components/template/platform-sidebar/content"
 
+// All platform pages are dynamic - they require auth, subdomain lookup, and query the database
+export const dynamic = "force-dynamic"
+
 interface PlatformLayoutProps {
   children: React.ReactNode
   params: Promise<{ subdomain: string; lang: string }>

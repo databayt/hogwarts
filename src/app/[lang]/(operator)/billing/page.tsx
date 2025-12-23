@@ -4,9 +4,6 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { BillingContent } from "@/components/operator/billing/content"
 import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
-// Prevent static prerendering - this page queries the database
-export const dynamic = "force-dynamic"
-
 export const metadata = {
   title: "Billing",
   description: "Operator billing and invoice management",
