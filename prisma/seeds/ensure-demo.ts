@@ -123,12 +123,30 @@ async function main() {
     console.log(`🔑 Password: ${DEMO_PASSWORD}`)
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   } catch (error) {
-    console.error("❌ Ensure demo error:", error)
-    // Don't exit with error code - build should continue
+    // Database errors (quota exceeded, connection issues) should NOT fail the build
     // The app can still work, just demo might not be available
+    console.warn(
+      "⚠️ Demo seed skipped (database unavailable):",
+      (error as Error).message || error
+    )
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("⏭️ Continuing build without demo verification...")
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   } finally {
-    await prisma.$disconnect()
+    try {
+      await prisma.$disconnect()
+    } catch {
+      // Ignore disconnect errors
+    }
   }
 }
 
-main()
+// Handle unhandled rejections gracefully
+process.on("unhandledRejection", (reason) => {
+  console.warn("⚠️ Unhandled rejection in ensure-demo (ignored):", reason)
+})
+
+main().then(() => {
+  // Force clean exit after completion
+  process.exit(0)
+})
