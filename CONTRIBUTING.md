@@ -480,7 +480,7 @@ export const dictionaries = {
 
 **Font System:**
 
-- **Arabic:** Tajawal
+- **Arabic:** Rubik
 - **English:** Inter
 
 **Current Status:** 800+ translation keys maintained across all features.

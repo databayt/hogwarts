@@ -474,7 +474,7 @@ Track the implementation status and production readiness of all platform feature
 
 - [x] Arabic (RTL) and English (LTR) support
 - [x] 800+ translation keys
-- [x] Font loading (Tajawal, Inter)
+- [x] Font loading (Rubik, Inter)
 - [x] Date formatting per locale
 - [x] Timezone handling
 - [ ] Translation completeness audit

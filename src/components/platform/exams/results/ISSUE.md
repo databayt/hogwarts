@@ -139,8 +139,8 @@ const pdf = await generateStudentPDF(examId, studentId, {
 ```typescript
 // lib/templates/modern.tsx
 Font.register({
-  family: "Tajawal", // ✅ Supports Arabic properly
-  src: "/fonts/Tajawal-Regular.ttf",
+  family: "Rubik", // ✅ Supports Arabic properly
+  src: "/fonts/Rubik-Regular.ttf",
 })
 ```
 

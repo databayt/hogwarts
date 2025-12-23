@@ -11,14 +11,14 @@ import {
 
 // Register fonts for Arabic support
 Font.register({
-  family: "Tajawal",
+  family: "Rubik",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/tajawal/v9/Iura6YBj_oCad4k1nzGBC45I.ttf",
+      src: "https://fonts.gstatic.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4i1UE80V4bVkA.ttf",
       fontWeight: 400,
     },
     {
-      src: "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l_6gHrZpiYlJ.ttf",
+      src: "https://fonts.gstatic.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4hAVU80V4bVkA.ttf",
       fontWeight: 700,
     },
   ],
@@ -110,7 +110,7 @@ const createStyles = (isRTL: boolean) =>
   StyleSheet.create({
     page: {
       padding: 40,
-      fontFamily: isRTL ? "Tajawal" : "Inter",
+      fontFamily: isRTL ? "Rubik" : "Inter",
       fontSize: 10,
       backgroundColor: "#ffffff",
     },

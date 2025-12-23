@@ -1,91 +1,675 @@
 // @ts-nocheck -- skip type checking
-import * as docsArabic_15 from "../content/docs-ar/(root)/structure.mdx?collection=docsArabic"
-import * as docsArabic_14 from "../content/docs-ar/(root)/stack.mdx?collection=docsArabic"
-import * as docsArabic_13 from "../content/docs-ar/(root)/shared-economy.mdx?collection=docsArabic"
-import * as docsArabic_12 from "../content/docs-ar/(root)/prd.mdx?collection=docsArabic"
-import * as docsArabic_11 from "../content/docs-ar/(root)/pitch.mdx?collection=docsArabic"
-import * as docsArabic_10 from "../content/docs-ar/(root)/pattern.mdx?collection=docsArabic"
-import * as docsArabic_9 from "../content/docs-ar/(root)/mvp.mdx?collection=docsArabic"
-import * as docsArabic_8 from "../content/docs-ar/(root)/localhost.mdx?collection=docsArabic"
-import * as docsArabic_7 from "../content/docs-ar/(root)/inspiration.mdx?collection=docsArabic"
-import * as docsArabic_6 from "../content/docs-ar/(root)/index.mdx?collection=docsArabic"
-import * as docsArabic_5 from "../content/docs-ar/(root)/get-started.mdx?collection=docsArabic"
-import * as docsArabic_4 from "../content/docs-ar/(root)/demo.mdx?collection=docsArabic"
-import * as docsArabic_3 from "../content/docs-ar/(root)/database.mdx?collection=docsArabic"
-import * as docsArabic_2 from "../content/docs-ar/(root)/contributing.mdx?collection=docsArabic"
-import * as docsArabic_1 from "../content/docs-ar/(root)/competitors.mdx?collection=docsArabic"
-import * as docsArabic_0 from "../content/docs-ar/(root)/architecture.mdx?collection=docsArabic"
-import * as docs_69 from "../content/docs/(root)/whatsapp.mdx?collection=docs"
-import * as docs_68 from "../content/docs/(root)/vibe-coding.mdx?collection=docs"
-import * as docs_67 from "../content/docs/(root)/upwork.mdx?collection=docs"
-import * as docs_66 from "../content/docs/(root)/typography.mdx?collection=docs"
-import * as docs_65 from "../content/docs/(root)/timetable.mdx?collection=docs"
-import * as docs_64 from "../content/docs/(root)/templates-factory.mdx?collection=docs"
-import * as docs_63 from "../content/docs/(root)/table.mdx?collection=docs"
-import * as docs_62 from "../content/docs/(root)/structure.mdx?collection=docs"
-import * as docs_61 from "../content/docs/(root)/stack.mdx?collection=docs"
-import * as docs_60 from "../content/docs/(root)/shared-economy.mdx?collection=docs"
-import * as docs_59 from "../content/docs/(root)/seeds.mdx?collection=docs"
-import * as docs_58 from "../content/docs/(root)/sales.mdx?collection=docs"
-import * as docs_57 from "../content/docs/(root)/roadmap.mdx?collection=docs"
-import * as docs_56 from "../content/docs/(root)/revenue.mdx?collection=docs"
-import * as docs_55 from "../content/docs/(root)/resume.mdx?collection=docs"
-import * as docs_54 from "../content/docs/(root)/repository.mdx?collection=docs"
-import * as docs_53 from "../content/docs/(root)/rebound.mdx?collection=docs"
-import * as docs_52 from "../content/docs/(root)/prompt.mdx?collection=docs"
-import * as docs_51 from "../content/docs/(root)/prettier.mdx?collection=docs"
-import * as docs_50 from "../content/docs/(root)/prd.mdx?collection=docs"
-import * as docs_49 from "../content/docs/(root)/playwright.mdx?collection=docs"
-import * as docs_48 from "../content/docs/(root)/pitch.mdx?collection=docs"
-import * as docs_47 from "../content/docs/(root)/pattern.mdx?collection=docs"
-import * as docs_46 from "../content/docs/(root)/onboarding.mdx?collection=docs"
-import * as docs_45 from "../content/docs/(root)/newcomers.mdx?collection=docs"
-import * as docs_44 from "../content/docs/(root)/mvp.mdx?collection=docs"
-import * as docs_43 from "../content/docs/(root)/localhost.mdx?collection=docs"
-import * as docs_42 from "../content/docs/(root)/listings.mdx?collection=docs"
-import * as docs_41 from "../content/docs/(root)/issues.mdx?collection=docs"
-import * as docs_40 from "../content/docs/(root)/invitation.mdx?collection=docs"
-import * as docs_39 from "../content/docs/(root)/internationalization.mdx?collection=docs"
-import * as docs_38 from "../content/docs/(root)/installation.mdx?collection=docs"
-import * as docs_37 from "../content/docs/(root)/inspiration.mdx?collection=docs"
-import * as docs_36 from "../content/docs/(root)/index.mdx?collection=docs"
-import * as docs_35 from "../content/docs/(root)/icons.mdx?collection=docs"
-import * as docs_34 from "../content/docs/(root)/hogwarts.mdx?collection=docs"
-import * as docs_33 from "../content/docs/(root)/github.mdx?collection=docs"
-import * as docs_32 from "../content/docs/(root)/get-started.mdx?collection=docs"
-import * as docs_31 from "../content/docs/(root)/form.mdx?collection=docs"
-import * as docs_30 from "../content/docs/(root)/first-pr.mdx?collection=docs"
-import * as docs_29 from "../content/docs/(root)/file.mdx?collection=docs"
-import * as docs_28 from "../content/docs/(root)/exams.mdx?collection=docs"
-import * as docs_27 from "../content/docs/(root)/eslint.mdx?collection=docs"
-import * as docs_26 from "../content/docs/(root)/entry-points.mdx?collection=docs"
-import * as docs_25 from "../content/docs/(root)/earning.mdx?collection=docs"
-import * as docs_24 from "../content/docs/(root)/domain.mdx?collection=docs"
-import * as docs_23 from "../content/docs/(root)/documantion.mdx?collection=docs"
-import * as docs_22 from "../content/docs/(root)/discord.mdx?collection=docs"
-import * as docs_21 from "../content/docs/(root)/demo.mdx?collection=docs"
-import * as docs_20 from "../content/docs/(root)/database.mdx?collection=docs"
-import * as docs_19 from "../content/docs/(root)/dashboard.mdx?collection=docs"
-import * as docs_18 from "../content/docs/(root)/credit.mdx?collection=docs"
-import * as docs_17 from "../content/docs/(root)/contributing.mdx?collection=docs"
-import * as docs_16 from "../content/docs/(root)/competitors.mdx?collection=docs"
-import * as docs_15 from "../content/docs/(root)/community.mdx?collection=docs"
-import * as docs_14 from "../content/docs/(root)/code-of-conduct.mdx?collection=docs"
-import * as docs_13 from "../content/docs/(root)/claude-code.mdx?collection=docs"
-import * as docs_12 from "../content/docs/(root)/changelog.mdx?collection=docs"
-import * as docs_11 from "../content/docs/(root)/card.mdx?collection=docs"
-import * as docs_10 from "../content/docs/(root)/button.mdx?collection=docs"
-import * as docs_9 from "../content/docs/(root)/business.mdx?collection=docs"
-import * as docs_8 from "../content/docs/(root)/business-model.mdx?collection=docs"
-import * as docs_7 from "../content/docs/(root)/benchmark.mdx?collection=docs"
-import * as docs_6 from "../content/docs/(root)/awesome-shadcn.mdx?collection=docs"
-import * as docs_5 from "../content/docs/(root)/authentication.mdx?collection=docs"
-import * as docs_4 from "../content/docs/(root)/attendance.mdx?collection=docs"
-import * as docs_3 from "../content/docs/(root)/atoms-factory.mdx?collection=docs"
-import * as docs_2 from "../content/docs/(root)/architecture.mdx?collection=docs"
-import * as docs_1 from "../content/docs/(root)/admission.mdx?collection=docs"
-import * as docs_0 from "../content/docs/(root)/accordion.mdx?collection=docs"
 import { _runtime } from "fumadocs-mdx/runtime/next"
+
+import * as docsArabic_0 from "../content/docs-ar/architecture.mdx?collection=docsArabic"
+import * as docsArabic_1 from "../content/docs-ar/competitors.mdx?collection=docsArabic"
+import * as docsArabic_2 from "../content/docs-ar/contributing.mdx?collection=docsArabic"
+import * as docsArabic_3 from "../content/docs-ar/database.mdx?collection=docsArabic"
+import * as docsArabic_4 from "../content/docs-ar/demo.mdx?collection=docsArabic"
+import * as docsArabic_5 from "../content/docs-ar/get-started.mdx?collection=docsArabic"
+import * as docsArabic_6 from "../content/docs-ar/index.mdx?collection=docsArabic"
+import * as docsArabic_7 from "../content/docs-ar/inspiration.mdx?collection=docsArabic"
+import * as docsArabic_8 from "../content/docs-ar/localhost.mdx?collection=docsArabic"
+import * as docsArabic_9 from "../content/docs-ar/mvp.mdx?collection=docsArabic"
+import * as docsArabic_10 from "../content/docs-ar/pattern.mdx?collection=docsArabic"
+import * as docsArabic_11 from "../content/docs-ar/pitch.mdx?collection=docsArabic"
+import * as docsArabic_12 from "../content/docs-ar/prd.mdx?collection=docsArabic"
+import * as docsArabic_13 from "../content/docs-ar/shared-economy.mdx?collection=docsArabic"
+import * as docsArabic_14 from "../content/docs-ar/stack.mdx?collection=docsArabic"
+import * as docsArabic_15 from "../content/docs-ar/structure.mdx?collection=docsArabic"
+import * as docs_0 from "../content/docs-en/accordion.mdx?collection=docs"
+import * as docs_1 from "../content/docs-en/admission.mdx?collection=docs"
+import * as docs_2 from "../content/docs-en/architecture.mdx?collection=docs"
+import * as docs_3 from "../content/docs-en/atoms-factory.mdx?collection=docs"
+import * as docs_4 from "../content/docs-en/attendance.mdx?collection=docs"
+import * as docs_5 from "../content/docs-en/authentication.mdx?collection=docs"
+import * as docs_6 from "../content/docs-en/awesome-shadcn.mdx?collection=docs"
+import * as docs_7 from "../content/docs-en/benchmark.mdx?collection=docs"
+import * as docs_8 from "../content/docs-en/business-model.mdx?collection=docs"
+import * as docs_9 from "../content/docs-en/business.mdx?collection=docs"
+import * as docs_10 from "../content/docs-en/button.mdx?collection=docs"
+import * as docs_11 from "../content/docs-en/card.mdx?collection=docs"
+import * as docs_12 from "../content/docs-en/changelog.mdx?collection=docs"
+import * as docs_13 from "../content/docs-en/claude-code.mdx?collection=docs"
+import * as docs_14 from "../content/docs-en/code-of-conduct.mdx?collection=docs"
+import * as docs_15 from "../content/docs-en/community.mdx?collection=docs"
+import * as docs_16 from "../content/docs-en/competitors.mdx?collection=docs"
+import * as docs_17 from "../content/docs-en/contributing.mdx?collection=docs"
+import * as docs_18 from "../content/docs-en/credit.mdx?collection=docs"
+import * as docs_19 from "../content/docs-en/dashboard.mdx?collection=docs"
+import * as docs_20 from "../content/docs-en/database.mdx?collection=docs"
+import * as docs_21 from "../content/docs-en/demo.mdx?collection=docs"
+import * as docs_22 from "../content/docs-en/discord.mdx?collection=docs"
+import * as docs_23 from "../content/docs-en/documentation.mdx?collection=docs"
+import * as docs_24 from "../content/docs-en/domain.mdx?collection=docs"
+import * as docs_25 from "../content/docs-en/earning.mdx?collection=docs"
+import * as docs_26 from "../content/docs-en/entry-points.mdx?collection=docs"
+import * as docs_27 from "../content/docs-en/eslint.mdx?collection=docs"
+import * as docs_28 from "../content/docs-en/exams.mdx?collection=docs"
+import * as docs_29 from "../content/docs-en/file.mdx?collection=docs"
+import * as docs_30 from "../content/docs-en/first-pr.mdx?collection=docs"
+import * as docs_31 from "../content/docs-en/form.mdx?collection=docs"
+import * as docs_32 from "../content/docs-en/get-started.mdx?collection=docs"
+import * as docs_33 from "../content/docs-en/github.mdx?collection=docs"
+import * as docs_34 from "../content/docs-en/hogwarts.mdx?collection=docs"
+import * as docs_35 from "../content/docs-en/icons.mdx?collection=docs"
+import * as docs_36 from "../content/docs-en/index.mdx?collection=docs"
+import * as docs_37 from "../content/docs-en/inspiration.mdx?collection=docs"
+import * as docs_38 from "../content/docs-en/installation.mdx?collection=docs"
+import * as docs_39 from "../content/docs-en/internationalization.mdx?collection=docs"
+import * as docs_40 from "../content/docs-en/invitation.mdx?collection=docs"
+import * as docs_41 from "../content/docs-en/issues.mdx?collection=docs"
+import * as docs_42 from "../content/docs-en/listings.mdx?collection=docs"
+import * as docs_43 from "../content/docs-en/localhost.mdx?collection=docs"
+import * as docs_44 from "../content/docs-en/mvp.mdx?collection=docs"
+import * as docs_45 from "../content/docs-en/newcomers.mdx?collection=docs"
+import * as docs_46 from "../content/docs-en/onboarding.mdx?collection=docs"
+import * as docs_47 from "../content/docs-en/pattern.mdx?collection=docs"
+import * as docs_48 from "../content/docs-en/pitch.mdx?collection=docs"
+import * as docs_49 from "../content/docs-en/playwright.mdx?collection=docs"
+import * as docs_50 from "../content/docs-en/prd.mdx?collection=docs"
+import * as docs_51 from "../content/docs-en/prettier.mdx?collection=docs"
+import * as docs_52 from "../content/docs-en/prompt.mdx?collection=docs"
+import * as docs_53 from "../content/docs-en/rebound.mdx?collection=docs"
+import * as docs_54 from "../content/docs-en/repository.mdx?collection=docs"
+import * as docs_55 from "../content/docs-en/resume.mdx?collection=docs"
+import * as docs_56 from "../content/docs-en/revenue.mdx?collection=docs"
+import * as docs_57 from "../content/docs-en/roadmap.mdx?collection=docs"
+import * as docs_58 from "../content/docs-en/sales.mdx?collection=docs"
+import * as docs_59 from "../content/docs-en/seeds.mdx?collection=docs"
+import * as docs_60 from "../content/docs-en/shared-economy.mdx?collection=docs"
+import * as docs_61 from "../content/docs-en/stack.mdx?collection=docs"
+import * as docs_62 from "../content/docs-en/structure.mdx?collection=docs"
+import * as docs_63 from "../content/docs-en/table.mdx?collection=docs"
+import * as docs_64 from "../content/docs-en/templates-factory.mdx?collection=docs"
+import * as docs_65 from "../content/docs-en/timetable.mdx?collection=docs"
+import * as docs_66 from "../content/docs-en/typography.mdx?collection=docs"
+import * as docs_67 from "../content/docs-en/upwork.mdx?collection=docs"
+import * as docs_68 from "../content/docs-en/vibe-coding.mdx?collection=docs"
+import * as docs_69 from "../content/docs-en/whatsapp.mdx?collection=docs"
 import * as _source from "../source.config"
-export const docs = _runtime.docs<typeof _source.docs>([{ info: {"path":"(root)/accordion.mdx","fullPath":"content/docs/(root)/accordion.mdx"}, data: docs_0 }, { info: {"path":"(root)/admission.mdx","fullPath":"content/docs/(root)/admission.mdx"}, data: docs_1 }, { info: {"path":"(root)/architecture.mdx","fullPath":"content/docs/(root)/architecture.mdx"}, data: docs_2 }, { info: {"path":"(root)/atoms-factory.mdx","fullPath":"content/docs/(root)/atoms-factory.mdx"}, data: docs_3 }, { info: {"path":"(root)/attendance.mdx","fullPath":"content/docs/(root)/attendance.mdx"}, data: docs_4 }, { info: {"path":"(root)/authentication.mdx","fullPath":"content/docs/(root)/authentication.mdx"}, data: docs_5 }, { info: {"path":"(root)/awesome-shadcn.mdx","fullPath":"content/docs/(root)/awesome-shadcn.mdx"}, data: docs_6 }, { info: {"path":"(root)/benchmark.mdx","fullPath":"content/docs/(root)/benchmark.mdx"}, data: docs_7 }, { info: {"path":"(root)/business-model.mdx","fullPath":"content/docs/(root)/business-model.mdx"}, data: docs_8 }, { info: {"path":"(root)/business.mdx","fullPath":"content/docs/(root)/business.mdx"}, data: docs_9 }, { info: {"path":"(root)/button.mdx","fullPath":"content/docs/(root)/button.mdx"}, data: docs_10 }, { info: {"path":"(root)/card.mdx","fullPath":"content/docs/(root)/card.mdx"}, data: docs_11 }, { info: {"path":"(root)/changelog.mdx","fullPath":"content/docs/(root)/changelog.mdx"}, data: docs_12 }, { info: {"path":"(root)/claude-code.mdx","fullPath":"content/docs/(root)/claude-code.mdx"}, data: docs_13 }, { info: {"path":"(root)/code-of-conduct.mdx","fullPath":"content/docs/(root)/code-of-conduct.mdx"}, data: docs_14 }, { info: {"path":"(root)/community.mdx","fullPath":"content/docs/(root)/community.mdx"}, data: docs_15 }, { info: {"path":"(root)/competitors.mdx","fullPath":"content/docs/(root)/competitors.mdx"}, data: docs_16 }, { info: {"path":"(root)/contributing.mdx","fullPath":"content/docs/(root)/contributing.mdx"}, data: docs_17 }, { info: {"path":"(root)/credit.mdx","fullPath":"content/docs/(root)/credit.mdx"}, data: docs_18 }, { info: {"path":"(root)/dashboard.mdx","fullPath":"content/docs/(root)/dashboard.mdx"}, data: docs_19 }, { info: {"path":"(root)/database.mdx","fullPath":"content/docs/(root)/database.mdx"}, data: docs_20 }, { info: {"path":"(root)/demo.mdx","fullPath":"content/docs/(root)/demo.mdx"}, data: docs_21 }, { info: {"path":"(root)/discord.mdx","fullPath":"content/docs/(root)/discord.mdx"}, data: docs_22 }, { info: {"path":"(root)/documantion.mdx","fullPath":"content/docs/(root)/documantion.mdx"}, data: docs_23 }, { info: {"path":"(root)/domain.mdx","fullPath":"content/docs/(root)/domain.mdx"}, data: docs_24 }, { info: {"path":"(root)/earning.mdx","fullPath":"content/docs/(root)/earning.mdx"}, data: docs_25 }, { info: {"path":"(root)/entry-points.mdx","fullPath":"content/docs/(root)/entry-points.mdx"}, data: docs_26 }, { info: {"path":"(root)/eslint.mdx","fullPath":"content/docs/(root)/eslint.mdx"}, data: docs_27 }, { info: {"path":"(root)/exams.mdx","fullPath":"content/docs/(root)/exams.mdx"}, data: docs_28 }, { info: {"path":"(root)/file.mdx","fullPath":"content/docs/(root)/file.mdx"}, data: docs_29 }, { info: {"path":"(root)/first-pr.mdx","fullPath":"content/docs/(root)/first-pr.mdx"}, data: docs_30 }, { info: {"path":"(root)/form.mdx","fullPath":"content/docs/(root)/form.mdx"}, data: docs_31 }, { info: {"path":"(root)/get-started.mdx","fullPath":"content/docs/(root)/get-started.mdx"}, data: docs_32 }, { info: {"path":"(root)/github.mdx","fullPath":"content/docs/(root)/github.mdx"}, data: docs_33 }, { info: {"path":"(root)/hogwarts.mdx","fullPath":"content/docs/(root)/hogwarts.mdx"}, data: docs_34 }, { info: {"path":"(root)/icons.mdx","fullPath":"content/docs/(root)/icons.mdx"}, data: docs_35 }, { info: {"path":"(root)/index.mdx","fullPath":"content/docs/(root)/index.mdx"}, data: docs_36 }, { info: {"path":"(root)/inspiration.mdx","fullPath":"content/docs/(root)/inspiration.mdx"}, data: docs_37 }, { info: {"path":"(root)/installation.mdx","fullPath":"content/docs/(root)/installation.mdx"}, data: docs_38 }, { info: {"path":"(root)/internationalization.mdx","fullPath":"content/docs/(root)/internationalization.mdx"}, data: docs_39 }, { info: {"path":"(root)/invitation.mdx","fullPath":"content/docs/(root)/invitation.mdx"}, data: docs_40 }, { info: {"path":"(root)/issues.mdx","fullPath":"content/docs/(root)/issues.mdx"}, data: docs_41 }, { info: {"path":"(root)/listings.mdx","fullPath":"content/docs/(root)/listings.mdx"}, data: docs_42 }, { info: {"path":"(root)/localhost.mdx","fullPath":"content/docs/(root)/localhost.mdx"}, data: docs_43 }, { info: {"path":"(root)/mvp.mdx","fullPath":"content/docs/(root)/mvp.mdx"}, data: docs_44 }, { info: {"path":"(root)/newcomers.mdx","fullPath":"content/docs/(root)/newcomers.mdx"}, data: docs_45 }, { info: {"path":"(root)/onboarding.mdx","fullPath":"content/docs/(root)/onboarding.mdx"}, data: docs_46 }, { info: {"path":"(root)/pattern.mdx","fullPath":"content/docs/(root)/pattern.mdx"}, data: docs_47 }, { info: {"path":"(root)/pitch.mdx","fullPath":"content/docs/(root)/pitch.mdx"}, data: docs_48 }, { info: {"path":"(root)/playwright.mdx","fullPath":"content/docs/(root)/playwright.mdx"}, data: docs_49 }, { info: {"path":"(root)/prd.mdx","fullPath":"content/docs/(root)/prd.mdx"}, data: docs_50 }, { info: {"path":"(root)/prettier.mdx","fullPath":"content/docs/(root)/prettier.mdx"}, data: docs_51 }, { info: {"path":"(root)/prompt.mdx","fullPath":"content/docs/(root)/prompt.mdx"}, data: docs_52 }, { info: {"path":"(root)/rebound.mdx","fullPath":"content/docs/(root)/rebound.mdx"}, data: docs_53 }, { info: {"path":"(root)/repository.mdx","fullPath":"content/docs/(root)/repository.mdx"}, data: docs_54 }, { info: {"path":"(root)/resume.mdx","fullPath":"content/docs/(root)/resume.mdx"}, data: docs_55 }, { info: {"path":"(root)/revenue.mdx","fullPath":"content/docs/(root)/revenue.mdx"}, data: docs_56 }, { info: {"path":"(root)/roadmap.mdx","fullPath":"content/docs/(root)/roadmap.mdx"}, data: docs_57 }, { info: {"path":"(root)/sales.mdx","fullPath":"content/docs/(root)/sales.mdx"}, data: docs_58 }, { info: {"path":"(root)/seeds.mdx","fullPath":"content/docs/(root)/seeds.mdx"}, data: docs_59 }, { info: {"path":"(root)/shared-economy.mdx","fullPath":"content/docs/(root)/shared-economy.mdx"}, data: docs_60 }, { info: {"path":"(root)/stack.mdx","fullPath":"content/docs/(root)/stack.mdx"}, data: docs_61 }, { info: {"path":"(root)/structure.mdx","fullPath":"content/docs/(root)/structure.mdx"}, data: docs_62 }, { info: {"path":"(root)/table.mdx","fullPath":"content/docs/(root)/table.mdx"}, data: docs_63 }, { info: {"path":"(root)/templates-factory.mdx","fullPath":"content/docs/(root)/templates-factory.mdx"}, data: docs_64 }, { info: {"path":"(root)/timetable.mdx","fullPath":"content/docs/(root)/timetable.mdx"}, data: docs_65 }, { info: {"path":"(root)/typography.mdx","fullPath":"content/docs/(root)/typography.mdx"}, data: docs_66 }, { info: {"path":"(root)/upwork.mdx","fullPath":"content/docs/(root)/upwork.mdx"}, data: docs_67 }, { info: {"path":"(root)/vibe-coding.mdx","fullPath":"content/docs/(root)/vibe-coding.mdx"}, data: docs_68 }, { info: {"path":"(root)/whatsapp.mdx","fullPath":"content/docs/(root)/whatsapp.mdx"}, data: docs_69 }], [{"info":{"path":"meta.json","fullPath":"content/docs/meta.json"},"data":{"title":"Documentation","pages":["(root)"]}}, {"info":{"path":"(root)/meta.json","fullPath":"content/docs/(root)/meta.json"},"data":{"title":"Documentation","pages":["index","pitch","business","mvp","prd","---Get Started---","get-started","repository","discord","whatsapp","---Architecture---","architecture","structure","pattern","listings","stack","database","file","---Modules---","dashboard","attendance","exams","timetable","---Setup---","localhost","playwright","seeds","internationalization","authantication","onboarding","---Contributing---","contributing","shared-economy","competitors","inspiration","demo"]}}])
-export const docsArabic = _runtime.docs<typeof _source.docsArabic>([{ info: {"path":"(root)/architecture.mdx","fullPath":"content/docs-ar/(root)/architecture.mdx"}, data: docsArabic_0 }, { info: {"path":"(root)/competitors.mdx","fullPath":"content/docs-ar/(root)/competitors.mdx"}, data: docsArabic_1 }, { info: {"path":"(root)/contributing.mdx","fullPath":"content/docs-ar/(root)/contributing.mdx"}, data: docsArabic_2 }, { info: {"path":"(root)/database.mdx","fullPath":"content/docs-ar/(root)/database.mdx"}, data: docsArabic_3 }, { info: {"path":"(root)/demo.mdx","fullPath":"content/docs-ar/(root)/demo.mdx"}, data: docsArabic_4 }, { info: {"path":"(root)/get-started.mdx","fullPath":"content/docs-ar/(root)/get-started.mdx"}, data: docsArabic_5 }, { info: {"path":"(root)/index.mdx","fullPath":"content/docs-ar/(root)/index.mdx"}, data: docsArabic_6 }, { info: {"path":"(root)/inspiration.mdx","fullPath":"content/docs-ar/(root)/inspiration.mdx"}, data: docsArabic_7 }, { info: {"path":"(root)/localhost.mdx","fullPath":"content/docs-ar/(root)/localhost.mdx"}, data: docsArabic_8 }, { info: {"path":"(root)/mvp.mdx","fullPath":"content/docs-ar/(root)/mvp.mdx"}, data: docsArabic_9 }, { info: {"path":"(root)/pattern.mdx","fullPath":"content/docs-ar/(root)/pattern.mdx"}, data: docsArabic_10 }, { info: {"path":"(root)/pitch.mdx","fullPath":"content/docs-ar/(root)/pitch.mdx"}, data: docsArabic_11 }, { info: {"path":"(root)/prd.mdx","fullPath":"content/docs-ar/(root)/prd.mdx"}, data: docsArabic_12 }, { info: {"path":"(root)/shared-economy.mdx","fullPath":"content/docs-ar/(root)/shared-economy.mdx"}, data: docsArabic_13 }, { info: {"path":"(root)/stack.mdx","fullPath":"content/docs-ar/(root)/stack.mdx"}, data: docsArabic_14 }, { info: {"path":"(root)/structure.mdx","fullPath":"content/docs-ar/(root)/structure.mdx"}, data: docsArabic_15 }], [{"info":{"path":"meta.json","fullPath":"content/docs-ar/meta.json"},"data":{"title":"التوثيق","pages":["(root)"]}}, {"info":{"path":"(root)/meta.json","fullPath":"content/docs-ar/(root)/meta.json"},"data":{"title":"التوثيق","pages":["index","pitch","mvp","prd","get-started","architecture","structure","pattern","stack","database","localhost","contributing","shared-economy","competitors","inspiration","demo"]}}])
+
+export const docs = _runtime.docs<typeof _source.docs>(
+  [
+    {
+      info: {
+        path: "accordion.mdx",
+        fullPath: "content/docs-en/accordion.mdx",
+      },
+      data: docs_0,
+    },
+    {
+      info: {
+        path: "admission.mdx",
+        fullPath: "content/docs-en/admission.mdx",
+      },
+      data: docs_1,
+    },
+    {
+      info: {
+        path: "architecture.mdx",
+        fullPath: "content/docs-en/architecture.mdx",
+      },
+      data: docs_2,
+    },
+    {
+      info: {
+        path: "atoms-factory.mdx",
+        fullPath: "content/docs-en/atoms-factory.mdx",
+      },
+      data: docs_3,
+    },
+    {
+      info: {
+        path: "attendance.mdx",
+        fullPath: "content/docs-en/attendance.mdx",
+      },
+      data: docs_4,
+    },
+    {
+      info: {
+        path: "authentication.mdx",
+        fullPath: "content/docs-en/authentication.mdx",
+      },
+      data: docs_5,
+    },
+    {
+      info: {
+        path: "awesome-shadcn.mdx",
+        fullPath: "content/docs-en/awesome-shadcn.mdx",
+      },
+      data: docs_6,
+    },
+    {
+      info: {
+        path: "benchmark.mdx",
+        fullPath: "content/docs-en/benchmark.mdx",
+      },
+      data: docs_7,
+    },
+    {
+      info: {
+        path: "business-model.mdx",
+        fullPath: "content/docs-en/business-model.mdx",
+      },
+      data: docs_8,
+    },
+    {
+      info: { path: "business.mdx", fullPath: "content/docs-en/business.mdx" },
+      data: docs_9,
+    },
+    {
+      info: { path: "button.mdx", fullPath: "content/docs-en/button.mdx" },
+      data: docs_10,
+    },
+    {
+      info: { path: "card.mdx", fullPath: "content/docs-en/card.mdx" },
+      data: docs_11,
+    },
+    {
+      info: {
+        path: "changelog.mdx",
+        fullPath: "content/docs-en/changelog.mdx",
+      },
+      data: docs_12,
+    },
+    {
+      info: {
+        path: "claude-code.mdx",
+        fullPath: "content/docs-en/claude-code.mdx",
+      },
+      data: docs_13,
+    },
+    {
+      info: {
+        path: "code-of-conduct.mdx",
+        fullPath: "content/docs-en/code-of-conduct.mdx",
+      },
+      data: docs_14,
+    },
+    {
+      info: {
+        path: "community.mdx",
+        fullPath: "content/docs-en/community.mdx",
+      },
+      data: docs_15,
+    },
+    {
+      info: {
+        path: "competitors.mdx",
+        fullPath: "content/docs-en/competitors.mdx",
+      },
+      data: docs_16,
+    },
+    {
+      info: {
+        path: "contributing.mdx",
+        fullPath: "content/docs-en/contributing.mdx",
+      },
+      data: docs_17,
+    },
+    {
+      info: { path: "credit.mdx", fullPath: "content/docs-en/credit.mdx" },
+      data: docs_18,
+    },
+    {
+      info: {
+        path: "dashboard.mdx",
+        fullPath: "content/docs-en/dashboard.mdx",
+      },
+      data: docs_19,
+    },
+    {
+      info: { path: "database.mdx", fullPath: "content/docs-en/database.mdx" },
+      data: docs_20,
+    },
+    {
+      info: { path: "demo.mdx", fullPath: "content/docs-en/demo.mdx" },
+      data: docs_21,
+    },
+    {
+      info: { path: "discord.mdx", fullPath: "content/docs-en/discord.mdx" },
+      data: docs_22,
+    },
+    {
+      info: {
+        path: "documentation.mdx",
+        fullPath: "content/docs-en/documentation.mdx",
+      },
+      data: docs_23,
+    },
+    {
+      info: { path: "domain.mdx", fullPath: "content/docs-en/domain.mdx" },
+      data: docs_24,
+    },
+    {
+      info: { path: "earning.mdx", fullPath: "content/docs-en/earning.mdx" },
+      data: docs_25,
+    },
+    {
+      info: {
+        path: "entry-points.mdx",
+        fullPath: "content/docs-en/entry-points.mdx",
+      },
+      data: docs_26,
+    },
+    {
+      info: { path: "eslint.mdx", fullPath: "content/docs-en/eslint.mdx" },
+      data: docs_27,
+    },
+    {
+      info: { path: "exams.mdx", fullPath: "content/docs-en/exams.mdx" },
+      data: docs_28,
+    },
+    {
+      info: { path: "file.mdx", fullPath: "content/docs-en/file.mdx" },
+      data: docs_29,
+    },
+    {
+      info: { path: "first-pr.mdx", fullPath: "content/docs-en/first-pr.mdx" },
+      data: docs_30,
+    },
+    {
+      info: { path: "form.mdx", fullPath: "content/docs-en/form.mdx" },
+      data: docs_31,
+    },
+    {
+      info: {
+        path: "get-started.mdx",
+        fullPath: "content/docs-en/get-started.mdx",
+      },
+      data: docs_32,
+    },
+    {
+      info: { path: "github.mdx", fullPath: "content/docs-en/github.mdx" },
+      data: docs_33,
+    },
+    {
+      info: { path: "hogwarts.mdx", fullPath: "content/docs-en/hogwarts.mdx" },
+      data: docs_34,
+    },
+    {
+      info: { path: "icons.mdx", fullPath: "content/docs-en/icons.mdx" },
+      data: docs_35,
+    },
+    {
+      info: { path: "index.mdx", fullPath: "content/docs-en/index.mdx" },
+      data: docs_36,
+    },
+    {
+      info: {
+        path: "inspiration.mdx",
+        fullPath: "content/docs-en/inspiration.mdx",
+      },
+      data: docs_37,
+    },
+    {
+      info: {
+        path: "installation.mdx",
+        fullPath: "content/docs-en/installation.mdx",
+      },
+      data: docs_38,
+    },
+    {
+      info: {
+        path: "internationalization.mdx",
+        fullPath: "content/docs-en/internationalization.mdx",
+      },
+      data: docs_39,
+    },
+    {
+      info: {
+        path: "invitation.mdx",
+        fullPath: "content/docs-en/invitation.mdx",
+      },
+      data: docs_40,
+    },
+    {
+      info: { path: "issues.mdx", fullPath: "content/docs-en/issues.mdx" },
+      data: docs_41,
+    },
+    {
+      info: { path: "listings.mdx", fullPath: "content/docs-en/listings.mdx" },
+      data: docs_42,
+    },
+    {
+      info: {
+        path: "localhost.mdx",
+        fullPath: "content/docs-en/localhost.mdx",
+      },
+      data: docs_43,
+    },
+    {
+      info: { path: "mvp.mdx", fullPath: "content/docs-en/mvp.mdx" },
+      data: docs_44,
+    },
+    {
+      info: {
+        path: "newcomers.mdx",
+        fullPath: "content/docs-en/newcomers.mdx",
+      },
+      data: docs_45,
+    },
+    {
+      info: {
+        path: "onboarding.mdx",
+        fullPath: "content/docs-en/onboarding.mdx",
+      },
+      data: docs_46,
+    },
+    {
+      info: { path: "pattern.mdx", fullPath: "content/docs-en/pattern.mdx" },
+      data: docs_47,
+    },
+    {
+      info: { path: "pitch.mdx", fullPath: "content/docs-en/pitch.mdx" },
+      data: docs_48,
+    },
+    {
+      info: {
+        path: "playwright.mdx",
+        fullPath: "content/docs-en/playwright.mdx",
+      },
+      data: docs_49,
+    },
+    {
+      info: { path: "prd.mdx", fullPath: "content/docs-en/prd.mdx" },
+      data: docs_50,
+    },
+    {
+      info: { path: "prettier.mdx", fullPath: "content/docs-en/prettier.mdx" },
+      data: docs_51,
+    },
+    {
+      info: { path: "prompt.mdx", fullPath: "content/docs-en/prompt.mdx" },
+      data: docs_52,
+    },
+    {
+      info: { path: "rebound.mdx", fullPath: "content/docs-en/rebound.mdx" },
+      data: docs_53,
+    },
+    {
+      info: {
+        path: "repository.mdx",
+        fullPath: "content/docs-en/repository.mdx",
+      },
+      data: docs_54,
+    },
+    {
+      info: { path: "resume.mdx", fullPath: "content/docs-en/resume.mdx" },
+      data: docs_55,
+    },
+    {
+      info: { path: "revenue.mdx", fullPath: "content/docs-en/revenue.mdx" },
+      data: docs_56,
+    },
+    {
+      info: { path: "roadmap.mdx", fullPath: "content/docs-en/roadmap.mdx" },
+      data: docs_57,
+    },
+    {
+      info: { path: "sales.mdx", fullPath: "content/docs-en/sales.mdx" },
+      data: docs_58,
+    },
+    {
+      info: { path: "seeds.mdx", fullPath: "content/docs-en/seeds.mdx" },
+      data: docs_59,
+    },
+    {
+      info: {
+        path: "shared-economy.mdx",
+        fullPath: "content/docs-en/shared-economy.mdx",
+      },
+      data: docs_60,
+    },
+    {
+      info: { path: "stack.mdx", fullPath: "content/docs-en/stack.mdx" },
+      data: docs_61,
+    },
+    {
+      info: {
+        path: "structure.mdx",
+        fullPath: "content/docs-en/structure.mdx",
+      },
+      data: docs_62,
+    },
+    {
+      info: { path: "table.mdx", fullPath: "content/docs-en/table.mdx" },
+      data: docs_63,
+    },
+    {
+      info: {
+        path: "templates-factory.mdx",
+        fullPath: "content/docs-en/templates-factory.mdx",
+      },
+      data: docs_64,
+    },
+    {
+      info: {
+        path: "timetable.mdx",
+        fullPath: "content/docs-en/timetable.mdx",
+      },
+      data: docs_65,
+    },
+    {
+      info: {
+        path: "typography.mdx",
+        fullPath: "content/docs-en/typography.mdx",
+      },
+      data: docs_66,
+    },
+    {
+      info: { path: "upwork.mdx", fullPath: "content/docs-en/upwork.mdx" },
+      data: docs_67,
+    },
+    {
+      info: {
+        path: "vibe-coding.mdx",
+        fullPath: "content/docs-en/vibe-coding.mdx",
+      },
+      data: docs_68,
+    },
+    {
+      info: { path: "whatsapp.mdx", fullPath: "content/docs-en/whatsapp.mdx" },
+      data: docs_69,
+    },
+  ],
+  [
+    {
+      info: { path: "meta.json", fullPath: "content/docs-en/meta.json" },
+      data: {
+        title: "Documentation",
+        pages: [
+          "index",
+          "pitch",
+          "hogwarts",
+          "demo",
+          "mvp",
+          "prd",
+          "roadmap",
+          "get-started",
+          "installation",
+          "localhost",
+          "architecture",
+          "structure",
+          "pattern",
+          "stack",
+          "database",
+          "file",
+          "entry-points",
+          "dashboard",
+          "authentication",
+          "onboarding",
+          "admission",
+          "attendance",
+          "exams",
+          "timetable",
+          "internationalization",
+          "accordion",
+          "button",
+          "card",
+          "form",
+          "table",
+          "icons",
+          "typography",
+          "atoms-factory",
+          "templates-factory",
+          "documentation",
+          "awesome-shadcn",
+          "inspiration",
+          "listings",
+          "contributing",
+          "first-pr",
+          "newcomers",
+          "code-of-conduct",
+          "github",
+          "repository",
+          "seeds",
+          "playwright",
+          "eslint",
+          "prettier",
+          "claude-code",
+          "vibe-coding",
+          "prompt",
+          "rebound",
+          "benchmark",
+          "business",
+          "business-model",
+          "shared-economy",
+          "earning",
+          "revenue",
+          "sales",
+          "domain",
+          "upwork",
+          "resume",
+          "credit",
+          "community",
+          "discord",
+          "whatsapp",
+          "invitation",
+          "issues",
+          "changelog",
+          "competitors",
+        ],
+      },
+    },
+  ]
+)
+export const docsArabic = _runtime.docs<typeof _source.docsArabic>(
+  [
+    {
+      info: {
+        path: "architecture.mdx",
+        fullPath: "content/docs-ar/architecture.mdx",
+      },
+      data: docsArabic_0,
+    },
+    {
+      info: {
+        path: "competitors.mdx",
+        fullPath: "content/docs-ar/competitors.mdx",
+      },
+      data: docsArabic_1,
+    },
+    {
+      info: {
+        path: "contributing.mdx",
+        fullPath: "content/docs-ar/contributing.mdx",
+      },
+      data: docsArabic_2,
+    },
+    {
+      info: { path: "database.mdx", fullPath: "content/docs-ar/database.mdx" },
+      data: docsArabic_3,
+    },
+    {
+      info: { path: "demo.mdx", fullPath: "content/docs-ar/demo.mdx" },
+      data: docsArabic_4,
+    },
+    {
+      info: {
+        path: "get-started.mdx",
+        fullPath: "content/docs-ar/get-started.mdx",
+      },
+      data: docsArabic_5,
+    },
+    {
+      info: { path: "index.mdx", fullPath: "content/docs-ar/index.mdx" },
+      data: docsArabic_6,
+    },
+    {
+      info: {
+        path: "inspiration.mdx",
+        fullPath: "content/docs-ar/inspiration.mdx",
+      },
+      data: docsArabic_7,
+    },
+    {
+      info: {
+        path: "localhost.mdx",
+        fullPath: "content/docs-ar/localhost.mdx",
+      },
+      data: docsArabic_8,
+    },
+    {
+      info: { path: "mvp.mdx", fullPath: "content/docs-ar/mvp.mdx" },
+      data: docsArabic_9,
+    },
+    {
+      info: { path: "pattern.mdx", fullPath: "content/docs-ar/pattern.mdx" },
+      data: docsArabic_10,
+    },
+    {
+      info: { path: "pitch.mdx", fullPath: "content/docs-ar/pitch.mdx" },
+      data: docsArabic_11,
+    },
+    {
+      info: { path: "prd.mdx", fullPath: "content/docs-ar/prd.mdx" },
+      data: docsArabic_12,
+    },
+    {
+      info: {
+        path: "shared-economy.mdx",
+        fullPath: "content/docs-ar/shared-economy.mdx",
+      },
+      data: docsArabic_13,
+    },
+    {
+      info: { path: "stack.mdx", fullPath: "content/docs-ar/stack.mdx" },
+      data: docsArabic_14,
+    },
+    {
+      info: {
+        path: "structure.mdx",
+        fullPath: "content/docs-ar/structure.mdx",
+      },
+      data: docsArabic_15,
+    },
+  ],
+  [
+    {
+      info: { path: "meta.json", fullPath: "content/docs-ar/meta.json" },
+      data: {
+        title: "التوثيق",
+        pages: [
+          "index",
+          "pitch",
+          "mvp",
+          "prd",
+          "get-started",
+          "architecture",
+          "structure",
+          "pattern",
+          "stack",
+          "database",
+          "localhost",
+          "contributing",
+          "shared-economy",
+          "competitors",
+          "inspiration",
+          "demo",
+        ],
+      },
+    },
+  ]
+)

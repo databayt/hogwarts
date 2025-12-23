@@ -293,7 +293,7 @@ export const PDF_CONFIG = {
   pageSize: "A4",
   fonts: {
     en: "Inter",
-    ar: "Tajawal",
+    ar: "Rubik",
   },
   includeSchoolLogo: true,
   includeWatermark: false,
@@ -342,7 +342,7 @@ export const GRADE_CONFIG = {
 const styles = StyleSheet.create({
   page: {
     flexDirection: lang === "ar" ? "row-reverse" : "row",
-    fontFamily: lang === "ar" ? "Tajawal" : "Inter",
+    fontFamily: lang === "ar" ? "Rubik" : "Inter",
     textAlign: lang === "ar" ? "right" : "left",
   },
   text: {
@@ -352,10 +352,10 @@ const styles = StyleSheet.create({
 
 // Register Arabic font
 Font.register({
-  family: "Tajawal",
+  family: "Rubik",
   fonts: [
-    { src: "/fonts/Tajawal-Regular.ttf" },
-    { src: "/fonts/Tajawal-Bold.ttf", fontWeight: "bold" },
+    { src: "/fonts/Rubik-Regular.ttf" },
+    { src: "/fonts/Rubik-Bold.ttf", fontWeight: "bold" },
   ],
 })
 ```

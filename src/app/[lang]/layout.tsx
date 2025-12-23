@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Tajawal } from "next/font/google"
+import { Rubik } from "next/font/google"
 import { headers } from "next/headers"
 import { auth } from "@/auth"
 import { GeistSans } from "geist/font/sans"
@@ -20,11 +20,11 @@ import { UserThemeProvider } from "@/components/theme/theme-provider"
 
 import "leaflet/dist/leaflet.css"
 
-// Configure fonts
-const tajawal = Tajawal({
+// Configure fonts - Rubik supports both Arabic and Latin scripts
+const rubik = Rubik({
   subsets: ["arabic", "latin"],
-  variable: "--font-tajawal",
-  weight: ["200", "300", "400", "500", "700", "800", "900"],
+  variable: "--font-rubik",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
   display: "swap",
 })
 
@@ -86,12 +86,12 @@ export default async function LocaleLayout({
   const fontClass = isSubdomain
     ? "font-sans"
     : isRTL
-      ? tajawal.className
+      ? rubik.className
       : GeistSans.className
 
   return (
     <div
-      className={`${fontClass} ${GeistSans.variable} ${tajawal.variable} layout-container antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}
+      className={`${fontClass} ${GeistSans.variable} ${rubik.variable} layout-container antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}
     >
       <SessionProvider session={session}>
         <NuqsAdapter>

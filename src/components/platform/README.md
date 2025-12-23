@@ -403,7 +403,7 @@ This platform is built with modern, production-grade technologies and follows be
 
 - **Custom i18n**: 800+ translation keys for Arabic (RTL) and English (LTR)
 - **@formatjs/intl-localematcher**: Locale detection and matching
-- **Tajawal Font**: Arabic typography
+- **Rubik Font**: Arabic typography
 - **Inter Font**: English typography
 
 #### Code Quality & Patterns
@@ -692,7 +692,7 @@ Platform supports **Arabic (default)** and **English**:
 - RTL (Right-to-Left) for Arabic UI
 - LTR (Left-to-Right) for English UI
 - 800+ translation keys covering all features
-- Font: Tajawal (Arabic), Inter (English)
+- Font: Rubik (Arabic), Inter (English)
 - Date formatting respects locale
 - Timezone: Africa/Khartoum (customizable)
 

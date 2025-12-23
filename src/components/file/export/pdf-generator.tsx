@@ -28,16 +28,16 @@ import type { ExportColumn, ExportConfig, ExportResult } from "./types"
 // Font Registration (Arabic support)
 // ============================================================================
 
-// Register Tajawal font for Arabic text
+// Register Rubik font for Arabic text
 Font.register({
-  family: "Tajawal",
+  family: "Rubik",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l4qjHrRpiYlJ.ttf",
+      src: "https://fonts.gstatic.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4i1UE80V4bVkA.ttf",
       fontWeight: "normal",
     },
     {
-      src: "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l8qkHrRpiYlJ.ttf",
+      src: "https://fonts.gstatic.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4hAVU80V4bVkA.ttf",
       fontWeight: "bold",
     },
   ],
@@ -67,7 +67,7 @@ const createStyles = (
   customStyles?: ExportConfig["styles"]
 ) => {
   const isRTL = locale === "ar"
-  const fontFamily = isRTL ? "Tajawal" : "Inter"
+  const fontFamily = isRTL ? "Rubik" : "Inter"
 
   return StyleSheet.create({
     page: {

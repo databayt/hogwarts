@@ -21,14 +21,14 @@ import type { CertificateData, TemplateStyle } from "./types"
 // ============================================================================
 
 Font.register({
-  family: "Tajawal",
+  family: "Rubik",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l4qjHrRpiYlJ.ttf",
+      src: "https://fonts.gstatic.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4i1UE80V4bVkA.ttf",
       fontWeight: "normal",
     },
     {
-      src: "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l8qkHrRpiYlJ.ttf",
+      src: "https://fonts.gstatic.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4hAVU80V4bVkA.ttf",
       fontWeight: "bold",
     },
   ],
@@ -57,7 +57,7 @@ const createStyles = (
   style: TemplateStyle = "elegant"
 ) => {
   const isRTL = locale === "ar"
-  const fontFamily = isRTL ? "Tajawal" : "Inter"
+  const fontFamily = isRTL ? "Rubik" : "Inter"
 
   const baseStyles = StyleSheet.create({
     page: {

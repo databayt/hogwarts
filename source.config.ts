@@ -24,7 +24,7 @@ export default defineConfig({
 })
 
 export const docs = defineDocs({
-  dir: "content/docs",
+  dir: "content/docs-en",
 })
 
 export const docsArabic = defineDocs({

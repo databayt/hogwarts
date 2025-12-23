@@ -71,10 +71,10 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
             ))}
           </h1>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-row gap-3">
             <Link
               href={`/${lang || "en"}/onboarding`}
-              className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
+              className={cn(buttonVariants({ size: "lg" }))}
             >
               {heroDict.appointment}
             </Link>
@@ -82,10 +82,7 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
               href={getDemoUrl()}
               target="_blank"
               rel="noreferrer"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "w-full sm:w-auto"
-              )}
+              className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
             >
               {heroDict.liveDemo || "Live Demo"}
             </Link>

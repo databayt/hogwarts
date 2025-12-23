@@ -32,18 +32,18 @@ import { TrueFalseQuestion } from "./components/tf-question"
 // ============================================================================
 
 Font.register({
-  family: "Tajawal",
+  family: "Rubik",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l4qjHrRpiYlJ.ttf",
+      src: "https://fonts.gstatic.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4i1UE80V4bVkA.ttf",
       fontWeight: "normal",
     },
     {
-      src: "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l5KgHrRpiYlJ.ttf",
+      src: "https://fonts.gstatic.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4iFUk80V4bVkA.ttf",
       fontWeight: 500,
     },
     {
-      src: "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l8qkHrRpiYlJ.ttf",
+      src: "https://fonts.gstatic.com/s/rubik/v28/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4hAVU80V4bVkA.ttf",
       fontWeight: "bold",
     },
   ],
@@ -76,7 +76,7 @@ Font.registerHyphenationCallback((word) => [word])
 
 const createStyles = (locale: "en" | "ar" = "en") => {
   const isRTL = locale === "ar"
-  const fontFamily = isRTL ? "Tajawal" : "Inter"
+  const fontFamily = isRTL ? "Rubik" : "Inter"
 
   return StyleSheet.create({
     page: {
@@ -207,7 +207,7 @@ export function ClassicTemplate({
   const locale = metadata.locale
   const styles = createStyles(locale)
   const isRTL = locale === "ar"
-  const fontFamily = isRTL ? "Tajawal" : "Inter"
+  const fontFamily = isRTL ? "Rubik" : "Inter"
 
   // Section labels
   const sectionLabels: Record<string, { en: string; ar: string }> = {

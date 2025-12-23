@@ -107,7 +107,7 @@ pnpm tsc --noEmit           # Check TypeScript (CRITICAL before builds)
 
 - **Arabic (RTL, default) & English (LTR)**
 - **800+ translation keys**
-- **Fonts**: Tajawal (Arabic), Inter (English)
+- **Fonts**: Rubik (Arabic), Inter (English)
 
 ### Testing & Monitoring
 
@@ -862,7 +862,7 @@ All business models include:
 
 - **Languages**: Arabic (RTL, default) & English (LTR)
 - **Routing**: `[lang]` dynamic segment (`/en/...`, `/ar/...`)
-- **Fonts**: Tajawal (Arabic), Inter (English)
+- **Fonts**: Rubik (Arabic), Inter (English)
 - **Translation Keys**: 800+ keys
 - **Files**: `src/components/internationalization/dictionaries.ts`
 - **Detection**: Cookie → Accept-Language header → default (ar)

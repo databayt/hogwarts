@@ -11,27 +11,6 @@ interface MissionCardsProps {
   lang?: Locale
 }
 
-const cards = [
-  {
-    title: "Student Success",
-    icon: "/icons/hands-build.svg",
-    href: "/about",
-    bgColor: "bg-[#E3DACC]", // oat - rgb(227, 218, 204)
-  },
-  {
-    title: "School Operations",
-    icon: "/icons/hands-stack.svg",
-    href: "/features",
-    bgColor: "bg-[#BCD1CA]", // cactus - rgb(188, 209, 202)
-  },
-  {
-    title: "Open Academy",
-    icon: "/icons/objects-puzzle.svg",
-    href: "/docs",
-    bgColor: "bg-[#CBCADB]", // heather - rgb(203, 202, 219)
-  },
-]
-
 export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
   const isRTL = lang === "ar"
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,7 +20,31 @@ export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
       "We sell time—the origin of value. Schools lose 40 hours monthly to paperwork; we give 80% of that back. Our open-source platform transforms fragmented systems into unified infrastructure, cutting operational costs by 60%.",
     values:
       "Transparency breeds accountability—when every stakeholder has access to real-time data, trust grows and outcomes improve. Open-source is participatory development: communities inspect, modify, and own their tools. They're not consumers—they're co-creators building capacity, reducing dependency, and ensuring sustainability.",
+    studentSuccess: "Student Success",
+    schoolOperations: "School Operations",
+    openAcademy: "Open Academy",
   }
+
+  const cards = [
+    {
+      title: dict.studentSuccess,
+      icon: "/icons/hands-build.svg",
+      href: "/about",
+      bgColor: "bg-[#E3DACC]", // oat - rgb(227, 218, 204)
+    },
+    {
+      title: dict.schoolOperations,
+      icon: "/icons/hands-stack.svg",
+      href: "/features",
+      bgColor: "bg-[#BCD1CA]", // cactus - rgb(188, 209, 202)
+    },
+    {
+      title: dict.openAcademy,
+      icon: "/icons/objects-puzzle.svg",
+      href: "/docs",
+      bgColor: "bg-[#CBCADB]", // heather - rgb(203, 202, 219)
+    },
+  ]
 
   return (
     <section className="py-16 md:py-24" dir={isRTL ? "rtl" : "ltr"}>
@@ -58,7 +61,9 @@ export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
           <p className="text-muted-foreground leading-relaxed">
             {dict.description}
           </p>
-          <p className="text-muted-foreground leading-relaxed">{dict.values}</p>
+          <p className="text-muted-foreground hidden leading-relaxed md:block">
+            {dict.values}
+          </p>
         </div>
 
         {/* Three Cards */}

@@ -36,7 +36,7 @@ export const pdfTemplateCustomizationSchema = z.object({
     .string()
     .regex(/^#[0-9A-F]{6}$/i, "Invalid hex color")
     .default("#3B82F6"),
-  fontFamily: z.enum(["Inter", "Tajawal", "Roboto", "Arial"]).default("Inter"),
+  fontFamily: z.enum(["Inter", "Rubik", "Roboto", "Arial"]).default("Inter"),
   fontSize: z.number().min(8).max(16).default(10),
   includeWatermark: z.boolean().default(false),
   watermarkText: z.string().max(50).optional(),

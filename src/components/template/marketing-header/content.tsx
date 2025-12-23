@@ -18,6 +18,8 @@ export default function MarketingHeader({
   dictionary,
   locale = "en",
 }: MarketingHeaderProps) {
+  const isRTL = locale === "ar"
+
   // Transform nav items for MobileNav
   const navItems = marketingConfig.mainNav.map((item) => ({
     href: item.href,
@@ -43,7 +45,10 @@ export default function MarketingHeader({
   ]
 
   return (
-    <header className="border-grid bg-background sticky top-0 z-50 w-full border-b">
+    <header
+      className="border-grid bg-background sticky top-0 z-50 w-full border-b"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
       <div className="container flex h-14 items-center gap-2 md:gap-4">
         <MainNav dictionary={dictionary} />
         <MarketingMobileNav

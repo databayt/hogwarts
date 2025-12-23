@@ -1,4 +1,21 @@
 {
   "title": "التوثيق",
-  "pages": ["(root)"]
+  "pages": [
+    "index",
+    "pitch",
+    "mvp",
+    "prd",
+    "get-started",
+    "architecture",
+    "structure",
+    "pattern",
+    "stack",
+    "database",
+    "localhost",
+    "contributing",
+    "shared-economy",
+    "competitors",
+    "inspiration",
+    "demo"
+  ]
 }

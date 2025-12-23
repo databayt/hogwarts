@@ -82,7 +82,7 @@ export const PAGE_MARGINS = {
 
 export const FONTS = {
   arabic: {
-    family: "Tajawal",
+    family: "Rubik",
     weights: {
       regular: 400,
       medium: 500,

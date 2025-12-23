@@ -608,7 +608,7 @@ export function calculateRanks(
 const rtlStyles = StyleSheet.create({
   page: {
     flexDirection: lang === "ar" ? "row-reverse" : "row",
-    fontFamily: lang === "ar" ? "Tajawal" : "Inter",
+    fontFamily: lang === "ar" ? "Rubik" : "Inter",
     textAlign: lang === "ar" ? "right" : "left",
   },
   text: {
@@ -618,8 +618,8 @@ const rtlStyles = StyleSheet.create({
 
 // Register Arabic font
 Font.register({
-  family: "Tajawal",
-  src: "/fonts/Tajawal-Regular.ttf",
+  family: "Rubik",
+  src: "/fonts/Rubik-Regular.ttf",
 })
 ```
 

@@ -186,7 +186,7 @@ export function getPDFMargins(
  * Get font family based on language
  */
 export function getFontFamily(language: "en" | "ar"): string {
-  return language === "ar" ? "Tajawal" : "Inter"
+  return language === "ar" ? "Rubik" : "Inter"
 }
 
 /**

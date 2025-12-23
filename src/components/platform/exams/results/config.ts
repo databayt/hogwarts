@@ -73,7 +73,7 @@ export const PDF_MARGINS = {
 
 export const FONT_FAMILIES = {
   Inter: "Inter",
-  Tajawal: "Tajawal",
+  Rubik: "Rubik",
   Roboto: "Roboto",
   Arial: "Helvetica", // Fallback to Helvetica in PDF
 } as const

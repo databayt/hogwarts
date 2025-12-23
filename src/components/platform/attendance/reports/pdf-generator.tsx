@@ -12,7 +12,7 @@ import {
 } from "@react-pdf/renderer"
 
 // Register fonts (optional - uses default sans-serif)
-// Font.register({ family: 'Tajawal', src: '/fonts/Tajawal-Regular.ttf' })
+// Font.register({ family: 'Rubik', src: '/fonts/Rubik-Regular.ttf' })
 
 const styles = StyleSheet.create({
   page: {
