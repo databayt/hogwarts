@@ -1,192 +1,241 @@
 /**
- * Fees Seed Module
- * Creates fee structures, assignments, and payments
- * Currency: SDG (Sudanese Pound) - Comboni School
+ * Fees Seed
+ * Creates Fee Structures and Fee Assignments
+ *
+ * Phase 10: Fees & Invoices
+ *
+ * Note: FeeStructure has no unique constraint, using findFirst + create
+ * FeeAssignment has @@unique([studentId, feeStructureId, academicYear])
  */
 
-import { FeeStatus, PaymentMethod, PaymentStatus } from "@prisma/client"
+import type { PrismaClient } from "@prisma/client"
 
-import type { ClassRef, SeedPrisma, StudentRef } from "./types"
+import type { StudentRef, YearLevelRef } from "./types"
+import { logPhase, logSuccess, processBatch } from "./utils"
 
-export async function seedFees(
-  prisma: SeedPrisma,
-  schoolId: string,
-  classes: ClassRef[],
-  students: StudentRef[]
-): Promise<void> {
-  console.log(
-    "💰 Creating fee structures and payments (SDG - Sudanese Pound)..."
-  )
+// ============================================================================
+// FEE STRUCTURES BY LEVEL
+// ============================================================================
 
-  const academicYear = "2025-2026"
+const FEE_STRUCTURES = [
+  // Kindergarten
+  {
+    name: "Kindergarten Fee Structure",
+    levels: ["KG1", "KG2"],
+    tuitionFee: 15000,
+    registrationFee: 500,
+    libraryFee: 200,
+    sportsFee: 300,
+    transportFee: 2000,
+    description: "Fee structure for kindergarten students",
+  },
+  // Primary (Grades 1-6)
+  {
+    name: "Primary Fee Structure",
+    levels: ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"],
+    tuitionFee: 18000,
+    registrationFee: 600,
+    examFee: 300,
+    libraryFee: 250,
+    laboratoryFee: 200,
+    sportsFee: 400,
+    transportFee: 2500,
+    description: "Fee structure for primary school students",
+  },
+  // Intermediate (Grades 7-9)
+  {
+    name: "Intermediate Fee Structure",
+    levels: ["Grade 7", "Grade 8", "Grade 9"],
+    tuitionFee: 22000,
+    registrationFee: 750,
+    examFee: 400,
+    libraryFee: 300,
+    laboratoryFee: 400,
+    sportsFee: 500,
+    transportFee: 3000,
+    description: "Fee structure for intermediate school students",
+  },
+  // Secondary (Grades 10-12)
+  {
+    name: "Secondary Fee Structure",
+    levels: ["Grade 10", "Grade 11", "Grade 12"],
+    tuitionFee: 28000,
+    registrationFee: 1000,
+    examFee: 600,
+    libraryFee: 400,
+    laboratoryFee: 600,
+    sportsFee: 600,
+    transportFee: 3500,
+    description: "Fee structure for secondary school students",
+  },
+]
 
-  // Fee structures in SDG (Sudanese Pound)
-  // Comboni School - Quality private education fees
-  const feeStructures = [
-    {
-      name: "Secondary (Grade 10-12) Annual Fee | الرسوم السنوية للمرحلة الثانوية",
-      tuition: 1200000,
-      admission: 180000,
-      registration: 48000,
-      exam: 90000,
-      library: 30000,
-      lab: 72000,
-      sports: 36000,
-      total: 1656000,
-    },
-    {
-      name: "Intermediate (Grade 7-9) Annual Fee | الرسوم السنوية للمرحلة المتوسطة",
-      tuition: 900000,
-      admission: 150000,
-      registration: 36000,
-      exam: 72000,
-      library: 24000,
-      lab: 48000,
-      sports: 30000,
-      total: 1260000,
-    },
-    {
-      name: "Primary (Grade 1-6) Annual Fee | الرسوم السنوية للمرحلة الابتدائية",
-      tuition: 720000,
-      admission: 120000,
-      registration: 30000,
-      exam: 60000,
-      library: 18000,
-      lab: 30000,
-      sports: 24000,
-      total: 1002000,
-    },
-    {
-      name: "Kindergarten (KG1-KG2) Annual Fee | الرسوم السنوية للروضة",
-      tuition: 600000,
-      admission: 90000,
-      registration: 24000,
-      exam: 30000,
-      library: 12000,
-      lab: 0,
-      sports: 18000,
-      total: 774000,
-    },
-  ]
+// ============================================================================
+// FEE SEEDING
+// ============================================================================
 
-  const createdStructures: { id: string; total: number }[] = []
-  let structureCreatedCount = 0
-  let structureSkippedCount = 0
+/**
+ * Seed fee structures (one per level group)
+ * Note: FeeStructure has no unique constraint, using findFirst + create
+ */
+export async function seedFeeStructures(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<Map<string, string>> {
+  logPhase(10, "FEES & INVOICES", "الرسوم والفواتير")
 
-  for (const [index, fs] of feeStructures.entries()) {
-    const structureName = `${fs.name} ${academicYear}`
+  const feeStructureMap = new Map<string, string>() // levelName -> feeStructureId
+  let count = 0
 
-    // Check if fee structure already exists
-    const existing = await prisma.feeStructure.findFirst({
-      where: { schoolId, name: structureName },
-    })
+  for (const structure of FEE_STRUCTURES) {
+    try {
+      // Calculate total fee
+      const totalAmount =
+        (structure.tuitionFee || 0) +
+        (structure.registrationFee || 0) +
+        (structure.examFee || 0) +
+        (structure.libraryFee || 0) +
+        (structure.laboratoryFee || 0) +
+        (structure.sportsFee || 0) +
+        (structure.transportFee || 0)
 
-    if (existing) {
-      createdStructures.push({ id: existing.id, total: fs.total })
-      structureSkippedCount++
-    } else {
-      const structure = await prisma.feeStructure.create({
-        data: {
+      // Check if fee structure exists (no unique constraint)
+      const existing = await prisma.feeStructure.findFirst({
+        where: {
           schoolId,
-          name: structureName,
-          academicYear,
-          classId: classes[index % classes.length]?.id,
-          tuitionFee: fs.tuition.toString(),
-          admissionFee: fs.admission.toString(),
-          registrationFee: fs.registration.toString(),
-          examFee: fs.exam.toString(),
-          libraryFee: fs.library.toString(),
-          laboratoryFee: fs.lab.toString(),
-          sportsFee: fs.sports.toString(),
-          totalAmount: fs.total.toString(),
-          installments: 3,
-          isActive: true,
+          name: structure.name,
+          academicYear: "2025-2026",
         },
       })
-      createdStructures.push({ id: structure.id, total: fs.total })
-      structureCreatedCount++
-    }
-  }
 
-  let paymentCount = 0
-  let assignmentCreatedCount = 0
-  let assignmentSkippedCount = 0
-
-  for (let i = 0; i < Math.min(150, students.length); i++) {
-    const student = students[i]
-    const structure = createdStructures[i % createdStructures.length]
-    const isPaid = i < 100
-
-    // Check if fee assignment already exists
-    const existingAssignment = await prisma.feeAssignment.findFirst({
-      where: {
-        schoolId,
-        studentId: student.id,
-        feeStructureId: structure.id,
-        academicYear,
-      },
-    })
-
-    let feeAssignment = existingAssignment
-
-    if (!existingAssignment) {
-      feeAssignment = await prisma.feeAssignment.create({
-        data: {
-          schoolId,
-          studentId: student.id,
-          feeStructureId: structure.id,
-          academicYear,
-          finalAmount: structure.total.toString(),
-          status: isPaid
-            ? FeeStatus.PAID
-            : i < 120
-              ? FeeStatus.PARTIAL
-              : FeeStatus.PENDING,
-        },
-      })
-      assignmentCreatedCount++
-    } else {
-      assignmentSkippedCount++
-    }
-
-    if ((isPaid || i < 120) && feeAssignment && !existingAssignment) {
-      const paymentAmount = isPaid ? structure.total : structure.total * 0.5
-      const paymentNumber = `PAY-2025-${String(paymentCount + 1).padStart(5, "0")}`
-
-      // Check if payment already exists
-      const existingPayment = await prisma.payment.findFirst({
-        where: { schoolId, paymentNumber },
-      })
-
-      if (!existingPayment) {
-        await prisma.payment.create({
+      let feeStructure
+      if (existing) {
+        feeStructure = existing
+      } else {
+        feeStructure = await prisma.feeStructure.create({
           data: {
             schoolId,
-            feeAssignmentId: feeAssignment.id,
-            studentId: student.id,
-            paymentNumber,
-            amount: paymentAmount.toString(),
-            paymentDate: new Date(),
-            paymentMethod:
-              i % 3 === 0
-                ? PaymentMethod.CASH
-                : i % 3 === 1
-                  ? PaymentMethod.BANK_TRANSFER
-                  : PaymentMethod.CHEQUE,
-            receiptNumber: `RCP-2025-${String(paymentCount + 1).padStart(5, "0")}`,
-            status: PaymentStatus.SUCCESS,
+            name: structure.name,
+            academicYear: "2025-2026",
+            description: structure.description,
+            tuitionFee: structure.tuitionFee,
+            registrationFee: structure.registrationFee || 0,
+            examFee: structure.examFee || 0,
+            libraryFee: structure.libraryFee || 0,
+            laboratoryFee: structure.laboratoryFee || 0,
+            sportsFee: structure.sportsFee || 0,
+            transportFee: structure.transportFee || 0,
+            totalAmount,
+            isActive: true,
           },
         })
-        paymentCount++
+        count++
       }
+
+      // Map each level to this fee structure
+      for (const levelName of structure.levels) {
+        feeStructureMap.set(levelName, feeStructure.id)
+      }
+    } catch {
+      // Skip if fee structure already exists with different key
     }
   }
 
-  console.log(
-    `   ✅ Fee structures: ${structureCreatedCount} new, ${structureSkippedCount} already existed`
+  logSuccess("Fee Structures", count, "by level group")
+
+  return feeStructureMap
+}
+
+/**
+ * Seed fee assignments for students
+ * Note: FeeAssignment has @@unique([studentId, feeStructureId, academicYear])
+ */
+export async function seedFeeAssignments(
+  prisma: PrismaClient,
+  schoolId: string,
+  students: StudentRef[],
+  yearLevels: YearLevelRef[],
+  feeStructureMap: Map<string, string>
+): Promise<number> {
+  let recordCount = 0
+
+  // Get fee amounts by level
+  const feeAmounts: Record<string, number> = {
+    KG1: 15000,
+    KG2: 15000,
+    "Grade 1": 18000,
+    "Grade 2": 18000,
+    "Grade 3": 18000,
+    "Grade 4": 18000,
+    "Grade 5": 18000,
+    "Grade 6": 18000,
+    "Grade 7": 22000,
+    "Grade 8": 22000,
+    "Grade 9": 22000,
+    "Grade 10": 28000,
+    "Grade 11": 28000,
+    "Grade 12": 28000,
+  }
+
+  await processBatch(students, 100, async (student) => {
+    if (!student.yearLevelId) return
+
+    const yearLevel = yearLevels.find((yl) => yl.id === student.yearLevelId)
+    if (!yearLevel) return
+
+    const feeStructureId = feeStructureMap.get(yearLevel.levelName)
+    if (!feeStructureId) return
+
+    const amount = feeAmounts[yearLevel.levelName] || 20000
+
+    // Create fee assignment for each student
+    try {
+      await prisma.feeAssignment.upsert({
+        where: {
+          studentId_feeStructureId_academicYear: {
+            studentId: student.id,
+            feeStructureId,
+            academicYear: "2025-2026",
+          },
+        },
+        update: {
+          finalAmount: amount,
+        },
+        create: {
+          schoolId,
+          studentId: student.id,
+          feeStructureId,
+          academicYear: "2025-2026",
+          finalAmount: amount,
+          status: "PENDING",
+        },
+      })
+      recordCount++
+    } catch {
+      // Skip if record already exists
+    }
+  })
+
+  logSuccess("Fee Assignments", recordCount, "tuition fees assigned")
+
+  return recordCount
+}
+
+/**
+ * Seed all fee-related data
+ */
+export async function seedFees(
+  prisma: PrismaClient,
+  schoolId: string,
+  students: StudentRef[],
+  yearLevels: YearLevelRef[]
+): Promise<number> {
+  const feeStructureMap = await seedFeeStructures(prisma, schoolId)
+  return await seedFeeAssignments(
+    prisma,
+    schoolId,
+    students,
+    yearLevels,
+    feeStructureMap
   )
-  console.log(
-    `   ✅ Fee assignments: ${assignmentCreatedCount} new, ${assignmentSkippedCount} already existed`
-  )
-  console.log(`   ✅ Payments: ${paymentCount} new\n`)
 }

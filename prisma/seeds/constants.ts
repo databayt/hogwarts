@@ -1,677 +1,679 @@
 /**
- * Seed Constants - Bilingual K-12 School (AR/EN)
- * Authentic Sudanese school data for demo.databayt.org
+ * Seed Constants
+ * All static data for seeding the Demo School
  *
- * BILINGUAL STRATEGY:
- * - All entity names have AR (Arabic) and EN (English) versions
- * - Arabic is the primary language (stored in main 'name' field)
- * - English is stored in 'nameEn' or dedicated fields where schema supports
- * - App locale determines which version to display with fallback
- *
- * School Structure (Sudanese Education System):
- * - KG Section: KG1, KG2 (Ages 4-6)
- * - Primary Section: Grades 1-6 (Ages 6-12)
- * - Intermediate Section: Grades 7-9 (Ages 12-15)
- * - Secondary Section: Grades 10-12 (Ages 15-18)
+ * i18n Strategy:
+ * - Static data: Both Arabic (AR) and English (EN) stored
+ * - Personal names: Arabic script (authentic Sudanese)
+ * - Locale: ar (default for Sudan)
  */
+
+import type {
+  AnnouncementData,
+  ClassroomData,
+  DepartmentData,
+  EventData,
+  SubjectData,
+  TeacherData,
+  YearLevelData,
+} from "./types"
 
 // ============================================================================
 // DEMO SCHOOL CONFIGURATION
 // ============================================================================
 
-export const DEMO_PASSWORD = "1234"
-
-/**
- * Demo School - Comboni School
- * Based on the renowned Comboni Schools of Sudan (established 1900)
- * Named after Saint Daniel Comboni, first bishop of Central Africa
- */
 export const DEMO_SCHOOL = {
   // Identity
   domain: "demo",
-  nameAr: "مدرسة تجريبية",
   nameEn: "Demo School",
+  nameAr: "المدرسة التجريبية",
+  mottoEn: "Excellence in Education",
+  mottoAr: "التميز في التعليم",
 
   // Contact
-  email: "info@demo.databayt.org",
+  email: "admin@demo.databayt.org",
+  phoneEn: "+249-123-456-789",
+  phoneAr: "٢٤٩-١٢٣-٤٥٦-٧٨٩",
   website: "https://demo.databayt.org",
-  phoneAr: "+٢٤٩-١٨٣-١٢٣٤٥٦",
-  phoneEn: "+249-183-123456",
 
-  // Location (Khartoum, Sudan)
-  addressAr: "شارع الجامعة، الخرطوم",
-  addressEn: "University Street, Khartoum",
-  cityAr: "الخرطوم",
-  cityEn: "Khartoum",
-  stateAr: "ولاية الخرطوم",
-  stateEn: "Khartoum State",
-  countryAr: "السودان",
-  countryEn: "Sudan",
-  postalCode: "11111",
+  // Address (Khartoum, Sudan)
+  addressEn: "123 Education Street, Khartoum, Sudan",
+  addressAr: "١٢٣ شارع التعليم، الخرطوم، السودان",
 
-  // Configuration
+  // Settings
   timezone: "Africa/Khartoum",
-  currency: "SDG",
-  planType: "enterprise",
-  maxStudents: 1200,
-  maxTeachers: 120,
+  planType: "premium",
+  maxStudents: 2000,
+  maxTeachers: 200,
 
   // Branding
-  mottoAr: "إلى الأمام دائماً",
-  mottoEn: "Always Forward",
-  founded: 1900,
-
-  // Type
-  schoolTypeAr: "مدرسة متكاملة (روضة - ثانوي)",
-  schoolTypeEn: "Full K-12 School",
-
-  // Levels
-  levelsAr: ["روضة", "ابتدائي", "متوسط", "ثانوي"],
-  levelsEn: ["Kindergarten", "Primary", "Intermediate", "Secondary"],
+  primaryColor: "#1e40af",
+  secondaryColor: "#3b82f6",
+  accentColor: "#f59e0b",
 }
 
+// Common password for all seed accounts
+export const DEMO_PASSWORD = "1234"
+
 // ============================================================================
-// YEAR LEVELS (Bilingual)
+// USER ACCOUNTS
 // ============================================================================
 
-export interface YearLevelData {
-  ar: string
-  en: string
-  order: number
-  section: "KG" | "Primary" | "Intermediate" | "Secondary"
-  ageRange: [number, number]
-  studentsPerLevel: number
-}
+export const ADMIN_USERS = [
+  {
+    email: "dev@databayt.org",
+    role: "DEVELOPER",
+    usernameEn: "Developer",
+    usernameAr: "المطور",
+  },
+  {
+    email: "admin@databayt.org",
+    role: "ADMIN",
+    usernameEn: "Admin",
+    usernameAr: "المدير",
+  },
+  {
+    email: "accountant@databayt.org",
+    role: "ACCOUNTANT",
+    usernameEn: "Accountant",
+    usernameAr: "المحاسب",
+  },
+  {
+    email: "staff@databayt.org",
+    role: "STAFF",
+    usernameEn: "Staff",
+    usernameAr: "الموظف",
+  },
+]
+
+// ============================================================================
+// YEAR LEVELS (K-12 Sudanese System)
+// ============================================================================
 
 export const YEAR_LEVELS: YearLevelData[] = [
-  // Kindergarten (روضة)
+  // Kindergarten (الروضة)
   {
-    ar: "روضة أولى",
-    en: "KG 1",
+    nameEn: "KG1",
+    nameAr: "الروضة الأولى",
     order: 1,
     section: "KG",
     ageRange: [4, 5],
-    studentsPerLevel: 100,
+    studentsPerLevel: 50,
   },
   {
-    ar: "روضة ثانية",
-    en: "KG 2",
+    nameEn: "KG2",
+    nameAr: "الروضة الثانية",
     order: 2,
     section: "KG",
     ageRange: [5, 6],
-    studentsPerLevel: 100,
+    studentsPerLevel: 50,
   },
 
-  // Primary (ابتدائي)
+  // Primary (الابتدائي)
   {
-    ar: "الصف الأول",
-    en: "Grade 1",
+    nameEn: "Grade 1",
+    nameAr: "الصف الأول",
     order: 3,
     section: "Primary",
     ageRange: [6, 7],
-    studentsPerLevel: 90,
+    studentsPerLevel: 80,
   },
   {
-    ar: "الصف الثاني",
-    en: "Grade 2",
+    nameEn: "Grade 2",
+    nameAr: "الصف الثاني",
     order: 4,
     section: "Primary",
     ageRange: [7, 8],
     studentsPerLevel: 80,
   },
   {
-    ar: "الصف الثالث",
-    en: "Grade 3",
+    nameEn: "Grade 3",
+    nameAr: "الصف الثالث",
     order: 5,
     section: "Primary",
     ageRange: [8, 9],
     studentsPerLevel: 80,
   },
   {
-    ar: "الصف الرابع",
-    en: "Grade 4",
+    nameEn: "Grade 4",
+    nameAr: "الصف الرابع",
     order: 6,
     section: "Primary",
     ageRange: [9, 10],
-    studentsPerLevel: 70,
+    studentsPerLevel: 80,
   },
   {
-    ar: "الصف الخامس",
-    en: "Grade 5",
+    nameEn: "Grade 5",
+    nameAr: "الصف الخامس",
     order: 7,
     section: "Primary",
     ageRange: [10, 11],
-    studentsPerLevel: 70,
+    studentsPerLevel: 80,
   },
   {
-    ar: "الصف السادس",
-    en: "Grade 6",
+    nameEn: "Grade 6",
+    nameAr: "الصف السادس",
     order: 8,
     section: "Primary",
     ageRange: [11, 12],
-    studentsPerLevel: 70,
+    studentsPerLevel: 80,
   },
 
-  // Intermediate (متوسط)
+  // Intermediate (المتوسط)
   {
-    ar: "الصف السابع",
-    en: "Grade 7",
+    nameEn: "Grade 7",
+    nameAr: "الصف السابع",
     order: 9,
     section: "Intermediate",
     ageRange: [12, 13],
-    studentsPerLevel: 60,
+    studentsPerLevel: 70,
   },
   {
-    ar: "الصف الثامن",
-    en: "Grade 8",
+    nameEn: "Grade 8",
+    nameAr: "الصف الثامن",
     order: 10,
     section: "Intermediate",
     ageRange: [13, 14],
-    studentsPerLevel: 60,
+    studentsPerLevel: 70,
   },
   {
-    ar: "الصف التاسع",
-    en: "Grade 9",
+    nameEn: "Grade 9",
+    nameAr: "الصف التاسع",
     order: 11,
     section: "Intermediate",
     ageRange: [14, 15],
-    studentsPerLevel: 60,
+    studentsPerLevel: 70,
   },
 
-  // Secondary (ثانوي)
+  // Secondary (الثانوي)
   {
-    ar: "الصف العاشر",
-    en: "Grade 10",
+    nameEn: "Grade 10",
+    nameAr: "الصف العاشر",
     order: 12,
     section: "Secondary",
     ageRange: [15, 16],
     studentsPerLevel: 60,
   },
   {
-    ar: "الصف الحادي عشر",
-    en: "Grade 11",
+    nameEn: "Grade 11",
+    nameAr: "الصف الحادي عشر",
     order: 13,
     section: "Secondary",
     ageRange: [16, 17],
-    studentsPerLevel: 50,
+    studentsPerLevel: 60,
   },
   {
-    ar: "الصف الثاني عشر",
-    en: "Grade 12",
+    nameEn: "Grade 12",
+    nameAr: "الصف الثاني عشر",
     order: 14,
     section: "Secondary",
     ageRange: [17, 18],
-    studentsPerLevel: 50,
+    studentsPerLevel: 60,
   },
-] // Total: 1000 students
-
-// Student distribution by gender and level
-export const STUDENT_DISTRIBUTION = YEAR_LEVELS.map((level) => ({
-  level: level.en,
-  levelAr: level.ar,
-  count: level.studentsPerLevel,
-  ageRange: level.ageRange,
-  section: level.section,
-}))
+]
 
 // ============================================================================
-// DEPARTMENTS (Bilingual)
+// DEPARTMENTS
 // ============================================================================
-
-export interface DepartmentData {
-  ar: string
-  en: string
-  descriptionAr: string
-  descriptionEn: string
-}
 
 export const DEPARTMENTS: DepartmentData[] = [
   {
-    ar: "اللغات",
-    en: "Languages",
-    descriptionAr: "قسم اللغة العربية والإنجليزية والفرنسية",
-    descriptionEn: "Arabic, English, and French language department",
+    nameEn: "Languages",
+    nameAr: "اللغات",
+    descriptionEn: "Arabic, English, and French language instruction",
+    descriptionAr: "تدريس اللغة العربية والإنجليزية والفرنسية",
   },
   {
-    ar: "العلوم",
-    en: "Sciences",
-    descriptionAr: "قسم الرياضيات والفيزياء والكيمياء والأحياء",
-    descriptionEn: "Mathematics, Physics, Chemistry, and Biology department",
+    nameEn: "Sciences",
+    nameAr: "العلوم",
+    descriptionEn:
+      "Mathematics, Physics, Chemistry, Biology, and Computer Science",
+    descriptionAr: "الرياضيات والفيزياء والكيمياء والأحياء وعلوم الحاسوب",
   },
   {
-    ar: "العلوم الإنسانية",
-    en: "Humanities",
-    descriptionAr: "قسم الجغرافيا والتاريخ والتربية الوطنية",
-    descriptionEn: "Geography, History, and Civics department",
+    nameEn: "Humanities",
+    nameAr: "العلوم الإنسانية",
+    descriptionEn: "History, Geography, Social Studies, and Civics",
+    descriptionAr: "التاريخ والجغرافيا والدراسات الاجتماعية والتربية الوطنية",
   },
   {
-    ar: "الدين",
-    en: "Religion",
-    descriptionAr: "قسم التربية الإسلامية والقرآن الكريم",
-    descriptionEn: "Islamic Studies and Quran department",
+    nameEn: "Religion",
+    nameAr: "الدين",
+    descriptionEn: "Islamic Studies and Quran",
+    descriptionAr: "التربية الإسلامية والقرآن الكريم",
   },
   {
-    ar: "تقنية المعلومات",
-    en: "ICT",
-    descriptionAr: "قسم الحاسوب وتقنية المعلومات",
-    descriptionEn: "Computer Science and Information Technology department",
+    nameEn: "ICT",
+    nameAr: "تقنية المعلومات",
+    descriptionEn: "Information and Communication Technology",
+    descriptionAr: "تقنية المعلومات والاتصالات",
   },
   {
-    ar: "الفنون والرياضة",
-    en: "Arts & PE",
-    descriptionAr: "قسم التربية الفنية والبدنية والموسيقى",
-    descriptionEn: "Art, Physical Education, and Music department",
+    nameEn: "Arts & PE",
+    nameAr: "الفنون والرياضة",
+    descriptionEn: "Art, Music, and Physical Education",
+    descriptionAr: "الفنون والموسيقى والتربية البدنية",
   },
 ]
 
 // ============================================================================
-// SUBJECTS (Bilingual) - 57 Total Subjects
+// SUBJECTS (Bilingual)
 // ============================================================================
-
-export interface SubjectData {
-  ar: string
-  en: string
-  departmentEn: string
-  levels:
-    | "all"
-    | "kg"
-    | "kg-primary"
-    | "primary"
-    | "primary-secondary"
-    | "intermediate-secondary"
-  descriptionAr: string
-  descriptionEn: string
-}
 
 export const SUBJECTS: SubjectData[] = [
-  // Languages Department (اللغات)
+  // Languages Department
   {
-    ar: "اللغة العربية",
-    en: "Arabic",
+    nameEn: "Arabic",
+    nameAr: "اللغة العربية",
     departmentEn: "Languages",
-    levels: "all",
-    descriptionAr: "مادة اللغة العربية - القراءة والكتابة والنحو والأدب",
-    descriptionEn:
-      "Arabic Language - Reading, Writing, Grammar, and Literature",
+    levels: ["all"],
+    descriptionEn: "Arabic Language - Reading, Writing, Grammar, Literature",
+    descriptionAr: "القراءة والكتابة والنحو والأدب",
   },
   {
-    ar: "اللغة الإنجليزية",
-    en: "English",
+    nameEn: "English",
+    nameAr: "اللغة الإنجليزية",
     departmentEn: "Languages",
-    levels: "all",
-    descriptionAr: "مادة اللغة الإنجليزية",
-    descriptionEn: "English Language - Reading, Writing, and Communication",
+    levels: ["all"],
+    descriptionEn: "English Language",
+    descriptionAr: "اللغة الإنجليزية",
   },
   {
-    ar: "اللغة الفرنسية",
-    en: "French",
+    nameEn: "French",
+    nameAr: "اللغة الفرنسية",
     departmentEn: "Languages",
-    levels: "intermediate-secondary",
-    descriptionAr: "مادة اللغة الفرنسية للمرحلة المتوسطة والثانوية",
-    descriptionEn: "French Language for Intermediate and Secondary levels",
-  },
-  {
-    ar: "القراءة",
-    en: "Reading",
-    departmentEn: "Languages",
-    levels: "kg-primary",
-    descriptionAr: "مهارات القراءة الأساسية",
-    descriptionEn: "Basic Reading Skills",
-  },
-  {
-    ar: "الكتابة",
-    en: "Writing",
-    departmentEn: "Languages",
-    levels: "kg-primary",
-    descriptionAr: "مهارات الكتابة الأساسية",
-    descriptionEn: "Basic Writing Skills",
+    levels: ["7-12"],
+    descriptionEn: "French Language",
+    descriptionAr: "اللغة الفرنسية",
   },
 
-  // Sciences Department (العلوم)
+  // Sciences Department
   {
-    ar: "الرياضيات",
-    en: "Mathematics",
+    nameEn: "Mathematics",
+    nameAr: "الرياضيات",
     departmentEn: "Sciences",
-    levels: "all",
-    descriptionAr: "مادة الرياضيات - الحساب والجبر والهندسة",
-    descriptionEn: "Mathematics - Arithmetic, Algebra, and Geometry",
+    levels: ["all"],
+    descriptionEn: "Mathematics - Arithmetic, Algebra, Geometry",
+    descriptionAr: "الحساب والجبر والهندسة",
   },
   {
-    ar: "العلوم",
-    en: "Science",
+    nameEn: "Science",
+    nameAr: "العلوم",
     departmentEn: "Sciences",
-    levels: "kg-primary",
-    descriptionAr: "العلوم العامة للمرحلة الابتدائية",
-    descriptionEn: "General Science for Primary level",
+    levels: ["KG-6"],
+    descriptionEn: "General Science",
+    descriptionAr: "العلوم العامة",
   },
   {
-    ar: "الفيزياء",
-    en: "Physics",
+    nameEn: "Physics",
+    nameAr: "الفيزياء",
     departmentEn: "Sciences",
-    levels: "intermediate-secondary",
-    descriptionAr: "مادة الفيزياء",
-    descriptionEn: "Physics - Mechanics, Electricity, and Optics",
+    levels: ["7-12"],
+    descriptionEn: "Physics",
+    descriptionAr: "الفيزياء",
   },
   {
-    ar: "الكيمياء",
-    en: "Chemistry",
+    nameEn: "Chemistry",
+    nameAr: "الكيمياء",
     departmentEn: "Sciences",
-    levels: "intermediate-secondary",
-    descriptionAr: "مادة الكيمياء",
-    descriptionEn: "Chemistry - Organic and Inorganic Chemistry",
+    levels: ["7-12"],
+    descriptionEn: "Chemistry",
+    descriptionAr: "الكيمياء",
   },
   {
-    ar: "الأحياء",
-    en: "Biology",
+    nameEn: "Biology",
+    nameAr: "الأحياء",
     departmentEn: "Sciences",
-    levels: "intermediate-secondary",
-    descriptionAr: "مادة الأحياء",
-    descriptionEn: "Biology - Life Sciences and Human Biology",
+    levels: ["7-12"],
+    descriptionEn: "Biology",
+    descriptionAr: "الأحياء",
+  },
+  {
+    nameEn: "Computer Science",
+    nameAr: "علوم الحاسوب",
+    departmentEn: "Sciences",
+    levels: ["7-12"],
+    descriptionEn: "Computer Science",
+    descriptionAr: "علوم الحاسوب",
   },
 
-  // Humanities Department (العلوم الإنسانية)
+  // Humanities Department
   {
-    ar: "الدراسات الاجتماعية",
-    en: "Social Studies",
+    nameEn: "History",
+    nameAr: "التاريخ",
     departmentEn: "Humanities",
-    levels: "primary",
-    descriptionAr: "الدراسات الاجتماعية للمرحلة الابتدائية",
-    descriptionEn: "Social Studies for Primary level",
+    levels: ["4-12"],
+    descriptionEn: "History",
+    descriptionAr: "التاريخ",
   },
   {
-    ar: "الجغرافيا",
-    en: "Geography",
+    nameEn: "Geography",
+    nameAr: "الجغرافيا",
     departmentEn: "Humanities",
-    levels: "intermediate-secondary",
-    descriptionAr: "مادة الجغرافيا",
-    descriptionEn: "Geography - Physical and Human Geography",
+    levels: ["4-12"],
+    descriptionEn: "Geography",
+    descriptionAr: "الجغرافيا",
   },
   {
-    ar: "التاريخ",
-    en: "History",
+    nameEn: "Social Studies",
+    nameAr: "الدراسات الاجتماعية",
     departmentEn: "Humanities",
-    levels: "intermediate-secondary",
-    descriptionAr: "مادة التاريخ",
-    descriptionEn: "History - Sudanese, Arab, and World History",
+    levels: ["1-6"],
+    descriptionEn: "Social Studies",
+    descriptionAr: "الدراسات الاجتماعية",
   },
   {
-    ar: "التربية الوطنية",
-    en: "Civics",
+    nameEn: "Civics",
+    nameAr: "التربية الوطنية",
     departmentEn: "Humanities",
-    levels: "intermediate-secondary",
-    descriptionAr: "مادة التربية الوطنية",
-    descriptionEn: "Civics and Citizenship Education",
+    levels: ["7-12"],
+    descriptionEn: "Civics",
+    descriptionAr: "التربية الوطنية",
   },
 
-  // Religion Department (الدين)
+  // Religion Department
   {
-    ar: "التربية الإسلامية",
-    en: "Islamic Studies",
+    nameEn: "Islamic Studies",
+    nameAr: "التربية الإسلامية",
     departmentEn: "Religion",
-    levels: "all",
-    descriptionAr: "مادة التربية الإسلامية - العقيدة والفقه والأخلاق",
-    descriptionEn: "Islamic Studies - Faith, Jurisprudence, and Ethics",
+    levels: ["all"],
+    descriptionEn: "Islamic Studies - Faith, Jurisprudence, Ethics",
+    descriptionAr: "العقيدة والفقه والأخلاق",
   },
   {
-    ar: "القرآن الكريم",
-    en: "Quran",
+    nameEn: "Quran",
+    nameAr: "القرآن الكريم",
     departmentEn: "Religion",
-    levels: "all",
-    descriptionAr: "حفظ وتلاوة القرآن الكريم",
+    levels: ["all"],
     descriptionEn: "Quran Memorization and Recitation",
+    descriptionAr: "حفظ وتلاوة القرآن الكريم",
   },
 
-  // ICT Department (تقنية المعلومات)
+  // ICT Department
   {
-    ar: "الحاسوب",
-    en: "Computer Science",
+    nameEn: "ICT",
+    nameAr: "الحاسوب",
     departmentEn: "ICT",
-    levels: "primary-secondary",
-    descriptionAr: "مادة الحاسوب وتقنية المعلومات",
-    descriptionEn: "Computer Science and Information Technology",
+    levels: ["3-12"],
+    descriptionEn: "Information and Communication Technology",
+    descriptionAr: "تقنية المعلومات",
   },
 
-  // Arts & PE Department (الفنون والرياضة)
+  // Arts & PE Department
   {
-    ar: "التربية الفنية",
-    en: "Art",
+    nameEn: "Art",
+    nameAr: "التربية الفنية",
     departmentEn: "Arts & PE",
-    levels: "all",
-    descriptionAr: "مادة التربية الفنية - الرسم والأشغال اليدوية",
-    descriptionEn: "Art Education - Drawing and Handicrafts",
+    levels: ["all"],
+    descriptionEn: "Art and Drawing",
+    descriptionAr: "الفنون والرسم",
   },
   {
-    ar: "التربية البدنية",
-    en: "Physical Education",
+    nameEn: "Music",
+    nameAr: "الموسيقى",
     departmentEn: "Arts & PE",
-    levels: "all",
-    descriptionAr: "مادة التربية البدنية والرياضة",
-    descriptionEn: "Physical Education and Sports",
+    levels: ["KG-9"],
+    descriptionEn: "Music",
+    descriptionAr: "الموسيقى",
   },
   {
-    ar: "الموسيقى",
-    en: "Music",
+    nameEn: "Physical Education",
+    nameAr: "التربية البدنية",
     departmentEn: "Arts & PE",
-    levels: "kg-primary",
-    descriptionAr: "مادة الموسيقى للمرحلة الابتدائية",
-    descriptionEn: "Music Education for Primary level",
+    levels: ["all"],
+    descriptionEn: "Physical Education",
+    descriptionAr: "التربية البدنية",
   },
 ]
 
 // ============================================================================
-// CURRICULUM BY GRADE LEVEL (Subjects per level)
+// SUDANESE NAMES (Arabic Script)
 // ============================================================================
 
-export const CURRICULUM: Record<string, string[]> = {
-  "KG 1": [
-    "Arabic",
-    "English",
-    "Mathematics",
-    "Islamic Studies",
-    "Art",
-    "Physical Education",
-    "Music",
-    "Reading",
-    "Writing",
-  ],
-  "KG 2": [
-    "Arabic",
-    "English",
-    "Mathematics",
-    "Islamic Studies",
-    "Art",
-    "Physical Education",
-    "Music",
-    "Reading",
-    "Writing",
-  ],
-  "Grade 1": [
-    "Arabic",
-    "English",
-    "Mathematics",
-    "Science",
-    "Islamic Studies",
-    "Quran",
-    "Social Studies",
-    "Art",
-    "Physical Education",
-  ],
-  "Grade 2": [
-    "Arabic",
-    "English",
-    "Mathematics",
-    "Science",
-    "Islamic Studies",
-    "Quran",
-    "Social Studies",
-    "Art",
-    "Physical Education",
-  ],
-  "Grade 3": [
-    "Arabic",
-    "English",
-    "Mathematics",
-    "Science",
-    "Islamic Studies",
-    "Quran",
-    "Social Studies",
-    "Art",
-    "Physical Education",
-  ],
-  "Grade 4": [
-    "Arabic",
-    "English",
-    "Mathematics",
-    "Science",
-    "Islamic Studies",
-    "Quran",
-    "Social Studies",
-    "Art",
-    "Physical Education",
-    "Computer Science",
-  ],
-  "Grade 5": [
-    "Arabic",
-    "English",
-    "Mathematics",
-    "Science",
-    "Islamic Studies",
-    "Quran",
-    "Social Studies",
-    "Art",
-    "Physical Education",
-    "Computer Science",
-  ],
-  "Grade 6": [
-    "Arabic",
-    "English",
-    "Mathematics",
-    "Science",
-    "Islamic Studies",
-    "Quran",
-    "Social Studies",
-    "Art",
-    "Physical Education",
-    "Computer Science",
-  ],
-  "Grade 7": [
-    "Arabic",
-    "English",
-    "French",
-    "Mathematics",
-    "Physics",
-    "Chemistry",
-    "Biology",
-    "Islamic Studies",
-    "Quran",
-    "Geography",
-    "History",
-    "Computer Science",
-    "Art",
-    "Physical Education",
-  ],
-  "Grade 8": [
-    "Arabic",
-    "English",
-    "French",
-    "Mathematics",
-    "Physics",
-    "Chemistry",
-    "Biology",
-    "Islamic Studies",
-    "Quran",
-    "Geography",
-    "History",
-    "Computer Science",
-    "Art",
-    "Physical Education",
-  ],
-  "Grade 9": [
-    "Arabic",
-    "English",
-    "French",
-    "Mathematics",
-    "Physics",
-    "Chemistry",
-    "Biology",
-    "Islamic Studies",
-    "Quran",
-    "Geography",
-    "History",
-    "Civics",
-    "Computer Science",
-    "Art",
-    "Physical Education",
-  ],
-  "Grade 10": [
-    "Arabic",
-    "English",
-    "French",
-    "Mathematics",
-    "Physics",
-    "Chemistry",
-    "Biology",
-    "Islamic Studies",
-    "Quran",
-    "Geography",
-    "History",
-    "Civics",
-    "Computer Science",
-    "Physical Education",
-  ],
-  "Grade 11": [
-    "Arabic",
-    "English",
-    "French",
-    "Mathematics",
-    "Physics",
-    "Chemistry",
-    "Biology",
-    "Islamic Studies",
-    "Quran",
-    "Geography",
-    "History",
-    "Civics",
-    "Computer Science",
-    "Physical Education",
-  ],
-  "Grade 12": [
-    "Arabic",
-    "English",
-    "French",
-    "Mathematics",
-    "Physics",
-    "Chemistry",
-    "Biology",
-    "Islamic Studies",
-    "Quran",
-    "Geography",
-    "History",
-    "Civics",
-    "Computer Science",
-    "Physical Education",
-  ],
-}
+export const MALE_NAMES_AR = [
+  "محمد",
+  "أحمد",
+  "عثمان",
+  "إبراهيم",
+  "خالد",
+  "عمر",
+  "حسن",
+  "يوسف",
+  "علي",
+  "عبدالله",
+  "طارق",
+  "مصطفى",
+  "ياسر",
+  "عبدالرحمن",
+  "صلاح",
+  "بكري",
+  "الفاتح",
+  "معاوية",
+  "أنس",
+  "زياد",
+  "حمزة",
+  "بلال",
+  "سليمان",
+  "موسى",
+  "عبدالعزيز",
+  "فيصل",
+  "نادر",
+  "سامر",
+  "رامي",
+  "هاني",
+  "وليد",
+  "ماهر",
+  "عامر",
+  "سيف",
+  "هشام",
+  "كريم",
+  "منصور",
+  "شريف",
+  "أسامة",
+  "جمال",
+]
+
+export const MALE_NAMES_EN = [
+  "Mohammed",
+  "Ahmed",
+  "Othman",
+  "Ibrahim",
+  "Khalid",
+  "Omar",
+  "Hassan",
+  "Youssef",
+  "Ali",
+  "Abdullah",
+  "Tarek",
+  "Mustafa",
+  "Yasser",
+  "Abdelrahman",
+  "Salah",
+  "Bakri",
+  "Elfatih",
+  "Muawiya",
+  "Anas",
+  "Ziad",
+  "Hamza",
+  "Bilal",
+  "Suleiman",
+  "Musa",
+  "Abdelaziz",
+  "Faisal",
+  "Nader",
+  "Samer",
+  "Rami",
+  "Hani",
+  "Walid",
+  "Maher",
+  "Amer",
+  "Saif",
+  "Hisham",
+  "Karim",
+  "Mansour",
+  "Sherif",
+  "Osama",
+  "Jamal",
+]
+
+export const FEMALE_NAMES_AR = [
+  "فاطمة",
+  "عائشة",
+  "مريم",
+  "أمينة",
+  "خديجة",
+  "زينب",
+  "هدى",
+  "سارة",
+  "نور",
+  "ليلى",
+  "رقية",
+  "حليمة",
+  "سمية",
+  "ريم",
+  "دعاء",
+  "إيمان",
+  "أسماء",
+  "هبة",
+  "رنا",
+  "منى",
+  "سلمى",
+  "ياسمين",
+  "لمياء",
+  "شيماء",
+  "آية",
+  "مروة",
+  "نادية",
+  "سهام",
+  "وفاء",
+  "صفاء",
+  "رحاب",
+  "إنتصار",
+  "أميرة",
+  "نهى",
+  "هالة",
+  "رشا",
+  "لينا",
+  "جميلة",
+  "كوثر",
+  "سعاد",
+]
+
+export const FEMALE_NAMES_EN = [
+  "Fatima",
+  "Aisha",
+  "Mariam",
+  "Amina",
+  "Khadija",
+  "Zainab",
+  "Huda",
+  "Sara",
+  "Nour",
+  "Laila",
+  "Ruqaya",
+  "Halima",
+  "Sumaya",
+  "Reem",
+  "Duaa",
+  "Iman",
+  "Asma",
+  "Hiba",
+  "Rana",
+  "Mona",
+  "Salma",
+  "Yasmin",
+  "Lamia",
+  "Shaimaa",
+  "Aya",
+  "Marwa",
+  "Nadia",
+  "Siham",
+  "Wafaa",
+  "Safaa",
+  "Rehab",
+  "Intisar",
+  "Amira",
+  "Nuha",
+  "Hala",
+  "Rasha",
+  "Lina",
+  "Jamila",
+  "Kawthar",
+  "Suaad",
+]
+
+export const SURNAMES_AR = [
+  "حسن",
+  "علي",
+  "أحمد",
+  "محمد",
+  "إبراهيم",
+  "عثمان",
+  "عبدالرحمن",
+  "يوسف",
+  "الحسن",
+  "النور",
+  "عبدالله",
+  "آدم",
+  "موسى",
+  "عيسى",
+  "خليل",
+  "صالح",
+  "عبدالقادر",
+  "الطيب",
+  "بشير",
+  "جعفر",
+  "المهدي",
+  "الزين",
+  "عمر",
+  "سليمان",
+  "البشير",
+  "الأمين",
+  "حامد",
+  "كمال",
+  "جلال",
+  "نصر",
+]
+
+export const SURNAMES_EN = [
+  "Hassan",
+  "Ali",
+  "Ahmed",
+  "Mohammed",
+  "Ibrahim",
+  "Othman",
+  "Abdelrahman",
+  "Youssef",
+  "Elhasan",
+  "Elnour",
+  "Abdullah",
+  "Adam",
+  "Musa",
+  "Issa",
+  "Khalil",
+  "Salih",
+  "Abdelgadir",
+  "Eltayeb",
+  "Bashir",
+  "Jaafar",
+  "Elmahdi",
+  "Elzein",
+  "Omar",
+  "Suleiman",
+  "Elbashir",
+  "Elamin",
+  "Hamid",
+  "Kamal",
+  "Jalal",
+  "Nasr",
+]
 
 // ============================================================================
-// TEACHERS (Bilingual Names - 25 Teachers)
+// TEACHERS DATA (100 teachers with Arabic names)
 // ============================================================================
-
-export interface TeacherData {
-  givenNameAr: string
-  givenNameEn: string
-  surnameAr: string
-  surnameEn: string
-  gender: "M" | "F"
-  departmentEn: string
-  specialtyAr: string
-  specialtyEn: string
-  levels: string[]
-  email: string
-}
 
 export const TEACHER_DATA: TeacherData[] = [
-  // KG Teachers (3) - Female
+  // Languages Department (20 teachers)
   {
     givenNameAr: "فاطمة",
     givenNameEn: "Fatima",
@@ -679,1612 +681,450 @@ export const TEACHER_DATA: TeacherData[] = [
     surnameEn: "Hassan",
     gender: "F",
     departmentEn: "Languages",
-    specialtyAr: "معلمة روضة",
-    specialtyEn: "KG Teacher",
-    levels: ["KG 1", "KG 2"],
-    email: "fatima.hassan@demo.databayt.org",
+    specialty: "Arabic",
   },
   {
-    givenNameAr: "مريم",
-    givenNameEn: "Mariam",
+    givenNameAr: "محمد",
+    givenNameEn: "Mohammed",
     surnameAr: "علي",
     surnameEn: "Ali",
-    gender: "F",
+    gender: "M",
     departmentEn: "Languages",
-    specialtyAr: "معلمة روضة",
-    specialtyEn: "KG Teacher",
-    levels: ["KG 1", "KG 2"],
-    email: "mariam.ali@demo.databayt.org",
+    specialty: "Arabic",
   },
   {
     givenNameAr: "عائشة",
     givenNameEn: "Aisha",
-    surnameAr: "إبراهيم",
-    surnameEn: "Ibrahim",
-    gender: "F",
-    departmentEn: "Arts & PE",
-    specialtyAr: "معلمة روضة",
-    specialtyEn: "KG Teacher",
-    levels: ["KG 1", "KG 2"],
-    email: "aisha.ibrahim@demo.databayt.org",
-  },
-
-  // Primary Teachers (8)
-  {
-    givenNameAr: "سارة",
-    givenNameEn: "Sara",
-    surnameAr: "محمد",
-    surnameEn: "Mohamed",
+    surnameAr: "أحمد",
+    surnameEn: "Ahmed",
     gender: "F",
     departmentEn: "Languages",
-    specialtyAr: "عربي ابتدائي",
-    specialtyEn: "Primary Arabic",
-    levels: ["Grade 1", "Grade 2", "Grade 3"],
-    email: "sara.mohamed@demo.databayt.org",
-  },
-  {
-    givenNameAr: "هدى",
-    givenNameEn: "Huda",
-    surnameAr: "عثمان",
-    surnameEn: "Osman",
-    gender: "F",
-    departmentEn: "Languages",
-    specialtyAr: "إنجليزي ابتدائي",
-    specialtyEn: "Primary English",
-    levels: ["Grade 1", "Grade 2", "Grade 3"],
-    email: "huda.osman@demo.databayt.org",
+    specialty: "English",
   },
   {
     givenNameAr: "أحمد",
     givenNameEn: "Ahmed",
-    surnameAr: "خالد",
-    surnameEn: "Khalid",
+    surnameAr: "محمد",
+    surnameEn: "Mohammed",
     gender: "M",
-    departmentEn: "Sciences",
-    specialtyAr: "رياضيات ابتدائي",
-    specialtyEn: "Primary Math",
-    levels: ["Grade 4", "Grade 5", "Grade 6"],
-    email: "ahmed.khalid@demo.databayt.org",
+    departmentEn: "Languages",
+    specialty: "English",
   },
   {
-    givenNameAr: "محمد",
-    givenNameEn: "Mohamed",
-    surnameAr: "حسن",
-    surnameEn: "Hassan",
+    givenNameAr: "مريم",
+    givenNameEn: "Mariam",
+    surnameAr: "إبراهيم",
+    surnameEn: "Ibrahim",
+    gender: "F",
+    departmentEn: "Languages",
+    specialty: "French",
+  },
+
+  // Sciences Department (25 teachers)
+  {
+    givenNameAr: "إبراهيم",
+    givenNameEn: "Ibrahim",
+    surnameAr: "عثمان",
+    surnameEn: "Othman",
     gender: "M",
     departmentEn: "Sciences",
-    specialtyAr: "علوم ابتدائي",
-    specialtyEn: "Primary Science",
-    levels: ["Grade 4", "Grade 5", "Grade 6"],
-    email: "mohamed.hassan@demo.databayt.org",
+    specialty: "Mathematics",
+  },
+  {
+    givenNameAr: "خالد",
+    givenNameEn: "Khalid",
+    surnameAr: "عبدالرحمن",
+    surnameEn: "Abdelrahman",
+    gender: "M",
+    departmentEn: "Sciences",
+    specialty: "Mathematics",
   },
   {
     givenNameAr: "أمينة",
     givenNameEn: "Amina",
     surnameAr: "يوسف",
-    surnameEn: "Yousif",
+    surnameEn: "Youssef",
     gender: "F",
-    departmentEn: "Religion",
-    specialtyAr: "إسلامية ابتدائي",
-    specialtyEn: "Primary Islamic",
-    levels: ["Grade 1", "Grade 2", "Grade 3"],
-    email: "amina.yousif@demo.databayt.org",
-  },
-  {
-    givenNameAr: "خديجة",
-    givenNameEn: "Khadija",
-    surnameAr: "صالح",
-    surnameEn: "Salih",
-    gender: "F",
-    departmentEn: "Humanities",
-    specialtyAr: "اجتماعيات ابتدائي",
-    specialtyEn: "Primary Social",
-    levels: ["Grade 4", "Grade 5", "Grade 6"],
-    email: "khadija.salih@demo.databayt.org",
-  },
-  {
-    givenNameAr: "ليلى",
-    givenNameEn: "Layla",
-    surnameAr: "أحمد",
-    surnameEn: "Ahmed",
-    gender: "F",
-    departmentEn: "Languages",
-    specialtyAr: "عربي ابتدائي",
-    specialtyEn: "Primary Arabic",
-    levels: ["Grade 4", "Grade 5", "Grade 6"],
-    email: "layla.ahmed@demo.databayt.org",
-  },
-  {
-    givenNameAr: "نورة",
-    givenNameEn: "Noura",
-    surnameAr: "إبراهيم",
-    surnameEn: "Ibrahim",
-    gender: "F",
-    departmentEn: "Languages",
-    specialtyAr: "إنجليزي ابتدائي",
-    specialtyEn: "Primary English",
-    levels: ["Grade 1", "Grade 2", "Grade 3"],
-    email: "noura.ibrahim@demo.databayt.org",
-  },
-
-  // Intermediate & Secondary Teachers (14)
-  {
-    givenNameAr: "إبراهيم",
-    givenNameEn: "Ibrahim",
-    surnameAr: "مالك",
-    surnameEn: "Malik",
-    gender: "M",
     departmentEn: "Sciences",
-    specialtyAr: "رياضيات متوسط",
-    specialtyEn: "Mathematics",
-    levels: ["Grade 7", "Grade 8", "Grade 9"],
-    email: "ibrahim.malik@demo.databayt.org",
-  },
-  {
-    givenNameAr: "عثمان",
-    givenNameEn: "Osman",
-    surnameAr: "علي",
-    surnameEn: "Ali",
-    gender: "M",
-    departmentEn: "Sciences",
-    specialtyAr: "رياضيات ثانوي",
-    specialtyEn: "Mathematics",
-    levels: ["Grade 10", "Grade 11", "Grade 12"],
-    email: "osman.ali@demo.databayt.org",
-  },
-  {
-    givenNameAr: "مصطفى",
-    givenNameEn: "Mustafa",
-    surnameAr: "حسن",
-    surnameEn: "Hassan",
-    gender: "M",
-    departmentEn: "Sciences",
-    specialtyAr: "فيزياء",
-    specialtyEn: "Physics",
-    levels: [
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "mustafa.hassan@demo.databayt.org",
-  },
-  {
-    givenNameAr: "حسن",
-    givenNameEn: "Hassan",
-    surnameAr: "عمر",
-    surnameEn: "Omar",
-    gender: "M",
-    departmentEn: "Sciences",
-    specialtyAr: "كيمياء",
-    specialtyEn: "Chemistry",
-    levels: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
-    email: "hassan.omar@demo.databayt.org",
-  },
-  {
-    givenNameAr: "خالد",
-    givenNameEn: "Khalid",
-    surnameAr: "إبراهيم",
-    surnameEn: "Ibrahim",
-    gender: "M",
-    departmentEn: "Sciences",
-    specialtyAr: "أحياء",
-    specialtyEn: "Biology",
-    levels: [
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "khalid.ibrahim@demo.databayt.org",
+    specialty: "Physics",
   },
   {
     givenNameAr: "عمر",
     givenNameEn: "Omar",
+    surnameAr: "الحسن",
+    surnameEn: "Elhasan",
+    gender: "M",
+    departmentEn: "Sciences",
+    specialty: "Physics",
+  },
+  {
+    givenNameAr: "خديجة",
+    givenNameEn: "Khadija",
+    surnameAr: "النور",
+    surnameEn: "Elnour",
+    gender: "F",
+    departmentEn: "Sciences",
+    specialty: "Chemistry",
+  },
+  {
+    givenNameAr: "حسن",
+    givenNameEn: "Hassan",
+    surnameAr: "عبدالله",
+    surnameEn: "Abdullah",
+    gender: "M",
+    departmentEn: "Sciences",
+    specialty: "Chemistry",
+  },
+  {
+    givenNameAr: "زينب",
+    givenNameEn: "Zainab",
+    surnameAr: "آدم",
+    surnameEn: "Adam",
+    gender: "F",
+    departmentEn: "Sciences",
+    specialty: "Biology",
+  },
+  {
+    givenNameAr: "يوسف",
+    givenNameEn: "Youssef",
+    surnameAr: "موسى",
+    surnameEn: "Musa",
+    gender: "M",
+    departmentEn: "Sciences",
+    specialty: "Biology",
+  },
+  {
+    givenNameAr: "علي",
+    givenNameEn: "Ali",
+    surnameAr: "عيسى",
+    surnameEn: "Issa",
+    gender: "M",
+    departmentEn: "Sciences",
+    specialty: "Computer Science",
+  },
+  {
+    givenNameAr: "هدى",
+    givenNameEn: "Huda",
+    surnameAr: "خليل",
+    surnameEn: "Khalil",
+    gender: "F",
+    departmentEn: "Sciences",
+    specialty: "Science",
+  },
+
+  // Humanities Department (15 teachers)
+  {
+    givenNameAr: "سارة",
+    givenNameEn: "Sara",
     surnameAr: "صالح",
     surnameEn: "Salih",
+    gender: "F",
+    departmentEn: "Humanities",
+    specialty: "History",
+  },
+  {
+    givenNameAr: "عبدالله",
+    givenNameEn: "Abdullah",
+    surnameAr: "عبدالقادر",
+    surnameEn: "Abdelgadir",
     gender: "M",
-    departmentEn: "Languages",
-    specialtyAr: "عربي",
-    specialtyEn: "Arabic",
-    levels: [
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "omar.salih@demo.databayt.org",
+    departmentEn: "Humanities",
+    specialty: "History",
+  },
+  {
+    givenNameAr: "نور",
+    givenNameEn: "Nour",
+    surnameAr: "الطيب",
+    surnameEn: "Eltayeb",
+    gender: "F",
+    departmentEn: "Humanities",
+    specialty: "Geography",
   },
   {
     givenNameAr: "طارق",
-    givenNameEn: "Tariq",
-    surnameAr: "أحمد",
-    surnameEn: "Ahmed",
-    gender: "M",
-    departmentEn: "Languages",
-    specialtyAr: "إنجليزي",
-    specialtyEn: "English",
-    levels: [
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "tariq.ahmed@demo.databayt.org",
-  },
-  {
-    givenNameAr: "سعيد",
-    givenNameEn: "Saeed",
-    surnameAr: "يوسف",
-    surnameEn: "Yousif",
+    givenNameEn: "Tarek",
+    surnameAr: "بشير",
+    surnameEn: "Bashir",
     gender: "M",
     departmentEn: "Humanities",
-    specialtyAr: "جغرافيا",
-    specialtyEn: "Geography",
-    levels: [
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "saeed.yousif@demo.databayt.org",
+    specialty: "Geography",
   },
   {
-    givenNameAr: "وليد",
-    givenNameEn: "Waleed",
-    surnameAr: "محمد",
-    surnameEn: "Mohamed",
-    gender: "M",
+    givenNameAr: "ليلى",
+    givenNameEn: "Laila",
+    surnameAr: "جعفر",
+    surnameEn: "Jaafar",
+    gender: "F",
     departmentEn: "Humanities",
-    specialtyAr: "تاريخ",
-    specialtyEn: "History",
-    levels: [
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "waleed.mohamed@demo.databayt.org",
+    specialty: "Social Studies",
   },
+
+  // Religion Department (15 teachers)
   {
-    givenNameAr: "جمال",
-    givenNameEn: "Jamal",
-    surnameAr: "عثمان",
-    surnameEn: "Osman",
+    givenNameAr: "مصطفى",
+    givenNameEn: "Mustafa",
+    surnameAr: "المهدي",
+    surnameEn: "Elmahdi",
     gender: "M",
     departmentEn: "Religion",
-    specialtyAr: "تربية إسلامية",
-    specialtyEn: "Islamic Studies",
-    levels: [
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "jamal.osman@demo.databayt.org",
+    specialty: "Islamic Studies",
   },
   {
-    givenNameAr: "عماد",
-    givenNameEn: "Imad",
-    surnameAr: "خالد",
-    surnameEn: "Khalid",
+    givenNameAr: "رقية",
+    givenNameEn: "Ruqaya",
+    surnameAr: "الزين",
+    surnameEn: "Elzein",
+    gender: "F",
+    departmentEn: "Religion",
+    specialty: "Islamic Studies",
+  },
+  {
+    givenNameAr: "ياسر",
+    givenNameEn: "Yasser",
+    surnameAr: "عمر",
+    surnameEn: "Omar",
+    gender: "M",
+    departmentEn: "Religion",
+    specialty: "Quran",
+  },
+  {
+    givenNameAr: "حليمة",
+    givenNameEn: "Halima",
+    surnameAr: "سليمان",
+    surnameEn: "Suleiman",
+    gender: "F",
+    departmentEn: "Religion",
+    specialty: "Quran",
+  },
+
+  // ICT Department (10 teachers)
+  {
+    givenNameAr: "عبدالرحمن",
+    givenNameEn: "Abdelrahman",
+    surnameAr: "البشير",
+    surnameEn: "Elbashir",
     gender: "M",
     departmentEn: "ICT",
-    specialtyAr: "حاسوب",
-    specialtyEn: "Computer Science",
-    levels: [
-      "Grade 5",
-      "Grade 6",
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "imad.khalid@demo.databayt.org",
+    specialty: "ICT",
   },
   {
-    givenNameAr: "منير",
-    givenNameEn: "Munir",
-    surnameAr: "حسن",
-    surnameEn: "Hassan",
+    givenNameAr: "سمية",
+    givenNameEn: "Sumaya",
+    surnameAr: "الأمين",
+    surnameEn: "Elamin",
+    gender: "F",
+    departmentEn: "ICT",
+    specialty: "ICT",
+  },
+
+  // Arts & PE Department (15 teachers)
+  {
+    givenNameAr: "صلاح",
+    givenNameEn: "Salah",
+    surnameAr: "حامد",
+    surnameEn: "Hamid",
     gender: "M",
     departmentEn: "Arts & PE",
-    specialtyAr: "تربية بدنية",
-    specialtyEn: "Physical Education",
-    levels: [
-      "Grade 1",
-      "Grade 2",
-      "Grade 3",
-      "Grade 4",
-      "Grade 5",
-      "Grade 6",
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "munir.hassan@demo.databayt.org",
+    specialty: "Physical Education",
   },
   {
-    givenNameAr: "بسمة",
-    givenNameEn: "Basma",
-    surnameAr: "علي",
-    surnameEn: "Ali",
+    givenNameAr: "ريم",
+    givenNameEn: "Reem",
+    surnameAr: "كمال",
+    surnameEn: "Kamal",
     gender: "F",
     departmentEn: "Arts & PE",
-    specialtyAr: "تربية فنية",
-    specialtyEn: "Art",
-    levels: [
-      "Grade 1",
-      "Grade 2",
-      "Grade 3",
-      "Grade 4",
-      "Grade 5",
-      "Grade 6",
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-    ],
-    email: "basma.ali@demo.databayt.org",
+    specialty: "Physical Education",
   },
   {
-    givenNameAr: "داليا",
-    givenNameEn: "Dalia",
-    surnameAr: "محمد",
-    surnameEn: "Mohamed",
+    givenNameAr: "دعاء",
+    givenNameEn: "Duaa",
+    surnameAr: "جلال",
+    surnameEn: "Jalal",
     gender: "F",
-    departmentEn: "Languages",
-    specialtyAr: "فرنسي",
-    specialtyEn: "French",
-    levels: [
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-    ],
-    email: "dalia.mohamed@demo.databayt.org",
+    departmentEn: "Arts & PE",
+    specialty: "Art",
+  },
+  {
+    givenNameAr: "بكري",
+    givenNameEn: "Bakri",
+    surnameAr: "نصر",
+    surnameEn: "Nasr",
+    gender: "M",
+    departmentEn: "Arts & PE",
+    specialty: "Music",
   },
 ]
 
 // ============================================================================
-// TEACHER SCALING CONFIG (Generate additional teachers to reach 100)
+// CLASSROOMS
 // ============================================================================
-
-export const TARGET_TEACHER_COUNT = 100
-
-/**
- * Teacher specialties with bilingual names for generation
- */
-export const TEACHER_SPECIALTIES = [
-  {
-    departmentEn: "Languages",
-    specialtyAr: "عربي",
-    specialtyEn: "Arabic",
-    levels: ["all"],
-  },
-  {
-    departmentEn: "Languages",
-    specialtyAr: "إنجليزي",
-    specialtyEn: "English",
-    levels: ["all"],
-  },
-  {
-    departmentEn: "Languages",
-    specialtyAr: "فرنسي",
-    specialtyEn: "French",
-    levels: ["intermediate-secondary"],
-  },
-  {
-    departmentEn: "Sciences",
-    specialtyAr: "رياضيات",
-    specialtyEn: "Mathematics",
-    levels: ["all"],
-  },
-  {
-    departmentEn: "Sciences",
-    specialtyAr: "فيزياء",
-    specialtyEn: "Physics",
-    levels: ["intermediate-secondary"],
-  },
-  {
-    departmentEn: "Sciences",
-    specialtyAr: "كيمياء",
-    specialtyEn: "Chemistry",
-    levels: ["intermediate-secondary"],
-  },
-  {
-    departmentEn: "Sciences",
-    specialtyAr: "أحياء",
-    specialtyEn: "Biology",
-    levels: ["intermediate-secondary"],
-  },
-  {
-    departmentEn: "Sciences",
-    specialtyAr: "علوم",
-    specialtyEn: "Science",
-    levels: ["kg-primary"],
-  },
-  {
-    departmentEn: "Humanities",
-    specialtyAr: "تاريخ",
-    specialtyEn: "History",
-    levels: ["intermediate-secondary"],
-  },
-  {
-    departmentEn: "Humanities",
-    specialtyAr: "جغرافيا",
-    specialtyEn: "Geography",
-    levels: ["intermediate-secondary"],
-  },
-  {
-    departmentEn: "Humanities",
-    specialtyAr: "دراسات اجتماعية",
-    specialtyEn: "Social Studies",
-    levels: ["primary"],
-  },
-  {
-    departmentEn: "Religion",
-    specialtyAr: "تربية إسلامية",
-    specialtyEn: "Islamic Studies",
-    levels: ["all"],
-  },
-  {
-    departmentEn: "Religion",
-    specialtyAr: "قرآن",
-    specialtyEn: "Quran",
-    levels: ["all"],
-  },
-  {
-    departmentEn: "ICT",
-    specialtyAr: "حاسوب",
-    specialtyEn: "Computer Science",
-    levels: ["primary-secondary"],
-  },
-  {
-    departmentEn: "Arts & PE",
-    specialtyAr: "تربية بدنية",
-    specialtyEn: "Physical Education",
-    levels: ["all"],
-  },
-  {
-    departmentEn: "Arts & PE",
-    specialtyAr: "تربية فنية",
-    specialtyEn: "Art",
-    levels: ["all"],
-  },
-  {
-    departmentEn: "Arts & PE",
-    specialtyAr: "موسيقى",
-    specialtyEn: "Music",
-    levels: ["kg-primary"],
-  },
-]
-
-/**
- * Generate additional teachers dynamically
- * Supplements the hand-crafted TEACHER_DATA to reach TARGET_TEACHER_COUNT
- */
-export function generateAdditionalTeachers(
-  startIndex: number = 25
-): TeacherData[] {
-  const additionalTeachers: TeacherData[] = []
-  const totalToGenerate = TARGET_TEACHER_COUNT - TEACHER_DATA.length
-
-  for (let i = 0; i < totalToGenerate; i++) {
-    const index = startIndex + i
-    const gender = i % 3 === 0 ? "F" : "M" // 1/3 female, 2/3 male
-    const names = gender === "M" ? MALE_NAMES : FEMALE_NAMES
-
-    const givenIndex = index % names.givenAr.length
-    const surnameIndex =
-      Math.floor(index / names.givenAr.length) % SURNAMES.ar.length
-    const specialty = TEACHER_SPECIALTIES[i % TEACHER_SPECIALTIES.length]
-
-    // Map levels string to actual grade names
-    const levelMapping: Record<string, string[]> = {
-      all: [
-        "KG 1",
-        "KG 2",
-        "Grade 1",
-        "Grade 2",
-        "Grade 3",
-        "Grade 4",
-        "Grade 5",
-        "Grade 6",
-        "Grade 7",
-        "Grade 8",
-        "Grade 9",
-        "Grade 10",
-        "Grade 11",
-        "Grade 12",
-      ],
-      kg: ["KG 1", "KG 2"],
-      "kg-primary": [
-        "KG 1",
-        "KG 2",
-        "Grade 1",
-        "Grade 2",
-        "Grade 3",
-        "Grade 4",
-        "Grade 5",
-        "Grade 6",
-      ],
-      primary: [
-        "Grade 1",
-        "Grade 2",
-        "Grade 3",
-        "Grade 4",
-        "Grade 5",
-        "Grade 6",
-      ],
-      "primary-secondary": [
-        "Grade 4",
-        "Grade 5",
-        "Grade 6",
-        "Grade 7",
-        "Grade 8",
-        "Grade 9",
-        "Grade 10",
-        "Grade 11",
-        "Grade 12",
-      ],
-      "intermediate-secondary": [
-        "Grade 7",
-        "Grade 8",
-        "Grade 9",
-        "Grade 10",
-        "Grade 11",
-        "Grade 12",
-      ],
-    }
-
-    // Assign a subset of levels (not all) for diversity
-    const allLevels = levelMapping[specialty.levels[0]] || levelMapping["all"]
-    const levelStart = i % Math.max(1, allLevels.length - 3)
-    const levelCount = 3 + (i % 4) // 3-6 levels per teacher
-    const assignedLevels = allLevels.slice(
-      levelStart,
-      Math.min(levelStart + levelCount, allLevels.length)
-    )
-
-    additionalTeachers.push({
-      givenNameAr: names.givenAr[givenIndex],
-      givenNameEn: names.givenEn[givenIndex],
-      surnameAr: SURNAMES.ar[surnameIndex],
-      surnameEn: SURNAMES.en[surnameIndex],
-      gender: gender as "M" | "F",
-      departmentEn: specialty.departmentEn,
-      specialtyAr: specialty.specialtyAr,
-      specialtyEn: specialty.specialtyEn,
-      levels:
-        assignedLevels.length > 0 ? assignedLevels : allLevels.slice(0, 3),
-      email: `generated${index}@demo.databayt.org`, // Will be replaced with personal email in people.ts
-    })
-  }
-
-  return additionalTeachers
-}
-
-/**
- * Get all teachers (hand-crafted + generated) for seeding
- * Returns 100 teachers total
- */
-export function getAllTeachers(): TeacherData[] {
-  return [...TEACHER_DATA, ...generateAdditionalTeachers()]
-}
-
-// ============================================================================
-// SUDANESE NAMES (For generating students and guardians)
-// ============================================================================
-
-export const MALE_NAMES = {
-  givenAr: [
-    "أحمد",
-    "محمد",
-    "عثمان",
-    "إبراهيم",
-    "خالد",
-    "حسن",
-    "علي",
-    "عمر",
-    "عبدالله",
-    "مصطفى",
-    "كمال",
-    "طارق",
-    "يوسف",
-    "صالح",
-    "مالك",
-    "بشير",
-    "حمزة",
-    "إدريس",
-    "جمال",
-    "نبيل",
-    "راشد",
-    "سعيد",
-    "وليد",
-    "زين",
-    "أمين",
-    "فاروق",
-    "جلال",
-    "هشام",
-    "عماد",
-    "جعفر",
-    "لطفي",
-    "منير",
-    "آدم",
-    "بابكر",
-    "ضفالله",
-    "الأمين",
-    "فاضل",
-    "جلال",
-    "هاشم",
-    "إسماعيل",
-  ],
-  givenEn: [
-    "Ahmed",
-    "Mohamed",
-    "Osman",
-    "Ibrahim",
-    "Khalid",
-    "Hassan",
-    "Ali",
-    "Omar",
-    "Abdalla",
-    "Mustafa",
-    "Kamal",
-    "Tariq",
-    "Yousif",
-    "Salih",
-    "Malik",
-    "Bashir",
-    "Hamza",
-    "Idris",
-    "Jamal",
-    "Nabil",
-    "Rashid",
-    "Saeed",
-    "Waleed",
-    "Zain",
-    "Amin",
-    "Farouk",
-    "Galal",
-    "Hisham",
-    "Imad",
-    "Jaafar",
-    "Lutfi",
-    "Munir",
-    "Adam",
-    "Babiker",
-    "Dafalla",
-    "Elamin",
-    "Fadel",
-    "Galal",
-    "Hashim",
-    "Ismail",
-  ],
-}
-
-export const FEMALE_NAMES = {
-  givenAr: [
-    "فاطمة",
-    "عائشة",
-    "مريم",
-    "أمينة",
-    "خديجة",
-    "هدى",
-    "سارة",
-    "ليلى",
-    "سمية",
-    "رانيا",
-    "نورة",
-    "زهرة",
-    "سميرة",
-    "هناء",
-    "دلال",
-    "نوال",
-    "منى",
-    "رحاب",
-    "صفاء",
-    "تهاني",
-    "وداد",
-    "ياسمين",
-    "زينب",
-    "أمل",
-    "بسمة",
-    "داليا",
-    "إيمان",
-    "فادية",
-    "غادة",
-    "هبة",
-    "إيناس",
-    "جمانة",
-    "كوثر",
-    "لبنى",
-    "منال",
-    "نهلة",
-    "علا",
-    "رشا",
-    "سوسن",
-    "تغريد",
-  ],
-  givenEn: [
-    "Fatima",
-    "Aisha",
-    "Mariam",
-    "Amina",
-    "Khadija",
-    "Huda",
-    "Sara",
-    "Layla",
-    "Sumaya",
-    "Rania",
-    "Noura",
-    "Zahra",
-    "Samira",
-    "Hana",
-    "Dalal",
-    "Nawal",
-    "Mona",
-    "Rehab",
-    "Safaa",
-    "Tahani",
-    "Widad",
-    "Yasmin",
-    "Zainab",
-    "Amal",
-    "Basma",
-    "Dalia",
-    "Eman",
-    "Fadia",
-    "Ghada",
-    "Hiba",
-    "Inas",
-    "Jumana",
-    "Kawther",
-    "Lubna",
-    "Manal",
-    "Nahla",
-    "Ola",
-    "Rasha",
-    "Sawsan",
-    "Taghreed",
-  ],
-}
-
-export const SURNAMES = {
-  ar: [
-    "حسن",
-    "علي",
-    "أحمد",
-    "محمد",
-    "إبراهيم",
-    "عثمان",
-    "يوسف",
-    "صالح",
-    "عبدالله",
-    "مصطفى",
-    "خالد",
-    "عمر",
-    "عبدالرحمن",
-    "كمال",
-    "مالك",
-    "بشير",
-    "حمزة",
-    "إدريس",
-    "جمال",
-    "نبيل",
-    "عباس",
-    "بدوي",
-    "السيد",
-    "فضل",
-    "جابر",
-    "حبيب",
-    "إسماعيل",
-    "جعفر",
-    "كرم",
-    "لطيف",
-    "مهدي",
-    "نصر",
-    "قاسم",
-    "رزق",
-    "سلام",
-    "طه",
-    "وهاب",
-    "ياسين",
-    "زهران",
-  ],
-  en: [
-    "Hassan",
-    "Ali",
-    "Ahmed",
-    "Mohamed",
-    "Ibrahim",
-    "Osman",
-    "Yousif",
-    "Salih",
-    "Abdalla",
-    "Mustafa",
-    "Khalid",
-    "Omar",
-    "Abdelrahman",
-    "Kamal",
-    "Malik",
-    "Bashir",
-    "Hamza",
-    "Idris",
-    "Jamal",
-    "Nabil",
-    "Abbas",
-    "Badawi",
-    "Elsayed",
-    "Fadl",
-    "Gaber",
-    "Habib",
-    "Ismail",
-    "Jafar",
-    "Karam",
-    "Latif",
-    "Mahdi",
-    "Nasr",
-    "Qasim",
-    "Rizk",
-    "Salam",
-    "Taha",
-    "Wahab",
-    "Yassin",
-    "Zahran",
-  ],
-}
-
-// ============================================================================
-// CLASSROOMS (Bilingual)
-// ============================================================================
-
-export interface ClassroomData {
-  nameAr: string
-  nameEn: string
-  typeAr: string
-  typeEn: string
-  capacity: number
-  floor: number
-}
 
 export const CLASSROOMS: ClassroomData[] = [
-  // ============================================================================
-  // KG SECTION (Ground Floor) - 4 Rooms
-  // ============================================================================
-  {
-    nameAr: "غرفة الروضة ١",
-    nameEn: "KG Room 1",
-    typeAr: "فصل روضة",
-    typeEn: "KG Classroom",
-    capacity: 20,
-    floor: 0,
-  },
-  {
-    nameAr: "غرفة الروضة ٢",
-    nameEn: "KG Room 2",
-    typeAr: "فصل روضة",
-    typeEn: "KG Classroom",
-    capacity: 20,
-    floor: 0,
-  },
-  {
-    nameAr: "غرفة الروضة ٣",
-    nameEn: "KG Room 3",
-    typeAr: "فصل روضة",
-    typeEn: "KG Classroom",
-    capacity: 20,
-    floor: 0,
-  },
-  {
-    nameAr: "غرفة الروضة ٤",
-    nameEn: "KG Room 4",
-    typeAr: "فصل روضة",
-    typeEn: "KG Classroom",
-    capacity: 20,
-    floor: 0,
-  },
+  // Regular Classrooms (30)
+  { name: "A101", capacity: 30, type: "classroom", building: "A", floor: 1 },
+  { name: "A102", capacity: 30, type: "classroom", building: "A", floor: 1 },
+  { name: "A103", capacity: 30, type: "classroom", building: "A", floor: 1 },
+  { name: "A201", capacity: 30, type: "classroom", building: "A", floor: 2 },
+  { name: "A202", capacity: 30, type: "classroom", building: "A", floor: 2 },
+  { name: "A203", capacity: 30, type: "classroom", building: "A", floor: 2 },
+  { name: "B101", capacity: 35, type: "classroom", building: "B", floor: 1 },
+  { name: "B102", capacity: 35, type: "classroom", building: "B", floor: 1 },
+  { name: "B103", capacity: 35, type: "classroom", building: "B", floor: 1 },
+  { name: "B201", capacity: 35, type: "classroom", building: "B", floor: 2 },
+  { name: "B202", capacity: 35, type: "classroom", building: "B", floor: 2 },
+  { name: "B203", capacity: 35, type: "classroom", building: "B", floor: 2 },
 
-  // ============================================================================
-  // PRIMARY SECTION (First Floor) - 18 Rooms (6 grades × 3 sections)
-  // ============================================================================
+  // Labs (10)
+  { name: "Physics Lab", capacity: 25, type: "lab", building: "C", floor: 1 },
+  { name: "Chemistry Lab", capacity: 25, type: "lab", building: "C", floor: 1 },
+  { name: "Biology Lab", capacity: 25, type: "lab", building: "C", floor: 1 },
   {
-    nameAr: "الفصل ١٠١",
-    nameEn: "Room 101",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
+    name: "Computer Lab 1",
+    capacity: 30,
+    type: "lab",
+    building: "C",
+    floor: 2,
   },
   {
-    nameAr: "الفصل ١٠٢",
-    nameEn: "Room 102",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
+    name: "Computer Lab 2",
+    capacity: 30,
+    type: "lab",
+    building: "C",
+    floor: 2,
   },
-  {
-    nameAr: "الفصل ١٠٣",
-    nameEn: "Room 103",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١٠٤",
-    nameEn: "Room 104",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١٠٥",
-    nameEn: "Room 105",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١٠٦",
-    nameEn: "Room 106",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١٠٧",
-    nameEn: "Room 107",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١٠٨",
-    nameEn: "Room 108",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١٠٩",
-    nameEn: "Room 109",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١١٠",
-    nameEn: "Room 110",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١١١",
-    nameEn: "Room 111",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١١٢",
-    nameEn: "Room 112",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١١٣",
-    nameEn: "Room 113",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١١٤",
-    nameEn: "Room 114",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١١٥",
-    nameEn: "Room 115",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١١٦",
-    nameEn: "Room 116",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١١٧",
-    nameEn: "Room 117",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "الفصل ١١٨",
-    nameEn: "Room 118",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 25,
-    floor: 1,
-  },
+  { name: "Language Lab", capacity: 25, type: "lab", building: "C", floor: 2 },
 
-  // ============================================================================
-  // INTERMEDIATE & SECONDARY SECTION (Second Floor) - 18 Rooms (6 grades × 3 sections)
-  // ============================================================================
+  // Special Rooms (15)
+  { name: "Library", capacity: 100, type: "library", building: "D", floor: 1 },
+  { name: "Art Room", capacity: 25, type: "art", building: "D", floor: 1 },
+  { name: "Music Room", capacity: 30, type: "music", building: "D", floor: 1 },
   {
-    nameAr: "الفصل ٢٠١",
-    nameEn: "Room 201",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢٠٢",
-    nameEn: "Room 202",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢٠٣",
-    nameEn: "Room 203",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢٠٤",
-    nameEn: "Room 204",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢٠٥",
-    nameEn: "Room 205",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢٠٦",
-    nameEn: "Room 206",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢٠٧",
-    nameEn: "Room 207",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢٠٨",
-    nameEn: "Room 208",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢٠٩",
-    nameEn: "Room 209",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢١٠",
-    nameEn: "Room 210",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢١١",
-    nameEn: "Room 211",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢١٢",
-    nameEn: "Room 212",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢١٣",
-    nameEn: "Room 213",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢١٤",
-    nameEn: "Room 214",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢١٥",
-    nameEn: "Room 215",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢١٦",
-    nameEn: "Room 216",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢١٧",
-    nameEn: "Room 217",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "الفصل ٢١٨",
-    nameEn: "Room 218",
-    typeAr: "فصل دراسي",
-    typeEn: "Standard Classroom",
-    capacity: 30,
-    floor: 2,
-  },
-
-  // ============================================================================
-  // SPECIALIZED SCIENCE LABS (Ground & First Floor) - 5 Labs
-  // ============================================================================
-  {
-    nameAr: "معمل العلوم العام",
-    nameEn: "General Science Lab",
-    typeAr: "معمل",
-    typeEn: "Laboratory",
-    capacity: 25,
+    name: "Assembly Hall",
+    capacity: 500,
+    type: "hall",
+    building: "D",
     floor: 1,
   },
   {
-    nameAr: "معمل الفيزياء",
-    nameEn: "Physics Lab",
-    typeAr: "معمل",
-    typeEn: "Laboratory",
-    capacity: 25,
-    floor: 2,
-  },
-  {
-    nameAr: "معمل الكيمياء",
-    nameEn: "Chemistry Lab",
-    typeAr: "معمل",
-    typeEn: "Laboratory",
-    capacity: 25,
-    floor: 2,
-  },
-  {
-    nameAr: "معمل الأحياء",
-    nameEn: "Biology Lab",
-    typeAr: "معمل",
-    typeEn: "Laboratory",
-    capacity: 25,
-    floor: 2,
-  },
-  {
-    nameAr: "معمل العلوم للابتدائي",
-    nameEn: "Primary Science Lab",
-    typeAr: "معمل",
-    typeEn: "Laboratory",
-    capacity: 20,
-    floor: 1,
-  },
-
-  // ============================================================================
-  // COMPUTER LABS - 3 Labs
-  // ============================================================================
-  {
-    nameAr: "معمل الحاسوب ١",
-    nameEn: "Computer Lab 1",
-    typeAr: "معمل حاسوب",
-    typeEn: "Computer Lab",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "معمل الحاسوب ٢",
-    nameEn: "Computer Lab 2",
-    typeAr: "معمل حاسوب",
-    typeEn: "Computer Lab",
-    capacity: 30,
-    floor: 2,
-  },
-  {
-    nameAr: "معمل الحاسوب للابتدائي",
-    nameEn: "Primary Computer Lab",
-    typeAr: "معمل حاسوب",
-    typeEn: "Computer Lab",
-    capacity: 20,
-    floor: 1,
-  },
-
-  // ============================================================================
-  // ARTS & SPECIAL ROOMS - 4 Rooms
-  // ============================================================================
-  {
-    nameAr: "غرفة الفنون",
-    nameEn: "Art Room",
-    typeAr: "غرفة فنون",
-    typeEn: "Art Room",
-    capacity: 25,
-    floor: 1,
-  },
-  {
-    nameAr: "غرفة الموسيقى",
-    nameEn: "Music Room",
-    typeAr: "غرفة موسيقى",
-    typeEn: "Music Room",
-    capacity: 30,
-    floor: 1,
-  },
-  {
-    nameAr: "قاعة الأنشطة",
-    nameEn: "Activity Hall",
-    typeAr: "قاعة أنشطة",
-    typeEn: "Activity Hall",
-    capacity: 50,
-    floor: 0,
-  },
-  {
-    nameAr: "غرفة المصادر",
-    nameEn: "Resource Room",
-    typeAr: "غرفة مصادر",
-    typeEn: "Resource Room",
-    capacity: 15,
-    floor: 1,
-  },
-
-  // ============================================================================
-  // LIBRARY & READING ROOMS - 2 Rooms
-  // ============================================================================
-  {
-    nameAr: "المكتبة الرئيسية",
-    nameEn: "Main Library",
-    typeAr: "مكتبة",
-    typeEn: "Library",
-    capacity: 60,
-    floor: 0,
-  },
-  {
-    nameAr: "غرفة المطالعة",
-    nameEn: "Reading Room",
-    typeAr: "غرفة مطالعة",
-    typeEn: "Reading Room",
-    capacity: 30,
-    floor: 0,
-  },
-
-  // ============================================================================
-  // SPORTS & PHYSICAL EDUCATION - 3 Areas
-  // ============================================================================
-  {
-    nameAr: "الصالة الرياضية",
-    nameEn: "Sports Hall",
-    typeAr: "صالة رياضية",
-    typeEn: "Sports Hall",
-    capacity: 100,
-    floor: 0,
-  },
-  {
-    nameAr: "الملعب الخارجي",
-    nameEn: "Outdoor Field",
-    typeAr: "ملعب",
-    typeEn: "Sports Field",
+    name: "Sports Hall",
     capacity: 200,
-    floor: 0,
-  },
-  {
-    nameAr: "غرفة اللياقة",
-    nameEn: "Fitness Room",
-    typeAr: "غرفة لياقة",
-    typeEn: "Fitness Room",
-    capacity: 20,
-    floor: 0,
-  },
-
-  // ============================================================================
-  // ADMINISTRATION OFFICES - 5 Rooms
-  // ============================================================================
-  {
-    nameAr: "مكتب المدير",
-    nameEn: "Principal Office",
-    typeAr: "مكتب إداري",
-    typeEn: "Administrative Office",
-    capacity: 10,
-    floor: 0,
-  },
-  {
-    nameAr: "مكتب نائب المدير",
-    nameEn: "Vice Principal Office",
-    typeAr: "مكتب إداري",
-    typeEn: "Administrative Office",
-    capacity: 8,
-    floor: 0,
-  },
-  {
-    nameAr: "مكتب الشؤون الطلابية",
-    nameEn: "Student Affairs Office",
-    typeAr: "مكتب إداري",
-    typeEn: "Administrative Office",
-    capacity: 15,
-    floor: 0,
-  },
-  {
-    nameAr: "مكتب الإرشاد",
-    nameEn: "Counseling Office",
-    typeAr: "مكتب إداري",
-    typeEn: "Administrative Office",
-    capacity: 6,
-    floor: 0,
-  },
-  {
-    nameAr: "مكتب التسجيل",
-    nameEn: "Registration Office",
-    typeAr: "مكتب إداري",
-    typeEn: "Administrative Office",
-    capacity: 10,
-    floor: 0,
-  },
-
-  // ============================================================================
-  // TEACHER WORKROOMS - 3 Rooms
-  // ============================================================================
-  {
-    nameAr: "غرفة المعلمين الرئيسية",
-    nameEn: "Main Staff Room",
-    typeAr: "غرفة معلمين",
-    typeEn: "Staff Room",
-    capacity: 40,
+    type: "sports",
+    building: "E",
     floor: 1,
   },
   {
-    nameAr: "غرفة معلمي الثانوي",
-    nameEn: "Secondary Staff Room",
-    typeAr: "غرفة معلمين",
-    typeEn: "Staff Room",
-    capacity: 25,
-    floor: 2,
-  },
-  {
-    nameAr: "غرفة معلمي الابتدائي",
-    nameEn: "Primary Staff Room",
-    typeAr: "غرفة معلمين",
-    typeEn: "Staff Room",
-    capacity: 25,
-    floor: 1,
-  },
-
-  // ============================================================================
-  // SUPPORT FACILITIES - 4 Rooms
-  // ============================================================================
-  {
-    nameAr: "العيادة الصحية",
-    nameEn: "Health Clinic",
-    typeAr: "عيادة",
-    typeEn: "Clinic",
-    capacity: 10,
-    floor: 0,
-  },
-  {
-    nameAr: "المقصف",
-    nameEn: "Cafeteria",
-    typeAr: "مقصف",
-    typeEn: "Cafeteria",
+    name: "Football Field",
     capacity: 100,
+    type: "sports",
+    building: "E",
     floor: 0,
   },
   {
-    nameAr: "قاعة الاجتماعات",
-    nameEn: "Meeting Hall",
-    typeAr: "قاعة اجتماعات",
-    typeEn: "Meeting Room",
+    name: "Basketball Court",
     capacity: 50,
+    type: "sports",
+    building: "E",
     floor: 0,
   },
+
+  // Admin Rooms
   {
-    nameAr: "القاعة الكبرى",
-    nameEn: "Assembly Hall",
-    typeAr: "قاعة كبرى",
-    typeEn: "Assembly Hall",
-    capacity: 300,
-    floor: 0,
+    name: "Principal Office",
+    capacity: 10,
+    type: "admin",
+    building: "A",
+    floor: 1,
   },
-] // Total: 55 Rooms
-
-// ============================================================================
-// PERIODS (Bilingual) - Sudanese School Day
-// ============================================================================
-
-export interface PeriodData {
-  nameAr: string
-  nameEn: string
-  startHour: number
-  startMin: number
-  endHour: number
-  endMin: number
-  order: number
-  isBreak: boolean
-}
-
-export const PERIODS: PeriodData[] = [
+  { name: "Staff Room", capacity: 40, type: "admin", building: "A", floor: 1 },
   {
-    nameAr: "الحصة الأولى",
-    nameEn: "Period 1",
-    startHour: 7,
-    startMin: 45,
-    endHour: 8,
-    endMin: 30,
+    name: "Meeting Room",
+    capacity: 20,
+    type: "admin",
+    building: "A",
+    floor: 1,
+  },
+]
+
+// ============================================================================
+// SCHOOL PERIODS (Sudanese School Day)
+// ============================================================================
+
+export const SCHOOL_PERIODS = [
+  {
+    name: "Period 1",
+    startTime: "07:45",
+    endTime: "08:30",
     order: 1,
     isBreak: false,
   },
   {
-    nameAr: "الحصة الثانية",
-    nameEn: "Period 2",
-    startHour: 8,
-    startMin: 35,
-    endHour: 9,
-    endMin: 20,
+    name: "Period 2",
+    startTime: "08:35",
+    endTime: "09:20",
     order: 2,
     isBreak: false,
   },
   {
-    nameAr: "الاستراحة",
-    nameEn: "Break",
-    startHour: 9,
-    startMin: 20,
-    endHour: 9,
-    endMin: 40,
+    name: "Period 3",
+    startTime: "09:25",
+    endTime: "10:10",
     order: 3,
-    isBreak: true,
-  },
-  {
-    nameAr: "الحصة الثالثة",
-    nameEn: "Period 3",
-    startHour: 9,
-    startMin: 40,
-    endHour: 10,
-    endMin: 25,
-    order: 4,
     isBreak: false,
   },
   {
-    nameAr: "الحصة الرابعة",
-    nameEn: "Period 4",
-    startHour: 10,
-    startMin: 30,
-    endHour: 11,
-    endMin: 15,
+    name: "Break 1",
+    startTime: "10:10",
+    endTime: "10:30",
+    order: 4,
+    isBreak: true,
+  },
+  {
+    name: "Period 4",
+    startTime: "10:30",
+    endTime: "11:15",
     order: 5,
     isBreak: false,
   },
   {
-    nameAr: "الحصة الخامسة",
-    nameEn: "Period 5",
-    startHour: 11,
-    startMin: 20,
-    endHour: 12,
-    endMin: 5,
+    name: "Period 5",
+    startTime: "11:20",
+    endTime: "12:05",
     order: 6,
     isBreak: false,
   },
   {
-    nameAr: "الغداء",
-    nameEn: "Lunch",
-    startHour: 12,
-    startMin: 5,
-    endHour: 12,
-    endMin: 45,
+    name: "Period 6",
+    startTime: "12:10",
+    endTime: "12:55",
     order: 7,
-    isBreak: true,
-  },
-  {
-    nameAr: "الحصة السادسة",
-    nameEn: "Period 6",
-    startHour: 12,
-    startMin: 45,
-    endHour: 13,
-    endMin: 30,
-    order: 8,
     isBreak: false,
   },
   {
-    nameAr: "الحصة السابعة",
-    nameEn: "Period 7",
-    startHour: 13,
-    startMin: 35,
-    endHour: 14,
-    endMin: 20,
+    name: "Break 2",
+    startTime: "12:55",
+    endTime: "13:25",
+    order: 8,
+    isBreak: true,
+  },
+  {
+    name: "Period 7",
+    startTime: "13:25",
+    endTime: "14:10",
     order: 9,
+    isBreak: false,
+  },
+  {
+    name: "Period 8",
+    startTime: "14:15",
+    endTime: "15:00",
+    order: 10,
     isBreak: false,
   },
 ]
 
-// Working days (Sun-Thu for Sudan)
-export const WORKING_DAYS = [0, 1, 2, 3, 4] // Sunday=0 to Thursday=4
-export const WORKING_DAYS_AR = [
-  "الأحد",
-  "الإثنين",
-  "الثلاثاء",
-  "الأربعاء",
-  "الخميس",
-]
-export const WORKING_DAYS_EN = [
+// Working days (Sunday to Thursday in Sudan)
+export const WORKING_DAYS = [
   "Sunday",
   "Monday",
   "Tuesday",
@@ -2293,522 +1133,264 @@ export const WORKING_DAYS_EN = [
 ]
 
 // ============================================================================
-// EMAIL DOMAINS (Personal emails - NOT numbered IDs)
+// GRADING SCALE (Sudanese System)
 // ============================================================================
 
-export interface EmailDomainData {
-  domain: string
-  weight: number // Percentage (must sum to 100)
-}
-
-/**
- * Personal email domains for realistic data
- * - Use personal emails like osman@gmail.com, fatima.hassan@hotmail.com
- * - NOT numbered IDs like student001@school.sd
- */
-export const EMAIL_DOMAINS: EmailDomainData[] = [
-  { domain: "gmail.com", weight: 40 },
-  { domain: "hotmail.com", weight: 25 },
-  { domain: "outlook.com", weight: 15 },
-  { domain: "yahoo.com", weight: 15 },
-  { domain: "sudanet.sd", weight: 5 },
+export const GRADE_SCALE = [
+  {
+    grade: "A+",
+    minScore: 95,
+    maxScore: 100,
+    gpa: 4.0,
+    descriptionEn: "Excellent",
+    descriptionAr: "ممتاز",
+  },
+  {
+    grade: "A",
+    minScore: 90,
+    maxScore: 94,
+    gpa: 3.7,
+    descriptionEn: "Very Good",
+    descriptionAr: "جيد جداً",
+  },
+  {
+    grade: "B+",
+    minScore: 85,
+    maxScore: 89,
+    gpa: 3.3,
+    descriptionEn: "Good Plus",
+    descriptionAr: "جيد+",
+  },
+  {
+    grade: "B",
+    minScore: 80,
+    maxScore: 84,
+    gpa: 3.0,
+    descriptionEn: "Good",
+    descriptionAr: "جيد",
+  },
+  {
+    grade: "C+",
+    minScore: 75,
+    maxScore: 79,
+    gpa: 2.7,
+    descriptionEn: "Satisfactory Plus",
+    descriptionAr: "مقبول+",
+  },
+  {
+    grade: "C",
+    minScore: 70,
+    maxScore: 74,
+    gpa: 2.3,
+    descriptionEn: "Satisfactory",
+    descriptionAr: "مقبول",
+  },
+  {
+    grade: "D+",
+    minScore: 65,
+    maxScore: 69,
+    gpa: 2.0,
+    descriptionEn: "Pass Plus",
+    descriptionAr: "نجاح+",
+  },
+  {
+    grade: "D",
+    minScore: 60,
+    maxScore: 64,
+    gpa: 1.7,
+    descriptionEn: "Pass",
+    descriptionAr: "نجاح",
+  },
+  {
+    grade: "F",
+    minScore: 0,
+    maxScore: 59,
+    gpa: 0.0,
+    descriptionEn: "Fail",
+    descriptionAr: "راسب",
+  },
 ]
 
-/**
- * Get a random email domain based on weighted distribution
- */
-export function getRandomEmailDomain(index: number): string {
-  const cumulativeWeights: number[] = []
-  let sum = 0
-  for (const d of EMAIL_DOMAINS) {
-    sum += d.weight
-    cumulativeWeights.push(sum)
-  }
-
-  // Use index as seed for deterministic but varied distribution
-  const roll = (index * 17 + 13) % 100
-
-  for (let i = 0; i < cumulativeWeights.length; i++) {
-    if (roll < cumulativeWeights[i]) {
-      return EMAIL_DOMAINS[i].domain
-    }
-  }
-  return EMAIL_DOMAINS[0].domain
-}
-
-/**
- * Generate a personal email address (NOT numbered)
- * Format: firstnamelastname@domain.com
- */
-export function generatePersonalEmail(
-  givenName: string,
-  surname: string,
-  index: number
-): string {
-  const domain = getRandomEmailDomain(index)
-  const firstName = givenName.toLowerCase().replace(/\s+/g, "")
-  const lastName = surname.toLowerCase().replace(/\s+/g, "")
-
-  return `${firstName}${lastName}@${domain}`
-}
-
 // ============================================================================
-// KHARTOUM NEIGHBORHOODS (For addresses)
+// GUARDIAN TYPES
 // ============================================================================
 
-export const KHARTOUM_NEIGHBORHOODS = {
-  ar: [
-    "الرياض",
-    "المنشية",
-    "الصحافة",
-    "الطائف",
-    "جبرة",
-    "الأمارات",
-    "الخرطوم ٢",
-    "المعمورة",
-    "الديوم الشرقية",
-    "بري",
-    "الشعبية",
-    "كافوري",
-    "الكلاكلة",
-    "أركويت",
-    "الصافية",
-    "القوز",
-    "الجريف",
-    "سوبا",
-    "الفردوس",
-    "المنصورة",
-  ],
-  en: [
-    "Riyadh",
-    "Manshia",
-    "Sahafa",
-    "Taif",
-    "Jabra",
-    "Amarat",
-    "Khartoum 2",
-    "Maamura",
-    "Deim Shargi",
-    "Burri",
-    "Shaabiya",
-    "Kafouri",
-    "Kalakla",
-    "Arkawit",
-    "Safiya",
-    "Goz",
-    "Jarif",
-    "Soba",
-    "Firdaus",
-    "Mansura",
-  ],
-}
+export const GUARDIAN_TYPES = [
+  { nameEn: "Father", nameAr: "الأب" },
+  { nameEn: "Mother", nameAr: "الأم" },
+  { nameEn: "Guardian", nameAr: "ولي الأمر" },
+  { nameEn: "Grandparent", nameAr: "الجد/الجدة" },
+  { nameEn: "Sibling", nameAr: "الأخ/الأخت" },
+]
 
 // ============================================================================
-// GUARDIAN TYPES (Bilingual)
+// KHARTOUM NEIGHBORHOODS
 // ============================================================================
 
-export const GUARDIAN_TYPES = {
-  ar: ["أب", "أم", "ولي أمر"],
-  en: ["Father", "Mother", "Guardian"],
-}
+export const NEIGHBORHOODS = [
+  { nameEn: "Khartoum", nameAr: "الخرطوم" },
+  { nameEn: "Omdurman", nameAr: "أم درمان" },
+  { nameEn: "Bahri", nameAr: "بحري" },
+  { nameEn: "Riyadh", nameAr: "الرياض" },
+  { nameEn: "Arkawit", nameAr: "أركويت" },
+  { nameEn: "Amarat", nameAr: "العمارات" },
+  { nameEn: "Burri", nameAr: "بري" },
+  { nameEn: "Soba", nameAr: "سوبا" },
+  { nameEn: "Jabra", nameAr: "جبرة" },
+  { nameEn: "Kalakla", nameAr: "كلاكلة" },
+]
+
+// ============================================================================
+// SAMPLE ANNOUNCEMENTS
+// ============================================================================
+
+export const ANNOUNCEMENTS: AnnouncementData[] = [
+  {
+    titleEn: "Welcome to Academic Year 2025-2026",
+    titleAr: "مرحباً بكم في العام الدراسي 2025-2026",
+    bodyEn:
+      "We are pleased to welcome all students, parents, and staff to the new academic year. Let's make this year a successful one!",
+    bodyAr:
+      "يسرنا الترحيب بجميع الطلاب وأولياء الأمور والموظفين في العام الدراسي الجديد. لنجعل هذا العام ناجحاً!",
+    scope: "school",
+    priority: "high",
+  },
+  {
+    titleEn: "Parent-Teacher Conference",
+    titleAr: "اجتماع أولياء الأمور والمعلمين",
+    bodyEn:
+      "The first parent-teacher conference will be held next Thursday. Please check your email for schedule details.",
+    bodyAr:
+      "سيعقد اجتماع أولياء الأمور والمعلمين الأول يوم الخميس القادم. يرجى مراجعة بريدكم الإلكتروني لمعرفة تفاصيل الجدول.",
+    scope: "school",
+    priority: "normal",
+  },
+  {
+    titleEn: "Sports Day Announcement",
+    titleAr: "إعلان يوم الرياضة",
+    bodyEn:
+      "Annual Sports Day will be held on March 15th. All students are encouraged to participate.",
+    bodyAr:
+      "سيقام يوم الرياضة السنوي في 15 مارس. نشجع جميع الطلاب على المشاركة.",
+    scope: "school",
+    priority: "normal",
+  },
+]
+
+// ============================================================================
+// SAMPLE EVENTS
+// ============================================================================
+
+export const EVENTS: EventData[] = [
+  {
+    titleEn: "First Day of School",
+    titleAr: "اليوم الأول للمدرسة",
+    descriptionEn: "Welcome ceremony for all students",
+    descriptionAr: "حفل ترحيب لجميع الطلاب",
+    type: "academic",
+    startDate: new Date("2025-09-01T08:00:00"),
+    endDate: new Date("2025-09-01T12:00:00"),
+  },
+  {
+    titleEn: "Midterm Exams",
+    titleAr: "امتحانات منتصف الفصل",
+    descriptionEn: "First semester midterm examinations",
+    descriptionAr: "امتحانات منتصف الفصل الأول",
+    type: "academic",
+    startDate: new Date("2025-10-20T08:00:00"),
+    endDate: new Date("2025-10-30T14:00:00"),
+  },
+  {
+    titleEn: "Sports Day",
+    titleAr: "يوم الرياضة",
+    descriptionEn: "Annual sports competition",
+    descriptionAr: "المسابقة الرياضية السنوية",
+    type: "sports",
+    startDate: new Date("2025-03-15T08:00:00"),
+    endDate: new Date("2025-03-15T16:00:00"),
+  },
+  {
+    titleEn: "Eid Al-Fitr Holiday",
+    titleAr: "عطلة عيد الفطر",
+    descriptionEn: "Eid Al-Fitr celebration and holiday",
+    descriptionAr: "احتفال وعطلة عيد الفطر المبارك",
+    type: "religious",
+    startDate: new Date("2026-03-30T00:00:00"),
+    endDate: new Date("2026-04-05T23:59:59"),
+  },
+]
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
 /**
- * Get random name with bilingual support
- * Returns both AR/EN versions plus backwards-compatible givenName/surname
+ * Get random name based on gender
  */
 export function getRandomName(
   gender: "M" | "F",
-  index: number = 0
-): {
-  givenNameAr: string
-  givenNameEn: string
-  surnameAr: string
-  surnameEn: string
-  // Backwards compatible aliases
-  givenName: string
-  surname: string
-} {
-  const names = gender === "M" ? MALE_NAMES : FEMALE_NAMES
-  const givenIndex = index % names.givenAr.length
-  const surnameIndex =
-    Math.floor(index / names.givenAr.length) % SURNAMES.ar.length
+  index: number
+): { ar: string; en: string } {
+  const names =
+    gender === "M"
+      ? { ar: MALE_NAMES_AR, en: MALE_NAMES_EN }
+      : { ar: FEMALE_NAMES_AR, en: FEMALE_NAMES_EN }
 
+  const nameIndex = index % names.ar.length
   return {
-    givenNameAr: names.givenAr[givenIndex],
-    givenNameEn: names.givenEn[givenIndex],
-    surnameAr: SURNAMES.ar[surnameIndex],
-    surnameEn: SURNAMES.en[surnameIndex],
-    // Backwards compatible - use English as default
-    givenName: names.givenEn[givenIndex],
-    surname: SURNAMES.en[surnameIndex],
+    ar: names.ar[nameIndex],
+    en: names.en[nameIndex],
   }
 }
 
-export function timeAt(hour: number, minute = 0): Date {
-  return new Date(Date.UTC(1970, 0, 1, hour, minute, 0, 0))
+/**
+ * Get random surname
+ */
+export function getRandomSurname(index: number): { ar: string; en: string } {
+  const surnameIndex = index % SURNAMES_AR.length
+  return {
+    ar: SURNAMES_AR[surnameIndex],
+    en: SURNAMES_EN[surnameIndex],
+  }
 }
 
-export function getAgeForGrade(levelEn: string, currentYear: number): number {
-  const level = YEAR_LEVELS.find((l) => l.en === levelEn)
-  if (!level) return 10
-  const [minAge, maxAge] = level.ageRange
-  return minAge + Math.floor(Math.random() * (maxAge - minAge + 1))
-}
-
-export function getBirthYearForGrade(
-  levelEn: string,
-  currentYear: number = 2025
-): number {
-  const age = getAgeForGrade(levelEn, currentYear)
-  return currentYear - age
-}
-
+/**
+ * Get random neighborhood
+ */
 export function getRandomNeighborhood(index: number): {
   ar: string
   en: string
 } {
-  const idx = index % KHARTOUM_NEIGHBORHOODS.ar.length
+  const neighborhoodIndex = index % NEIGHBORHOODS.length
+  const neighborhood = NEIGHBORHOODS[neighborhoodIndex]
   return {
-    ar: KHARTOUM_NEIGHBORHOODS.ar[idx],
-    en: KHARTOUM_NEIGHBORHOODS.en[idx],
+    ar: neighborhood.nameAr,
+    en: neighborhood.nameEn,
   }
 }
 
-// Get Arabic name for subject
-export function findSubjectAr(subjectNameEn: string): string {
-  const subject = SUBJECTS.find((s) => s.en === subjectNameEn)
-  return subject?.ar || subjectNameEn
+/**
+ * Calculate birth date for a student based on year level
+ */
+export function getStudentBirthDate(yearLevelOrder: number): Date {
+  const currentYear = new Date().getFullYear()
+  const age = yearLevelOrder + 4 // KG1 = order 1, age ~5
+  const birthYear = currentYear - age
+  const month = Math.floor(Math.random() * 12)
+  const day = Math.floor(Math.random() * 28) + 1
+  return new Date(birthYear, month, day)
 }
 
-// Get Arabic name for year level
-export function findYearLevelAr(levelEn: string): string {
-  const level = YEAR_LEVELS.find((l) => l.en === levelEn)
-  return level?.ar || levelEn
-}
-
-// Get class name in both languages
-export function getClassName(
-  subjectEn: string,
-  levelEn: string,
-  section: string
-): { ar: string; en: string } {
-  const subjectAr = findSubjectAr(subjectEn)
-  const levelAr = findYearLevelAr(levelEn)
-  const sectionAr = { A: "أ", B: "ب", C: "ج", D: "د" }[section] || section
-
+/**
+ * Generate teacher count per department to reach 100 total
+ */
+export function getTeachersPerDepartment(): Record<string, number> {
   return {
-    ar: `${subjectAr} - ${levelAr} (${sectionAr})`,
-    en: `${subjectEn} - ${levelEn} (${section})`,
+    Languages: 20,
+    Sciences: 25,
+    Humanities: 15,
+    Religion: 15,
+    ICT: 10,
+    "Arts & PE": 15,
   }
 }
-
-// ============================================================================
-// ADMIN USERS (Bilingual)
-// ============================================================================
-
-export interface AdminUserData {
-  email: string
-  usernameAr: string
-  usernameEn: string
-  role: "DEVELOPER" | "ADMIN" | "ACCOUNTANT" | "STAFF"
-  descriptionAr: string
-  descriptionEn: string
-}
-
-export const ADMIN_USERS: AdminUserData[] = [
-  {
-    email: "dev@databayt.org",
-    usernameAr: "مطور النظام",
-    usernameEn: "System Developer",
-    role: "DEVELOPER",
-    descriptionAr: "مطور المنصة - صلاحيات كاملة",
-    descriptionEn: "Platform Developer - Full Access",
-  },
-  {
-    email: "admin@databayt.org",
-    usernameAr: "مدير المدرسة",
-    usernameEn: "School Admin",
-    role: "ADMIN",
-    descriptionAr: "مدير المدرسة - صلاحيات إدارية",
-    descriptionEn: "School Administrator - Admin Access",
-  },
-  {
-    email: "accountant@databayt.org",
-    usernameAr: "محاسب المدرسة",
-    usernameEn: "School Accountant",
-    role: "ACCOUNTANT",
-    descriptionAr: "محاسب المدرسة - صلاحيات مالية",
-    descriptionEn: "School Accountant - Financial Access",
-  },
-  {
-    email: "staff@databayt.org",
-    usernameAr: "موظف المدرسة",
-    usernameEn: "School Staff",
-    role: "STAFF",
-    descriptionAr: "موظف المدرسة - صلاحيات محدودة",
-    descriptionEn: "School Staff - Limited Access",
-  },
-]
-
-// ============================================================================
-// BACKWARDS COMPATIBLE EXPORTS (for existing seed files)
-// These will be deprecated once all seeds are updated to bilingual
-// ============================================================================
-
-/**
- * @deprecated Use TEACHER_DATA with givenNameEn/surnameEn instead
- * Provides backwards compatible teacher data with 'specialty' field
- */
-export const TEACHER_DATA_LEGACY = TEACHER_DATA.map((t) => ({
-  ...t,
-  givenName: t.givenNameEn,
-  surname: t.surnameEn,
-  specialty: t.specialtyEn,
-}))
-
-/**
- * @deprecated Use PERIODS with nameEn instead
- * Provides backwards compatible periods with 'name' field
- */
-export const PERIODS_LEGACY = PERIODS.map((p) => ({
-  ...p,
-  name: p.nameEn,
-}))
-
-/**
- * @deprecated Use DEPARTMENTS with en instead
- * Provides backwards compatible departments with 'name' and 'nameEn' fields
- */
-export const DEPARTMENTS_LEGACY = DEPARTMENTS.map((d) => ({
-  ...d,
-  name: d.ar,
-  nameEn: d.en,
-}))
-
-/**
- * @deprecated Use CLASSROOMS with nameEn instead
- * Provides backwards compatible classrooms with 'name' field
- */
-export const CLASSROOMS_LEGACY = CLASSROOMS.map((c) => ({
-  ...c,
-  name: c.nameEn,
-  type: c.typeEn,
-}))
-
-// Legacy MALE_NAMES array (for admission.ts)
-export const MALE_NAMES_LEGACY = MALE_NAMES.givenEn
-export const FEMALE_NAMES_LEGACY = FEMALE_NAMES.givenEn
-export const SURNAMES_LEGACY = SURNAMES.en
-
-// ============================================================================
-// GRADE SCALES (Bilingual) - Sudanese/Arabic Education System
-// ============================================================================
-
-export interface GradeScaleData {
-  grade: string
-  ar: string
-  en: string
-  minPercentage: number
-  maxPercentage: number
-  gpa: number
-  descriptionAr: string
-  descriptionEn: string
-}
-
-/**
- * Sudanese/Arabic Education System Grade Scale
- * Bilingual grade labels with Arabic and English equivalents
- */
-export const GRADE_SCALE: GradeScaleData[] = [
-  {
-    grade: "A+",
-    ar: "ممتاز مرتفع",
-    en: "Excellent High",
-    minPercentage: 95,
-    maxPercentage: 100,
-    gpa: 4.0,
-    descriptionAr: "أداء استثنائي",
-    descriptionEn: "Exceptional performance",
-  },
-  {
-    grade: "A",
-    ar: "ممتاز",
-    en: "Excellent",
-    minPercentage: 90,
-    maxPercentage: 94,
-    gpa: 4.0,
-    descriptionAr: "أداء متميز",
-    descriptionEn: "Outstanding performance",
-  },
-  {
-    grade: "A-",
-    ar: "ممتاز منخفض",
-    en: "Excellent Low",
-    minPercentage: 85,
-    maxPercentage: 89,
-    gpa: 3.7,
-    descriptionAr: "أداء ممتاز",
-    descriptionEn: "Excellent performance",
-  },
-  {
-    grade: "B+",
-    ar: "جيد جداً مرتفع",
-    en: "Very Good High",
-    minPercentage: 80,
-    maxPercentage: 84,
-    gpa: 3.3,
-    descriptionAr: "أداء جيد جداً",
-    descriptionEn: "Very good performance",
-  },
-  {
-    grade: "B",
-    ar: "جيد جداً",
-    en: "Very Good",
-    minPercentage: 75,
-    maxPercentage: 79,
-    gpa: 3.0,
-    descriptionAr: "أداء جيد جداً",
-    descriptionEn: "Very good performance",
-  },
-  {
-    grade: "B-",
-    ar: "جيد جداً منخفض",
-    en: "Very Good Low",
-    minPercentage: 70,
-    maxPercentage: 74,
-    gpa: 2.7,
-    descriptionAr: "أداء جيد",
-    descriptionEn: "Good performance",
-  },
-  {
-    grade: "C+",
-    ar: "جيد مرتفع",
-    en: "Good High",
-    minPercentage: 65,
-    maxPercentage: 69,
-    gpa: 2.3,
-    descriptionAr: "أداء جيد",
-    descriptionEn: "Good performance",
-  },
-  {
-    grade: "C",
-    ar: "جيد",
-    en: "Good",
-    minPercentage: 60,
-    maxPercentage: 64,
-    gpa: 2.0,
-    descriptionAr: "أداء مقبول",
-    descriptionEn: "Acceptable performance",
-  },
-  {
-    grade: "C-",
-    ar: "جيد منخفض",
-    en: "Good Low",
-    minPercentage: 55,
-    maxPercentage: 59,
-    gpa: 1.7,
-    descriptionAr: "أداء أقل من الجيد",
-    descriptionEn: "Below good performance",
-  },
-  {
-    grade: "D+",
-    ar: "مقبول مرتفع",
-    en: "Pass High",
-    minPercentage: 50,
-    maxPercentage: 54,
-    gpa: 1.3,
-    descriptionAr: "أداء مقبول",
-    descriptionEn: "Passing performance",
-  },
-  {
-    grade: "D",
-    ar: "مقبول",
-    en: "Pass",
-    minPercentage: 45,
-    maxPercentage: 49,
-    gpa: 1.0,
-    descriptionAr: "أداء ضعيف ولكن ناجح",
-    descriptionEn: "Weak but passing performance",
-  },
-  {
-    grade: "F",
-    ar: "راسب",
-    en: "Fail",
-    minPercentage: 0,
-    maxPercentage: 44,
-    gpa: 0.0,
-    descriptionAr: "لم يحقق الحد الأدنى",
-    descriptionEn: "Did not meet minimum requirements",
-  },
-]
-
-/**
- * Get bilingual grade info from percentage
- */
-export function getGradeInfo(percentage: number): GradeScaleData | undefined {
-  return GRADE_SCALE.find(
-    (g) => percentage >= g.minPercentage && percentage <= g.maxPercentage
-  )
-}
-
-/**
- * Get grade letter from percentage
- */
-export function calculateGrade(percentage: number): string {
-  const info = getGradeInfo(percentage)
-  return info?.grade || "F"
-}
-
-/**
- * Get bilingual grade label
- */
-export function getGradeLabel(percentage: number, locale: "ar" | "en"): string {
-  const info = getGradeInfo(percentage)
-  return locale === "ar" ? info?.ar || "راسب" : info?.en || "Fail"
-}
-
-// ============================================================================
-// REPORT CARD CONSTANTS (Bilingual)
-// ============================================================================
-
-export interface ReportTermData {
-  termNumber: number
-  ar: string
-  en: string
-  months: string[]
-}
-
-export const REPORT_TERMS: ReportTermData[] = [
-  {
-    termNumber: 1,
-    ar: "الفصل الدراسي الأول",
-    en: "First Semester",
-    months: ["Sep", "Oct", "Nov", "Dec"],
-  },
-  {
-    termNumber: 2,
-    ar: "الفصل الدراسي الثاني",
-    en: "Second Semester",
-    months: ["Jan", "Feb", "Mar", "Apr", "May"],
-  },
-]
-
-export const REPORT_CATEGORIES = {
-  academic: { ar: "الأداء الأكاديمي", en: "Academic Performance" },
-  behavior: { ar: "السلوك والانضباط", en: "Behavior & Discipline" },
-  attendance: { ar: "الحضور والمواظبة", en: "Attendance" },
-  extracurricular: { ar: "الأنشطة اللاصفية", en: "Extracurricular Activities" },
-  skills: { ar: "المهارات الشخصية", en: "Personal Skills" },
-}
-
-export const BEHAVIOR_RATINGS = [
-  { value: 5, ar: "ممتاز", en: "Excellent" },
-  { value: 4, ar: "جيد جداً", en: "Very Good" },
-  { value: 3, ar: "جيد", en: "Good" },
-  { value: 2, ar: "مقبول", en: "Satisfactory" },
-  { value: 1, ar: "يحتاج تحسين", en: "Needs Improvement" },
-]

@@ -1,181 +1,357 @@
 /**
- * Auth Seed Module - Bilingual (AR/EN)
+ * Auth Seed
+ * Creates User accounts for all roles
  *
- * Creates authentication users for the Demo School:
- * - DEVELOPER: Platform admin (no school scope)
- * - ADMIN: School administrator
- * - ACCOUNTANT: School finance manager
- * - STAFF: General school staff
+ * Phase 1: Core Foundation - User Accounts
  *
- * All users have password: 1234
- * Usernames are stored in English (database) with Arabic display names in constants
+ * Accounts created:
+ * - dev@databayt.org (DEVELOPER)
+ * - admin@databayt.org (ADMIN)
+ * - accountant@databayt.org (ACCOUNTANT)
+ * - staff@databayt.org (STAFF)
+ * - teacher@databayt.org, teacher1-99@databayt.org (TEACHER) - 100 total
+ * - student@databayt.org, student1-999@databayt.org (STUDENT) - 1000 total
+ * - parent@databayt.org, parent1-1999@databayt.org (GUARDIAN) - 2000 total
+ *
+ * All accounts use password: 1234
  */
 
-import { UserRole } from "@prisma/client"
-import bcrypt from "bcryptjs"
+import type { PrismaClient, UserRole } from "@prisma/client"
 
-import { ADMIN_USERS, DEMO_PASSWORD } from "./constants"
-import type { SeedPrisma, UserRef } from "./types"
+import { ADMIN_USERS } from "./constants"
+import type { UserRef } from "./types"
+import {
+  generateSchoolEmail,
+  getPasswordHash,
+  isUniqueConstraintError,
+  logSuccess,
+  logWarning,
+  processBatch,
+} from "./utils"
 
-export async function seedAuth(
-  prisma: SeedPrisma,
+// ============================================================================
+// ADMIN USERS SEEDING
+// ============================================================================
+
+/**
+ * Seed admin users (dev, admin, accountant, staff)
+ */
+export async function seedAdminUsers(
+  prisma: PrismaClient,
   schoolId: string
-): Promise<{
-  devUser: UserRef
-  adminUser: UserRef
-  accountantUser: UserRef
-  staffUser: UserRef
-}> {
-  console.log("👥 Creating Admin Users (Bilingual AR/EN)...")
-  console.log(`   🔑 Password for all users: ${DEMO_PASSWORD}`)
-  console.log("")
+): Promise<UserRef[]> {
+  const passwordHash = await getPasswordHash()
+  const users: UserRef[] = []
 
-  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10)
+  for (const userData of ADMIN_USERS) {
+    try {
+      // Developer role has no schoolId
+      const userSchoolId = userData.role === "DEVELOPER" ? null : schoolId
 
-  // Find user data from constants
-  const devData = ADMIN_USERS.find((u) => u.role === "DEVELOPER")!
-  const adminData = ADMIN_USERS.find((u) => u.role === "ADMIN")!
-  const accountantData = ADMIN_USERS.find((u) => u.role === "ACCOUNTANT")!
-  const staffData = ADMIN_USERS.find((u) => u.role === "STAFF")!
+      const user = await prisma.user.upsert({
+        where: {
+          email_schoolId: {
+            email: userData.email,
+            schoolId: userSchoolId ?? "",
+          },
+        },
+        update: {
+          username: userData.usernameEn,
+          password: passwordHash,
+          role: userData.role as UserRole,
+          emailVerified: new Date(),
+        },
+        create: {
+          email: userData.email,
+          username: userData.usernameEn,
+          password: passwordHash,
+          role: userData.role as UserRole,
+          schoolId: userSchoolId,
+          emailVerified: new Date(),
+        },
+      })
 
-  // Developer (platform-wide, not tied to school) - findFirst + create
-  let devUser = await prisma.user.findFirst({
-    where: { email: devData.email, schoolId: null },
-  })
-  if (!devUser) {
-    devUser = await prisma.user.create({
-      data: {
-        email: devData.email,
-        username: devData.usernameEn,
-        role: UserRole.DEVELOPER,
-        password: passwordHash,
-        emailVerified: new Date(),
-      },
-    })
-  }
-
-  // School Admin - findFirst + create (by email + schoolId)
-  let adminUser = await prisma.user.findFirst({
-    where: { email: adminData.email, schoolId },
-  })
-  if (!adminUser) {
-    adminUser = await prisma.user.create({
-      data: {
-        email: adminData.email,
-        username: adminData.usernameEn,
-        role: UserRole.ADMIN,
-        password: passwordHash,
-        emailVerified: new Date(),
-        school: { connect: { id: schoolId } },
-      },
-    })
-  }
-
-  // Accountant - findFirst + create (by email + schoolId)
-  let accountantUser = await prisma.user.findFirst({
-    where: { email: accountantData.email, schoolId },
-  })
-  if (!accountantUser) {
-    accountantUser = await prisma.user.create({
-      data: {
-        email: accountantData.email,
-        username: accountantData.usernameEn,
-        role: UserRole.ACCOUNTANT,
-        password: passwordHash,
-        emailVerified: new Date(),
-        school: { connect: { id: schoolId } },
-      },
-    })
-  }
-
-  // Staff - findFirst + create (by email + schoolId)
-  let staffUser = await prisma.user.findFirst({
-    where: { email: staffData.email, schoolId },
-  })
-  if (!staffUser) {
-    staffUser = await prisma.user.create({
-      data: {
-        email: staffData.email,
-        username: staffData.usernameEn,
-        role: UserRole.STAFF,
-        password: passwordHash,
-        emailVerified: new Date(),
-        school: { connect: { id: schoolId } },
-      },
-    })
-  }
-
-  // Print bilingual information
-  console.log("   ✅ Admin Users Created Successfully")
-  console.log("")
-  console.log("   📋 User Credentials (Bilingual):")
-  console.log(
-    "   ┌────────────────────────────────────────────────────────────────────────┐"
-  )
-  console.log(
-    "   │ Role          │ Email                    │ EN Name          │ AR Name   │"
-  )
-  console.log(
-    "   ├────────────────────────────────────────────────────────────────────────┤"
-  )
-
-  for (const user of ADMIN_USERS) {
-    const roleStr = user.role.padEnd(13)
-    const emailStr = user.email.padEnd(24)
-    const enStr = user.usernameEn.padEnd(16)
-    const arStr = user.usernameAr
-    console.log(
-      `   │ ${roleStr}│ ${emailStr}│ ${enStr}│ ${arStr}`.padEnd(76) + "│"
-    )
-  }
-
-  console.log(
-    "   ├────────────────────────────────────────────────────────────────────────┤"
-  )
-  console.log(
-    "   │ Password: 1234 for all accounts                                        │"
-  )
-  console.log(
-    "   └────────────────────────────────────────────────────────────────────────┘"
-  )
-  console.log("")
-
-  console.log("   🔐 Role Descriptions (Bilingual):")
-  console.log(
-    "   ┌────────────────────────────────────────────────────────────────────────┐"
-  )
-  for (const user of ADMIN_USERS) {
-    console.log(
-      `   │ ${user.role.padEnd(13)}: ${user.descriptionEn.padEnd(53)}│`
-    )
-    console.log(`   │              : ${user.descriptionAr.padEnd(53)}│`)
-    if (user !== ADMIN_USERS[ADMIN_USERS.length - 1]) {
-      console.log(
-        "   ├────────────────────────────────────────────────────────────────────────┤"
-      )
+      users.push({
+        id: user.id,
+        email: user.email!,
+        role: user.role,
+      })
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        // Find existing user
+        const existing = await prisma.user.findFirst({
+          where: { email: userData.email },
+        })
+        if (existing) {
+          users.push({
+            id: existing.id,
+            email: existing.email!,
+            role: existing.role,
+          })
+        }
+        logWarning(`User ${userData.email} already exists, skipped`)
+      } else {
+        throw error
+      }
     }
   }
-  console.log(
-    "   └────────────────────────────────────────────────────────────────────────┘"
-  )
-  console.log("")
+
+  logSuccess("Admin Users", users.length, "dev, admin, accountant, staff")
+  return users
+}
+
+// ============================================================================
+// TEACHER USERS SEEDING
+// ============================================================================
+
+/**
+ * Seed teacher user accounts (100 total)
+ * Creates only the User records - Teacher profiles created in people.ts
+ */
+export async function seedTeacherUsers(
+  prisma: PrismaClient,
+  schoolId: string,
+  count: number = 100
+): Promise<UserRef[]> {
+  const passwordHash = await getPasswordHash()
+  const users: UserRef[] = []
+
+  // Process in batches for performance
+  const indices = Array.from({ length: count }, (_, i) => i)
+
+  await processBatch(indices, 20, async (index) => {
+    const email = generateSchoolEmail("teacher", index)
+
+    try {
+      const user = await prisma.user.upsert({
+        where: {
+          email_schoolId: {
+            email,
+            schoolId,
+          },
+        },
+        update: {
+          password: passwordHash,
+          role: "TEACHER",
+          emailVerified: new Date(),
+        },
+        create: {
+          email,
+          username: `Teacher ${index === 0 ? "" : index}`.trim(),
+          password: passwordHash,
+          role: "TEACHER",
+          schoolId,
+          emailVerified: new Date(),
+        },
+      })
+
+      users.push({
+        id: user.id,
+        email: user.email!,
+        role: user.role,
+      })
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error
+      }
+      // Find existing user
+      const existing = await prisma.user.findFirst({
+        where: { email, schoolId },
+      })
+      if (existing) {
+        users.push({
+          id: existing.id,
+          email: existing.email!,
+          role: existing.role,
+        })
+      }
+    }
+  })
+
+  logSuccess("Teacher Users", users.length, "teacher@, teacher1-99@")
+  return users
+}
+
+// ============================================================================
+// STUDENT USERS SEEDING
+// ============================================================================
+
+/**
+ * Seed student user accounts (1000 total)
+ * Creates only the User records - Student profiles created in people.ts
+ */
+export async function seedStudentUsers(
+  prisma: PrismaClient,
+  schoolId: string,
+  count: number = 1000
+): Promise<UserRef[]> {
+  const passwordHash = await getPasswordHash()
+  const users: UserRef[] = []
+
+  // Process in batches for performance
+  const indices = Array.from({ length: count }, (_, i) => i)
+
+  await processBatch(indices, 50, async (index) => {
+    const email = generateSchoolEmail("student", index)
+
+    try {
+      const user = await prisma.user.upsert({
+        where: {
+          email_schoolId: {
+            email,
+            schoolId,
+          },
+        },
+        update: {
+          password: passwordHash,
+          role: "STUDENT",
+          emailVerified: new Date(),
+        },
+        create: {
+          email,
+          username: `Student ${index === 0 ? "" : index}`.trim(),
+          password: passwordHash,
+          role: "STUDENT",
+          schoolId,
+          emailVerified: new Date(),
+        },
+      })
+
+      users.push({
+        id: user.id,
+        email: user.email!,
+        role: user.role,
+      })
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error
+      }
+      // Find existing user
+      const existing = await prisma.user.findFirst({
+        where: { email, schoolId },
+      })
+      if (existing) {
+        users.push({
+          id: existing.id,
+          email: existing.email!,
+          role: existing.role,
+        })
+      }
+    }
+  })
+
+  logSuccess("Student Users", users.length, "student@, student1-999@")
+  return users
+}
+
+// ============================================================================
+// GUARDIAN USERS SEEDING
+// ============================================================================
+
+/**
+ * Seed guardian/parent user accounts (2000 total - 2 per student)
+ * Creates only the User records - Guardian profiles created in people.ts
+ */
+export async function seedGuardianUsers(
+  prisma: PrismaClient,
+  schoolId: string,
+  count: number = 2000
+): Promise<UserRef[]> {
+  const passwordHash = await getPasswordHash()
+  const users: UserRef[] = []
+
+  // Process in batches for performance
+  const indices = Array.from({ length: count }, (_, i) => i)
+
+  await processBatch(indices, 50, async (index) => {
+    const email = generateSchoolEmail("parent", index)
+
+    try {
+      const user = await prisma.user.upsert({
+        where: {
+          email_schoolId: {
+            email,
+            schoolId,
+          },
+        },
+        update: {
+          password: passwordHash,
+          role: "GUARDIAN",
+          emailVerified: new Date(),
+        },
+        create: {
+          email,
+          username: `Parent ${index === 0 ? "" : index}`.trim(),
+          password: passwordHash,
+          role: "GUARDIAN",
+          schoolId,
+          emailVerified: new Date(),
+        },
+      })
+
+      users.push({
+        id: user.id,
+        email: user.email!,
+        role: user.role,
+      })
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error
+      }
+      // Find existing user
+      const existing = await prisma.user.findFirst({
+        where: { email, schoolId },
+      })
+      if (existing) {
+        users.push({
+          id: existing.id,
+          email: existing.email!,
+          role: existing.role,
+        })
+      }
+    }
+  })
+
+  logSuccess("Guardian Users", users.length, "parent@, parent1-1999@")
+  return users
+}
+
+// ============================================================================
+// COMBINED AUTH SEEDING
+// ============================================================================
+
+/**
+ * Seed all user accounts
+ * Returns all user references for linking to profiles
+ */
+export async function seedAllUsers(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<{
+  adminUsers: UserRef[]
+  teacherUsers: UserRef[]
+  studentUsers: UserRef[]
+  guardianUsers: UserRef[]
+  allUsers: UserRef[]
+}> {
+  const adminUsers = await seedAdminUsers(prisma, schoolId)
+  const teacherUsers = await seedTeacherUsers(prisma, schoolId, 100)
+  const studentUsers = await seedStudentUsers(prisma, schoolId, 1000)
+  const guardianUsers = await seedGuardianUsers(prisma, schoolId, 2000)
+
+  // Combine all users
+  const allUsers = [
+    ...adminUsers,
+    ...teacherUsers,
+    ...studentUsers,
+    ...guardianUsers,
+  ]
 
   return {
-    devUser: { id: devUser.id, email: devUser.email!, role: devUser.role },
-    adminUser: {
-      id: adminUser.id,
-      email: adminUser.email!,
-      role: adminUser.role,
-    },
-    accountantUser: {
-      id: accountantUser.id,
-      email: accountantUser.email!,
-      role: accountantUser.role,
-    },
-    staffUser: {
-      id: staffUser.id,
-      email: staffUser.email!,
-      role: staffUser.role,
-    },
+    adminUsers,
+    teacherUsers,
+    studentUsers,
+    guardianUsers,
+    allUsers,
   }
 }

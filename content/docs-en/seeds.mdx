@@ -1,145 +1,52 @@
 ---
 title: Database Seeds
-description: Bilingual seed system for Demo School data (AR/EN)
+description: Full K-12 school simulation with bilingual support (AR/EN) for Hogwarts Academy
 ---
 
 # Database Seeds
 
-The seed system creates realistic K-12 school data for **demo.databayt.org** with full **bilingual support (Arabic/English)**.
+The seed system creates a **realistic K-12 school simulation** for **demo.databayt.org** with full **bilingual support (Arabic/English)**.
 
 ## Quick Start
 
 ```bash
-# Seed everything at once
+# Seed everything (additive - safe to run multiple times)
 pnpm db:seed
-
-# Or seed one phase at a time
-pnpm db:seed:single school
-pnpm db:seed:single auth
-pnpm db:seed:single academic
-# ... and so on
 ```
 
-## Bilingual Strategy
-
-All seed data follows a bilingual pattern:
-
-| Language         | Usage                               | Priority |
-| ---------------- | ----------------------------------- | -------- |
-| **Arabic (AR)**  | Primary display language, RTL       | Default  |
-| **English (EN)** | Database storage, API compatibility | Fallback |
-
-### Schema Support
-
-Models with built-in bilingual fields:
-
-```prisma
-// YearLevel - has levelNameAr
-model YearLevel {
-  levelName   String   // English (e.g., "Grade 1")
-  levelNameAr String?  // Arabic (e.g., "الصف الأول")
-}
-
-// Subject - has subjectNameAr
-model Subject {
-  subjectName   String   // English
-  subjectNameAr String?  // Arabic
-}
-
-// Department - has departmentNameAr
-model Department {
-  departmentName   String   // English
-  departmentNameAr String?  // Arabic
-}
-
-// Class - has nameAr
-model Class {
-  name   String   // English
-  nameAr String?  // Arabic
-}
-```
-
-### Display Logic
-
-```typescript
-// In components, select language based on locale
-const displayName =
-  lang === "ar"
-    ? item.nameAr || item.name // Arabic with English fallback
-    : item.name // English
-```
+**Total seed time:** ~26 minutes (first run), ~5 minutes (subsequent runs)
 
 ---
 
-## Seed Phases
+## Data Summary
 
-Run seeds in order due to dependencies:
-
-| #   | Phase             | Command                             | Creates                                     | Depends On                    |
-| --- | ----------------- | ----------------------------------- | ------------------------------------------- | ----------------------------- |
-| 1   | **cleanup**       | `pnpm db:seed:single cleanup`       | Clears all data                             | -                             |
-| 2   | **school**        | `pnpm db:seed:single school`        | Demo School + branding                      | -                             |
-| 3   | **auth**          | `pnpm db:seed:single auth`          | 4 admin users                               | school                        |
-| 4   | **academic**      | `pnpm db:seed:single academic`      | Year, terms, levels, periods                | school                        |
-| 5   | **departments**   | `pnpm db:seed:single departments`   | 6 departments, 20 subjects                  | school                        |
-| 6   | **classrooms**    | `pnpm db:seed:single classrooms`    | 17 rooms                                    | school                        |
-| 7   | **people**        | `pnpm db:seed:single people`        | 100 teachers, 1000 students, 2000 guardians | school, academic, departments |
-| 8   | **classes**       | `pnpm db:seed:single classes`       | Class sections + enrollments                | people, classrooms, subjects  |
-| 9   | **library**       | `pnpm db:seed:single library`       | Books (AR/EN)                               | school                        |
-| 10  | **announcements** | `pnpm db:seed:single announcements` | Announcements                               | classes                       |
-| 11  | **events**        | `pnpm db:seed:single events`        | Calendar events                             | school                        |
-| 12  | **fees**          | `pnpm db:seed:single fees`          | Fee structures                              | classes, students             |
-| 13  | **finance**       | `pnpm db:seed:single finance`       | Accounts, transactions                      | users, teachers               |
-| 14  | **exams**         | `pnpm db:seed:single exams`         | Exam schedules                              | classes, subjects             |
-| 15  | **grades**        | `pnpm db:seed:single grades`        | Student grades                              | classes, subjects             |
-| 16  | **timetable**     | `pnpm db:seed:single timetable`     | Class schedules                             | classes, periods              |
-| 17  | **stream**        | `pnpm db:seed:single stream`        | LMS courses                                 | teachers                      |
-| 18  | **lessons**       | `pnpm db:seed:single lessons`       | Lesson plans                                | classes                       |
-| 19  | **reports**       | `pnpm db:seed:single reports`       | Student reports                             | students, subjects            |
-| 20  | **attendance**    | `pnpm db:seed:single attendance`    | Attendance records                          | classes, students             |
-| 21  | **admission**     | `pnpm db:seed:single admission`     | Applications                                | admin user                    |
+| Entity              | Count  | Notes                               |
+| ------------------- | ------ | ----------------------------------- |
+| Users               | 3,104  | All roles with @databayt.org emails |
+| Teachers            | 100    | Arabic names, department assigned   |
+| Students            | 970    | K-12 distribution                   |
+| Guardians           | ~1,940 | 2 per student (father + mother)     |
+| Departments         | 6      | Bilingual AR+EN                     |
+| Subjects            | 19     | Bilingual AR+EN                     |
+| Year Levels         | 14     | KG1-12, Bilingual AR+EN             |
+| Classrooms          | 28     | Labs, rooms, special facilities     |
+| Classes             | 187    | Subject-level combinations          |
+| Student Enrollments | 12,950 | Across all classes                  |
+| Stream Categories   | 12     | EN + AR versions                    |
+| Stream Courses      | 38     | EN + AR with chapters               |
+| Exams               | 100    | Midterm + Final per class           |
+| Exam Results        | 1,000  | With grade distribution             |
+| Score Ranges        | 9      | A+ to F (Sudanese grading)          |
+| Bank Accounts       | 3      | Operating, Savings, Petty Cash      |
+| Books               | 480    | Multiple copies each                |
 
 ---
 
-## Demo School Configuration
-
-### School Identity
-
-| Field  | English           | Arabic                       |
-| ------ | ----------------- | ---------------------------- |
-| Name   | Demo School       | مدرسة تجريبية                |
-| Domain | demo.databayt.org | -                            |
-| Motto  | Always Forward    | إلى الأمام دائماً            |
-| Type   | Full K-12 School  | مدرسة متكاملة (روضة - ثانوي) |
-
-### Location
-
-| Field    | English                     | Arabic                |
-| -------- | --------------------------- | --------------------- |
-| Address  | University Street, Khartoum | شارع الجامعة، الخرطوم |
-| City     | Khartoum                    | الخرطوم               |
-| State    | Khartoum State              | ولاية الخرطوم         |
-| Country  | Sudan                       | السودان               |
-| Timezone | Africa/Khartoum             | -                     |
-| Phone    | +249-183-123456             | +٢٤٩-١٨٣-١٢٣٤٥٦       |
-
-### Configuration
-
-```typescript
-{
-  planType: "enterprise",
-  maxStudents: 1200,
-  maxTeachers: 120,
-  currency: "SDG",
-  workingDays: [0, 1, 2, 3, 4], // Sun-Thu
-}
-```
-
----
-
-## Admin Users
+## User Accounts
 
 All accounts use password: **1234**
+
+### Admin Users
 
 | Role       | Email                   | English           | Arabic        |
 | ---------- | ----------------------- | ----------------- | ------------- |
@@ -148,42 +55,204 @@ All accounts use password: **1234**
 | ACCOUNTANT | accountant@databayt.org | School Accountant | محاسب المدرسة |
 | STAFF      | staff@databayt.org      | School Staff      | موظف المدرسة  |
 
-### Role Permissions
+### Batch Users
 
-| Role       | Access          | Description (EN)                 | Description (AR)              |
-| ---------- | --------------- | -------------------------------- | ----------------------------- |
-| DEVELOPER  | All schools     | Platform Developer - Full Access | مطور المنصة - صلاحيات كاملة   |
-| ADMIN      | School-scoped   | School Administrator             | مدير المدرسة - صلاحيات إدارية |
-| ACCOUNTANT | Finance modules | School Accountant                | محاسب المدرسة - صلاحيات مالية |
-| STAFF      | Limited         | School Staff                     | موظف المدرسة - صلاحيات محدودة |
+| Role     | Email Pattern                       | Count |
+| -------- | ----------------------------------- | ----- |
+| TEACHER  | teacher@, teacher1-99@databayt.org  | 100   |
+| STUDENT  | student@, student1-999@databayt.org | 1,000 |
+| GUARDIAN | parent@, parent1-1999@databayt.org  | 2,000 |
 
 ---
 
-## Academic Structure
+## Execution Phases (12 Total)
 
-### Year Levels (14 levels, K-12)
+The seed runs in dependency order:
 
-| Section      | Levels (EN) | Levels (AR)              | Students |
-| ------------ | ----------- | ------------------------ | -------- |
-| Kindergarten | KG 1, KG 2  | روضة أولى، روضة ثانية    | 200      |
-| Primary      | Grade 1-6   | الصف الأول - السادس      | 460      |
-| Intermediate | Grade 7-9   | الصف السابع - التاسع     | 180      |
-| Secondary    | Grade 10-12 | الصف العاشر - الثاني عشر | 160      |
+```
+PHASE 1: CORE FOUNDATION
+├── School (demo.databayt.org)
+├── School Branding
+└── User Accounts (3,104 users)
 
-**Total: 1000 students** (10x scale for production-realistic demo)
+PHASE 2: ACADEMIC STRUCTURE
+├── School Year (2025-2026)
+├── Terms (Term 1, Term 2)
+├── Periods (8 teaching + 2 breaks)
+├── Departments (6)
+└── Year Levels (14: KG1-12)
 
-### Departments (6)
+PHASE 3: PEOPLE
+├── Teachers (100)
+├── Students (970)
+├── Guardian Types (5)
+└── Guardians (~1,940)
 
-| English    | Arabic           | Subjects                                          |
-| ---------- | ---------------- | ------------------------------------------------- |
-| Languages  | اللغات           | Arabic, English, French, Reading, Writing         |
-| Sciences   | العلوم           | Mathematics, Science, Physics, Chemistry, Biology |
-| Humanities | العلوم الإنسانية | Social Studies, Geography, History, Civics        |
-| Religion   | الدين            | Islamic Studies, Quran                            |
-| ICT        | تقنية المعلومات  | Computer Science                                  |
-| Arts & PE  | الفنون والرياضة  | Art, Physical Education, Music                    |
+PHASE 4: SUBJECTS & CLASSROOMS
+├── Subjects (19 bilingual)
+├── Classroom Types (8)
+└── Classrooms (28)
 
-### Periods (Sudanese School Day)
+PHASE 5: CLASSES & ENROLLMENTS
+├── Classes (187)
+├── Student Enrollments (12,950)
+└── Teacher Assignments (187)
+
+PHASE 6: LIBRARY
+└── Books (480)
+
+PHASE 7: LMS / STREAM
+├── Stream Categories (12)
+├── Stream Courses (38)
+└── Course Chapters (10 per course)
+
+PHASE 8: EXAMS & GRADES
+├── Exams (100)
+├── Exam Results (1,000)
+├── Score Ranges (9)
+└── Report Cards
+
+PHASE 9: FINANCE
+└── Chart of Accounts
+
+PHASE 10: FEES & INVOICES
+├── Fee Structures
+├── Fee Records
+└── Sample Invoices
+
+PHASE 11: BANKING
+└── Bank Accounts (3)
+
+PHASE 12: OPERATIONS
+├── Attendance Records
+└── Timetable Entries
+```
+
+---
+
+## File Structure
+
+```
+prisma/seeds/
+├── index.ts              # Main orchestrator
+├── types.ts              # TypeScript interfaces
+├── constants.ts          # All data constants (bilingual)
+├── utils.ts              # Helpers (upsert, batch, logging)
+│
+├── school.ts             # School + Branding
+├── auth.ts               # User accounts (all roles)
+├── academic.ts           # Years, Terms, Periods, Departments
+├── subjects.ts           # Subjects (bilingual)
+├── classrooms.ts         # Classrooms + Types
+├── people.ts             # Teachers, Students, Guardians
+├── classes.ts            # Classes, Enrollments
+│
+├── lessons.ts            # Lessons
+├── stream.ts             # LMS: Courses, Chapters
+├── library.ts            # Books
+├── announcements.ts      # Announcements (bilingual)
+├── events.ts             # School events
+├── exams.ts              # Exams, Results
+├── qbank.ts              # Question Bank
+├── grades.ts             # Grades, Report Cards
+│
+├── finance.ts            # Chart of Accounts
+├── fees.ts               # Fee Structures
+├── invoices.ts           # Invoices
+├── banking.ts            # Bank Accounts
+│
+├── attendance.ts         # Attendance (10 days)
+├── timetable.ts          # Timetables
+│
+└── ensure-demo.ts        # Vercel deployment safety
+```
+
+---
+
+## Additive Behavior
+
+The seed system uses **upsert patterns** - safe to run multiple times:
+
+```typescript
+// All seeds use upsert for idempotency
+await prisma.subject.upsert({
+  where: {
+    schoolId_departmentId_subjectName: {
+      schoolId,
+      departmentId,
+      subjectName: "Mathematics",
+    },
+  },
+  update: {
+    subjectNameAr: "الرياضيات",
+  },
+  create: {
+    schoolId,
+    departmentId,
+    subjectName: "Mathematics",
+    subjectNameAr: "الرياضيات",
+  },
+})
+```
+
+**Benefits:**
+
+- Run seeds as many times as needed
+- Never duplicates data
+- Updates existing records
+- Safe for CI/CD pipelines
+
+---
+
+## Bilingual Strategy
+
+All data supports Arabic (RTL) and English (LTR):
+
+| Language         | Usage                               | Priority |
+| ---------------- | ----------------------------------- | -------- |
+| **Arabic (AR)**  | Primary display language, RTL       | Default  |
+| **English (EN)** | Database storage, API compatibility | Fallback |
+
+### Schema Pattern
+
+```prisma
+model Subject {
+  subjectName   String   // English (e.g., "Mathematics")
+  subjectNameAr String?  // Arabic (e.g., "الرياضيات")
+}
+
+model YearLevel {
+  levelName   String   // English (e.g., "Grade 1")
+  levelNameAr String?  // Arabic (e.g., "الصف الأول")
+}
+
+model Department {
+  departmentName   String   // English
+  departmentNameAr String?  // Arabic
+}
+```
+
+### Display Logic
+
+```typescript
+const displayName =
+  lang === "ar"
+    ? item.nameAr || item.name // Arabic with English fallback
+    : item.name // English
+```
+
+---
+
+## Sudanese Configuration
+
+### School Hours
+
+- Start: 7:45 AM
+- End: 3:20 PM (approx)
+- Days: Sunday-Thursday (not Mon-Fri)
+- Breaks: 9:20-9:40 AM, 12:05-12:45 PM
+
+### Periods
 
 | #   | English  | Arabic        | Time          |
 | --- | -------- | ------------- | ------------- |
@@ -197,151 +266,69 @@ All accounts use password: **1234**
 | 6   | Period 6 | الحصة السادسة | 12:45 - 13:30 |
 | 7   | Period 7 | الحصة السابعة | 13:35 - 14:20 |
 
----
+### Year Levels
 
-## File Structure
+| Section      | Levels (EN) | Levels (AR)              | Students |
+| ------------ | ----------- | ------------------------ | -------- |
+| Kindergarten | KG 1, KG 2  | روضة أولى، روضة ثانية    | ~70 each |
+| Primary      | Grade 1-6   | الصف الأول - السادس      | ~70 each |
+| Intermediate | Grade 7-9   | الصف السابع - التاسع     | ~70 each |
+| Secondary    | Grade 10-12 | الصف العاشر - الثاني عشر | ~70 each |
 
-```
-prisma/seeds/
-├── index.ts           # Main orchestrator (full seed)
-├── run-single.ts      # Individual phase runner
-├── constants.ts       # Bilingual data constants
-├── types.ts           # TypeScript types
-├── cleanup.ts         # Database cleanup
-│
-├── school.ts          # Phase 2: School + branding
-├── auth.ts            # Phase 3: Admin users
-├── academic.ts        # Phase 4: Year, terms, levels
-├── departments.ts     # Phase 5: Departments + subjects
-├── classrooms.ts      # Phase 6: Physical rooms
-├── people.ts          # Phase 7: Teachers, students, guardians
-├── classes.ts         # Phase 8: Class sections
-│
-├── library.ts         # Phase 9: Books
-├── announcements.ts   # Phase 10: Announcements
-├── events.ts          # Phase 11: Events
-├── fees.ts            # Phase 12: Fee structures
-├── finance.ts         # Phase 13: Finance data
-├── exams.ts           # Phase 14: Exam schedules
-├── grades.ts          # Phase 15: Student grades
-├── timetable.ts       # Phase 16: Class schedules
-├── stream.ts          # Phase 17: LMS courses
-├── lessons.ts         # Phase 18: Lesson plans
-├── reports.ts         # Phase 19: Student reports
-├── attendance.ts      # Phase 20: Attendance
-└── admission.ts       # Phase 21: Applications
-```
+### Grading Scale
+
+| Grade | Min | Max | GPA |
+| ----- | --- | --- | --- |
+| A+    | 95  | 100 | 4.0 |
+| A     | 90  | 94  | 3.7 |
+| B+    | 85  | 89  | 3.3 |
+| B     | 80  | 84  | 3.0 |
+| C+    | 75  | 79  | 2.7 |
+| C     | 70  | 74  | 2.3 |
+| D+    | 65  | 69  | 2.0 |
+| D     | 60  | 64  | 1.7 |
+| F     | 0   | 59  | 0.0 |
 
 ---
 
-## Constants Reference
+## Departments & Subjects
 
-### `constants.ts` Exports
+### Departments (6)
 
-```typescript
-// School
-export const DEMO_SCHOOL: {
-  domain: string
-  nameAr: string
-  nameEn: string
-  // ... all school config
-}
+| English    | Arabic           |
+| ---------- | ---------------- |
+| Languages  | اللغات           |
+| Sciences   | العلوم           |
+| Humanities | العلوم الإنسانية |
+| Religion   | الدين            |
+| ICT        | تقنية المعلومات  |
+| Arts & PE  | الفنون والرياضة  |
 
-// Academic
-export const YEAR_LEVELS: YearLevelData[] // 14 levels
-export const DEPARTMENTS: DepartmentData[] // 6 departments
-export const SUBJECTS: SubjectData[] // 20 subjects
-export const CURRICULUM: Record<string, string[]>
-export const PERIODS: PeriodData[] // 9 periods
-export const CLASSROOMS: ClassroomData[] // 17 rooms
+### Subjects (19)
 
-// People
-export const TEACHER_DATA: TeacherData[] // 25 hand-crafted teachers
-export function getAllTeachers() // 100 teachers (scaled)
-export const MALE_NAMES: { givenAr; givenEn }
-export const FEMALE_NAMES: { givenAr; givenEn }
-export const SURNAMES: { ar; en }
-export const ADMIN_USERS: AdminUserData[] // 4 admins
-
-// Email System (Personal emails, NOT numbered IDs)
-export const EMAIL_DOMAINS: EmailDomainData[]
-export function generatePersonalEmail(givenName, surname, index)
-
-// Helpers
-export function getRandomName(gender, index)
-export function findSubjectAr(subjectEn)
-export function findYearLevelAr(levelEn)
-export function getClassName(subject, level, section)
-```
+| Department | Subjects                                          |
+| ---------- | ------------------------------------------------- |
+| Languages  | Arabic, English, French, Reading, Writing         |
+| Sciences   | Mathematics, Science, Physics, Chemistry, Biology |
+| Humanities | Social Studies, Geography, History, Civics        |
+| Religion   | Islamic Studies, Quran                            |
+| ICT        | Computer Science                                  |
+| Arts & PE  | Art, Physical Education, Music                    |
 
 ---
 
-## Adding New Seeds
+## Classrooms (28)
 
-### 1. Create Seed File
-
-```typescript
-// prisma/seeds/my-feature.ts
-import type { SeedPrisma } from "./types"
-
-export async function seedMyFeature(
-  prisma: SeedPrisma,
-  schoolId: string
-  // ... dependencies
-) {
-  console.log("🎯 Creating My Feature (Bilingual AR/EN)...")
-
-  // Create records with bilingual data
-  await prisma.myModel.create({
-    data: {
-      name: "English Name",
-      nameAr: "الاسم العربي",
-      schoolId,
-    },
-  })
-
-  console.log("   ✅ My Feature created")
-}
-```
-
-### 2. Add to Constants
-
-```typescript
-// prisma/seeds/constants.ts
-export interface MyFeatureData {
-  ar: string
-  en: string
-  // ...
-}
-
-export const MY_FEATURE_DATA: MyFeatureData[] = [
-  { ar: "عربي", en: "English" /* ... */ },
-]
-```
-
-### 3. Register in Runner
-
-```typescript
-// prisma/seeds/run-single.ts
-import { seedMyFeature } from "./my-feature";
-
-case "my-feature": {
-  const school = await getSchool();
-  await seedMyFeature(prisma, school.id);
-  console.log("✅ My Feature seeded");
-  break;
-}
-```
-
-### 4. Add to Main Index
-
-```typescript
-// prisma/seeds/index.ts
-import { seedMyFeature } from "./my-feature"
-
-// In main()
-await seedMyFeature(prisma, schoolId /* deps */)
-```
+| Type      | Count | Examples                            |
+| --------- | ----- | ----------------------------------- |
+| Classroom | 12    | Rooms 101-112                       |
+| Lab       | 6     | Science Lab, Computer Lab, etc.     |
+| Library   | 1     | Main Library                        |
+| Art       | 1     | Art Studio                          |
+| Music     | 1     | Music Room                          |
+| Hall      | 1     | Assembly Hall                       |
+| Sports    | 3     | Gymnasium, Football Field, Swimming |
+| Admin     | 3     | Principal Office, Staff Room, etc.  |
 
 ---
 
@@ -350,80 +337,32 @@ await seedMyFeature(prisma, schoolId /* deps */)
 ### Reset and Reseed
 
 ```bash
-# Clear and reseed everything
-pnpm db:seed:single cleanup
+# Reset Prisma (clears all data)
+pnpm prisma migrate reset
+
+# Or just reseed (additive)
 pnpm db:seed
-
-# Or use Prisma reset
-npx prisma migrate reset
-```
-
-### Check Seed Status
-
-```bash
-# Verify school exists
-npx prisma studio
-
-# Query directly
-npx prisma db execute --stdin <<< "SELECT domain, name FROM schools"
 ```
 
 ### Common Issues
 
-| Issue                     | Solution                   |
-| ------------------------- | -------------------------- |
-| "School not found"        | Run `school` phase first   |
-| "Duplicate key"           | Run `cleanup` first        |
-| "Foreign key constraint"  | Check dependency order     |
-| "Prisma client not found" | Run `pnpm prisma generate` |
+| Issue                     | Solution                          |
+| ------------------------- | --------------------------------- |
+| "Deadlock detected"       | Reduce batch size in people.ts    |
+| "Table does not exist"    | Run `pnpm prisma db push`         |
+| "Unknown field"           | Check Prisma schema, run generate |
+| "Foreign key constraint"  | Seeds run in dependency order     |
+| "Prisma client not found" | Run `pnpm prisma generate`        |
 
----
+### Verify Data
 
-## Personal Email System
+```bash
+# Open Prisma Studio
+npx prisma studio
 
-All users are assigned **realistic personal emails** (not numbered IDs):
-
-### Email Format
-
-```typescript
-// ✅ CORRECT - Personal emails like real users (no dots)
-"osman@gmail.com"
-"fatimahassan@hotmail.com"
-"ahmedkhalid@outlook.com"
-"mariam42@yahoo.com"
-
-// ❌ WRONG - Avoid numbered IDs
-"student001@school.sd"
-"teacher_1@demo.databayt.org"
-"parent1@demo.com"
+# Check counts
+pnpm db:seed  # Shows summary at end
 ```
-
-### Email Domains
-
-| Domain      | Distribution        |
-| ----------- | ------------------- |
-| gmail.com   | 40%                 |
-| hotmail.com | 25%                 |
-| outlook.com | 15%                 |
-| yahoo.com   | 15%                 |
-| sudanet.sd  | 5% (local Sudanese) |
-
-### Format
-
-All emails use the format: `firstnamelastname@domain.com`
-
----
-
-## Data Scale
-
-| Entity     | Count | Notes                               |
-| ---------- | ----- | ----------------------------------- |
-| Students   | 1000  | ~70 per grade average               |
-| Teachers   | 100   | 1:10 student-teacher ratio          |
-| Guardians  | 2000  | 2 per student (father + mother)     |
-| Subjects   | 20    | Full K-12 curriculum                |
-| Classes    | 200+  | Multiple sections per subject/grade |
-| Classrooms | 17    | Labs, rooms, special facilities     |
 
 ---
 
@@ -433,7 +372,7 @@ The seed system is designed for **development and demo environments**.
 
 For production:
 
-- Never run cleanup on production database
+- Never run seeds on production database without review
 - Use migrations for schema changes
 - Seed data should be environment-specific
-- Consider using separate seed commands for production vs development
+- The `ensure-demo.ts` file provides Vercel safety checks

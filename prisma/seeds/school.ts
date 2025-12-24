@@ -1,33 +1,36 @@
 /**
- * School Seed Module - Bilingual (AR/EN)
+ * School Seed
+ * Creates Demo School and School Branding
  *
- * Creates the Demo School with:
- * - School entity with bilingual name
- * - School branding with colors and settings
- * - Sudanese school configuration
- *
- * Subdomain: demo.databayt.org
+ * Phase 1: Core Foundation - School Setup
  */
 
+import type { PrismaClient } from "@prisma/client"
+
 import { DEMO_SCHOOL } from "./constants"
-import type { SchoolRef, SeedPrisma } from "./types"
+import type { SchoolRef } from "./types"
+import { logPhase, logSuccess, logWarning } from "./utils"
 
-export async function seedSchool(prisma: SeedPrisma): Promise<SchoolRef> {
-  console.log("🏫 Creating Demo School (Bilingual AR/EN)...")
-  console.log("   📍 Subdomain: demo.databayt.org")
-  console.log("   🇸🇩 Location: Khartoum, Sudan")
-  console.log("")
+// ============================================================================
+// SCHOOL SEEDING
+// ============================================================================
 
-  // Upsert school - create if not exists, update if exists
+/**
+ * Seed the Demo School
+ * Uses upsert to ensure additive behavior
+ */
+export async function seedSchool(prisma: PrismaClient): Promise<SchoolRef> {
+  logPhase(1, "CORE FOUNDATION", "البنية الأساسية")
+
+  // Upsert Demo School by domain
   const school = await prisma.school.upsert({
     where: { domain: DEMO_SCHOOL.domain },
     update: {
-      // Update existing school
       name: DEMO_SCHOOL.nameEn,
       email: DEMO_SCHOOL.email,
-      website: DEMO_SCHOOL.website,
       phoneNumber: DEMO_SCHOOL.phoneEn,
       address: DEMO_SCHOOL.addressEn,
+      website: DEMO_SCHOOL.website,
       timezone: DEMO_SCHOOL.timezone,
       planType: DEMO_SCHOOL.planType,
       maxStudents: DEMO_SCHOOL.maxStudents,
@@ -35,13 +38,12 @@ export async function seedSchool(prisma: SeedPrisma): Promise<SchoolRef> {
       isActive: true,
     },
     create: {
-      // Create new school
-      name: DEMO_SCHOOL.nameEn,
       domain: DEMO_SCHOOL.domain,
+      name: DEMO_SCHOOL.nameEn,
       email: DEMO_SCHOOL.email,
-      website: DEMO_SCHOOL.website,
       phoneNumber: DEMO_SCHOOL.phoneEn,
       address: DEMO_SCHOOL.addressEn,
+      website: DEMO_SCHOOL.website,
       timezone: DEMO_SCHOOL.timezone,
       planType: DEMO_SCHOOL.planType,
       maxStudents: DEMO_SCHOOL.maxStudents,
@@ -50,77 +52,65 @@ export async function seedSchool(prisma: SeedPrisma): Promise<SchoolRef> {
     },
   })
 
-  // Upsert school branding
-  await prisma.schoolBranding.upsert({
-    where: { schoolId: school.id },
-    update: {
-      primaryColor: "#3B82F6",
-      secondaryColor: "#F59E0B",
-      borderRadius: "md",
-      shadow: "lg",
-      isPubliclyListed: true,
-      allowSelfEnrollment: true,
-      requireParentApproval: true,
-      informationSharing: "full-sharing",
-    },
-    create: {
-      schoolId: school.id,
-      primaryColor: "#3B82F6",
-      secondaryColor: "#F59E0B",
-      borderRadius: "md",
-      shadow: "lg",
-      isPubliclyListed: true,
-      allowSelfEnrollment: true,
-      requireParentApproval: true,
-      informationSharing: "full-sharing",
-    },
-  })
-
-  // Print bilingual information
-  console.log("   ✅ School Created Successfully")
-  console.log("")
-  console.log("   📋 School Details (Bilingual):")
-  console.log("   ┌─────────────────────────────────────────────────────────┐")
-  console.log(`   │ Name (EN): ${DEMO_SCHOOL.nameEn.padEnd(43)}│`)
-  console.log(`   │ Name (AR): ${DEMO_SCHOOL.nameAr.padEnd(43)}│`)
-  console.log("   ├─────────────────────────────────────────────────────────┤")
-  console.log(`   │ Domain:    ${DEMO_SCHOOL.domain.padEnd(43)}│`)
-  console.log(`   │ URL:       ${DEMO_SCHOOL.website.padEnd(43)}│`)
-  console.log("   ├─────────────────────────────────────────────────────────┤")
-  console.log(`   │ Email:     ${DEMO_SCHOOL.email.padEnd(43)}│`)
-  console.log(`   │ Phone:     ${DEMO_SCHOOL.phoneEn.padEnd(43)}│`)
-  console.log("   ├─────────────────────────────────────────────────────────┤")
-  console.log(`   │ Address (EN): ${DEMO_SCHOOL.addressEn.padEnd(40)}│`)
-  console.log(`   │ Address (AR): ${DEMO_SCHOOL.addressAr.padEnd(40)}│`)
-  console.log(
-    `   │ City:      ${DEMO_SCHOOL.cityEn} / ${DEMO_SCHOOL.cityAr}`.padEnd(58) +
-      "│"
-  )
-  console.log("   ├─────────────────────────────────────────────────────────┤")
-  console.log(`   │ Timezone:  ${DEMO_SCHOOL.timezone.padEnd(43)}│`)
-  console.log(`   │ Plan:      ${DEMO_SCHOOL.planType.padEnd(43)}│`)
-  console.log(
-    `   │ Capacity:  ${DEMO_SCHOOL.maxStudents} students, ${DEMO_SCHOOL.maxTeachers} teachers`.padEnd(
-      54
-    ) + "│"
-  )
-  console.log("   ├─────────────────────────────────────────────────────────┤")
-  console.log(`   │ Motto (EN): ${DEMO_SCHOOL.mottoEn.padEnd(42)}│`)
-  console.log(`   │ Motto (AR): ${DEMO_SCHOOL.mottoAr.padEnd(42)}│`)
-  console.log("   └─────────────────────────────────────────────────────────┘")
-  console.log("")
-  console.log("   🎓 School Levels (Bilingual):")
-  console.log("   ┌─────────────────────────────────────────────────────────┐")
-  DEMO_SCHOOL.levelsEn.forEach((en, i) => {
-    const ar = DEMO_SCHOOL.levelsAr[i]
-    console.log(`   │ ${i + 1}. ${en.padEnd(20)} ${ar.padEnd(25)}│`)
-  })
-  console.log("   └─────────────────────────────────────────────────────────┘")
-  console.log("")
+  logSuccess("School", 1, DEMO_SCHOOL.domain)
 
   return {
     id: school.id,
     name: school.name,
     domain: school.domain,
   }
+}
+
+// ============================================================================
+// SCHOOL BRANDING
+// ============================================================================
+
+/**
+ * Seed School Branding
+ */
+export async function seedSchoolBranding(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<void> {
+  // Check if branding exists
+  const existingBranding = await prisma.schoolBranding.findUnique({
+    where: { schoolId },
+  })
+
+  if (existingBranding) {
+    // Update existing branding
+    await prisma.schoolBranding.update({
+      where: { schoolId },
+      data: {
+        primaryColor: DEMO_SCHOOL.primaryColor,
+        secondaryColor: DEMO_SCHOOL.secondaryColor,
+      },
+    })
+    logWarning("School Branding updated (already existed)")
+  } else {
+    // Create new branding
+    await prisma.schoolBranding.create({
+      data: {
+        schoolId,
+        primaryColor: DEMO_SCHOOL.primaryColor,
+        secondaryColor: DEMO_SCHOOL.secondaryColor,
+      },
+    })
+    logSuccess("School Branding", 1)
+  }
+}
+
+// ============================================================================
+// COMBINED SCHOOL SEED
+// ============================================================================
+
+/**
+ * Seed School and Branding together
+ */
+export async function seedSchoolWithBranding(
+  prisma: PrismaClient
+): Promise<SchoolRef> {
+  const school = await seedSchool(prisma)
+  await seedSchoolBranding(prisma, school.id)
+  return school
 }

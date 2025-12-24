@@ -1,257 +1,270 @@
 /**
- * Main Seed Orchestrator - Bilingual K-12 School (AR/EN)
- * Coordinates all seed modules and runs them in proper order
+ * Seed System Orchestrator
  *
- * Creates a complete demo school (demo.databayt.org) with:
- * - 100 students (K-12, 14 grade levels)
- * - 25 teachers (1:4 student ratio)
- * - 200 guardians (2 per student)
- * - Full bilingual curriculum (Arabic/English)
- * - Sudanese education system (KG1-2, Grades 1-12)
- * - SDG currency for finance
- * - Realistic Arabic names, vendors, and addresses
+ * Main entry point for seeding the Hogwarts school database.
+ * Executes all seed phases in dependency order.
  *
- * All data is bilingual:
- * - Arabic (AR): Primary display language (RTL)
- * - English (EN): Database storage for API compatibility
+ * Usage:
+ *   pnpm db:seed
+ *
+ * Expected Output:
+ *   - 1 School (demo.databayt.org)
+ *   - 3104 Users (all roles)
+ *   - 100 Teachers (Arabic names)
+ *   - 1000 Students (K-12 distribution)
+ *   - 2000 Guardians (2 per student)
+ *   - 14 Year Levels (KG1-12)
+ *   - 6 Departments
+ *   - 19 Subjects (bilingual)
+ *   - 30+ Classrooms
+ *   - 400+ Classes
+ *   - 10,000+ Attendance records (10 days)
+ *   - 10 Sample Invoices
  */
 
 import { PrismaClient } from "@prisma/client"
 
-import { seedAcademic } from "./academic"
-import { seedAdmission, seedAdmissionExtended } from "./admission"
+import { seedAcademicStructure } from "./academic"
 import { seedAnnouncements } from "./announcements"
-import { seedAdvancedAttendance, seedAttendance } from "./attendance"
-import { seedAuth } from "./auth"
-import { seedClasses } from "./classes"
+import { seedAttendance } from "./attendance"
+import { seedAllUsers } from "./auth"
+import { seedBanking } from "./banking"
+import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
-import { seedDepartments } from "./departments"
-import { seedDocuments } from "./documents"
 import { seedEvents } from "./events"
-import { seedExams } from "./exams"
+import { seedExamResults, seedExams } from "./exams"
 import { seedFees } from "./fees"
 import { seedFinance } from "./finance"
 import { seedGrades } from "./grades"
-import { seedHealth } from "./health"
+import { seedInvoices } from "./invoices"
 import { seedLessons } from "./lessons"
-import { seedBorrowRecords, seedLibrary } from "./library"
-import { seedMessaging } from "./messaging"
-import { seedMissingData } from "./missing"
-import { seedPeople, seedTeacherQualifications } from "./people"
-import { seedReports } from "./reports"
-import { seedSchool } from "./school"
-import { seedStaff } from "./staff"
-import { seedCourseProgress, seedStream } from "./stream"
+import { seedLibrary } from "./library"
+import { seedAllPeople } from "./people"
+import { seedQBank } from "./qbank"
+import { seedSchoolWithBranding } from "./school"
+import { seedStreamCourses } from "./stream"
+import { seedSubjects } from "./subjects"
 import { seedTimetable } from "./timetable"
-import type { SeedPrisma } from "./types"
+import type { SeedContext } from "./types"
+import { logHeader, logPhase, logSummary, measureDuration } from "./utils"
 
-const prisma = new PrismaClient() as SeedPrisma
+// ============================================================================
+// MAIN SEED FUNCTION
+// ============================================================================
 
 async function main() {
-  console.log("\n" + "=".repeat(60))
-  console.log("  🌱 ADDITIVE SEED MODE - Data is preserved")
-  console.log("  🏫 BILINGUAL K-12 SCHOOL SEED (AR/EN)")
-  console.log("  📍 demo.databayt.org | مدرسة تجريبية")
-  console.log("  🇸🇩 Sudanese Education System | النظام التعليمي السوداني")
-  console.log("=".repeat(60) + "\n")
-
   const startTime = Date.now()
+  const prisma = new PrismaClient()
 
   try {
-    // Phase 1: Core Setup (find or create school)
-    console.log("PHASE 1: CORE SETUP")
-    console.log("-".repeat(40))
+    logHeader()
 
-    // Find existing school or create new one
-    const existingSchool = await prisma.school.findFirst({
-      where: { domain: "demo" },
+    // Build context progressively through phases
+    const context: Partial<SeedContext> = { prisma }
+
+    // ========================================================================
+    // PHASE 1: CORE FOUNDATION
+    // ========================================================================
+    logPhase(1, "CORE FOUNDATION", "الأساس")
+
+    const school = await measureDuration("School + Branding", () =>
+      seedSchoolWithBranding(prisma)
+    )
+    context.school = school
+    context.schoolId = school.id
+
+    // ========================================================================
+    // PHASE 2: USER ACCOUNTS
+    // ========================================================================
+    logPhase(2, "USER ACCOUNTS", "حسابات المستخدمين")
+
+    const { adminUsers, teacherUsers, studentUsers, guardianUsers, allUsers } =
+      await measureDuration("All Users", () => seedAllUsers(prisma, school.id))
+    context.users = allUsers
+
+    // ========================================================================
+    // PHASE 3: ACADEMIC STRUCTURE
+    // ========================================================================
+    const { schoolYear, terms, periods, departments, yearLevels } =
+      await measureDuration("Academic Structure", () =>
+        seedAcademicStructure(prisma, school.id)
+      )
+    context.schoolYear = schoolYear
+    context.terms = terms
+    context.periods = periods
+    context.departments = departments
+    context.yearLevels = yearLevels
+
+    // ========================================================================
+    // PHASE 4: SUBJECTS & CLASSROOMS
+    // ========================================================================
+    logPhase(4, "SUBJECTS & CLASSROOMS", "المواد والفصول")
+
+    const subjects = await measureDuration("Subjects", () =>
+      seedSubjects(prisma, school.id, departments)
+    )
+    context.subjects = subjects
+
+    const classrooms = await measureDuration("Classrooms", () =>
+      seedClassrooms(prisma, school.id)
+    )
+    context.classrooms = classrooms
+
+    // ========================================================================
+    // PHASE 5: PEOPLE
+    // ========================================================================
+    const { teachers, students, guardians } = await measureDuration(
+      "People",
+      () =>
+        seedAllPeople(
+          prisma,
+          school.id,
+          teacherUsers,
+          studentUsers,
+          guardianUsers,
+          departments,
+          yearLevels,
+          schoolYear
+        )
+    )
+    context.teachers = teachers
+    context.students = students
+    context.guardians = guardians
+
+    // ========================================================================
+    // PHASE 6: CLASSES & ENROLLMENTS
+    // ========================================================================
+    const term = terms[0] // Use first term
+
+    const classes = await measureDuration("Classes & Enrollments", () =>
+      seedAllClasses(
+        prisma,
+        school.id,
+        subjects,
+        yearLevels,
+        teachers,
+        students,
+        classrooms,
+        periods,
+        term
+      )
+    )
+    context.classes = classes
+
+    // ========================================================================
+    // PHASE 7: LMS / STREAM
+    // ========================================================================
+    logPhase(7, "LMS / STREAM", "نظام التعلم")
+
+    await measureDuration("Stream Courses", () =>
+      seedStreamCourses(prisma, school.id, subjects, adminUsers)
+    )
+
+    await measureDuration("Lessons", () =>
+      seedLessons(prisma, school.id, classes)
+    )
+
+    await measureDuration("Library", () => seedLibrary(prisma, school.id))
+
+    // ========================================================================
+    // PHASE 8: ANNOUNCEMENTS & EVENTS
+    // ========================================================================
+    await measureDuration("Announcements", () =>
+      seedAnnouncements(prisma, school.id, adminUsers)
+    )
+
+    await measureDuration("Events", () => seedEvents(prisma, school.id))
+
+    // ========================================================================
+    // PHASE 9: EXAMS, QBANK & GRADES
+    // ========================================================================
+    await measureDuration("Exams", () =>
+      seedExams(prisma, school.id, subjects, classes, term)
+    )
+
+    await measureDuration("Exam Results", () =>
+      seedExamResults(prisma, school.id, students, classes)
+    )
+
+    await measureDuration("QBank", () =>
+      seedQBank(prisma, school.id, subjects, adminUsers)
+    )
+
+    await measureDuration("Grades", () =>
+      seedGrades(prisma, school.id, students, yearLevels, term)
+    )
+
+    // ========================================================================
+    // PHASE 10: FINANCE
+    // ========================================================================
+    await measureDuration("Finance", () => seedFinance(prisma, school.id))
+
+    await measureDuration("Fees", () =>
+      seedFees(prisma, school.id, students, yearLevels)
+    )
+
+    await measureDuration("Invoices", () =>
+      seedInvoices(prisma, school.id, students, adminUsers)
+    )
+
+    // ========================================================================
+    // PHASE 11: BANKING
+    // ========================================================================
+    await measureDuration("Banking", () =>
+      seedBanking(prisma, school.id, adminUsers)
+    )
+
+    // ========================================================================
+    // PHASE 12: OPERATIONS
+    // ========================================================================
+    await measureDuration("Attendance", () =>
+      seedAttendance(prisma, school.id, students, classes, teachers)
+    )
+
+    await measureDuration("Timetable", () =>
+      seedTimetable(
+        prisma,
+        school.id,
+        classes,
+        teachers,
+        classrooms,
+        periods,
+        term
+      )
+    )
+
+    // ========================================================================
+    // COMPLETION
+    // ========================================================================
+    logSummary(startTime, {
+      users: allUsers.length,
+      teachers: teachers.length,
+      students: students.length,
+      guardians: guardians.length,
+      departments: departments.length,
+      subjects: subjects.length,
+      yearLevels: yearLevels.length,
+      classrooms: classrooms.length,
+      classes: classes.length,
     })
-    let schoolId: string
-    let schoolName: string
-    if (existingSchool) {
-      console.log("   ✓ School already exists, using existing")
-      schoolId = existingSchool.id
-      schoolName = existingSchool.name
-    } else {
-      const newSchool = await seedSchool(prisma)
-      schoolId = newSchool.id
-      schoolName = newSchool.name
-    }
-
-    const { devUser, adminUser, accountantUser, staffUser } = await seedAuth(
-      prisma,
-      schoolId
-    )
-
-    // Phase 2: Academic Structure
-    console.log("\nPHASE 2: ACADEMIC STRUCTURE")
-    console.log("-".repeat(40))
-
-    const { schoolYear, term1, term2, yearLevels, periods } =
-      await seedAcademic(prisma, schoolId)
-    const terms = [term1, term2]
-
-    const { departments, subjects } = await seedDepartments(prisma, schoolId)
-
-    const { classrooms } = await seedClassrooms(prisma, schoolId)
-
-    // Phase 3: People (100 students, 25 teachers, 200 guardians)
-    console.log("\nPHASE 3: PEOPLE")
-    console.log("-".repeat(40))
-
-    const { teachers, students, guardians } = await seedPeople(
-      prisma,
-      schoolId,
-      departments,
-      yearLevels,
-      schoolYear
-    )
-
-    // Teacher qualifications (degrees, certifications, experience)
-    await seedTeacherQualifications(prisma, schoolId)
-
-    // Non-teaching staff (50+ members: admin, security, maintenance, etc.)
-    await seedStaff(prisma, schoolId)
-
-    // Phase 4: Classes & Enrollments
-    console.log("\nPHASE 4: CLASSES & ENROLLMENTS")
-    console.log("-".repeat(40))
-
-    const { classes } = await seedClasses(
-      prisma,
-      schoolId,
-      term1.id,
-      periods,
-      classrooms,
-      subjects,
-      teachers,
-      students
-    )
-
-    // Phase 5: Resources
-    console.log("\nPHASE 5: RESOURCES")
-    console.log("-".repeat(40))
-
-    await seedLibrary(prisma, schoolId)
-    await seedBorrowRecords(prisma, schoolId)
-    await seedAnnouncements(prisma, schoolId, classes)
-    await seedEvents(prisma, schoolId)
-
-    // Phase 6: Finance & Fees
-    console.log("\nPHASE 6: FINANCE & FEES")
-    console.log("-".repeat(40))
-
-    await seedFees(prisma, schoolId, classes, students)
-    await seedFinance(
-      prisma,
-      schoolId,
-      schoolName,
-      [devUser, adminUser, accountantUser, staffUser],
-      teachers,
-      students
-    )
-
-    // Phase 7: Assessments
-    console.log("\nPHASE 7: ASSESSMENTS")
-    console.log("-".repeat(40))
-
-    await seedExams(prisma, schoolId, classes, subjects, students, teachers)
-    await seedGrades(prisma, schoolId, classes, subjects, students, teachers)
-
-    // Phase 8: Scheduling
-    console.log("\nPHASE 8: SCHEDULING")
-    console.log("-".repeat(40))
-
-    await seedTimetable(prisma, schoolId, term1.id, periods, classes)
-
-    // Phase 9: Learning Management
-    console.log("\nPHASE 9: LEARNING MANAGEMENT")
-    console.log("-".repeat(40))
-
-    await seedStream(prisma, schoolId, teachers, students)
-    await seedCourseProgress(prisma, schoolId)
-    await seedLessons(prisma, schoolId, classes)
-    await seedReports(prisma, schoolId, terms[0].id, students, subjects)
-
-    // Phase 10: Attendance
-    console.log("\nPHASE 10: ATTENDANCE")
-    console.log("-".repeat(40))
-
-    await seedAttendance(prisma, schoolId, classes, students)
-    await seedAdvancedAttendance(prisma, schoolId, students)
-
-    // Phase 11: Admissions
-    console.log("\nPHASE 11: ADMISSIONS")
-    console.log("-".repeat(40))
-
-    await seedAdmission(prisma, schoolId, schoolName, adminUser)
-    await seedAdmissionExtended(prisma, schoolId, adminUser)
-
-    // Phase 12: Communication & Records
-    console.log("\nPHASE 12: COMMUNICATION & RECORDS")
-    console.log("-".repeat(40))
-
-    await seedMessaging(prisma, schoolId)
-    await seedHealth(prisma, schoolId)
-    await seedDocuments(prisma, schoolId)
-
-    // Phase 13: Missing Data (invoices, notifications, tasks, etc.)
-    console.log("\nPHASE 13: MISSING DATA")
-    console.log("-".repeat(40))
-
-    await seedMissingData(prisma, schoolId)
-
-    // Summary
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2)
-
-    console.log("\n" + "=".repeat(60))
-    console.log("  ✅ SEED COMPLETED SUCCESSFULLY")
-    console.log("=".repeat(60))
-    console.log(`
-  🏫 School: ${schoolName}
-  🌐 Domain: demo.databayt.org
-
-  📋 Login Credentials (password: 1234):
-  ┌─────────────────────────────────────────────┐
-  │ Role        │ Email                         │
-  ├─────────────────────────────────────────────┤
-  │ Developer   │ dev@databayt.org              │
-  │ Admin       │ admin@databayt.org            │
-  │ Accountant  │ accountant@databayt.org       │
-  │ Staff       │ staff@databayt.org            │
-  │ Teacher     │ teacher1@demo.databayt.org    │
-  │ Student     │ student1@demo.databayt.org    │
-  │ Guardian    │ father1@demo.databayt.org     │
-  └─────────────────────────────────────────────┘
-
-  📊 Data Summary:
-  ┌─────────────────────────────────────────────┐
-  │ Entity          │ Count                     │
-  ├─────────────────────────────────────────────┤
-  │ Students        │ ${String(students.length).padStart(3)}  (K-12)               │
-  │ Teachers        │ ${String(teachers.length).padStart(3)}  (1:${Math.round(students.length / teachers.length)} ratio)           │
-  │ Guardians       │ ${String(guardians.length).padStart(3)}  (2 per student)       │
-  │ Classes         │ ${String(classes.length).padStart(3)}  (subjects × levels)  │
-  │ Subjects        │ ${String(subjects.length).padStart(3)}  (curriculum)         │
-  │ Classrooms      │ ${String(classrooms.length).padStart(3)}  (rooms)              │
-  │ Departments     │ ${String(departments.length).padStart(3)}  (academic)           │
-  │ Year Levels     │ ${String(yearLevels.length).padStart(3)}  (KG1 - Grade 12)    │
-  └─────────────────────────────────────────────┘
-
-  ⏱️  Time: ${elapsed}s
-`)
-    console.log("=".repeat(60) + "\n")
   } catch (error) {
-    console.error("\n❌ SEED FAILED:", error)
+    console.error("❌ Seed failed:", error)
     throw error
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
+// ============================================================================
+// EXECUTION
+// ============================================================================
+
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
+  .then(() => {
+    console.log("\n✅ Seed completed successfully!")
+    process.exit(0)
   })
-  .finally(async () => {
-    await prisma.$disconnect()
+  .catch((error) => {
+    console.error("❌ Seed failed:", error)
+    process.exit(1)
   })

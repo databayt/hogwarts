@@ -1,7 +1,5 @@
-import React from "react"
 import Link from "next/link"
 
-import { GradientAnimation } from "@/components/atom/gradient-animation"
 import type { Locale } from "@/components/internationalization/config"
 
 import { Button } from "../ui/button"
@@ -19,11 +17,8 @@ export function BackgroundGradientAnimationDemo({
 
   return (
     <section className="py-16 md:py-24">
-      <GradientAnimation
-        height="h-[400px]"
-        containerClassName="!w-full rounded-lg overflow-hidden"
-      >
-        <div className="absolute inset-0 z-50 flex items-center justify-center">
+      <div className="h-[400px] w-full overflow-hidden rounded-lg bg-[#1e40af]">
+        <div className="flex h-full items-center justify-center">
           <div className="px-6 text-center">
             <h2 className="font-heading text-3xl font-extrabold text-white md:text-4xl">
               {isRTL
@@ -56,7 +51,7 @@ export function BackgroundGradientAnimationDemo({
             </div>
           </div>
         </div>
-      </GradientAnimation>
+      </div>
     </section>
   )
 }

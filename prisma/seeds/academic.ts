@@ -1,201 +1,340 @@
 /**
- * Academic Seed Module
- * Creates academic structure: years, terms, levels, periods
- * Aligned with Sudanese academic calendar (September - June)
+ * Academic Seed
+ * Creates School Year, Terms, Periods, Departments, and Year Levels
+ *
+ * Phase 2: Academic Structure
  */
 
-import { PERIODS, timeAt, YEAR_LEVELS } from "./constants"
+import type { PrismaClient } from "@prisma/client"
+
+import { DEPARTMENTS, SCHOOL_PERIODS, YEAR_LEVELS } from "./constants"
 import type {
+  DepartmentRef,
   PeriodRef,
   SchoolYearRef,
-  SeedPrisma,
   TermRef,
   YearLevelRef,
 } from "./types"
+import {
+  getSchoolYearDates,
+  getTermDates,
+  logPhase,
+  logSuccess,
+  parseTime,
+} from "./utils"
 
-export async function seedAcademic(
-  prisma: SeedPrisma,
+// ============================================================================
+// SCHOOL YEAR SEEDING
+// ============================================================================
+
+/**
+ * Seed the current school year
+ */
+export async function seedSchoolYear(
+  prisma: PrismaClient,
   schoolId: string
-): Promise<{
-  schoolYear: SchoolYearRef
-  term1: TermRef
-  term2: TermRef
-  yearLevels: YearLevelRef[]
-  periods: PeriodRef[]
-}> {
-  console.log("📚 Creating academic structure (Sudanese Calendar)...")
+): Promise<SchoolYearRef> {
+  logPhase(2, "ACADEMIC STRUCTURE", "الهيكل الأكاديمي")
 
-  // School Year - Sudanese academic year (September - June) - upsert by yearName
+  const { start, end, yearName } = getSchoolYearDates()
+
   const schoolYear = await prisma.schoolYear.upsert({
-    where: { schoolId_yearName: { schoolId, yearName: "2025-2026" } },
+    where: {
+      schoolId_yearName: {
+        schoolId,
+        yearName,
+      },
+    },
     update: {
-      startDate: new Date("2025-09-01T00:00:00Z"),
-      endDate: new Date("2026-06-30T00:00:00Z"),
+      startDate: start,
+      endDate: end,
     },
     create: {
       schoolId,
-      yearName: "2025-2026",
-      startDate: new Date("2025-09-01T00:00:00Z"),
-      endDate: new Date("2026-06-30T00:00:00Z"),
+      yearName,
+      startDate: start,
+      endDate: end,
     },
   })
 
-  // Periods - Sudanese school day (7:45 AM - 3:20 PM, Sun-Thu) - upsert by name
-  for (const p of PERIODS) {
-    await prisma.period.upsert({
-      where: {
-        schoolId_yearId_name: {
-          schoolId,
-          yearId: schoolYear.id,
-          name: p.nameEn,
-        },
-      },
-      update: {
-        startTime: timeAt(p.startHour, p.startMin),
-        endTime: timeAt(p.endHour, p.endMin),
-      },
-      create: {
-        schoolId,
-        yearId: schoolYear.id,
-        name: p.nameEn,
-        startTime: timeAt(p.startHour, p.startMin),
-        endTime: timeAt(p.endHour, p.endMin),
-      },
-    })
-  }
-  const periods = await prisma.period.findMany({
-    where: { schoolId, yearId: schoolYear.id },
-    orderBy: { name: "asc" },
-  })
+  logSuccess("School Year", 1, yearName)
 
-  // Terms - Sudanese school terms - upsert by termNumber
-  const term1 = await prisma.term.upsert({
+  return {
+    id: schoolYear.id,
+    yearName: schoolYear.yearName,
+    startDate: schoolYear.startDate,
+    endDate: schoolYear.endDate,
+  }
+}
+
+// ============================================================================
+// TERMS SEEDING
+// ============================================================================
+
+/**
+ * Seed terms for the school year (2 terms)
+ */
+export async function seedTerms(
+  prisma: PrismaClient,
+  schoolId: string,
+  schoolYearId: string
+): Promise<TermRef[]> {
+  const yearStart = new Date()
+  if (yearStart.getMonth() < 8) {
+    yearStart.setFullYear(yearStart.getFullYear() - 1)
+  }
+  yearStart.setMonth(8) // September
+
+  const { term1, term2 } = getTermDates(yearStart)
+  const terms: TermRef[] = []
+
+  // Term 1
+  const t1 = await prisma.term.upsert({
     where: {
       schoolId_yearId_termNumber: {
         schoolId,
-        yearId: schoolYear.id,
+        yearId: schoolYearId,
         termNumber: 1,
       },
     },
     update: {
-      startDate: new Date("2025-09-01T00:00:00Z"),
-      endDate: new Date("2026-01-15T00:00:00Z"),
+      startDate: term1.start,
+      endDate: term1.end,
+      isActive: true,
     },
     create: {
       schoolId,
-      yearId: schoolYear.id,
+      yearId: schoolYearId,
       termNumber: 1,
-      startDate: new Date("2025-09-01T00:00:00Z"),
-      endDate: new Date("2026-01-15T00:00:00Z"),
+      startDate: term1.start,
+      endDate: term1.end,
+      isActive: true,
     },
   })
 
-  const term2 = await prisma.term.upsert({
+  terms.push({
+    id: t1.id,
+    termNumber: t1.termNumber,
+    startDate: t1.startDate,
+    endDate: t1.endDate,
+  })
+
+  // Term 2
+  const t2 = await prisma.term.upsert({
     where: {
       schoolId_yearId_termNumber: {
         schoolId,
-        yearId: schoolYear.id,
+        yearId: schoolYearId,
         termNumber: 2,
       },
     },
     update: {
-      startDate: new Date("2026-01-16T00:00:00Z"),
-      endDate: new Date("2026-06-30T00:00:00Z"),
+      startDate: term2.start,
+      endDate: term2.end,
+      isActive: false,
     },
     create: {
       schoolId,
-      yearId: schoolYear.id,
+      yearId: schoolYearId,
       termNumber: 2,
-      startDate: new Date("2026-01-16T00:00:00Z"),
-      endDate: new Date("2026-06-30T00:00:00Z"),
+      startDate: term2.start,
+      endDate: term2.end,
+      isActive: false,
     },
   })
 
-  // Year Levels - Sudanese education system (bilingual AR/EN)
-  // Check if existing year levels match expected pattern
-  const existingLevels = await prisma.yearLevel.findMany({
-    where: { schoolId },
-    orderBy: { levelOrder: "asc" },
+  terms.push({
+    id: t2.id,
+    termNumber: t2.termNumber,
+    startDate: t2.startDate,
+    endDate: t2.endDate,
   })
 
-  // Check for data mismatch (wrong order mappings from previous seeds)
-  const hasDataMismatch = existingLevels.some((existing) => {
-    const expected = YEAR_LEVELS.find((l) => l.en === existing.levelName)
-    return expected && expected.order !== existing.levelOrder
-  })
+  logSuccess("Terms", terms.length, "Term 1, Term 2")
 
-  if (hasDataMismatch || existingLevels.length !== YEAR_LEVELS.length) {
-    // Reset year levels if data is inconsistent (dev database cleanup)
-    console.log("   🔄 Resetting year levels (data mismatch detected)...")
+  return terms
+}
 
-    // First, delete dependent records (StudentYearLevel) that reference old levels
-    const levelIds = existingLevels.map((l) => l.id)
-    if (levelIds.length > 0) {
-      await prisma.studentYearLevel.deleteMany({
-        where: { levelId: { in: levelIds } },
-      })
-    }
+// ============================================================================
+// PERIODS SEEDING
+// ============================================================================
 
-    // Now safe to delete year levels
-    await prisma.yearLevel.deleteMany({ where: { schoolId } })
+/**
+ * Seed school periods (7 teaching + 2 breaks)
+ */
+export async function seedPeriods(
+  prisma: PrismaClient,
+  schoolId: string,
+  schoolYearId: string
+): Promise<PeriodRef[]> {
+  const periods: PeriodRef[] = []
 
-    // Create all year levels with correct order
-    for (const level of YEAR_LEVELS) {
-      await prisma.yearLevel.create({
-        data: {
+  for (const periodData of SCHOOL_PERIODS) {
+    const startTime = parseTime(periodData.startTime)
+    const endTime = parseTime(periodData.endTime)
+
+    const period = await prisma.period.upsert({
+      where: {
+        schoolId_yearId_name: {
           schoolId,
-          levelName: level.en,
-          levelNameAr: level.ar,
-          levelOrder: level.order,
+          yearId: schoolYearId,
+          name: periodData.name,
         },
-      })
-    }
-  } else {
-    // Additive pattern: only add missing levels or update Arabic names
-    for (const level of YEAR_LEVELS) {
-      const existingByName = await prisma.yearLevel.findFirst({
-        where: { schoolId, levelName: level.en },
-      })
+      },
+      update: {
+        startTime,
+        endTime,
+      },
+      create: {
+        schoolId,
+        yearId: schoolYearId,
+        name: periodData.name,
+        startTime,
+        endTime,
+      },
+    })
 
-      if (!existingByName) {
-        // Only create if order is also free
-        const existingByOrder = await prisma.yearLevel.findFirst({
-          where: { schoolId, levelOrder: level.order },
-        })
-
-        if (!existingByOrder) {
-          await prisma.yearLevel.create({
-            data: {
-              schoolId,
-              levelName: level.en,
-              levelNameAr: level.ar,
-              levelOrder: level.order,
-            },
-          })
-        }
-      } else if (!existingByName.levelNameAr) {
-        // Only update Arabic name if missing
-        await prisma.yearLevel.update({
-          where: { id: existingByName.id },
-          data: { levelNameAr: level.ar },
-        })
-      }
-    }
+    periods.push({
+      id: period.id,
+      name: period.name,
+      startTime: periodData.startTime,
+      endTime: periodData.endTime,
+    })
   }
-  const yearLevels = await prisma.yearLevel.findMany({
-    where: { schoolId },
-    orderBy: { levelOrder: "asc" },
-  })
 
-  console.log(
-    `   ✅ Created: 1 school year, ${periods.length} periods, 2 terms, ${yearLevels.length} year levels\n`
+  const teachingPeriods = SCHOOL_PERIODS.filter((p) => !p.isBreak).length
+  const breakPeriods = SCHOOL_PERIODS.filter((p) => p.isBreak).length
+
+  logSuccess(
+    "Periods",
+    periods.length,
+    `${teachingPeriods} teaching, ${breakPeriods} breaks`
   )
 
+  return periods
+}
+
+// ============================================================================
+// DEPARTMENTS SEEDING
+// ============================================================================
+
+/**
+ * Seed departments (6 departments)
+ */
+export async function seedDepartments(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<DepartmentRef[]> {
+  const departments: DepartmentRef[] = []
+
+  for (const deptData of DEPARTMENTS) {
+    const department = await prisma.department.upsert({
+      where: {
+        schoolId_departmentName: {
+          schoolId,
+          departmentName: deptData.nameEn,
+        },
+      },
+      update: {
+        departmentNameAr: deptData.nameAr,
+      },
+      create: {
+        schoolId,
+        departmentName: deptData.nameEn,
+        departmentNameAr: deptData.nameAr,
+      },
+    })
+
+    departments.push({
+      id: department.id,
+      departmentName: department.departmentName,
+      departmentNameAr: department.departmentNameAr || "",
+    })
+  }
+
+  logSuccess(
+    "Departments",
+    departments.length,
+    DEPARTMENTS.map((d) => d.nameEn).join(", ")
+  )
+
+  return departments
+}
+
+// ============================================================================
+// YEAR LEVELS SEEDING
+// ============================================================================
+
+/**
+ * Seed year levels (KG1-KG2, Grade 1-12)
+ */
+export async function seedYearLevels(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<YearLevelRef[]> {
+  const yearLevels: YearLevelRef[] = []
+
+  for (const levelData of YEAR_LEVELS) {
+    const yearLevel = await prisma.yearLevel.upsert({
+      where: {
+        schoolId_levelName: {
+          schoolId,
+          levelName: levelData.nameEn,
+        },
+      },
+      update: {
+        levelNameAr: levelData.nameAr,
+        levelOrder: levelData.order,
+      },
+      create: {
+        schoolId,
+        levelName: levelData.nameEn,
+        levelNameAr: levelData.nameAr,
+        levelOrder: levelData.order,
+      },
+    })
+
+    yearLevels.push({
+      id: yearLevel.id,
+      levelName: yearLevel.levelName,
+      levelNameAr: yearLevel.levelNameAr || "",
+      levelOrder: yearLevel.levelOrder,
+    })
+  }
+
+  logSuccess("Year Levels", yearLevels.length, "KG1-2, Grade 1-12")
+
+  return yearLevels
+}
+
+// ============================================================================
+// COMBINED ACADEMIC SEEDING
+// ============================================================================
+
+/**
+ * Seed all academic structure
+ */
+export async function seedAcademicStructure(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<{
+  schoolYear: SchoolYearRef
+  terms: TermRef[]
+  periods: PeriodRef[]
+  departments: DepartmentRef[]
+  yearLevels: YearLevelRef[]
+}> {
+  const schoolYear = await seedSchoolYear(prisma, schoolId)
+  const terms = await seedTerms(prisma, schoolId, schoolYear.id)
+  const periods = await seedPeriods(prisma, schoolId, schoolYear.id)
+  const departments = await seedDepartments(prisma, schoolId)
+  const yearLevels = await seedYearLevels(prisma, schoolId)
+
   return {
-    schoolYear: { id: schoolYear.id },
-    term1: { id: term1.id },
-    term2: { id: term2.id },
-    yearLevels: yearLevels.map((l) => ({ id: l.id, levelName: l.levelName })),
-    periods: periods.map((p) => ({ id: p.id })),
+    schoolYear,
+    terms,
+    periods,
+    departments,
+    yearLevels,
   }
 }
