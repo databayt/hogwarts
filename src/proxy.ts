@@ -288,6 +288,6 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Exclude: _next, static files, and mobile API routes from middleware
-  matcher: ["/((?!_next/|api/mobile/|.*\\..*).*)"],
+  // Exclude: _next, static files, and ALL API routes from middleware
+  matcher: ["/((?!_next/|api/|.*\\..*).*)"],
 }
