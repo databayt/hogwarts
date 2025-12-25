@@ -1,10 +1,11 @@
 import { Separator } from "@/components/ui/separator"
 import { UserButton } from "@/components/auth/user-button"
+import { DOCS_LINKS } from "@/components/docs/docs-config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { MobileNav } from "@/components/template/mobile-nav"
 
 import { CommandMenu } from "./command-menu"
-import { docsConfig, marketingConfig } from "./config"
+import { marketingConfig } from "./config"
 import { GitHubLink } from "./github-link"
 import { LangSwitcher } from "./lang-switcher"
 import { MainNav } from "./main-nav"
@@ -28,17 +29,18 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
     disabled: item.disabled,
   }))
 
-  // Contextual sections for docs
+  // Contextual sections for docs - uses same DOCS_LINKS as desktop sidebar
   const sections = [
     {
       title: dictionary?.navigation?.documentation || "Documentation",
-      items: docsConfig.sidebarNav.flatMap((section) =>
-        (section.items || []).map((item) => ({
-          title: item.title,
-          href: item.href,
-          disabled: item.disabled,
-        }))
-      ),
+      items: DOCS_LINKS.map(({ key, href, fallback }) => ({
+        title:
+          dictionary?.docs?.sidebar?.[
+            key as keyof typeof dictionary.docs.sidebar
+          ] || fallback,
+        href,
+        disabled: false,
+      })),
     },
   ]
 
