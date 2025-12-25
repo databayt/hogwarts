@@ -109,11 +109,11 @@ export function proxy(req: NextRequest) {
   const url = req.nextUrl.clone()
   const host = req.headers.get("host") || ""
 
-  // Skip static files, API auth routes, and mobile API routes
+  // Skip static files and ALL API routes (API routes don't need subdomain rewriting)
+  // API routes handle their own auth and tenant context
   if (
     url.pathname.startsWith("/_next") ||
-    url.pathname.startsWith("/api/auth") ||
-    url.pathname.startsWith("/api/mobile") ||
+    url.pathname.startsWith("/api/") ||
     url.pathname.match(/\.(png|jpg|jpeg|gif|ico|svg|css|js|woff2?)$/)
   ) {
     return NextResponse.next()
