@@ -5,6 +5,6 @@ export { proxy }
 
 // Config must be inline (not re-exported) for Next.js
 export const config = {
-  // Exclude: _next, static files, and mobile API routes from proxy
-  matcher: ["/((?!_next/|api/mobile/|.*\\..*).*)"],
+  // Exclude: _next, static files, and ALL API routes from proxy
+  matcher: ["/((?!_next/|api/|.*\\..*).*)"],
 }
