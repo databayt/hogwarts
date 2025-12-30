@@ -31,6 +31,8 @@ export interface LessonWithProgress {
   }>
   progress: {
     isCompleted: boolean
+    watchedSeconds: number
+    totalSeconds: number | null
   } | null
   // Navigation helpers
   previousLesson: { id: string; title: string } | null
@@ -89,6 +91,8 @@ export async function getLessonWithProgress(
         },
         select: {
           isCompleted: true,
+          watchedSeconds: true,
+          totalSeconds: true,
         },
       },
     },
@@ -154,7 +158,13 @@ export async function getLessonWithProgress(
       },
     },
     attachments: lesson.attachments,
-    progress: lesson.progress[0] || null,
+    progress: lesson.progress[0]
+      ? {
+          isCompleted: lesson.progress[0].isCompleted,
+          watchedSeconds: lesson.progress[0].watchedSeconds,
+          totalSeconds: lesson.progress[0].totalSeconds,
+        }
+      : null,
     previousLesson: previousLesson
       ? { id: previousLesson.id, title: previousLesson.title }
       : null,

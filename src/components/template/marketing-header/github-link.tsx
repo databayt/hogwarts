@@ -26,21 +26,39 @@ export function GitHubLink() {
 }
 
 async function StarsCount() {
-  const data = await fetch("https://api.github.com/repos/databayt/hogwarts", {
-    next: { revalidate: 86400 },
-  })
-  const json = await data.json()
+  try {
+    const data = await fetch("https://api.github.com/repos/databayt/hogwarts", {
+      next: { revalidate: 86400 },
+    })
+    const json = await data.json()
 
-  const formattedCount =
-    json.stargazers_count >= 1000
-      ? json.stargazers_count % 1000 === 0
-        ? `${Math.floor(json.stargazers_count / 1000)}k`
-        : `${(json.stargazers_count / 1000).toFixed(1)}k`
-      : json.stargazers_count.toLocaleString()
+    // Handle API errors or missing data
+    const count = json?.stargazers_count
+    if (typeof count !== "number") {
+      return (
+        <span className="text-muted-foreground w-fit text-xs tabular-nums">
+          -
+        </span>
+      )
+    }
 
-  return (
-    <span className="text-muted-foreground w-fit text-xs tabular-nums">
-      {formattedCount.replace(".0k", "k")}
-    </span>
-  )
+    const formattedCount =
+      count >= 1000
+        ? count % 1000 === 0
+          ? `${Math.floor(count / 1000)}k`
+          : `${(count / 1000).toFixed(1)}k`
+        : count.toLocaleString()
+
+    return (
+      <span className="text-muted-foreground w-fit text-xs tabular-nums">
+        {formattedCount.replace(".0k", "k")}
+      </span>
+    )
+  } catch {
+    return (
+      <span className="text-muted-foreground w-fit text-xs tabular-nums">
+        -
+      </span>
+    )
+  }
 }

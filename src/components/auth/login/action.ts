@@ -95,9 +95,10 @@ export const login = async (
     }
   }
 
-  // Smart redirect based on user role:
-  // - DEVELOPER: Redirect to /dashboard (platform admin)
-  // - Other roles: Redirect to homepage (/)
+  // Smart redirect based on user role AND school context:
+  // - DEVELOPER: Redirect to /dashboard (platform operator dashboard)
+  // - Users with school: Redirect to their school's subdomain dashboard
+  // - Users without school: Redirect to onboarding
   let finalRedirectUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT
 
   // Extract locale from callbackUrl or default to 'ar'
@@ -106,19 +107,55 @@ export const login = async (
     : "ar"
 
   if (existingUser.role === "DEVELOPER") {
-    // DEVELOPER gets dashboard access
+    // DEVELOPER → Platform operator dashboard (main domain)
     finalRedirectUrl = `/${locale}/dashboard`
-    console.log("[LOGIN-ACTION] 👑 DEVELOPER - redirecting to dashboard:", {
-      role: existingUser.role,
-      redirectUrl: finalRedirectUrl,
+    console.log(
+      "[LOGIN-ACTION] 👑 DEVELOPER - redirecting to operator dashboard:",
+      {
+        role: existingUser.role,
+        redirectUrl: finalRedirectUrl,
+      }
+    )
+  } else if (existingUser.schoolId) {
+    // User has a school → look up school subdomain and redirect there
+    const school = await db.school.findUnique({
+      where: { id: existingUser.schoolId },
+      select: { domain: true },
     })
+
+    if (school?.domain) {
+      // Redirect to school subdomain dashboard
+      // The /dashboard is role-aware - UI adapts based on user role
+      const baseUrl =
+        process.env.NODE_ENV === "production"
+          ? `https://${school.domain}.databayt.org`
+          : `http://${school.domain}.localhost:3000`
+      finalRedirectUrl = `${baseUrl}/${locale}/dashboard`
+      console.log(
+        "[LOGIN-ACTION] 🏫 School member - redirecting to school dashboard:",
+        {
+          role: existingUser.role,
+          school: school.domain,
+          redirectUrl: finalRedirectUrl,
+        }
+      )
+    } else {
+      // Fallback: if school domain not found, go to locale homepage
+      finalRedirectUrl = `/${locale}`
+      console.log(
+        "[LOGIN-ACTION] ⚠️ School domain not found, falling back to homepage"
+      )
+    }
   } else {
-    // All other users go to homepage
-    finalRedirectUrl = `/${locale}`
-    console.log("[LOGIN-ACTION] 🏠 User - redirecting to homepage:", {
-      role: existingUser.role,
-      redirectUrl: finalRedirectUrl,
-    })
+    // No school → onboarding (user needs to create/join a school)
+    finalRedirectUrl = `/${locale}/onboarding`
+    console.log(
+      "[LOGIN-ACTION] 🆕 New user without school - redirecting to onboarding:",
+      {
+        role: existingUser.role,
+        redirectUrl: finalRedirectUrl,
+      }
+    )
   }
 
   try {

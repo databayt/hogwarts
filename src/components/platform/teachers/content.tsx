@@ -3,6 +3,7 @@ import { SearchParams } from "nuqs/server"
 import { db } from "@/lib/db"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getDisplayName } from "@/lib/transliterate-name"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type TeacherRow } from "@/components/platform/teachers/columns"
@@ -114,7 +115,7 @@ export default async function TeachersContent({
 
       return {
         id: t.id,
-        name: [t.givenName, t.surname].filter(Boolean).join(" "),
+        name: getDisplayName(t.givenName, t.surname, lang),
         givenName: t.givenName || "",
         surname: t.surname || "",
         emailAddress: t.emailAddress || "-",

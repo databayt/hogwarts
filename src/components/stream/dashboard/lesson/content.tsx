@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useTransition } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
   CheckCircle2,
@@ -19,9 +20,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import type { LessonWithProgress } from "@/components/stream/data/course/get-lesson-with-progress"
-import { VideoPlayer } from "@/components/stream/shared/video-player"
+import {
+  VideoPlayer,
+  type VideoProgress,
+} from "@/components/stream/shared/video-player"
 
-import { markLessonComplete, markLessonIncomplete } from "./actions"
+import {
+  markLessonComplete,
+  markLessonIncomplete,
+  updateLessonProgress,
+} from "./actions"
 
 interface StreamLessonContentProps {
   dictionary: Record<string, unknown>
@@ -38,10 +46,13 @@ export function StreamLessonContent({
   subdomain,
   lesson,
 }: StreamLessonContentProps) {
+  const router = useRouter()
   const [isCompleted, setIsCompleted] = useState(
     lesson.progress?.isCompleted ?? false
   )
   const [isPending, startTransition] = useTransition()
+
+  const baseUrl = `/${lang}/s/${subdomain}/stream/dashboard/${lesson.chapter.course.slug}`
 
   const handleToggleComplete = () => {
     startTransition(async () => {
@@ -75,6 +86,19 @@ export function StreamLessonContent({
     })
   }
 
+  // Save video progress for resume functionality
+  const handleProgress = useCallback(
+    (progress: VideoProgress) => {
+      // Debounced save to server (handled by video player)
+      updateLessonProgress({
+        lessonId: lesson.id,
+        watchedSeconds: Math.floor(progress.watchedSeconds),
+        totalSeconds: Math.floor(progress.duration),
+      })
+    },
+    [lesson.id]
+  )
+
   // Auto-mark complete when video finishes
   const handleVideoComplete = useCallback(() => {
     if (isCompleted) return // Already completed, don't mark again
@@ -97,7 +121,25 @@ export function StreamLessonContent({
     })
   }, [isCompleted, lesson.id, lesson.chapter.course.slug])
 
-  const baseUrl = `/${lang}/s/${subdomain}/stream/dashboard/${lesson.chapter.course.slug}`
+  // Handle auto-play next lesson
+  const handleNextLesson = useCallback(() => {
+    if (lesson.nextLesson) {
+      router.push(`${baseUrl}/${lesson.nextLesson.id}`)
+    }
+  }, [lesson.nextLesson, baseUrl, router])
+
+  // Prepare next lesson data for video player
+  const nextLessonData = lesson.nextLesson
+    ? {
+        id: lesson.nextLesson.id,
+        title: lesson.nextLesson.title,
+        chapterTitle: lesson.chapter.title,
+        duration: undefined, // Could be added if available
+      }
+    : null
+
+  // Get initial position for resume (from server)
+  const initialPosition = lesson.progress?.watchedSeconds ?? 0
 
   return (
     <div className="space-y-6 py-6">
@@ -143,7 +185,12 @@ export function StreamLessonContent({
                 <VideoPlayer
                   url={lesson.videoUrl}
                   title={lesson.title}
+                  lessonId={lesson.id}
+                  initialPosition={initialPosition}
+                  nextLesson={nextLessonData}
+                  onProgress={handleProgress}
                   onComplete={handleVideoComplete}
+                  onNextLesson={handleNextLesson}
                   className="h-full w-full rounded-t-lg"
                 />
               )}

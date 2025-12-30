@@ -77,6 +77,12 @@ export default function PlatformHeader({
             className="flex lg:hidden"
             dictionary={dictionary ?? undefined}
             locale={locale}
+            school={school}
+            notificationsUrl={notificationsUrl}
+            messagesUrl={messagesUrl}
+            currentPath={pathname}
+            role={role}
+            subdomain={params?.subdomain as string}
           />
           <div className="hidden items-center md:flex">
             {breadcrumbItems.length > 0 && (
@@ -119,7 +125,7 @@ export default function PlatformHeader({
             )}
           </div>
         </div>
-        <div className="ms-auto flex items-center gap-1.5">
+        <div className="ms-auto hidden items-center gap-1.5 lg:flex">
           <GenericCommandMenu
             config={platformSearchConfig}
             context={{

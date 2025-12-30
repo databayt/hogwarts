@@ -2,6 +2,7 @@ import { SearchParams } from "nuqs/server"
 
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getDisplayName } from "@/lib/transliterate-name"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type StudentRow } from "@/components/platform/students/columns"
@@ -83,7 +84,7 @@ export default async function StudentsContent({
     data = rows.map((s: any) => ({
       id: s.id,
       userId: s.userId,
-      name: [s.givenName, s.surname].filter(Boolean).join(" "),
+      name: getDisplayName(s.givenName, s.surname, lang),
       className: s.studentClasses?.[0]?.class?.name || "-",
       status: s.userId ? "active" : "inactive",
       createdAt: (s.createdAt as Date).toISOString(),

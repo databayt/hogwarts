@@ -47,7 +47,8 @@
     "system": "النظام",
     "platform": "منصة",
     "brandName": "هجورتس",
-    "unauthorized": "وصول غير مصرح به"
+    "unauthorized": "وصول غير مصرح به",
+    "switchLanguage": "تبديل اللغة"
   },
   "navigation": {
     "menu": "القائمة",

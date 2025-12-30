@@ -16,6 +16,7 @@ import {
   localeConfig,
   type Locale,
 } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   useLocale,
   useSwitchLocaleHref,
@@ -33,6 +34,11 @@ export function LanguageSwitcher({
   const router = useRouter()
   const getSwitchLocaleHref = useSwitchLocaleHref()
   const { locale: currentLocale, isRTL } = useLocale()
+  const { dictionary } = useDictionary()
+
+  // Get translated switch language text with fallback
+  const switchLanguageLabel =
+    dictionary?.common?.switchLanguage || "Switch language"
 
   const handleLocaleChange = (locale: Locale) => {
     // Set cookie to persist locale preference
@@ -60,7 +66,7 @@ export function LanguageSwitcher({
         onClick={() => handleLocaleChange(nextLocale)}
       >
         <Languages className="h-4 w-4" />
-        <span className="sr-only">Switch language</span>
+        <span className="sr-only">{switchLanguageLabel}</span>
       </Button>
     )
   }
@@ -101,7 +107,7 @@ export function LanguageSwitcher({
           className={cn("h-9 w-9", className)}
         >
           <Languages className="h-4 w-4" />
-          <span className="sr-only">Switch language</span>
+          <span className="sr-only">{switchLanguageLabel}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={isRTL ? "start" : "end"}>

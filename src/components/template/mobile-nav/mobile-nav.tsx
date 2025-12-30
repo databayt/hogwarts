@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link, { LinkProps } from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { Bell, Mail } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -11,7 +12,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { GenericCommandMenu } from "@/components/atom/generic-command-menu"
+import { platformSearchConfig } from "@/components/atom/generic-command-menu/platform-config"
+import type { Role } from "@/components/atom/generic-command-menu/types"
+import { UserButton } from "@/components/auth/user-button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { LanguageSwitcher } from "@/components/internationalization/language-switcher"
+import type { School } from "@/components/site/types"
+import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 
 export interface NavItem {
   href: string
@@ -32,6 +40,13 @@ interface MobileNavProps {
   locale?: string
   homeHref?: string
   brandName?: string
+  // Toolbar props for mobile
+  school?: School
+  notificationsUrl?: string
+  messagesUrl?: string
+  currentPath?: string
+  role?: Role
+  subdomain?: string
 }
 
 export function MobileNav({
@@ -41,9 +56,18 @@ export function MobileNav({
   dictionary,
   locale = "en",
   homeHref = "/",
+  school,
+  notificationsUrl,
+  messagesUrl,
+  currentPath,
+  role,
+  subdomain,
 }: MobileNavProps) {
   const [open, setOpen] = React.useState(false)
   const pathname = usePathname()
+
+  // Check if toolbar props are provided (platform mode)
+  const showToolbar = !!(notificationsUrl || messagesUrl || subdomain)
 
   // Determine contextual section based on route
   const currentSection = sections?.find((s) =>
@@ -92,7 +116,57 @@ export function MobileNav({
         alignOffset={-16}
         sideOffset={14}
       >
-        <div className="flex flex-col gap-12 overflow-auto px-6 py-6">
+        <div className="flex flex-col gap-8 overflow-auto px-6 py-6">
+          {/* Quick Actions Row (Platform toolbar) */}
+          {showToolbar && (
+            <div className="flex items-center justify-between gap-2 border-b pb-4">
+              <div className="flex items-center gap-1">
+                <GenericCommandMenu
+                  config={platformSearchConfig}
+                  context={{
+                    currentRole: role,
+                    currentPath: currentPath,
+                    schoolId: school?.id,
+                  }}
+                  variant="icon"
+                />
+                <LanguageSwitcher variant="toggle" />
+                <ModeSwitcher />
+                {notificationsUrl && (
+                  <Button
+                    variant="link"
+                    size="icon"
+                    className="size-8 cursor-pointer transition-opacity hover:opacity-70"
+                    asChild
+                    onClick={() => setOpen(false)}
+                  >
+                    <Link href={notificationsUrl}>
+                      <Bell className="h-4 w-4" />
+                      <span className="sr-only">Notifications</span>
+                    </Link>
+                  </Button>
+                )}
+                {messagesUrl && (
+                  <Button
+                    variant="link"
+                    size="icon"
+                    className="size-8 cursor-pointer transition-opacity hover:opacity-70"
+                    asChild
+                    onClick={() => setOpen(false)}
+                  >
+                    <Link href={messagesUrl}>
+                      <Mail className="h-4 w-4" />
+                      <span className="sr-only">Messages</span>
+                    </Link>
+                  </Button>
+                )}
+              </div>
+              {subdomain && (
+                <UserButton variant="platform" subdomain={subdomain} />
+              )}
+            </div>
+          )}
+
           {/* Main Menu Section */}
           <div className="flex flex-col gap-4">
             <div className="text-muted-foreground text-sm font-medium">

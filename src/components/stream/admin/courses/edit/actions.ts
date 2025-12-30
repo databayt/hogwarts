@@ -116,6 +116,113 @@ export async function editCourse(
 }
 
 // ============================================
+// COURSE PUBLISHING
+// ============================================
+
+export async function publishCourse(courseId: string): Promise<ApiResponse> {
+  try {
+    await verifyCourseAccess(courseId)
+
+    // Check if course has at least one chapter with one lesson
+    const course = await db.streamCourse.findUnique({
+      where: { id: courseId },
+      include: {
+        chapters: {
+          include: {
+            lessons: {
+              where: { videoUrl: { not: null } },
+            },
+          },
+        },
+      },
+    })
+
+    if (!course) {
+      return { status: "error", message: "Course not found" }
+    }
+
+    // Validate: at least 1 chapter
+    if (course.chapters.length === 0) {
+      return {
+        status: "error",
+        message: "Cannot publish: Course must have at least one chapter",
+      }
+    }
+
+    // Validate: at least 1 lesson with video
+    const totalLessonsWithVideo = course.chapters.reduce(
+      (sum, ch) => sum + ch.lessons.length,
+      0
+    )
+
+    if (totalLessonsWithVideo === 0) {
+      return {
+        status: "error",
+        message:
+          "Cannot publish: Course must have at least one lesson with a video",
+      }
+    }
+
+    // Publish the course
+    await db.streamCourse.update({
+      where: { id: courseId },
+      data: {
+        isPublished: true,
+        status: "PUBLISHED",
+      },
+    })
+
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`
+    )
+    revalidatePath(`/[lang]/s/[subdomain]/stream/courses`)
+
+    return {
+      status: "success",
+      message: "Course published successfully",
+    }
+  } catch (error) {
+    console.error("Failed to publish course:", error)
+    return {
+      status: "error",
+      message:
+        error instanceof Error ? error.message : "Failed to publish course",
+    }
+  }
+}
+
+export async function unpublishCourse(courseId: string): Promise<ApiResponse> {
+  try {
+    await verifyCourseAccess(courseId)
+
+    await db.streamCourse.update({
+      where: { id: courseId },
+      data: {
+        isPublished: false,
+        status: "DRAFT",
+      },
+    })
+
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`
+    )
+    revalidatePath(`/[lang]/s/[subdomain]/stream/courses`)
+
+    return {
+      status: "success",
+      message: "Course unpublished",
+    }
+  } catch (error) {
+    console.error("Failed to unpublish course:", error)
+    return {
+      status: "error",
+      message:
+        error instanceof Error ? error.message : "Failed to unpublish course",
+    }
+  }
+}
+
+// ============================================
 // CHAPTER ACTIONS
 // ============================================
 

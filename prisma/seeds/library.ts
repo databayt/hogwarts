@@ -1,13 +1,21 @@
 /**
  * Library Seed
- * Creates Books for the library
+ * Creates Books and Borrow Records for the library
  *
  * Phase 6: Library
+ *
+ * Features:
+ * - 500+ books across multiple genres
+ * - 100+ borrow records with realistic distribution:
+ *   - 55 active loans (BORROWED - on time)
+ *   - 30 returned books (RETURNED)
+ *   - 15 overdue books (OVERDUE - 15% of active)
  */
 
 import type { PrismaClient } from "@prisma/client"
 
-import { logPhase, logSuccess, processBatch } from "./utils"
+import type { StudentRef } from "./types"
+import { logPhase, logSuccess, processBatch, randomNumber } from "./utils"
 
 // ============================================================================
 // BOOK DATA
@@ -231,19 +239,19 @@ const SAMPLE_BOOKS = [
 ]
 
 // ============================================================================
-// LIBRARY SEEDING
+// BOOK SEEDING
 // ============================================================================
 
 /**
  * Seed books (500+ books by duplicating with variations)
  */
-export async function seedLibrary(
+export async function seedBooks(
   prisma: PrismaClient,
   schoolId: string
-): Promise<number> {
+): Promise<string[]> {
   logPhase(6, "LIBRARY", "المكتبة")
 
-  let bookCount = 0
+  const bookIds: string[] = []
 
   // Create multiple editions of each book to reach 500+ books
   const booksToCreate: Array<(typeof SAMPLE_BOOKS)[0] & { edition: number }> =
@@ -271,8 +279,10 @@ export async function seedLibrary(
         },
       })
 
-      if (!existing) {
-        await prisma.book.create({
+      if (existing) {
+        bookIds.push(existing.id)
+      } else {
+        const book = await prisma.book.create({
           data: {
             schoolId,
             title,
@@ -287,14 +297,195 @@ export async function seedLibrary(
             availableCopies: 3,
           },
         })
-        bookCount++
+        bookIds.push(book.id)
       }
     } catch {
       // Skip if book already exists
     }
   })
 
-  logSuccess("Books", bookCount, "with multiple copies")
+  logSuccess("Books", bookIds.length, "with multiple copies")
 
-  return bookCount
+  return bookIds
+}
+
+// ============================================================================
+// BORROW RECORDS SEEDING
+// ============================================================================
+
+/**
+ * Seed borrow records for library books
+ * Target: 100+ borrow records
+ * - 55 active loans (BORROWED - on time)
+ * - 30 returned books (RETURNED)
+ * - 15 overdue books (OVERDUE - 15% of active)
+ */
+export async function seedBorrowRecords(
+  prisma: PrismaClient,
+  schoolId: string,
+  students: StudentRef[]
+): Promise<number> {
+  let borrowCount = 0
+
+  // Get all books
+  const books = await prisma.book.findMany({
+    where: { schoolId },
+    select: { id: true, title: true, availableCopies: true },
+    take: 200, // Use up to 200 books
+  })
+
+  if (books.length === 0) {
+    logSuccess("Borrow Records", 0, "no books found")
+    return 0
+  }
+
+  // Get student user IDs
+  const studentUserIds = students
+    .filter((s) => s.userId)
+    .map((s) => s.userId!)
+    .slice(0, 100) // Use up to 100 students
+
+  if (studentUserIds.length === 0) {
+    logSuccess("Borrow Records", 0, "no student users found")
+    return 0
+  }
+
+  // Create borrow records with distribution:
+  // - 55 BORROWED (active, on time)
+  // - 15 OVERDUE (active, past due)
+  // - 30 RETURNED
+
+  const borrowConfigs = [
+    // Active loans - on time (55)
+    ...Array(55)
+      .fill(null)
+      .map(() => ({
+        status: "BORROWED" as const,
+        daysAgo: randomNumber(1, 10), // Borrowed 1-10 days ago
+        dueDaysFromNow: randomNumber(4, 14), // Due in 4-14 days
+        isReturned: false,
+      })),
+    // Overdue loans (15)
+    ...Array(15)
+      .fill(null)
+      .map(() => ({
+        status: "OVERDUE" as const,
+        daysAgo: randomNumber(20, 30), // Borrowed 20-30 days ago
+        dueDaysFromNow: -randomNumber(1, 10), // Due 1-10 days ago (negative = overdue)
+        isReturned: false,
+      })),
+    // Returned books (30)
+    ...Array(30)
+      .fill(null)
+      .map(() => ({
+        status: "RETURNED" as const,
+        daysAgo: randomNumber(30, 60), // Borrowed 30-60 days ago
+        dueDaysFromNow: 0, // N/A for returned
+        isReturned: true,
+        returnDaysAgo: randomNumber(5, 25), // Returned 5-25 days ago
+      })),
+  ]
+
+  let bookIndex = 0
+  let userIndex = 0
+
+  for (const config of borrowConfigs) {
+    const bookId = books[bookIndex % books.length].id
+    const userId = studentUserIds[userIndex % studentUserIds.length]
+
+    bookIndex++
+    userIndex++
+
+    // Calculate dates
+    const now = new Date()
+    const borrowDate = new Date(now)
+    borrowDate.setDate(borrowDate.getDate() - config.daysAgo)
+
+    const dueDate = new Date(now)
+    dueDate.setDate(dueDate.getDate() + config.dueDaysFromNow)
+
+    let returnDate: Date | null = null
+    if (config.isReturned && "returnDaysAgo" in config) {
+      returnDate = new Date(now)
+      returnDate.setDate(returnDate.getDate() - config.returnDaysAgo)
+    }
+
+    try {
+      // Check if borrow record already exists
+      const existing = await prisma.borrowRecord.findFirst({
+        where: {
+          schoolId,
+          bookId,
+          userId,
+          borrowDate: {
+            gte: new Date(borrowDate.getTime() - 86400000), // Within 1 day
+            lte: new Date(borrowDate.getTime() + 86400000),
+          },
+        },
+      })
+
+      if (!existing) {
+        await prisma.borrowRecord.create({
+          data: {
+            schoolId,
+            bookId,
+            userId,
+            borrowDate,
+            dueDate,
+            returnDate,
+            status: config.status,
+          },
+        })
+
+        // Update available copies for active borrows
+        if (!config.isReturned) {
+          await prisma.book.update({
+            where: { id: bookId },
+            data: {
+              availableCopies: {
+                decrement: 1,
+              },
+            },
+          })
+        }
+
+        borrowCount++
+      }
+    } catch {
+      // Skip if borrow record creation fails
+    }
+  }
+
+  logSuccess(
+    "Borrow Records",
+    borrowCount,
+    "55 active + 15 overdue + 30 returned"
+  )
+
+  return borrowCount
+}
+
+// ============================================================================
+// MAIN SEED FUNCTION
+// ============================================================================
+
+/**
+ * Seed all library-related data
+ * - 500+ books
+ * - 100+ borrow records
+ */
+export async function seedLibrary(
+  prisma: PrismaClient,
+  schoolId: string,
+  students?: StudentRef[]
+): Promise<number> {
+  // 1. Seed books
+  const bookIds = await seedBooks(prisma, schoolId)
+
+  // 2. Seed borrow records if students provided
+  if (students && students.length > 0) {
+    await seedBorrowRecords(prisma, schoolId, students)
+  }
+
+  return bookIds.length
 }

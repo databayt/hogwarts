@@ -213,11 +213,13 @@ export async function markLessonIncomplete(
 
 export async function getLessonProgress(lessonId: string): Promise<{
   isCompleted: boolean
+  watchedSeconds: number
+  totalSeconds: number | null
 }> {
   const session = await auth()
 
   if (!session?.user) {
-    return { isCompleted: false }
+    return { isCompleted: false, watchedSeconds: 0, totalSeconds: null }
   }
 
   const progress = await db.streamLessonProgress.findUnique({
@@ -227,8 +229,73 @@ export async function getLessonProgress(lessonId: string): Promise<{
         lessonId: lessonId,
       },
     },
-    select: { isCompleted: true },
+    select: {
+      isCompleted: true,
+      watchedSeconds: true,
+      totalSeconds: true,
+    },
   })
 
-  return { isCompleted: progress?.isCompleted ?? false }
+  return {
+    isCompleted: progress?.isCompleted ?? false,
+    watchedSeconds: progress?.watchedSeconds ?? 0,
+    totalSeconds: progress?.totalSeconds ?? null,
+  }
+}
+
+/**
+ * Update video playback progress for resume functionality
+ * Called periodically during video playback and on pause/close
+ */
+export async function updateLessonProgress(data: {
+  lessonId: string
+  watchedSeconds: number
+  totalSeconds: number
+}): Promise<ApiResponse> {
+  const session = await auth()
+
+  if (!session?.user) {
+    return {
+      status: "error",
+      message: "Authentication required",
+    }
+  }
+
+  try {
+    // Upsert lesson progress with video position
+    await db.streamLessonProgress.upsert({
+      where: {
+        userId_lessonId: {
+          userId: session.user.id,
+          lessonId: data.lessonId,
+        },
+      },
+      update: {
+        watchedSeconds: data.watchedSeconds,
+        totalSeconds: data.totalSeconds,
+        lastWatchedAt: new Date(),
+        updatedAt: new Date(),
+      },
+      create: {
+        userId: session.user.id,
+        lessonId: data.lessonId,
+        watchedSeconds: data.watchedSeconds,
+        totalSeconds: data.totalSeconds,
+        lastWatchedAt: new Date(),
+        watchCount: 1,
+        isCompleted: false,
+      },
+    })
+
+    return {
+      status: "success",
+      message: "Progress saved",
+    }
+  } catch (error) {
+    console.error("Failed to update lesson progress:", error)
+    return {
+      status: "error",
+      message: "Failed to save progress",
+    }
+  }
 }

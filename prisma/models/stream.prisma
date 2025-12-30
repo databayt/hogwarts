@@ -171,12 +171,19 @@ model StreamLessonProgress {
 
   isCompleted Boolean @default(false)
 
+  // Video progress tracking for resume functionality
+  watchedSeconds Int      @default(0) // Last playback position in seconds
+  totalSeconds   Int? // Video duration in seconds (cached)
+  lastWatchedAt  DateTime @default(now()) // For "continue watching" sorting
+  watchCount     Int      @default(0) // Number of times video was started
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, lessonId])
   @@index([userId])
   @@index([lessonId])
+  @@index([lastWatchedAt]) // For sorting "continue watching"
   @@map("stream_lesson_progress")
 }
 

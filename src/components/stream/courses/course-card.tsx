@@ -1,10 +1,11 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
-import { BookOpen, Star } from "lucide-react"
+import { Star } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getSubjectImage } from "@/components/platform/subjects/image-map"
 import { PublicCourseType } from "@/components/stream/data/course/get-all-courses"
 
 // Default provider logos for categories
@@ -37,6 +38,9 @@ export function CourseCard({ course, lang }: CourseCardProps) {
   const providerName = course.category?.name || "Course"
   const providerLogo = providerLogos[providerName] || providerLogos.default
   const courseType = getCourseType(chaptersCount)
+  const fallbackImage = getSubjectImage(
+    course.title || course.category?.name || ""
+  )
 
   return (
     <Link
@@ -44,19 +48,14 @@ export function CourseCard({ course, lang }: CourseCardProps) {
       className="group block"
     >
       {/* Card Image */}
-      <div className="aspect-video overflow-hidden rounded-xl">
-        {course.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={course.imageUrl}
-            alt={course.title}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="bg-muted flex h-full w-full items-center justify-center rounded-xl">
-            <BookOpen className="text-muted-foreground size-16" />
-          </div>
-        )}
+      <div className="relative aspect-video overflow-hidden rounded-xl">
+        <Image
+          src={course.imageUrl || fallbackImage}
+          alt={course.title}
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        />
       </div>
 
       {/* Content */}

@@ -7,10 +7,10 @@
  * Usage:
  *   pnpm db:seed
  *
- * Expected Output:
+ * Expected Output (Enhanced):
  *   - 1 School (demo.databayt.org)
  *   - 3104 Users (all roles)
- *   - 100 Teachers (Arabic names)
+ *   - 100 Teachers (+ qualifications, experience, expertise)
  *   - 1000 Students (K-12 distribution)
  *   - 2000 Guardians (2 per student)
  *   - 14 Year Levels (KG1-12)
@@ -18,15 +18,26 @@
  *   - 19 Subjects (bilingual)
  *   - 30+ Classrooms
  *   - 400+ Classes
+ *   - 200+ Assignments + 500 Submissions
  *   - 10,000+ Attendance records (10 days)
- *   - 10 Sample Invoices
+ *   - 2 Fiscal Years + 200 Expenses + 100 Journal Entries
+ *   - 1000 Fee Records + 500 Payments
+ *   - 100 Library Borrow Records
+ *   - 50 Conversations + 300 Messages
+ *   - 500+ Notifications
+ *   - 50 Admission Applications
+ *   - 500+ Audit Logs
+ *   - 50 Health Records + 25 Disciplinary + 35 Achievements
  */
 
 import { PrismaClient } from "@prisma/client"
 
 import { seedAcademicStructure } from "./academic"
+import { seedAdmission } from "./admission"
 import { seedAnnouncements } from "./announcements"
+import { seedAssignments } from "./assignments"
 import { seedAttendance } from "./attendance"
+import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { seedBanking } from "./banking"
 import { seedAllClasses } from "./classes"
@@ -34,11 +45,14 @@ import { seedClassrooms } from "./classrooms"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams } from "./exams"
 import { seedFees } from "./fees"
-import { seedFinance } from "./finance"
+import { seedFinanceComplete } from "./finance"
 import { seedGrades } from "./grades"
+import { seedWellness } from "./health"
 import { seedInvoices } from "./invoices"
 import { seedLessons } from "./lessons"
 import { seedLibrary } from "./library"
+import { seedMessaging } from "./messages"
+import { seedNotifications } from "./notifications"
 import { seedAllPeople } from "./people"
 import { seedQBank } from "./qbank"
 import { seedSchoolWithBranding } from "./school"
@@ -111,7 +125,7 @@ async function main() {
     context.classrooms = classrooms
 
     // ========================================================================
-    // PHASE 5: PEOPLE
+    // PHASE 5: PEOPLE (Enhanced with qualifications, experience, expertise)
     // ========================================================================
     const { teachers, students, guardians } = await measureDuration(
       "People",
@@ -124,7 +138,8 @@ async function main() {
           guardianUsers,
           departments,
           yearLevels,
-          schoolYear
+          schoolYear,
+          subjects // Pass subjects for teacher expertise
         )
     )
     context.teachers = teachers
@@ -164,10 +179,26 @@ async function main() {
       seedLessons(prisma, school.id, classes)
     )
 
-    await measureDuration("Library", () => seedLibrary(prisma, school.id))
+    await measureDuration("Library (with borrow records)", () =>
+      seedLibrary(prisma, school.id, students)
+    )
 
     // ========================================================================
-    // PHASE 8: ANNOUNCEMENTS & EVENTS
+    // PHASE 8: ASSIGNMENTS
+    // ========================================================================
+    await measureDuration("Assignments", () =>
+      seedAssignments(
+        prisma,
+        school.id,
+        classes,
+        teachers,
+        term.startDate,
+        term.endDate
+      )
+    )
+
+    // ========================================================================
+    // PHASE 9: ANNOUNCEMENTS & EVENTS
     // ========================================================================
     await measureDuration("Announcements", () =>
       seedAnnouncements(prisma, school.id, adminUsers)
@@ -176,7 +207,7 @@ async function main() {
     await measureDuration("Events", () => seedEvents(prisma, school.id))
 
     // ========================================================================
-    // PHASE 9: EXAMS, QBANK & GRADES
+    // PHASE 10: EXAMS, QBANK & GRADES
     // ========================================================================
     await measureDuration("Exams", () =>
       seedExams(prisma, school.id, subjects, classes, term)
@@ -195,11 +226,13 @@ async function main() {
     )
 
     // ========================================================================
-    // PHASE 10: FINANCE
+    // PHASE 11: FINANCE (Enhanced with 2-year history)
     // ========================================================================
-    await measureDuration("Finance", () => seedFinance(prisma, school.id))
+    await measureDuration("Finance (2-year history)", () =>
+      seedFinanceComplete(prisma, school.id, departments, adminUsers[0] || null)
+    )
 
-    await measureDuration("Fees", () =>
+    await measureDuration("Fees (with payments)", () =>
       seedFees(prisma, school.id, students, yearLevels)
     )
 
@@ -208,14 +241,14 @@ async function main() {
     )
 
     // ========================================================================
-    // PHASE 11: BANKING
+    // PHASE 12: BANKING
     // ========================================================================
     await measureDuration("Banking", () =>
       seedBanking(prisma, school.id, adminUsers)
     )
 
     // ========================================================================
-    // PHASE 12: OPERATIONS
+    // PHASE 13: OPERATIONS
     // ========================================================================
     await measureDuration("Attendance", () =>
       seedAttendance(prisma, school.id, students, classes, teachers)
@@ -231,6 +264,35 @@ async function main() {
         periods,
         term
       )
+    )
+
+    // ========================================================================
+    // PHASE 14: COMMUNICATIONS
+    // ========================================================================
+    await measureDuration("Messages & Conversations", () =>
+      seedMessaging(prisma, school.id, teachers, students, adminUsers)
+    )
+
+    await measureDuration("Notifications", () =>
+      seedNotifications(prisma, school.id, teachers, students, adminUsers)
+    )
+
+    // ========================================================================
+    // PHASE 15: ADMISSION
+    // ========================================================================
+    await measureDuration("Admission (campaigns, applications)", () =>
+      seedAdmission(prisma, school.id, yearLevels, adminUsers)
+    )
+
+    // ========================================================================
+    // PHASE 16: COMPLIANCE & WELLNESS
+    // ========================================================================
+    await measureDuration("Audit Logs", () =>
+      seedAuditLogs(prisma, school.id, allUsers)
+    )
+
+    await measureDuration("Health & Wellness", () =>
+      seedWellness(prisma, school.id, students, teachers, adminUsers)
     )
 
     // ========================================================================

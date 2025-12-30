@@ -21,6 +21,7 @@ import type {
   GuardianRef,
   SchoolYearRef,
   StudentRef,
+  SubjectRef,
   TeacherRef,
   UserRef,
   YearLevelRef,
@@ -35,6 +36,8 @@ import {
   logPhase,
   logSuccess,
   processBatch,
+  randomElement,
+  randomNumber,
 } from "./utils"
 
 // ============================================================================
@@ -181,6 +184,366 @@ export async function seedTeachers(
   logSuccess("Teachers", teachers.length, "with department assignments")
 
   return teachers
+}
+
+// ============================================================================
+// TEACHER QUALIFICATIONS SEEDING
+// ============================================================================
+
+// Sample qualification data
+const DEGREE_TYPES = [
+  { name: "Bachelor of Education", major: "Education", type: "DEGREE" },
+  { name: "Bachelor of Science", major: "Science Education", type: "DEGREE" },
+  { name: "Bachelor of Arts", major: "English Literature", type: "DEGREE" },
+  {
+    name: "Master of Education",
+    major: "Educational Leadership",
+    type: "DEGREE",
+  },
+  { name: "Master of Science", major: "Mathematics", type: "DEGREE" },
+  { name: "Master of Arts", major: "Arabic Studies", type: "DEGREE" },
+  { name: "PhD in Education", major: "Curriculum Development", type: "DEGREE" },
+  { name: "Diploma in Education", major: "Teaching Methods", type: "DEGREE" },
+]
+
+const CERTIFICATIONS = [
+  {
+    name: "TEFL Certificate",
+    institution: "Cambridge University",
+    type: "CERTIFICATION",
+  },
+  {
+    name: "Teaching License",
+    institution: "Ministry of Education",
+    type: "LICENSE",
+  },
+  {
+    name: "First Aid Certificate",
+    institution: "Red Crescent Society",
+    type: "CERTIFICATION",
+  },
+  {
+    name: "Child Protection Training",
+    institution: "UNICEF",
+    type: "CERTIFICATION",
+  },
+  {
+    name: "ICT in Education",
+    institution: "Google for Education",
+    type: "CERTIFICATION",
+  },
+  {
+    name: "Special Needs Education",
+    institution: "British Council",
+    type: "CERTIFICATION",
+  },
+  {
+    name: "Assessment & Evaluation",
+    institution: "IB Organization",
+    type: "CERTIFICATION",
+  },
+]
+
+const UNIVERSITIES = [
+  "University of Khartoum",
+  "Sudan University of Science and Technology",
+  "Omdurman Islamic University",
+  "Al-Neelain University",
+  "University of Gezira",
+  "Red Sea University",
+  "International University of Africa",
+  "Ahfad University for Women",
+]
+
+/**
+ * Seed teacher qualifications
+ * Target: 100+ qualifications (1-2 per teacher)
+ */
+export async function seedTeacherQualifications(
+  prisma: PrismaClient,
+  schoolId: string,
+  teachers: TeacherRef[]
+): Promise<number> {
+  let qualificationCount = 0
+
+  for (const teacher of teachers) {
+    // Each teacher gets 1-2 qualifications
+    const numQualifications = randomNumber(1, 2)
+
+    for (let i = 0; i < numQualifications; i++) {
+      try {
+        // First qualification is always a degree
+        const qualData =
+          i === 0
+            ? randomElement(DEGREE_TYPES)
+            : randomElement([...DEGREE_TYPES, ...CERTIFICATIONS])
+
+        const institution =
+          qualData.type === "DEGREE"
+            ? randomElement(UNIVERSITIES)
+            : qualData.type === "CERTIFICATION" || qualData.type === "LICENSE"
+              ? CERTIFICATIONS.find((c) => c.name === qualData.name)
+                  ?.institution || "Ministry of Education"
+              : randomElement(UNIVERSITIES)
+
+        const yearsAgo = randomNumber(3, 20)
+        const dateObtained = new Date()
+        dateObtained.setFullYear(dateObtained.getFullYear() - yearsAgo)
+
+        const existing = await prisma.teacherQualification.findFirst({
+          where: {
+            schoolId,
+            teacherId: teacher.id,
+            qualificationType: qualData.type,
+            name: qualData.name,
+          },
+        })
+
+        if (!existing) {
+          await prisma.teacherQualification.create({
+            data: {
+              schoolId,
+              teacherId: teacher.id,
+              qualificationType: qualData.type,
+              name: qualData.name,
+              institution,
+              major: "major" in qualData ? qualData.major : null,
+              dateObtained,
+              expiryDate:
+                qualData.type === "LICENSE"
+                  ? new Date(
+                      dateObtained.getTime() + 5 * 365 * 24 * 60 * 60 * 1000
+                    )
+                  : null,
+              licenseNumber:
+                qualData.type === "LICENSE"
+                  ? `LIC-${String(randomNumber(10000, 99999))}`
+                  : null,
+            },
+          })
+          qualificationCount++
+        }
+      } catch {
+        // Skip if creation fails
+      }
+    }
+  }
+
+  logSuccess(
+    "Teacher Qualifications",
+    qualificationCount,
+    "degrees + certifications"
+  )
+  return qualificationCount
+}
+
+// ============================================================================
+// TEACHER EXPERIENCE SEEDING
+// ============================================================================
+
+const PREVIOUS_SCHOOLS = [
+  "Khartoum International School",
+  "Unity High School",
+  "Al-Noor Academy",
+  "Excellence Primary School",
+  "Sunrise International School",
+  "Modern Education Academy",
+  "Al-Mashreq School",
+  "Cambridge School Sudan",
+  "Green Valley Academy",
+  "Pioneer School",
+]
+
+const TEACHING_POSITIONS = [
+  "Teacher",
+  "Senior Teacher",
+  "Head of Department",
+  "Assistant Teacher",
+  "Subject Coordinator",
+  "Classroom Teacher",
+  "Lead Teacher",
+]
+
+/**
+ * Seed teacher experience records
+ * Target: 100+ experience records (1-2 per teacher)
+ */
+export async function seedTeacherExperience(
+  prisma: PrismaClient,
+  schoolId: string,
+  teachers: TeacherRef[]
+): Promise<number> {
+  let experienceCount = 0
+
+  for (const teacher of teachers) {
+    // Each teacher gets 1-2 previous experiences
+    const numExperiences = randomNumber(1, 2)
+
+    for (let i = 0; i < numExperiences; i++) {
+      try {
+        const institution = randomElement(PREVIOUS_SCHOOLS)
+        const position = randomElement(TEACHING_POSITIONS)
+
+        // Calculate dates - oldest experience first
+        const yearsAgo = numExperiences - i + randomNumber(2, 10)
+        const startDate = new Date()
+        startDate.setFullYear(startDate.getFullYear() - yearsAgo)
+
+        const endDate = new Date(startDate)
+        endDate.setFullYear(endDate.getFullYear() + randomNumber(1, 3))
+
+        const existing = await prisma.teacherExperience.findFirst({
+          where: {
+            schoolId,
+            teacherId: teacher.id,
+            institution,
+            position,
+          },
+        })
+
+        if (!existing) {
+          await prisma.teacherExperience.create({
+            data: {
+              schoolId,
+              teacherId: teacher.id,
+              institution,
+              position,
+              startDate,
+              endDate,
+              isCurrent: false,
+              description: `Taught ${randomElement(["Mathematics", "Science", "English", "Arabic", "Social Studies"])} to students in grades ${randomNumber(1, 6)}-${randomNumber(7, 12)}. Responsibilities included curriculum development, student assessment, and parent communication.`,
+            },
+          })
+          experienceCount++
+        }
+      } catch {
+        // Skip if creation fails
+      }
+    }
+  }
+
+  logSuccess("Teacher Experience", experienceCount, "previous positions")
+  return experienceCount
+}
+
+// ============================================================================
+// TEACHER SUBJECT EXPERTISE SEEDING
+// ============================================================================
+
+/**
+ * Seed teacher subject expertise
+ * Target: 100+ expertise records (1-2 per teacher)
+ */
+export async function seedTeacherSubjectExpertise(
+  prisma: PrismaClient,
+  schoolId: string,
+  teachers: TeacherRef[],
+  subjects: SubjectRef[]
+): Promise<number> {
+  let expertiseCount = 0
+
+  if (subjects.length === 0) {
+    logSuccess("Teacher Subject Expertise", 0, "no subjects available")
+    return 0
+  }
+
+  for (const teacher of teachers) {
+    // Each teacher gets 1-3 subject expertise areas
+    const numSubjects = randomNumber(1, 3)
+    const assignedSubjects = new Set<string>()
+
+    for (let i = 0; i < numSubjects; i++) {
+      try {
+        const subject = randomElement(subjects)
+        if (assignedSubjects.has(subject.id)) continue
+        assignedSubjects.add(subject.id)
+
+        const expertiseLevel =
+          i === 0 ? "PRIMARY" : Math.random() < 0.5 ? "SECONDARY" : "CERTIFIED"
+
+        const existing = await prisma.teacherSubjectExpertise.findFirst({
+          where: {
+            schoolId,
+            teacherId: teacher.id,
+            subjectId: subject.id,
+          },
+        })
+
+        if (!existing) {
+          await prisma.teacherSubjectExpertise.create({
+            data: {
+              schoolId,
+              teacherId: teacher.id,
+              subjectId: subject.id,
+              expertiseLevel,
+            },
+          })
+          expertiseCount++
+        }
+      } catch {
+        // Skip if creation fails
+      }
+    }
+  }
+
+  logSuccess("Teacher Subject Expertise", expertiseCount, "subject assignments")
+  return expertiseCount
+}
+
+// ============================================================================
+// TEACHER PHONE NUMBERS SEEDING
+// ============================================================================
+
+/**
+ * Seed teacher phone numbers
+ * Target: 100+ phone numbers (1-2 per teacher)
+ */
+export async function seedTeacherPhoneNumbers(
+  prisma: PrismaClient,
+  schoolId: string,
+  teachers: TeacherRef[]
+): Promise<number> {
+  let phoneCount = 0
+
+  for (let i = 0; i < teachers.length; i++) {
+    const teacher = teachers[i]
+
+    // Each teacher gets 1-2 phone numbers
+    const numPhones = randomNumber(1, 2)
+
+    for (let j = 0; j < numPhones; j++) {
+      try {
+        const phoneNumber = generatePhone(i * 2 + j + 1000)
+        const phoneType = j === 0 ? "mobile" : randomElement(["home", "work"])
+
+        const existing = await prisma.teacherPhoneNumber.findFirst({
+          where: {
+            schoolId,
+            teacherId: teacher.id,
+            phoneNumber,
+          },
+        })
+
+        if (!existing) {
+          await prisma.teacherPhoneNumber.create({
+            data: {
+              schoolId,
+              teacherId: teacher.id,
+              phoneNumber,
+              phoneType,
+              isPrimary: j === 0,
+            },
+          })
+          phoneCount++
+        }
+      } catch {
+        // Skip if creation fails
+      }
+    }
+  }
+
+  logSuccess("Teacher Phone Numbers", phoneCount, "contact numbers")
+  return phoneCount
 }
 
 // ============================================================================
@@ -454,6 +817,7 @@ export async function seedGuardians(
 
 /**
  * Seed all people (teachers, students, guardians)
+ * Also seeds teacher qualifications, experience, and expertise
  */
 export async function seedAllPeople(
   prisma: PrismaClient,
@@ -463,7 +827,8 @@ export async function seedAllPeople(
   guardianUsers: UserRef[],
   departments: DepartmentRef[],
   yearLevels: YearLevelRef[],
-  schoolYear: SchoolYearRef
+  schoolYear: SchoolYearRef,
+  subjects?: SubjectRef[]
 ): Promise<{
   teachers: TeacherRef[]
   students: StudentRef[]
@@ -475,6 +840,15 @@ export async function seedAllPeople(
     teacherUsers,
     departments
   )
+
+  // Seed teacher profile data
+  await seedTeacherQualifications(prisma, schoolId, teachers)
+  await seedTeacherExperience(prisma, schoolId, teachers)
+  await seedTeacherPhoneNumbers(prisma, schoolId, teachers)
+  if (subjects && subjects.length > 0) {
+    await seedTeacherSubjectExpertise(prisma, schoolId, teachers, subjects)
+  }
+
   const students = await seedStudents(
     prisma,
     schoolId,

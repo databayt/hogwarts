@@ -2,6 +2,7 @@ import { SearchParams } from "nuqs/server"
 
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getDisplayName } from "@/lib/transliterate-name"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { type ParentRow } from "@/components/platform/parents/columns"
@@ -59,7 +60,7 @@ export default async function ParentsContent({
     data = rows.map((p: any) => ({
       id: p.id,
       userId: p.userId || null,
-      name: [p.givenName, p.surname].filter(Boolean).join(" "),
+      name: getDisplayName(p.givenName, p.surname, lang),
       emailAddress: p.emailAddress || "-",
       status: p.userId ? "active" : "inactive",
       createdAt: (p.createdAt as Date).toISOString(),

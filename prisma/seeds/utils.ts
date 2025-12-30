@@ -355,7 +355,7 @@ export function generateReceiptNumber(index: number, year: number): string {
 /**
  * Get random element from array
  */
-export function randomElement<T>(array: T[]): T {
+export function randomElement<T>(array: readonly T[]): T {
   return array[Math.floor(Math.random() * array.length)]
 }
 

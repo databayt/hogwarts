@@ -146,9 +146,8 @@ export async function seedExamResults(
     const classInfo = classes.find((c) => c.id === exam.classId)
     if (!classInfo) return
 
-    const levelStudents = (
-      studentsByLevel.get(classInfo.yearLevelId) || []
-    ).slice(0, 10) // Limit to 10 students per exam
+    // Get all students for this year level (full coverage)
+    const levelStudents = studentsByLevel.get(classInfo.yearLevelId) || []
 
     for (const student of levelStudents) {
       const marksObtained = getRandomScore(exam.totalMarks)
