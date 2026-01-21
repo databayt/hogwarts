@@ -17,6 +17,7 @@ export const publicRoutes = [
   "/docs",
   "/stream",
   "/stream/courses",
+  "/onboarding",
 ]
 
 /**
@@ -24,12 +25,7 @@ export const publicRoutes = [
  * Users must be logged in to access these routes
  * @type {string[]}
  */
-export const protectedRoutes = [
-  "/dashboard",
-  "/onboarding",
-  "/profile",
-  "/settings",
-]
+export const protectedRoutes = ["/dashboard", "/profile", "/settings"]
 
 /**
  * An array of routes that are used for authentication

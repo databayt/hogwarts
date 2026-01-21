@@ -272,29 +272,33 @@ const Footer = () => {
 
       {/* Bottom Section */}
       <div className="border-border mt-8 border-t pt-6">
-        <div className="flex flex-col items-center md:flex-row">
+        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <p className="text-muted-foreground text-sm">
+            Build by{" "}
+            <Link
+              href="https://databayt.org"
+              className="hover:text-primary transition-colors"
+            >
+              databayt
+            </Link>
+            , source code available on{" "}
+            <Link
+              href="https://github.com/databayt/hogwarts"
+              className="hover:text-primary transition-colors"
+            >
+              GitHub
+            </Link>
+          </p>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <Image
-                src="/logo.png"
-                alt="Hogwarts Logo"
-                width={32}
-                height={32}
-                className="dark:invert"
-              />
-              <span className="text-foreground text-lg font-bold">
-                Hogwarts
-              </span>
-            </div>
             <Link
               href="/terms"
-              className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
+              className="text-muted-foreground hover:text-primary text-sm transition-colors"
             >
               Terms
             </Link>
             <Link
               href="/privacy"
-              className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
+              className="text-muted-foreground hover:text-primary text-sm transition-colors"
             >
               Privacy
             </Link>

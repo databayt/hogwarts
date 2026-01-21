@@ -36,6 +36,7 @@ const publicRoutes = [
   "/features",
   "/pricing",
   "/blog",
+  "/onboarding",
 ]
 const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
 
