@@ -325,9 +325,9 @@ enum AnswerSheetType {
 
 // Paper configuration for generated exams
 model ExamPaperConfig {
-  id              String            @id @default(cuid())
+  id              String @id @default(cuid())
   schoolId        String
-  generatedExamId String            @unique
+  generatedExamId String @unique
 
   // Template & Layout
   template        ExamPaperTemplate @default(CLASSIC)
@@ -362,8 +362,8 @@ model ExamPaperConfig {
   // Versioning (for multiple exam versions A/B/C)
   versionCount Int @default(1)
 
-  school        School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  generatedExam GeneratedExam   @relation(fields: [generatedExamId], references: [id], onDelete: Cascade)
+  school        School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  generatedExam GeneratedExam    @relation(fields: [generatedExamId], references: [id], onDelete: Cascade)
   papers        GeneratedPaper[]
 
   createdAt DateTime @default(now())
@@ -490,8 +490,8 @@ model ExamCertificate {
   studentId    String
 
   // Certificate Details
-  certificateNumber String   @unique
-  issuedAt          DateTime @default(now())
+  certificateNumber String    @unique
+  issuedAt          DateTime  @default(now())
   expiresAt         DateTime?
 
   // Frozen Content (snapshot at time of generation)

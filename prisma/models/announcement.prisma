@@ -14,14 +14,14 @@ enum AnnouncementPriority {
 }
 
 model Announcement {
-  id       String               @id @default(cuid())
+  id       String @id @default(cuid())
   schoolId String
 
   // Bilingual content - render based on locale with fallback
-  titleEn  String?              // English title
-  titleAr  String?              // Arabic title (RTL)
-  bodyEn   String?              @db.Text // English body
-  bodyAr   String?              @db.Text // Arabic body (RTL)
+  titleEn String? // English title
+  titleAr String? // Arabic title (RTL)
+  bodyEn  String? @db.Text // English body
+  bodyAr  String? @db.Text // Arabic body (RTL)
 
   scope    AnnouncementScope    @default(school)
   priority AnnouncementPriority @default(normal)
@@ -143,12 +143,12 @@ model AnnouncementTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Back-relation for default template
+  configsAsDefault AnnouncementConfig[]
+
   @@unique([schoolId, name])
   @@index([schoolId, type])
   @@map("announcement_templates")
-
-  // Back-relation for default template
-  configsAsDefault AnnouncementConfig[]
 }
 
 // Digest frequency options
@@ -170,10 +170,10 @@ model AnnouncementConfig {
   defaultExpiryDays Int                  @default(30)
 
   // Notifications
-  emailOnPublish    Boolean @default(true)
-  pushNotifications Boolean @default(false)
-  quietHoursStart   String? @default("22:00")
-  quietHoursEnd     String? @default("07:00")
+  emailOnPublish    Boolean         @default(true)
+  pushNotifications Boolean         @default(false)
+  quietHoursStart   String?         @default("22:00")
+  quietHoursEnd     String?         @default("07:00")
   digestFrequency   DigestFrequency @default(none)
 
   // Templates

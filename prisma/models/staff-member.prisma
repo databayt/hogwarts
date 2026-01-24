@@ -1,0 +1,225 @@
+// Staff Member Models (Non-teaching employees)
+
+model StaffMember {
+  id           String  @id @default(cuid())
+  schoolId     String
+  employeeId   String? // External employee identifier
+  givenName    String
+  surname      String
+  gender       String?
+  emailAddress String
+
+  // Profile fields
+  birthDate         DateTime?
+  joiningDate       DateTime?
+  employmentStatus  String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RETIRED
+  employmentType    String    @default("FULL_TIME") // FULL_TIME, PART_TIME, CONTRACT, TEMPORARY
+  contractStartDate DateTime?
+  contractEndDate   DateTime?
+  profilePhotoUrl   String?
+
+  // Position fields
+  position     String? // Job title (e.g., "Accountant", "Librarian", "Security Guard")
+  departmentId String?
+
+  // Contact fields
+  phoneNumber    String?
+  alternatePhone String?
+  address        String?
+  city           String?
+  state          String?
+  country        String?
+
+  // Emergency contact
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactRelation String?
+
+  // Relations
+  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  // Qualifications and experience
+  qualifications StaffQualification[]
+  experiences    StaffExperience[]
+
+  // Finance relations
+  salaryStructures StaffSalaryStructure[]
+  salarySlips      StaffSalarySlip[]
+  timesheetEntries StaffTimesheetEntry[]
+
+  // Access card for attendance
+  accessCards StaffAccessCard[]
+
+  // Auth relationship
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id])
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  staffPhoneNumbers StaffPhoneNumber[]
+
+  @@unique([schoolId, emailAddress]) // Unique email per school
+  @@unique([schoolId, employeeId]) // Unique employee ID per school
+  @@index([schoolId])
+  @@index([departmentId])
+  @@map("staff_members")
+}
+
+// Staff Phone Numbers (for multiple contact numbers)
+model StaffPhoneNumber {
+  id            String  @id @default(cuid())
+  schoolId      String
+  staffMemberId String
+  phoneNumber   String
+  phoneType     String  @default("mobile") // mobile, home, work, emergency
+  isPrimary     Boolean @default(false)
+
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  staffMember StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, staffMemberId, phoneNumber])
+  @@map("staff_phone_numbers")
+}
+
+// Staff Qualifications (Degrees, Certifications)
+model StaffQualification {
+  id                String    @id @default(cuid())
+  schoolId          String
+  staffMemberId     String
+  qualificationType String // DEGREE, CERTIFICATION, LICENSE
+  name              String
+  institution       String?
+  major             String?
+  dateObtained      DateTime
+  expiryDate        DateTime?
+  documentUrl       String?
+
+  staffMember StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, staffMemberId, qualificationType, name])
+  @@index([schoolId, staffMemberId])
+  @@map("staff_qualifications")
+}
+
+// Staff Experience Records
+model StaffExperience {
+  id            String    @id @default(cuid())
+  schoolId      String
+  staffMemberId String
+  organization  String
+  position      String
+  startDate     DateTime
+  endDate       DateTime?
+  isCurrent     Boolean   @default(false)
+  description   String?   @db.Text
+
+  staffMember StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, staffMemberId])
+  @@map("staff_experiences")
+}
+
+// Staff Salary Structure
+model StaffSalaryStructure {
+  id            String    @id @default(cuid())
+  schoolId      String
+  staffMemberId String
+  baseSalary    Decimal   @db.Decimal(10, 2)
+  currency      String    @default("SAR")
+  payFrequency  String    @default("MONTHLY") // MONTHLY, BIWEEKLY, WEEKLY
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  allowances    Json?
+  deductions    Json?
+
+  staffMember StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, staffMemberId])
+  @@map("staff_salary_structures")
+}
+
+// Staff Salary Slip
+model StaffSalarySlip {
+  id            String    @id @default(cuid())
+  schoolId      String
+  staffMemberId String
+  payPeriod     String // e.g., "2024-01"
+  grossSalary   Decimal   @db.Decimal(10, 2)
+  netSalary     Decimal   @db.Decimal(10, 2)
+  allowances    Json?
+  deductions    Json?
+  paymentDate   DateTime?
+  paymentMethod String?
+  status        String    @default("PENDING") // PENDING, PAID, CANCELLED
+
+  staffMember StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, staffMemberId, payPeriod])
+  @@index([schoolId, staffMemberId])
+  @@map("staff_salary_slips")
+}
+
+// Staff Timesheet Entry
+model StaffTimesheetEntry {
+  id            String    @id @default(cuid())
+  schoolId      String
+  staffMemberId String
+  date          DateTime
+  checkIn       DateTime?
+  checkOut      DateTime?
+  hoursWorked   Decimal?  @db.Decimal(4, 2)
+  overtimeHours Decimal?  @db.Decimal(4, 2)
+  status        String    @default("PRESENT") // PRESENT, ABSENT, LATE, HALF_DAY, LEAVE
+  notes         String?
+
+  staffMember StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, staffMemberId, date])
+  @@index([schoolId, staffMemberId])
+  @@map("staff_timesheet_entries")
+}
+
+// Staff Access Card
+model StaffAccessCard {
+  id            String    @id @default(cuid())
+  schoolId      String
+  staffMemberId String
+  cardNumber    String
+  isActive      Boolean   @default(true)
+  issuedAt      DateTime  @default(now())
+  expiresAt     DateTime?
+
+  staffMember StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, cardNumber])
+  @@index([schoolId, staffMemberId])
+  @@map("staff_access_cards")
+}

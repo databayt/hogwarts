@@ -114,7 +114,7 @@ model Application {
   paymentDate        DateTime?
 
   // Public Status Tracker Access
-  accessToken       String?   @unique  // For status tracker without login
+  accessToken       String?   @unique // For status tracker without login
   accessTokenExpiry DateTime?
 
   createdAt DateTime @default(now())
@@ -201,37 +201,37 @@ enum Gender {
 
 // Lead capture - Inquiry form for interested families
 model AdmissionInquiry {
-  id              String        @id @default(cuid())
-  schoolId        String
+  id       String @id @default(cuid())
+  schoolId String
 
   // Contact Information
-  parentName      String
-  email           String
-  phone           String?
+  parentName String
+  email      String
+  phone      String?
 
   // Inquiry Details
   studentName     String?
   studentDOB      DateTime?
   interestedGrade String?
-  source          String?       // website, social, referral, advertisement
-  message         String?       @db.Text
+  source          String? // website, social, referral, advertisement
+  message         String?   @db.Text
 
   // Status Tracking
-  status          InquiryStatus @default(NEW)
-  followUpDate    DateTime?
-  assignedTo      String?       // Staff member ID
-  notes           String?       @db.Text
+  status       InquiryStatus @default(NEW)
+  followUpDate DateTime?
+  assignedTo   String? // Staff member ID
+  notes        String?       @db.Text
 
   // Newsletter
-  subscribeNewsletter Boolean   @default(false)
+  subscribeNewsletter Boolean @default(false)
 
   // Conversion tracking
   convertedToApplicationId String?
 
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  school          School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
   @@index([status])
@@ -240,48 +240,48 @@ model AdmissionInquiry {
 
 // Tour/Interview Time Slots Configuration
 model AdmissionTimeSlot {
-  id              String    @id @default(cuid())
-  schoolId        String
-  campaignId      String?   // Optional: can be campaign-specific or school-wide
+  id         String  @id @default(cuid())
+  schoolId   String
+  campaignId String? // Optional: can be campaign-specific or school-wide
 
   // Slot Details
-  slotType        SlotType  // TOUR, INTERVIEW, ORIENTATION, OPEN_HOUSE
-  date            DateTime  @db.Date
-  startTime       DateTime  @db.Time
-  endTime         DateTime  @db.Time
+  slotType  SlotType // TOUR, INTERVIEW, ORIENTATION, OPEN_HOUSE
+  date      DateTime @db.Date
+  startTime DateTime @db.Time
+  endTime   DateTime @db.Time
 
   // Capacity
-  maxCapacity     Int       @default(10)
-  currentBookings Int       @default(0)
+  maxCapacity     Int @default(10)
+  currentBookings Int @default(0)
 
   // Configuration
-  isActive        Boolean   @default(true)
-  location        String?   // Room, building, or virtual link
-  conductedBy     String?   // Staff member ID
-  notes           String?   @db.Text
+  isActive    Boolean @default(true)
+  location    String? // Room, building, or virtual link
+  conductedBy String? // Staff member ID
+  notes       String? @db.Text
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  school          School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  campaign        AdmissionCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  bookings        TourBooking[]
+  school   School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  campaign AdmissionCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  bookings TourBooking[]
 
+  @@unique([schoolId, date, startTime, slotType])
   @@index([schoolId])
   @@index([campaignId])
   @@index([date, slotType])
-  @@unique([schoolId, date, startTime, slotType])
 }
 
 // Tour/Interview Bookings
 model TourBooking {
-  id              String        @id @default(cuid())
-  schoolId        String
-  slotId          String
-  applicationId   String?       // Optional: can book before applying
+  id            String  @id @default(cuid())
+  schoolId      String
+  slotId        String
+  applicationId String? // Optional: can book before applying
 
   // Booking Reference
-  bookingNumber   String        @unique
+  bookingNumber String @unique
 
   // Contact Information (for guests without application)
   parentName      String
@@ -291,28 +291,28 @@ model TourBooking {
   interestedGrade String?
 
   // Booking Status
-  status          BookingStatus @default(CONFIRMED)
-  attendedAt      DateTime?
-  noShowReason    String?
+  status       BookingStatus @default(CONFIRMED)
+  attendedAt   DateTime?
+  noShowReason String?
 
   // Additional info
-  specialRequests String?       @db.Text
-  numberOfAttendees Int         @default(1)
+  specialRequests   String? @db.Text
+  numberOfAttendees Int     @default(1)
 
   // Reminders
-  reminderSent    Boolean       @default(false)
-  reminderSentAt  DateTime?
+  reminderSent   Boolean   @default(false)
+  reminderSentAt DateTime?
 
   // Cancellation
-  cancelledAt     DateTime?
-  cancelReason    String?
+  cancelledAt  DateTime?
+  cancelReason String?
 
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  school          School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  slot            AdmissionTimeSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
-  application     Application?      @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  school      School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  slot        AdmissionTimeSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  application Application?      @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
   @@index([schoolId])
   @@index([slotId])
@@ -323,31 +323,31 @@ model TourBooking {
 
 // Application Sessions (for save/resume functionality without login)
 model ApplicationSession {
-  id              String   @id @default(cuid())
-  schoolId        String
-  campaignId      String?
+  id         String  @id @default(cuid())
+  schoolId   String
+  campaignId String?
 
   // Session Token (secure random for resume)
-  sessionToken    String   @unique
+  sessionToken String @unique
 
   // Partial application data
-  formData        Json
-  currentStep     Int      @default(1)
+  formData    Json
+  currentStep Int  @default(1)
 
   // Contact for resume link
-  email           String
+  email String
 
   // Expiry (7 days default)
-  expiresAt       DateTime
+  expiresAt DateTime
 
   // Conversion tracking
   convertedToApplicationId String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  school          School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  campaign        AdmissionCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  school   School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  campaign AdmissionCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
 
   @@index([schoolId])
   @@index([sessionToken])
@@ -357,70 +357,70 @@ model ApplicationSession {
 
 // School-level Admission Settings
 model AdmissionSettings {
-  id                      String   @id @default(cuid())
-  schoolId                String   @unique
+  id       String @id @default(cuid())
+  schoolId String @unique
 
   // General Settings
-  allowMultipleApplications Boolean @default(false)
-  requireDocuments          Boolean @default(true)
+  allowMultipleApplications Boolean  @default(false)
+  requireDocuments          Boolean  @default(true)
   defaultApplicationFee     Decimal? @db.Decimal(10, 2)
   offerExpiryDays           Int      @default(14)
 
   // Public Portal Settings
-  enablePublicPortal        Boolean @default(true)
-  enableInquiryForm         Boolean @default(true)
-  enableTourBooking         Boolean @default(true)
-  enableStatusTracker       Boolean @default(true)
+  enablePublicPortal  Boolean @default(true)
+  enableInquiryForm   Boolean @default(true)
+  enableTourBooking   Boolean @default(true)
+  enableStatusTracker Boolean @default(true)
 
   // Notification Settings
-  autoEmailNotifications    Boolean @default(true)
-  smsNotifications          Boolean @default(false)
+  autoEmailNotifications Boolean @default(true)
+  smsNotifications       Boolean @default(false)
 
   // Payment Settings
-  enableOnlinePayment       Boolean @default(false)
-  stripeAccountId           String?
-  paymentMethods            Json?   // Array of enabled payment methods
+  enableOnlinePayment Boolean @default(false)
+  stripeAccountId     String?
+  paymentMethods      Json? // Array of enabled payment methods
 
   // Merit Criteria Weights
-  academicWeight            Int     @default(40)
-  entranceWeight            Int     @default(35)
-  interviewWeight           Int     @default(25)
+  academicWeight  Int @default(40)
+  entranceWeight  Int @default(35)
+  interviewWeight Int @default(25)
 
   // Tour/Interview Settings
-  tourDuration              Int     @default(60)  // minutes
-  interviewDuration         Int     @default(30)  // minutes
-  maxToursPerDay            Int     @default(5)
-  tourDaysOfWeek            Json?   // Array of days [0-6] when tours are available
-  tourTimeSlots             Json?   // Default time slots
+  tourDuration      Int   @default(60) // minutes
+  interviewDuration Int   @default(30) // minutes
+  maxToursPerDay    Int   @default(5)
+  tourDaysOfWeek    Json? // Array of days [0-6] when tours are available
+  tourTimeSlots     Json? // Default time slots
 
   // Document Requirements
-  documentRequirements      Json?   // Array of required documents with descriptions
+  documentRequirements Json? // Array of required documents with descriptions
 
   // Grade Level Configuration
-  gradeMapping              Json?   // Map DOB ranges to grades
+  gradeMapping Json? // Map DOB ranges to grades
 
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  school                    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }
 
 // OTP Verification for Status Tracker
 model AdmissionOTP {
-  id              String   @id @default(cuid())
-  schoolId        String
-  email           String
+  id                String @id @default(cuid())
+  schoolId          String
+  email             String
   applicationNumber String
 
   // OTP Details
-  otp             String
-  expiresAt       DateTime
-  verified        Boolean  @default(false)
-  attempts        Int      @default(0)
+  otp       String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  school          School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
   @@index([email, applicationNumber])

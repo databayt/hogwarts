@@ -88,6 +88,14 @@ export type KnownModelName =
   | "templateApplication"
   | "questionBank"
   | "department"
+  | "staffMember"
+  | "staffPhoneNumber"
+  | "staffQualification"
+  | "staffExperience"
+  | "staffSalaryStructure"
+  | "staffSalarySlip"
+  | "staffTimesheetEntry"
+  | "staffAccessCard"
 
 /**
  * Type-safe model accessor

@@ -56,9 +56,9 @@ model Attendance {
   timetableId String? // Links to specific timetable slot
   periodName  String? // Cached period name for quick display (e.g., "Period 1", "الحصة الأولى")
 
-  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  school  School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class             @relation(fields: [classId], references: [id], onDelete: Cascade)
   excuse  AttendanceExcuse? // Optional excuse submission
 
   createdAt DateTime @default(now())
@@ -143,29 +143,29 @@ enum ExcuseStatus {
 
 // Intervention types for chronic absenteeism management
 enum InterventionType {
-  PARENT_PHONE_CALL       // Initial phone call to parent
-  PARENT_EMAIL            // Email communication
-  PARENT_MEETING          // In-person or virtual meeting
-  HOME_VISIT              // Home visit by school staff
-  COUNSELOR_REFERRAL      // Referral to school counselor
-  SOCIAL_WORKER_REFERRAL  // Referral to social worker
-  ADMINISTRATOR_MEETING   // Meeting with principal/VP
-  ATTENDANCE_CONTRACT     // Written agreement with family
-  TRUANCY_REFERRAL        // Referral to truancy officer
-  COMMUNITY_RESOURCE      // Connection to community services
-  ACADEMIC_SUPPORT        // Academic intervention/tutoring
-  MENTORSHIP_ASSIGNMENT   // Assign mentor/buddy
-  INCENTIVE_PROGRAM       // Positive incentive enrollment
-  OTHER                   // Other intervention type
+  PARENT_PHONE_CALL // Initial phone call to parent
+  PARENT_EMAIL // Email communication
+  PARENT_MEETING // In-person or virtual meeting
+  HOME_VISIT // Home visit by school staff
+  COUNSELOR_REFERRAL // Referral to school counselor
+  SOCIAL_WORKER_REFERRAL // Referral to social worker
+  ADMINISTRATOR_MEETING // Meeting with principal/VP
+  ATTENDANCE_CONTRACT // Written agreement with family
+  TRUANCY_REFERRAL // Referral to truancy officer
+  COMMUNITY_RESOURCE // Connection to community services
+  ACADEMIC_SUPPORT // Academic intervention/tutoring
+  MENTORSHIP_ASSIGNMENT // Assign mentor/buddy
+  INCENTIVE_PROGRAM // Positive incentive enrollment
+  OTHER // Other intervention type
 }
 
 // Intervention outcome status
 enum InterventionStatus {
-  SCHEDULED    // Intervention is scheduled
-  IN_PROGRESS  // Currently ongoing
-  COMPLETED    // Successfully completed
-  CANCELLED    // Intervention was cancelled
-  ESCALATED    // Escalated to higher level
+  SCHEDULED // Intervention is scheduled
+  IN_PROGRESS // Currently ongoing
+  COMPLETED // Successfully completed
+  CANCELLED // Intervention was cancelled
+  ESCALATED // Escalated to higher level
 }
 
 // Excuse reason categories
@@ -186,13 +186,13 @@ model AttendanceExcuse {
   attendanceId String       @unique // One excuse per attendance record
   reason       ExcuseReason
   description  String?      @db.Text
-  attachments  String[]     // File URLs (medical notes, etc.)
+  attachments  String[] // File URLs (medical notes, etc.)
   status       ExcuseStatus @default(PENDING)
-  submittedBy  String       // Guardian's user ID
+  submittedBy  String // Guardian's user ID
   submittedAt  DateTime     @default(now())
-  reviewedBy   String?      // Teacher/Admin who reviewed
+  reviewedBy   String? // Teacher/Admin who reviewed
   reviewedAt   DateTime?
-  reviewNotes  String?      // Reason for approval/rejection
+  reviewNotes  String? // Reason for approval/rejection
 
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   attendance Attendance @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
@@ -212,27 +212,27 @@ model AttendanceIntervention {
   schoolId       String
   studentId      String
   type           InterventionType
-  title          String             // Brief title/summary
+  title          String // Brief title/summary
   description    String             @db.Text // Detailed description of the intervention
   outcome        String?            @db.Text // Results/notes after completion
   status         InterventionStatus @default(SCHEDULED)
   priority       Int                @default(1) // 1=low, 2=medium, 3=high, 4=critical
-  scheduledDate  DateTime?          // When intervention is scheduled
-  completedDate  DateTime?          // When intervention was completed
-  followUpDate   DateTime?          // When to follow up
-  initiatedBy    String             // User ID who created/initiated
-  assignedTo     String?            // User ID assigned to handle (counselor, etc.)
+  scheduledDate  DateTime? // When intervention is scheduled
+  completedDate  DateTime? // When intervention was completed
+  followUpDate   DateTime? // When to follow up
+  initiatedBy    String // User ID who created/initiated
+  assignedTo     String? // User ID assigned to handle (counselor, etc.)
   parentNotified Boolean            @default(false)
-  escalatedFrom  String?            // ID of previous intervention if escalated
+  escalatedFrom  String? // ID of previous intervention if escalated
 
   // Metadata
-  contactMethod  String?            // How parent was contacted (phone, email, etc.)
-  contactResult  String?            // Result of contact attempt
-  documentsUrls  String[]           // Supporting documents
-  tags           String[]           // Custom tags for filtering
+  contactMethod String? // How parent was contacted (phone, email, etc.)
+  contactResult String? // Result of contact attempt
+  documentsUrls String[] // Supporting documents
+  tags          String[] // Custom tags for filtering
 
-  school   School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student  Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -246,4 +246,3 @@ model AttendanceIntervention {
   @@index([schoolId, studentId])
   @@map("attendance_interventions")
 }
-

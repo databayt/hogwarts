@@ -28,7 +28,7 @@ model UserActivity {
   activityType UserActivityType
   title        String
   description  String?
-  metadata     Json?            // Additional data (score, grade, etc.)
+  metadata     Json? // Additional data (score, grade, etc.)
   createdAt    DateTime         @default(now())
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -49,7 +49,7 @@ enum PinnedItemType {
   ACHIEVEMENT
   CERTIFICATE
   CLASS
-  CHILD         // For parents
+  CHILD // For parents
   DEPARTMENT
   PUBLICATION
   TASK
@@ -61,10 +61,10 @@ model PinnedItem {
   schoolId    String
   userId      String
   itemType    PinnedItemType
-  itemId      String         // Reference to the actual item
+  itemId      String // Reference to the actual item
   title       String
   description String?
-  metadata    Json?          // Language, stats, icon, etc.
+  metadata    Json? // Language, stats, icon, etc.
   order       Int            @default(0)
   isPublic    Boolean        @default(true)
   createdAt   DateTime       @default(now())

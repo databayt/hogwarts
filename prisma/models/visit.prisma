@@ -5,8 +5,8 @@ model Visit {
   id          String      @id @default(cuid())
   schoolId    String
   date        DateTime
-  startTime   String      // "09:00"
-  endTime     String      // "10:00"
+  startTime   String // "09:00"
+  endTime     String // "10:00"
   visitorName String
   email       String
   phone       String?
@@ -17,7 +17,7 @@ model Visit {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
   @@index([date])

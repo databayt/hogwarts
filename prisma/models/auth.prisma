@@ -20,13 +20,13 @@ model User {
   role          UserRole  @default(USER)
 
   // GitHub-style profile fields
-  bio           String?   @db.Text  // User bio/README
-  website       String?             // Personal website
-  timezone      String?             // User timezone
-  statusEmoji   String?             // Status emoji (like GitHub)
-  statusMessage String?             // Status message
-  pronouns      String?             // Pronouns
-  socialLinks   Json?               // JSON object for social links
+  bio           String? @db.Text // User bio/README
+  website       String? // Personal website
+  timezone      String? // User timezone
+  statusEmoji   String? // Status emoji (like GitHub)
+  statusMessage String? // Status message
+  pronouns      String? // Pronouns
+  socialLinks   Json? // JSON object for social links
 
   // Multi-tenant fields
   schoolId String? // null for DEVELOPER
@@ -37,9 +37,10 @@ model User {
   twoFactorConfirmation TwoFactorConfirmation?
 
   // School relationships
-  student  Student?
-  teacher  Teacher?
-  guardian Guardian?
+  student     Student?
+  teacher     Teacher?
+  guardian    Guardian?
+  staffMember StaffMember?
 
   // Stripe subscription fields (user-scoped for compatibility with pricing UI)
   stripeSubscriptionId   String?

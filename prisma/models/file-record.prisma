@@ -2,44 +2,44 @@
 // Stores metadata for all uploaded files across the platform
 
 model FileRecord {
-  id              String   @id @default(cuid())
-  filename        String   // Generated filename (with timestamp)
-  originalName    String   // Original filename from upload
-  size            Int      // File size in bytes
-  mimeType        String   // MIME type (e.g., "application/pdf")
-  category        String   // FileCategory: image, video, document, audio, archive, other
-  type            String?  // FileType: avatar, logo, pdf, invoice, etc.
-  url             String   // Public URL to access the file
-  pathname        String?  // Storage path (provider-specific)
+  id           String  @id @default(cuid())
+  filename     String // Generated filename (with timestamp)
+  originalName String // Original filename from upload
+  size         Int // File size in bytes
+  mimeType     String // MIME type (e.g., "application/pdf")
+  category     String // FileCategory: image, video, document, audio, archive, other
+  type         String? // FileType: avatar, logo, pdf, invoice, etc.
+  url          String // Public URL to access the file
+  pathname     String? // Storage path (provider-specific)
 
   // Dimensions (for images/videos)
-  width           Int?
-  height          Int?
-  duration        Int?     // Duration in seconds (for video/audio)
+  width    Int?
+  height   Int?
+  duration Int? // Duration in seconds (for video/audio)
 
   // Timestamps
-  uploadedAt      DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  lastAccessedAt  DateTime?
+  uploadedAt     DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastAccessedAt DateTime?
 
   // Relationships
-  uploadedBy      String   // User ID who uploaded
-  schoolId        String   // Multi-tenant isolation
-  folder          String   // Storage folder path
+  uploadedBy String // User ID who uploaded
+  schoolId   String // Multi-tenant isolation
+  folder     String // Storage folder path
 
   // Storage details
-  storageProvider String   // vercel_blob, aws_s3, cloudflare_r2, imagekit
-  storageTier     String   @default("hot") // hot, warm, cold
+  storageProvider String // vercel_blob, aws_s3, cloudflare_r2, imagekit
+  storageTier     String @default("hot") // hot, warm, cold
 
   // Usage tracking
-  accessCount     Int      @default(0)
+  accessCount Int @default(0)
 
   // Additional metadata (JSON)
-  metadata        Json?
+  metadata Json?
 
   // Relations
-  school          School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user            User     @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
 
   // Indexes for efficient queries
   @@index([schoolId])
@@ -49,6 +49,5 @@ model FileRecord {
   @@index([uploadedBy])
   @@index([storageProvider])
   @@index([uploadedAt])
-
   @@map("file_records")
 }

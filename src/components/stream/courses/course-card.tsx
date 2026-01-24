@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Star } from "lucide-react"
 
 import { Skeleton } from "@/components/ui/skeleton"
-import { getSubjectImage } from "@/components/platform/subjects/image-map"
+import { getSubjectImage } from "@/components/platform/listings/subjects/image-map"
 import { PublicCourseType } from "@/components/stream/data/course/get-all-courses"
 
 // Default provider logos for categories

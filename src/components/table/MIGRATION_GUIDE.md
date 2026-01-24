@@ -180,8 +180,8 @@ export function StudentsTable({ initialData, totalCount }) {
 
 ```tsx
 // src/app/[lang]/s/[subdomain]/(platform)/students/page.tsx
-import { fetchStudents } from "@/components/platform/students/actions"
-import { StudentsTable } from "@/components/platform/students/table"
+import { fetchStudents } from "@/components/platform/listings/students/actions"
+import { StudentsTable } from "@/components/platform/listings/students/table"
 
 export default async function StudentsPage() {
   // Fetch initial batch

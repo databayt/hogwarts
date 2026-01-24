@@ -57,12 +57,12 @@ model TeacherConstraint {
   termId    String? // null = applies to all terms
 
   // Time constraints
-  maxPeriodsPerDay      Int     @default(6)
-  maxPeriodsPerWeek     Int     @default(25)
-  minFreePeriods        Int     @default(1) // Per day
+  maxPeriodsPerDay      Int  @default(6)
+  maxPeriodsPerWeek     Int  @default(25)
+  minFreePeriods        Int  @default(1) // Per day
   preferredStartPeriod  Int? // 1-indexed period number
   preferredEndPeriod    Int?
-  maxConsecutivePeriods Int     @default(3)
+  maxConsecutivePeriods Int  @default(3)
 
   // Day preferences (JSON: {dayOfWeek: "preferred" | "neutral" | "avoid" | "unavailable"})
   dayPreferences Json @default("{}")
@@ -95,13 +95,13 @@ model TeacherConstraint {
 
 // Specific time blocks when teacher is unavailable
 model TeacherUnavailableBlock {
-  id                  String  @id @default(cuid())
+  id                  String    @id @default(cuid())
   schoolId            String
   teacherConstraintId String
   dayOfWeek           Int // 0-6
   periodId            String
   reason              String?
-  isRecurring         Boolean  @default(true)
+  isRecurring         Boolean   @default(true)
   specificDate        DateTime?
 
   // Relations

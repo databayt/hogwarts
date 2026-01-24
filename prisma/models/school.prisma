@@ -1,17 +1,17 @@
 // School and School Structure Models
 
 model School {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
-  domain      String  @unique // e.g., "hogwarts" for hogwarts.schoolapp.com
+  domain      String   @unique // e.g., "hogwarts" for hogwarts.schoolapp.com
   logoUrl     String?
   address     String?
-  latitude    Decimal?  @db.Decimal(10, 8)
-  longitude   Decimal?  @db.Decimal(11, 8)
+  latitude    Decimal? @db.Decimal(10, 8)
+  longitude   Decimal? @db.Decimal(11, 8)
   phoneNumber String?
   email       String?
   website     String?
-  timezone    String  @default("Africa/Khartoum")
+  timezone    String   @default("Africa/Khartoum")
   // locale      String  @default("ar") // TODO: Add migration for this field
 
   // Subscription/billing info (high-level; detailed state in Subscription)
@@ -30,49 +30,58 @@ model School {
   // safetyFeatures        String[] @default([])
 
   // School relationships
-  users                   User[]
-  schoolYears             SchoolYear[]
-  periods                 Period[]
-  terms                   Term[]
-  departments             Department[]
-  yearLevels              YearLevel[]
-  students                Student[]
-  teachers                Teacher[]
-  teacherQualifications   TeacherQualification[]
-  teacherExperiences      TeacherExperience[]
-  teacherSubjectExpertise TeacherSubjectExpertise[]
-  workloadConfigs         WorkloadConfig[]
-  guardians               Guardian[]
-  classrooms              Classroom[]
-  classroomTypes          ClassroomType[]
-  teacherDepartments      TeacherDepartment[]
-  teacherPhoneNumbers     TeacherPhoneNumber[]
-  guardianTypes           GuardianType[]
-  studentGuardians        StudentGuardian[]
-  guardianPhoneNumbers    GuardianPhoneNumber[]
-  studentYearLevels       StudentYearLevel[]
-  subjects                Subject[]
-  classes                 Class[]
-  studentClasses          StudentClass[]
-  classTeachers           ClassTeacher[]
-  scoreRanges             ScoreRange[]
-  assignments             Assignment[]
-  assignmentSubmissions   AssignmentSubmission[]
-  attendances             Attendance[]
-  announcements           Announcement[]
-  announcementTemplates   AnnouncementTemplate[]
-  announcementConfig      AnnouncementConfig?
-  domainRequests          DomainRequest[]
-  subscriptions           Subscription[]
-  invoices                Invoice[]
+  users                    User[]
+  schoolYears              SchoolYear[]
+  periods                  Period[]
+  terms                    Term[]
+  departments              Department[]
+  yearLevels               YearLevel[]
+  students                 Student[]
+  teachers                 Teacher[]
+  teacherQualifications    TeacherQualification[]
+  teacherExperiences       TeacherExperience[]
+  teacherSubjectExpertise  TeacherSubjectExpertise[]
+  workloadConfigs          WorkloadConfig[]
+  guardians                Guardian[]
+  // Staff (non-teaching employees) relations
+  staffMembers             StaffMember[]
+  staffPhoneNumbers        StaffPhoneNumber[]
+  staffQualifications      StaffQualification[]
+  staffExperiences         StaffExperience[]
+  staffSalaryStructures    StaffSalaryStructure[]
+  staffSalarySlips         StaffSalarySlip[]
+  staffTimesheetEntries    StaffTimesheetEntry[]
+  staffAccessCards         StaffAccessCard[]
+  classrooms               Classroom[]
+  classroomTypes           ClassroomType[]
+  teacherDepartments       TeacherDepartment[]
+  teacherPhoneNumbers      TeacherPhoneNumber[]
+  guardianTypes            GuardianType[]
+  studentGuardians         StudentGuardian[]
+  guardianPhoneNumbers     GuardianPhoneNumber[]
+  studentYearLevels        StudentYearLevel[]
+  subjects                 Subject[]
+  classes                  Class[]
+  studentClasses           StudentClass[]
+  classTeachers            ClassTeacher[]
+  scoreRanges              ScoreRange[]
+  assignments              Assignment[]
+  assignmentSubmissions    AssignmentSubmission[]
+  attendances              Attendance[]
+  announcements            Announcement[]
+  announcementTemplates    AnnouncementTemplate[]
+  announcementConfig       AnnouncementConfig?
+  domainRequests           DomainRequest[]
+  subscriptions            Subscription[]
+  invoices                 Invoice[]
   // Standalone invoice block relations
-  userInvoices            UserInvoice[]
-  userInvoiceItems        UserInvoiceItem[]
-  userInvoiceAddresses    UserInvoiceAddress[]
-  userInvoiceSettings     UserInvoiceSettings[]
-  userInvoiceSignatures   UserInvoiceSignature[]
-  timetables              Timetable[]
-  schoolWeekConfigs       SchoolWeekConfig[]
+  userInvoices             UserInvoice[]
+  userInvoiceItems         UserInvoiceItem[]
+  userInvoiceAddresses     UserInvoiceAddress[]
+  userInvoiceSettings      UserInvoiceSettings[]
+  userInvoiceSignatures    UserInvoiceSignature[]
+  timetables               Timetable[]
+  schoolWeekConfigs        SchoolWeekConfig[]
   // Timetable optimization relations
   teacherConstraints       TeacherConstraint[]
   teacherUnavailableBlocks TeacherUnavailableBlock[]
@@ -81,25 +90,25 @@ model School {
   templateApplications     TemplateApplication[]
   scheduleExceptions       ScheduleException[]
   // Legal relations
-  legalConsents           LegalConsent[]
-  legalDocuments          LegalDocument[]
-  complianceLogs          ComplianceLog[]
+  legalConsents            LegalConsent[]
+  legalDocuments           LegalDocument[]
+  complianceLogs           ComplianceLog[]
   // Subscription relations
-  discounts               Discount[]
-  appliedDiscounts        AppliedDiscount[]
+  discounts                Discount[]
+  appliedDiscounts         AppliedDiscount[]
   // Branding and visibility
-  branding                SchoolBranding?
+  branding                 SchoolBranding?
   // Events relations
-  events                  Event[]
+  events                   Event[]
 
   // Examination relations
-  exams                   Exam[]
-  examResults             ExamResult[]
-  gradeBoundaries         GradeBoundary[]
+  exams            Exam[]
+  examResults      ExamResult[]
+  gradeBoundaries  GradeBoundary[]
   // Gradebook relations
-  results                 Result[]
-  reportCards             ReportCard[]
-  reportCardGrades        ReportCardGrade[]
+  results          Result[]
+  reportCards      ReportCard[]
+  reportCardGrades ReportCardGrade[]
 
   // Stream (LMS) relations
   streamCourses      StreamCourse[]
@@ -168,18 +177,18 @@ model School {
   billingPreferences BillingPreferences?
 
   // Enhanced Attendance relations
-  studentIdentifiers  StudentIdentifier[]
-  attendanceDevices   AttendanceDevice[]
-  attendanceSessions  AttendanceSession[]
-  attendanceEvents    AttendanceEvent[]
-  attendanceExcuses   AttendanceExcuse[]
-  qrCodeSessions      QRCodeSession[]
-  biometricTemplates BiometricTemplate[]
-  accessCards        AccessCard[]
-  bluetoothBeacons   BluetoothBeacon[]
-  attendancePolicies       AttendancePolicy[]
-  attendanceReports        AttendanceReport[]
-  attendanceInterventions  AttendanceIntervention[]
+  studentIdentifiers      StudentIdentifier[]
+  attendanceDevices       AttendanceDevice[]
+  attendanceSessions      AttendanceSession[]
+  attendanceEvents        AttendanceEvent[]
+  attendanceExcuses       AttendanceExcuse[]
+  qrCodeSessions          QRCodeSession[]
+  biometricTemplates      BiometricTemplate[]
+  accessCards             AccessCard[]
+  bluetoothBeacons        BluetoothBeacon[]
+  attendancePolicies      AttendancePolicy[]
+  attendanceReports       AttendanceReport[]
+  attendanceInterventions AttendanceIntervention[]
 
   // Quiz relations
   quizGames         QuizGame[]
@@ -241,11 +250,11 @@ model School {
   pinnedItems    PinnedItem[]
 
   // Exam Paper & Certificate relations
-  examPaperConfigs      ExamPaperConfig[]
-  generatedPapers       GeneratedPaper[]
-  examAnswerKeys        ExamAnswerKey[]
+  examPaperConfigs       ExamPaperConfig[]
+  generatedPapers        GeneratedPaper[]
+  examAnswerKeys         ExamAnswerKey[]
   examCertificateConfigs ExamCertificateConfig[]
-  examCertificates      ExamCertificate[]
+  examCertificates       ExamCertificate[]
 
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
@@ -363,7 +372,7 @@ model Term {
   // Timetable optimization relations
   teacherConstraints   TeacherConstraint[]
   roomConstraints      RoomConstraint[]
-  timetableTemplates   TimetableTemplate[] @relation("TemplateSourceTerm")
+  timetableTemplates   TimetableTemplate[]   @relation("TemplateSourceTerm")
   templateApplications TemplateApplication[]
   scheduleExceptions   ScheduleException[]
 
