@@ -98,9 +98,9 @@ export default function FAQs({ dictionary, lang }: FAQsProps) {
             </ul>
           </div>
           <div className="pt-6">
-            <Accordion type="single" collapsible defaultValue="item-1">
+            <Accordion type="single" collapsible defaultValue="item-0">
               {items.map((item, index) => (
-                <AccordionItem key={index} value={`item-${index + 1}`}>
+                <AccordionItem key={index} value={`item-${index}`}>
                   <AccordionTrigger className="text-start">
                     {item.question}
                   </AccordionTrigger>

@@ -47,6 +47,8 @@ interface MobileNavProps {
   currentPath?: string
   role?: Role
   subdomain?: string
+  // Marketing mode - show basic actions without platform toolbar
+  showMarketingActions?: boolean
 }
 
 export function MobileNav({
@@ -62,6 +64,7 @@ export function MobileNav({
   currentPath,
   role,
   subdomain,
+  showMarketingActions,
 }: MobileNavProps) {
   const [open, setOpen] = React.useState(false)
   const pathname = usePathname()
@@ -212,6 +215,17 @@ export function MobileNav({
                     {item.title}
                   </MobileLink>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Marketing Actions (language, theme, sign in) */}
+          {showMarketingActions && (
+            <div className="flex flex-col gap-4 border-t pt-4">
+              <div className="flex items-center gap-2">
+                <LanguageSwitcher variant="toggle" />
+                <ModeSwitcher />
+                <UserButton variant="marketing" />
               </div>
             </div>
           )}

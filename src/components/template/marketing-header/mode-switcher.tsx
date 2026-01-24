@@ -3,9 +3,14 @@
 import * as React from "react"
 import { useTheme } from "next-themes"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-export function ModeSwitcher() {
+interface ModeSwitcherProps {
+  className?: string
+}
+
+export function ModeSwitcher({ className }: ModeSwitcherProps) {
   const { setTheme, resolvedTheme } = useTheme()
 
   const toggleTheme = React.useCallback(() => {

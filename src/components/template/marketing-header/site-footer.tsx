@@ -23,16 +23,7 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
     >
       <div className="py-4">
         <p className="text-muted-foreground text-center text-sm leading-loose text-balance md:text-left rtl:md:text-right">
-          {footerDict.inspiredBy}{" "}
-          <a
-            href="https://ui.shadcn.com"
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium underline underline-offset-4"
-          >
-            Shadcn
-          </a>
-          . {footerDict.builtBy}{" "}
+          Build by{" "}
           <a
             href={siteConfig.links.twitter}
             target="_blank"
@@ -41,7 +32,7 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
           >
             Databayt
           </a>
-          . {footerDict.sourceCode}{" "}
+          , source code available on{" "}
           <a
             href={siteConfig.links.github}
             target="_blank"
@@ -50,7 +41,6 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
           >
             GitHub
           </a>
-          .
         </p>
       </div>
     </footer>

@@ -3,9 +3,14 @@
 import { usePathname, useRouter } from "next/navigation"
 import { Languages } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-export function LangSwitcher() {
+interface LangSwitcherProps {
+  className?: string
+}
+
+export function LangSwitcher({ className }: LangSwitcherProps) {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -24,7 +29,10 @@ export function LangSwitcher() {
     <Button
       variant="ghost"
       size="icon"
-      className="size-8 cursor-pointer transition-opacity hover:opacity-70"
+      className={cn(
+        "size-8 cursor-pointer transition-opacity hover:opacity-70",
+        className
+      )}
       onClick={switchLanguage}
     >
       <Languages className="size-4" />

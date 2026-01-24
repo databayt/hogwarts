@@ -55,7 +55,7 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
 
   return (
     <section id="hero" className="bg-background" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-6 py-8 md:gap-8 lg:flex-row lg:gap-16 lg:py-0">
+      <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-start justify-center gap-6 py-8 md:gap-8 lg:flex-row lg:items-center lg:gap-16 lg:py-0">
         {/* Illustration - shown first on mobile (column), second on desktop (row) */}
         <div className="flex items-center justify-center lg:order-2 lg:flex-1 lg:justify-end">
           <HeroIllustration />
@@ -63,7 +63,7 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
 
         {/* Content */}
         <div className="flex flex-col items-start space-y-6 text-start lg:order-1 lg:flex-1">
-          <h1 className="font-heading text-5xl font-black tracking-tight sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl">
+          <h1 className="font-heading text-6xl font-black tracking-tight md:text-7xl lg:text-7xl xl:text-8xl">
             {titleLines.map((line, index) => (
               <span key={index} className="block">
                 {line}

@@ -59,16 +59,18 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
           className="flex lg:hidden"
           dictionary={dictionary}
           locale={locale}
+          showMarketingActions
         />
         {/* Right: Actions */}
         <nav className="flex flex-1 items-center justify-end gap-0.5">
           <CommandMenu dictionary={dictionary} />
           <Separator orientation="vertical" className="ms-2 hidden lg:block" />
           <GitHubLink />
-          <Separator orientation="vertical" className="mx-1" />
-          <LangSwitcher />
-          <ModeSwitcher />
-          <UserButton variant="marketing" />
+          {/* Desktop: Show all actions */}
+          <Separator orientation="vertical" className="mx-1 hidden lg:block" />
+          <LangSwitcher className="hidden lg:flex" />
+          <ModeSwitcher className="hidden lg:flex" />
+          <UserButton variant="marketing" className="hidden lg:flex" />
         </nav>
       </div>
     </header>
