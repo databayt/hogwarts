@@ -14,241 +14,275 @@ interface ListingStructureProps {
 }
 
 export function ListingStructure({ className }: ListingStructureProps) {
-  const listingStructure: DirectoryNode = {
-    name: "Listing Feature Structure",
-    type: "directory",
-    description: "Replace 'abc' with your feature name",
-    children: [
-      {
-        name: "prisma/",
-        type: "directory",
-        description: "Database layer",
-        children: [
-          {
-            name: "models/abc.prisma",
-            type: "file",
-            description: "Model with schoolId scope",
-          },
-          {
-            name: "seeds/abc.ts",
-            type: "file",
-            description: "Test seed data",
-          },
-        ],
-      },
-      {
-        name: "src/",
-        type: "directory",
-        description: "Source code",
-        children: [
-          {
-            name: "app/[lang]/s/[subdomain]/(platform)/(listings)/abc/",
-            type: "directory",
-            description: "Route layer",
-            children: [
-              {
-                name: "page.tsx",
-                type: "file",
-                description: "Imports AbcContent",
-              },
-              {
-                name: "layout.tsx",
-                type: "file",
-                description: "Feature layout",
-              },
-              {
-                name: "loading.tsx",
-                type: "file",
-                description: "Loading skeleton",
-              },
-              {
-                name: "error.tsx",
-                type: "file",
-                description: "Error boundary",
-              },
-              {
-                name: "[id]/page.tsx",
-                type: "file",
-                description: "Detail view",
-              },
-            ],
-          },
-          {
-            name: "components/",
-            type: "directory",
-            description: "Component layer",
-            children: [
-              {
-                name: "atom/",
-                type: "directory",
-                description: "Reusable UI atoms",
-                children: [
-                  {
-                    name: "page-title.tsx",
-                    type: "file",
-                    description: "Page title display",
-                  },
-                  {
-                    name: "page-nav.tsx",
-                    type: "file",
-                    description: "Sub-navigation tabs",
-                  },
-                  {
-                    name: "toolbar.tsx",
-                    type: "file",
-                    description: "Action toolbar",
-                  },
-                  {
-                    name: "search-input.tsx",
-                    type: "file",
-                    description: "Debounced search",
-                  },
-                  {
-                    name: "view-toggle.tsx",
-                    type: "file",
-                    description: "Grid/Table toggle",
-                  },
-                  {
-                    name: "grid-container.tsx",
-                    type: "file",
-                    description: "Responsive grid",
-                  },
-                  {
-                    name: "empty-state.tsx",
-                    type: "file",
-                    description: "Empty state display",
-                  },
-                  {
-                    name: "modal/",
-                    type: "directory",
-                    description: "Modal system",
-                    children: [
-                      {
-                        name: "context.tsx",
-                        type: "file",
-                        description: "Modal state (useModal)",
-                      },
-                      {
-                        name: "modal.tsx",
-                        type: "file",
-                        description: "Modal wrapper",
-                      },
-                      {
-                        name: "modal-form-layout.tsx",
-                        type: "file",
-                        description: "Two-column layout",
-                      },
-                      {
-                        name: "modal-footer.tsx",
-                        type: "file",
-                        description: "Progress + navigation",
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                name: "table/",
-                type: "directory",
-                description: "Reusable table components",
-                children: [
-                  {
-                    name: "data-table.tsx",
-                    type: "file",
-                    description: "Main DataTable",
-                  },
-                  {
-                    name: "data-table-toolbar.tsx",
-                    type: "file",
-                    description: "Table toolbar",
-                  },
-                  {
-                    name: "data-table-column-header.tsx",
-                    type: "file",
-                    description: "Sortable header",
-                  },
-                  {
-                    name: "use-data-table.ts",
-                    type: "file",
-                    description: "Table state hook",
-                  },
-                ],
-              },
-              {
-                name: "platform/listings/abc/",
-                type: "directory",
-                description: "Feature logic (mirrors route)",
-                children: [
-                  {
-                    name: "content.tsx",
-                    type: "file",
-                    description: "Server: data fetching",
-                  },
-                  {
-                    name: "table.tsx",
-                    type: "file",
-                    description: "Client: interactive table",
-                  },
-                  {
-                    name: "columns.tsx",
-                    type: "file",
-                    description: "Column definitions",
-                  },
-                  {
-                    name: "form.tsx",
-                    type: "file",
-                    description: "Create/Edit form",
-                  },
-                  {
-                    name: "actions.ts",
-                    type: "file",
-                    description: "Server actions",
-                  },
-                  {
-                    name: "queries.ts",
-                    type: "file",
-                    description: "Query builders",
-                  },
-                  {
-                    name: "authorization.ts",
-                    type: "file",
-                    description: "RBAC checks",
-                  },
-                  {
-                    name: "validation.ts",
-                    type: "file",
-                    description: "Zod schemas",
-                  },
-                  {
-                    name: "types.ts",
-                    type: "file",
-                    description: "TypeScript types",
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            name: "hooks/",
-            type: "directory",
-            description: "Shared hooks",
-            children: [
-              {
-                name: "use-platform-data.ts",
-                type: "file",
-                description: "Optimistic updates + infinite scroll",
-              },
-              {
-                name: "use-platform-view.ts",
-                type: "file",
-                description: "View mode (URL-persisted)",
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  }
+  const listingStructure: DirectoryNode[] = [
+    {
+      name: "prisma/",
+      type: "directory",
+      description: "Database layer",
+      children: [
+        {
+          name: "models/abc.prisma",
+          type: "file",
+          description: "Model with schoolId scope",
+        },
+        {
+          name: "seeds/abc.ts",
+          type: "file",
+          description: "Test seed data",
+        },
+      ],
+    },
+    {
+      name: "src/",
+      type: "directory",
+      description: "Source code",
+      children: [
+        {
+          name: "app/[lang]/s/[subdomain]/(platform)/(listings)/",
+          type: "directory",
+          description: "Route layer",
+          children: [
+            {
+              name: "layout.tsx",
+              type: "file",
+              description: "Shared listings layout",
+            },
+            {
+              name: "abc/",
+              type: "directory",
+              description: "Feature route",
+              children: [
+                {
+                  name: "page.tsx",
+                  type: "file",
+                  description: "Imports AbcContent",
+                },
+                {
+                  name: "layout.tsx",
+                  type: "file",
+                  description: "Feature layout",
+                },
+                {
+                  name: "loading.tsx",
+                  type: "file",
+                  description: "Loading skeleton",
+                },
+                {
+                  name: "error.tsx",
+                  type: "file",
+                  description: "Error boundary",
+                },
+                {
+                  name: "[id]/page.tsx",
+                  type: "file",
+                  description: "Detail view",
+                },
+              ],
+            },
+          ],
+        },
+        {
+          name: "components/",
+          type: "directory",
+          description: "Component layer",
+          children: [
+            {
+              name: "atom/",
+              type: "directory",
+              description: "Reusable UI atoms",
+              children: [
+                {
+                  name: "page-title.tsx",
+                  type: "file",
+                  description: "Page title display",
+                },
+                {
+                  name: "page-nav.tsx",
+                  type: "file",
+                  description: "Sub-navigation tabs",
+                },
+                {
+                  name: "toolbar.tsx",
+                  type: "file",
+                  description: "Action toolbar",
+                },
+                {
+                  name: "search-input.tsx",
+                  type: "file",
+                  description: "Debounced search",
+                },
+                {
+                  name: "view-toggle.tsx",
+                  type: "file",
+                  description: "Grid/Table toggle",
+                },
+                {
+                  name: "grid-container.tsx",
+                  type: "file",
+                  description: "Responsive grid",
+                },
+                {
+                  name: "empty-state.tsx",
+                  type: "file",
+                  description: "Empty state display",
+                },
+                {
+                  name: "modal/",
+                  type: "directory",
+                  description: "Modal system",
+                  children: [
+                    {
+                      name: "context.tsx",
+                      type: "file",
+                      description: "Modal state (useModal)",
+                    },
+                    {
+                      name: "modal.tsx",
+                      type: "file",
+                      description: "Modal wrapper",
+                    },
+                    {
+                      name: "modal-form-layout.tsx",
+                      type: "file",
+                      description: "Two-column layout",
+                    },
+                    {
+                      name: "modal-footer.tsx",
+                      type: "file",
+                      description: "Progress + navigation",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              name: "table/",
+              type: "directory",
+              description: "Reusable table components",
+              children: [
+                {
+                  name: "data-table.tsx",
+                  type: "file",
+                  description: "Main DataTable",
+                },
+                {
+                  name: "data-table-toolbar.tsx",
+                  type: "file",
+                  description: "Table toolbar",
+                },
+                {
+                  name: "data-table-column-header.tsx",
+                  type: "file",
+                  description: "Sortable header",
+                },
+                {
+                  name: "use-data-table.ts",
+                  type: "file",
+                  description: "Table state hook",
+                },
+              ],
+            },
+            {
+              name: "platform/listings/",
+              type: "directory",
+              description: "Listings components",
+              children: [
+                {
+                  name: "card.tsx",
+                  type: "file",
+                  description: "Generic listing card",
+                },
+                {
+                  name: "form.tsx",
+                  type: "file",
+                  description: "Generic form base",
+                },
+                {
+                  name: "index.ts",
+                  type: "file",
+                  description: "Shared exports",
+                },
+                {
+                  name: "abc/",
+                  type: "directory",
+                  description: "Feature logic (mirrors route)",
+                  children: [
+                    {
+                      name: "content.tsx",
+                      type: "file",
+                      description: "Server: data fetching",
+                    },
+                    {
+                      name: "table.tsx",
+                      type: "file",
+                      description: "Client: interactive table",
+                    },
+                    {
+                      name: "columns.tsx",
+                      type: "file",
+                      description: "Column definitions",
+                    },
+                    {
+                      name: "form.tsx",
+                      type: "file",
+                      description: "Extends generic form",
+                    },
+                    {
+                      name: "card.tsx",
+                      type: "file",
+                      description: "Extends generic card",
+                    },
+                    {
+                      name: "actions.ts",
+                      type: "file",
+                      description: "Server actions",
+                    },
+                    {
+                      name: "queries.ts",
+                      type: "file",
+                      description: "Query builders",
+                    },
+                    {
+                      name: "authorization.ts",
+                      type: "file",
+                      description: "RBAC checks",
+                    },
+                    {
+                      name: "validation.ts",
+                      type: "file",
+                      description: "Zod schemas",
+                    },
+                    {
+                      name: "types.ts",
+                      type: "file",
+                      description: "TypeScript types",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          name: "hooks/",
+          type: "directory",
+          description: "Shared hooks",
+          children: [
+            {
+              name: "use-platform-data.ts",
+              type: "file",
+              description: "Optimistic updates + infinite scroll",
+            },
+            {
+              name: "use-platform-view.ts",
+              type: "file",
+              description: "View mode (URL-persisted)",
+            },
+          ],
+        },
+      ],
+    },
+  ]
 
   const FileIcon = ({ type }: { type: string }) => {
     if (type === "directory") {
@@ -330,7 +364,13 @@ export function ListingStructure({ className }: ListingStructureProps) {
   return (
     <div className={`space-y-6 ${className}`}>
       <div className="py-4">
-        <FileTree item={listingStructure} />
+        {listingStructure.map((item, index) => (
+          <FileTree
+            key={index}
+            item={item}
+            isLast={index === listingStructure.length - 1}
+          />
+        ))}
       </div>
     </div>
   )
