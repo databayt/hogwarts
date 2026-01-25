@@ -70,6 +70,7 @@ import { ComponentPreview } from "@/components/docs/component-preview"
 import { ComponentSource } from "@/components/docs/component-source"
 import { CopyButton } from "@/components/docs/copy-button"
 import { DirectoryStructure } from "@/components/docs/directory-structure"
+import { ListingStructure } from "@/components/docs/listing-structure"
 import { PrismaStructure } from "@/components/docs/prisma-structure"
 import { StoryVideo } from "@/components/docs/story-video"
 import { Structure } from "@/components/docs/structure"
@@ -382,6 +383,7 @@ const mdxComponents = {
   FormFieldText,
   PaymentMethodSelector,
   DirectoryStructure,
+  ListingStructure,
   Structure,
   PrismaStructure,
   // AI components

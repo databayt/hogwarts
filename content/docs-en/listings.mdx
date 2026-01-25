@@ -3,11 +3,11 @@ title: "Listings"
 description: "A unified pattern for data tables, grids, and CRUD operations across the platform with optimistic updates, auto-refresh, and consistent UX."
 ---
 
-## The Listings Block
+## Overview
 
 **Listings** are the backbone of data-driven features in the platform. They provide a unified pattern for displaying, searching, filtering, creating, editing, and deleting records—all with a consistent UX and optimistic updates.
 
-Every listing in the platform follows the same structure, making it predictable for developers and consistent for users. Whether you're working with Students, Teachers, Classes, Events, or any other entity—the pattern remains the same.
+Every listing follows the same structure, making it predictable for developers and consistent for users. Whether you're working with Students, Teachers, Classes, Events, or any other entity—the pattern remains the same.
 
 ## Key Features
 
@@ -40,1183 +40,151 @@ Every listing in the platform follows the same structure, making it predictable 
 
 ---
 
-## Architecture
+## Listing Structure
 
-Every listing consists of these co-located files following the mirror pattern:
+Every listing follows the **mirror pattern** — the URL route produces two directories: one in `app/` for routing, one in `components/` for feature logic. Replace `abc` with your feature name.
+
+<ListingStructure />
+
+---
+
+## Standardized File Patterns
+
+Each listing directory follows these naming conventions:
+
+| File               | Purpose                                         |
+| ------------------ | ----------------------------------------------- |
+| `content.tsx`      | Server component: data fetching, tenant context |
+| `table.tsx`        | Client component: interactive table with state  |
+| `columns.tsx`      | Column definitions (client, uses hooks)         |
+| `form.tsx`         | Create/Edit form with validation                |
+| `actions.ts`       | Server actions: validate, scope tenant, mutate  |
+| `queries.ts`       | Query builders with Prisma                      |
+| `authorization.ts` | RBAC permission checks                          |
+| `validation.ts`    | Zod schemas & refinements                       |
+| `types.ts`         | TypeScript interfaces                           |
+| `config.ts`        | Constants, options, labels                      |
+| `list-params.ts`   | URL params (nuqs)                               |
+| `README.md`        | Feature documentation                           |
+| `ISSUE.md`         | Known issues tracker                            |
+
+---
+
+## Page Layout Composition
 
 ```
-src/components/platform/listings/<feature>/
-├── table.tsx          # Main listing component (client)
-├── form.tsx           # Create/Edit form (client)
-├── columns.tsx        # Column definitions (client)
-├── content.tsx        # Server component wrapper
-├── actions.ts         # Server actions ("use server")
-├── queries.ts         # Query builders & data fetchers (NEW)
-├── authorization.ts   # Role-based access control (NEW)
-├── validation.ts      # Zod schemas
-└── types.ts           # TypeScript interfaces
+┌─────────────────────────────────────────────────────────────────┐
+│  PageTitle                     src/components/atom/page-title.tsx│
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │ Abc Management                                              ││
+│  │ Manage all abc records in your school                       ││
+│  └─────────────────────────────────────────────────────────────┘│
+├─────────────────────────────────────────────────────────────────┤
+│  PageNav                         src/components/atom/page-nav.tsx│
+│  ┌──────────┬──────────┬──────────┬──────────┐                  │
+│  │ All      │ Active   │ Archive  │ Settings │                  │
+│  └──────────┴──────────┴──────────┴──────────┘                  │
+├─────────────────────────────────────────────────────────────────┤
+│  Toolbar                         src/components/atom/toolbar.tsx │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │ SearchInput    Filters           ViewToggle Export Create   ││
+│  │ [🔍 Search...] [Status▾][Type▾]  [≡/⊞]     [↓]    [+]      ││
+│  └─────────────────────────────────────────────────────────────┘│
+├─────────────────────────────────────────────────────────────────┤
+│  DataTable                   src/components/table/data-table.tsx │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │ ☐ │ Name        │ Status   │ Created    │ Actions          ││
+│  │───┼─────────────┼──────────┼────────────┼──────────────────││
+│  │ ☐ │ Item 1      │ Active   │ 2025-01-20 │ [···]            ││
+│  │ ☐ │ Item 2      │ Draft    │ 2025-01-19 │ [···]            ││
+│  └─────────────────────────────────────────────────────────────┘│
+├─────────────────────────────────────────────────────────────────┤
+│  OR GridContainer          src/components/atom/grid-container.tsx│
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐                            │
+│  │ Card 1  │ │ Card 2  │ │ Card 3  │                            │
+│  └─────────┘ └─────────┘ └─────────┘                            │
+├─────────────────────────────────────────────────────────────────┤
+│  Modal (when open)              src/components/atom/modal/modal  │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │ ModalFormLayout  src/components/atom/modal/modal-form-layout ││
+│  │ ┌──────────────┐  ┌───────────────────────────────────────┐││
+│  │ │ Create Abc   │  │  Form (listings/abc/form.tsx)         │││
+│  │ │ Add new item │  │  - Field 1                           │││
+│  │ └──────────────┘  └───────────────────────────────────────┘││
+│  │ ModalFooter      src/components/atom/modal/modal-footer     ││
+│  │ [━━━━━━━━━━━━━━━━━━━━━━━━━━━━]                              ││
+│  │ Step 1 of 2: Basic Info              [Cancel] [Next]       ││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Reference Implementations
+---
 
-The **Announcements** and **Grades** modules serve as reference implementations with the complete pattern including:
+## Component Flow
 
-- **queries.ts**: Centralized query builders with type-safe Prisma queries
-- **authorization.ts**: Role-based access control (RBAC) with permission checks
-- **ActionResponse\<T\>**: Typed success/error responses
+```
+Route (page.tsx)
+    │
+    ▼
+Content (content.tsx) ──── Server Component
+    │ • getTenantContext()
+    │ • Parse URL params
+    │ • Fetch data via queries.ts
+    │
+    ▼
+Table (table.tsx) ──────── Client Component
+    │ • useModal()
+    │ • usePlatformView()
+    │ • useDataTable()
+    │
+    ├──► Toolbar
+    │      • SearchInput
+    │      • ViewToggle
+    │      • ExportButton
+    │      • CreateButton
+    │
+    ├──► DataTable / GridContainer
+    │      • Columns (columns.tsx)
+    │      • Row actions
+    │      • Pagination
+    │
+    └──► Modal
+           • Form (form.tsx)
+           • ModalFormLayout
+           • ModalFooter
+```
+
+---
+
+## Reference Implementation
+
+The **Grades** module serves as the reference implementation with the complete pattern:
+
+| Pattern        | Reference File                                             |
+| -------------- | ---------------------------------------------------------- |
+| Server Actions | `src/components/platform/listings/grades/actions.ts`       |
+| Queries        | `src/components/platform/listings/grades/queries.ts`       |
+| Authorization  | `src/components/platform/listings/grades/authorization.ts` |
+| Validation     | `src/components/platform/listings/grades/validation.ts`    |
+| Table          | `src/components/platform/listings/grades/table.tsx`        |
+| Columns        | `src/components/platform/listings/grades/columns.tsx`      |
+| Form           | `src/components/platform/listings/grades/form.tsx`         |
+| Content        | `src/components/platform/listings/grades/content.tsx`      |
 
 ---
 
 ## Core Hooks
 
-### usePlatformData
-
-The `usePlatformData` hook manages client-side data state with infinite scroll pagination and optimistic updates:
-
-```typescript
-import { usePlatformData } from "@/hooks/use-platform-data"
-
-interface UsePlatformDataOptions<TData, TFilters> {
-  initialData: TData[] // Initial data from server
-  total: number // Total count from server
-  perPage?: number // Items per page (default: 20)
-  fetcher: (params: TFilters & { page: number; perPage: number }) => Promise<{
-    rows: TData[]
-    total: number
-  }>
-  filters?: TFilters // Filter object - auto-triggers refresh on change
-}
-
-// Returns
-interface UsePlatformDataReturn<TData> {
-  data: TData[] // Current data array
-  total: number // Total count
-  currentPage: number // Current page number
-  isLoading: boolean // Loading state
-  hasMore: boolean // Whether more data is available
-  loadMore: () => Promise<void> // Load next page
-  refresh: () => Promise<void> // Refresh from page 1
-  optimisticAdd: (item: TData) => void
-  optimisticUpdate: (id: string, updater: (item: TData) => TData) => void
-  optimisticRemove: (id: string) => void
-  setData: React.Dispatch<React.SetStateAction<TData[]>>
-}
-```
-
-**Usage:**
-
-```typescript
-const { data, total, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
-  usePlatformData<StudentRow, StudentFilters>({
-    initialData,
-    total,
-    perPage: 20,
-    fetcher: async (params) => {
-      const result = await getStudents(params)
-      return result.success
-        ? { rows: result.data.rows, total: result.data.total }
-        : { rows: [], total: 0 }
-    },
-    filters: searchValue ? { name: searchValue } : undefined,
-  })
-```
-
-**Key Behaviors:**
-
-- Auto-refreshes when `filters` object changes (JSON comparison)
-- Skips first render to avoid double-fetching initialData
-- Optimistic operations update UI immediately
-- Call `refresh()` to rollback on mutation errors
+| Hook            | Path                                     | Purpose                                                   |
+| --------------- | ---------------------------------------- | --------------------------------------------------------- |
+| usePlatformData | `src/hooks/use-platform-data.ts`         | Data fetching with optimistic updates and infinite scroll |
+| usePlatformView | `src/hooks/use-platform-view.ts`         | View mode (table/grid) with URL persistence               |
+| useDataTable    | `src/components/table/use-data-table.ts` | TanStack Table state management                           |
+| useModal        | `src/components/atom/modal/context.tsx`  | Modal open/close state management                         |
 
 ---
 
-### usePlatformView
-
-The `usePlatformView` hook manages view mode (table/grid) with URL persistence using nuqs:
-
-```typescript
-import { usePlatformView, type ViewMode } from "@/hooks/use-platform-view";
-
-interface UsePlatformViewOptions {
-  defaultView?: ViewMode;  // "table" | "grid" (default: "table")
-}
-
-// Returns
-{
-  view: ViewMode;                    // Current view ("table" | "grid")
-  setView: (view: ViewMode) => void; // Set specific view
-  toggleView: () => void;            // Toggle between views
-  setTableView: () => void;          // Switch to table view
-  setGridView: () => void;           // Switch to grid view
-  isTable: boolean;                  // Convenience boolean
-  isGrid: boolean;                   // Convenience boolean
-}
-```
-
-**Usage:**
-
-```typescript
-const { view, toggleView, isTable, isGrid } = usePlatformView({
-  defaultView: "table",
-})
-
-// URL updates automatically: ?view=table or ?view=grid
-```
-
----
-
-## PlatformToolbar
-
-The `PlatformToolbar` component provides a unified interface for all listings:
-
-```
-┌────────────────────────────────────────────────────────────────────────────┐
-│  [🔍 Search]  [Scope ▾]  [Status ▾]  [Reset]  │  [≡/⊞]  [↓]  [⚙]  [+]    │
-└────────────────────────────────────────────────────────────────────────────┘
-     Search      Column Filters     Reset      View Export Options Create
-```
-
-**Props:**
-
-```typescript
-interface PlatformToolbarProps<TData> {
-  table?: Table<TData> // TanStack table (for table view)
-  view: ViewMode // Current view mode
-  onToggleView: () => void // Toggle view callback
-  searchValue?: string // Search input value
-  onSearchChange?: (value: string) => void
-  searchPlaceholder?: string
-  onCreate?: () => void // Create button handler
-  getCSV?: (filters?: Record<string, unknown>) => Promise<string>
-  entityName?: string // For export filename
-  exportFormats?: ExportFormat[] // ["csv"] by default
-  filters?: Record<string, unknown> // Current filters for export
-  showColumnToggle?: boolean // Show column visibility (default: true)
-  additionalActions?: React.ReactNode
-  translations?: {
-    search?: string
-    create?: string
-    reset?: string
-    tableView?: string
-    gridView?: string
-    export?: string
-  }
-  className?: string
-}
-```
-
-**Usage:**
-
-```typescript
-<PlatformToolbar
-  table={view === "table" ? table : undefined}
-  view={view}
-  onToggleView={toggleView}
-  searchValue={searchInput}
-  onSearchChange={setSearchInput}
-  searchPlaceholder={dictionary.search}
-  onCreate={() => openModal()}
-  getCSV={getStudentsCSV}
-  entityName="students"
-  translations={{
-    search: dictionary.search,
-    create: dictionary.create,
-    reset: dictionary.reset,
-  }}
-/>
-```
-
----
-
-## Column Filters
-
-Use **column filters** (dropdown in table headers) for filterable fields:
-
-```typescript
-// columns.tsx
-{
-  accessorKey: "scope",
-  header: ({ column }) => <DataTableColumnHeader column={column} title={t.scope} />,
-  cell: ({ getValue }) => {
-    const scope = getValue<string>();
-    const labels: Record<string, string> = {
-      school: t.schoolWide,
-      class: t.classSpecific,
-      role: t.roleSpecific,
-    };
-    return <span className="text-sm">{labels[scope] || scope}</span>;
-  },
-  meta: {
-    label: t.scope,
-    variant: "select",  // "select" | "multiSelect"
-    options: [
-      { label: t.schoolWide, value: "school" },
-      { label: t.classSpecific, value: "class" },
-      { label: t.roleSpecific, value: "role" },
-    ],
-  },
-  enableColumnFilter: true,
-  filterFn: (row, id, value) => value.includes(row.getValue(id)),
-},
-{
-  accessorKey: "published",
-  header: ({ column }) => <DataTableColumnHeader column={column} title={t.status} />,
-  cell: ({ getValue }) => {
-    const is = getValue<boolean>();
-    return <Badge variant={is ? "default" : "outline"}>{is ? t.published : t.draft}</Badge>;
-  },
-  meta: {
-    label: t.status,
-    variant: "select",
-    options: [
-      { label: t.published, value: "true" },
-      { label: t.draft, value: "false" },
-    ],
-  },
-  enableColumnFilter: true,
-  filterFn: (row, id, value) => value.includes(String(row.getValue(id))),
-},
-```
-
-**Column Filters vs Toolbar Filters:**
-
-| Use Column Filters              | Use Toolbar Filters             |
-| ------------------------------- | ------------------------------- |
-| Simple select/checkbox filters  | Complex multi-field filters     |
-| Status, scope, type, category   | Date range pickers              |
-| Any filterable column displayed | Filters for data not in columns |
-
----
-
-## Grid View Components
-
-### GridCard
-
-Card component for grid view with avatar, badges, metadata, and actions:
-
-```typescript
-import { GridCard, GridContainer, GridEmptyState } from "@/components/platform/shared";
-
-<GridCard
-  title={student.name}
-  subtitle={student.email}
-  avatarUrl={student.image}
-  avatarFallback={getInitials(student.name)}
-  status={{ label: "Active", variant: "default" }}
-  badges={[
-    { label: student.yearLevel, variant: "outline" },
-  ]}
-  metadata={[
-    { label: t.class, value: student.className },
-    { label: t.guardian, value: student.guardianName },
-  ]}
-  actions={[
-    { label: t.view, onClick: () => handleView(student.id), icon: <Eye /> },
-    { label: t.edit, onClick: () => handleEdit(student.id), icon: <Pencil /> },
-    { label: t.delete, onClick: () => handleDelete(student), variant: "destructive", icon: <Trash2 /> },
-  ]}
-  onClick={() => handleView(student.id)}
-/>
-```
-
-### GridContainer
-
-Responsive grid layout:
-
-```typescript
-<GridContainer columns={3}>
-  {data.map((item) => (
-    <GridCard key={item.id} {...props} />
-  ))}
-</GridContainer>
-
-// columns: 1 | 2 | 3 | 4
-// Responsive classes:
-// 1: grid-cols-1
-// 2: grid-cols-1 sm:grid-cols-2
-// 3: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
-// 4: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
-```
-
-### GridEmptyState
-
-Empty state for grid view:
-
-```typescript
-<GridEmptyState
-  title={t.noStudents}
-  description={t.addFirstStudent}
-  icon={<Users className="h-12 w-12" />}
-  action={<Button onClick={() => openModal()}>{t.addStudent}</Button>}
-/>
-```
-
----
-
-## Optimistic Updates Pattern
-
-### Delete with Optimistic Update
-
-```typescript
-// 1. Define handler BEFORE columns useMemo
-const handleDelete = useCallback(
-  async (item: RowType) => {
-    const ok = await confirmDeleteDialog(`Delete ${item.name}?`)
-    if (!ok) return
-
-    // Optimistic remove from UI immediately
-    optimisticRemove(item.id)
-
-    // Server request
-    const result = await deleteItem({ id: item.id })
-
-    if (result.success) {
-      DeleteToast()
-    } else {
-      // Revert on error
-      refresh()
-      ErrorToast("Failed to delete")
-    }
-  },
-  [optimisticRemove, refresh]
-)
-
-// 2. Pass callback to columns
-const columns = useMemo(
-  () =>
-    getColumns(dictionary, lang, {
-      onDelete: handleDelete,
-    }),
-  [dictionary, lang, handleDelete]
-)
-```
-
-### Update with Optimistic Update
-
-```typescript
-const handleTogglePublish = useCallback(
-  async (item: RowType) => {
-    const newState = !item.published
-
-    // Optimistic update
-    optimisticUpdate(item.id, (prev) => ({ ...prev, published: newState }))
-
-    const result = await togglePublish({ id: item.id, publish: newState })
-
-    if (result.success) {
-      toast.success(newState ? "Published" : "Unpublished")
-    } else {
-      // Revert on error
-      refresh()
-      toast.error("Failed to update")
-    }
-  },
-  [optimisticUpdate, refresh]
-)
-```
-
-### Column Callbacks Interface
-
-```typescript
-// columns.tsx
-export interface ColumnCallbacks {
-  onDelete?: (row: RowType) => void;
-  onToggleStatus?: (row: RowType) => void;
-  onView?: (row: RowType) => void;
-  onEdit?: (row: RowType) => void;
-}
-
-export const getColumns = (
-  dictionary: Dictionary['school']['feature'],
-  locale: Locale,
-  callbacks?: ColumnCallbacks
-): ColumnDef<RowType>[] => [
-  // ... column definitions
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const item = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => callbacks?.onView?.(item)}>
-              {locale === 'ar' ? 'عرض' : 'View'}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => callbacks?.onEdit?.(item)}>
-              {locale === 'ar' ? 'تعديل' : 'Edit'}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => callbacks?.onDelete?.(item)}
-              className="text-destructive"
-            >
-              {locale === 'ar' ? 'حذف' : 'Delete'}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-```
-
----
-
-## Query Builders Pattern (queries.ts)
-
-Centralize all query logic in `queries.ts`:
-
-```typescript
-// queries.ts
-import { Prisma } from "@prisma/client"
-
-import { db } from "@/lib/db"
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export type StudentListFilters = {
-  name?: string
-  yearLevel?: string
-  status?: string
-  classId?: string
-}
-
-export type PaginationParams = {
-  page: number
-  perPage: number
-}
-
-export type SortParam = {
-  id: string
-  desc: boolean
-}
-
-export type StudentQueryParams = StudentListFilters &
-  PaginationParams & {
-    sort?: SortParam[]
-  }
-
-// Select objects for different contexts
-export const studentListSelect = {
-  id: true,
-  name: true,
-  email: true,
-  yearLevel: true,
-  status: true,
-  image: true,
-  createdAt: true,
-} as const
-
-export const studentDetailSelect = {
-  ...studentListSelect,
-  phone: true,
-  address: true,
-  dateOfBirth: true,
-  guardian: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-    },
-  },
-  studentClasses: {
-    select: {
-      class: {
-        select: {
-          id: true,
-          name: true,
-          subject: { select: { name: true } },
-        },
-      },
-    },
-  },
-} as const
-
-// ============================================================================
-// Query Builders
-// ============================================================================
-
-export function buildStudentWhere(
-  schoolId: string,
-  filters: StudentListFilters = {}
-): Prisma.StudentWhereInput {
-  const where: Prisma.StudentWhereInput = { schoolId }
-
-  if (filters.name) {
-    where.name = {
-      contains: filters.name,
-      mode: Prisma.QueryMode.insensitive,
-    }
-  }
-
-  if (filters.yearLevel) {
-    where.yearLevel = filters.yearLevel
-  }
-
-  if (filters.status) {
-    where.status = filters.status as any
-  }
-
-  if (filters.classId) {
-    where.studentClasses = {
-      some: { classId: filters.classId },
-    }
-  }
-
-  return where
-}
-
-export function buildStudentOrderBy(
-  sortParams?: SortParam[]
-): Prisma.StudentOrderByWithRelationInput[] {
-  if (sortParams?.length) {
-    return sortParams.map((s) => ({
-      [s.id]: s.desc ? Prisma.SortOrder.desc : Prisma.SortOrder.asc,
-    }))
-  }
-  return [{ createdAt: Prisma.SortOrder.desc }]
-}
-
-export function buildPagination(page: number, perPage: number) {
-  return {
-    skip: (page - 1) * perPage,
-    take: perPage,
-  }
-}
-
-// ============================================================================
-// Query Functions
-// ============================================================================
-
-export async function getStudentsList(
-  schoolId: string,
-  params: Partial<StudentQueryParams> = {}
-) {
-  const where = buildStudentWhere(schoolId, params)
-  const orderBy = buildStudentOrderBy(params.sort)
-  const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 20)
-
-  const [rows, count] = await Promise.all([
-    db.student.findMany({
-      where,
-      orderBy,
-      skip,
-      take,
-      select: studentListSelect,
-    }),
-    db.student.count({ where }),
-  ])
-
-  return { rows, count }
-}
-
-export async function getStudentDetail(schoolId: string, studentId: string) {
-  return db.student.findFirst({
-    where: { id: studentId, schoolId },
-    select: studentDetailSelect,
-  })
-}
-
-export async function getStudentStats(schoolId: string) {
-  const [total, active, inactive] = await Promise.all([
-    db.student.count({ where: { schoolId } }),
-    db.student.count({ where: { schoolId, status: "ACTIVE" } }),
-    db.student.count({ where: { schoolId, status: "INACTIVE" } }),
-  ])
-  return { total, active, inactive }
-}
-```
-
----
-
-## Authorization Pattern (authorization.ts)
-
-Implement role-based access control per module:
-
-```typescript
-// authorization.ts
-import { UserRole } from "@prisma/client"
-
-export type ModuleAction =
-  | "create"
-  | "read"
-  | "update"
-  | "delete"
-  | "export"
-  | "bulk_action"
-
-export interface AuthContext {
-  userId: string
-  role: UserRole
-  schoolId: string | null
-}
-
-export interface EntityContext {
-  id?: string
-  createdBy?: string | null
-  schoolId?: string
-}
-
-/**
- * Check if user has permission to perform an action
- */
-export function checkPermission(
-  auth: AuthContext,
-  action: ModuleAction,
-  entity?: EntityContext
-): boolean {
-  const { role, userId, schoolId } = auth
-
-  // DEVELOPER has full access
-  if (role === "DEVELOPER") return true
-
-  // All authenticated users can read within their school
-  if (action === "read") {
-    if (!schoolId || !entity?.schoolId) return false
-    return schoolId === entity.schoolId
-  }
-
-  // ADMIN has full access within their school
-  if (role === "ADMIN") {
-    if (!schoolId || !entity?.schoolId) return true // For create
-    return schoolId === entity.schoolId
-  }
-
-  // TEACHER can manage their own entities
-  if (role === "TEACHER") {
-    if (action === "create") return true
-    if (["update", "delete"].includes(action)) {
-      return entity?.createdBy === userId && schoolId === entity?.schoolId
-    }
-    return false
-  }
-
-  // Other roles are read-only
-  return false
-}
-
-/**
- * Assert permission, throw if unauthorized
- */
-export function assertPermission(
-  auth: AuthContext,
-  action: ModuleAction,
-  entity?: EntityContext
-): void {
-  if (!checkPermission(auth, action, entity)) {
-    throw new Error(`Unauthorized: ${auth.role} cannot ${action}`)
-  }
-}
-
-/**
- * Get auth context from session
- */
-export function getAuthContext(session: any): AuthContext | null {
-  if (!session?.user) return null
-  return {
-    userId: session.user.id,
-    role: session.user.role as UserRole,
-    schoolId: session.user.schoolId || null,
-  }
-}
-```
-
----
-
-## Server Actions Pattern (actions.ts)
-
-```typescript
-// actions.ts
-"use server"
-
-import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
-import { z } from "zod"
-
-import { db } from "@/lib/db"
-
-import { assertPermission, getAuthContext } from "./authorization"
-import { getStudentDetail, getStudentsList } from "./queries"
-import { getStudentsSchema, studentSchema } from "./validation"
-
-// Type-safe response
-type ActionResponse<T> =
-  | { success: true; data: T }
-  | { success: false; error: string }
-
-export async function getStudents(
-  input: Partial<z.infer<typeof getStudentsSchema>>
-): Promise<ActionResponse<{ rows: any[]; total: number }>> {
-  try {
-    const session = await auth()
-    const authCtx = getAuthContext(session)
-    if (!authCtx?.schoolId) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    const params = getStudentsSchema.parse(input ?? {})
-    const { rows, count } = await getStudentsList(authCtx.schoolId, params)
-
-    return { success: true, data: { rows, total: count } }
-  } catch (error) {
-    console.error("getStudents error:", error)
-    return { success: false, error: "Failed to fetch students" }
-  }
-}
-
-export async function createStudent(
-  input: z.infer<typeof studentSchema>
-): Promise<ActionResponse<{ id: string }>> {
-  try {
-    const session = await auth()
-    const authCtx = getAuthContext(session)
-    if (!authCtx?.schoolId) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    assertPermission(authCtx, "create")
-
-    const validated = studentSchema.parse(input)
-    const student = await db.student.create({
-      data: { ...validated, schoolId: authCtx.schoolId },
-    })
-
-    revalidatePath("/students")
-    return { success: true, data: { id: student.id } }
-  } catch (error) {
-    console.error("createStudent error:", error)
-    return { success: false, error: "Failed to create student" }
-  }
-}
-
-export async function deleteStudent(input: {
-  id: string
-}): Promise<ActionResponse<void>> {
-  try {
-    const session = await auth()
-    const authCtx = getAuthContext(session)
-    if (!authCtx?.schoolId) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    const student = await getStudentDetail(authCtx.schoolId, input.id)
-    if (!student) {
-      return { success: false, error: "Student not found" }
-    }
-
-    assertPermission(authCtx, "delete", { schoolId: authCtx.schoolId })
-
-    await db.student.delete({ where: { id: input.id } })
-
-    revalidatePath("/students")
-    return { success: true, data: undefined }
-  } catch (error) {
-    console.error("deleteStudent error:", error)
-    return { success: false, error: "Failed to delete student" }
-  }
-}
-
-export async function getStudentsCSV(
-  filters?: Record<string, unknown>
-): Promise<string> {
-  try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
-    if (!schoolId) return ""
-
-    const students = await db.student.findMany({
-      where: { schoolId },
-      orderBy: [{ createdAt: "desc" }],
-    })
-
-    const headers = ["ID", "Name", "Email", "Year Level", "Status", "Created"]
-    const csvRows = students.map((s) =>
-      [
-        s.id,
-        `"${(s.name || "").replace(/"/g, '""')}"`,
-        `"${(s.email || "").replace(/"/g, '""')}"`,
-        s.yearLevel,
-        s.status,
-        new Date(s.createdAt).toISOString().split("T")[0],
-      ].join(",")
-    )
-
-    return [headers.join(","), ...csvRows].join("\n")
-  } catch (error) {
-    console.error("getStudentsCSV error:", error)
-    return ""
-  }
-}
-```
-
----
-
-## Modal Form Layout
-
-All listing modals follow the **onboarding layout pattern**:
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                                                                      │
-│   ┌──────────────────────┐    ┌───────────────────────────────┐    │
-│   │  Title (h1)          │    │  Form Fields                  │    │
-│   │  Description         │    │  - Input 1                    │    │
-│   │  (muted text)        │    │  - Input 2                    │    │
-│   │                      │    │  - ...                        │    │
-│   └──────────────────────┘    └───────────────────────────────┘    │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│  [━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━]                           │
-│  Step 1 of 3: Basic Information            [Cancel] [Save] [Next]   │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-### ModalFormLayout
-
-Two-column layout wrapper:
-
-```typescript
-import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
-
-<ModalFormLayout
-  title={isView ? "View Student" : currentId ? "Edit Student" : "Create Student"}
-  description={isView
-    ? "View student details"
-    : currentId
-      ? "Update student information"
-      : "Add a new student to the school"
-  }
->
-  {renderCurrentStep()}
-</ModalFormLayout>
-```
-
-### ModalFooter
-
-Fixed footer with progress bar and navigation:
-
-```typescript
-import { ModalFooter } from "@/components/atom/modal/modal-footer";
-
-<ModalFooter
-  currentStep={currentStep}
-  totalSteps={3}
-  stepLabel={stepLabels[currentStep]}
-  isView={isView}
-  isEdit={!!currentId}
-  isDirty={form.formState.isDirty}
-  isSubmitting={form.formState.isSubmitting}
-  onBack={handleBack}
-  onNext={handleNext}
-  onSaveStep={handleSaveCurrentStep}
-  labels={{
-    cancel: dictionary?.cancel,
-    back: dictionary?.back,
-    next: dictionary?.next,
-    save: dictionary?.save,
-    create: dictionary?.create,
-  }}
-/>
-```
-
-**Props:**
-
-| Prop           | Type         | Description                   |
-| -------------- | ------------ | ----------------------------- |
-| `currentStep`  | `number`     | Current step (1-indexed)      |
-| `totalSteps`   | `number`     | Total steps                   |
-| `stepLabel`    | `string`     | Label for current step        |
-| `isView`       | `boolean`    | Read-only mode                |
-| `isEdit`       | `boolean`    | Edit mode (shows Save button) |
-| `isDirty`      | `boolean`    | Form has unsaved changes      |
-| `isSubmitting` | `boolean`    | Form is submitting            |
-| `progress`     | `number`     | Custom progress (0-100)       |
-| `onBack`       | `() => void` | Back/Cancel handler           |
-| `onNext`       | `() => void` | Next/Create handler           |
-| `onSaveStep`   | `() => void` | Save current step (edit mode) |
-| `labels`       | `object`     | i18n labels                   |
-
----
-
-## Complete Table Implementation
-
-```typescript
-// table.tsx
-"use client";
-
-import { useMemo, useState, useCallback } from "react";
-import { DataTable } from "@/components/table/data-table";
-import { useDataTable } from "@/components/table/use-data-table";
-import { usePlatformView } from "@/hooks/use-platform-view";
-import { usePlatformData } from "@/hooks/use-platform-data";
-import {
-  PlatformToolbar,
-  GridCard,
-  GridContainer,
-  GridEmptyState,
-} from "@/components/platform/shared";
-import { useModal } from "@/components/atom/modal/context";
-import Modal from "@/components/atom/modal/modal";
-import { getColumns, type StudentRow, type ColumnCallbacks } from "./columns";
-import { StudentForm } from "./form";
-import { getStudents, getStudentsCSV, deleteStudent } from "./actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/settings";
-
-interface TableProps {
-  initialData: StudentRow[];
-  total: number;
-  dictionary: Dictionary['school']['students'];
-  lang: Locale;
-  perPage?: number;
-}
-
-export function StudentsTable({
-  initialData,
-  total,
-  dictionary,
-  lang,
-  perPage = 20,
-}: TableProps) {
-  const t = dictionary;
-  const { openModal } = useModal();
-
-  // View mode (URL-persisted)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" });
-
-  // Search state
-  const [searchInput, setSearchInput] = useState("");
-
-  // Data management with optimistic updates
-  const {
-    data,
-    total: dataTotal,
-    isLoading,
-    hasMore,
-    loadMore,
-    refresh,
-    optimisticRemove,
-  } = usePlatformData<StudentRow, { name?: string }>({
-    initialData,
-    total,
-    perPage,
-    fetcher: async (params) => {
-      const result = await getStudents(params);
-      return result.success
-        ? { rows: result.data.rows, total: result.data.total }
-        : { rows: [], total: 0 };
-    },
-    filters: searchInput ? { name: searchInput } : undefined,
-  });
-
-  // Handlers (MUST be defined BEFORE columns useMemo)
-  const handleDelete = useCallback(async (item: StudentRow) => {
-    const ok = await confirmDeleteDialog(`Delete ${item.name}?`);
-    if (!ok) return;
-
-    optimisticRemove(item.id);
-    const result = await deleteStudent({ id: item.id });
-
-    if (result.success) {
-      DeleteToast();
-    } else {
-      refresh();
-      ErrorToast(result.error || "Failed to delete");
-    }
-  }, [optimisticRemove, refresh]);
-
-  const handleView = useCallback((item: StudentRow) => {
-    openModal(`view:${item.id}`);
-  }, [openModal]);
-
-  const handleEdit = useCallback((item: StudentRow) => {
-    openModal(item.id);
-  }, [openModal]);
-
-  // Columns with callbacks
-  const columns = useMemo(() => getColumns(t, lang, {
-    onDelete: handleDelete,
-    onView: handleView,
-    onEdit: handleEdit,
-  }), [t, lang, handleDelete, handleView, handleEdit]);
-
-  // Table instance
-  const { table } = useDataTable<StudentRow>({
-    data,
-    columns,
-    pageCount: 1,
-    enableClientFiltering: true,
-    initialState: {
-      pagination: { pageIndex: 0, pageSize: data.length || perPage },
-      columnVisibility: {
-        id: false,
-        createdAt: false,
-      },
-    },
-  });
-
-  // CSV export wrapper
-  const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getStudentsCSV(filters);
-  }, []);
-
-  return (
-    <>
-      <PlatformToolbar
-        table={view === "table" ? table : undefined}
-        view={view}
-        onToggleView={toggleView}
-        searchValue={searchInput}
-        onSearchChange={setSearchInput}
-        searchPlaceholder={t.searchPlaceholder}
-        onCreate={() => openModal()}
-        getCSV={handleExportCSV}
-        entityName="students"
-        translations={{
-          search: t.search,
-          create: t.create,
-          reset: t.reset,
-        }}
-      />
-
-      {view === "table" ? (
-        <DataTable
-          table={table}
-          paginationMode="load-more"
-          hasMore={hasMore}
-          isLoading={isLoading}
-          onLoadMore={loadMore}
-        />
-      ) : (
-        <>
-          {data.length === 0 ? (
-            <GridEmptyState
-              title={t.noStudents}
-              description={t.addFirstStudent}
-            />
-          ) : (
-            <GridContainer columns={3}>
-              {data.map((student) => (
-                <GridCard
-                  key={student.id}
-                  title={student.name}
-                  subtitle={student.email}
-                  avatarFallback={student.name.slice(0, 2).toUpperCase()}
-                  status={{
-                    label: student.status === "ACTIVE" ? t.active : t.inactive,
-                    variant: student.status === "ACTIVE" ? "default" : "outline",
-                  }}
-                  metadata={[
-                    { label: t.yearLevel, value: student.yearLevel },
-                    { label: t.enrolled, value: new Date(student.createdAt).toLocaleDateString() },
-                  ]}
-                  actions={[
-                    { label: lang === 'ar' ? 'عرض' : 'View', onClick: () => handleView(student) },
-                    { label: lang === 'ar' ? 'تعديل' : 'Edit', onClick: () => handleEdit(student) },
-                    { label: lang === 'ar' ? 'حذف' : 'Delete', onClick: () => handleDelete(student), variant: "destructive" },
-                  ]}
-                  onClick={() => handleView(student)}
-                />
-              ))}
-            </GridContainer>
-          )}
-          {hasMore && (
-            <div className="flex justify-center mt-4">
-              <Button onClick={loadMore} disabled={isLoading}>
-                {isLoading ? t.loading : t.loadMore}
-              </Button>
-            </div>
-          )}
-        </>
-      )}
-
-      <Modal content={<StudentForm onSuccess={refresh} dictionary={t} />} />
-    </>
-  );
-}
-```
-
----
-
-## Bilingual Support (i18n)
-
-For bilingual content (Arabic/English), use locale helpers:
-
-```typescript
-// queries.ts
-export function getLocalizedTitle(
-  entity: { titleEn: string | null; titleAr: string | null },
-  locale: string
-): string {
-  if (locale === 'ar') {
-    return entity.titleAr || entity.titleEn || '';
-  }
-  return entity.titleEn || entity.titleAr || '';
-}
-
-// columns.tsx
-{
-  accessorKey: "title",
-  accessorFn: (row) => getLocalizedTitle(row, lang),
-  header: ({ column }) => <DataTableColumnHeader column={column} title={t.title} />,
-  cell: ({ getValue }) => <span>{getValue<string>()}</span>,
-},
-```
-
-**Dictionary Labels:**
-
-Use concise labels for filters:
-
-```json
-// English
-{
-  "schoolWide": "School",
-  "classSpecific": "Class",
-  "roleSpecific": "Role"
-}
-
-// Arabic
-{
-  "schoolWide": "مدرسة",
-  "classSpecific": "فصل",
-  "roleSpecific": "دور"
-}
-```
-
----
-
-## Multi-Tenant Safety
-
-**CRITICAL**: Every query MUST include `schoolId`:
-
-```typescript
-// ✅ CORRECT
-await db.student.findMany({
-  where: { schoolId, yearLevel: "10" },
-})
-
-await db.class.create({
-  data: { name: "Math 101", schoolId },
-})
-
-// ❌ WRONG - breaks tenant isolation
-await db.student.findMany({
-  where: { yearLevel: "10" },
-})
-```
-
----
-
-## Modules Using This Pattern
+## Modules Status
 
 | Module            | Table | Grid | Search | Export | queries.ts | authorization.ts |
 | ----------------- | ----- | ---- | ------ | ------ | ---------- | ---------------- |
@@ -1236,117 +204,40 @@ await db.student.findMany({
 
 ## Best Practices
 
-### 1. Toolbar Height Consistency
+### Multi-Tenant Safety
 
-All toolbar elements use `h-9` (36px):
+- **ALWAYS include `schoolId`** in every database query
+- Get schoolId from session: `const { schoolId } = session.user`
+- Missing schoolId breaks tenant isolation
 
-```typescript
-// ✅ CORRECT
-<Input className="h-9 w-40 pl-8" />
-<SelectTrigger className="h-9 w-32 py-1" />  // py-1 matches Input
-<Button size="icon" className="h-9 w-9" />
-```
+### Column Definitions
 
-### 2. Column Definition Order
+- Define handlers **BEFORE** columns `useMemo`
+- Columns with hooks (useModal) must be generated in **client components**
+- Pass callbacks via `getColumns(dictionary, lang, { onDelete, onEdit, onView })`
 
-**CRITICAL**: Define handlers BEFORE columns useMemo:
+### Optimistic Updates
 
-```typescript
-// 1. Define handlers first
-const handleDelete = useCallback(/* ... */)
+- Call `optimisticRemove(id)` before server request
+- Call `refresh()` on error to rollback
+- Use `optimisticUpdate(id, updater)` for in-place updates
 
-// 2. Then create columns with handlers
-const columns = useMemo(
-  () =>
-    getColumns(t, lang, {
-      onDelete: handleDelete,
-    }),
-  [t, lang, handleDelete]
-)
-```
+### Server Actions
 
-### 3. Always Use Callbacks in Forms
+- Start with `"use server"` directive
+- Validate with Zod on both client (UX) and server (security)
+- Call `revalidatePath()` or `redirect()` after mutations
+- Return typed `ActionResponse<T>` results
 
-```typescript
-// form.tsx
-if (onSuccess) {
-  onSuccess();  // Triggers optimistic refresh
-} else {
-  router.refresh();  // Fallback
-}
+### Modal Forms
 
-// table.tsx
-<Modal content={<Form onSuccess={refresh} />} />
-```
-
-### 4. Memoize Columns
-
-```typescript
-const columns = useMemo(
-  () => getColumns(dictionary, lang, callbacks),
-  [dictionary, lang, callbacks]
-)
-```
-
-### 5. Handle Loading States
-
-```typescript
-<DataTable
-  isLoading={isLoading}
-  paginationMode="load-more"
-  hasMore={hasMore}
-  onLoadMore={loadMore}
-/>
-```
-
-### 6. Provide Empty States
-
-```typescript
-{data.length === 0 ? (
-  <GridEmptyState title={t.noItems} description={t.addFirst} />
-) : (
-  <GridContainer columns={3}>
-    {/* Grid cards */}
-  </GridContainer>
-)}
-```
+- Use `ModalFormLayout` for two-column header/form layout
+- Use `ModalFooter` for progress bar and navigation
+- Call `onSuccess()` callback after successful mutations
 
 ---
 
-## Shared Components
-
-All shared listing components are exported from:
-
-```typescript
-import {
-  ExportButton,
-  GridCard,
-  GridContainer,
-  GridEmptyState,
-  PlatformToolbar,
-  ViewToggle,
-} from "@/components/platform/shared"
-```
-
----
-
-## From CRUD to Connected System
-
-Basic CRUD listings are useful, but **production-ready listings connect to each other**:
-
-```
-ISOLATED (Level 1)              CONNECTED (Level 3+)
-┌─────────┐ ┌─────────┐        ┌─────────────────────────────┐
-│Students │ │ Grades  │        │   STUDENTS                  │
-│  CRUD   │ │  CRUD   │   →    │ ┌─────────────────────────┐ │
-└─────────┘ └─────────┘        │ │ Ahmed (10A)             │ │
-    ↓           ↓              │ │ 3 classes | 92% attend  │ │
- (nothing connects them)       │ │ [→ Grades] [→ Classes]  │ │
-                               │ └─────────────────────────┘ │
-                               └─────────────────────────────┘
-```
-
-### 5 Levels of Listing Maturity
+## Listing Maturity Levels
 
 | Level | Feature                                       | Status         |
 | ----- | --------------------------------------------- | -------------- |
@@ -1355,166 +246,6 @@ ISOLATED (Level 1)              CONNECTED (Level 3+)
 | **3** | Rich detail pages with related data tabs      | 🔄 In Progress |
 | **4** | Cross-listing actions (bulk operations)       | 🔄 In Progress |
 | **5** | Automated workflows (triggers, notifications) | ⏳ Planned     |
-
----
-
-## Relationship Data in Rows
-
-Show computed relationship data directly in listing rows:
-
-```typescript
-// content.tsx
-const students = await db.student.findMany({
-  where: { schoolId },
-  include: {
-    _count: {
-      select: {
-        studentClasses: true,
-        attendances: true,
-        results: true,
-      }
-    }
-  }
-});
-
-const rows = students.map(s => ({
-  ...s,
-  classCount: s._count.studentClasses,
-  gradeCount: s._count.results,
-}));
-
-// columns.tsx
-{
-  accessorKey: "classCount",
-  header: t.classes,
-  cell: ({ getValue }) => (
-    <Badge variant="outline">{getValue<number>()} {t.classes}</Badge>
-  ),
-},
-```
-
----
-
-## Quick Actions Pattern
-
-Add navigation links in action dropdowns:
-
-```typescript
-<DropdownMenuSeparator />
-
-<DropdownMenuItem asChild>
-  <Link href={`/${locale}/grades?studentId=${row.id}`}>
-    <GraduationCap className="mr-2 h-4 w-4" />
-    {locale === 'ar' ? 'عرض الدرجات' : 'View Grades'}
-  </Link>
-</DropdownMenuItem>
-
-<DropdownMenuItem asChild>
-  <Link href={`/${locale}/attendance?studentId=${row.id}`}>
-    <CalendarCheck className="mr-2 h-4 w-4" />
-    {locale === 'ar' ? 'عرض الحضور' : 'View Attendance'}
-  </Link>
-</DropdownMenuItem>
-```
-
----
-
-## Detail Pages with Tabs
-
-Rich detail pages show entity plus related data:
-
-```typescript
-// [id]/page.tsx
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-export default async function StudentDetailPage({ params }) {
-  const student = await getStudentWithRelations(params.id);
-
-  return (
-    <div className="space-y-6">
-      <StudentHeader student={student} />
-
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="classes">
-            Classes ({student.classes.length})
-          </TabsTrigger>
-          <TabsTrigger value="grades">
-            Grades ({student.grades.length})
-          </TabsTrigger>
-          <TabsTrigger value="attendance">
-            Attendance ({student.attendanceRate}%)
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <StudentOverview student={student} />
-        </TabsContent>
-        <TabsContent value="classes">
-          <StudentClasses classes={student.classes} />
-        </TabsContent>
-        <TabsContent value="grades">
-          <StudentGrades grades={student.grades} />
-        </TabsContent>
-        <TabsContent value="attendance">
-          <StudentAttendance records={student.attendances} />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
-```
-
----
-
-## Bulk Operations
-
-Enable multi-select and batch actions:
-
-```typescript
-// columns.tsx - Selection column
-{
-  id: "select",
-  header: ({ table }) => (
-    <Checkbox
-      checked={table.getIsAllPageRowsSelected()}
-      onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-    />
-  ),
-  cell: ({ row }) => (
-    <Checkbox
-      checked={row.getIsSelected()}
-      onCheckedChange={(value) => row.toggleSelected(!!value)}
-    />
-  ),
-  enableSorting: false,
-  enableHiding: false,
-},
-
-// table.tsx - Bulk actions
-const selectedRows = table.getFilteredSelectedRowModel().rows;
-
-{selectedRows.length > 0 && (
-  <BulkActionsToolbar
-    selectedCount={selectedRows.length}
-    onClearSelection={() => table.resetRowSelection()}
-    actions={[
-      {
-        label: t.deleteSelected,
-        icon: <Trash2 />,
-        variant: 'destructive',
-        onClick: () => handleBulkDelete(selectedRows.map(r => r.original)),
-      },
-      {
-        label: t.enrollInClass,
-        icon: <UserPlus />,
-        onClick: () => handleBulkEnroll(selectedRows.map(r => r.original)),
-      },
-    ]}
-  />
-)}
-```
 
 ---
 
