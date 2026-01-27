@@ -6,7 +6,7 @@ import { ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { AnthropicIcons } from "@/components/icons/anthropic"
+import { AnthropicIcons } from "@/components/icons"
 
 import type { QuickLookData } from "./actions"
 

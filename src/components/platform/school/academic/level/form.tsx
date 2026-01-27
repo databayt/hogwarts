@@ -2,7 +2,6 @@
 
 import { useEffect, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { GraduationCap, Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
@@ -17,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useModal } from "@/components/atom/modal/context"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 
 import { createYearLevel, getYearLevel, updateYearLevel } from "./actions"
@@ -107,7 +107,7 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <GraduationCap className="text-primary h-5 w-5" />
+        <Icons.graduationCap className="text-primary h-5 w-5" />
         <h2 className="font-semibold">{t.title}</h2>
       </div>
 
@@ -186,7 +186,7 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {t.saving}
                 </>
               ) : (

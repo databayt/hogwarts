@@ -3,7 +3,6 @@
 import { useState } from "react"
 import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, Loader2, SaveIcon } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -26,6 +25,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Icons } from "@/components/icons"
 import { FileUpload } from "@/components/stream/shared/file-upload"
 
 import {
@@ -96,7 +96,7 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
             size: "icon",
           })}
         >
-          <ArrowLeft className="size-4" />
+          <Icons.arrowLeft className="size-4" />
         </Link>
         <h2>Edit Lesson</h2>
       </div>
@@ -194,12 +194,12 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
               <Button type="submit" disabled={isPending}>
                 {isPending ? (
                   <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    <Icons.loader2 className="mr-2 size-4 animate-spin" />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <SaveIcon className="mr-2 size-4" />
+                    <Icons.save className="mr-2 size-4" />
                     Save Changes
                   </>
                 )}

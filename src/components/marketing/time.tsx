@@ -20,7 +20,7 @@ const Time = ({ dictionary, lang }: TimeProps) => {
     }
 
   return (
-    <section className="py-16 md:py-0" dir={isRTL ? "rtl" : "ltr"}>
+    <section className="py-24 md:py-0" dir={isRTL ? "rtl" : "ltr"}>
       <div className="flex h-[320px] w-full items-center overflow-hidden rounded-xl bg-[rgb(106,155,204)] md:h-[240px]">
         <div className="flex w-full flex-col items-center justify-between gap-8 px-8 md:flex-row md:px-16">
           <div className="flex flex-col text-center md:text-start">

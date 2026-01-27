@@ -263,6 +263,118 @@ export const CATEGORY_INFO: Record<
     ],
     color: "#f43f5e", // Rose
   },
+
+  [IconCategory.CONTENT]: {
+    label: "Content",
+    description: "Document and file type icons",
+    examples: [
+      "file",
+      "document",
+      "pdf",
+      "report",
+      "logbook",
+      "proposal",
+      "article",
+      "note",
+    ],
+    color: "#0ea5e9", // Sky
+  },
+
+  [IconCategory.DEVELOPMENT]: {
+    label: "Development",
+    description: "Developer tools and coding icons",
+    examples: [
+      "code",
+      "terminal",
+      "api",
+      "debug",
+      "git",
+      "deploy",
+      "build",
+      "package",
+    ],
+    color: "#22c55e", // Green
+  },
+
+  [IconCategory.PROGRAMMING]: {
+    label: "Programming",
+    description: "Programming language logos and icons",
+    examples: [
+      "python",
+      "typescript",
+      "rust",
+      "javascript",
+      "go",
+      "java",
+      "c",
+      "ruby",
+    ],
+    color: "#eab308", // Yellow
+  },
+
+  [IconCategory.PRODUCTIVITY]: {
+    label: "Productivity",
+    description: "Workflow and productivity icons",
+    examples: [
+      "task",
+      "checklist",
+      "calendar",
+      "schedule",
+      "reminder",
+      "note",
+      "project",
+      "workflow",
+    ],
+    color: "#a855f7", // Purple
+  },
+
+  [IconCategory.APPLICATIONS]: {
+    label: "Applications",
+    description: "App-specific and feature icons",
+    examples: [
+      "chatbot",
+      "starter",
+      "template",
+      "flow",
+      "leads",
+      "math",
+      "cms",
+      "app",
+    ],
+    color: "#06b6d4", // Cyan
+  },
+
+  [IconCategory.RATINGS]: {
+    label: "Ratings",
+    description: "Rating and quality indicator icons",
+    examples: [
+      "excellent",
+      "good",
+      "average",
+      "poor",
+      "star",
+      "rating",
+      "score",
+      "quality",
+    ],
+    color: "#f97316", // Orange
+  },
+
+  [IconCategory.SHAPES]: {
+    label: "Shapes",
+    description: "Geometric shapes and symbols",
+    examples: [
+      "triangle",
+      "circle",
+      "square",
+      "hexagon",
+      "star",
+      "diamond",
+      "arrow",
+      "polygon",
+    ],
+    color: "#78716c", // Stone
+  },
 }
 
 /**
@@ -352,6 +464,62 @@ export const CATEGORY_TAGS: Record<IconCategory, string[]> = {
     "feature",
     "showcase",
     "hero",
+  ],
+  [IconCategory.CONTENT]: [
+    "file",
+    "document",
+    "text",
+    "paper",
+    "report",
+    "article",
+  ],
+  [IconCategory.DEVELOPMENT]: [
+    "code",
+    "develop",
+    "build",
+    "terminal",
+    "cli",
+    "deploy",
+  ],
+  [IconCategory.PROGRAMMING]: [
+    "language",
+    "coding",
+    "syntax",
+    "runtime",
+    "compiler",
+    "script",
+  ],
+  [IconCategory.PRODUCTIVITY]: [
+    "task",
+    "workflow",
+    "efficiency",
+    "organize",
+    "manage",
+    "schedule",
+  ],
+  [IconCategory.APPLICATIONS]: [
+    "app",
+    "software",
+    "tool",
+    "feature",
+    "module",
+    "function",
+  ],
+  [IconCategory.RATINGS]: [
+    "rating",
+    "score",
+    "quality",
+    "feedback",
+    "review",
+    "evaluate",
+  ],
+  [IconCategory.SHAPES]: [
+    "shape",
+    "geometry",
+    "form",
+    "figure",
+    "symbol",
+    "graphic",
   ],
 }
 

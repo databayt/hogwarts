@@ -1,7 +1,6 @@
 "use client"
 
 import { memo, useActionState, useEffect, useMemo, useState } from "react"
-import { CircleAlert, CircleCheckBig, LoaderCircle } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -15,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
@@ -128,7 +128,7 @@ function PaymentTransferForm(props: Props) {
       {/* Status Messages */}
       {!state.success && (
         <Alert variant="destructive">
-          <CircleAlert className="h-4 w-4" />
+          <Icons.circleAlert className="h-4 w-4" />
           <AlertDescription>
             {state.error.message || "An error occurred"}
           </AlertDescription>
@@ -137,7 +137,7 @@ function PaymentTransferForm(props: Props) {
 
       {state.success && (
         <Alert>
-          <CircleCheckBig className="h-4 w-4" />
+          <Icons.circleCheckBig className="h-4 w-4" />
           <AlertDescription>
             {props.dictionary.transferSuccess}
           </AlertDescription>
@@ -298,7 +298,7 @@ function PaymentTransferForm(props: Props) {
       >
         {isPending ? (
           <>
-            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
             {props.dictionary.processing}
           </>
         ) : (

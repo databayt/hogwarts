@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
-import { LoaderCircle, Plus, X } from "lucide-react"
 import { useForm, type UseFormReturn } from "react-hook-form"
 import type { z } from "zod"
 
@@ -30,6 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useModal } from "@/components/atom/modal/context"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { createQuestion, updateQuestion } from "./actions"
@@ -459,7 +459,7 @@ export function QuestionBankForm({
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && (
-                <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
+                <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
               )}
               {initialData?.id ? "Update" : "Create"}
             </Button>
@@ -506,7 +506,7 @@ function MultipleChoiceFields({
         <FormLabel>Options</FormLabel>
         {!isTrueFalse && !isView && options.length < 6 && (
           <Button type="button" variant="outline" size="sm" onClick={addOption}>
-            <Plus className="me-2 h-4 w-4" />
+            <Icons.plus className="me-2 h-4 w-4" />
             Add Option
           </Button>
         )}
@@ -558,7 +558,7 @@ function MultipleChoiceFields({
                 size="sm"
                 onClick={() => removeOption(index)}
               >
-                <X className="h-4 w-4" />
+                <Icons.x className="h-4 w-4" />
               </Button>
             )}
           </div>
@@ -598,7 +598,7 @@ function FillBlankFields({
         <FormLabel>Accepted Answers</FormLabel>
         {!isView && (
           <Button type="button" variant="outline" size="sm" onClick={addAnswer}>
-            <Plus className="me-2 h-4 w-4" />
+            <Icons.plus className="me-2 h-4 w-4" />
             Add Answer
           </Button>
         )}
@@ -624,7 +624,7 @@ function FillBlankFields({
                 size="sm"
                 onClick={() => removeAnswer(index)}
               >
-                <X className="h-4 w-4" />
+                <Icons.x className="h-4 w-4" />
               </Button>
             )}
           </div>
@@ -764,7 +764,7 @@ function TagsInput({
                   onClick={() => removeTag(tag)}
                   className="hover:text-destructive ms-1"
                 >
-                  <X className="h-3 w-3" />
+                  <Icons.x className="h-3 w-3" />
                 </button>
               )}
             </Badge>

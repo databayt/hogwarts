@@ -4,7 +4,6 @@ import { useTransition } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, Loader2, PlusIcon } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -27,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Icons } from "@/components/icons"
 import { FileUpload } from "@/components/stream/shared/file-upload"
 import { RichTextEditor } from "@/components/stream/shared/rich-text-editor"
 
@@ -101,7 +101,7 @@ export function StreamCourseCreateForm({
             size: "icon",
           })}
         >
-          <ArrowLeft className="size-4" />
+          <Icons.arrowLeft className="size-4" />
         </Link>
         <h2>Create Course</h2>
       </div>
@@ -198,11 +198,11 @@ export function StreamCourseCreateForm({
                 {pending ? (
                   <>
                     Creating...
-                    <Loader2 className="ml-1 size-4 animate-spin" />
+                    <Icons.loader2 className="ml-1 size-4 animate-spin" />
                   </>
                 ) : (
                   <>
-                    Create Course <PlusIcon className="ml-1 size-4" />
+                    Create Course <Icons.plus className="ml-1 size-4" />
                   </>
                 )}
               </Button>

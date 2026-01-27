@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { LoaderCircle } from "lucide-react"
 import { useForm } from "react-hook-form"
 import type { z } from "zod"
 
@@ -27,6 +26,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useModal } from "@/components/atom/modal/context"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { createTemplate } from "./actions"
@@ -317,7 +317,7 @@ export function ExamTemplateForm({
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && (
-                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
               )}
               {initialData?.id
                 ? dictionary?.generate?.form?.update || "Update"

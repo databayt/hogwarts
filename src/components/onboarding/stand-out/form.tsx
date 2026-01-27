@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface StandOutFormProps {
@@ -36,7 +36,7 @@ export function StandOutForm({
           <>
             {dictionary?.marketing?.onboarding?.standOut?.continueSetup ||
               "Continue to School Setup"}
-            <ArrowRight className="ms-2 h-4 w-4" />
+            <Icons.arrowRight className="ms-2 h-4 w-4" />
           </>
         )}
       </Button>

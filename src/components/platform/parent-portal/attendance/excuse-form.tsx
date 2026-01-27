@@ -3,16 +3,7 @@
 import { useCallback, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import {
-  AlertCircle,
-  CheckCircle2,
-  File,
-  FileText,
-  Image as ImageIcon,
-  Loader2,
-  Upload,
-  X,
-} from "lucide-react"
+import { CheckCircle2, File, ImageIcon } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -52,6 +43,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { IMAGEKIT_FOLDERS, useImageKitUpload } from "@/components/file"
+import { Icons } from "@/components/icons"
 import { submitExcuse } from "@/components/platform/attendance/actions"
 
 // Excuse reasons with labels (English and Arabic)
@@ -357,7 +349,7 @@ export function ExcuseForm({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {error && (
                 <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
+                  <Icons.alertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -437,7 +429,7 @@ export function ExcuseForm({
                 {/* Upload Error */}
                 {(uploadError || ikError) && (
                   <Alert variant="destructive" className="py-2">
-                    <AlertCircle className="h-4 w-4" />
+                    <Icons.alertCircle className="h-4 w-4" />
                     <AlertDescription className="text-sm">
                       {uploadError || ikError}
                     </AlertDescription>
@@ -470,7 +462,7 @@ export function ExcuseForm({
                           disabled={isPending}
                           aria-label={isArabic ? "إزالة الملف" : "Remove file"}
                         >
-                          <X className="h-4 w-4" />
+                          <Icons.x className="h-4 w-4" />
                         </Button>
                       </div>
                     ))}
@@ -481,7 +473,7 @@ export function ExcuseForm({
                 {isUploading && (
                   <div className="space-y-1">
                     <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Icons.loader2 className="h-4 w-4 animate-spin" />
                       <span>{isArabic ? "جاري الرفع..." : "Uploading..."}</span>
                       <span>{progress}%</span>
                     </div>
@@ -502,7 +494,7 @@ export function ExcuseForm({
                       onChange={handleFileSelect}
                       disabled={isUploading || isPending}
                     />
-                    <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
+                    <Icons.upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
                     <p className="text-muted-foreground text-sm">
                       {isArabic
                         ? "انقر أو اسحب لرفع الملفات"
@@ -534,7 +526,7 @@ export function ExcuseForm({
                 <Button type="submit" disabled={isPending}>
                   {isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {isArabic ? "جاري الإرسال..." : "Submitting..."}
                     </>
                   ) : isArabic ? (
@@ -577,7 +569,7 @@ export function UnexcusedAbsenceCard({
     <div className="flex items-center justify-between rounded-lg border border-red-100 bg-red-50/50 p-4">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-          <AlertCircle className="h-5 w-5 text-red-600" />
+          <Icons.alertCircle className="h-5 w-5 text-red-600" />
         </div>
         <div>
           <p className="font-medium">{absence.studentName}</p>
@@ -592,7 +584,7 @@ export function UnexcusedAbsenceCard({
         onClick={() => onSubmitExcuse(absence)}
         className="border-red-200 hover:bg-red-50"
       >
-        <FileText className="mr-2 h-4 w-4" />
+        <Icons.fileText className="mr-2 h-4 w-4" />
         {isArabic ? "تقديم عذر" : "Submit Excuse"}
       </Button>
     </div>

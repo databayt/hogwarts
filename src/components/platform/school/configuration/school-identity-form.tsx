@@ -2,17 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  Check,
-  Clock,
-  Globe,
-  Loader2,
-  Mail,
-  MapPin,
-  Pencil,
-  Phone,
-  X,
-} from "lucide-react"
+import { Pencil, Phone } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -20,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 
 import { updateSchoolIdentity } from "./actions"
@@ -99,7 +90,7 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
                   Timezone
                 </Label>
                 <div className="flex items-center gap-1">
-                  <Clock className="text-muted-foreground h-4 w-4" />
+                  <Icons.clock className="text-muted-foreground h-4 w-4" />
                   <p className="font-medium">
                     {initialData.timezone || "Africa/Khartoum"}
                   </p>
@@ -113,7 +104,7 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
                 School URL
               </Label>
               <div className="flex items-center gap-1">
-                <Globe className="text-muted-foreground h-4 w-4" />
+                <Icons.globe className="text-muted-foreground h-4 w-4" />
                 <p className="font-mono text-sm font-medium">
                   {initialData.domain
                     ? `${initialData.domain}.databayt.org`
@@ -129,7 +120,7 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
               <div>
                 <Label className="text-muted-foreground text-xs">Email</Label>
                 <div className="flex items-center gap-1">
-                  <Mail className="text-muted-foreground h-4 w-4" />
+                  <Icons.mail className="text-muted-foreground h-4 w-4" />
                   <p className="font-medium">
                     {initialData.email || "Not set"}
                   </p>
@@ -150,7 +141,7 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
             <div>
               <Label className="text-muted-foreground text-xs">Address</Label>
               <div className="flex items-start gap-1">
-                <MapPin className="text-muted-foreground mt-0.5 h-4 w-4" />
+                <Icons.mapPin className="text-muted-foreground mt-0.5 h-4 w-4" />
                 <p className="font-medium">
                   {initialData.address || "Not set"}
                 </p>
@@ -162,7 +153,7 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
               <div>
                 <Label className="text-muted-foreground text-xs">Website</Label>
                 <div className="flex items-center gap-1">
-                  <Globe className="text-muted-foreground h-4 w-4" />
+                  <Icons.globe className="text-muted-foreground h-4 w-4" />
                   <a
                     href={initialData.website}
                     target="_blank"
@@ -300,12 +291,12 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
         <Button onClick={handleSave} disabled={isPending} size="sm">
           {isPending ? (
             <>
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              <Icons.loader2 className="mr-1 h-4 w-4 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <Check className="mr-1 h-4 w-4" />
+              <Icons.check className="mr-1 h-4 w-4" />
               Save Changes
             </>
           )}
@@ -316,7 +307,7 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
           disabled={isPending}
           size="sm"
         >
-          <X className="mr-1 h-4 w-4" />
+          <Icons.x className="mr-1 h-4 w-4" />
           Cancel
         </Button>
       </div>

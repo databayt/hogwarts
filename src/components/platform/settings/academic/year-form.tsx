@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { createSchoolYear, updateSchoolYear } from "./actions"
@@ -212,7 +212,9 @@ export function YearForm({
               {dict.cancel || "Cancel"}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && (
+                <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {editingYear
                 ? dict.saveChanges || "Save Changes"
                 : dict.addYear || "Add Year"}

@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect } from "react"
-import { Building2, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Icons } from "@/components/icons"
 
 export default function TenantsError({
   error,
@@ -29,7 +29,7 @@ export default function TenantsError({
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/20">
-            <Building2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            <Icons.building2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </div>
           <CardTitle>Tenant Management Error</CardTitle>
           <CardDescription>
@@ -43,7 +43,7 @@ export default function TenantsError({
             </div>
           )}
           <Button onClick={() => reset()} className="w-full">
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <Icons.refresh className="mr-2 h-4 w-4" />
             Retry loading tenants
           </Button>
         </CardContent>

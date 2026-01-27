@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2, SaveIcon } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -16,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Icons } from "@/components/icons"
 import { RichTextEditor } from "@/components/stream/shared/rich-text-editor"
 
 import {
@@ -123,12 +123,12 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
         <Button type="submit" disabled={isPending}>
           {isPending ? (
             <>
-              <Loader2 className="mr-2 size-4 animate-spin" />
+              <Icons.loader2 className="mr-2 size-4 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <SaveIcon className="mr-2 size-4" />
+              <Icons.save className="mr-2 size-4" />
               Save Changes
             </>
           )}

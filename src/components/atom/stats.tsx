@@ -5,7 +5,7 @@ import { Bar, BarChart, Line, LineChart } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartConfig, ChartContainer } from "@/components/ui/chart"
-import { Icons } from "@/components/atom/icons"
+import { Icons } from "@/components/icons"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 const data = [

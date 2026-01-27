@@ -20,14 +20,6 @@ import {
 import AgentHeading from "@/components/atom/agent-heading"
 import { AIResponseDisplay } from "@/components/atom/ai-response-display"
 import {
-  AIBrainIcon,
-  AILogoIcon,
-  AttachIcon,
-  PlusIcon,
-  SendUpIcon,
-  VoiceIcon,
-} from "@/components/atom/icons"
-import {
   PromptInput,
   PromptInputActionAddAttachments,
   PromptInputActionMenu,
@@ -40,6 +32,14 @@ import {
   PromptInputTextarea,
   type PromptInputMessage,
 } from "@/components/atom/prompt-input"
+import {
+  AIBrainIcon,
+  AILogoIcon,
+  AttachIcon,
+  PlusIcon,
+  SendUpIcon,
+  VoiceIcon,
+} from "@/components/icons"
 
 import { createLead, extractLeadsFromText } from "./actions"
 

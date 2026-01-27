@@ -7,12 +7,12 @@ import React, {
   useState,
 } from "react"
 import { useParams } from "next/navigation"
-import { CheckCircle, FileText, Upload, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Uploader, type UploadResult } from "@/components/file"
+import { Icons } from "@/components/icons"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplication } from "../application-context"
@@ -188,7 +188,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                       className="absolute -end-2 -top-2 h-6 w-6"
                       onClick={removePhoto}
                     >
-                      <X className="h-4 w-4" />
+                      <Icons.x className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
@@ -226,7 +226,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                       className="absolute -end-2 -top-2 h-6 w-6"
                       onClick={removeSignature}
                     >
-                      <X className="h-4 w-4" />
+                      <Icons.x className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
@@ -262,7 +262,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                   <CardContent className="pt-4">
                     <div className="mb-3 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <FileText className="text-muted-foreground h-5 w-5" />
+                        <Icons.fileText className="text-muted-foreground h-5 w-5" />
                         <span className="font-medium">
                           {isRTL ? docType.labelAr : docType.label}
                           {docType.required && (
@@ -271,7 +271,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                         </span>
                       </div>
                       {uploaded && (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <Icons.checkCircle className="h-5 w-5 text-green-500" />
                       )}
                     </div>
                     {uploaded ? (
@@ -284,7 +284,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                           size="sm"
                           onClick={() => removeDocument(docType.value)}
                         >
-                          <X className="h-4 w-4" />
+                          <Icons.x className="h-4 w-4" />
                         </Button>
                       </div>
                     ) : (

@@ -8,7 +8,7 @@ import { ChevronDown, Search as SearchIcon, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { AnthropicIcons } from "@/components/icons/anthropic"
+import { AnthropicIcons } from "@/components/icons"
 
 interface SearchBarProps {
   lang: string

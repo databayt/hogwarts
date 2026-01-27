@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Palette, Upload } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateSchoolBranding } from "./actions"
@@ -191,7 +191,7 @@ export function BrandingForm({
                         asChild
                       >
                         <span>
-                          <Upload className="h-4 w-4" />
+                          <Icons.upload className="h-4 w-4" />
                         </span>
                       </Button>
                     </label>

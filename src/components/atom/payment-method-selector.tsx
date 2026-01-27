@@ -6,7 +6,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Icons } from "@/components/atom/icons"
+import { Icons } from "@/components/icons"
 
 const methodIcons = {
   card: Icons.creditCard,

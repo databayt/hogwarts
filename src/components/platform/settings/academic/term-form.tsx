@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -24,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { createTerm, updateTerm } from "./actions"
@@ -251,7 +251,9 @@ export function TermForm({
               {dict.cancel || "Cancel"}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && (
+                <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {editingTerm
                 ? dict.saveChanges || "Save Changes"
                 : dict.addTerm || "Add Term"}

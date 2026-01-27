@@ -2,12 +2,12 @@
 
 import * as React from "react"
 import type { Column, Table } from "@tanstack/react-table"
-import { Plus, Search, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import type { ViewMode } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Icons } from "@/components/icons"
 // Simple filter component for select/multiSelect
 import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter"
 import { DataTableViewOptions } from "@/components/table/data-table-view-options"
@@ -116,7 +116,7 @@ export function PlatformToolbar<TData>({
         {/* Search input */}
         {onSearchChange && (
           <div className="relative">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+            <Icons.search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
             <Input
               placeholder={searchPlaceholder || t.search}
               value={searchValue}
@@ -158,7 +158,7 @@ export function PlatformToolbar<TData>({
             className="h-9 border-dashed"
             onClick={handleReset}
           >
-            <X className="mr-1 h-4 w-4" />
+            <Icons.x className="mr-1 h-4 w-4" />
             {t.reset}
           </Button>
         )}
@@ -213,7 +213,7 @@ export function PlatformToolbar<TData>({
             aria-label={t.create}
             title={t.create}
           >
-            <Plus className="h-4 w-4" />
+            <Icons.plus className="h-4 w-4" />
           </Button>
         )}
       </div>

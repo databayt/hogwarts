@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { AlertCircle, CheckCircle, Lightbulb, RefreshCw } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { Badge } from "@/components/ui/badge"
@@ -24,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Icons } from "@/components/icons"
 
 import {
   checkSubdomainAvailability,
@@ -180,7 +180,7 @@ export function SubdomainForm({
                       <div className="mt-2">
                         {isChecking ? (
                           <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            <Icons.refresh className="h-4 w-4 animate-spin" />
                             {VALIDATION_MESSAGES.CHECKING}
                           </div>
                         ) : availabilityStatus ? (
@@ -192,9 +192,9 @@ export function SubdomainForm({
                             }`}
                           >
                             {availabilityStatus.available ? (
-                              <CheckCircle className="h-4 w-4" />
+                              <Icons.checkCircle className="h-4 w-4" />
                             ) : (
-                              <AlertCircle className="h-4 w-4" />
+                              <Icons.alertCircle className="h-4 w-4" />
                             )}
                             {availabilityStatus.message}
                           </div>
@@ -212,7 +212,7 @@ export function SubdomainForm({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5" />
+                  <Icons.lightbulb className="h-5 w-5" />
                   Suggestions
                 </CardTitle>
                 <CardDescription>Based on your school name</CardDescription>
@@ -245,7 +245,7 @@ export function SubdomainForm({
               <ul className="text-muted-foreground space-y-2 text-sm">
                 {SUBDOMAIN_RULES.map((rule, index) => (
                   <li key={index} className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-600" />
+                    <Icons.checkCircle className="h-4 w-4 flex-shrink-0 text-green-600" />
                     {rule}
                   </li>
                 ))}

@@ -1,7 +1,6 @@
 "use client"
 
 import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
 import { type UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 
@@ -28,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { GENDER_OPTIONS } from "./config"
@@ -116,7 +116,7 @@ export function InformationStep({ form, isView }: StudentFormStepProps) {
                       ) : (
                         <span>{t?.dateOfBirth ?? "Date of birth"}</span>
                       )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      <Icons.calendar className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>

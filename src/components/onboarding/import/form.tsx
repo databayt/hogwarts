@@ -2,7 +2,6 @@
 
 import React, { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Download, Edit, FileSpreadsheet, Info, Upload } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/form"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ImportCard } from "./card"
@@ -70,13 +70,13 @@ export function ImportForm({
   const getImportIcon = (type: string) => {
     switch (type) {
       case "csv":
-        return <FileSpreadsheet className="h-5 w-5" />
+        return <Icons.fileSpreadsheet className="h-5 w-5" />
       case "excel":
-        return <FileSpreadsheet className="h-5 w-5" />
+        return <Icons.fileSpreadsheet className="h-5 w-5" />
       case "manual":
-        return <Edit className="h-5 w-5" />
+        return <Icons.edit className="h-5 w-5" />
       default:
-        return <Upload className="h-5 w-5" />
+        return <Icons.upload className="h-5 w-5" />
     }
   }
 
@@ -170,7 +170,7 @@ export function ImportForm({
                       id="file-upload"
                     />
                     <Label htmlFor="file-upload" className="cursor-pointer">
-                      <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
+                      <Icons.upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
                       <p className="text-sm">
                         {selectedFile ? (
                           <>
@@ -198,10 +198,10 @@ export function ImportForm({
 
                   {/* Download Template */}
                   <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                    <Info className="h-4 w-4" />
+                    <Icons.info className="h-4 w-4" />
                     <span>Need a template?</span>
                     <Button variant="link" size="sm" className="h-auto p-0">
-                      <Download className="me-1 h-3 w-3" />
+                      <Icons.download className="me-1 h-3 w-3" />
                       Download template
                     </Button>
                   </div>

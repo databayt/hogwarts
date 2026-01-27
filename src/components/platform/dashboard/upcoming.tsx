@@ -19,7 +19,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { AnthropicIcons } from "@/components/icons/anthropic"
+import { AnthropicIcons } from "@/components/icons"
 
 // ============================================================================
 // TYPES

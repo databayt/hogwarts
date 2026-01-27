@@ -8,7 +8,6 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { LoaderCircle, Upload } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -18,6 +17,7 @@ import {
   FileUploader,
   type UploadedFileResult,
 } from "@/components/file"
+import { Icons } from "@/components/icons"
 
 import { uploadReceipt } from "./actions"
 
@@ -103,7 +103,7 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
         <div className="border-primary/50 rounded-lg border-2 border-dashed p-8 text-center">
           <div className="space-y-2">
             <div className="bg-primary/10 mx-auto flex h-12 w-12 items-center justify-center rounded-full">
-              <Upload className="text-primary h-6 w-6" />
+              <Icons.upload className="text-primary h-6 w-6" />
             </div>
             <p className="text-sm font-medium">File uploaded successfully</p>
             <p className="text-muted-foreground text-xs">
@@ -129,12 +129,12 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
       >
         {isProcessing ? (
           <>
-            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
             Processing Receipt...
           </>
         ) : (
           <>
-            <Upload className="mr-2 h-4 w-4" />
+            <Icons.upload className="mr-2 h-4 w-4" />
             Process Receipt
           </>
         )}

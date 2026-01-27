@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react"
 import { formatDistanceToNow } from "date-fns"
-import { CircleAlert, CircleCheck, CircleX, Clock, Globe } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Icons } from "@/components/icons"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -94,28 +94,28 @@ export function DomainRequestForm({
       case "pending":
         return (
           <Badge variant="secondary">
-            <Clock className="mr-1 h-3 w-3" />
+            <Icons.clock className="mr-1 h-3 w-3" />
             Pending
           </Badge>
         )
       case "approved":
         return (
           <Badge variant="default">
-            <CircleCheck className="mr-1 h-3 w-3" />
+            <Icons.circleCheck className="mr-1 h-3 w-3" />
             Approved
           </Badge>
         )
       case "rejected":
         return (
           <Badge variant="destructive">
-            <CircleX className="mr-1 h-3 w-3" />
+            <Icons.circleX className="mr-1 h-3 w-3" />
             Rejected
           </Badge>
         )
       case "verified":
         return (
           <Badge className="bg-green-500">
-            <CircleCheck className="mr-1 h-3 w-3" />
+            <Icons.circleCheck className="mr-1 h-3 w-3" />
             Verified
           </Badge>
         )
@@ -134,7 +134,7 @@ export function DomainRequestForm({
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
-            <Globe className="text-muted-foreground h-4 w-4" />
+            <Icons.globe className="text-muted-foreground h-4 w-4" />
             <code className="bg-muted rounded px-2 py-1 font-mono text-sm">
               {currentDomain}.databayt.org
             </code>
@@ -188,7 +188,7 @@ export function DomainRequestForm({
               </div>
 
               <Alert>
-                <CircleAlert className="h-4 w-4" />
+                <Icons.circleAlert className="h-4 w-4" />
                 <AlertTitle>Important</AlertTitle>
                 <AlertDescription>
                   Domain requests are reviewed within 24-48 hours. Once
@@ -198,14 +198,14 @@ export function DomainRequestForm({
 
               {error && (
                 <Alert variant="destructive">
-                  <CircleAlert className="h-4 w-4" />
+                  <Icons.circleAlert className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
               {success && (
                 <Alert className="border-green-500 bg-green-50">
-                  <CircleCheck className="h-4 w-4 text-green-600" />
+                  <Icons.circleCheck className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-600">
                     {success}
                   </AlertDescription>

@@ -81,66 +81,73 @@ export default function FAQs({ dictionary, lang }: FAQsProps) {
       <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
         <div className="text-center lg:text-start">
           <h1 className="font-heading mb-4 text-4xl font-extrabold whitespace-pre-line md:text-5xl">
-            {faqsDict.titleBreak || faqsDict.title}
+            <span className="md:hidden">FAQ</span>
+            <span className="hidden md:inline">
+              {faqsDict.titleBreak || faqsDict.title}
+            </span>
           </h1>
           <p className="muted">{faqsDict.subtitle}</p>
         </div>
-        <div className="divide-y divide-dashed sm:mx-auto sm:max-w-xl lg:mx-0 lg:ms-auto">
-          <div className="pb-6">
-            <h3 className="text-start">{faqsDict.openSourceTitle}</h3>
-            <p className="muted my-4 text-start">{faqsDict.openSourceDesc}</p>
-            <ul className="list-outside list-disc space-y-2 ps-4">
-              {faqsDict.openSourceItems?.map((item, index) => (
-                <li key={index} className="muted">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="pt-6">
-            <Accordion type="single" collapsible defaultValue="item-0">
-              {items.map((item, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-start">
-                    {item.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-start">
-                    {item.answer && <p className="muted mb-4">{item.answer}</p>}
-                    {item.list && (
-                      <ul className="list-outside list-disc space-y-2 ps-4">
-                        {item.links
-                          ? item.links.map((link, linkIndex) => (
-                              <li key={linkIndex} className="muted">
-                                <Link
-                                  href={link.href}
-                                  target={
-                                    link.href.startsWith("http")
-                                      ? "_blank"
-                                      : undefined
-                                  }
-                                  rel={
-                                    link.href.startsWith("http")
-                                      ? "noopener noreferrer"
-                                      : undefined
-                                  }
-                                  className="hover:underline"
-                                >
-                                  {link.text}
-                                </Link>
-                              </li>
-                            ))
-                          : item.list.map((listItem, listIndex) => (
-                              <li key={listIndex} className="muted">
-                                {listItem}
-                              </li>
-                            ))}
-                      </ul>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
+        <div className="sm:mx-auto sm:max-w-xl lg:mx-0 lg:ms-auto">
+          <Accordion type="single" collapsible defaultValue="item-opensource">
+            {/* Open Source Question - First Item */}
+            <AccordionItem value="item-opensource">
+              <AccordionTrigger className="text-start">
+                {faqsDict.openSourceTitle}
+              </AccordionTrigger>
+              <AccordionContent className="text-start">
+                <p className="muted mb-4">{faqsDict.openSourceDesc}</p>
+                <ul className="list-outside list-disc space-y-2 ps-4">
+                  {faqsDict.openSourceItems?.map((item, index) => (
+                    <li key={index} className="muted">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+            {/* Other FAQ Items */}
+            {items.map((item, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-start">
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-start">
+                  {item.answer && <p className="muted mb-4">{item.answer}</p>}
+                  {item.list && (
+                    <ul className="list-outside list-disc space-y-2 ps-4">
+                      {item.links
+                        ? item.links.map((link, linkIndex) => (
+                            <li key={linkIndex} className="muted">
+                              <Link
+                                href={link.href}
+                                target={
+                                  link.href.startsWith("http")
+                                    ? "_blank"
+                                    : undefined
+                                }
+                                rel={
+                                  link.href.startsWith("http")
+                                    ? "noopener noreferrer"
+                                    : undefined
+                                }
+                                className="hover:underline"
+                              >
+                                {link.text}
+                              </Link>
+                            </li>
+                          ))
+                        : item.list.map((listItem, listIndex) => (
+                            <li key={listIndex} className="muted">
+                              {listItem}
+                            </li>
+                          ))}
+                    </ul>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </div>
     </section>

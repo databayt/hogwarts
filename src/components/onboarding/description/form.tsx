@@ -2,17 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  BookOpen,
-  Building2,
-  GraduationCap,
-  Heart,
-  Landmark,
-  Library,
-  Loader2,
-  School,
-  Wrench,
-} from "lucide-react"
+import { Building2, Heart, Landmark, School, Wrench } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -24,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Icons } from "@/components/icons"
 
 import { updateSchoolDescription } from "./actions"
 import { descriptionSchema, type DescriptionFormData } from "./validation"

@@ -2,18 +2,12 @@
 
 import React, { forwardRef, useImperativeHandle } from "react"
 import { useParams } from "next/navigation"
-import {
-  CheckCircle,
-  FileText,
-  GraduationCap,
-  Phone,
-  User,
-  Users,
-} from "lucide-react"
+import { Phone, User, Users } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { Icons } from "@/components/icons"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplication } from "../application-context"
@@ -82,7 +76,7 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <CheckCircle className="text-primary h-5 w-5" />
+                <Icons.checkCircle className="text-primary h-5 w-5" />
                 {dict.applyingFor || (isRTL ? "التقديم لـ" : "Applying For")}
               </CardTitle>
             </CardHeader>
@@ -201,7 +195,7 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <GraduationCap className="text-primary h-5 w-5" />
+              <Icons.graduationCap className="text-primary h-5 w-5" />
               {dict.academicInfo ||
                 (isRTL ? "المعلومات الأكاديمية" : "Academic Information")}
             </CardTitle>
@@ -233,7 +227,7 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="text-primary h-5 w-5" />
+              <Icons.fileText className="text-primary h-5 w-5" />
               {dict.documents || (isRTL ? "المستندات" : "Documents")}
             </CardTitle>
           </CardHeader>

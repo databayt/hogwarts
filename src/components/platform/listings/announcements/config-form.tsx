@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2, Save } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -26,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { AnthropicIcons } from "@/components/icons/anthropic"
+import { AnthropicIcons, Icons } from "@/components/icons"
 import {
   updateAnnouncementConfig,
   type AnnouncementConfigData,
@@ -161,12 +160,12 @@ export function AnnouncementConfigForm({
           <Button type="submit" disabled={isPending}>
             {isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {d.saving}
               </>
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" />
+                <Icons.save className="mr-2 h-4 w-4" />
                 {d.saveChanges}
               </>
             )}

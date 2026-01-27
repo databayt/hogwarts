@@ -34,9 +34,22 @@ export enum IconCategory {
   INTEGRATIONS = "integrations",
   BRANDING = "branding",
 
-  // Content
+  // Content Types
+  CONTENT = "content",
   ILLUSTRATIONS = "illustrations",
   MARKETING = "marketing",
+
+  // Development
+  DEVELOPMENT = "development",
+  PROGRAMMING = "programming",
+
+  // Productivity & Apps
+  PRODUCTIVITY = "productivity",
+  APPLICATIONS = "applications",
+
+  // UI Elements
+  RATINGS = "ratings",
+  SHAPES = "shapes",
 }
 
 /**

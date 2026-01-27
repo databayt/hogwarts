@@ -1,5 +1,4 @@
 import * as React from "react"
-import { Award, Medal, Trophy } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Icons } from "@/components/icons"
 
 import type { CardSize } from "./types"
 
@@ -175,11 +175,11 @@ export function TopPerformersCard({
     if (!showMedals) return null
     switch (rank) {
       case 1:
-        return <Trophy className="text-chart-3 h-5 w-5" />
+        return <Icons.trophy className="text-chart-3 h-5 w-5" />
       case 2:
-        return <Medal className="text-muted-foreground h-5 w-5" />
+        return <Icons.medal className="text-muted-foreground h-5 w-5" />
       case 3:
-        return <Award className="text-chart-5 h-5 w-5" />
+        return <Icons.award className="text-chart-5 h-5 w-5" />
       default:
         return null
     }

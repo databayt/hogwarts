@@ -57,7 +57,7 @@
     "DEFAULT_MODEL": "opus",
     "COVERAGE_TARGET": "95",
     "ERROR_PATTERNS": "204",
-    "AGENT_COUNT": "33"
+    "AGENT_COUNT": "34"
   },
   "hooks": {
     "PreToolUse": [

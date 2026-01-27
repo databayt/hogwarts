@@ -6,7 +6,6 @@
  */
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { LoaderCircle } from "lucide-react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -38,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Icons } from "@/components/icons"
 
 import { createCircularGeofence } from "./actions"
 import {
@@ -346,7 +346,7 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && (
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Create Geofence
               </Button>

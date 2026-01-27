@@ -4,9 +4,9 @@
  * Certificates Error Boundary
  */
 import { useEffect } from "react"
-import { AlertTriangle, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Icons } from "@/components/icons"
 
 interface ErrorProps {
   error: Error & { digest?: string }
@@ -21,7 +21,7 @@ export default function CertificatesError({ error, reset }: ErrorProps) {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
       <div className="bg-destructive/10 rounded-full p-4">
-        <AlertTriangle className="text-destructive h-8 w-8" />
+        <Icons.alertTriangle className="text-destructive h-8 w-8" />
       </div>
       <h2 className="text-xl font-semibold">Something went wrong</h2>
       <p className="text-muted-foreground max-w-md text-center text-sm">
@@ -33,7 +33,7 @@ export default function CertificatesError({ error, reset }: ErrorProps) {
         </p>
       )}
       <Button onClick={reset} variant="outline">
-        <RefreshCw className="mr-2 h-4 w-4" />
+        <Icons.refresh className="mr-2 h-4 w-4" />
         Try again
       </Button>
     </div>

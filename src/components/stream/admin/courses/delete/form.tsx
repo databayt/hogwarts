@@ -3,7 +3,6 @@
 import { useTransition } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { Loader2, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { tryCatch } from "@/hooks/try-catch"
@@ -15,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Icons } from "@/components/icons"
 
 import { deleteCourse } from "./actions"
 
@@ -59,12 +59,12 @@ export default function DeleteCourseForm() {
           <Button variant="destructive" onClick={onSubmit} disabled={pending}>
             {pending ? (
               <>
-                <Loader2 className="size-4 animate-spin" />
+                <Icons.loader2 className="size-4 animate-spin" />
                 Deleting...
               </>
             ) : (
               <>
-                <Trash2 className="size-4" />
+                <Icons.trash2 className="size-4" />
                 Delete
               </>
             )}

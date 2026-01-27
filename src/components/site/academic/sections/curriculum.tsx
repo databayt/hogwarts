@@ -1,4 +1,4 @@
-import { AnthropicIcons } from "@/components/icons/anthropic"
+import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 

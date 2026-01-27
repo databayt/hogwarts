@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
-import { MapPin } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { type LocationResult } from "@/components/atom/mapbox-autocomplete"
+import { Icons } from "@/components/icons"
 
 import { type LocationFormData } from "./validation"
 
@@ -80,7 +80,7 @@ export function MapForm({
         {locationData.address && (
           <div className="bg-muted/50 space-y-3 rounded-lg p-4">
             <div className="flex items-start gap-2">
-              <MapPin className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+              <Icons.mapPin className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
               <div className="space-y-1">
                 <p className="text-sm font-medium">{locationData.address}</p>
                 {(locationData.city ||

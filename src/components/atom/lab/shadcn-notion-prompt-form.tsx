@@ -6,10 +6,8 @@ import {
   AtSign,
   FileText,
   Paperclip,
-  Search,
   Sparkles,
   User,
-  X,
 } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -48,6 +46,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Icons } from "@/components/icons"
 
 type PageItem = {
   id: string
@@ -147,7 +146,7 @@ export function ShadcnNotionPromptForm() {
               {mentions.map((mention) => (
                 <Badge key={mention.id} variant="secondary" className="gap-1">
                   {mention.type === "page" ? (
-                    <FileText className="size-3" />
+                    <Icons.fileText className="size-3" />
                   ) : (
                     <User className="size-3" />
                   )}
@@ -156,7 +155,7 @@ export function ShadcnNotionPromptForm() {
                     onClick={() => removeMention(mention.id)}
                     className="hover:text-foreground ml-1"
                   >
-                    <X className="size-3" />
+                    <Icons.x className="size-3" />
                   </button>
                 </Badge>
               ))}
@@ -302,7 +301,7 @@ export function ShadcnNotionPromptForm() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm">
-                    <Search className="mr-1 size-4" />
+                    <Icons.search className="mr-1 size-4" />
                     Sources
                   </Button>
                 </DropdownMenuTrigger>

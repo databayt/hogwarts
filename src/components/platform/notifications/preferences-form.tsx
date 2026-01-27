@@ -3,14 +3,7 @@
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import type { NotificationChannel, NotificationType } from "@prisma/client"
-import {
-  Bell,
-  Clock,
-  LoaderCircle,
-  Mail,
-  MessageSquare,
-  Smartphone,
-} from "lucide-react"
+import { Bell, Mail, MessageSquare, Smartphone } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -43,6 +36,7 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/use-toast"
+import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { updateNotificationPreferences } from "./actions"
@@ -206,7 +200,7 @@ export function NotificationPreferencesForm({
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
+              <Icons.clock className="h-5 w-5" />
               <CardTitle>{dictionary.preferences.quietHours.title}</CardTitle>
             </div>
             <CardDescription>
@@ -311,7 +305,7 @@ export function NotificationPreferencesForm({
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
+              <Icons.mail className="h-5 w-5" />
               <CardTitle>{dictionary.preferences.digest.title}</CardTitle>
             </div>
             <CardDescription>
@@ -471,7 +465,7 @@ export function NotificationPreferencesForm({
           </Button>
           <Button type="submit" disabled={isLoading}>
             {isLoading && (
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
             )}
             {dictionary.common.save}
           </Button>

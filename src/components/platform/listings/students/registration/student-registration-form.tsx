@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Check, ChevronLeft, ChevronRight, Save } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -19,6 +18,7 @@ import {
 import { Form } from "@/components/ui/form"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/components/ui/use-toast"
+import { Icons } from "@/components/icons"
 
 import { registerStudent } from "../actions"
 import { ContactInfoStep } from "./contact-info-step"
@@ -214,7 +214,7 @@ export function StudentRegistrationForm({
               )}
             >
               {completedSteps.has(index) ? (
-                <Check className="h-4 w-4" />
+                <Icons.check className="h-4 w-4" />
               ) : (
                 <span className="text-sm">{index + 1}</span>
               )}
@@ -248,7 +248,7 @@ export function StudentRegistrationForm({
                     variant="outline"
                     onClick={handlePrevious}
                   >
-                    <ChevronLeft className="mr-1 h-4 w-4" />
+                    <Icons.chevronLeft className="mr-1 h-4 w-4" />
                     Previous
                   </Button>
                 )}
@@ -264,14 +264,14 @@ export function StudentRegistrationForm({
                   variant="outline"
                   onClick={handleSaveProgress}
                 >
-                  <Save className="mr-1 h-4 w-4" />
+                  <Icons.save className="mr-1 h-4 w-4" />
                   Save Progress
                 </Button>
 
                 {currentStep < totalSteps - 1 ? (
                   <Button type="button" onClick={handleNext}>
                     Next
-                    <ChevronRight className="ml-1 h-4 w-4" />
+                    <Icons.chevronRight className="ml-1 h-4 w-4" />
                   </Button>
                 ) : (
                   <Button type="submit" disabled={isSubmitting}>

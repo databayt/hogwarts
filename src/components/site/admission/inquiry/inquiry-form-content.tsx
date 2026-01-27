@@ -3,7 +3,6 @@
 import { useState } from "react"
 import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -34,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { AnthropicIcons } from "@/components/icons/anthropic"
+import { AnthropicIcons, Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -428,7 +427,7 @@ export default function InquiryFormContent({
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                    <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
                     {isRTL ? "جارٍ الإرسال..." : "Submitting..."}
                   </>
                 ) : (

@@ -3,19 +3,7 @@
 import * as React from "react"
 import { useCallback, useRef, useState } from "react"
 import { format } from "date-fns"
-import {
-  CircleAlert,
-  File,
-  FileAudio,
-  FileText,
-  Image,
-  LoaderCircle,
-  Save,
-  Send,
-  Upload,
-  Video,
-  X,
-} from "lucide-react"
+import { File, FileAudio, Image, Send, Video } from "lucide-react"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
@@ -34,6 +22,7 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
+import { Icons } from "@/components/icons"
 
 interface Assignment {
   id: string
@@ -242,7 +231,7 @@ export function SubmissionForm({
     if (type.startsWith("video/")) return <Video className="h-4 w-4" />
     if (type.startsWith("audio/")) return <FileAudio className="h-4 w-4" />
     if (type.includes("pdf"))
-      return <FileText className="h-4 w-4 text-red-600" />
+      return <Icons.fileText className="h-4 w-4 text-red-600" />
     return <File className="h-4 w-4" />
   }
 
@@ -318,7 +307,7 @@ export function SubmissionForm({
         <CardContent className="space-y-4">
           {isPastDue && (
             <Alert variant="destructive">
-              <CircleAlert className="h-4 w-4" />
+              <Icons.circleAlert className="h-4 w-4" />
               <AlertTitle>Late Submission</AlertTitle>
               <AlertDescription>
                 This assignment is past due. Your submission will be marked as
@@ -364,7 +353,7 @@ export function SubmissionForm({
                   accept={ALLOWED_FILE_TYPES.join(",")}
                   disabled={isSubmitting || isUploading}
                 />
-                <Upload className="text-muted-foreground mx-auto mb-3 h-10 w-10" />
+                <Icons.upload className="text-muted-foreground mx-auto mb-3 h-10 w-10" />
                 <p className="text-sm font-medium">
                   Click to upload or drag and drop
                 </p>
@@ -432,7 +421,7 @@ export function SubmissionForm({
                           onClick={() => handleRemoveFile(file.id)}
                           disabled={file.status === "uploading"}
                         >
-                          <X className="h-4 w-4" />
+                          <Icons.x className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -452,15 +441,15 @@ export function SubmissionForm({
             disabled={isSubmitting || isUploading}
           >
             {isSubmitting ? (
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Save className="mr-2 h-4 w-4" />
+              <Icons.save className="mr-2 h-4 w-4" />
             )}
             Save as Draft
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting || isUploading}>
             {isSubmitting ? (
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Send className="mr-2 h-4 w-4" />
             )}

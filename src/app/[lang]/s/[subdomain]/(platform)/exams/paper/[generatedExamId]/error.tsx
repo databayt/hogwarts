@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect } from "react"
-import { AlertTriangle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Icons } from "@/components/icons"
 
 export default function Error({
   error,
@@ -22,7 +22,7 @@ export default function Error({
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <AlertTriangle className="text-destructive h-5 w-5" />
+            <Icons.alertTriangle className="text-destructive h-5 w-5" />
             <CardTitle>Error Loading Page</CardTitle>
           </div>
         </CardHeader>

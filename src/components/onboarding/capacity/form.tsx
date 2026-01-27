@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Minus, Plus } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
+import { Icons } from "@/components/icons"
 
 import { updateSchoolCapacity } from "./actions"
 import { capacitySchema, type CapacityFormData } from "./validation"
@@ -105,7 +105,7 @@ export function CapacityForm({
               value <= minValue && "cursor-not-allowed opacity-50"
             )}
           >
-            <Minus size={16} strokeWidth={2} className="sm:h-3.5 sm:w-3.5" />
+            <Icons.minus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
           </Button>
           <span className="w-16 text-center font-mono text-lg font-medium sm:text-base">
             {formatNumber(value)}
@@ -118,7 +118,7 @@ export function CapacityForm({
             disabled={isPending}
             className="flex h-10 min-h-[40px] w-10 items-center justify-center rounded-full border transition-colors sm:h-7 sm:min-h-[28px] sm:w-7"
           >
-            <Plus size={16} strokeWidth={2} className="sm:h-3.5 sm:w-3.5" />
+            <Icons.plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
           </Button>
         </div>
       </div>

@@ -3,16 +3,7 @@
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import {
-  BookOpen,
-  Calendar as CalendarIcon,
-  CircleCheck,
-  CreditCard,
-  FileText,
-  Info,
-  TriangleAlert,
-  Users,
-} from "lucide-react"
+import { BookOpen, CreditCard, TriangleAlert, Users } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -54,6 +45,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { Icons } from "@/components/icons"
 
 import type { Batch, Student } from "../registration/types"
 import type { Course, Section, Subject } from "./types"
@@ -146,7 +138,7 @@ export function EnrollmentForm({
               Fees & Services
             </TabsTrigger>
             <TabsTrigger value="documents">
-              <FileText className="mr-2 h-4 w-4" />
+              <Icons.fileText className="mr-2 h-4 w-4" />
               Documents
             </TabsTrigger>
           </TabsList>
@@ -163,7 +155,7 @@ export function EnrollmentForm({
               <CardContent className="space-y-4">
                 {student && (
                   <Alert>
-                    <Info className="h-4 w-4" />
+                    <Icons.info className="h-4 w-4" />
                     <AlertDescription>
                       Enrolling:{" "}
                       <strong>
@@ -220,7 +212,7 @@ export function EnrollmentForm({
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                <Icons.calendar className="mr-2 h-4 w-4" />
                                 {field.value
                                   ? format(field.value, "PPP")
                                   : "Pick a date"}
@@ -578,7 +570,7 @@ export function EnrollmentForm({
                                 !field.value && "text-muted-foreground"
                               )}
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              <Icons.calendar className="mr-2 h-4 w-4" />
                               {field.value
                                 ? format(field.value, "PPP")
                                 : "Pick a date"}
@@ -907,7 +899,7 @@ export function EnrollmentForm({
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && (
-              <CircleCheck className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.circleCheck className="mr-2 h-4 w-4 animate-spin" />
             )}
             {isSubmitting ? "Enrolling..." : "Enroll Student"}
           </Button>

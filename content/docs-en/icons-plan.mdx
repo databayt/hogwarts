@@ -1,0 +1,660 @@
+---
+title: "Icon Plan"
+description: "Complete architecture map, migration plan, and automation reference for the icon system"
+---
+
+# Icon Plan
+
+Complete technical documentation of the Hogwarts icon system architecture, migration strategy, and automation tools.
+
+---
+
+## Quick Reference
+
+### Current Metrics (January 2026)
+
+| Metric                | Before   | Current   | Target | Status      |
+| --------------------- | -------- | --------- | ------ | ----------- |
+| Total Icons           | 86       | 180+      | 240+   | ✅ +94      |
+| Direct lucide imports | 801      | 703       | 0      | 🔄 12% done |
+| Unified imports       | 36 files | 125 files | 100%   | 🔄 15%      |
+| Registry entries      | 4        | 173+      | Full   | ✅ Complete |
+| Error boundaries      | 0/45     | 45/45     | 100%   | ✅ Complete |
+| Form components       | 0/48     | 47/48     | 100%   | ✅ 98%      |
+
+### Recent Achievements
+
+- **62 new icons** added for form and UI components
+- **45 error.tsx files** fully migrated
+- **47 form components** migrated
+- **8 new categories** organized
+- **7 automation commands** created
+- **Icon manager agent** operational
+
+---
+
+## Architecture Map
+
+### Core Files
+
+| File                                | Lines | Purpose                                          |
+| ----------------------------------- | ----- | ------------------------------------------------ |
+| `src/components/icons.tsx`          | 2,437 | Legacy barrel export (180+ icons)                |
+| `src/components/icons/index.tsx`    | 262   | Central export hub with Icons namespace          |
+| `src/components/icons/registry.ts`  | 1,351 | 173+ icons with full metadata                    |
+| `src/components/icons/types.ts`     | 303   | TypeScript types & IconCategory enum             |
+| `src/components/icons/constants.ts` | 633   | Design system rules & category metadata          |
+| `src/components/icons/utils.ts`     | 477   | Helper functions (search, filter, getByCategory) |
+
+### Category Files
+
+Located in `src/components/icons/categories/`:
+
+| File               | Lines | Icons | Description                                 |
+| ------------------ | ----- | ----- | ------------------------------------------- |
+| `system.tsx`       | 632   | 59    | Core UI icons (navigation, actions, status) |
+| `integrations.tsx` | 175   | 16    | Third-party brand logos                     |
+| `content.tsx`      | ~40   | 8     | Document and file type icons                |
+| `apps.tsx`         | ~35   | 6     | Application-specific icons                  |
+| `productivity.tsx` | ~30   | 5     | Workflow and productivity icons             |
+| `development.tsx`  | ~45   | 7     | Developer tool icons                        |
+| `programming.tsx`  | ~50   | 8     | Programming language logos                  |
+| `ratings.tsx`      | ~25   | 4     | Quality indicator icons                     |
+| `shapes.tsx`       | ~20   | 3     | Geometric shape icons                       |
+
+**Total:** 9 category files with ~116 icons
+
+### Anthropic Design System
+
+| File                                          | Lines | Purpose                             |
+| --------------------------------------------- | ----- | ----------------------------------- |
+| `src/components/icons/anthropic.tsx`          | 557   | 26 Anthropic React components       |
+| `src/components/icons/anthropic-showcase.tsx` | 899   | Interactive documentation component |
+
+### Public Assets
+
+| Directory            | Files      | Description                              |
+| -------------------- | ---------- | ---------------------------------------- |
+| `/public/anthropic/` | 139 files  | Anthropic SVG assets (112 SVG, 27 other) |
+| `/public/icons/`     | 120+ files | General purpose SVG icons                |
+
+### Claude Automation
+
+**Commands** (`.claude/commands/`):
+
+| Command          | File               | Purpose                             |
+| ---------------- | ------------------ | ----------------------------------- |
+| `/icon-add`      | `icon-add.md`      | Add new icon to system              |
+| `/icon-generate` | `icon-generate.md` | AI-generate icon from description   |
+| `/icon-validate` | `icon-validate.md` | Validate icons against design rules |
+| `/icon-fetch`    | `icon-fetch.md`    | Fetch from external sources         |
+| `/icon-migrate`  | `icon-migrate.md`  | Migrate lucide imports to unified   |
+| `/icon-audit`    | `icon-audit.md`    | Audit icon usage across codebase    |
+| `/icon-registry` | `icon-registry.md` | Manage icon registry metadata       |
+
+**Agent** (`.claude/agents/`):
+
+| Agent          | File              | Purpose                      |
+| -------------- | ----------------- | ---------------------------- |
+| `icon-manager` | `icon-manager.md` | Expert agent for icon system |
+
+**Skill** (`.claude/skills/`):
+
+| Skill          | File              | Purpose               |
+| -------------- | ----------------- | --------------------- |
+| `icon-manager` | `icon-manager.md` | Icon management skill |
+
+---
+
+## Current Implementation Trace
+
+### Import Flow
+
+```
+Component imports Icons from "@/components/icons"
+         ↓
+src/components/icons/index.tsx (central hub)
+         ↓
+Re-exports from:
+├── categories/system.tsx (59 icons)
+├── categories/integrations.tsx (16 icons)
+├── categories/content.tsx (8 icons)
+├── categories/programming.tsx (8 icons)
+├── anthropic.tsx (26 icons)
+└── ... other categories
+         ↓
+Icons namespace provides unified access
+```
+
+### Usage Pattern (shadcn/ui Style)
+
+```tsx
+// CORRECT - Unified system
+import { Icons } from "@/components/icons"
+
+<Icons.alertCircle className="size-5" />
+<Icons.check className="text-green-500 size-5" />
+<Icons.spinner className="size-5 animate-spin" />
+
+// WRONG - Direct lucide import (needs migration)
+import { AlertCircle } from "lucide-react"
+```
+
+### Registry Structure
+
+```typescript
+// src/components/icons/registry.ts
+interface IconMetadata {
+  id: string // "alert-circle"
+  name: string // "Alert Circle"
+  component: IconComponent // React component
+  category: IconCategory // IconCategory.SYSTEM
+  tags: string[] // ["warning", "error", "status"]
+  description?: string // "Displays error or warning state"
+  viewBox: string // "0 0 24 24"
+  customizable: boolean // true (uses currentColor)
+}
+```
+
+---
+
+## Migration Plan
+
+### Phase 1: Foundation (Complete ✅)
+
+| Task                           | Status | Files Changed |
+| ------------------------------ | ------ | ------------- |
+| Fix anthropic.tsx path mapping | ✅     | 1             |
+| Create icon-manager agent      | ✅     | 1             |
+| Create 7 automation commands   | ✅     | 7             |
+| Expand registry (4 → 173+)     | ✅     | 1             |
+| Add 8 category files           | ✅     | 8             |
+
+### Phase 2: Error Boundaries (Complete ✅)
+
+All 45 error.tsx files migrated to unified system:
+
+```tsx
+// Before
+import { AlertCircle, RefreshCw } from "lucide-react"
+
+// After
+import { Icons } from "@/components/icons"
+
+<Icons.alertCircle className="size-6" />
+<Icons.refresh className="size-4" />
+```
+
+**Files migrated:** All files in `src/app/**/error.tsx`
+
+### Phase 3: Form Components (98% Complete ✅)
+
+47 of 48 form components migrated:
+
+**Migrated patterns:**
+
+- `Loader2` → `Icons.loader2`
+- `Check`, `CheckCircle` → `Icons.check`, `Icons.checkCircle`
+- `AlertCircle`, `CircleAlert` → `Icons.alertCircle`, `Icons.circleAlert`
+- `Upload`, `Download` → `Icons.upload`, `Icons.download`
+- `Eye`, `EyeOff` → `Icons.eye`, `Icons.eyeOff`
+- `Calendar`, `Clock` → `Icons.calendar`, `Icons.clock`
+- `Mail`, `Phone` → `Icons.mail`, `Icons.phone`
+- `Search`, `Filter` → `Icons.search`, `Icons.filter`
+
+### Phase 4: Content Components (Pending 🔄)
+
+**Remaining:** ~102 files with direct lucide imports
+
+**Strategy:** Batch migration by component category
+
+1. Platform components (`src/components/platform/**`)
+2. Marketing components (`src/components/marketing/**`)
+3. Site components (`src/components/site/**`)
+4. Onboarding components (`src/components/onboarding/**`)
+5. Atom components (`src/components/atom/**`)
+
+### Phase 5: Full Adoption (Target)
+
+**Goal:** 100% unified system adoption, 0 direct lucide imports
+
+**Enforcement:**
+
+- Pre-commit hook warns on lucide imports
+- ESLint rule for import enforcement
+- CI check for compliance
+
+---
+
+## Automation Reference
+
+### Commands
+
+#### `/icon-add <name>`
+
+Add a new icon to the unified system.
+
+```bash
+# Add a new icon
+/icon-add activity
+
+# Process:
+# 1. Check if icon exists in lucide
+# 2. Create component in appropriate category file
+# 3. Add to Icons namespace in index.tsx
+# 4. Register in registry.ts with metadata
+# 5. Verify component renders correctly
+```
+
+#### `/icon-migrate <scope>`
+
+Migrate lucide-react imports to unified system.
+
+```bash
+# Migrate a single file
+/icon-migrate src/components/example.tsx
+
+# Migrate in batches (10 files at a time)
+/icon-migrate batch
+
+# Migrate all files (with confirmation)
+/icon-migrate all
+
+# Show migration status/report
+/icon-migrate report
+```
+
+#### `/icon-audit`
+
+Audit icon usage across the codebase.
+
+```bash
+/icon-audit
+
+# Output:
+# - Unified system imports: 125 files (15.1%)
+# - Direct lucide imports: 703 files (84.9%)
+# - Unregistered icons: 0
+# - Theme compatibility: 100%
+# - Files needing migration: 703
+```
+
+#### `/icon-registry <mode>`
+
+Manage the icon registry.
+
+```bash
+# Sync registry with Icons namespace
+/icon-registry sync
+
+# Add single icon to registry
+/icon-registry add alertCircle
+
+# Validate registry completeness
+/icon-registry validate
+
+# Export registry as JSON
+/icon-registry export
+```
+
+#### `/icon-validate [scope]`
+
+Validate icons against design system rules.
+
+```bash
+# Validate all icons
+/icon-validate
+
+# Validate specific category
+/icon-validate system
+
+# Validate specific file
+/icon-validate src/components/icons/categories/system.tsx
+```
+
+**Validation rules:**
+
+- Uses `currentColor` (theme-aware)
+- Correct viewBox (0 0 24 24 for UI icons)
+- Spreads `{...props}` for customization
+- No hardcoded colors
+- Proper xmlns attribute
+
+#### `/icon-fetch <source>`
+
+Fetch icons from external sources.
+
+```bash
+# Fetch from Anthropic design system
+/icon-fetch anthropic
+
+# Fetch education-style icons (ClickView)
+/icon-fetch education
+
+# Fetch school operations icons (Zenda)
+/icon-fetch school
+
+# Fetch from all sources
+/icon-fetch all
+```
+
+#### `/icon-generate`
+
+AI-generate icon from description.
+
+```bash
+/icon-generate "a graduation cap for education"
+
+# Process:
+# 1. Generate SVG based on description
+# 2. Optimize SVG (remove metadata, minify)
+# 3. Create React component
+# 4. Add to appropriate category
+# 5. Register with metadata
+```
+
+### Agent: icon-manager
+
+Expert agent for icon system management.
+
+```bash
+# Invoke agent directly
+/agents/icon-manager
+
+# Or use for complex tasks:
+"Use icon-manager to migrate all form components"
+"Use icon-manager to audit and fix icon usage"
+"Use icon-manager to add 10 education icons"
+```
+
+**Capabilities:**
+
+- Icon system architecture (shadcn/ui pattern)
+- SVG optimization and validation
+- Registry management and metadata
+- Theme-aware icon design (currentColor)
+- External icon fetching
+- lucide-react migration
+- Accessibility compliance
+
+---
+
+## Implementation Guidelines
+
+### SVG Component Pattern
+
+```tsx
+// Standard icon component (UI icons)
+export const IconName = (props: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="..." />
+  </svg>
+)
+
+// Filled icon variant
+export const IconNameFilled = (props: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    {...props}
+  >
+    <path d="..." />
+  </svg>
+)
+```
+
+### SVG Standards
+
+| Property    | UI Icons                | Anthropic Icons                     |
+| ----------- | ----------------------- | ----------------------------------- |
+| viewBox     | `0 0 24 24`             | `0 0 1000 1000` or `0 0 1680 1260`  |
+| Colors      | `currentColor` only     | `#FAF9F5` (light), `#141413` (dark) |
+| Fill/Stroke | `stroke="currentColor"` | `fill="currentColor"` or explicit   |
+| Props       | `{...props}` last       | `{...props}` last                   |
+| Naming      | camelCase               | camelCase                           |
+
+### Do's and Don'ts
+
+**DO:**
+
+```tsx
+// ✅ Use unified system
+import { Icons } from "@/components/icons"
+<Icons.check className="size-5" />
+
+// ✅ Use size-* utilities
+<Icons.github className="size-4" />
+
+// ✅ Let icons inherit color
+<div className="text-primary">
+  <Icons.check />  {/* Inherits text-primary */}
+</div>
+
+// ✅ Use semantic color classes
+<Icons.trash className="icon-destructive" />
+
+// ✅ Spread props for customization
+export const Icon = (props: IconProps) => (
+  <svg {...props}>...</svg>
+)
+
+// ✅ Use currentColor
+<path fill="currentColor" d="..." />
+```
+
+**DON'T:**
+
+```tsx
+// ❌ Direct lucide import
+import { Check } from "lucide-react"
+
+// ❌ Separate width/height
+<Icons.github className="w-4 h-4" />
+
+// ❌ Hardcoded colors
+<path fill="#000000" d="..." />
+
+// ❌ Inline SVG in components
+<button>
+  <svg>...</svg>  {/* Add to icons.tsx instead */}
+</button>
+
+// ❌ Inconsistent sizes
+<Icons.a className="size-4" />
+<Icons.b className="size-6" />  {/* Same context, different sizes */}
+```
+
+---
+
+## Reference Sources
+
+### External Icon Sources
+
+| Source              | URL                    | Icon Types               | Status         |
+| ------------------- | ---------------------- | ------------------------ | -------------- |
+| Anthropic           | anthropic.com          | Brand, UI, Illustrations | ✅ 139 files   |
+| ClickView Education | clickvieweducation.com | Education, School        | 🔄 Planned     |
+| Zenda               | zenda.com              | School Operations        | 🔄 Planned     |
+| Lucide              | lucide.dev             | General UI               | ✅ Base source |
+
+### Anthropic Assets Available
+
+**Brand:**
+
+- A-large, A-small, logomark, wordmark
+- Claude variants (sparkle, wordmark, personal, work)
+- MCP protocol logos (dark/light)
+
+**UI Icons:**
+
+- Arrows, chevrons, search, menu, close
+- Terminal, code-brackets, api-vine
+- Chat, lightning, checklist
+
+**Illustrations:**
+
+- Hands-Build, Hands-Stack, Objects-Puzzle
+- Categories 01-14
+
+### Education Icons (ClickView Style)
+
+**Planned additions:**
+
+- `classroom` - Classroom/learning
+- `school-building` - School structure
+- `district` - Multi-school/district
+- `student-engagement` - Star/activity
+- `teacher-support` - Heart/care
+- `video-content` - Video/media
+
+### School Operations Icons (Zenda Style)
+
+**Planned additions:**
+
+- `activities` - Sports/extracurricular
+- `transport` - Bus/transportation
+- `uniform` - School dress code
+- `supplies` - Books/materials
+- `laboratory` - Science/lab
+- `security` - Safety/security
+- `fees` - Payment/billing
+- `events` - Calendar events
+- `rewards` - Coins/achievements
+
+---
+
+## File Inventory
+
+### Complete File List
+
+```
+src/components/
+├── icons.tsx                      # 2,437 lines - Legacy barrel export
+└── icons/
+    ├── index.tsx                  # 262 lines - Central hub
+    ├── registry.ts                # 1,351 lines - Metadata registry
+    ├── types.ts                   # 303 lines - TypeScript types
+    ├── constants.ts               # 633 lines - Design rules
+    ├── utils.ts                   # 477 lines - Helper functions
+    ├── anthropic.tsx              # 557 lines - Anthropic components
+    ├── anthropic-showcase.tsx     # 899 lines - Showcase component
+    ├── components/
+    │   └── icon-wrapper.tsx       # Icon wrapper for file-based
+    └── categories/
+        ├── system.tsx             # 632 lines - 59 icons
+        ├── integrations.tsx       # 175 lines - 16 icons
+        ├── content.tsx            # ~40 lines - 8 icons
+        ├── apps.tsx               # ~35 lines - 6 icons
+        ├── productivity.tsx       # ~30 lines - 5 icons
+        ├── development.tsx        # ~45 lines - 7 icons
+        ├── programming.tsx        # ~50 lines - 8 icons
+        ├── ratings.tsx            # ~25 lines - 4 icons
+        └── shapes.tsx             # ~20 lines - 3 icons
+
+public/
+├── anthropic/                     # 139 files (112 SVG)
+└── icons/                         # 120+ general icons
+
+.claude/
+├── agents/
+│   └── icon-manager.md            # Icon management agent
+├── commands/
+│   ├── icon-add.md                # Add new icon
+│   ├── icon-generate.md           # AI generate icon
+│   ├── icon-validate.md           # Validate icons
+│   ├── icon-fetch.md              # Fetch external icons
+│   ├── icon-migrate.md            # Migrate imports
+│   ├── icon-audit.md              # Audit usage
+│   └── icon-registry.md           # Manage registry
+└── skills/
+    └── icon-manager.md            # Icon skill
+
+content/docs-en/
+├── icons.mdx                      # User documentation
+└── icons-plan.mdx                 # This file (architecture)
+```
+
+---
+
+## Success Metrics
+
+| Metric                | Before  | Current  | Target     |
+| --------------------- | ------- | -------- | ---------- |
+| Unified adoption      | 4.5%    | 15.1%    | 100%       |
+| Direct lucide imports | 801     | 703      | 0          |
+| Registry completion   | 4 icons | 173+     | 240+       |
+| Icon categories       | 9       | 12       | 14         |
+| Automation commands   | 3       | 7        | 7          |
+| Documentation         | Partial | Complete | Maintained |
+| Theme compatibility   | Unknown | 100%     | 100%       |
+| TypeScript coverage   | Partial | Full     | Full       |
+
+---
+
+## Handoff Notes
+
+### Ownership Scope
+
+The icon system owner is responsible for:
+
+- **Registry** - Icon metadata and search/filter
+- **Fetching** - External icon acquisition
+- **Migration** - Gradual lucide → unified transition
+- **Automation** - Agents, commands, hooks
+- **Documentation** - Showcases, guides, patterns
+
+### Quick Start for New Engineers
+
+1. Read `src/components/icons/index.tsx` (shadcn/ui pattern)
+2. Read `src/components/icons/registry.ts` (metadata pattern)
+3. Check commands: `/icon-add`, `/icon-validate`, `/icon-audit`
+4. Review `content/docs-en/icons.mdx` (user docs)
+5. Run `/icon-audit` to see current health
+
+### Key Decision Records
+
+**Why unified system over direct lucide?**
+
+- Consistent theming (currentColor)
+- Better tree-shaking
+- Centralized management
+- Easier migrations
+- Type-safe icon names
+
+**Why registry pattern?**
+
+- Searchable metadata
+- Documentation generation
+- Category filtering
+- Validation automation
+
+**Why category files?**
+
+- Organized by domain
+- Easier maintenance
+- Better code splitting
+- Clear ownership
+
+---
+
+## Changelog
+
+### January 2026
+
+- Created icon-manager agent
+- Added 7 automation commands
+- Migrated 45 error boundaries
+- Migrated 47 form components
+- Added 62 new icons
+- Expanded registry to 173+ entries
+- Created comprehensive documentation

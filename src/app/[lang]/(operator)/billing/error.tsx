@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { Receipt, RefreshCw } from "lucide-react"
+import { Receipt } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Icons } from "@/components/icons"
 
 export default function BillingError({
   error,
@@ -43,7 +44,7 @@ export default function BillingError({
             </div>
           )}
           <Button onClick={() => reset()} className="w-full">
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <Icons.refresh className="mr-2 h-4 w-4" />
             Try again
           </Button>
         </CardContent>

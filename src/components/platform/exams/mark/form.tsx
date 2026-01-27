@@ -5,7 +5,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
-import { ArrowLeft, ArrowRight, Plus, Save, Trash } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -23,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { createQuestion, updateQuestion } from "./actions"
@@ -305,7 +305,7 @@ export function QuestionForm({
                     size="sm"
                     onClick={() => removeOption(index)}
                   >
-                    <Trash className="h-4 w-4" />
+                    <Icons.trash className="h-4 w-4" />
                   </Button>
                 )}
               </div>
@@ -317,7 +317,7 @@ export function QuestionForm({
               onClick={addOption}
               className="w-full"
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Icons.plus className="mr-2 h-4 w-4" />
               {dict.options.addOption}
             </Button>
 
@@ -397,7 +397,7 @@ export function QuestionForm({
               variant="outline"
               onClick={() => setStep(step - 1)}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <Icons.arrowLeft className="mr-2 h-4 w-4" />
               {dict.buttons.previous}
             </Button>
           )}
@@ -407,12 +407,12 @@ export function QuestionForm({
           {step < (needsOptions ? 3 : 2) && (
             <Button type="button" onClick={() => setStep(step + 1)}>
               {dict.buttons.next}
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <Icons.arrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
           {step === (needsOptions ? 3 : 2) && (
             <Button type="submit" disabled={loading}>
-              <Save className="mr-2 h-4 w-4" />
+              <Icons.save className="mr-2 h-4 w-4" />
               {questionId
                 ? dict.buttons.saveQuestion
                 : dict.buttons.createQuestion}

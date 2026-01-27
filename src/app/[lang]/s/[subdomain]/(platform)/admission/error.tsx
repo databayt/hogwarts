@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect } from "react"
-import { AlertTriangle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Icons } from "@/components/icons"
 
 export default function AdmissionError({
   error,
@@ -18,7 +18,7 @@ export default function AdmissionError({
 
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
-      <AlertTriangle className="text-destructive h-12 w-12" />
+      <Icons.alertTriangle className="text-destructive h-12 w-12" />
       <h2 className="text-xl font-semibold">Something went wrong</h2>
       <p className="text-muted-foreground max-w-md text-center">
         An error occurred while loading admission data. Please try again.

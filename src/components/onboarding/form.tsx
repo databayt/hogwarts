@@ -2,7 +2,6 @@
 
 import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
@@ -26,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Icons } from "@/components/icons"
 
 import {
   CURRENCIES,
@@ -144,7 +144,7 @@ export function OnboardingForm({
                   className={!onBack ? "w-full" : ""}
                 >
                   {isSubmitting && (
-                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                    <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
                   )}
                   Continue
                 </Button>

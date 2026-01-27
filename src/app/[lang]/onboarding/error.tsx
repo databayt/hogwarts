@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect } from "react"
-import { AlertTriangle, Home, RefreshCcw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Icons } from "@/components/icons"
 
 export default function OnboardingError({
   error,
@@ -28,7 +28,7 @@ export default function OnboardingError({
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="bg-destructive/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-            <AlertTriangle className="text-destructive h-6 w-6" />
+            <Icons.alertTriangle className="text-destructive h-6 w-6" />
           </div>
           <CardTitle>Something went wrong</CardTitle>
           <CardDescription>
@@ -49,7 +49,7 @@ export default function OnboardingError({
           )}
           <div className="space-y-2">
             <Button onClick={reset} className="w-full">
-              <RefreshCcw className="me-2 h-4 w-4" />
+              <Icons.refresh className="me-2 h-4 w-4" />
               Try Again
             </Button>
             <Button
@@ -57,7 +57,7 @@ export default function OnboardingError({
               onClick={() => (window.location.href = "/onboarding/overview")}
               className="w-full"
             >
-              <Home className="me-2 h-4 w-4" />
+              <Icons.home className="me-2 h-4 w-4" />
               Back to Overview
             </Button>
           </div>

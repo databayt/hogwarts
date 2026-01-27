@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { CheckCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface FinishSetupFormProps {
@@ -36,7 +36,7 @@ export function FinishSetupForm({
           <>
             {dictionary?.marketing?.onboarding?.finishSetup?.completeSetup ||
               "Complete Setup"}
-            <CheckCircle className="ms-2 h-4 w-4" />
+            <Icons.checkCircle className="ms-2 h-4 w-4" />
           </>
         )}
       </Button>

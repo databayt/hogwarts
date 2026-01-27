@@ -2,7 +2,6 @@
 
 import React, { useCallback, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
 import { FieldValues, useForm, UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 
@@ -10,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export interface CrudFormProps<TFormValues extends FieldValues = FieldValues> {
@@ -150,7 +150,7 @@ export function CrudForm<TFormValues extends FieldValues = FieldValues>({
           <Button type="submit" disabled={isLoading} className="min-w-[100px]">
             {isLoading ? (
               <>
-                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
                 {dictionary?.common?.loading || "Saving..."}
               </>
             ) : (

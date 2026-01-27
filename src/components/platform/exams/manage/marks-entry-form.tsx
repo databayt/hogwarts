@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { LoaderCircle } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -25,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Icons } from "@/components/icons"
 
 import { enterMarks, getExamWithStudents } from "./actions"
 
@@ -144,7 +144,7 @@ export function MarksEntryForm({ examId }: Props) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <LoaderCircle className="text-muted-foreground h-8 w-8 animate-spin" />
+        <Icons.loaderCircle className="text-muted-foreground h-8 w-8 animate-spin" />
       </div>
     )
   }
@@ -264,7 +264,7 @@ export function MarksEntryForm({ examId }: Props) {
             >
               {saving ? (
                 <>
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
                   Saving...
                 </>
               ) : (
