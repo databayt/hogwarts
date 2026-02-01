@@ -339,32 +339,104 @@ export function useUserSchools() {
 }
 
 // Helper function to determine completed steps
+// Checks all 15 onboarding steps for completion status
 function getCompletedSteps(statusData: SchoolWithStatus): OnboardingStep[] {
   const completedSteps: OnboardingStep[] = []
 
-  // Check each step's completion based on data
+  // Phase 1: Basic Information (5 steps)
+  // =====================================
+
+  // about-school: Always considered "visited" if we have any school data
+  // This is an intro step, so if user has proceeded past it, it's complete
+  if (statusData.id) {
+    completedSteps.push("about-school")
+  }
+
+  // title: School has a real name (not the default)
   if (statusData.name && statusData.name !== "New School") {
     completedSteps.push("title")
   }
 
-  if (statusData.description) {
+  // description: School has a description
+  if (statusData.description && statusData.description.length > 0) {
     completedSteps.push("description")
   }
 
+  // location: School has an address set
   if (statusData.address) {
     completedSteps.push("location")
   }
 
+  // stand-out: Optional step - check if any unique features are set
+  // This could be extended to check specific fields like highlights, features, etc.
+  // For now, consider it complete if description is substantial (> 100 chars)
+  if (statusData.description && statusData.description.length > 100) {
+    completedSteps.push("stand-out")
+  }
+
+  // Phase 2: Setup (4 steps)
+  // ========================
+
+  // capacity: Both students and teachers capacity are set
   if (statusData.maxStudents && statusData.maxTeachers) {
     completedSteps.push("capacity")
   }
 
+  // branding: Logo or primary color has been customized
   if (statusData.logo || statusData.primaryColor) {
     completedSteps.push("branding")
   }
 
+  // import: Optional - considered complete if any teachers/students exist
+  // This would require additional data, so mark as optional/skippable
+  // For simplicity, mark complete if capacity step is done (implies ready for import)
+  if (statusData.maxStudents && statusData.maxTeachers) {
+    completedSteps.push("import")
+  }
+
+  // finish-setup: Complete when all setup phase steps are done
+  const setupStepsComplete =
+    completedSteps.includes("capacity") && completedSteps.includes("branding")
+  if (setupStepsComplete) {
+    completedSteps.push("finish-setup")
+  }
+
+  // Phase 3: Business & Legal (5 steps)
+  // ===================================
+
+  // join: Considered complete if user is authenticated and linked to school
+  // Since this is in context of a school, if we have data, user has "joined"
+  if (statusData.id) {
+    completedSteps.push("join")
+  }
+
+  // visibility: Optional - check if visibility settings exist
+  // Default to complete since visibility has defaults
+  if (statusData.isPublished !== undefined) {
+    completedSteps.push("visibility")
+  }
+
+  // price: Tuition fee and currency are set
   if (statusData.tuitionFee && statusData.currency) {
     completedSteps.push("price")
+  }
+
+  // discount: Optional - could check for discount codes
+  // For now, mark complete if pricing is set (discounts are optional)
+  if (statusData.tuitionFee && statusData.currency) {
+    completedSteps.push("discount")
+  }
+
+  // legal: Check if legal consent was given (requires isComplete or similar flag)
+  // If school is published or marked complete, legal must have been accepted
+  if (statusData.isComplete || statusData.isPublished) {
+    completedSteps.push("legal")
+  }
+
+  // Bonus: subdomain
+  // subdomain: Check if custom domain is set
+  if (statusData.domain && statusData.domain !== statusData.id) {
+    completedSteps.push("subdomain")
   }
 
   return completedSteps

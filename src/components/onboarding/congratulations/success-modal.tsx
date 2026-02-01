@@ -197,12 +197,15 @@ export default function SuccessModal({
                 className="bg-primary/10 border-primary/20 mt-12 rounded-2xl border p-6 backdrop-blur-sm"
               >
                 <div className="mb-2 flex items-center gap-3">
-                  <School className="text-primary h-5 w-5" />
-                  <p className="muted">Your school's portal:</p>
+                  <School className="text-primary h-5 w-5" aria-hidden="true" />
+                  <p className="text-muted-foreground text-sm">
+                    Your school&apos;s portal:
+                  </p>
                 </div>
-                <h3 className="text-primary">
-                  {schoolData.domain}.databayt.org
-                </h3>
+                <p className="text-primary scroll-m-20 text-xl font-semibold tracking-tight">
+                  {schoolData.domain}.
+                  {process.env.NEXT_PUBLIC_ROOT_DOMAIN || "databayt.org"}
+                </p>
               </motion.div>
             </motion.div>
           ) : (

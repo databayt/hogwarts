@@ -17,7 +17,9 @@ export const publicRoutes = [
   "/docs",
   "/stream",
   "/stream/courses",
-  "/onboarding",
+  // NOTE: /onboarding is removed from public routes
+  // Auth is now handled client-side in OnboardingContent for better UX
+  // This allows the component to redirect with callback URL
 ]
 
 /**

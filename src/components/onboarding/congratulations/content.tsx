@@ -10,14 +10,22 @@ import {
   GraduationCap,
   Users,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getSchoolOnboardingStatus } from "../legal/actions"
+import type { OnboardingSchoolData } from "../types"
 import SuccessModal from "./success-modal"
+
+interface SchoolData extends Pick<
+  OnboardingSchoolData,
+  "name" | "domain" | "id"
+> {}
 
 interface Props {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -25,13 +33,62 @@ interface Props {
   id: string
 }
 
+// Safe dictionary accessor to avoid TS errors for non-existent keys
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const safeGet = (obj: any, path: string, fallback: string): string => {
+  try {
+    const keys = path.split(".")
+    let result = obj
+    for (const key of keys) {
+      result = result?.[key]
+      if (result === undefined) return fallback
+    }
+    return typeof result === "string" ? result : fallback
+  } catch {
+    return fallback
+  }
+}
+
 export default function CongratulationsContent(props: Props) {
-  const { dictionary, lang, id } = props
+  const { lang, id } = props
+  const { dictionary: d } = useDictionary()
   const router = useRouter()
   const schoolId = id
-  const [schoolData, setSchoolData] = useState<any>(null)
+  const [schoolData, setSchoolData] = useState<SchoolData | null>(null)
   const [loading, setLoading] = useState(true)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Get root domain from env or derive from hostname
+  const getRootDomain = () => {
+    // Use env var if available
+    if (process.env.NEXT_PUBLIC_ROOT_DOMAIN) {
+      return process.env.NEXT_PUBLIC_ROOT_DOMAIN
+    }
+
+    // Fallback: derive from current hostname
+    const hostname = window.location.hostname
+
+    // Handle localhost
+    if (hostname === "localhost" || hostname.includes("localhost")) {
+      return "localhost:3000"
+    }
+
+    // Handle Vercel preview deployments (tenant---branch.vercel.app)
+    if (hostname.includes("vercel.app")) {
+      return hostname
+    }
+
+    // Handle production (ed.databayt.org → databayt.org)
+    // Remove common prefixes like "ed.", "www.", or subdomain
+    const parts = hostname.split(".")
+    if (parts.length >= 2) {
+      // Take last two parts (e.g., databayt.org)
+      return parts.slice(-2).join(".")
+    }
+
+    return hostname
+  }
 
   useEffect(() => {
     async function fetchSchoolData() {
@@ -39,9 +96,24 @@ export default function CongratulationsContent(props: Props) {
         const result = await getSchoolOnboardingStatus(schoolId)
         if (result.success && result.data) {
           setSchoolData(result.data)
+        } else {
+          const errorMsg = safeGet(
+            d,
+            "marketing.onboarding.errors.loadFailed",
+            "Failed to load school data"
+          )
+          setError(errorMsg)
+          toast.error(errorMsg)
         }
-      } catch (error) {
-        console.error("Error fetching school data:", error)
+      } catch (err) {
+        console.error("Error fetching school data:", err)
+        const errorMsg = safeGet(
+          d,
+          "marketing.onboarding.errors.loadFailed",
+          "Failed to load school data"
+        )
+        setError(errorMsg)
+        toast.error(errorMsg)
       } finally {
         setLoading(false)
         // Show the success modal after data is loaded
@@ -49,26 +121,153 @@ export default function CongratulationsContent(props: Props) {
       }
     }
     fetchSchoolData()
-  }, [schoolId])
+  }, [schoolId, d])
 
   const handleGoToDashboard = () => {
     if (schoolData?.domain) {
-      // Construct the subdomain URL
       const protocol = window.location.protocol
-      const baseDomain = window.location.hostname.replace("ed.", "")
-      const schoolUrl = `${protocol}//${schoolData.domain}.${baseDomain}/dashboard`
+      const rootDomain = getRootDomain()
 
-      // Redirect to the school's subdomain lab
+      // Handle localhost differently (no subdomain)
+      let schoolUrl: string
+      if (rootDomain.includes("localhost")) {
+        // For localhost, use path-based routing
+        schoolUrl = `${protocol}//${rootDomain}/${lang}/s/${schoolData.domain}/dashboard`
+      } else {
+        // For production/preview, use subdomain
+        schoolUrl = `${protocol}//${schoolData.domain}.${rootDomain}/${lang}/dashboard`
+      }
+
       window.location.href = schoolUrl
     }
   }
 
+  // Get display domain
+  const getDisplayDomain = () => {
+    const rootDomain = getRootDomain()
+    if (rootDomain.includes("localhost")) {
+      return `localhost:3000/${lang}/s/${schoolData?.domain}`
+    }
+    return `${schoolData?.domain}.${rootDomain}`
+  }
+
+  // i18n helper - use safeGet for dictionary access with fallbacks
+  const t = {
+    congratulations: safeGet(
+      d,
+      "marketing.onboarding.success.congratulations",
+      "Congratulations!"
+    ),
+    schoolReady: safeGet(
+      d,
+      "marketing.onboarding.success.schoolReady",
+      "is now set up and ready to go!"
+    ),
+    yourSchoolUrl: safeGet(
+      d,
+      "marketing.onboarding.success.yourSchoolUrl",
+      "Your school's URL:"
+    ),
+    goToDashboard: safeGet(
+      d,
+      "marketing.onboarding.success.goToDashboard",
+      "Go to Dashboard"
+    ),
+    whatsNext: safeGet(
+      d,
+      "marketing.onboarding.success.whatsNext",
+      "What's Next?"
+    ),
+    inviteTeam: safeGet(
+      d,
+      "marketing.onboarding.success.inviteTeam",
+      "Invite Your Team"
+    ),
+    inviteTeamDesc: safeGet(
+      d,
+      "marketing.onboarding.success.inviteTeamDesc",
+      "Add teachers, staff, and administrators to your school"
+    ),
+    addStudents: safeGet(
+      d,
+      "marketing.onboarding.success.addStudents",
+      "Add Students"
+    ),
+    addStudentsDesc: safeGet(
+      d,
+      "marketing.onboarding.success.addStudentsDesc",
+      "Import student data or add them individually"
+    ),
+    setUpClasses: safeGet(
+      d,
+      "marketing.onboarding.success.setUpClasses",
+      "Set Up Classes"
+    ),
+    setUpClassesDesc: safeGet(
+      d,
+      "marketing.onboarding.success.setUpClassesDesc",
+      "Create class schedules and assign teachers"
+    ),
+    configureSettings: safeGet(
+      d,
+      "marketing.onboarding.success.configureSettings",
+      "Configure Settings"
+    ),
+    configureSettingsDesc: safeGet(
+      d,
+      "marketing.onboarding.success.configureSettingsDesc",
+      "Customize your school's preferences and policies"
+    ),
+    quickTips: safeGet(
+      d,
+      "marketing.onboarding.success.quickTips",
+      "Quick Tips"
+    ),
+    tipPortalLive: safeGet(
+      d,
+      "marketing.onboarding.success.tipPortalLive",
+      "Your school portal is now live at"
+    ),
+    tipShareUrl: safeGet(
+      d,
+      "marketing.onboarding.success.tipShareUrl",
+      "Share this URL with your staff and parents for easy access"
+    ),
+    tipHelpCenter: safeGet(
+      d,
+      "marketing.onboarding.success.tipHelpCenter",
+      "Check out the Help Center for guides and tutorials"
+    ),
+    tipContactSupport: safeGet(
+      d,
+      "marketing.onboarding.success.tipContactSupport",
+      "Contact support if you need any assistance getting started"
+    ),
+    reviewSettings: safeGet(
+      d,
+      "marketing.onboarding.success.reviewSettings",
+      "Review Settings"
+    ),
+    goToSchoolDashboard: safeGet(
+      d,
+      "marketing.onboarding.success.goToSchoolDashboard",
+      "Go to School Dashboard"
+    ),
+    loading: safeGet(d, "common.loading", "Loading..."),
+    yourSchool: safeGet(d, "marketing.onboarding.yourSchool", "Your school"),
+  }
+
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
+      <div
+        className="flex min-h-[60vh] items-center justify-center"
+        role="status"
+        aria-busy="true"
+        aria-label={t.loading}
+      >
         <div className="animate-pulse">
-          <div className="bg-muted mb-4 h-12 w-48 rounded"></div>
-          <div className="bg-muted h-4 w-32 rounded"></div>
+          <div className="bg-muted mb-4 h-12 w-48 rounded" />
+          <div className="bg-muted h-4 w-32 rounded" />
         </div>
       </div>
     )
@@ -77,9 +276,13 @@ export default function CongratulationsContent(props: Props) {
   return (
     <>
       {/* Success Modal */}
-      {schoolData && (
+      {schoolData?.name && schoolData?.domain && schoolData?.id && (
         <SuccessModal
-          schoolData={schoolData}
+          schoolData={{
+            name: schoolData.name,
+            domain: schoolData.domain,
+            id: schoolData.id,
+          }}
           showModal={showSuccessModal}
           setShowModal={setShowSuccessModal}
           onGoToDashboard={handleGoToDashboard}
@@ -93,9 +296,11 @@ export default function CongratulationsContent(props: Props) {
           <div className="bg-chart-2/10 mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full">
             <CheckCircle className="text-chart-2 h-12 w-12" />
           </div>
-          <h1 className="mb-3 text-4xl font-bold">Congratulations! 🎉</h1>
-          <p className="lead text-muted-foreground">
-            {schoolData?.name || "Your school"} is now set up and ready to go!
+          <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+            {t.congratulations}
+          </h1>
+          <p className="lead text-muted-foreground mt-3">
+            {schoolData?.name || t.yourSchool} {t.schoolReady}
           </p>
         </div>
 
@@ -104,11 +309,15 @@ export default function CongratulationsContent(props: Props) {
           <Card className="bg-primary/5 border-primary/20 mb-8 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="muted mb-1">Your school's URL:</p>
-                <h5>{schoolData.domain}.databayt.org</h5>
+                <p className="text-muted-foreground mb-1 text-sm">
+                  {t.yourSchoolUrl}
+                </p>
+                <p className="scroll-m-20 text-xl font-semibold tracking-tight">
+                  {getDisplayDomain()}
+                </p>
               </div>
               <Button onClick={handleGoToDashboard} size="lg" className="gap-2">
-                Go to Dashboard
+                {t.goToDashboard}
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </div>
@@ -117,20 +326,27 @@ export default function CongratulationsContent(props: Props) {
 
         {/* Next Steps */}
         <div className="mb-8">
-          <h3 className="mb-4">What's Next?</h3>
+          <h2 className="mb-4 scroll-m-20 text-2xl font-semibold tracking-tight">
+            {t.whatsNext}
+          </h2>
           <div className="grid gap-4 md:grid-cols-2">
             <Card
               className="cursor-pointer p-6 transition-shadow hover:shadow-lg"
               onClick={handleGoToDashboard}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && handleGoToDashboard()}
             >
               <div className="flex items-start gap-4">
                 <div className="bg-chart-1/10 rounded-lg p-2">
-                  <Users className="text-chart-1 h-6 w-6" />
+                  <Users className="text-chart-1 h-6 w-6" aria-hidden="true" />
                 </div>
                 <div>
-                  <h6 className="mb-1">Invite Your Team</h6>
-                  <p className="muted">
-                    Add teachers, staff, and administrators to your school
+                  <h3 className="mb-1 scroll-m-20 text-lg font-semibold tracking-tight">
+                    {t.inviteTeam}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    {t.inviteTeamDesc}
                   </p>
                 </div>
               </div>
@@ -139,15 +355,23 @@ export default function CongratulationsContent(props: Props) {
             <Card
               className="cursor-pointer p-6 transition-shadow hover:shadow-lg"
               onClick={handleGoToDashboard}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && handleGoToDashboard()}
             >
               <div className="flex items-start gap-4">
                 <div className="bg-chart-3/10 rounded-lg p-2">
-                  <GraduationCap className="text-chart-3 h-6 w-6" />
+                  <GraduationCap
+                    className="text-chart-3 h-6 w-6"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div>
-                  <h6 className="mb-1">Add Students</h6>
-                  <p className="muted">
-                    Import student data or add them individually
+                  <h3 className="mb-1 scroll-m-20 text-lg font-semibold tracking-tight">
+                    {t.addStudents}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    {t.addStudentsDesc}
                   </p>
                 </div>
               </div>
@@ -156,15 +380,23 @@ export default function CongratulationsContent(props: Props) {
             <Card
               className="cursor-pointer p-6 transition-shadow hover:shadow-lg"
               onClick={handleGoToDashboard}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && handleGoToDashboard()}
             >
               <div className="flex items-start gap-4">
                 <div className="bg-chart-2/10 rounded-lg p-2">
-                  <Calendar className="text-chart-2 h-6 w-6" />
+                  <Calendar
+                    className="text-chart-2 h-6 w-6"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div>
-                  <h6 className="mb-1">Set Up Classes</h6>
-                  <p className="muted">
-                    Create class schedules and assign teachers
+                  <h3 className="mb-1 scroll-m-20 text-lg font-semibold tracking-tight">
+                    {t.setUpClasses}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    {t.setUpClassesDesc}
                   </p>
                 </div>
               </div>
@@ -173,15 +405,23 @@ export default function CongratulationsContent(props: Props) {
             <Card
               className="cursor-pointer p-6 transition-shadow hover:shadow-lg"
               onClick={handleGoToDashboard}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && handleGoToDashboard()}
             >
               <div className="flex items-start gap-4">
                 <div className="bg-chart-1/10 rounded-lg p-2">
-                  <ArrowRight className="text-chart-1 h-6 w-6" />
+                  <ArrowRight
+                    className="text-chart-1 h-6 w-6"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div>
-                  <h6 className="mb-1">Configure Settings</h6>
-                  <p className="muted">
-                    Customize your school's preferences and policies
+                  <h3 className="mb-1 scroll-m-20 text-lg font-semibold tracking-tight">
+                    {t.configureSettings}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    {t.configureSettingsDesc}
                   </p>
                 </div>
               </div>
@@ -191,23 +431,19 @@ export default function CongratulationsContent(props: Props) {
 
         {/* Quick Tips */}
         <Card className="bg-muted/50 p-6">
-          <h6 className="mb-3">💡 Quick Tips</h6>
+          <h3 className="mb-3 scroll-m-20 text-lg font-semibold tracking-tight">
+            {t.quickTips}
+          </h3>
           <ul className="space-y-2">
-            <small className="text-muted-foreground block">
-              • Your school portal is now live at{" "}
-              <span className="font-medium">
-                {schoolData?.domain}.databayt.org
-              </span>
-            </small>
-            <small className="text-muted-foreground block">
-              • Share this URL with your staff and parents for easy access
-            </small>
-            <small className="text-muted-foreground block">
-              • Check out the Help Center for guides and tutorials
-            </small>
-            <small className="text-muted-foreground block">
-              • Contact support if you need any assistance getting started
-            </small>
+            <li className="text-muted-foreground text-sm">
+              {t.tipPortalLive}{" "}
+              <span className="font-medium">{getDisplayDomain()}</span>
+            </li>
+            <li className="text-muted-foreground text-sm">{t.tipShareUrl}</li>
+            <li className="text-muted-foreground text-sm">{t.tipHelpCenter}</li>
+            <li className="text-muted-foreground text-sm">
+              {t.tipContactSupport}
+            </li>
           </ul>
         </Card>
 
@@ -216,13 +452,15 @@ export default function CongratulationsContent(props: Props) {
           <Button
             variant="outline"
             size="lg"
-            onClick={() => router.push(`/onboarding/${schoolId}/overview`)}
+            onClick={() =>
+              router.push(`/${lang}/onboarding/${schoolId}/overview`)
+            }
           >
-            Review Settings
+            {t.reviewSettings}
           </Button>
           <Button size="lg" onClick={handleGoToDashboard} className="gap-2">
-            Go to School Dashboard
-            <ArrowRight className="h-4 w-4" />
+            {t.goToSchoolDashboard}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
