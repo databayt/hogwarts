@@ -28,8 +28,11 @@ export async function generateMetadata({
 
 export default async function TourPage({ params }: TourPageProps) {
   const { lang, subdomain } = await params
-  const dictionary = await getDictionary(lang)
-  const schoolResult = await getSchoolBySubdomain(subdomain)
+  // Parallelize independent async operations to avoid request waterfalls
+  const [dictionary, schoolResult] = await Promise.all([
+    getDictionary(lang),
+    getSchoolBySubdomain(subdomain),
+  ])
 
   if (!schoolResult.success || !schoolResult.data) {
     notFound()

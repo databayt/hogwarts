@@ -41,9 +41,12 @@ export async function generateMetadata({
 }
 
 export default async function Sales({ params }: SalesProps) {
+  // Parallelize independent async operations to avoid request waterfalls
   const { subdomain, lang } = await params
-  const dictionary = await getDictionary(lang)
-  const result = await getSchoolBySubdomain(subdomain)
+  const [dictionary, result] = await Promise.all([
+    getDictionary(lang),
+    getSchoolBySubdomain(subdomain),
+  ])
 
   if (!result.success || !result.data) {
     notFound()

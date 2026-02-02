@@ -11,7 +11,6 @@ import {
   ApplySessionProvider,
   useApplySession,
 } from "@/components/site/apply/application-context"
-import { ApplyHeader } from "@/components/site/apply/apply-header"
 import ErrorBoundary from "@/components/site/apply/error-boundary"
 import {
   ApplyValidationProvider,
@@ -64,8 +63,8 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   // Show loading state while initializing session
   if (isLoading) {
     return (
-      <div className="h-screen px-4 sm:px-6 md:px-12">
-        <main className="h-screen pt-16">{renderSkeleton()}</main>
+      <div className="mx-auto w-full max-w-5xl pb-20">
+        {renderSkeleton()}
         <FormFooter
           config={ADMISSION_CONFIG}
           basePath={`/${locale}/s/${subdomain}/apply`}
@@ -81,8 +80,8 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   // Show error state if initialization failed
   if (error) {
     return (
-      <div className="h-screen px-4 sm:px-6 md:px-12">
-        <main className="flex h-screen items-center justify-center pt-16">
+      <div className="mx-auto w-full max-w-5xl pb-20">
+        <div className="flex items-center justify-center py-16">
           <div className="max-w-md text-center">
             <div className="mb-4 text-6xl">⚠️</div>
             <h2 className="mb-2 text-2xl font-bold">
@@ -108,7 +107,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
               </button>
             </div>
           </div>
-        </main>
+        </div>
         <FormFooter
           config={ADMISSION_CONFIG}
           basePath={`/${locale}/s/${subdomain}/apply`}
@@ -122,22 +121,8 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen flex-col px-4 sm:px-8 md:px-12">
-      <ApplyHeader
-        backUrl={`/${locale}/s/${subdomain}/apply`}
-        onSave={saveSession}
-        isSaving={isSaving}
-        lastSaved={lastSaved}
-        isRTL={isRTL}
-        dictionary={{
-          saving: isRTL ? "جاري الحفظ..." : "Saving...",
-          lastSaved: isRTL ? "آخر حفظ {time}" : "Last saved {time}",
-          help: isRTL ? "مساعدة" : "Help",
-          save: isRTL ? "حفظ" : "Save",
-          exitApplication: isRTL ? "الخروج من الطلب" : "Exit application",
-        }}
-      />
-      <main className="flex w-full flex-1 items-center pb-20">{children}</main>
+    <div className="mx-auto w-full max-w-5xl pb-20">
+      {children}
       <FormFooter
         config={ADMISSION_CONFIG}
         basePath={`/${locale}/s/${subdomain}/apply`}

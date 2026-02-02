@@ -261,3 +261,58 @@ export interface TimetableDictionary {
 export interface DragItem {
   slot: TimetableSlot
 }
+
+// ============================================================================
+// CONSTRAINT VALIDATION TYPES (for server actions)
+// ============================================================================
+
+export type ConstraintViolation = {
+  type:
+    | "MAX_PERIODS_DAY"
+    | "MAX_PERIODS_WEEK"
+    | "CONSECUTIVE_PERIODS"
+    | "UNAVAILABLE_BLOCK"
+    | "ROOM_CAPACITY"
+    | "ROOM_RESERVED"
+    | "ROOM_EQUIPMENT"
+  severity: "error" | "warning"
+  message: string
+  details?: Record<string, unknown>
+}
+
+export type TeacherConstraintCheck = {
+  isValid: boolean
+  violations: ConstraintViolation[]
+  teacherId: string
+  teacherName: string
+}
+
+export type RoomConstraintCheck = {
+  isValid: boolean
+  violations: ConstraintViolation[]
+  roomId: string
+  roomName: string
+}
+
+// ============================================================================
+// IMPORT/EXPORT TYPES (for server actions)
+// ============================================================================
+
+export interface ImportSlot {
+  dayOfWeek: number
+  periodId: string
+  classId: string
+  teacherId: string
+  classroomId: string
+  weekOffset?: number
+}
+
+export interface ImportResult {
+  success: boolean
+  totalRows: number
+  successCount: number
+  failedCount: number
+  skippedCount: number
+  errors: Array<{ row: number; message: string }>
+  warnings: Array<{ row: number; message: string }>
+}

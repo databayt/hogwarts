@@ -10,6 +10,7 @@ import { db } from "@/lib/db"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
 import { i18n } from "@/components/internationalization/config"
+import { sendEnrollmentEmail } from "@/components/stream/shared/email-service"
 
 export async function enrollInCourseAction(courseId: string) {
   const session = await auth()
@@ -133,6 +134,25 @@ export async function enrollInCourseAction(courseId: string) {
           where: { id: enrollment.id },
           data: { isActive: true },
         })
+
+        // Get school name for email
+        const school = await tx.school.findUnique({
+          where: { id: schoolId },
+          select: { name: true },
+        })
+
+        // Send enrollment confirmation email (fire and forget)
+        if (session.user.email) {
+          sendEnrollmentEmail({
+            to: session.user.email,
+            studentName: session.user.name || "Student",
+            courseTitle: course.title,
+            courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/dashboard/${course.slug}`,
+            schoolName: school?.name || "School",
+          }).catch((err) =>
+            console.error("Failed to send enrollment email:", err)
+          )
+        }
 
         return {
           enrollment,
@@ -321,6 +341,29 @@ export async function verifyPaymentAndActivateEnrollment(sessionId: string) {
         updatedAt: new Date(),
       },
     })
+
+    // Get user email and school name for enrollment email
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true, username: true },
+    })
+
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { name: true },
+    })
+
+    // Send enrollment confirmation email (fire and forget)
+    if (user?.email) {
+      const locale = i18n.defaultLocale
+      sendEnrollmentEmail({
+        to: user.email,
+        studentName: user.username || "Student",
+        courseTitle: enrollment.course.title,
+        courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/dashboard/${enrollment.course.slug}`,
+        schoolName: school?.name || "School",
+      }).catch((err) => console.error("Failed to send enrollment email:", err))
+    }
 
     return {
       success: true,

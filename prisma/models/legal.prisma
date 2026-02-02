@@ -18,6 +18,9 @@ model LegalConsent {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([schoolId, userId, documentType, documentVersion])
+  @@index([schoolId])
+  @@index([schoolId, userId])
+  @@index([schoolId, documentType])
   @@map("legal_consents")
 }
 
@@ -40,6 +43,8 @@ model LegalDocument {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, type, version])
+  @@index([schoolId])
+  @@index([schoolId, type, isActive])
   @@map("legal_documents")
 }
 
@@ -56,5 +61,8 @@ model ComplianceLog {
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   user   User?  @relation(fields: [userId], references: [id])
 
+  @@index([schoolId])
+  @@index([schoolId, eventType])
+  @@index([schoolId, timestamp])
   @@map("compliance_logs")
 }

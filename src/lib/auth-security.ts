@@ -81,82 +81,28 @@ export class TenantError extends Error {
  * Extracts schoolId and role from NextAuth extended session
  */
 export async function getAuthContext(): Promise<AuthContext> {
-  const startTime = new Date().toISOString()
-  console.log("🔍 [DEBUG] getAuthContext START", { startTime })
-
-  // WHY: Call auth() once - it's async and shouldn't be called multiple times
-  console.log("🔍 [DEBUG] Step 1: Calling auth() function...")
-
   let session
   try {
     const auth = await getAuth()
     session = await auth()
   } catch (authError) {
-    console.error("❌ [DEBUG] auth() call failed:", {
-      error: authError instanceof Error ? authError.message : String(authError),
-      errorType: authError?.constructor?.name,
-      stack: authError instanceof Error ? authError.stack : undefined,
-      timestamp: new Date().toISOString(),
-    })
     throw new AuthError("Authentication service error", "AUTH_SERVICE_ERROR")
   }
 
-  console.log("📋 [DEBUG] Step 1 - Raw session data:", {
-    hasSession: !!session,
-    hasUser: !!session?.user,
-    userId: session?.user?.id,
-    email: session?.user?.email,
-    sessionKeys: session?.user ? Object.keys(session.user) : [],
-    sessionUserType: session?.user ? typeof session.user : "undefined",
-    sessionUserSchoolId: (session?.user as any)?.schoolId,
-    sessionUserRole: (session?.user as any)?.role,
-    timestamp: new Date().toISOString(),
-  })
-
   if (!session?.user?.id) {
-    // WHY: Must have valid session with userId
-    // Prevents unauthenticated access and identifies which user made request
-    console.error("❌ [DEBUG] Step 2 - No session or user ID found", {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      hasUserId: !!session?.user?.id,
-      errorTimestamp: new Date().toISOString(),
-    })
     throw new AuthError("Authentication required", "AUTH_REQUIRED")
   }
 
   if (!session.user.email) {
-    console.error("❌ [DEBUG] Step 2 - No user email found", {
-      userId: session.user.id,
-      hasEmail: !!session.user.email,
-      errorTimestamp: new Date().toISOString(),
-    })
     throw new AuthError("User email is required", "EMAIL_REQUIRED")
   }
 
-  console.log("🔍 [DEBUG] Step 2: Creating auth context...")
   const authContext = {
     userId: session.user.id,
     schoolId: (session.user as any).schoolId || null,
     role: (session.user as any).role || "USER",
     email: session.user.email,
   }
-
-  console.log("✅ [DEBUG] Step 2 - AuthContext created:", {
-    ...authContext,
-    sessionSchoolId: (session.user as any).schoolId,
-    sessionRole: (session.user as any).role,
-    sessionHasSchoolId: "schoolId" in (session.user as any),
-    sessionHasRole: "role" in (session.user as any),
-    contextCreationTimestamp: new Date().toISOString(),
-  })
-
-  console.log("✅ [DEBUG] getAuthContext COMPLETE", {
-    userId: authContext.userId,
-    schoolId: authContext.schoolId,
-    role: authContext.role,
-    endTime: new Date().toISOString(),
-  })
 
   return authContext
 }
@@ -200,14 +146,6 @@ export async function requireSchoolOwnership(
 ): Promise<AuthContext> {
   const authContext = await getAuthContext()
 
-  console.log("🔐 [SCHOOL OWNERSHIP CHECK] Starting:", {
-    userId: authContext.userId,
-    role: authContext.role,
-    targetSchoolId,
-    userSchoolId: authContext.schoolId,
-    timestamp: new Date().toISOString(),
-  })
-
   // Check if user can access this school
   const accessResult = await canUserAccessSchool(
     authContext.userId,
@@ -217,37 +155,16 @@ export async function requireSchoolOwnership(
   if (!accessResult.hasAccess) {
     // If user doesn't have access but is authenticated, try to create/ensure they have a school
     if (!authContext.schoolId) {
-      console.log(
-        "🏫 [SCHOOL OWNERSHIP] User has no school, ensuring one exists"
-      )
       const schoolResult = await ensureUserSchool(authContext.userId)
 
       if (schoolResult.success && schoolResult.schoolId) {
         // Update auth context with new school
         authContext.schoolId = schoolResult.schoolId
-        console.log("✅ [SCHOOL OWNERSHIP] School created/ensured for user:", {
-          userId: authContext.userId,
-          schoolId: schoolResult.schoolId,
-        })
       }
     }
 
     // For onboarding, be permissive if user is authenticated
-    console.warn(
-      "⚠️ [SCHOOL OWNERSHIP] Access check failed but allowing for onboarding:",
-      {
-        reason: accessResult.reason,
-        userId: authContext.userId,
-        targetSchoolId,
-      }
-    )
-  } else {
-    console.log("✅ [SCHOOL OWNERSHIP] Access granted:", {
-      userId: authContext.userId,
-      targetSchoolId,
-      reason: accessResult.reason,
-      isOwner: accessResult.isOwner,
-    })
+    // This allows users to complete onboarding flow
   }
 
   return authContext
@@ -381,24 +298,7 @@ export function createActionResponse<T>(
   error?: unknown
 ): ActionResponse<T> {
   if (error) {
-    console.error("🚨 [DEBUG] createActionResponse called with error:", {
-      error,
-      errorType: error?.constructor?.name,
-      errorMessage:
-        error instanceof Error ? error.message : "Not an Error instance",
-      isAuthError: error instanceof AuthError,
-      isTenantError: error instanceof TenantError,
-      errorKeys: error && typeof error === "object" ? Object.keys(error) : [],
-      errorStringified: JSON.stringify(error),
-      errorToString: error?.toString?.() || String(error),
-    })
-
     if (error instanceof AuthError || error instanceof TenantError) {
-      console.error("🚨 [DEBUG] This is an AuthError or TenantError:", {
-        message: error.message,
-        code: error.code,
-        name: error.name,
-      })
       return {
         success: false,
         error: error.message || "Access denied",
@@ -436,26 +336,12 @@ export function createActionResponse<T>(
     if (error instanceof Error) {
       errorMessage = error.message || "An error occurred"
       errorCode = error.name || "INTERNAL_ERROR"
-
-      console.error("🔍 [DEBUG] Standard Error instance:", {
-        message: error.message,
-        name: error.name,
-        stack: error.stack?.substring(0, 200), // First 200 chars of stack
-      })
     } else if (typeof error === "string") {
       errorMessage = error
       errorCode = "STRING_ERROR"
     } else if (error && typeof error === "object") {
-      console.error("🔍 [DEBUG] Object error, trying to extract info:", {
-        hasMessage: "message" in error,
-        hasCode: "code" in error,
-        hasName: "name" in error,
-        keys: Object.keys(error),
-        stringified: JSON.stringify(error),
-      })
-
       // Try to extract message and code from object
-      const errorObj = error as any
+      const errorObj = error as Record<string, unknown>
       if (errorObj.message && typeof errorObj.message === "string") {
         errorMessage = errorObj.message
       } else if (errorObj.error && typeof errorObj.error === "string") {
@@ -477,12 +363,6 @@ export function createActionResponse<T>(
     if (!errorMessage || errorMessage.trim() === "") {
       errorMessage = "An error occurred"
     }
-
-    console.error("🚨 [DEBUG] Final error response:", {
-      errorMessage,
-      errorCode,
-      originalError: error,
-    })
 
     return {
       success: false,

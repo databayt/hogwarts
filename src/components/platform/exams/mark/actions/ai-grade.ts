@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { GradingMethod, MarkingStatus } from "@prisma/client"
 
-import { gradeEssayWithAI, gradeShortAnswerWithAI } from "@/lib/ai/openai"
+import {
+  checkAIServiceHealth,
+  getAIServiceStats,
+  gradeEssayWithAI,
+  gradeShortAnswerWithAI,
+  isAIServiceAvailable,
+} from "@/lib/ai/openai"
 import { db } from "@/lib/db"
 
 import { parseAcceptedAnswers } from "../utils"
@@ -13,6 +19,49 @@ import type {
   AIGradeResult,
   QuestionWithRubrics,
 } from "./types"
+
+/**
+ * Check if AI grading service is available
+ */
+export async function checkAIGradingAvailability(): Promise<
+  ActionResponse<{
+    available: boolean
+    latency?: number
+    queueLength: number
+    totalCost: number
+  }>
+> {
+  try {
+    const session = await auth()
+    if (!session?.user?.schoolId) {
+      return {
+        success: false,
+        error: "Unauthorized - No school context",
+        code: "NO_SCHOOL_CONTEXT",
+      }
+    }
+
+    const health = await checkAIServiceHealth()
+    const stats = getAIServiceStats()
+
+    return {
+      success: true,
+      data: {
+        available: health.available,
+        latency: health.latency,
+        queueLength: stats.queueLength,
+        totalCost: stats.totalCost,
+      },
+    }
+  } catch (error) {
+    console.error("AI availability check error:", error)
+    return {
+      success: false,
+      error: "Failed to check AI service availability",
+      code: "HEALTH_CHECK_FAILED",
+    }
+  }
+}
 
 /**
  * Grade a student answer using AI assistance
@@ -29,6 +78,16 @@ export async function aiGradeAnswer(
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
+      }
+    }
+
+    // Check AI service availability first
+    if (!isAIServiceAvailable()) {
+      return {
+        success: false,
+        error:
+          "AI grading service is not available. Please grade manually or contact administrator.",
+        code: "AI_SERVICE_UNAVAILABLE",
       }
     }
 

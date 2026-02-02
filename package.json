@@ -187,6 +187,7 @@
     "stripe": "^20.0.0",
     "swr": "^2.2.5",
     "tailwind-merge": "^3.3.1",
+    "twilio": "^5.12.0",
     "use-debounce": "^10.0.6",
     "usehooks-ts": "^3.1.1",
     "uuid": "^11.1.0",

@@ -79,7 +79,16 @@
     "dismiss": "Dismiss",
     "undo": "Undo",
     "retry": "Retry",
-    "settings": "Settings"
+    "settings": "Settings",
+    "star": "Star",
+    "unstar": "Unstar"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "of": "of",
+    "showing": "Showing"
   },
   "types": {
     "message": "New message",
@@ -103,6 +112,8 @@
     "login_alert": "Login alert",
     "document_shared": "Document shared",
     "report_ready": "Report ready",
+    "absence_intention": "Absence intention submitted",
+    "absence_intention_decision": "Absence intention reviewed",
     "exam_scheduled": "Exam scheduled",
     "exam_result": "Exam result available",
     "library_due": "Library book due",

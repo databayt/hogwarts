@@ -12,4 +12,7 @@ model DomainRequest {
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@unique([schoolId, domain])
+  @@index([schoolId])
+  @@index([status])
+  @@map("domain_requests")
 }

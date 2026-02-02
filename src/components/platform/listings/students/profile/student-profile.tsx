@@ -120,13 +120,11 @@ export function StudentProfile({
   }
 
   const handleDownload = () => {
-    // Implement PDF download functionality
-    console.log("Download student profile as PDF")
+    // TODO: Implement PDF download functionality
   }
 
   const handleShare = () => {
-    // Implement share functionality
-    console.log("Share student profile")
+    // TODO: Implement share functionality
   }
 
   return (

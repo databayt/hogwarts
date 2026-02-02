@@ -27,6 +27,46 @@ enum ExamStatus {
   CANCELLED
 }
 
+// Proctoring Mode for exam security
+enum ProctorMode {
+  NONE      // No restrictions
+  BASIC     // Question randomization, timing
+  STANDARD  // + Browser focus detection
+  STRICT    // + Browser lockdown, session tracking
+}
+
+// Security flags for exam monitoring
+enum SecurityFlag {
+  FOCUS_LOST     // Tab/window lost focus
+  TAB_SWITCH     // Switched browser tabs
+  COPY_ATTEMPT   // Attempted to copy content
+  TIME_ANOMALY   // Suspicious timing pattern
+  IP_CHANGE      // IP address changed mid-exam
+  MULTIPLE_DEVICE // Detected access from multiple devices
+}
+
+// Exam session status
+enum SessionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PAUSED
+  SUBMITTED
+  EXPIRED
+  FLAGGED
+}
+
+// Grading system types for multi-format support
+enum GradingSystem {
+  PERCENTAGE  // 0-100%
+  GPA_4       // 0.0-4.0
+  GPA_5       // 0.0-5.0
+  LETTER      // A+, A, B+, B, C+, C, D, F
+  CGPA        // Cumulative GPA
+  CCE         // Continuous and Comprehensive Evaluation
+  CBSE        // Central Board pattern
+  ICSE        // Indian Certificate pattern
+}
+
 // Auto-Marking Enums
 enum GradingMethod {
   AUTO // Fully automated (MCQ, T/F, Fill Blank)
@@ -68,8 +108,18 @@ model Exam {
   examType     ExamType
   instructions String?    @db.Text
   status       ExamStatus @default(PLANNED)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+
+  // Proctoring & Security settings
+  proctorMode       ProctorMode @default(BASIC)
+  shuffleQuestions  Boolean     @default(true)
+  shuffleOptions    Boolean     @default(true)
+  maxAttempts       Int         @default(1)
+  retakePenalty     Decimal?    @db.Decimal(5, 2) // % deduction per retake
+  allowLateSubmit   Boolean     @default(false)
+  lateSubmitMinutes Int         @default(0) // Extra minutes allowed after deadline
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   school         School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   class          Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
@@ -79,6 +129,7 @@ model Exam {
   generatedExam  GeneratedExam? // Auto-generated exam (one-to-one)
   studentAnswers StudentAnswer[] // Auto-marking system
   markingResults MarkingResult[] // Auto-marking system
+  examSessions   ExamSession[]   // Proctoring sessions
 
   // Performance indexes
   @@index([schoolId, examDate])
@@ -91,6 +142,58 @@ model Exam {
   @@index([schoolId, subjectId, examType]) // Composite for subject exams
   @@index([createdAt]) // For sorting
   @@map("exams")
+}
+
+// Exam Session - Tracks individual student exam attempts with proctoring
+model ExamSession {
+  id              String        @id @default(cuid())
+  schoolId        String
+  examId          String
+  studentId       String
+  attemptNumber   Int           @default(1)
+  status          SessionStatus @default(NOT_STARTED)
+
+  // Timing
+  startedAt       DateTime?
+  submittedAt     DateTime?
+  lastActivityAt  DateTime?
+
+  // Proctoring
+  proctorMode     ProctorMode   @default(BASIC)
+  ipAddress       String?
+  userAgent       String?
+  deviceFingerprint String?     // Browser fingerprint for device tracking
+
+  // Security tracking
+  securityFlags   Json          @default("[]") // [{flag, timestamp, details}]
+  flagCount       Int           @default(0)
+  focusLostCount  Int           @default(0)
+  tabSwitchCount  Int           @default(0)
+  copyAttempts    Int           @default(0)
+
+  // Answer backup (auto-save)
+  answerSnapshot  Json?         // Backup of answers in case of connection loss
+  lastSavedAt     DateTime?
+
+  // Question order (for shuffled exams)
+  questionOrder   Json?         // Array of question IDs in display order
+  optionOrders    Json?         // Map of questionId -> shuffled option indices
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  school          School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  exam            Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, studentId, attemptNumber])
+  @@index([schoolId])
+  @@index([schoolId, examId])
+  @@index([schoolId, studentId])
+  @@index([schoolId, status])
+  @@index([schoolId, examId, status])
+  @@index([flagCount]) // For identifying flagged sessions
+  @@map("exam_sessions")
 }
 
 // Exam results for students
@@ -140,6 +243,48 @@ model GradeBoundary {
   @@unique([schoolId, grade])
   @@index([schoolId, minScore, maxScore])
   @@map("grade_boundaries")
+}
+
+// School-wide grading configuration
+model SchoolGradingConfig {
+  id              String        @id @default(cuid())
+  schoolId        String        @unique
+
+  // Primary grading system
+  primarySystem   GradingSystem @default(GPA_4)
+  gpaScale        Decimal       @default(4.0) @db.Decimal(3, 1) // 4.0 or 5.0
+
+  // Display preferences
+  showPercentage  Boolean       @default(true)
+  showGPA         Boolean       @default(true)
+  showLetter      Boolean       @default(true)
+
+  // Pass/fail threshold
+  passingThreshold Int          @default(60) // Percentage required to pass
+
+  // CGPA weighting configuration
+  // Format: {"midterm": 0.3, "final": 0.5, "quiz": 0.1, "assignment": 0.1}
+  cgpaWeighting   Json?
+
+  // Custom grade boundaries (overrides defaults)
+  // Format: [{"grade": "A+", "minScore": 97, "maxScore": 100, "gpa4": 4.0, "gpa5": 5.0}, ...]
+  customBoundaries Json?
+
+  // Retake policy: "best" | "latest" | "average"
+  retakePolicy    String        @default("best")
+  maxRetakes      Int           @default(2)
+  retakePenaltyPercent Int      @default(0) // % deduction per retake
+
+  // Rounding
+  roundingMethod  String        @default("round") // round, floor, ceil
+  decimalPlaces   Int           @default(2)
+
+  school          School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("school_grading_configs")
 }
 
 // ========== QUESTION BANK & GENERATION ==========

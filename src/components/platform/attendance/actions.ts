@@ -65,6 +65,7 @@ import type { AttendanceMethod, AttendanceStatus, Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { isChannelAvailable, sendAttendanceSMS } from "@/lib/notifications/sms"
 import { getTenantContext } from "@/lib/tenant-context"
 import { markAttendanceSchema } from "@/components/platform/attendance/validation"
 
@@ -103,7 +104,7 @@ export type ActionResponse<T = void> =
 
 /**
  * Trigger absence notification to all guardians of a student
- * Sends in-app and email notifications when a student is marked absent
+ * Sends in-app, email, and SMS notifications when a student is marked absent
  */
 async function triggerAbsenceNotification(
   schoolId: string,
@@ -113,21 +114,18 @@ async function triggerAbsenceNotification(
   markedBy?: string
 ): Promise<void> {
   try {
-    // Get student info with guardians
+    // Get student info with guardians (including phone for SMS)
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
-      select: {
-        givenName: true,
-        surname: true,
+      include: {
         studentGuardians: {
           include: {
             guardian: {
-              select: {
-                id: true,
-                givenName: true,
-                surname: true,
-                userId: true,
-                emailAddress: true,
+              include: {
+                phoneNumbers: {
+                  where: { isPrimary: true },
+                  take: 1,
+                },
               },
             },
           },
@@ -136,21 +134,30 @@ async function triggerAbsenceNotification(
     })
 
     if (!student || student.studentGuardians.length === 0) {
-      console.log(
-        "[triggerAbsenceNotification] No guardians found for student",
-        studentId
-      )
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          "[triggerAbsenceNotification] No guardians found for student",
+          studentId
+        )
+      }
       return
     }
 
-    // Get class info
-    const classInfo = await db.class.findFirst({
-      where: { id: classId, schoolId },
-      select: { name: true },
-    })
+    // Get class and school info
+    const [classInfo, schoolInfo] = await Promise.all([
+      db.class.findFirst({
+        where: { id: classId, schoolId },
+        select: { name: true },
+      }),
+      db.school.findFirst({
+        where: { id: schoolId },
+        select: { name: true },
+      }),
+    ])
 
     const studentName = `${student.givenName} ${student.surname}`
     const className = classInfo?.name || "Unknown class"
+    const schoolName = schoolInfo?.name || "School"
     const dateStr = date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
@@ -163,18 +170,31 @@ async function triggerAbsenceNotification(
       month: "long",
       day: "numeric",
     })
+    const dateShort = date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    })
+
+    // Check if SMS channel is available
+    const smsAvailable = isChannelAvailable("sms")
 
     // Create notifications for each guardian with a userId
     for (const sg of student.studentGuardians) {
       const guardian = sg.guardian
 
       if (!guardian.userId) {
-        console.log(
-          "[triggerAbsenceNotification] Guardian has no userId",
-          guardian.id
-        )
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            "[triggerAbsenceNotification] Guardian has no userId",
+            guardian.id
+          )
+        }
         continue
       }
+
+      // Get primary phone number if available
+      const primaryPhone = guardian.phoneNumbers?.[0]?.phoneNumber
+      const hasSMS = smsAvailable && !!primaryPhone
 
       // Create in-app notification (and email via notification system)
       await db.notification.create({
@@ -198,15 +218,36 @@ async function triggerAbsenceNotification(
             titleAr: `تنبيه غياب: ${studentName}`,
             bodyAr: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`,
           },
-          channels: ["in_app", "email"],
           actorId: markedBy,
         },
       })
 
-      console.log(
-        "[triggerAbsenceNotification] Notification created for guardian",
-        guardian.id
-      )
+      // Send SMS if available and guardian has phone number
+      if (hasSMS && primaryPhone) {
+        // Fire-and-forget SMS (don't block on SMS delivery)
+        sendAttendanceSMS(
+          primaryPhone,
+          {
+            studentName,
+            className,
+            date: dateShort,
+            status: "ABSENT",
+            schoolName,
+          },
+          "en" // TODO: Get guardian's preferred language
+        ).catch((err) => {
+          console.error("[triggerAbsenceNotification] SMS send failed:", err)
+        })
+      }
+
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          "[triggerAbsenceNotification] Notification created for guardian",
+          guardian.id,
+          "SMS:",
+          hasSMS
+        )
+      }
     }
   } catch (error) {
     // Don't fail the attendance marking if notification fails
@@ -467,6 +508,7 @@ export async function getAttendanceList(input: {
           schoolId,
           classId: parsed.classId,
           date: new Date(parsed.date),
+          deletedAt: null, // Exclude soft-deleted records
         },
       }),
     ])
@@ -604,7 +646,7 @@ export async function getAttendanceStats(input?: {
     }
   }
 
-  const where: Prisma.AttendanceWhereInput = { schoolId }
+  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
   if (input?.classId) where.classId = input.classId
   if (input?.studentId) where.studentId = input.studentId
@@ -666,6 +708,7 @@ export async function getAttendanceTrends(input: {
 
     const where: Prisma.AttendanceWhereInput = {
       schoolId,
+      deletedAt: null,
       date: {
         gte: new Date(input.dateFrom),
         lte: new Date(input.dateTo),
@@ -734,7 +777,7 @@ export async function getMethodUsageStats(input?: {
     return { success: false, error: "Missing school context" }
   }
 
-  const where: Prisma.AttendanceWhereInput = { schoolId }
+  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
@@ -772,7 +815,7 @@ export async function getDayWisePatterns(input?: {
     return { success: false, error: "Missing school context" }
   }
 
-  const where: Prisma.AttendanceWhereInput = { schoolId }
+  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
   if (input?.classId) where.classId = input.classId
   if (input?.dateFrom || input?.dateTo) {
@@ -824,6 +867,209 @@ export async function getDayWisePatterns(input?: {
   }))
 
   return { patterns }
+}
+
+/**
+ * Get calendar view data for a specific month
+ * Returns daily attendance stats and weekly summaries
+ */
+export async function getCalendarData(input: {
+  year: number
+  month: number // 0-indexed (0 = January)
+  classId?: string
+}) {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { success: false, error: "Missing school context" }
+  }
+
+  // Calculate date range for the month
+  const startDate = new Date(input.year, input.month, 1)
+  const endDate = new Date(input.year, input.month + 1, 0) // Last day of month
+
+  const where: Prisma.AttendanceWhereInput = {
+    schoolId,
+    deletedAt: null,
+    date: {
+      gte: startDate,
+      lte: endDate,
+    },
+  }
+
+  if (input.classId) {
+    where.classId = input.classId
+  }
+
+  // Fetch all attendance records for the month
+  const attendance = await db.attendance.findMany({
+    where,
+    select: {
+      date: true,
+      status: true,
+    },
+  })
+
+  // Group by date
+  const byDate: Record<
+    string,
+    {
+      present: number
+      absent: number
+      late: number
+      excused: number
+      sick: number
+      total: number
+    }
+  > = {}
+
+  // Initialize all days of the month
+  const daysInMonth = endDate.getDate()
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${input.year}-${String(input.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    byDate[dateStr] = {
+      present: 0,
+      absent: 0,
+      late: 0,
+      excused: 0,
+      sick: 0,
+      total: 0,
+    }
+  }
+
+  // Aggregate attendance data
+  attendance.forEach((record) => {
+    const dateStr = record.date.toISOString().split("T")[0]
+    if (byDate[dateStr]) {
+      byDate[dateStr].total++
+      switch (record.status) {
+        case "PRESENT":
+          byDate[dateStr].present++
+          break
+        case "ABSENT":
+          byDate[dateStr].absent++
+          break
+        case "LATE":
+          byDate[dateStr].late++
+          break
+        case "EXCUSED":
+          byDate[dateStr].excused++
+          break
+        case "SICK":
+          byDate[dateStr].sick++
+          break
+      }
+    }
+  })
+
+  // Convert to array with rates
+  const days = Object.entries(byDate).map(([date, stats]) => ({
+    date,
+    ...stats,
+    rate:
+      stats.total > 0
+        ? Math.round(((stats.present + stats.late) / stats.total) * 100)
+        : 0,
+  }))
+
+  // Calculate weekly stats
+  const weeklyStats: Array<{
+    weekNumber: number
+    startDate: string
+    endDate: string
+    present: number
+    absent: number
+    late: number
+    total: number
+    rate: number
+  }> = []
+
+  // Group days by week
+  let currentWeek = 1
+  let weekStart = 1
+  const firstDayOfWeek = new Date(input.year, input.month, 1).getDay()
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const currentDate = new Date(input.year, input.month, day)
+    const dayOfWeek = currentDate.getDay()
+
+    // Start new week on Sunday (dayOfWeek === 0) unless it's the first day
+    if (dayOfWeek === 0 && day > 1) {
+      // Calculate stats for the previous week
+      const weekDays = days.filter((d) => {
+        const dayNum = parseInt(d.date.split("-")[2])
+        return dayNum >= weekStart && dayNum < day
+      })
+
+      const weekStats = weekDays.reduce(
+        (acc, d) => ({
+          present: acc.present + d.present,
+          absent: acc.absent + d.absent,
+          late: acc.late + d.late,
+          total: acc.total + d.total,
+        }),
+        { present: 0, absent: 0, late: 0, total: 0 }
+      )
+
+      weeklyStats.push({
+        weekNumber: currentWeek,
+        startDate: `${input.year}-${String(input.month + 1).padStart(2, "0")}-${String(weekStart).padStart(2, "0")}`,
+        endDate: `${input.year}-${String(input.month + 1).padStart(2, "0")}-${String(day - 1).padStart(2, "0")}`,
+        ...weekStats,
+        rate:
+          weekStats.total > 0
+            ? Math.round(
+                ((weekStats.present + weekStats.late) / weekStats.total) * 100
+              )
+            : 0,
+      })
+
+      currentWeek++
+      weekStart = day
+    }
+  }
+
+  // Add the last week
+  const lastWeekDays = days.filter((d) => {
+    const dayNum = parseInt(d.date.split("-")[2])
+    return dayNum >= weekStart
+  })
+
+  if (lastWeekDays.length > 0) {
+    const lastWeekStats = lastWeekDays.reduce(
+      (acc, d) => ({
+        present: acc.present + d.present,
+        absent: acc.absent + d.absent,
+        late: acc.late + d.late,
+        total: acc.total + d.total,
+      }),
+      { present: 0, absent: 0, late: 0, total: 0 }
+    )
+
+    weeklyStats.push({
+      weekNumber: currentWeek,
+      startDate: `${input.year}-${String(input.month + 1).padStart(2, "0")}-${String(weekStart).padStart(2, "0")}`,
+      endDate: `${input.year}-${String(input.month + 1).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`,
+      ...lastWeekStats,
+      rate:
+        lastWeekStats.total > 0
+          ? Math.round(
+              ((lastWeekStats.present + lastWeekStats.late) /
+                lastWeekStats.total) *
+                100
+            )
+          : 0,
+    })
+  }
+
+  return {
+    success: true,
+    data: {
+      month: input.month,
+      year: input.year,
+      days,
+      weeklyStats,
+    },
+  }
 }
 
 /**
@@ -1316,92 +1562,166 @@ export async function findStudentByIdentifier(input: {
 
 /**
  * Bulk upload attendance records
+ *
+ * Uses Prisma transaction for atomic rollback:
+ * - Phase 1: Validate ALL records first (student exists, data format)
+ * - Phase 2: Execute all DB operations in single transaction
+ * - If ANY operation fails, entire batch is rolled back
+ *
+ * @returns Detailed report with row numbers for failed validations
  */
 export async function bulkUploadAttendance(
   input: z.infer<typeof bulkUploadSchema>
 ): Promise<{
   successful: number
   failed: number
-  errors: Array<{ studentId: string; error: string }>
+  errors: Array<{ studentId: string; row: number; error: string }>
+  rolledBack: boolean
 }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return {
       successful: 0,
       failed: 0,
-      errors: [{ studentId: "", error: "Missing school context" }],
+      errors: [{ studentId: "", row: 0, error: "Missing school context" }],
+      rolledBack: false,
     }
   }
 
   const session = await auth()
   const parsed = bulkUploadSchema.parse(input)
 
-  const results = {
-    successful: 0,
-    failed: 0,
-    errors: [] as { studentId: string; error: string }[],
-  }
+  // Phase 1: Pre-validate all records BEFORE any DB operations
+  const validationErrors: Array<{
+    studentId: string
+    row: number
+    error: string
+  }> = []
 
-  for (const record of parsed.records) {
-    try {
-      // Find existing daily attendance (where periodId is null)
-      const existing = await db.attendance.findFirst({
-        where: {
-          schoolId,
-          studentId: record.studentId,
-          classId: parsed.classId,
-          date: new Date(parsed.date),
-          periodId: null,
-        },
-      })
+  // Get all student IDs to validate they exist in this school
+  const studentIds = parsed.records.map((r) => r.studentId)
+  const existingStudents = await db.student.findMany({
+    where: { schoolId, id: { in: studentIds } },
+    select: { id: true },
+  })
+  const validStudentIds = new Set(existingStudents.map((s) => s.id))
 
-      if (existing) {
-        await db.attendance.update({
-          where: { id: existing.id },
-          data: {
-            status: record.status,
-            checkInTime: record.checkInTime
-              ? new Date(record.checkInTime)
-              : undefined,
-            checkOutTime: record.checkOutTime
-              ? new Date(record.checkOutTime)
-              : undefined,
-            notes: record.notes,
-          },
-        })
-      } else {
-        await db.attendance.create({
-          data: {
-            schoolId,
-            studentId: record.studentId,
-            classId: parsed.classId,
-            date: new Date(parsed.date),
-            status: record.status,
-            method: parsed.method,
-            markedBy: session?.user?.id,
-            markedAt: new Date(),
-            checkInTime: record.checkInTime
-              ? new Date(record.checkInTime)
-              : undefined,
-            checkOutTime: record.checkOutTime
-              ? new Date(record.checkOutTime)
-              : undefined,
-            notes: record.notes,
-          },
-        })
-      }
-      results.successful++
-    } catch (error) {
-      results.failed++
-      results.errors.push({
+  // Validate each record
+  for (let i = 0; i < parsed.records.length; i++) {
+    const record = parsed.records[i]
+    const rowNum = i + 1 // 1-indexed for user-friendly error messages
+
+    // Check student exists in this school
+    if (!validStudentIds.has(record.studentId)) {
+      validationErrors.push({
         studentId: record.studentId,
-        error: error instanceof Error ? error.message : "Unknown error",
+        row: rowNum,
+        error: `Student not found in this school: ${record.studentId}`,
       })
     }
   }
 
-  revalidatePath("/attendance")
-  return results
+  // If any validation errors, abort entire operation
+  if (validationErrors.length > 0) {
+    return {
+      successful: 0,
+      failed: validationErrors.length,
+      errors: validationErrors,
+      rolledBack: true,
+    }
+  }
+
+  // Validate class exists
+  const classExists = await db.class.findFirst({
+    where: { id: parsed.classId, schoolId },
+  })
+  if (!classExists) {
+    return {
+      successful: 0,
+      failed: parsed.records.length,
+      errors: [
+        { studentId: "", row: 0, error: `Class not found: ${parsed.classId}` },
+      ],
+      rolledBack: true,
+    }
+  }
+
+  // Phase 2: Execute all operations in a single transaction
+  try {
+    await db.$transaction(async (tx) => {
+      for (const record of parsed.records) {
+        // Find existing daily attendance (where periodId is null, exclude soft-deleted)
+        const existing = await tx.attendance.findFirst({
+          where: {
+            schoolId,
+            studentId: record.studentId,
+            classId: parsed.classId,
+            date: new Date(parsed.date),
+            periodId: null,
+            deletedAt: null, // Exclude soft-deleted records
+          },
+        })
+
+        if (existing) {
+          await tx.attendance.update({
+            where: { id: existing.id },
+            data: {
+              status: record.status,
+              checkInTime: record.checkInTime
+                ? new Date(record.checkInTime)
+                : undefined,
+              checkOutTime: record.checkOutTime
+                ? new Date(record.checkOutTime)
+                : undefined,
+              notes: record.notes,
+            },
+          })
+        } else {
+          await tx.attendance.create({
+            data: {
+              schoolId,
+              studentId: record.studentId,
+              classId: parsed.classId,
+              date: new Date(parsed.date),
+              status: record.status,
+              method: parsed.method,
+              markedBy: session?.user?.id,
+              markedAt: new Date(),
+              checkInTime: record.checkInTime
+                ? new Date(record.checkInTime)
+                : undefined,
+              checkOutTime: record.checkOutTime
+                ? new Date(record.checkOutTime)
+                : undefined,
+              notes: record.notes,
+            },
+          })
+        }
+      }
+    })
+
+    revalidatePath("/attendance")
+    return {
+      successful: parsed.records.length,
+      failed: 0,
+      errors: [],
+      rolledBack: false,
+    }
+  } catch (error) {
+    // Transaction failed - all operations rolled back
+    return {
+      successful: 0,
+      failed: parsed.records.length,
+      errors: [
+        {
+          studentId: "",
+          row: 0,
+          error: `Transaction failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        },
+      ],
+      rolledBack: true,
+    }
+  }
 }
 
 // ============================================================================
@@ -1421,7 +1741,7 @@ export async function getAttendanceReport(
 
   const parsed = attendanceFilterSchema.parse(input)
 
-  const where: Prisma.AttendanceWhereInput = { schoolId }
+  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
   if (parsed.classId) where.classId = parsed.classId
   if (parsed.studentId) where.studentId = parsed.studentId
@@ -1502,7 +1822,7 @@ export async function getAttendanceReportCsv(input: {
   })
   const sp = schema.parse(input ?? {})
 
-  const where: Prisma.AttendanceWhereInput = { schoolId }
+  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
   if (sp.classId) where.classId = sp.classId
   if (sp.studentId) where.studentId = sp.studentId
   if (sp.status) where.status = sp.status.toUpperCase() as AttendanceStatus
@@ -5215,6 +5535,173 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
         error instanceof Error
           ? error.message
           : "Failed to get follow-up students",
+    }
+  }
+}
+
+// ============================================================================
+// SOFT DELETE OPERATIONS
+// ============================================================================
+
+/**
+ * Soft delete attendance record
+ *
+ * Sets deletedAt timestamp instead of hard delete.
+ * Historical records are preserved for audit and compliance.
+ *
+ * @param attendanceId - The attendance record ID to soft delete
+ * @returns Success status and deleted record info
+ */
+export async function deleteAttendance(attendanceId: string): Promise<{
+  success: boolean
+  error?: string
+  deletedAt?: Date
+}> {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { success: false, error: "Missing school context" }
+  }
+
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  try {
+    // Verify attendance exists and belongs to this school
+    const attendance = await db.attendance.findFirst({
+      where: {
+        id: attendanceId,
+        schoolId,
+        deletedAt: null, // Can't delete already deleted
+      },
+    })
+
+    if (!attendance) {
+      return { success: false, error: "Attendance record not found" }
+    }
+
+    // Soft delete by setting deletedAt timestamp
+    const now = new Date()
+    await db.attendance.update({
+      where: { id: attendanceId },
+      data: { deletedAt: now },
+    })
+
+    revalidatePath("/attendance")
+
+    return { success: true, deletedAt: now }
+  } catch (error) {
+    console.error("[deleteAttendance] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete attendance record",
+    }
+  }
+}
+
+/**
+ * Bulk soft delete attendance records
+ *
+ * @param attendanceIds - Array of attendance record IDs to soft delete
+ * @returns Count of successfully deleted records
+ */
+export async function bulkDeleteAttendance(attendanceIds: string[]): Promise<{
+  success: boolean
+  deleted: number
+  error?: string
+}> {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { success: false, deleted: 0, error: "Missing school context" }
+  }
+
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, deleted: 0, error: "Unauthorized" }
+  }
+
+  try {
+    const now = new Date()
+    const result = await db.attendance.updateMany({
+      where: {
+        id: { in: attendanceIds },
+        schoolId,
+        deletedAt: null,
+      },
+      data: { deletedAt: now },
+    })
+
+    revalidatePath("/attendance")
+
+    return { success: true, deleted: result.count }
+  } catch (error) {
+    console.error("[bulkDeleteAttendance] Error:", error)
+    return {
+      success: false,
+      deleted: 0,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete attendance records",
+    }
+  }
+}
+
+/**
+ * Restore soft-deleted attendance record
+ *
+ * @param attendanceId - The attendance record ID to restore
+ * @returns Success status
+ */
+export async function restoreAttendance(attendanceId: string): Promise<{
+  success: boolean
+  error?: string
+}> {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { success: false, error: "Missing school context" }
+  }
+
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  try {
+    // Verify attendance exists and is soft-deleted
+    const attendance = await db.attendance.findFirst({
+      where: {
+        id: attendanceId,
+        schoolId,
+        deletedAt: { not: null },
+      },
+    })
+
+    if (!attendance) {
+      return { success: false, error: "Deleted attendance record not found" }
+    }
+
+    // Restore by clearing deletedAt
+    await db.attendance.update({
+      where: { id: attendanceId },
+      data: { deletedAt: null },
+    })
+
+    revalidatePath("/attendance")
+
+    return { success: true }
+  } catch (error) {
+    console.error("[restoreAttendance] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to restore attendance record",
     }
   }
 }

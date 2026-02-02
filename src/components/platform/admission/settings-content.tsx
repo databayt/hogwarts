@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { Bell, Calculator, CreditCard, Save, Settings } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -13,10 +14,13 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { getAdmissionSettings, saveAdmissionSettings } from "./settings/actions"
 
 interface Props {
   dictionary: Dictionary["school"]
@@ -25,6 +29,9 @@ interface Props {
 
 export default function SettingsContent({ dictionary, lang }: Props) {
   const t = dictionary.admission?.settings
+  const isRTL = lang === "ar"
+  const [isPending, startTransition] = useTransition()
+  const [isLoading, setIsLoading] = useState(true)
 
   // Settings state
   const [settings, setSettings] = useState({
@@ -39,9 +46,75 @@ export default function SettingsContent({ dictionary, lang }: Props) {
     interviewWeight: 25,
   })
 
+  // Load settings on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      const result = await getAdmissionSettings()
+      if (result.success) {
+        setSettings({
+          allowMultipleApplications: result.data.allowMultipleApplications,
+          requireDocuments: result.data.requireDocuments,
+          applicationFee: result.data.applicationFee.toString(),
+          offerExpiryDays: result.data.offerExpiryDays,
+          autoEmailNotifications: result.data.autoEmailNotifications,
+          enableOnlinePayment: result.data.enableOnlinePayment,
+          academicWeight: result.data.academicWeight,
+          entranceWeight: result.data.entranceWeight,
+          interviewWeight: result.data.interviewWeight,
+        })
+      }
+      setIsLoading(false)
+    }
+    loadSettings()
+  }, [])
+
   const handleSave = () => {
-    // Save settings action would go here
-    console.log("Saving settings:", settings)
+    // Validate merit weights sum to 100
+    const totalWeight =
+      settings.academicWeight +
+      settings.entranceWeight +
+      settings.interviewWeight
+    if (totalWeight !== 100) {
+      toast.error(
+        isRTL
+          ? "يجب أن يكون مجموع أوزان الجدارة 100%"
+          : "Merit weights must sum to 100%"
+      )
+      return
+    }
+
+    startTransition(async () => {
+      const result = await saveAdmissionSettings({
+        allowMultipleApplications: settings.allowMultipleApplications,
+        requireDocuments: settings.requireDocuments,
+        applicationFee: parseFloat(settings.applicationFee) || 0,
+        offerExpiryDays: settings.offerExpiryDays,
+        autoEmailNotifications: settings.autoEmailNotifications,
+        enableOnlinePayment: settings.enableOnlinePayment,
+        academicWeight: settings.academicWeight,
+        entranceWeight: settings.entranceWeight,
+        interviewWeight: settings.interviewWeight,
+      })
+
+      if (result.success) {
+        toast.success(
+          isRTL ? "تم حفظ الإعدادات بنجاح" : "Settings saved successfully"
+        )
+      } else {
+        toast.error(result.error)
+      }
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
   }
 
   return (
@@ -281,9 +354,18 @@ export default function SettingsContent({ dictionary, lang }: Props) {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} className="gap-2">
-          <Save className="h-4 w-4" />
-          {t?.saveSettings || "Save Settings"}
+        <Button onClick={handleSave} disabled={isPending} className="gap-2">
+          {isPending ? (
+            <>
+              <Save className="h-4 w-4 animate-spin" />
+              {isRTL ? "جاري الحفظ..." : "Saving..."}
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              {t?.saveSettings || "Save Settings"}
+            </>
+          )}
         </Button>
       </div>
     </div>

@@ -19,6 +19,7 @@ export type TimetableRole =
   | "USER"
 
 export type TimetableAction =
+  // Permission actions
   | "view_all"
   | "view_own"
   | "view_class"
@@ -32,6 +33,27 @@ export type TimetableAction =
   | "import"
   | "configure_settings"
   | "view_analytics"
+  | "manage_substitutions"
+  // Audit log actions
+  | "generate_preview"
+  | "apply_generated"
+  | "bulk_import"
+  | "create_period"
+  | "update_period"
+  | "delete_period"
+  | "copy_periods"
+  | "create_default_periods"
+  | "update_term_dates"
+  | "create_schedule_exception"
+  | "update_schedule_exception"
+  | "delete_schedule_exception"
+  | "copy_schedule_settings"
+  // Substitution audit log actions
+  | "create_teacher_absence"
+  | "update_teacher_absence"
+  | "assign_substitute"
+  | "respond_substitution"
+  | "cancel_substitution"
 
 export type AccessLevel = "none" | "read" | "write" | "admin"
 
@@ -54,6 +76,7 @@ export const PERMISSION_MATRIX: Record<TimetableRole, TimetableAction[]> = {
     "import",
     "configure_settings",
     "view_analytics",
+    "manage_substitutions",
   ],
   ADMIN: [
     "view_all",
@@ -66,6 +89,7 @@ export const PERMISSION_MATRIX: Record<TimetableRole, TimetableAction[]> = {
     "import",
     "configure_settings",
     "view_analytics",
+    "manage_substitutions",
   ],
   TEACHER: ["view_all", "view_own", "export", "view_analytics"],
   STUDENT: ["view_class", "export"],

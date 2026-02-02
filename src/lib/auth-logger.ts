@@ -9,7 +9,7 @@
  *   authLogger.oauth('google', 'Profile received', { email: '...' })
  */
 
-const AUTH_DEBUG = true // Force-enable for debugging - set to false after issue resolved
+const AUTH_DEBUG = process.env.NODE_ENV === "development" // Only enable in development
 
 interface AuthLogData {
   [key: string]: unknown

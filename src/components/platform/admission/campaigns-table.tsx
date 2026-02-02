@@ -3,6 +3,7 @@
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -19,7 +20,8 @@ import {
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { getCampaigns } from "./actions"
+import { deleteCampaign, getCampaigns } from "./actions"
+import { CampaignForm } from "./campaign-form"
 import type { CampaignRow } from "./campaigns-columns"
 import { getCampaignColumns } from "./campaigns-columns"
 
@@ -79,7 +81,34 @@ export function CampaignsTable({
     filters,
   })
 
-  const columns = useMemo(() => getCampaignColumns(t, lang), [t, lang])
+  const handleEdit = useCallback(
+    (id: string) => {
+      openModal(id)
+    },
+    [openModal]
+  )
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      const result = await deleteCampaign({ id })
+      if (result.success) {
+        toast.success(lang === "ar" ? "تم حذف الحملة" : "Campaign deleted")
+        refresh()
+      } else {
+        toast.error(result.error)
+      }
+    },
+    [lang, refresh]
+  )
+
+  const columns = useMemo(
+    () =>
+      getCampaignColumns(t, lang, {
+        onEdit: handleEdit,
+        onDelete: handleDelete,
+      }),
+    [t, lang, handleEdit, handleDelete]
+  )
 
   const { table } = useDataTable<CampaignRow>({
     data,
@@ -198,14 +227,7 @@ export function CampaignsTable({
 
       <Modal
         content={
-          <div className="p-4">
-            <h2 className="mb-4 text-lg font-semibold">
-              {t?.campaigns?.createCampaign || "Create Campaign"}
-            </h2>
-            <p className="text-muted-foreground">
-              Campaign creation form will be implemented here.
-            </p>
-          </div>
+          <CampaignForm onSuccess={refresh} lang={lang} dictionary={t} />
         }
       />
     </>

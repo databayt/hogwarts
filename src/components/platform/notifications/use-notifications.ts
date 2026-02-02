@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import type { NotificationPriority, NotificationType } from "@prisma/client"
 import { useSession } from "next-auth/react"
 
 import socketService from "@/lib/websocket/socket-service"
@@ -184,8 +185,8 @@ export function useNotifications(
           id: data.id,
           schoolId: session?.user?.schoolId || "",
           userId: session?.user?.id || "",
-          type: data.type as any,
-          priority: data.priority as any,
+          type: data.type as NotificationType,
+          priority: data.priority as NotificationPriority,
           title: data.title,
           body: data.body,
           metadata: null,

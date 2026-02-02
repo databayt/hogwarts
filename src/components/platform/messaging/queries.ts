@@ -1043,6 +1043,207 @@ export async function searchMessages(
   return { rows, count }
 }
 
+// =============================================================================
+// Full-Text Search Functions
+// =============================================================================
+
+/**
+ * Search result type with relevance ranking
+ */
+export interface SearchResult {
+  id: string
+  conversationId: string
+  content: string
+  contentType: string
+  senderId: string
+  senderUsername: string | null
+  senderImage: string | null
+  conversationTitle: string | null
+  conversationType: string
+  createdAt: Date
+  rank: number
+}
+
+/**
+ * Full-text search across all user's messages using PostgreSQL's text search
+ *
+ * Features:
+ * - Relevance ranking using ts_rank
+ * - Stemming and normalization (e.g., "running" matches "run")
+ * - Multi-tenant safe (schoolId scoped)
+ * - Participant-scoped (only searches in user's conversations)
+ * - Supports conversation filtering
+ *
+ * @param schoolId - School ID for tenant isolation
+ * @param userId - User ID to scope to their conversations
+ * @param query - Search query string
+ * @param options - Search options (limit, offset, conversationId filter)
+ * @returns Array of messages with relevance ranking
+ */
+export async function fullTextSearchMessages(
+  schoolId: string,
+  userId: string,
+  query: string,
+  options: {
+    limit?: number
+    offset?: number
+    conversationId?: string
+  } = {}
+): Promise<{ results: SearchResult[]; total: number }> {
+  const { limit = 50, offset = 0, conversationId } = options
+
+  // Sanitize query for PostgreSQL tsquery
+  const sanitizedQuery = query
+    .trim()
+    .replace(/[^\w\s]/g, " ") // Remove special characters
+    .split(/\s+/)
+    .filter((word) => word.length > 0)
+    .join(" & ") // AND search (all words must match)
+
+  if (!sanitizedQuery) {
+    return { results: [], total: 0 }
+  }
+
+  // Build conversation filter
+  const conversationFilter = conversationId
+    ? `AND m."conversationId" = '${conversationId}'`
+    : ""
+
+  // Execute full-text search with ranking
+  const results = await db.$queryRaw<SearchResult[]>`
+    SELECT
+      m.id,
+      m."conversationId",
+      m.content,
+      m."contentType",
+      m."senderId",
+      u.username as "senderUsername",
+      u.image as "senderImage",
+      c.title as "conversationTitle",
+      c.type as "conversationType",
+      m."createdAt",
+      ts_rank(
+        to_tsvector('english', COALESCE(m.content, '')),
+        to_tsquery('english', ${sanitizedQuery})
+      ) as rank
+    FROM "Message" m
+    INNER JOIN "Conversation" c ON c.id = m."conversationId"
+    INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+    LEFT JOIN "User" u ON u.id = m."senderId"
+    WHERE c."schoolId" = ${schoolId}
+      AND cp."userId" = ${userId}
+      AND m."isDeleted" = false
+      AND to_tsvector('english', COALESCE(m.content, '')) @@ to_tsquery('english', ${sanitizedQuery})
+      ${Prisma.raw(conversationFilter)}
+    ORDER BY rank DESC, m."createdAt" DESC
+    LIMIT ${limit}
+    OFFSET ${offset}
+  `
+
+  // Get total count for pagination
+  const countResult = await db.$queryRaw<{ count: bigint }[]>`
+    SELECT COUNT(DISTINCT m.id) as count
+    FROM "Message" m
+    INNER JOIN "Conversation" c ON c.id = m."conversationId"
+    INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+    WHERE c."schoolId" = ${schoolId}
+      AND cp."userId" = ${userId}
+      AND m."isDeleted" = false
+      AND to_tsvector('english', COALESCE(m.content, '')) @@ to_tsquery('english', ${sanitizedQuery})
+      ${Prisma.raw(conversationFilter)}
+  `
+
+  const total = Number(countResult[0]?.count || 0)
+
+  return { results, total }
+}
+
+/**
+ * Global search across conversations and messages
+ *
+ * Searches both:
+ * 1. Conversation titles/descriptions
+ * 2. Message content
+ *
+ * Returns unified results with type discrimination
+ */
+export async function globalSearch(
+  schoolId: string,
+  userId: string,
+  query: string,
+  options: {
+    limit?: number
+    includeConversations?: boolean
+    includeMessages?: boolean
+  } = {}
+): Promise<{
+  conversations: Awaited<ReturnType<typeof searchConversations>>["rows"]
+  messages: SearchResult[]
+  totalConversations: number
+  totalMessages: number
+}> {
+  const {
+    limit = 20,
+    includeConversations = true,
+    includeMessages = true,
+  } = options
+
+  const [conversationResults, messageResults] = await Promise.all([
+    includeConversations
+      ? searchConversations(schoolId, userId, query, { perPage: limit })
+      : { rows: [], count: 0 },
+    includeMessages
+      ? fullTextSearchMessages(schoolId, userId, query, { limit })
+      : { results: [], total: 0 },
+  ])
+
+  return {
+    conversations: conversationResults.rows,
+    messages: messageResults.results,
+    totalConversations: conversationResults.count,
+    totalMessages: messageResults.total,
+  }
+}
+
+/**
+ * Get recent search suggestions based on user's message history
+ */
+export async function getSearchSuggestions(
+  schoolId: string,
+  userId: string,
+  prefix: string,
+  limit: number = 5
+): Promise<string[]> {
+  if (!prefix || prefix.length < 2) {
+    return []
+  }
+
+  // Get unique words from user's recent messages that match the prefix
+  const results = await db.$queryRaw<{ word: string }[]>`
+    SELECT DISTINCT unnest(
+      regexp_split_to_array(
+        lower(m.content),
+        '\\s+'
+      )
+    ) as word
+    FROM "Message" m
+    INNER JOIN "Conversation" c ON c.id = m."conversationId"
+    INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+    WHERE c."schoolId" = ${schoolId}
+      AND cp."userId" = ${userId}
+      AND m."isDeleted" = false
+      AND m.content IS NOT NULL
+      AND m."createdAt" > NOW() - INTERVAL '30 days'
+    HAVING unnest(regexp_split_to_array(lower(m.content), '\\s+'))
+      LIKE ${prefix.toLowerCase() + "%"}
+      AND length(unnest(regexp_split_to_array(lower(m.content), '\\s+'))) >= 3
+    ORDER BY word
+    LIMIT ${limit}
+  `
+
+  return results.map((r) => r.word)
+}
+
 /**
  * Get direct conversation between two users
  */

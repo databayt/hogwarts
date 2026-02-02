@@ -79,7 +79,16 @@
     "dismiss": "إخفاء",
     "undo": "تراجع",
     "retry": "إعادة المحاولة",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "star": "تمييز",
+    "unstar": "إلغاء التمييز"
+  },
+  "pagination": {
+    "previous": "السابق",
+    "next": "التالي",
+    "page": "صفحة",
+    "of": "من",
+    "showing": "عرض"
   },
   "types": {
     "message": "رسالة جديدة",
@@ -103,6 +112,8 @@
     "login_alert": "تنبيه تسجيل الدخول",
     "document_shared": "تمت مشاركة مستند",
     "report_ready": "التقرير جاهز",
+    "absence_intention": "تم تقديم نية الغياب",
+    "absence_intention_decision": "تمت مراجعة نية الغياب",
     "exam_scheduled": "تم جدولة امتحان",
     "exam_result": "نتيجة الامتحان متاحة",
     "library_due": "موعد إرجاع كتاب المكتبة",

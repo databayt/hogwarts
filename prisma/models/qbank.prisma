@@ -156,7 +156,7 @@ model QuestionBank {
   @@map("question_bank")
 }
 
-// Question Analytics - Track question performance
+// Question Analytics - Track question performance with psychometric analysis
 model QuestionAnalytics {
   id         String @id @default(cuid())
   schoolId   String
@@ -169,6 +169,22 @@ model QuestionAnalytics {
 
   // Difficulty analysis
   perceivedDifficulty DifficultyLevel? // Based on student performance
+
+  // Psychometric indices (Classical Test Theory)
+  difficultyIndex     Decimal? @db.Decimal(5, 4) // p-value (0-1): proportion correct
+  discriminationIndex Decimal? @db.Decimal(5, 4) // D-index (-1 to 1): high vs low group diff
+  pointBiserial       Decimal? @db.Decimal(5, 4) // Item-total correlation (-1 to 1)
+
+  // Distractor analysis for MCQ (JSON array)
+  // Format: [{optionIndex: number, selectedCount: number, highGroupCount: number, lowGroupCount: number, isCorrect: boolean}]
+  distractorAnalysis Json?
+
+  // Quality scoring and recommendations
+  qualityScore      Int?     // Composite quality score 0-100
+  qualityFlags      String[] // ["too_easy", "too_hard", "low_discrimination", "negative_discrimination", "insufficient_data"]
+  recommendedAction String?  // "keep", "revise", "retire", "needs_review"
+  sampleSize        Int      @default(0) // Number of responses analyzed
+  lastAnalyzedAt    DateTime?
 
   // Relations
   school   School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -184,7 +200,46 @@ model QuestionAnalytics {
   @@index([avgScore]) // For identifying problematic questions
   @@index([perceivedDifficulty]) // For difficulty analysis
   @@index([lastUsed]) // For usage frequency analysis
+  @@index([schoolId, qualityScore]) // For quality-based filtering
+  @@index([schoolId, recommendedAction]) // For action-needed questions
+  @@index([difficultyIndex]) // For difficulty distribution
+  @@index([discriminationIndex]) // For discrimination analysis
   @@map("question_analytics")
+}
+
+// Question Response - Individual responses for psychometric analysis
+model QuestionResponse {
+  id           String  @id @default(cuid())
+  schoolId     String
+  questionId   String
+  studentId    String
+  examId       String
+
+  // Response data
+  isCorrect    Boolean
+  pointsAwarded Decimal @db.Decimal(5, 2)
+  maxPoints    Decimal @db.Decimal(5, 2)
+  selectedOptions String[] // For MCQ: which options were selected
+
+  // For discrimination calculation
+  studentTotal  Decimal? @db.Decimal(6, 2) // Student's total exam score
+  studentRank   Int?     // Student's rank in this exam (for high/low grouping)
+
+  // Timing
+  responseTime  Int?     // Time spent on question in seconds
+  createdAt     DateTime @default(now())
+
+  // No direct relations to avoid circular dependencies
+  // Use questionId, studentId, examId for lookups
+
+  @@unique([examId, questionId, studentId])
+  @@index([schoolId])
+  @@index([schoolId, questionId])
+  @@index([schoolId, examId])
+  @@index([schoolId, studentId])
+  @@index([schoolId, questionId, isCorrect]) // For difficulty calculation
+  @@index([questionId, studentRank]) // For discrimination calculation
+  @@map("question_responses")
 }
 
 // ========== EXAM GENERATION ==========

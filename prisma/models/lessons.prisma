@@ -29,8 +29,9 @@ model Lesson {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([schoolId])
   @@index([schoolId, classId])
-  @@index([lessonDate])
+  @@index([schoolId, lessonDate])
   @@index([status])
   @@map("lessons")
 }

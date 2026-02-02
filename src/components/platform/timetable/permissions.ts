@@ -180,6 +180,13 @@ export async function logTimetableAction(
       | "room_constraint"
       | "template"
       | "template_application"
+      | "period"
+      | "scheduleException"
+      | "scheduleConfig"
+      | "generation"
+      | "import"
+      | "teacherAbsence"
+      | "substitution"
     changes?: Record<string, unknown>
     metadata?: Record<string, unknown>
   }
@@ -197,7 +204,9 @@ export async function logTimetableAction(
   }
 
   // In production, this would write to an audit log table or service
-  console.log("[TIMETABLE_AUDIT]", JSON.stringify(auditLog))
+  if (process.env.NODE_ENV === "development") {
+    console.log("[TIMETABLE_AUDIT]", JSON.stringify(auditLog))
+  }
 
   // You could also send to monitoring service like Sentry
   // Sentry.captureMessage('Timetable Action', { extra: auditLog })

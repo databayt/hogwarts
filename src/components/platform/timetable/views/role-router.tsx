@@ -75,10 +75,8 @@ export default function RoleRouter({ dictionary, lang }: Props) {
         const data = await getPersonalizedTimetable({ termId: term.id })
         setViewData(data as PersonalizedData)
 
-        // Log term source for debugging
-        if (source === "most_recent") {
-          console.log("Using most recent term (no active term set)")
-        }
+        // Note: Using most recent term when no active term is set
+        void source
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load timetable"

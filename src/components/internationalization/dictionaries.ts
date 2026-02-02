@@ -123,6 +123,26 @@ const salesDictionaries = {
     import("./dictionaries/ar/sales.json").then((module) => module.default),
 } as const
 
+// Attendance module dictionaries
+const attendanceDictionaries = {
+  en: () =>
+    import("./dictionaries/en/attendance.json").then(
+      (module) => module.default
+    ),
+  ar: () =>
+    import("./dictionaries/ar/attendance.json").then(
+      (module) => module.default
+    ),
+} as const
+
+// Messaging module dictionaries (chat, conversations)
+const messagingDictionaries = {
+  en: () =>
+    import("./dictionaries/en/messaging.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/messaging.json").then((module) => module.default),
+} as const
+
 // ============================================================================
 // Route-Specific Dictionary Loaders (Optimized)
 // ============================================================================
@@ -376,6 +396,64 @@ export const getSalesDictionary = async (locale: Locale) => {
   }
 }
 
+/**
+ * Attendance pages - platform core + attendance
+ * Used for: attendance tracking, QR codes, geofencing, interventions
+ */
+export const getAttendanceDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, messages, attendance] = await Promise.all(
+      [
+        generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+        schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+        operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+        messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
+        attendanceDictionaries[locale]?.() ?? attendanceDictionaries["en"](),
+      ]
+    )
+    return { ...general, ...school, ...operator, messages, attendance }
+  } catch (error) {
+    console.warn(`Failed to load attendance dictionary for locale: ${locale}`)
+    const [general, school, operator, messages, attendance] = await Promise.all(
+      [
+        generalDictionaries["en"](),
+        schoolDictionaries["en"](),
+        operatorDictionaries["en"](),
+        messagesDictionaries["en"](),
+        attendanceDictionaries["en"](),
+      ]
+    )
+    return { ...general, ...school, ...operator, messages, attendance }
+  }
+}
+
+/**
+ * Messaging pages - platform core + messaging
+ * Used for: chat, conversations, direct messages
+ */
+export const getMessagingDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, messages, messaging] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+      messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
+      messagingDictionaries[locale]?.() ?? messagingDictionaries["en"](),
+    ])
+    return { ...general, ...school, ...operator, messages, messaging }
+  } catch (error) {
+    console.warn(`Failed to load messaging dictionary for locale: ${locale}`)
+    const [general, school, operator, messages, messaging] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+      messagesDictionaries["en"](),
+      messagingDictionaries["en"](),
+    ])
+    return { ...general, ...school, ...operator, messages, messaging }
+  }
+}
+
 // ============================================================================
 // Full Dictionary Loader (Default)
 // ============================================================================
@@ -404,6 +482,8 @@ export const getDictionary = async (locale: Locale) => {
       messages,
       lab,
       sales,
+      attendance,
+      messaging,
     ] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
@@ -422,6 +502,8 @@ export const getDictionary = async (locale: Locale) => {
       messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
       labDictionaries[locale]?.() ?? labDictionaries["en"](),
       salesDictionaries[locale]?.() ?? salesDictionaries["en"](),
+      attendanceDictionaries[locale]?.() ?? attendanceDictionaries["en"](),
+      messagingDictionaries[locale]?.() ?? messagingDictionaries["en"](),
     ])
 
     // Merge dictionaries with module-specific keys nested under their respective namespaces
@@ -442,6 +524,8 @@ export const getDictionary = async (locale: Locale) => {
       messages,
       lab,
       sales,
+      attendance,
+      messaging,
     }
   } catch (error) {
     console.warn(
@@ -464,6 +548,8 @@ export const getDictionary = async (locale: Locale) => {
       messages,
       lab,
       sales,
+      attendance,
+      messaging,
     ] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
@@ -481,6 +567,8 @@ export const getDictionary = async (locale: Locale) => {
       messagesDictionaries["en"](),
       labDictionaries["en"](),
       salesDictionaries["en"](),
+      attendanceDictionaries["en"](),
+      messagingDictionaries["en"](),
     ])
     return {
       ...general,
@@ -499,6 +587,8 @@ export const getDictionary = async (locale: Locale) => {
       messages,
       lab,
       sales,
+      attendance,
+      messaging,
     }
   }
 }

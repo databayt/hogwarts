@@ -15,5 +15,6 @@ model SchoolWeekConfig {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, termId])
+  @@index([schoolId])
   @@map("school_week_configs")
 }

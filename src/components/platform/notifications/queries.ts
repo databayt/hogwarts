@@ -253,6 +253,63 @@ export async function getNotificationsList(
   return { rows, count }
 }
 
+// ============================================================================
+// Cursor-Based Pagination
+// ============================================================================
+
+export type CursorPaginationParams = {
+  cursor?: string
+  limit: number
+}
+
+export type CursorPaginatedResult<T> = {
+  items: T[]
+  nextCursor: string | undefined
+  hasMore: boolean
+}
+
+/**
+ * Get notifications list with cursor-based pagination
+ * More efficient for infinite scroll - avoids OFFSET/LIMIT performance issues
+ * @param schoolId - School ID for multi-tenant filtering
+ * @param userId - User ID to get notifications for
+ * @param params - Cursor pagination parameters
+ * @param filters - Optional filters
+ * @returns Promise with paginated notifications
+ */
+export async function getNotificationsListCursor(
+  schoolId: string,
+  userId: string,
+  params: CursorPaginationParams,
+  filters: NotificationListFilters = {}
+) {
+  const where = buildNotificationWhere(schoolId, userId, filters)
+
+  const rows = await db.notification.findMany({
+    where,
+    take: params.limit + 1, // Fetch one extra to determine hasMore
+    ...(params.cursor && {
+      cursor: { id: params.cursor },
+      skip: 1, // Skip the cursor item itself
+    }),
+    orderBy: [
+      { read: Prisma.SortOrder.asc },
+      { createdAt: Prisma.SortOrder.desc },
+    ],
+    select: notificationListSelect,
+  })
+
+  const hasMore = rows.length > params.limit
+  const items = hasMore ? rows.slice(0, -1) : rows
+  const nextCursor = hasMore ? items[items.length - 1]?.id : undefined
+
+  return {
+    items,
+    nextCursor,
+    hasMore,
+  }
+}
+
 /**
  * Get a single notification by ID with full details
  * @param schoolId - School ID for multi-tenant filtering

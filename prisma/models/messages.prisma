@@ -233,6 +233,7 @@ model MessageReadReceipt {
 // Typing indicators (real-time)
 model TypingIndicator {
   id             String @id @default(cuid())
+  schoolId       String // Multi-tenant scoping (CRITICAL)
   conversationId String
   userId         String
 
@@ -244,13 +245,15 @@ model TypingIndicator {
   expiresAt DateTime
 
   // Relationships
-  user User @relation("TypingIndicators", fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation("TypingIndicators", fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Unique constraint: one indicator per user-conversation
   @@unique([conversationId, userId])
+  @@index([schoolId])
   @@index([conversationId, expiresAt])
   @@map("typing_indicators")
 }

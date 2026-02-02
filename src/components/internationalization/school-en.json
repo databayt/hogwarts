@@ -591,6 +591,64 @@
       "settings": {
         "title": "Timetable Settings",
         "description": "Configure periods, bells, scheduling constraints, and module settings."
+      },
+      "scheduleSettings": {
+        "title": "Schedule Settings",
+        "configureTermSchedule": "Configure term schedule",
+        "tabs": {
+          "general": "General",
+          "holidays": "Holidays",
+          "copySettings": "Copy Settings"
+        },
+        "termDuration": "Term Duration",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "pickDate": "Pick a date",
+        "workingDaysPreset": "Working Days Preset",
+        "selectPreset": "Select preset",
+        "workingDays": "Working Days",
+        "lunchAfterPeriod": "Lunch After Period",
+        "notSet": "Not set",
+        "holidayCalendar": "Holiday Calendar",
+        "addHoliday": "Add Holiday",
+        "editException": "Edit Exception",
+        "newException": "New Exception",
+        "type": "Type",
+        "exceptionTitle": "Title",
+        "descriptionLabel": "Description (optional)",
+        "descriptionPlaceholder": "Additional details...",
+        "allDay": "All day",
+        "affectsAllClasses": "Affects all classes",
+        "noHolidays": "No holidays or events configured",
+        "copyToTerm": "Copy Settings To Another Term",
+        "copyDescription": "Copy working days, lunch configuration, and optionally holidays to another term.",
+        "selectTargetTerm": "Select target term...",
+        "includeHolidays": "Include holidays and events",
+        "copySettings": "Copy Settings",
+        "copying": "Copying...",
+        "saving": "Saving...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "close": "Close",
+        "saveSettings": "Save Settings"
+      },
+      "days": {
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat"
+      },
+      "exceptionTypes": {
+        "holiday": "Holiday",
+        "event": "Event",
+        "modifiedSchedule": "Modified Schedule",
+        "cancelled": "Cancelled"
+      },
+      "placeholders": {
+        "exampleNationalDay": "e.g., National Day"
       }
     },
     "announcements": {
@@ -684,6 +742,69 @@
       "normal": "Normal",
       "all": "All",
       "noContent": "No content"
+    },
+    "stream": {
+      "courses": {
+        "create": {
+          "pageTitle": "Create Course",
+          "cardTitle": "Basic Information",
+          "cardDescription": "Provide basic information about the course",
+          "title": "Title",
+          "titlePlaceholder": "Course title",
+          "description": "Description",
+          "descriptionPlaceholder": "Course description",
+          "coverImage": "Cover Image",
+          "price": "Price ($)",
+          "pricePlaceholder": "Price",
+          "creating": "Creating...",
+          "createButton": "Create Course",
+          "success": "Course created successfully!",
+          "error": "Failed to create course"
+        },
+        "edit": {
+          "pageTitle": "Edit Course",
+          "title": "Title",
+          "titlePlaceholder": "Enter course title",
+          "description": "Description",
+          "descriptionPlaceholder": "Enter course description",
+          "price": "Price ($)",
+          "pricePlaceholder": "Enter price",
+          "saving": "Saving...",
+          "saveButton": "Save Changes",
+          "success": "Course updated successfully!",
+          "error": "Failed to update course"
+        },
+        "lesson": {
+          "pageTitle": "Edit Lesson",
+          "cardTitle": "Lesson Details",
+          "cardDescription": "Update the lesson information and content",
+          "title": "Lesson Title",
+          "titlePlaceholder": "Enter lesson title",
+          "description": "Description",
+          "descriptionPlaceholder": "Enter lesson description",
+          "video": "Lesson Video",
+          "videoDescription": "Upload MP4, WebM, or MOV. Max 2GB for Vercel Blob, up to 5GB with S3.",
+          "duration": "Duration (minutes)",
+          "durationPlaceholder": "Enter duration",
+          "saving": "Saving...",
+          "saveButton": "Save Changes",
+          "success": "Lesson updated successfully!",
+          "error": "Failed to update lesson"
+        }
+      },
+      "richTextEditor": {
+        "undo": "Undo",
+        "redo": "Redo",
+        "heading2": "Heading 2",
+        "heading3": "Heading 3",
+        "bold": "Bold",
+        "italic": "Italic",
+        "bulletList": "Bullet List",
+        "numberedList": "Numbered List",
+        "alignLeft": "Align Left",
+        "alignCenter": "Align Center",
+        "alignRight": "Align Right"
+      }
     },
     "parents": {
       "title": "Parents",
@@ -1675,6 +1796,67 @@
         "useTemplate": "Use a template",
         "useTemplateDescription": "Start with pre-configured settings",
         "back": "Back"
+      },
+      "form": {
+        "stepTitles": {
+          "title": "School Name",
+          "description": "School Description",
+          "location": "School Location",
+          "capacity": "School Capacity",
+          "price": "Pricing Setup"
+        },
+        "navigation": {
+          "back": "Back",
+          "continue": "Continue"
+        },
+        "titleStep": {
+          "label": "School Name",
+          "placeholder": "Enter your school name",
+          "description": "This will be displayed as your school's main title"
+        },
+        "descriptionStep": {
+          "label": "School Description",
+          "placeholder": "Tell us about your school and what makes it special...",
+          "description": "Provide a brief overview of your school's mission and values",
+          "levelLabel": "School Level",
+          "levelPlaceholder": "Select level",
+          "typeLabel": "School Type",
+          "typePlaceholder": "Select type"
+        },
+        "locationStep": {
+          "addressLabel": "School Address",
+          "addressPlaceholder": "Enter the full address of your school",
+          "cityLabel": "City",
+          "cityPlaceholder": "City",
+          "stateLabel": "State/Province",
+          "statePlaceholder": "State",
+          "countryLabel": "Country",
+          "countryPlaceholder": "Country"
+        },
+        "capacityStep": {
+          "maxStudentsLabel": "Maximum Students",
+          "maxStudentsPlaceholder": "400",
+          "maxStudentsDescription": "Total enrollment capacity",
+          "maxTeachersLabel": "Maximum Teachers",
+          "maxTeachersPlaceholder": "25",
+          "maxTeachersDescription": "Total faculty capacity",
+          "maxClassesLabel": "Maximum Classes",
+          "maxClassesPlaceholder": "30",
+          "maxClassesDescription": "Total number of classes/sections"
+        },
+        "priceStep": {
+          "currencyLabel": "Currency",
+          "currencyPlaceholder": "Select currency",
+          "scheduleLabel": "Payment Schedule",
+          "schedulePlaceholder": "Select schedule",
+          "tuitionLabel": "Tuition Fee",
+          "tuitionPlaceholder": "15000",
+          "tuitionDescription": "Annual tuition fee amount",
+          "registrationLabel": "Registration Fee",
+          "registrationPlaceholder": "500",
+          "applicationLabel": "Application Fee",
+          "applicationPlaceholder": "100"
+        }
       }
     },
     "library": {
@@ -1940,7 +2122,10 @@
         "recentGrades": "Recent Grades",
         "upcomingAssignments": "Upcoming Assignments",
         "announcements": "School Announcements",
-        "attendanceSummary": "Attendance Summary"
+        "attendanceSummary": "Attendance Summary",
+        "childProgress": "Child Progress",
+        "academicProgress": "Academic Progress",
+        "overallAttendance": "Overall Attendance"
       },
       "labels": {
         "enrolledStudents": "Enrolled students",
@@ -1955,7 +2140,57 @@
         "pending": "Pending",
         "attendance": "Attendance",
         "recentGrades": "Recent Grades",
-        "presentDays": "Present Days"
+        "presentDays": "Present Days",
+        "target": "Target: {percent}%",
+        "avgGrade": "Avg Grade",
+        "tasksDue": "Tasks Due",
+        "notAvailable": "N/A",
+        "viewAll": "View all",
+        "new": "new",
+        "days": "days",
+        "tasks": "tasks",
+        "weeks": "weeks"
+      },
+      "metrics": {
+        "children": "Children",
+        "attendance": "Attendance",
+        "pendingTasks": "Pending Tasks",
+        "announcements": "Announcements"
+      },
+      "badges": {
+        "excellent": "Excellent",
+        "keepGoing": "Keep Going!",
+        "good": "Good",
+        "needsAttention": "Needs Attention"
+      },
+      "dueStatus": {
+        "overdue": "Overdue",
+        "dueToday": "Due Today",
+        "tomorrow": "Tomorrow",
+        "daysRemaining": "{count} days"
+      },
+      "emptyStates": {
+        "childrenDescription": "Your children will appear here once enrolled",
+        "gradesDescription": "Grades will appear here after assessments",
+        "assignmentsDescription": "All caught up!",
+        "announcementsDescription": "New announcements will appear here",
+        "clickToView": "Click to view full announcement"
+      },
+      "charts": {
+        "performanceComparison": "Your child's performance compared to last term",
+        "thisTerm": "This Term",
+        "lastTerm": "Last Term"
+      },
+      "progressCards": {
+        "attendanceGoal": "Attendance Goal",
+        "assignmentsCompleted": "Assignments Completed",
+        "termProgress": "Term Progress"
+      },
+      "errors": {
+        "unableToLoad": "Unable to Load Dashboard",
+        "loadError": "There was an error loading the dashboard data. Please try refreshing the page.",
+        "renderError": "Dashboard Rendering Error",
+        "renderErrorMessage": "An error occurred while rendering the dashboard."
       }
     },
     "grades": {
@@ -2127,6 +2362,55 @@
         "invalidPhone": "Invalid phone number",
         "passwordMismatch": "Passwords do not match",
         "weakPassword": "Password is too weak"
+      },
+      "toast": {
+        "success": {
+          "saved": "Saved successfully",
+          "updated": "Updated successfully",
+          "deleted": "Deleted successfully",
+          "created": "Created successfully",
+          "uploaded": "Uploaded successfully",
+          "exported": "Exported successfully",
+          "imported": "Imported successfully",
+          "copied": "Copied to clipboard",
+          "submitted": "Submitted successfully",
+          "sent": "Sent successfully"
+        },
+        "error": {
+          "generic": "An error occurred. Please try again.",
+          "save": "Failed to save",
+          "update": "Failed to update",
+          "delete": "Failed to delete",
+          "create": "Failed to create",
+          "upload": "Failed to upload",
+          "export": "Failed to export",
+          "import": "Failed to import",
+          "send": "Failed to send",
+          "fetch": "Failed to load data",
+          "network": "Network error. Check your connection."
+        },
+        "theme": {
+          "saved": "Theme saved successfully",
+          "activated": "Theme activated",
+          "deleted": "Theme deleted",
+          "exported": "Theme exported successfully",
+          "imported": "Theme imported successfully",
+          "exportFailed": "Failed to export theme",
+          "importFailed": "Failed to import theme"
+        },
+        "attendance": {
+          "saved": "Attendance saved successfully",
+          "markedPresent": "Marked as present",
+          "markedAbsent": "Marked as absent",
+          "geofenceCreated": "Geofence created successfully",
+          "geofenceDeleted": "Geofence deleted"
+        },
+        "file": {
+          "uploaded": "File uploaded successfully",
+          "uploadFailed": "Failed to upload file",
+          "tooLarge": "File is too large",
+          "invalidType": "Invalid file type"
+        }
       },
       "table": {
         "showing": "Showing",

@@ -7,12 +7,19 @@ import { z } from "zod"
 import { db } from "@/lib/db"
 
 import {
+  checkRateLimit,
+  clearRateLimit,
+  createAuditLog,
+  recordScanFailure,
+} from "../security"
+import {
   barcodeScanSchema,
   studentIdentifierSchema,
 } from "../shared/validation"
 
 /**
  * Process barcode scan for attendance
+ * Includes rate limiting protection against brute-force attacks
  */
 export async function processBarcodeScan(
   data: z.infer<typeof barcodeScanSchema>
@@ -28,6 +35,19 @@ export async function processBarcodeScan(
 
     if (!schoolId) {
       throw new Error("School ID is required")
+    }
+
+    // Rate limit check (by device ID or user ID as fallback)
+    const rateLimitId = deviceId || session.user.id
+    const rateLimitStatus = checkRateLimit(rateLimitId)
+
+    if (rateLimitStatus.isBlocked) {
+      const minutesRemaining = Math.ceil(rateLimitStatus.remainingSeconds / 60)
+      return {
+        success: false,
+        error: `Too many failed scan attempts. Please wait ${minutesRemaining} minute(s) before trying again.`,
+        rateLimited: true,
+      }
     }
 
     // Validate that the class exists and belongs to the school
@@ -56,6 +76,9 @@ export async function processBarcodeScan(
     })
 
     if (!studentIdentifier) {
+      // Record rate limit failure
+      const failureResult = recordScanFailure(rateLimitId)
+
       // Log failed scan
       await db.attendanceEvent.create({
         data: {
@@ -66,12 +89,27 @@ export async function processBarcodeScan(
           deviceId,
           success: false,
           errorMessage: "Barcode not found in system",
-          metadata: { barcode, format, classId },
+          metadata: {
+            barcode,
+            format,
+            classId,
+            remainingAttempts: failureResult.remainingAttempts,
+          },
           timestamp: new Date(scannedAt),
         },
       })
 
-      throw new Error("Barcode not found in system")
+      if (failureResult.isBlocked) {
+        return {
+          success: false,
+          error: "Too many failed attempts. Device blocked for 5 minutes.",
+          rateLimited: true,
+        }
+      }
+
+      throw new Error(
+        `Barcode not found in system. ${failureResult.remainingAttempts} attempts remaining.`
+      )
     }
 
     // Check if expired
@@ -118,6 +156,9 @@ export async function processBarcodeScan(
       },
     })
 
+    // Clear rate limit on successful scan
+    clearRateLimit(rateLimitId)
+
     // Log successful scan
     await db.attendanceEvent.create({
       data: {
@@ -134,6 +175,22 @@ export async function processBarcodeScan(
         },
         timestamp: new Date(scannedAt),
       },
+    })
+
+    // Create audit log
+    await createAuditLog({
+      schoolId,
+      userId: session.user.id,
+      action: "ATTENDANCE_CREATED",
+      entityType: "Attendance",
+      entityId: attendance.id,
+      newValue: {
+        studentId: studentIdentifier.studentId,
+        classId,
+        status: "PRESENT",
+        method: "BARCODE",
+      },
+      metadata: { deviceId, barcode: barcode.substring(0, 4) + "****" },
     })
 
     revalidatePath("/attendance/barcode")
@@ -220,6 +277,22 @@ export async function assignBarcodeToStudent(
       },
       include: {
         student: true,
+      },
+    })
+
+    // Create audit log
+    await createAuditLog({
+      schoolId,
+      userId: session.user.id,
+      action: "BARCODE_ASSIGNED",
+      entityType: "Barcode",
+      entityId: identifier.id,
+      newValue: {
+        studentId: data.studentId,
+        studentName:
+          identifier.student.givenName + " " + identifier.student.surname,
+        isActive: data.isActive ?? true,
+        expiresAt: data.expiresAt,
       },
     })
 

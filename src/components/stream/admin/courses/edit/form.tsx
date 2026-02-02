@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -22,6 +23,7 @@ import {
   updateCourseSchema,
   type UpdateCourseInput,
 } from "../create/validation"
+import { editCourse } from "./actions"
 
 interface EditCourseFormProps {
   data: {
@@ -32,10 +34,25 @@ interface EditCourseFormProps {
     imageUrl: string | null
     isPublished: boolean
   }
+  dictionary?: any
 }
 
-export function EditCourseForm({ data }: EditCourseFormProps) {
+export function EditCourseForm({ data, dictionary }: EditCourseFormProps) {
   const [isPending, setIsPending] = useState(false)
+  const router = useRouter()
+
+  // Get stream dictionary with fallbacks
+  const t = dictionary?.stream?.courses?.edit || {
+    title: "Course Title",
+    titlePlaceholder: "Enter course title",
+    description: "Description",
+    descriptionPlaceholder: "Enter course description",
+    price: "Price ($)",
+    pricePlaceholder: "Enter price",
+    saving: "Saving...",
+    saveButton: "Save Changes",
+    error: "Failed to update course",
+  }
 
   const form = useForm<UpdateCourseInput>({
     resolver: zodResolver(updateCourseSchema),
@@ -51,11 +68,17 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
   async function onSubmit(values: UpdateCourseInput) {
     setIsPending(true)
     try {
-      // TODO: Implement update course action
-      console.log("Update course:", values)
-      toast.success("Course updated successfully!")
+      const result = await editCourse(values, data.id)
+
+      if (result.status === "error") {
+        toast.error(result.message)
+        return
+      }
+
+      toast.success(result.message)
+      router.refresh()
     } catch (error) {
-      toast.error("Failed to update course")
+      toast.error(t.error)
     } finally {
       setIsPending(false)
     }
@@ -69,9 +92,9 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Course Title</FormLabel>
+              <FormLabel>{t.title}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter course title" {...field} />
+                <Input placeholder={t.titlePlaceholder} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -83,12 +106,12 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>{t.description}</FormLabel>
               <FormControl>
                 <RichTextEditor
                   value={field.value || ""}
                   onChange={field.onChange}
-                  placeholder="Enter course description"
+                  placeholder={t.descriptionPlaceholder}
                   disabled={isPending}
                 />
               </FormControl>
@@ -102,11 +125,11 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
           name="price"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Price ($)</FormLabel>
+              <FormLabel>{t.price}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="Enter price"
+                  placeholder={t.pricePlaceholder}
                   {...field}
                   value={field.value ?? ""}
                   onChange={(e) => {
@@ -124,12 +147,12 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
           {isPending ? (
             <>
               <Icons.loader2 className="mr-2 size-4 animate-spin" />
-              Saving...
+              {t.saving}
             </>
           ) : (
             <>
               <Icons.save className="mr-2 size-4" />
-              Save Changes
+              {t.saveButton}
             </>
           )}
         </Button>

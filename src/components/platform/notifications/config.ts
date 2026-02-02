@@ -110,6 +110,14 @@ export const NOTIFICATION_TYPE_CONFIG: Record<
     icon: FileText,
     requiresAction: true,
   },
+  absence_intention: {
+    icon: Calendar,
+    requiresAction: true,
+  },
+  absence_intention_decision: {
+    icon: Calendar,
+    requiresAction: false,
+  },
 }
 
 // Priority configurations
@@ -223,6 +231,8 @@ export const NOTIFICATION_EXPIRATION: Record<NotificationType, number | null> =
     login_alert: 7,
     document_shared: 60,
     report_ready: 30,
+    absence_intention: 14,
+    absence_intention_decision: 14,
   }
 
 // Pagination and limits

@@ -119,9 +119,12 @@ async function getAdminStats(schoolId: string) {
 
 export default async function StreamAdminDashboardPage({ params }: Props) {
   const { lang, subdomain } = await params
-  const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
-  const session = await auth()
+  // Parallelize independent async operations to avoid request waterfalls
+  const [dictionary, { schoolId }, session] = await Promise.all([
+    getDictionary(lang),
+    getTenantContext(),
+    auth(),
+  ])
 
   // Check admin access
   if (!session?.user) {

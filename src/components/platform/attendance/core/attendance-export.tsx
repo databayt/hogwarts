@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type {
   AttendanceFilters,
@@ -51,7 +52,7 @@ interface AttendanceExportProps {
   records: AttendanceRecord[]
   filters?: AttendanceFilters
   className?: string
-  dictionary?: any
+  dictionary?: Dictionary["school"]
 }
 
 type ExportFormat = "CSV" | "EXCEL" | "PDF" | "JSON"
@@ -63,6 +64,11 @@ export function AttendanceExport({
   className,
   dictionary,
 }: AttendanceExportProps) {
+  const t = dictionary?.attendance as Record<string, unknown> | undefined
+  const exportDict = t?.export as Record<string, string> | undefined
+  const statusDict = t?.status as Record<string, string> | undefined
+  const methodDict = t?.method as Record<string, string> | undefined
+
   const [isOpen, setIsOpen] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [exportFormat, setExportFormat] = useState<ExportFormat>("CSV")
@@ -138,16 +144,23 @@ export function AttendanceExport({
       }
 
       toast({
-        title: "Export Successful",
-        description: `Attendance data exported as ${exportFormat}`,
+        title: exportDict?.exportSuccessful || "Export Successful",
+        description:
+          exportDict?.exportSuccessfulDescription?.replace(
+            "{format}",
+            exportFormat
+          ) || `Attendance data exported as ${exportFormat}`,
       })
 
       setIsOpen(false)
     } catch (error) {
       toast({
-        title: "Export Failed",
+        title: exportDict?.exportFailed || "Export Failed",
         description:
-          error instanceof Error ? error.message : "Failed to export data",
+          error instanceof Error
+            ? error.message
+            : (t?.errors as Record<string, string> | undefined)?.serverError ||
+              "Failed to export data",
       })
     } finally {
       setExporting(false)
@@ -179,6 +192,7 @@ export function AttendanceExport({
     toast({
       title: "Note",
       description:
+        exportDict?.excelNote ||
         "Excel export is currently in CSV format. Open with Excel to convert.",
     })
 
@@ -191,6 +205,7 @@ export function AttendanceExport({
     toast({
       title: "PDF Export",
       description:
+        exportDict?.pdfNote ||
         "PDF export will be available soon. Please use CSV format for now.",
     })
   }
@@ -229,22 +244,25 @@ export function AttendanceExport({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className={className}>
-          <Download className="mr-2 h-4 w-4" />
-          Export Data
+          <Download className="me-2 h-4 w-4" />
+          {exportDict?.exportData || "Export Data"}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Export Attendance Data</DialogTitle>
+          <DialogTitle>
+            {exportDict?.exportAttendanceData || "Export Attendance Data"}
+          </DialogTitle>
           <DialogDescription>
-            Configure export options and download attendance records
+            {exportDict?.configureExport ||
+              "Configure export options and download attendance records"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* Export Format */}
           <div className="space-y-2">
-            <Label>Export Format</Label>
+            <Label>{exportDict?.exportFormat || "Export Format"}</Label>
             <RadioGroup
               value={exportFormat}
               onValueChange={(v) => setExportFormat(v as ExportFormat)}
@@ -296,7 +314,7 @@ export function AttendanceExport({
 
           {/* Date Range */}
           <div className="space-y-2">
-            <Label>Date Range</Label>
+            <Label>{exportDict?.dateRange || "Date Range"}</Label>
             <DateRangePicker
               from={dateRange.from}
               to={dateRange.to}
@@ -306,58 +324,75 @@ export function AttendanceExport({
                   to: range.to || new Date(),
                 })
               }
-              placeholder="Select date range"
+              placeholder={exportDict?.selectDateRange || "Select date range"}
             />
           </div>
 
           {/* Status ListFilter */}
           <div className="space-y-2">
-            <Label>Include Status Types</Label>
+            <Label>
+              {exportDict?.includeStatusTypes || "Include Status Types"}
+            </Label>
             <div className="grid grid-cols-3 gap-2">
-              {["PRESENT", "ABSENT", "LATE", "EXCUSED", "SICK", "HOLIDAY"].map(
-                (status) => (
-                  <div key={status} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={status}
-                      checked={selectedStatuses.includes(status)}
-                      onCheckedChange={() => toggleStatus(status)}
-                    />
-                    <Label htmlFor={status} className="cursor-pointer text-sm">
-                      {status.charAt(0) + status.slice(1).toLowerCase()}
-                    </Label>
-                  </div>
-                )
-              )}
+              {(
+                [
+                  "PRESENT",
+                  "ABSENT",
+                  "LATE",
+                  "EXCUSED",
+                  "SICK",
+                  "HOLIDAY",
+                ] as const
+              ).map((status) => (
+                <div
+                  key={status}
+                  className="flex items-center gap-2 rtl:flex-row-reverse"
+                >
+                  <Checkbox
+                    id={status}
+                    checked={selectedStatuses.includes(status)}
+                    onCheckedChange={() => toggleStatus(status)}
+                  />
+                  <Label htmlFor={status} className="cursor-pointer text-sm">
+                    {statusDict?.[status] ||
+                      status.charAt(0) + status.slice(1).toLowerCase()}
+                  </Label>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Method ListFilter */}
           <div className="space-y-2">
-            <Label>Include Tracking Methods</Label>
+            <Label>
+              {exportDict?.includeTrackingMethods || "Include Tracking Methods"}
+            </Label>
             <div className="grid grid-cols-3 gap-2">
-              {[
-                { value: "MANUAL", label: "Manual" },
-                { value: "GEOFENCE", label: "Geofence" },
-                { value: "QR_CODE", label: "QR Code" },
-                { value: "BARCODE", label: "Barcode" },
-                { value: "RFID", label: "RFID" },
-                { value: "FINGERPRINT", label: "Fingerprint" },
-                { value: "FACE_RECOGNITION", label: "Face" },
-                { value: "NFC", label: "NFC" },
-                { value: "BLUETOOTH", label: "Bluetooth" },
-                { value: "BULK_UPLOAD", label: "Bulk Upload" },
-              ].map((method) => (
-                <div key={method.value} className="flex items-center space-x-2">
+              {(
+                [
+                  "MANUAL",
+                  "GEOFENCE",
+                  "QR_CODE",
+                  "BARCODE",
+                  "RFID",
+                  "FINGERPRINT",
+                  "FACE_RECOGNITION",
+                  "NFC",
+                  "BLUETOOTH",
+                  "BULK_UPLOAD",
+                ] as const
+              ).map((methodKey) => (
+                <div
+                  key={methodKey}
+                  className="flex items-center gap-2 rtl:flex-row-reverse"
+                >
                   <Checkbox
-                    id={method.value}
-                    checked={selectedMethods.includes(method.value)}
-                    onCheckedChange={() => toggleMethod(method.value)}
+                    id={methodKey}
+                    checked={selectedMethods.includes(methodKey)}
+                    onCheckedChange={() => toggleMethod(methodKey)}
                   />
-                  <Label
-                    htmlFor={method.value}
-                    className="cursor-pointer text-sm"
-                  >
-                    {method.label}
+                  <Label htmlFor={methodKey} className="cursor-pointer text-sm">
+                    {methodDict?.[methodKey] || methodKey}
                   </Label>
                 </div>
               ))}
@@ -366,7 +401,7 @@ export function AttendanceExport({
 
           {/* Group By Option */}
           <div className="space-y-2">
-            <Label>Group By</Label>
+            <Label>{exportDict?.groupBy || "Group By"}</Label>
             <Select
               value={groupBy}
               onValueChange={(v) => setGroupBy(v as GroupByOption)}
@@ -375,18 +410,28 @@ export function AttendanceExport({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">No Grouping</SelectItem>
-                <SelectItem value="student">By Student</SelectItem>
-                <SelectItem value="class">By Class</SelectItem>
-                <SelectItem value="date">By Date</SelectItem>
-                <SelectItem value="method">By Method</SelectItem>
+                <SelectItem value="none">
+                  {exportDict?.noGrouping || "No Grouping"}
+                </SelectItem>
+                <SelectItem value="student">
+                  {exportDict?.byStudent || "By Student"}
+                </SelectItem>
+                <SelectItem value="class">
+                  {exportDict?.byClass || "By Class"}
+                </SelectItem>
+                <SelectItem value="date">
+                  {exportDict?.byDate || "By Date"}
+                </SelectItem>
+                <SelectItem value="method">
+                  {exportDict?.byMethod || "By Method"}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Additional Options */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2 rtl:flex-row-reverse">
               <Checkbox
                 id="include-stats"
                 checked={includeStats}
@@ -395,7 +440,8 @@ export function AttendanceExport({
                 }
               />
               <Label htmlFor="include-stats" className="cursor-pointer">
-                Include summary statistics
+                {exportDict?.includeSummaryStatistics ||
+                  "Include summary statistics"}
               </Label>
             </div>
           </div>
@@ -403,17 +449,35 @@ export function AttendanceExport({
           {/* Preview Info */}
           <div className="bg-secondary rounded-lg p-4">
             <div className="space-y-1 text-sm">
-              <p className="font-medium">Export Preview:</p>
-              <p className="text-muted-foreground">• Format: {exportFormat}</p>
+              <p className="font-medium">
+                {exportDict?.exportPreview || "Export Preview:"}
+              </p>
               <p className="text-muted-foreground">
-                • Date Range: {formatAttendanceDate(dateRange.from)} to{" "}
+                •{" "}
+                {exportDict?.format?.replace("{format}", exportFormat) ||
+                  `Format: ${exportFormat}`}
+              </p>
+              <p className="text-muted-foreground">
+                •{" "}
+                {(t?.reports as Record<string, string> | undefined)?.byDate ||
+                  "Date Range"}
+                : {formatAttendanceDate(dateRange.from)} -{" "}
                 {formatAttendanceDate(dateRange.to)}
               </p>
               <p className="text-muted-foreground">
-                • Records to export: {records.length}
+                •{" "}
+                {exportDict?.recordsToExport?.replace(
+                  "{count}",
+                  String(records.length)
+                ) || `Records to export: ${records.length}`}
               </p>
               <p className="text-muted-foreground">
-                • Grouping: {groupBy === "none" ? "None" : `By ${groupBy}`}
+                • {exportDict?.groupBy || "Grouping"}:{" "}
+                {groupBy === "none"
+                  ? exportDict?.none || "None"
+                  : exportDict?.[
+                      `by${groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}` as keyof typeof exportDict
+                    ] || `By ${groupBy}`}
               </p>
             </div>
           </div>
@@ -425,7 +489,8 @@ export function AttendanceExport({
             onClick={() => setIsOpen(false)}
             disabled={exporting}
           >
-            Cancel
+            {(t?.form as Record<string, string> | undefined)?.cancel ||
+              "Cancel"}
           </Button>
           <Button
             onClick={handleExport}
@@ -433,13 +498,13 @@ export function AttendanceExport({
           >
             {exporting ? (
               <>
-                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                Exporting...
+                <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
+                {exportDict?.exporting || "Exporting..."}
               </>
             ) : (
               <>
-                <Download className="mr-2 h-4 w-4" />
-                Export
+                <Download className="me-2 h-4 w-4" />
+                {exportDict?.export || "Export"}
               </>
             )}
           </Button>

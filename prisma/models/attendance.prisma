@@ -20,6 +20,27 @@ enum AttendanceMethod {
   NFC
   BLUETOOTH
   BULK_UPLOAD
+  KIOSK // Self-service kiosk check-in/out
+}
+
+// Hall pass destination types
+enum HallPassDestination {
+  BATHROOM
+  NURSE
+  OFFICE
+  COUNSELOR
+  LIBRARY
+  LOCKER
+  WATER_FOUNTAIN
+  OTHER
+}
+
+// Hall pass status
+enum HallPassStatus {
+  ACTIVE     // Student is currently out
+  RETURNED   // Student returned on time
+  EXPIRED    // Time limit exceeded
+  CANCELLED  // Pass was cancelled
 }
 
 enum IdentifierType {
@@ -50,6 +71,7 @@ model Attendance {
   checkOutTime DateTime? // Exact check-out time
   location     Json? // Location data if applicable
   confidence   Float? // Accuracy/confidence score for biometric methods
+  deletedAt    DateTime? // Soft delete timestamp (null = not deleted)
 
   // Period-by-period tracking (for secondary schools)
   periodId    String? // Links to Period model for period-specific attendance
@@ -75,6 +97,7 @@ model Attendance {
   @@index([method])
   @@index([periodId])
   @@index([schoolId, date, periodId])
+  @@index([deletedAt])
   @@map("attendances")
 }
 
@@ -206,6 +229,43 @@ model AttendanceExcuse {
   @@map("attendance_excuses")
 }
 
+// Pre-absence intention submission (student/parent notification)
+// Allows students/parents to notify school about planned absences in advance
+model AbsenceIntention {
+  id          String        @id @default(cuid())
+  schoolId    String
+  studentId   String
+  dateFrom    DateTime      @db.Date // Start of intended absence
+  dateTo      DateTime      @db.Date // End of intended absence (can be same as dateFrom)
+  reason      ExcuseReason  // Reuse existing ExcuseReason enum
+  description String?       @db.Text // Additional details
+  status      String        @default("PENDING") // PENDING, APPROVED, REJECTED
+  submittedBy String        // User ID who submitted (student or guardian)
+  reviewedBy  String?       // Teacher/Admin who reviewed
+  reviewedAt  DateTime?
+  reviewNotes String?       // Notes from reviewer
+  attachments String[]      // Supporting documents (doctor's note, etc.)
+
+  // Metadata
+  notifyTeachers  Boolean   @default(true) // Auto-notify homeroom teacher
+  notifyGuardians Boolean   @default(true) // Notify other guardians
+  daysCount       Int       // Calculated number of school days affected
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([status])
+  @@index([dateFrom])
+  @@index([dateTo])
+  @@index([schoolId, status])
+  @@map("absence_intentions")
+}
+
 // Intervention tracking for chronic absenteeism
 model AttendanceIntervention {
   id             String             @id @default(cuid())
@@ -245,4 +305,310 @@ model AttendanceIntervention {
   @@index([assignedTo])
   @@index([schoolId, studentId])
   @@map("attendance_interventions")
+}
+
+// ============================================================================
+// KIOSK & HALL PASS MODELS (Phase 2)
+// ============================================================================
+
+// Hall pass for tracking students out of class during class time
+// Inspired by Infinite Campus digital hall pass feature
+model HallPass {
+  id               String              @id @default(cuid())
+  schoolId         String
+  studentId        String
+  classId          String              // Class the student left from
+  destination      HallPassDestination
+  destinationNote  String?             // Additional details for "OTHER" destination
+  issuedBy         String              // Teacher ID who issued the pass
+  issuedAt         DateTime            @default(now())
+  expectedDuration Int                 // Expected duration in minutes
+  expectedReturn   DateTime            // Calculated expected return time
+  returnedAt       DateTime?           // Actual return time
+  status           HallPassStatus      @default(ACTIVE)
+
+  // Conflict detection
+  conflictWith     String?             // Another student's pass ID if conflict detected
+
+  // Metadata
+  notes            String?             @db.Text
+  photoUrl         String?             // Optional photo capture on departure
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([classId])
+  @@index([status])
+  @@index([issuedAt])
+  @@index([schoolId, status])
+  @@index([schoolId, studentId, status])
+  @@map("hall_passes")
+}
+
+// Kiosk session for self-service check-in/out stations
+// Tracks kiosk activity and offline queue
+model KioskSession {
+  id           String   @id @default(cuid())
+  schoolId     String
+  kioskId      String   // Unique identifier for the physical kiosk
+  kioskName    String   // Human-readable name (e.g., "Main Entrance", "Gym Exit")
+  location     String?  // Physical location description
+  isActive     Boolean  @default(true)
+  lastPingAt   DateTime @default(now()) // Last heartbeat from kiosk
+
+  // Configuration
+  config       Json?    // Kiosk-specific settings (camera enabled, receipt printing, etc.)
+
+  // Stats
+  checkInsToday  Int    @default(0)
+  checkOutsToday Int    @default(0)
+  lastResetAt    DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, kioskId])
+  @@index([schoolId])
+  @@index([isActive])
+  @@map("kiosk_sessions")
+}
+
+// Kiosk check-in/out log for detailed tracking
+model KioskLog {
+  id           String   @id @default(cuid())
+  schoolId     String
+  kioskId      String   // References KioskSession.kioskId
+  studentId    String
+  action       String   // "CHECK_IN" or "CHECK_OUT"
+  timestamp    DateTime @default(now())
+  method       String   // "BARCODE", "QR_CODE", "MANUAL", "FACE"
+  identifierValue String? // The scanned value
+
+  // Optional data
+  photoUrl     String?  // Photo captured at kiosk
+  reasonCode   String?  // Late arrival or early departure reason
+  reasonNote   String?  // Additional reason details
+
+  // Sync status for offline support
+  syncedToAttendance Boolean @default(false)
+  attendanceId       String? // Link to created/updated Attendance record
+  syncError          String? // Error message if sync failed
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([kioskId])
+  @@index([studentId])
+  @@index([timestamp])
+  @@index([syncedToAttendance])
+  @@index([schoolId, kioskId, timestamp])
+  @@map("kiosk_logs")
+}
+
+// ============================================================================
+// GAMIFICATION MODELS (Phase 4)
+// ============================================================================
+
+// Reason for awarding points
+enum AttendanceRewardReason {
+  DAILY_PRESENT        // Present for the day
+  DAILY_ON_TIME        // Arrived on time (not late)
+  WEEKLY_STREAK        // 5-day attendance streak
+  BIWEEKLY_STREAK      // 10-day attendance streak
+  MONTHLY_PERFECT      // Perfect attendance for the month
+  BADGE_EARNED         // Points from earning a badge
+  COMPETITION_WIN      // Class competition win
+  IMPROVEMENT          // Attendance improvement bonus
+  CUSTOM               // Admin-awarded points
+}
+
+// Attendance points record
+model AttendanceReward {
+  id          String                 @id @default(cuid())
+  schoolId    String
+  studentId   String
+  points      Int                    // Points awarded (can be negative for penalties)
+  reason      AttendanceRewardReason
+  description String?                // Optional description
+  awardedAt   DateTime               @default(now())
+  awardedBy   String?                // User ID who awarded (null for automatic)
+
+  // Reference to related records
+  attendanceId String?               // Link to attendance record if applicable
+  badgeId      String?               // Link to badge if awarded for earning badge
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([awardedAt])
+  @@index([reason])
+  @@index([schoolId, studentId])
+  @@map("attendance_rewards")
+}
+
+// Badge definition (school-specific badge templates)
+model AttendanceBadge {
+  id          String   @id @default(cuid())
+  schoolId    String
+  code        String   // Unique code: PERFECT_WEEK, EARLY_BIRD, COMEBACK_KID, etc.
+  name        String   // Display name
+  nameAr      String?  // Arabic name
+  description String   // Badge description
+  descriptionAr String? // Arabic description
+  icon        String   // Icon name or URL
+  color       String   @default("#10B981") // Badge color (hex)
+  pointValue  Int      @default(0) // Points awarded when badge is earned
+
+  // Badge criteria
+  criteria    Json?    // JSON with specific criteria for auto-award
+  isActive    Boolean  @default(true)
+  isAutomatic Boolean  @default(true) // Auto-award when criteria met
+
+  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentBadges StudentBadge[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, code])
+  @@index([schoolId])
+  @@index([isActive])
+  @@map("attendance_badges")
+}
+
+// Student badge awards
+model StudentBadge {
+  id        String   @id @default(cuid())
+  schoolId  String
+  studentId String
+  badgeId   String
+  awardedAt DateTime @default(now())
+  awardedBy String?  // User ID who awarded (null for automatic)
+
+  // Context for the award
+  periodStart DateTime? // Start of period badge was earned for (e.g., week start)
+  periodEnd   DateTime? // End of period
+  metadata    Json?     // Additional data about the award
+
+  school  School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  badge   AttendanceBadge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([schoolId, studentId, badgeId, periodStart]) // One badge per period
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([badgeId])
+  @@index([awardedAt])
+  @@map("student_badges")
+}
+
+// Attendance streak tracking (optimized for quick lookups)
+model AttendanceStreak {
+  id              String   @id @default(cuid())
+  schoolId        String
+  studentId       String   @unique // One streak record per student
+  currentStreak   Int      @default(0) // Current consecutive days
+  longestStreak   Int      @default(0) // Personal best
+  streakStartDate DateTime? // When current streak started
+  lastPresentDate DateTime? // Last day student was present
+
+  // Monthly stats (reset monthly)
+  monthlyPresent  Int      @default(0)
+  monthlyLate     Int      @default(0)
+  monthlyAbsent   Int      @default(0)
+  monthStart      DateTime? // First day of tracked month
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, studentId])
+  @@index([schoolId])
+  @@index([currentStreak])
+  @@index([longestStreak])
+  @@map("attendance_streaks")
+}
+
+// Class competition for attendance
+model AttendanceCompetition {
+  id          String   @id @default(cuid())
+  schoolId    String
+  name        String   // Competition name
+  nameAr      String?  // Arabic name
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+
+  // Prizes/rewards
+  winnerReward   String? // Description of prize for winning class
+  participantPoints Int @default(0) // Points for participating students
+  winnerPoints   Int    @default(100) // Bonus points for winning class students
+
+  // Results
+  winnerId       String? // Winning class ID
+  winnerRate     Float?  // Winning attendance rate
+
+  school  School                     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  entries ClassCompetitionEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([isActive])
+  @@index([startDate])
+  @@index([endDate])
+  @@map("attendance_competitions")
+}
+
+// Class entry in a competition
+model ClassCompetitionEntry {
+  id            String @id @default(cuid())
+  schoolId      String
+  competitionId String
+  classId       String
+
+  // Tracked metrics
+  totalStudents   Int    @default(0)
+  presentDays     Int    @default(0)
+  lateDays        Int    @default(0)
+  absentDays      Int    @default(0)
+  attendanceRate  Float  @default(0) // Calculated percentage
+
+  // Ranking
+  rank            Int?   // Calculated rank in competition
+
+  school      School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  competition AttendanceCompetition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  class       Class                 @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([competitionId, classId])
+  @@index([schoolId])
+  @@index([competitionId])
+  @@index([classId])
+  @@index([attendanceRate])
+  @@map("class_competition_entries")
 }

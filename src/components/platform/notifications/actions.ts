@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from "next/cache"
 import { auth } from "@/auth"
-import { NotificationChannel, NotificationType } from "@prisma/client"
+import { NotificationChannel, NotificationType, Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
@@ -117,7 +117,9 @@ export async function createNotification(
         priority: parsed.priority || "normal",
         title: parsed.title,
         body: parsed.body,
-        metadata: (parsed.metadata || null) as any,
+        metadata: parsed.metadata
+          ? (parsed.metadata as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
         actorId: parsed.actorId || authContext.userId,
         channels: parsed.channels || ["in_app"],
         expiresAt,
@@ -453,7 +455,7 @@ export async function createNotificationBatch(
         type: parsed.type,
         title: parsed.title,
         body: parsed.body,
-        targetRole: (parsed.targetRole || null) as any,
+        targetRole: parsed.targetRole ?? null,
         targetClassId: parsed.targetClassId || null,
         targetUserIds: parsed.targetUserIds || [],
         scheduledFor: parsed.scheduledFor

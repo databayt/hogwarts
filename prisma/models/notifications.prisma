@@ -10,6 +10,8 @@ enum NotificationType {
   grade_posted // New grade posted
   attendance_marked // Attendance marked
   attendance_alert // Absence alert for guardians
+  absence_intention // Pre-absence notification submitted
+  absence_intention_decision // Absence intention approved/rejected
   fee_due // Fee payment due
   fee_overdue // Overdue fee payment
   fee_paid // Fee payment received
@@ -146,7 +148,7 @@ model NotificationTemplate {
   schoolId String? // null for platform-wide templates
 
   // Template identification
-  type    NotificationType    @unique
+  type    NotificationType
   channel NotificationChannel
 
   // Template content (supports {{variable}} placeholders)
@@ -170,6 +172,8 @@ model NotificationTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Unique per type+channel per school (or platform-wide if schoolId is null)
+  @@unique([schoolId, type, channel])
   @@index([schoolId, type])
   @@index([type, channel, active])
   @@map("notification_templates")

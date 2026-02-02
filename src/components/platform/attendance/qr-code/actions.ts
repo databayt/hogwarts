@@ -6,6 +6,14 @@ import { z } from "zod"
 
 import { db } from "@/lib/db"
 
+import {
+  checkRateLimit,
+  clearRateLimit,
+  createAuditLog,
+  generateSecureQRPayload,
+  parseSecureQRPayload,
+  recordScanFailure,
+} from "../security"
 import type { AttendanceRecord, QRCodeScanPayload } from "../shared/types"
 import {
   attendanceRecordSchema,
@@ -44,22 +52,31 @@ export async function generateAttendanceQR(
       throw new Error("Class not found")
     }
 
-    // Generate unique QR code payload
-    const code = `${classId}-${Date.now()}-${Math.random().toString(36).substring(7)}`
+    // Generate unique QR code payload with HMAC signature
+    const sessionId = `${classId}-${Date.now()}-${Math.random().toString(36).substring(7)}`
     const expiresAt = new Date(Date.now() + validFor * 1000)
+
+    // Generate secure payload with HMAC signature
+    const securePayload = generateSecureQRPayload(
+      sessionId,
+      schoolId,
+      classId,
+      expiresAt.getTime()
+    )
 
     // Create QR session in database
     const qrSession = await db.qRCodeSession.create({
       data: {
         schoolId,
         classId,
-        code,
+        code: sessionId,
         payload: {
           classId,
           timestamp: Date.now(),
           expiresAt: expiresAt.getTime(),
           includeLocation,
           secret: secret || null,
+          secured: true, // Mark as using HMAC
         },
         generatedBy: session.user.id,
         expiresAt,
@@ -71,14 +88,29 @@ export async function generateAttendanceQR(
       },
     })
 
+    // Create audit log
+    await createAuditLog({
+      schoolId,
+      userId: session.user.id,
+      action: "QR_SESSION_CREATED",
+      entityType: "QRSession",
+      entityId: qrSession.id,
+      newValue: {
+        classId,
+        validFor,
+        expiresAt: expiresAt.toISOString(),
+      },
+    })
+
     revalidatePath("/attendance/qr-code")
 
     return {
       success: true,
       data: {
-        code: qrSession.code,
+        code: securePayload, // Return signed payload
+        sessionId: qrSession.code,
         expiresAt: qrSession.expiresAt,
-        payload: JSON.stringify(qrSession.payload),
+        payload: securePayload,
       },
     }
   } catch (error) {
@@ -92,6 +124,7 @@ export async function generateAttendanceQR(
 
 /**
  * Process QR code scan for attendance
+ * Includes HMAC signature verification and rate limiting
  */
 export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
   try {
@@ -108,18 +141,48 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       throw new Error("School ID not found in session")
     }
 
-    // Parse and validate QR code
-    let qrData: any
-    try {
-      qrData = JSON.parse(code)
-    } catch {
-      throw new Error("Invalid QR code format")
+    // Rate limit check
+    const rateLimitId = deviceId || studentId
+    const rateLimitStatus = checkRateLimit(rateLimitId)
+
+    if (rateLimitStatus.isBlocked) {
+      const minutesRemaining = Math.ceil(rateLimitStatus.remainingSeconds / 60)
+      return {
+        success: false,
+        error: `Too many failed scan attempts. Please wait ${minutesRemaining} minute(s).`,
+        rateLimited: true,
+      }
+    }
+
+    // First, try to parse as secure payload with HMAC
+    const secureData = parseSecureQRPayload(code)
+    let sessionCode: string
+    let verifiedSchoolId: string | undefined
+
+    if (secureData) {
+      // Secure QR code - verify school ID matches
+      sessionCode = secureData.sessionId
+      verifiedSchoolId = secureData.schoolId
+
+      if (verifiedSchoolId !== schoolId) {
+        // Record failure for cross-school attempt
+        recordScanFailure(rateLimitId)
+        throw new Error("QR code is not valid for this school")
+      }
+    } else {
+      // Fallback to legacy QR code format
+      try {
+        const qrData = JSON.parse(code)
+        sessionCode = qrData.code || qrData.sessionId || code
+      } catch {
+        sessionCode = code
+      }
     }
 
     // Find the QR session
     const qrSession = await db.qRCodeSession.findFirst({
       where: {
-        code: qrData.code || code,
+        code: sessionCode,
         schoolId,
         isActive: true,
         expiresAt: {
@@ -129,7 +192,18 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
     })
 
     if (!qrSession) {
-      throw new Error("Invalid or expired QR code")
+      // Record failure
+      const failureResult = recordScanFailure(rateLimitId)
+      if (failureResult.isBlocked) {
+        return {
+          success: false,
+          error: "Too many failed attempts. Device blocked for 5 minutes.",
+          rateLimited: true,
+        }
+      }
+      throw new Error(
+        `Invalid or expired QR code. ${failureResult.remainingAttempts} attempts remaining.`
+      )
     }
 
     // Check if student already scanned this QR
@@ -165,6 +239,9 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       },
     })
 
+    // Clear rate limit on success
+    clearRateLimit(rateLimitId)
+
     // Log the event
     await db.attendanceEvent.create({
       data: {
@@ -182,11 +259,28 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
         metadata: {
           qrSessionId: qrSession.id,
           classId: qrSession.classId,
+          secureQR: !!secureData, // Track if secure QR was used
         },
         success: true,
         userAgent: deviceId,
         timestamp: new Date(scannedAt),
       },
+    })
+
+    // Create audit log
+    await createAuditLog({
+      schoolId,
+      userId: studentId,
+      action: "ATTENDANCE_CREATED",
+      entityType: "Attendance",
+      entityId: attendance.id,
+      newValue: {
+        classId: qrSession.classId,
+        status: "PRESENT",
+        method: "QR_CODE",
+        qrSessionId: qrSession.id,
+      },
+      metadata: { deviceId },
     })
 
     revalidatePath("/attendance/qr-code")
@@ -295,6 +389,17 @@ export async function invalidateQRSession(sessionId: string) {
         invalidatedAt: new Date(),
         invalidatedBy: session.user.id,
       },
+    })
+
+    // Create audit log
+    await createAuditLog({
+      schoolId: schoolId!,
+      userId: session.user.id,
+      action: "QR_SESSION_INVALIDATED",
+      entityType: "QRSession",
+      entityId: sessionId,
+      oldValue: { isActive: true },
+      newValue: { isActive: false, invalidatedAt: new Date().toISOString() },
     })
 
     revalidatePath("/attendance/qr-code")

@@ -108,14 +108,11 @@ export function TimetableContent({ dictionary }: Props) {
   }
 
   const handleSubjectChange = (dayIndex: number, periodIdx: number, newSubject: string) => {
-    // This function would typically update the timetable data
-    // For now, we'll just log the change
-    console.log(`Subject changed: Day ${dayIndex}, Period ${periodIdx} -> ${newSubject}`)
-    
-    // In a real implementation, you would:
+    // TODO: Implement subject change functionality
     // 1. Update the local state
     // 2. Send the change to the server
     // 3. Update the timetable data
+    void { dayIndex, periodIdx, newSubject }
   }
 
   // Extract available subjects from current timetable data

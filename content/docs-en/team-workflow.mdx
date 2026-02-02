@@ -34,11 +34,11 @@ This guide documents professional workflows inspired by top repositories like [s
 
 Choose your workflow based on team structure:
 
-| Workflow | Best For | Access Level | Use Case |
-|----------|----------|--------------|----------|
-| **Fork-based** | Open source, external contributors | No write access needed | Community contributions |
-| **Branch-based** | Internal teams | Direct write access | Core team development |
-| **Hybrid** | Mixed teams | Core team + external | Enterprise with contractors |
+| Workflow         | Best For                           | Access Level           | Use Case                    |
+| ---------------- | ---------------------------------- | ---------------------- | --------------------------- |
+| **Fork-based**   | Open source, external contributors | No write access needed | Community contributions     |
+| **Branch-based** | Internal teams                     | Direct write access    | Core team development       |
+| **Hybrid**       | Mixed teams                        | Core team + external   | Enterprise with contractors |
 
 ### Fork-Based Workflow (Open Source Style)
 
@@ -155,14 +155,14 @@ Follow a consistent naming pattern:
 <type>/<short-description>
 ```
 
-| Type | Purpose | Example |
-|------|---------|---------|
-| `feature/` | New functionality | `feature/student-export` |
-| `fix/` | Bug fixes | `fix/login-redirect` |
-| `docs/` | Documentation | `docs/api-reference` |
-| `refactor/` | Code improvements | `refactor/auth-flow` |
-| `test/` | Test additions | `test/attendance-api` |
-| `chore/` | Maintenance tasks | `chore/update-deps` |
+| Type        | Purpose           | Example                  |
+| ----------- | ----------------- | ------------------------ |
+| `feature/`  | New functionality | `feature/student-export` |
+| `fix/`      | Bug fixes         | `fix/login-redirect`     |
+| `docs/`     | Documentation     | `docs/api-reference`     |
+| `refactor/` | Code improvements | `refactor/auth-flow`     |
+| `test/`     | Test additions    | `test/attendance-api`    |
+| `chore/`    | Maintenance tasks | `chore/update-deps`      |
 
 **Examples:**
 
@@ -202,14 +202,14 @@ main (protected)
 
 Configure branch protection in GitHub Settings:
 
-| Protection Rule | main | develop |
-|-----------------|------|---------|
-| Require PR before merge | ✅ | ✅ |
-| Require approvals | 1+ | 1+ |
-| Require status checks | ✅ | ✅ |
-| Require conversation resolution | ✅ | Optional |
-| Restrict force push | ✅ | ✅ |
-| Restrict deletions | ✅ | ✅ |
+| Protection Rule                 | main | develop  |
+| ------------------------------- | ---- | -------- |
+| Require PR before merge         | ✅   | ✅       |
+| Require approvals               | 1+   | 1+       |
+| Require status checks           | ✅   | ✅       |
+| Require conversation resolution | ✅   | Optional |
+| Restrict force push             | ✅   | ✅       |
+| Restrict deletions              | ✅   | ✅       |
 
 ## Commit Convention
 
@@ -227,18 +227,18 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) — the s
 
 ### Commit Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `feat` | New feature | `feat(students): add bulk import functionality` |
-| `fix` | Bug fix | `fix(auth): resolve session expiration issue` |
-| `docs` | Documentation | `docs(readme): update installation steps` |
-| `style` | Formatting (no code change) | `style(ui): fix button alignment` |
-| `refactor` | Code restructuring | `refactor(api): simplify error handling` |
-| `test` | Adding tests | `test(attendance): add unit tests for API` |
-| `chore` | Maintenance | `chore(deps): update dependencies` |
-| `ci` | CI/CD changes | `ci(github): add deployment workflow` |
-| `build` | Build system | `build(turbo): optimize cache config` |
-| `perf` | Performance | `perf(queries): add database indexes` |
+| Type       | Description                 | Example                                         |
+| ---------- | --------------------------- | ----------------------------------------------- |
+| `feat`     | New feature                 | `feat(students): add bulk import functionality` |
+| `fix`      | Bug fix                     | `fix(auth): resolve session expiration issue`   |
+| `docs`     | Documentation               | `docs(readme): update installation steps`       |
+| `style`    | Formatting (no code change) | `style(ui): fix button alignment`               |
+| `refactor` | Code restructuring          | `refactor(api): simplify error handling`        |
+| `test`     | Adding tests                | `test(attendance): add unit tests for API`      |
+| `chore`    | Maintenance                 | `chore(deps): update dependencies`              |
+| `ci`       | CI/CD changes               | `ci(github): add deployment workflow`           |
+| `build`    | Build system                | `build(turbo): optimize cache config`           |
+| `perf`     | Performance                 | `perf(queries): add database indexes`           |
 
 ### Scope Examples
 
@@ -314,13 +314,13 @@ pnpm build
 
 Keep PRs small and focused:
 
-| PR Size | Lines Changed | Review Time | Recommendation |
-|---------|---------------|-------------|----------------|
-| **XS** | 1-50 | 5-10 min | Ideal |
-| **S** | 51-200 | 15-30 min | Good |
-| **M** | 201-500 | 30-60 min | Acceptable |
-| **L** | 501-1000 | 1-2 hours | Split if possible |
-| **XL** | 1000+ | 2+ hours | Must split |
+| PR Size | Lines Changed | Review Time | Recommendation    |
+| ------- | ------------- | ----------- | ----------------- |
+| **XS**  | 1-50          | 5-10 min    | Ideal             |
+| **S**   | 51-200        | 15-30 min   | Good              |
+| **M**   | 201-500       | 30-60 min   | Acceptable        |
+| **L**   | 501-1000      | 1-2 hours   | Split if possible |
+| **XL**  | 1000+         | 2+ hours    | Must split        |
 
 **Why small PRs?**
 
@@ -351,29 +351,35 @@ refactor(finance): simplify invoice calculation logic
 
 ```markdown
 ## Summary
+
 Brief description of what this PR does (1-3 sentences).
 
 ## Changes
+
 - Added bulk import functionality for students
 - Implemented CSV validation with error reporting
 - Added progress indicator for large imports
 
 ## Screenshots (if UI changes)
-| Before | After |
-|--------|-------|
+
+| Before         | After         |
+| -------------- | ------------- |
 | ![before](url) | ![after](url) |
 
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] E2E tests added/updated
 - [ ] Manually tested on localhost
 - [ ] Tested on mobile viewport
 
 ## Related Issues
+
 Closes #123
 Related to #456
 
 ## Checklist
+
 - [ ] Code follows project conventions
 - [ ] Self-reviewed the code
 - [ ] Added/updated documentation
@@ -422,28 +428,33 @@ gh pr ready
 
 ```markdown
 ## Functionality
+
 - [ ] Code does what the PR claims
 - [ ] Edge cases handled
 - [ ] Error handling appropriate
 
 ## Code Quality
+
 - [ ] Follows project conventions
 - [ ] No code duplication
 - [ ] Functions are focused and small
 - [ ] Variable names are clear
 
 ## Security
+
 - [ ] No hardcoded secrets
 - [ ] Input validation present
 - [ ] schoolId included in queries (multi-tenant)
 - [ ] No SQL injection risks
 
 ## Performance
+
 - [ ] No N+1 queries
 - [ ] Appropriate use of indexes
 - [ ] No unnecessary re-renders
 
 ## Testing
+
 - [ ] Tests cover happy path
 - [ ] Tests cover error cases
 - [ ] Tests are maintainable
@@ -453,13 +464,13 @@ gh pr ready
 
 **Prefixes for clarity:**
 
-| Prefix | Meaning | Action Required |
-|--------|---------|-----------------|
-| `blocking:` | Must fix before merge | Yes |
-| `suggestion:` | Would be better, but optional | No |
-| `question:` | Need clarification | Response needed |
-| `nit:` | Minor style/preference | No |
-| `praise:` | Good work! | No |
+| Prefix        | Meaning                       | Action Required |
+| ------------- | ----------------------------- | --------------- |
+| `blocking:`   | Must fix before merge         | Yes             |
+| `suggestion:` | Would be better, but optional | No              |
+| `question:`   | Need clarification            | Response needed |
+| `nit:`        | Minor style/preference        | No              |
+| `praise:`     | Good work!                    | No              |
 
 **Examples:**
 
@@ -494,10 +505,10 @@ https://hogwarts-<branch>-<team>.vercel.app
 
 ### Preview URL Patterns
 
-| Branch | Preview URL |
-|--------|-------------|
+| Branch                   | Preview URL                                       |
+| ------------------------ | ------------------------------------------------- |
 | `feature/student-export` | `hogwarts-feature-student-export-team.vercel.app` |
-| `fix/login-bug` | `hogwarts-fix-login-bug-team.vercel.app` |
+| `fix/login-bug`          | `hogwarts-fix-login-bug-team.vercel.app`          |
 
 ### Commenting Preview URLs
 
@@ -540,6 +551,7 @@ Before merging to main:
 
 ```markdown
 ## Pre-Merge Checklist
+
 - [ ] All CI checks passing
 - [ ] Code review approved
 - [ ] Preview deployment tested
@@ -600,13 +612,13 @@ For small, low-risk changes:
 
 ### Repository Security
 
-| Practice | Implementation |
-|----------|----------------|
-| Branch protection | Require PR reviews, status checks |
-| Secret scanning | Enable GitHub secret scanning |
-| Dependabot | Auto-update vulnerable dependencies |
-| 2FA | Require for all team members |
-| CODEOWNERS | Require specific reviewers for sensitive files |
+| Practice          | Implementation                                 |
+| ----------------- | ---------------------------------------------- |
+| Branch protection | Require PR reviews, status checks              |
+| Secret scanning   | Enable GitHub secret scanning                  |
+| Dependabot        | Auto-update vulnerable dependencies            |
+| 2FA               | Require for all team members                   |
+| CODEOWNERS        | Require specific reviewers for sensitive files |
 
 ### CODEOWNERS File
 
@@ -677,16 +689,16 @@ git branch -d feature/my-feature
 
 ### Quick Reference Card
 
-| Action | Command |
-|--------|---------|
-| Sync fork | `git fetch upstream && git merge upstream/main` |
-| New branch | `git checkout -b feature/name` |
-| Commit | `git commit -m "type(scope): message"` |
-| Push | `git push -u origin branch-name` |
-| Create PR | `gh pr create` |
-| View PR | `gh pr view` |
-| Merge PR | `gh pr merge` |
-| Delete branch | `git branch -d branch-name` |
+| Action        | Command                                         |
+| ------------- | ----------------------------------------------- |
+| Sync fork     | `git fetch upstream && git merge upstream/main` |
+| New branch    | `git checkout -b feature/name`                  |
+| Commit        | `git commit -m "type(scope): message"`          |
+| Push          | `git push -u origin branch-name`                |
+| Create PR     | `gh pr create`                                  |
+| View PR       | `gh pr view`                                    |
+| Merge PR      | `gh pr merge`                                   |
+| Delete branch | `git branch -d branch-name`                     |
 
 ## Tools & Automation
 
@@ -782,6 +794,7 @@ Effective team collaboration follows these principles:
 Following these practices ensures code quality, reduces bugs, and keeps the team moving fast.
 
 **Sources:**
+
 - [GitHub Pull Request Best Practices](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/getting-started/best-practices-for-pull-requests)
 - [shadcn/ui Contributing Guide](https://github.com/shadcn-ui/ui/blob/main/CONTRIBUTING.md)
 - [Conventional Commits](https://www.conventionalcommits.org/)

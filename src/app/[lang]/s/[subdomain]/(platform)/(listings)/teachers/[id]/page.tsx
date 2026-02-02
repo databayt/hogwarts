@@ -14,11 +14,12 @@ interface Props {
 
 export default async function TeacherDetailPage({ params }: Props) {
   const { lang, id } = await params
-  const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
-
-  // Get current session to determine ownership
-  const session = await auth()
+  // Parallelize independent async operations to avoid request waterfalls
+  const [dictionary, { schoolId }, session] = await Promise.all([
+    getDictionary(lang),
+    getTenantContext(),
+    auth(),
+  ])
 
   const teacherModel = getModel("teacher")
   if (!schoolId || !teacherModel) return notFound()

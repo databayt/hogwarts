@@ -73,6 +73,7 @@
 
 import { revalidatePath, revalidateTag } from "next/cache"
 import { auth } from "@/auth"
+import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
@@ -83,6 +84,16 @@ import {
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
+  logAttachmentUploaded,
+  logConversationArchived,
+  logConversationCreated,
+  logMessageCreated,
+  logMessageDeleted,
+  logMessageEdited,
+  logParticipantAdded,
+  logParticipantRemoved,
+} from "./audit"
+import {
   assertMessagingPermission,
   canManageParticipants,
   canSendMessage,
@@ -90,6 +101,12 @@ import {
   validateConversationType,
 } from "./authorization"
 import { DEFAULT_SETTINGS, MESSAGES_PATH } from "./config"
+import {
+  extractMentions,
+  notifyMentions,
+  notifyNewMessage,
+  notifyParticipantAdded,
+} from "./notification-helpers"
 import {
   getConversation,
   getConversationParticipant,
@@ -198,6 +215,19 @@ export async function createConversation(
         },
       },
     })
+
+    // Audit log (non-blocking)
+    logConversationCreated(
+      { schoolId, userId: authContext.userId },
+      {
+        conversationId: conversation.id,
+        conversationType: parsed.type,
+        title: parsed.title,
+        participantCount: parsed.participantIds.length + 1,
+      }
+    ).catch((err) =>
+      console.error("[createConversation] Audit log error:", err)
+    )
 
     revalidatePath(MESSAGES_PATH)
     revalidateTag(`conversations-${schoolId}`, "max")
@@ -341,6 +371,13 @@ export async function archiveConversation(
       return { success: false, error: "Not a participant in this conversation" }
     }
 
+    // Get conversation title for audit
+    const conversation = await getConversation(
+      schoolId,
+      authContext.userId,
+      parsed.conversationId
+    )
+
     // Archive the conversation itself
     await db.conversation.update({
       where: { id: parsed.conversationId },
@@ -348,6 +385,17 @@ export async function archiveConversation(
         isArchived: true,
       },
     })
+
+    // Audit log (non-blocking)
+    logConversationArchived(
+      { schoolId, userId: authContext.userId },
+      {
+        conversationId: parsed.conversationId,
+        title: conversation?.title ?? undefined,
+      }
+    ).catch((err) =>
+      console.error("[archiveConversation] Audit log error:", err)
+    )
 
     revalidatePath(MESSAGES_PATH)
     revalidateTag(`conversations-${schoolId}`, "max")
@@ -446,7 +494,9 @@ export async function sendMessage(
         content: parsed.content,
         contentType: parsed.contentType || "text",
         replyToId: parsed.replyToId,
-        metadata: (parsed.metadata as any) || null,
+        metadata: parsed.metadata
+          ? (parsed.metadata as Prisma.InputJsonValue)
+          : Prisma.DbNull,
         status: "sent",
       },
     })
@@ -456,6 +506,51 @@ export async function sendMessage(
       where: { id: parsed.conversationId },
       data: { lastMessageAt: new Date() },
     })
+
+    // Get sender name for notifications
+    const sender = await db.user.findUnique({
+      where: { id: authContext.userId },
+      select: { username: true },
+    })
+    const senderName = sender?.username || "Someone"
+
+    // Trigger notifications (non-blocking)
+    // 1. Notify all participants about the new message
+    notifyNewMessage(
+      schoolId,
+      parsed.conversationId,
+      authContext.userId,
+      senderName,
+      parsed.content,
+      conversation.title || undefined
+    ).catch((err) => console.error("[sendMessage] Notification error:", err))
+
+    // 2. Check for and notify mentioned users
+    const mentionedUserIds = await extractMentions(parsed.content)
+    if (mentionedUserIds.length > 0) {
+      notifyMentions(
+        schoolId,
+        parsed.conversationId,
+        authContext.userId,
+        senderName,
+        parsed.content,
+        mentionedUserIds
+      ).catch((err) =>
+        console.error("[sendMessage] Mention notification error:", err)
+      )
+    }
+
+    // 3. Audit log (non-blocking)
+    logMessageCreated(
+      { schoolId, userId: authContext.userId },
+      {
+        conversationId: parsed.conversationId,
+        messageId: message.id,
+        contentPreview: parsed.content,
+        contentLength: parsed.content.length,
+        replyToId: parsed.replyToId,
+      }
+    ).catch((err) => console.error("[sendMessage] Audit log error:", err))
 
     revalidatePath(MESSAGES_PATH)
     revalidateTag(`messages-${parsed.conversationId}`, "max")
@@ -591,11 +686,25 @@ export async function editMessage(
       where: { id: parsed.messageId },
       data: {
         content: parsed.content,
-        metadata: (parsed.metadata as any) || undefined,
+        metadata: parsed.metadata
+          ? (parsed.metadata as Prisma.InputJsonValue)
+          : undefined,
         isEdited: true,
         editedAt: new Date(),
       },
     })
+
+    // Audit log (non-blocking)
+    logMessageEdited(
+      { schoolId, userId: authContext.userId },
+      {
+        conversationId: message.conversationId,
+        messageId: parsed.messageId,
+        contentPreview: parsed.content,
+        contentLength: parsed.content.length,
+        previousContentLength: message.content?.length,
+      }
+    ).catch((err) => console.error("[editMessage] Audit log error:", err))
 
     revalidatePath(MESSAGES_PATH)
     revalidateTag(`messages-${message.conversationId}`, "max")
@@ -662,6 +771,15 @@ export async function deleteMessage(
         content: "[Message deleted]",
       },
     })
+
+    // Audit log (non-blocking)
+    logMessageDeleted(
+      { schoolId, userId: authContext.userId },
+      {
+        conversationId: message.conversationId,
+        messageId: parsed.messageId,
+      }
+    ).catch((err) => console.error("[deleteMessage] Audit log error:", err))
 
     revalidatePath(MESSAGES_PATH)
     revalidateTag(`messages-${message.conversationId}`, "max")
@@ -828,6 +946,33 @@ export async function addParticipant(
       },
     })
 
+    // Get the adder's name for notification
+    const adder = await db.user.findUnique({
+      where: { id: authContext.userId },
+      select: { username: true },
+    })
+    const adderName = adder?.username || "Someone"
+
+    // Notify the added user (non-blocking)
+    notifyParticipantAdded(
+      schoolId,
+      parsed.conversationId,
+      parsed.userId,
+      authContext.userId,
+      adderName,
+      conversation.title || undefined
+    ).catch((err) => console.error("[addParticipant] Notification error:", err))
+
+    // Audit log (non-blocking)
+    logParticipantAdded(
+      { schoolId, userId: authContext.userId },
+      {
+        conversationId: parsed.conversationId,
+        targetUserId: parsed.userId,
+        newRole: parsed.role || "member",
+      }
+    ).catch((err) => console.error("[addParticipant] Audit log error:", err))
+
     revalidatePath(MESSAGES_PATH)
     revalidateTag(`conversation-${parsed.conversationId}`, "max")
 
@@ -872,6 +1017,9 @@ export async function removeParticipant(
       return { success: false, error: "Permission denied" }
     }
 
+    // Get schoolId for audit
+    const { schoolId } = await getTenantContext()
+
     // Remove participant
     await db.conversationParticipant.deleteMany({
       where: {
@@ -879,6 +1027,19 @@ export async function removeParticipant(
         userId: parsed.userId,
       },
     })
+
+    // Audit log (non-blocking)
+    if (schoolId) {
+      logParticipantRemoved(
+        { schoolId, userId: authContext.userId },
+        {
+          conversationId: parsed.conversationId,
+          targetUserId: parsed.userId,
+        }
+      ).catch((err) =>
+        console.error("[removeParticipant] Audit log error:", err)
+      )
+    }
 
     revalidatePath(MESSAGES_PATH)
     revalidateTag(`conversation-${parsed.conversationId}`, "max")
@@ -1238,6 +1399,230 @@ export async function leaveConversation(input: {
   }
 }
 
+// =============================================================================
+// Search Actions
+// =============================================================================
+
+/**
+ * Global search across conversations and messages
+ *
+ * Searches both conversation metadata (title, description) and
+ * message content using PostgreSQL full-text search with ranking.
+ */
+export async function searchMessaging(input: {
+  query: string
+  limit?: number
+  includeConversations?: boolean
+  includeMessages?: boolean
+}): Promise<
+  ActionResponse<{
+    conversations: Array<{
+      id: string
+      type: string
+      title: string | null
+      lastMessageAt: Date | null
+    }>
+    messages: Array<{
+      id: string
+      conversationId: string
+      content: string
+      senderUsername: string | null
+      conversationTitle: string | null
+      createdAt: Date
+      rank: number
+    }>
+    totalConversations: number
+    totalMessages: number
+  }>
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    // Validate query
+    const query = input.query?.trim()
+    if (!query || query.length < 2) {
+      return {
+        success: false,
+        error: "Search query must be at least 2 characters",
+      }
+    }
+
+    // Import search function
+    const { globalSearch } = await import("./queries")
+
+    const results = await globalSearch(schoolId, authContext.userId, query, {
+      limit: input.limit ?? 20,
+      includeConversations: input.includeConversations ?? true,
+      includeMessages: input.includeMessages ?? true,
+    })
+
+    // Serialize results for client
+    return {
+      success: true,
+      data: {
+        conversations: results.conversations.map((c) => ({
+          id: c.id,
+          type: c.type,
+          title: c.title,
+          lastMessageAt: c.lastMessageAt,
+        })),
+        messages: results.messages.map((m) => ({
+          id: m.id,
+          conversationId: m.conversationId,
+          content: m.content,
+          senderUsername: m.senderUsername,
+          conversationTitle: m.conversationTitle,
+          createdAt: m.createdAt,
+          rank: m.rank,
+        })),
+        totalConversations: results.totalConversations,
+        totalMessages: results.totalMessages,
+      },
+    }
+  } catch (error) {
+    console.error("[searchMessaging] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Search failed",
+    }
+  }
+}
+
+/**
+ * Search messages within a specific conversation
+ */
+export async function searchConversationMessages(input: {
+  conversationId: string
+  query: string
+  limit?: number
+  offset?: number
+}): Promise<
+  ActionResponse<{
+    results: Array<{
+      id: string
+      content: string
+      senderUsername: string | null
+      createdAt: Date
+      rank: number
+    }>
+    total: number
+  }>
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    // Validate query
+    const query = input.query?.trim()
+    if (!query || query.length < 2) {
+      return {
+        success: false,
+        error: "Search query must be at least 2 characters",
+      }
+    }
+
+    // Verify user is participant
+    const isParticipant = await isConversationParticipant(
+      input.conversationId,
+      authContext.userId
+    )
+    if (!isParticipant) {
+      return { success: false, error: "Not a participant in this conversation" }
+    }
+
+    // Import search function
+    const { fullTextSearchMessages } = await import("./queries")
+
+    const { results, total } = await fullTextSearchMessages(
+      schoolId,
+      authContext.userId,
+      query,
+      {
+        conversationId: input.conversationId,
+        limit: input.limit ?? 50,
+        offset: input.offset ?? 0,
+      }
+    )
+
+    return {
+      success: true,
+      data: {
+        results: results.map((r) => ({
+          id: r.id,
+          content: r.content,
+          senderUsername: r.senderUsername,
+          createdAt: r.createdAt,
+          rank: r.rank,
+        })),
+        total,
+      },
+    }
+  } catch (error) {
+    console.error("[searchConversationMessages] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Search failed",
+    }
+  }
+}
+
+/**
+ * Get search suggestions based on user's message history
+ */
+export async function fetchSearchSuggestions(input: {
+  prefix: string
+  limit?: number
+}): Promise<ActionResponse<string[]>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    // Import function with alias to avoid collision
+    const queries = await import("./queries")
+
+    const suggestions = await queries.getSearchSuggestions(
+      schoolId,
+      authContext.userId,
+      input.prefix,
+      input.limit ?? 5
+    )
+
+    return { success: true, data: suggestions }
+  } catch (error) {
+    console.error("[fetchSearchSuggestions] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to get suggestions",
+    }
+  }
+}
+
 // Export all actions
 export const messagingActions = {
   createConversation,
@@ -1257,4 +1642,7 @@ export const messagingActions = {
   muteConversation,
   unmuteConversation,
   leaveConversation,
+  searchMessaging,
+  searchConversationMessages,
+  fetchSearchSuggestions,
 } as const

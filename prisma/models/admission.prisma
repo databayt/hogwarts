@@ -403,6 +403,9 @@ model AdmissionSettings {
   updatedAt DateTime @updatedAt
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  // Note: schoolId has @unique which implicitly creates an index
+  @@map("admission_settings")
 }
 
 // OTP Verification for Status Tracker

@@ -591,6 +591,64 @@
       "settings": {
         "title": "إعدادات الجدول",
         "description": "تكوين الحصص والأجراس وقيود الجدولة وإعدادات الوحدة."
+      },
+      "scheduleSettings": {
+        "title": "إعدادات الجدولة",
+        "configureTermSchedule": "تكوين جدول الفصل الدراسي",
+        "tabs": {
+          "general": "عام",
+          "holidays": "العطلات",
+          "copySettings": "نسخ الإعدادات"
+        },
+        "termDuration": "مدة الفصل الدراسي",
+        "startDate": "تاريخ البداية",
+        "endDate": "تاريخ النهاية",
+        "pickDate": "اختر تاريخاً",
+        "workingDaysPreset": "إعداد أيام العمل المسبق",
+        "selectPreset": "اختر إعداداً مسبقاً",
+        "workingDays": "أيام العمل",
+        "lunchAfterPeriod": "الغداء بعد الحصة",
+        "notSet": "غير محدد",
+        "holidayCalendar": "تقويم العطلات",
+        "addHoliday": "إضافة عطلة",
+        "editException": "تعديل الاستثناء",
+        "newException": "استثناء جديد",
+        "type": "النوع",
+        "exceptionTitle": "العنوان",
+        "descriptionLabel": "الوصف (اختياري)",
+        "descriptionPlaceholder": "تفاصيل إضافية...",
+        "allDay": "طوال اليوم",
+        "affectsAllClasses": "يؤثر على جميع الفصول",
+        "noHolidays": "لا توجد عطلات أو أحداث مُكونة",
+        "copyToTerm": "نسخ الإعدادات إلى فصل آخر",
+        "copyDescription": "نسخ أيام العمل وتكوين الغداء والعطلات اختيارياً إلى فصل آخر.",
+        "selectTargetTerm": "اختر الفصل المستهدف...",
+        "includeHolidays": "تضمين العطلات والأحداث",
+        "copySettings": "نسخ الإعدادات",
+        "copying": "جارٍ النسخ...",
+        "saving": "جارٍ الحفظ...",
+        "save": "حفظ",
+        "cancel": "إلغاء",
+        "close": "إغلاق",
+        "saveSettings": "حفظ الإعدادات"
+      },
+      "days": {
+        "sun": "أحد",
+        "mon": "اثنين",
+        "tue": "ثلاثاء",
+        "wed": "أربعاء",
+        "thu": "خميس",
+        "fri": "جمعة",
+        "sat": "سبت"
+      },
+      "exceptionTypes": {
+        "holiday": "عطلة",
+        "event": "حدث",
+        "modifiedSchedule": "جدول معدّل",
+        "cancelled": "ملغى"
+      },
+      "placeholders": {
+        "exampleNationalDay": "مثال: اليوم الوطني"
       }
     },
     "announcements": {
@@ -684,6 +742,69 @@
       "normal": "عادية",
       "all": "الكل",
       "noContent": "لا يوجد محتوى"
+    },
+    "stream": {
+      "courses": {
+        "create": {
+          "pageTitle": "إنشاء دورة",
+          "cardTitle": "المعلومات الأساسية",
+          "cardDescription": "قدم المعلومات الأساسية حول الدورة",
+          "title": "العنوان",
+          "titlePlaceholder": "عنوان الدورة",
+          "description": "الوصف",
+          "descriptionPlaceholder": "وصف الدورة",
+          "coverImage": "صورة الغلاف",
+          "price": "السعر ($)",
+          "pricePlaceholder": "السعر",
+          "creating": "جارٍ الإنشاء...",
+          "createButton": "إنشاء الدورة",
+          "success": "تم إنشاء الدورة بنجاح!",
+          "error": "فشل في إنشاء الدورة"
+        },
+        "edit": {
+          "pageTitle": "تعديل الدورة",
+          "title": "العنوان",
+          "titlePlaceholder": "أدخل عنوان الدورة",
+          "description": "الوصف",
+          "descriptionPlaceholder": "أدخل وصف الدورة",
+          "price": "السعر ($)",
+          "pricePlaceholder": "أدخل السعر",
+          "saving": "جارٍ الحفظ...",
+          "saveButton": "حفظ التغييرات",
+          "success": "تم تحديث الدورة بنجاح!",
+          "error": "فشل في تحديث الدورة"
+        },
+        "lesson": {
+          "pageTitle": "تعديل الدرس",
+          "cardTitle": "تفاصيل الدرس",
+          "cardDescription": "تحديث معلومات ومحتوى الدرس",
+          "title": "عنوان الدرس",
+          "titlePlaceholder": "أدخل عنوان الدرس",
+          "description": "الوصف",
+          "descriptionPlaceholder": "أدخل وصف الدرس",
+          "video": "فيديو الدرس",
+          "videoDescription": "رفع MP4 أو WebM أو MOV. الحد الأقصى 2GB لـ Vercel Blob، حتى 5GB مع S3.",
+          "duration": "المدة (بالدقائق)",
+          "durationPlaceholder": "أدخل المدة",
+          "saving": "جارٍ الحفظ...",
+          "saveButton": "حفظ التغييرات",
+          "success": "تم تحديث الدرس بنجاح!",
+          "error": "فشل في تحديث الدرس"
+        }
+      },
+      "richTextEditor": {
+        "undo": "تراجع",
+        "redo": "إعادة",
+        "heading2": "عنوان 2",
+        "heading3": "عنوان 3",
+        "bold": "غامق",
+        "italic": "مائل",
+        "bulletList": "قائمة نقطية",
+        "numberedList": "قائمة مرقمة",
+        "alignLeft": "محاذاة لليسار",
+        "alignCenter": "محاذاة للوسط",
+        "alignRight": "محاذاة لليمين"
+      }
     },
     "parents": {
       "title": "أولياء الأمور",
@@ -1676,6 +1797,67 @@
         "useTemplate": "استخدم قالب جاهز",
         "useTemplateDescription": "ابدأ بإعدادات مُهيأة مسبقاً",
         "back": "العودة"
+      },
+      "form": {
+        "stepTitles": {
+          "title": "اسم المدرسة",
+          "description": "وصف المدرسة",
+          "location": "موقع المدرسة",
+          "capacity": "سعة المدرسة",
+          "price": "إعداد الرسوم"
+        },
+        "navigation": {
+          "back": "رجوع",
+          "continue": "متابعة"
+        },
+        "titleStep": {
+          "label": "اسم المدرسة",
+          "placeholder": "أدخل اسم مدرستك",
+          "description": "سيتم عرض هذا كعنوان رئيسي لمدرستك"
+        },
+        "descriptionStep": {
+          "label": "وصف المدرسة",
+          "placeholder": "أخبرنا عن مدرستك وما يميزها...",
+          "description": "قدم نظرة عامة موجزة عن رسالة وقيم مدرستك",
+          "levelLabel": "المرحلة الدراسية",
+          "levelPlaceholder": "اختر المرحلة",
+          "typeLabel": "نوع المدرسة",
+          "typePlaceholder": "اختر النوع"
+        },
+        "locationStep": {
+          "addressLabel": "عنوان المدرسة",
+          "addressPlaceholder": "أدخل العنوان الكامل لمدرستك",
+          "cityLabel": "المدينة",
+          "cityPlaceholder": "المدينة",
+          "stateLabel": "المحافظة/الولاية",
+          "statePlaceholder": "المحافظة",
+          "countryLabel": "الدولة",
+          "countryPlaceholder": "الدولة"
+        },
+        "capacityStep": {
+          "maxStudentsLabel": "الحد الأقصى للطلاب",
+          "maxStudentsPlaceholder": "400",
+          "maxStudentsDescription": "السعة الإجمالية للتسجيل",
+          "maxTeachersLabel": "الحد الأقصى للمعلمين",
+          "maxTeachersPlaceholder": "25",
+          "maxTeachersDescription": "السعة الإجمالية للكادر التعليمي",
+          "maxClassesLabel": "الحد الأقصى للفصول",
+          "maxClassesPlaceholder": "30",
+          "maxClassesDescription": "إجمالي عدد الفصول/الشُعب"
+        },
+        "priceStep": {
+          "currencyLabel": "العملة",
+          "currencyPlaceholder": "اختر العملة",
+          "scheduleLabel": "جدول الدفع",
+          "schedulePlaceholder": "اختر الجدول",
+          "tuitionLabel": "رسوم التعليم",
+          "tuitionPlaceholder": "15000",
+          "tuitionDescription": "مبلغ الرسوم السنوية",
+          "registrationLabel": "رسوم التسجيل",
+          "registrationPlaceholder": "500",
+          "applicationLabel": "رسوم التقديم",
+          "applicationPlaceholder": "100"
+        }
       }
     },
     "library": {
@@ -1941,7 +2123,10 @@
         "recentGrades": "الدرجات الأخيرة",
         "upcomingAssignments": "الواجبات القادمة",
         "announcements": "إعلانات المدرسة",
-        "attendanceSummary": "ملخص الحضور"
+        "attendanceSummary": "ملخص الحضور",
+        "childProgress": "تقدم الطفل",
+        "academicProgress": "التقدم الأكاديمي",
+        "overallAttendance": "الحضور العام"
       },
       "labels": {
         "enrolledStudents": "طلاب مسجلون",
@@ -1956,7 +2141,57 @@
         "pending": "معلق",
         "attendance": "الحضور",
         "recentGrades": "الدرجات الأخيرة",
-        "presentDays": "أيام الحضور"
+        "presentDays": "أيام الحضور",
+        "target": "الهدف: {percent}%",
+        "avgGrade": "متوسط الدرجة",
+        "tasksDue": "المهام المستحقة",
+        "notAvailable": "غير متوفر",
+        "viewAll": "عرض الكل",
+        "new": "جديد",
+        "days": "أيام",
+        "tasks": "مهام",
+        "weeks": "أسابيع"
+      },
+      "metrics": {
+        "children": "الأبناء",
+        "attendance": "الحضور",
+        "pendingTasks": "المهام المعلقة",
+        "announcements": "الإعلانات"
+      },
+      "badges": {
+        "excellent": "ممتاز",
+        "keepGoing": "استمر!",
+        "good": "جيد",
+        "needsAttention": "يحتاج اهتماماً"
+      },
+      "dueStatus": {
+        "overdue": "متأخر",
+        "dueToday": "مستحق اليوم",
+        "tomorrow": "غداً",
+        "daysRemaining": "{count} أيام"
+      },
+      "emptyStates": {
+        "childrenDescription": "سيظهر أطفالك هنا بمجرد تسجيلهم",
+        "gradesDescription": "ستظهر الدرجات هنا بعد التقييمات",
+        "assignmentsDescription": "لا توجد واجبات متأخرة!",
+        "announcementsDescription": "ستظهر الإعلانات الجديدة هنا",
+        "clickToView": "انقر لعرض الإعلان الكامل"
+      },
+      "charts": {
+        "performanceComparison": "أداء طفلك مقارنة بالفصل الماضي",
+        "thisTerm": "هذا الفصل",
+        "lastTerm": "الفصل الماضي"
+      },
+      "progressCards": {
+        "attendanceGoal": "هدف الحضور",
+        "assignmentsCompleted": "الواجبات المكتملة",
+        "termProgress": "تقدم الفصل"
+      },
+      "errors": {
+        "unableToLoad": "تعذر تحميل لوحة التحكم",
+        "loadError": "حدث خطأ أثناء تحميل بيانات لوحة التحكم. يرجى تحديث الصفحة.",
+        "renderError": "خطأ في عرض لوحة التحكم",
+        "renderErrorMessage": "حدث خطأ أثناء عرض لوحة التحكم."
       }
     },
     "grades": {
@@ -2128,6 +2363,55 @@
         "invalidPhone": "رقم الهاتف غير صالح",
         "passwordMismatch": "كلمات المرور غير متطابقة",
         "weakPassword": "كلمة المرور ضعيفة جداً"
+      },
+      "toast": {
+        "success": {
+          "saved": "تم الحفظ بنجاح",
+          "updated": "تم التحديث بنجاح",
+          "deleted": "تم الحذف بنجاح",
+          "created": "تم الإنشاء بنجاح",
+          "uploaded": "تم الرفع بنجاح",
+          "exported": "تم التصدير بنجاح",
+          "imported": "تم الاستيراد بنجاح",
+          "copied": "تم النسخ إلى الحافظة",
+          "submitted": "تم الإرسال بنجاح",
+          "sent": "تم الإرسال بنجاح"
+        },
+        "error": {
+          "generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+          "save": "فشل في الحفظ",
+          "update": "فشل في التحديث",
+          "delete": "فشل في الحذف",
+          "create": "فشل في الإنشاء",
+          "upload": "فشل في الرفع",
+          "export": "فشل في التصدير",
+          "import": "فشل في الاستيراد",
+          "send": "فشل في الإرسال",
+          "fetch": "فشل في تحميل البيانات",
+          "network": "خطأ في الشبكة. تحقق من اتصالك."
+        },
+        "theme": {
+          "saved": "تم حفظ السمة بنجاح",
+          "activated": "تم تفعيل السمة",
+          "deleted": "تم حذف السمة",
+          "exported": "تم تصدير السمة بنجاح",
+          "imported": "تم استيراد السمة بنجاح",
+          "exportFailed": "فشل في تصدير السمة",
+          "importFailed": "فشل في استيراد السمة"
+        },
+        "attendance": {
+          "saved": "تم حفظ الحضور بنجاح",
+          "markedPresent": "تم تسجيل الحضور",
+          "markedAbsent": "تم تسجيل الغياب",
+          "geofenceCreated": "تم إنشاء النطاق الجغرافي بنجاح",
+          "geofenceDeleted": "تم حذف النطاق الجغرافي"
+        },
+        "file": {
+          "uploaded": "تم رفع الملف بنجاح",
+          "uploadFailed": "فشل في رفع الملف",
+          "tooLarge": "الملف كبير جداً",
+          "invalidType": "نوع الملف غير صالح"
+        }
       },
       "table": {
         "showing": "عرض",

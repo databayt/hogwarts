@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Library({ params }: Props) {
   const { lang } = await params
-  const session = await auth()
-  const dictionary = await getDictionary(lang)
+  // Parallelize independent async operations to avoid request waterfalls
+  const [session, dictionary] = await Promise.all([auth(), getDictionary(lang)])
 
   return (
     <LibraryContent

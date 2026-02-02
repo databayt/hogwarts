@@ -189,6 +189,20 @@ model School {
   attendancePolicies      AttendancePolicy[]
   attendanceReports       AttendanceReport[]
   attendanceInterventions AttendanceIntervention[]
+  absenceIntentions       AbsenceIntention[]
+  hallPasses              HallPass[]
+  kioskSessions           KioskSession[]
+  kioskLogs               KioskLog[]
+  teacherAbsences         TeacherAbsence[]
+  substitutionRecords     SubstitutionRecord[]
+
+  // Gamification relations
+  attendanceRewards       AttendanceReward[]
+  attendanceBadges        AttendanceBadge[]
+  studentBadges           StudentBadge[]
+  attendanceStreaks       AttendanceStreak[]
+  attendanceCompetitions  AttendanceCompetition[]
+  classCompetitionEntries ClassCompetitionEntry[]
 
   // Quiz relations
   quizGames         QuizGame[]
@@ -234,12 +248,16 @@ model School {
   notificationSummaries     NotificationSummary[]
 
   // Messaging relations
-  conversations Conversation[]
+  conversations    Conversation[]
+  typingIndicators TypingIndicator[]
 
   // File upload relations
   fileMetadata FileMetadata[]
   uploadQuotas UploadQuota[]
   fileRecords  FileRecord[]
+
+  // Audit relations
+  auditLogs AuditLog[]
 
   // Sales Module relations
   leads          Lead[]
@@ -255,6 +273,8 @@ model School {
   examAnswerKeys         ExamAnswerKey[]
   examCertificateConfigs ExamCertificateConfig[]
   examCertificates       ExamCertificate[]
+  examSessions           ExamSession[]
+  gradingConfig          SchoolGradingConfig?
 
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt

@@ -36,5 +36,7 @@ model Task {
   // Multi-tenant scoping (optional for demo data-table)
   schoolId String?
 
+  @@index([schoolId])
+  @@index([status])
   @@map("shadcn_tasks")
 }

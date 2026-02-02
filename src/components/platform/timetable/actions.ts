@@ -12,7 +12,7 @@
  * - Free slot suggestions: AI-like recommendation for class/teacher availability
  *
  * KEY ALGORITHMS:
- * 1. detectTimetableConflicts(): O(n²) comparison of all slots for same teacher/room at same time
+ * 1. detectTimetableConflicts(): Database-level grouping for O(conflicts) detection (optimized from O(n²))
  * 2. suggestFreeSlots(): Finds gap patterns across week, excluding existing bookings
  * 3. Role-based filtering: Different users see different views (teacher sees own classes, admin sees all)
  * 4. Week offset calculations: Support current week (0) and next week (1) views
@@ -37,7 +37,7 @@
  * - filterTimetableByRole(): Client-side visibility filter (prevents info leakage)
  *
  * PERFORMANCE NOTES:
- * - detectTimetableConflicts is O(n²) - could be optimized with indexed queries
+ * - detectTimetableConflicts uses database GROUP BY + HAVING for O(conflicts) performance
  * - Consider caching weekly timetables (immutable after term starts)
  * - getTimetableAnalytics aggregates across all classes - potential bottleneck
  * - Free slot suggestions could benefit from memoization (same input patterns daily)
@@ -61,11 +61,27 @@
 "use server"
 
 import { auth } from "@/auth"
+import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 
+// Constants imported from ./constants.ts to avoid "use server" export restrictions
+import { ABSENCE_TYPES, SUBSTITUTION_STATUS } from "./constants"
+// ============================================================================
+// AI-POWERED TIMETABLE GENERATION
+// ============================================================================
+
+import {
+  generateTimetable as runGenerationAlgorithm,
+  type ClassRequirement,
+  type GeneratedSlot,
+  type GenerationConfig,
+  type GenerationResult,
+  type RoomAvailability,
+  type TeacherAvailability,
+} from "./generate/algorithm"
 import {
   filterTimetableByRole,
   getPermissionContext,
@@ -74,6 +90,14 @@ import {
   requirePermission,
   requireReadAccess,
 } from "./permissions"
+// Types imported from ./types.ts to avoid "use server" export restrictions
+import type {
+  ConstraintViolation,
+  ImportResult,
+  ImportSlot,
+  RoomConstraintCheck,
+  TeacherConstraintCheck,
+} from "./types"
 import {
   detectTimetableConflictsSchema,
   getClassesForSelectionSchema,
@@ -85,6 +109,471 @@ import {
   upsertTimetableSlotSchema,
   type GetWeeklyTimetableInput as GetWeeklyTimetableValidated,
 } from "./validation"
+
+// Note: Types (ConstraintViolation, ImportResult, ImportSlot, etc.)
+// should be imported directly from ./types.ts by consuming files
+
+// ============================================================================
+// TEACHER CONSTRAINT VALIDATION
+// ============================================================================
+
+/**
+ * Validate teacher constraints for a proposed slot assignment
+ * Returns violations (errors block assignment, warnings are advisory)
+ */
+export async function validateTeacherConstraints(input: {
+  schoolId: string
+  termId: string
+  teacherId: string
+  dayOfWeek: number
+  periodId: string
+  weekOffset?: number
+  excludeSlotId?: string // Exclude this slot when checking (for updates)
+}): Promise<TeacherConstraintCheck> {
+  const violations: ConstraintViolation[] = []
+
+  // Get teacher info
+  const teacher = await db.teacher.findFirst({
+    where: { id: input.teacherId, schoolId: input.schoolId },
+    select: { id: true, givenName: true, surname: true },
+  })
+
+  if (!teacher) {
+    return {
+      isValid: false,
+      violations: [
+        {
+          type: "UNAVAILABLE_BLOCK",
+          severity: "error",
+          message: "Teacher not found",
+        },
+      ],
+      teacherId: input.teacherId,
+      teacherName: "Unknown",
+    }
+  }
+
+  const teacherName = `${teacher.givenName} ${teacher.surname}`
+
+  // Get teacher constraint (term-specific or school-wide)
+  const constraint = await db.teacherConstraint.findFirst({
+    where: {
+      schoolId: input.schoolId,
+      teacherId: input.teacherId,
+      OR: [{ termId: input.termId }, { termId: null }],
+    },
+    orderBy: { termId: "desc" }, // Prefer term-specific
+    include: {
+      unavailableBlocks: {
+        where: {
+          OR: [
+            { isRecurring: true },
+            {
+              specificDate: {
+                gte: new Date(new Date().setHours(0, 0, 0, 0)),
+              },
+            },
+          ],
+        },
+      },
+    },
+  })
+
+  // Check unavailable blocks
+  if (constraint?.unavailableBlocks) {
+    const isUnavailable = constraint.unavailableBlocks.some(
+      (block) =>
+        block.dayOfWeek === input.dayOfWeek && block.periodId === input.periodId
+    )
+
+    if (isUnavailable) {
+      violations.push({
+        type: "UNAVAILABLE_BLOCK",
+        severity: "error",
+        message: `${teacherName} is marked as unavailable for this time slot`,
+        details: { dayOfWeek: input.dayOfWeek, periodId: input.periodId },
+      })
+    }
+  }
+
+  // Check day preferences (unavailable = error, avoid = warning)
+  if (constraint?.dayPreferences) {
+    const dayPrefs = constraint.dayPreferences as Record<string, string>
+    const dayPref = dayPrefs[String(input.dayOfWeek)]
+
+    if (dayPref === "unavailable") {
+      violations.push({
+        type: "UNAVAILABLE_BLOCK",
+        severity: "error",
+        message: `${teacherName} is unavailable on this day`,
+        details: { dayOfWeek: input.dayOfWeek, preference: dayPref },
+      })
+    } else if (dayPref === "avoid") {
+      violations.push({
+        type: "UNAVAILABLE_BLOCK",
+        severity: "warning",
+        message: `${teacherName} prefers to avoid teaching on this day`,
+        details: { dayOfWeek: input.dayOfWeek, preference: dayPref },
+      })
+    }
+  }
+
+  // Check period preferences
+  if (constraint?.periodPreferences) {
+    const periodPrefs = constraint.periodPreferences as Record<string, string>
+    const periodPref = periodPrefs[input.periodId]
+
+    if (periodPref === "unavailable") {
+      violations.push({
+        type: "UNAVAILABLE_BLOCK",
+        severity: "error",
+        message: `${teacherName} is unavailable during this period`,
+        details: { periodId: input.periodId, preference: periodPref },
+      })
+    } else if (periodPref === "avoid") {
+      violations.push({
+        type: "UNAVAILABLE_BLOCK",
+        severity: "warning",
+        message: `${teacherName} prefers to avoid this period`,
+        details: { periodId: input.periodId, preference: periodPref },
+      })
+    }
+  }
+
+  // Get existing slots for this teacher in the same term/week
+  const existingSlots = await db.timetable.findMany({
+    where: {
+      schoolId: input.schoolId,
+      termId: input.termId,
+      teacherId: input.teacherId,
+      weekOffset: input.weekOffset ?? 0,
+      ...(input.excludeSlotId && { id: { not: input.excludeSlotId } }),
+    },
+    include: {
+      period: { select: { startTime: true, name: true } },
+    },
+    orderBy: [{ dayOfWeek: "asc" }, { period: { startTime: "asc" } }],
+  })
+
+  // Check max periods per day
+  const slotsOnSameDay = existingSlots.filter(
+    (s) => s.dayOfWeek === input.dayOfWeek
+  )
+  const maxPerDay = constraint?.maxPeriodsPerDay ?? 6
+
+  if (slotsOnSameDay.length >= maxPerDay) {
+    violations.push({
+      type: "MAX_PERIODS_DAY",
+      severity: "error",
+      message: `${teacherName} already has ${slotsOnSameDay.length} periods on this day (max: ${maxPerDay})`,
+      details: {
+        current: slotsOnSameDay.length,
+        max: maxPerDay,
+        dayOfWeek: input.dayOfWeek,
+      },
+    })
+  } else if (slotsOnSameDay.length >= maxPerDay - 1) {
+    violations.push({
+      type: "MAX_PERIODS_DAY",
+      severity: "warning",
+      message: `${teacherName} will reach maximum periods (${maxPerDay}) for this day`,
+      details: {
+        current: slotsOnSameDay.length,
+        max: maxPerDay,
+        dayOfWeek: input.dayOfWeek,
+      },
+    })
+  }
+
+  // Check max periods per week
+  const maxPerWeek = constraint?.maxPeriodsPerWeek ?? 25
+
+  if (existingSlots.length >= maxPerWeek) {
+    violations.push({
+      type: "MAX_PERIODS_WEEK",
+      severity: "error",
+      message: `${teacherName} already has ${existingSlots.length} periods this week (max: ${maxPerWeek})`,
+      details: { current: existingSlots.length, max: maxPerWeek },
+    })
+  } else if (existingSlots.length >= maxPerWeek - 3) {
+    violations.push({
+      type: "MAX_PERIODS_WEEK",
+      severity: "warning",
+      message: `${teacherName} is approaching maximum weekly periods (${existingSlots.length}/${maxPerWeek})`,
+      details: { current: existingSlots.length, max: maxPerWeek },
+    })
+  }
+
+  // Check consecutive periods (would this create too many in a row?)
+  const maxConsecutive = constraint?.maxConsecutivePeriods ?? 3
+
+  // Get periods ordered by start time for the same day
+  const periods = await db.period.findMany({
+    where: {
+      schoolId: input.schoolId,
+      id: { in: [...slotsOnSameDay.map((s) => s.periodId), input.periodId] },
+    },
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true },
+  })
+
+  // Check if adding this period creates a consecutive streak > maxConsecutive
+  const periodOrder = periods.map((p) => p.id)
+  const newPeriodIndex = periodOrder.indexOf(input.periodId)
+
+  if (newPeriodIndex !== -1) {
+    // Count consecutive periods including the new one
+    let consecutiveCount = 1
+    // Check backwards
+    for (let i = newPeriodIndex - 1; i >= 0; i--) {
+      if (slotsOnSameDay.some((s) => s.periodId === periodOrder[i])) {
+        consecutiveCount++
+      } else {
+        break
+      }
+    }
+    // Check forwards
+    for (let i = newPeriodIndex + 1; i < periodOrder.length; i++) {
+      if (slotsOnSameDay.some((s) => s.periodId === periodOrder[i])) {
+        consecutiveCount++
+      } else {
+        break
+      }
+    }
+
+    if (consecutiveCount > maxConsecutive) {
+      violations.push({
+        type: "CONSECUTIVE_PERIODS",
+        severity: "warning",
+        message: `${teacherName} will have ${consecutiveCount} consecutive periods (recommended max: ${maxConsecutive})`,
+        details: { consecutive: consecutiveCount, max: maxConsecutive },
+      })
+    }
+  }
+
+  return {
+    isValid: !violations.some((v) => v.severity === "error"),
+    violations,
+    teacherId: input.teacherId,
+    teacherName,
+  }
+}
+
+// ============================================================================
+// ROOM CONSTRAINT VALIDATION
+// ============================================================================
+
+/**
+ * Validate room constraints for a proposed slot assignment
+ */
+export async function validateRoomConstraints(input: {
+  schoolId: string
+  termId: string
+  classroomId: string
+  classId: string
+  dayOfWeek: number
+  periodId: string
+  weekOffset?: number
+  excludeSlotId?: string
+}): Promise<RoomConstraintCheck> {
+  const violations: ConstraintViolation[] = []
+
+  // Get room info
+  const room = await db.classroom.findFirst({
+    where: { id: input.classroomId, schoolId: input.schoolId },
+    select: {
+      id: true,
+      roomName: true,
+      capacity: true,
+      classroomType: { select: { name: true } },
+    },
+  })
+
+  if (!room) {
+    return {
+      isValid: false,
+      violations: [
+        {
+          type: "ROOM_RESERVED",
+          severity: "error",
+          message: "Room not found",
+        },
+      ],
+      roomId: input.classroomId,
+      roomName: "Unknown",
+    }
+  }
+
+  // Get class info (student count)
+  const classInfo = await db.class.findFirst({
+    where: { id: input.classId, schoolId: input.schoolId },
+    select: {
+      name: true,
+      subject: { select: { subjectName: true } },
+      _count: { select: { studentClasses: true } },
+    },
+  })
+
+  const studentCount = classInfo?._count?.studentClasses ?? 0
+
+  // Get room constraint
+  const constraint = await db.roomConstraint.findFirst({
+    where: {
+      schoolId: input.schoolId,
+      classroomId: input.classroomId,
+      OR: [{ termId: input.termId }, { termId: null }],
+    },
+    orderBy: { termId: "desc" },
+  })
+
+  // Check room capacity
+  const effectiveCapacity = room.capacity + (constraint?.capacityBuffer ?? 0)
+  const strictCapacity = constraint?.strictCapacityLimit ?? true
+
+  if (studentCount > effectiveCapacity) {
+    violations.push({
+      type: "ROOM_CAPACITY",
+      severity: strictCapacity ? "error" : "warning",
+      message: `Class has ${studentCount} students but ${room.roomName} only holds ${effectiveCapacity}`,
+      details: {
+        studentCount,
+        roomCapacity: room.capacity,
+        buffer: constraint?.capacityBuffer ?? 0,
+      },
+    })
+  } else if (studentCount > room.capacity * 0.9) {
+    violations.push({
+      type: "ROOM_CAPACITY",
+      severity: "warning",
+      message: `${room.roomName} will be at ${Math.round((studentCount / room.capacity) * 100)}% capacity`,
+      details: { studentCount, roomCapacity: room.capacity },
+    })
+  }
+
+  // Check reserved periods
+  if (constraint?.reservedPeriods) {
+    const reserved = constraint.reservedPeriods as Record<string, string[]>
+    const dayReserved = reserved[String(input.dayOfWeek)] || []
+
+    if (dayReserved.includes(input.periodId)) {
+      violations.push({
+        type: "ROOM_RESERVED",
+        severity: "error",
+        message: `${room.roomName} is reserved during this time slot`,
+        details: { dayOfWeek: input.dayOfWeek, periodId: input.periodId },
+      })
+    }
+  }
+
+  // Check subject type requirements (if room has restrictions)
+  if (
+    constraint?.allowedSubjectTypes &&
+    constraint.allowedSubjectTypes.length > 0
+  ) {
+    const subjectName = classInfo?.subject?.subjectName?.toLowerCase() || ""
+    const roomType = room.classroomType?.name?.toLowerCase() || ""
+
+    // Check if subject requires special room
+    const requiresLab =
+      subjectName.includes("lab") ||
+      subjectName.includes("science") ||
+      subjectName.includes("physics") ||
+      subjectName.includes("chemistry") ||
+      subjectName.includes("biology")
+
+    const requiresComputer =
+      subjectName.includes("computer") ||
+      subjectName.includes("it") ||
+      subjectName.includes("programming")
+
+    const isLabRoom =
+      roomType.includes("lab") || roomType.includes("laboratory")
+    const isComputerRoom =
+      roomType.includes("computer") || roomType.includes("it")
+
+    if (requiresLab && !isLabRoom) {
+      violations.push({
+        type: "ROOM_EQUIPMENT",
+        severity: "warning",
+        message: `${classInfo?.subject?.subjectName} may require a lab room, but ${room.roomName} is a ${room.classroomType?.name || "regular"} room`,
+        details: { subjectName, roomType: room.classroomType?.name },
+      })
+    }
+
+    if (requiresComputer && !isComputerRoom) {
+      violations.push({
+        type: "ROOM_EQUIPMENT",
+        severity: "warning",
+        message: `${classInfo?.subject?.subjectName} may require a computer room, but ${room.roomName} is a ${room.classroomType?.name || "regular"} room`,
+        details: { subjectName, roomType: room.classroomType?.name },
+      })
+    }
+  }
+
+  return {
+    isValid: !violations.some((v) => v.severity === "error"),
+    violations,
+    roomId: input.classroomId,
+    roomName: room.roomName,
+  }
+}
+
+/**
+ * Validate all constraints for a slot (teacher + room)
+ * Use this before creating or updating a timetable slot
+ */
+export async function validateSlotConstraints(input: {
+  schoolId: string
+  termId: string
+  teacherId: string
+  classroomId: string
+  classId: string
+  dayOfWeek: number
+  periodId: string
+  weekOffset?: number
+  excludeSlotId?: string
+  enforceConstraints?: boolean // If true, throw on violations; if false, return violations
+}): Promise<{
+  isValid: boolean
+  teacherCheck: TeacherConstraintCheck
+  roomCheck: RoomConstraintCheck
+}> {
+  const [teacherCheck, roomCheck] = await Promise.all([
+    validateTeacherConstraints({
+      schoolId: input.schoolId,
+      termId: input.termId,
+      teacherId: input.teacherId,
+      dayOfWeek: input.dayOfWeek,
+      periodId: input.periodId,
+      weekOffset: input.weekOffset,
+      excludeSlotId: input.excludeSlotId,
+    }),
+    validateRoomConstraints({
+      schoolId: input.schoolId,
+      termId: input.termId,
+      classroomId: input.classroomId,
+      classId: input.classId,
+      dayOfWeek: input.dayOfWeek,
+      periodId: input.periodId,
+      weekOffset: input.weekOffset,
+      excludeSlotId: input.excludeSlotId,
+    }),
+  ])
+
+  const isValid = teacherCheck.isValid && roomCheck.isValid
+
+  // If enforcing constraints, throw an error with all violations
+  if (input.enforceConstraints && !isValid) {
+    const errors = [
+      ...teacherCheck.violations.filter((v) => v.severity === "error"),
+      ...roomCheck.violations.filter((v) => v.severity === "error"),
+    ]
+
+    throw new Error(errors.map((e) => e.message).join("; "))
+  }
+
+  return { isValid, teacherCheck, roomCheck }
+}
 
 type Conflict = {
   type: "TEACHER" | "ROOM"
@@ -110,85 +599,126 @@ export async function detectTimetableConflicts(input?: unknown) {
     metadata: { termId: validatedInput?.termId },
   })
 
-  // If new Timetable model exists, perform slot-based conflict checks first
+  const conflicts: Conflict[] = []
+
+  // P0 OPTIMIZATION: Use database-level grouping instead of O(n²) in-memory comparison
+  // This scales efficiently even with 100+ classes by leveraging database indexes
   const timetableModel = getModel("timetable")
   if (timetableModel) {
-    const where: any = { schoolId }
+    const where: Record<string, unknown> = { schoolId }
     if (validatedInput?.termId) where.termId = validatedInput.termId
 
-    const slots = await timetableModel.findMany({
-      where,
-      select: {
-        dayOfWeek: true,
-        periodId: true,
-        classId: true,
-        teacherId: true,
-        classroomId: true,
-        class: { select: { id: true, name: true } },
-        teacher: { select: { givenName: true, surname: true } },
-        classroom: { select: { roomName: true } },
-      },
-    })
+    // Step 1: Find teacher conflicts using database grouping
+    // Query slots grouped by (dayOfWeek, periodId, teacherId) with count > 1
+    const teacherConflicts = await db.$queryRaw<
+      Array<{
+        dayOfWeek: number
+        periodId: string
+        teacherId: string
+        count: bigint
+      }>
+    >`
+      SELECT "dayOfWeek", "periodId", "teacherId", COUNT(*) as count
+      FROM timetables
+      WHERE "schoolId" = ${schoolId}
+        AND "teacherId" IS NOT NULL
+        ${validatedInput?.termId ? Prisma.sql`AND "termId" = ${validatedInput.termId}` : Prisma.empty}
+      GROUP BY "dayOfWeek", "periodId", "teacherId"
+      HAVING COUNT(*) > 1
+    `
 
-    const conflicts: Conflict[] = []
-    // Group by day+period
-    const groups = new Map<string, typeof slots>() as any
-    for (const s of slots) {
-      const key = `${s.dayOfWeek}:${s.periodId}`
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key).push(s)
-    }
-    for (const [, group] of groups) {
-      // Teacher conflicts in this time slot
-      const byTeacher = new Map<string, (typeof group)[number]>()
-      for (const s of group) {
-        if (s.teacherId) {
-          if (byTeacher.has(s.teacherId)) {
-            const a = byTeacher.get(s.teacherId)!
-            const b = s
-            conflicts.push({
-              type: "TEACHER",
-              classA: { id: a.class.id, name: a.class.name },
-              classB: { id: b.class.id, name: b.class.name },
-              teacher: {
-                id: s.teacherId,
-                name: [b.teacher?.givenName, b.teacher?.surname]
-                  .filter(Boolean)
-                  .join(" "),
-              },
-              room: null,
-            })
-          } else {
-            byTeacher.set(s.teacherId, s)
-          }
-        }
-      }
-      // Room conflicts
-      const byRoom = new Map<string, (typeof group)[number]>()
-      for (const s of group) {
-        if (s.classroomId) {
-          if (byRoom.has(s.classroomId)) {
-            const a = byRoom.get(s.classroomId)!
-            const b = s
-            conflicts.push({
-              type: "ROOM",
-              classA: { id: a.class.id, name: a.class.name },
-              classB: { id: b.class.id, name: b.class.name },
-              teacher: null,
-              room: {
-                id: s.classroomId,
-                name: b.classroom?.roomName ?? s.classroomId,
-              },
-            })
-          } else {
-            byRoom.set(s.classroomId, s)
-          }
-        }
+    // Step 2: Find room conflicts using database grouping
+    const roomConflicts = await db.$queryRaw<
+      Array<{
+        dayOfWeek: number
+        periodId: string
+        classroomId: string
+        count: bigint
+      }>
+    >`
+      SELECT "dayOfWeek", "periodId", "classroomId", COUNT(*) as count
+      FROM timetables
+      WHERE "schoolId" = ${schoolId}
+        AND "classroomId" IS NOT NULL
+        ${validatedInput?.termId ? Prisma.sql`AND "termId" = ${validatedInput.termId}` : Prisma.empty}
+      GROUP BY "dayOfWeek", "periodId", "classroomId"
+      HAVING COUNT(*) > 1
+    `
+
+    // Step 3: Fetch details for conflicting slots (only the ones we need)
+    // This is O(conflicts) not O(all slots)
+    for (const tc of teacherConflicts) {
+      const conflictSlots = await timetableModel.findMany({
+        where: {
+          schoolId,
+          dayOfWeek: tc.dayOfWeek,
+          periodId: tc.periodId,
+          teacherId: tc.teacherId,
+          ...(validatedInput?.termId && { termId: validatedInput.termId }),
+        },
+        select: {
+          classId: true,
+          teacherId: true,
+          class: { select: { id: true, name: true } },
+          teacher: { select: { givenName: true, surname: true } },
+        },
+        take: 2, // We only need 2 to show conflict
+      })
+
+      if (conflictSlots.length >= 2) {
+        const [a, b] = conflictSlots
+        conflicts.push({
+          type: "TEACHER",
+          classA: { id: a.class.id, name: a.class.name },
+          classB: { id: b.class.id, name: b.class.name },
+          teacher: {
+            id: a.teacherId,
+            name: [a.teacher?.givenName, a.teacher?.surname]
+              .filter(Boolean)
+              .join(" "),
+          },
+          room: null,
+        })
       }
     }
+
+    for (const rc of roomConflicts) {
+      const conflictSlots = await timetableModel.findMany({
+        where: {
+          schoolId,
+          dayOfWeek: rc.dayOfWeek,
+          periodId: rc.periodId,
+          classroomId: rc.classroomId,
+          ...(validatedInput?.termId && { termId: validatedInput.termId }),
+        },
+        select: {
+          classId: true,
+          classroomId: true,
+          class: { select: { id: true, name: true } },
+          classroom: { select: { roomName: true } },
+        },
+        take: 2,
+      })
+
+      if (conflictSlots.length >= 2) {
+        const [a, b] = conflictSlots
+        conflicts.push({
+          type: "ROOM",
+          classA: { id: a.class.id, name: a.class.name },
+          classB: { id: b.class.id, name: b.class.name },
+          teacher: null,
+          room: {
+            id: a.classroomId,
+            name: a.classroom?.roomName ?? a.classroomId,
+          },
+        })
+      }
+    }
+
     return { conflicts }
   }
 
+  // Fallback: Legacy conflict detection using Class model (for backward compatibility)
   const classModel = getModel("class")
   const periodModel = getModel("period")
   if (!classModel || !periodModel) return { conflicts: [] as Conflict[] }
@@ -213,7 +743,7 @@ export async function detectTimetableConflicts(input?: unknown) {
   })
 
   type Row = (typeof classes)[number]
-  const conflicts: Conflict[] = []
+  // Use the outer conflicts array (don't redeclare)
 
   const overlaps = (a: Row, b: Row) => {
     const aStart = new Date(a.startPeriod.startTime as Date).getTime()
@@ -371,6 +901,59 @@ export async function upsertTimetableSlot(input: unknown) {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
+
+  // P0 FIX: Validate teacher-subject expertise before assignment
+  // Get the class's subject to check teacher qualification
+  const classInfo = await db.class.findFirst({
+    where: { id: validatedInput.classId, schoolId },
+    select: {
+      subjectId: true,
+      subject: { select: { subjectName: true } },
+    },
+  })
+
+  if (classInfo?.subjectId && validatedInput.teacherId) {
+    // Check if teacher has expertise in this subject
+    const teacherExpertise = await db.teacherSubjectExpertise.findFirst({
+      where: {
+        schoolId,
+        teacherId: validatedInput.teacherId,
+        subjectId: classInfo.subjectId,
+      },
+    })
+
+    if (!teacherExpertise) {
+      // Get teacher name for better error message
+      const teacher = await db.teacher.findFirst({
+        where: { id: validatedInput.teacherId, schoolId },
+        select: { givenName: true, surname: true },
+      })
+      const teacherName = teacher
+        ? `${teacher.givenName} ${teacher.surname}`
+        : "Selected teacher"
+      const subjectName = classInfo.subject?.subjectName || "this subject"
+
+      throw new Error(
+        `${teacherName} is not qualified to teach ${subjectName}. ` +
+          `Please assign a teacher with subject expertise or add this subject to the teacher's qualifications.`
+      )
+    }
+  }
+
+  // P2 FIX: Validate teacher and room constraints before assignment
+  // This checks max periods/day, max periods/week, unavailable blocks, room capacity, etc.
+  await validateSlotConstraints({
+    schoolId,
+    termId: validatedInput.termId,
+    teacherId: validatedInput.teacherId,
+    classroomId: validatedInput.classroomId,
+    classId: validatedInput.classId,
+    dayOfWeek: validatedInput.dayOfWeek,
+    periodId: validatedInput.periodId,
+    weekOffset: validatedInput.weekOffset,
+    enforceConstraints: true, // Throw error on constraint violations
+  })
+
   const data = {
     schoolId,
     termId: validatedInput.termId,
@@ -450,6 +1033,187 @@ export async function upsertSchoolWeekConfig(input: unknown) {
   })
 
   return { id: row.id }
+}
+
+/**
+ * Move a timetable slot to a new position with constraint validation
+ * Used for drag-and-drop scheduling
+ */
+export async function moveTimetableSlot(input: {
+  slotId: string
+  targetDayOfWeek: number
+  targetPeriodId: string
+  targetClassroomId?: string // Optional: also change room
+  validateOnly?: boolean // If true, only check constraints without moving
+}): Promise<{
+  success: boolean
+  slotId?: string
+  warnings: ConstraintViolation[]
+  errors: ConstraintViolation[]
+}> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Get the existing slot
+  const existingSlot = await db.timetable.findFirst({
+    where: { id: input.slotId, schoolId },
+    include: {
+      class: { select: { id: true, name: true } },
+      teacher: { select: { id: true, givenName: true, surname: true } },
+      classroom: { select: { id: true, roomName: true } },
+    },
+  })
+
+  if (!existingSlot) {
+    throw new Error("Slot not found")
+  }
+
+  const targetClassroomId = input.targetClassroomId ?? existingSlot.classroomId
+
+  // Validate constraints at the new position
+  const validation = await validateSlotConstraints({
+    schoolId,
+    termId: existingSlot.termId,
+    teacherId: existingSlot.teacherId,
+    classroomId: targetClassroomId,
+    classId: existingSlot.classId,
+    dayOfWeek: input.targetDayOfWeek,
+    periodId: input.targetPeriodId,
+    weekOffset: existingSlot.weekOffset,
+    excludeSlotId: input.slotId, // Exclude current slot from validation
+    enforceConstraints: false, // Don't throw, return violations
+  })
+
+  const errors = [
+    ...validation.teacherCheck.violations.filter((v) => v.severity === "error"),
+    ...validation.roomCheck.violations.filter((v) => v.severity === "error"),
+  ]
+
+  const warnings = [
+    ...validation.teacherCheck.violations.filter(
+      (v) => v.severity === "warning"
+    ),
+    ...validation.roomCheck.violations.filter((v) => v.severity === "warning"),
+  ]
+
+  // Check for conflicts at target position
+  const conflictingSlot = await db.timetable.findFirst({
+    where: {
+      schoolId,
+      termId: existingSlot.termId,
+      dayOfWeek: input.targetDayOfWeek,
+      periodId: input.targetPeriodId,
+      weekOffset: existingSlot.weekOffset,
+      OR: [
+        { teacherId: existingSlot.teacherId },
+        { classroomId: targetClassroomId },
+      ],
+      id: { not: input.slotId },
+    },
+    include: {
+      class: { select: { name: true } },
+      teacher: { select: { givenName: true, surname: true } },
+    },
+  })
+
+  if (conflictingSlot) {
+    if (conflictingSlot.teacherId === existingSlot.teacherId) {
+      errors.push({
+        type: "UNAVAILABLE_BLOCK",
+        severity: "error",
+        message: `Teacher is already scheduled for ${conflictingSlot.class?.name} at this time`,
+        details: { conflictingSlotId: conflictingSlot.id },
+      })
+    }
+    if (conflictingSlot.classroomId === targetClassroomId) {
+      errors.push({
+        type: "ROOM_RESERVED",
+        severity: "error",
+        message: `Room is already booked for ${conflictingSlot.class?.name} at this time`,
+        details: { conflictingSlotId: conflictingSlot.id },
+      })
+    }
+  }
+
+  // If validate only, return without making changes
+  if (input.validateOnly) {
+    return {
+      success: errors.length === 0,
+      warnings,
+      errors,
+    }
+  }
+
+  // If there are errors, don't move
+  if (errors.length > 0) {
+    return {
+      success: false,
+      warnings,
+      errors,
+    }
+  }
+
+  // Perform the move
+  const updatedSlot = await db.timetable.update({
+    where: { id: input.slotId },
+    data: {
+      dayOfWeek: input.targetDayOfWeek,
+      periodId: input.targetPeriodId,
+      classroomId: targetClassroomId,
+    },
+  })
+
+  // Log action for audit trail
+  await logTimetableAction("edit", {
+    entityType: "slot",
+    entityId: input.slotId,
+    changes: {
+      from: {
+        dayOfWeek: existingSlot.dayOfWeek,
+        periodId: existingSlot.periodId,
+        classroomId: existingSlot.classroomId,
+      },
+      to: {
+        dayOfWeek: input.targetDayOfWeek,
+        periodId: input.targetPeriodId,
+        classroomId: targetClassroomId,
+      },
+    },
+    metadata: { action: "move" },
+  })
+
+  return {
+    success: true,
+    slotId: updatedSlot.id,
+    warnings,
+    errors: [],
+  }
+}
+
+/**
+ * Preview constraint validation for a potential slot move
+ * Used to show warnings during drag-over
+ */
+export async function previewMoveConstraints(input: {
+  slotId: string
+  targetDayOfWeek: number
+  targetPeriodId: string
+  targetClassroomId?: string
+}): Promise<{
+  isValid: boolean
+  violations: ConstraintViolation[]
+}> {
+  const result = await moveTimetableSlot({
+    ...input,
+    validateOnly: true,
+  })
+
+  return {
+    isValid: result.success,
+    violations: [...result.errors, ...result.warnings],
+  }
 }
 
 export async function suggestFreeSlots(input: unknown) {
@@ -860,14 +1624,32 @@ export async function getTimetableByStudentGrade(input: {
   const userId = session?.user?.id
   if (!userId) throw new Error("Not authenticated")
 
-  // Get student record
+  // Get student record with their enrolled classes via StudentClass relation
   const student = await db.student.findFirst({
     where: { userId, schoolId },
-    select: { id: true, givenName: true, surname: true },
+    select: {
+      id: true,
+      givenName: true,
+      surname: true,
+      studentClasses: {
+        where: { schoolId },
+        select: {
+          classId: true,
+          class: {
+            select: {
+              id: true,
+              name: true,
+              termId: true,
+              subject: { select: { subjectName: true } },
+            },
+          },
+        },
+      },
+    },
   })
   if (!student) throw new Error("Student not found")
 
-  // Get student's current year level
+  // Get student's current year level for display
   const studentYearLevel = await db.studentYearLevel.findFirst({
     where: { studentId: student.id, schoolId },
     orderBy: { createdAt: "desc" },
@@ -875,27 +1657,46 @@ export async function getTimetableByStudentGrade(input: {
       yearLevel: { select: { id: true, levelName: true, levelNameAr: true } },
     },
   })
-  if (!studentYearLevel?.yearLevel)
-    throw new Error("Student not enrolled in any grade level")
 
-  const gradeName = studentYearLevel.yearLevel.levelName // e.g., "Grade 10"
+  const gradeName = studentYearLevel?.yearLevel?.levelName || "Unknown Grade"
+  const gradeNameAr = studentYearLevel?.yearLevel?.levelNameAr
 
-  // Get all classes for this grade level (by name pattern match)
-  // Classes are named like "Mathematics - Grade 10", "Arabic - Grade 10"
-  const gradeClasses = await db.class.findMany({
-    where: {
-      schoolId,
-      termId: input.termId,
-      name: { endsWith: ` - ${gradeName}` },
-    },
-    select: {
-      id: true,
-      name: true,
-      subject: { select: { subjectName: true } },
-    },
-  })
+  // Filter enrolled classes by the requested term
+  // StudentClass now directly gives us the classes the student is enrolled in
+  const enrolledClasses = student.studentClasses
+    .filter((sc) => sc.class.termId === input.termId)
+    .map((sc) => sc.class)
 
-  const classIds = gradeClasses.map((c) => c.id)
+  // If no direct enrollment found for this term, fall back to name pattern matching
+  // This maintains backward compatibility with existing data
+  let classIds: string[]
+  let subjectCount: number
+
+  if (enrolledClasses.length > 0) {
+    // Use StudentClass enrollment data (preferred)
+    classIds = enrolledClasses.map((c) => c.id)
+    subjectCount = enrolledClasses.length
+  } else if (gradeName && gradeName !== "Unknown Grade") {
+    // Fallback: Pattern match by grade name for backward compatibility
+    const gradeClasses = await db.class.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        name: { endsWith: ` - ${gradeName}` },
+      },
+      select: {
+        id: true,
+        name: true,
+        subject: { select: { subjectName: true } },
+      },
+    })
+    classIds = gradeClasses.map((c) => c.id)
+    subjectCount = gradeClasses.length
+  } else {
+    // No classes found
+    classIds = []
+    subjectCount = 0
+  }
 
   // Get schedule config
   const { config } = await getScheduleConfig({ termId: input.termId })
@@ -947,10 +1748,10 @@ export async function getTimetableByStudentGrade(input: {
       id: student.id,
       name: `${student.givenName} ${student.surname}`,
       gradeName,
-      gradeNameAr: studentYearLevel.yearLevel.levelNameAr,
+      gradeNameAr,
     },
     schoolName: school?.name || "",
-    subjectCount: gradeClasses.length,
+    subjectCount,
     workingDays: config.workingDays,
     periods: periods.map((p, idx) => ({
       id: p.id,
@@ -1842,51 +2643,76 @@ export async function getGuardianChildren() {
 
   if (!userId) throw new Error("Not authenticated")
 
-  // Get guardian record
+  // Get guardian record with linked students in a single query (fixes N+1)
+  // Include student classes and year levels for complete data
   const guardian = await db.guardian.findFirst({
     where: { userId, schoolId },
-    select: { id: true },
+    select: {
+      id: true,
+      studentGuardians: {
+        where: { schoolId },
+        select: {
+          isPrimary: true,
+          student: {
+            select: {
+              id: true,
+              givenName: true,
+              surname: true,
+              profilePhotoUrl: true,
+              studentClasses: {
+                where: { schoolId },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+                select: {
+                  class: {
+                    select: {
+                      id: true,
+                      name: true,
+                      subject: { select: { subjectName: true } },
+                    },
+                  },
+                },
+              },
+              studentYearLevels: {
+                where: { schoolId },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+                select: {
+                  yearLevel: {
+                    select: {
+                      levelName: true,
+                      levelNameAr: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   })
 
   if (!guardian) {
     return { children: [] }
   }
 
-  // Get linked students
-  const studentGuardians = await db.studentGuardian.findMany({
-    where: { guardianId: guardian.id, schoolId },
-    select: {
-      student: {
-        select: {
-          id: true,
-          givenName: true,
-          surname: true,
-          profilePhotoUrl: true,
-        },
-      },
-    },
+  // Transform the data into the expected format
+  const children = guardian.studentGuardians.map((sg) => {
+    const enrollment = sg.student.studentClasses[0]
+    const yearLevel = sg.student.studentYearLevels[0]
+
+    return {
+      id: sg.student.id,
+      name: `${sg.student.givenName} ${sg.student.surname}`,
+      photoUrl: sg.student.profilePhotoUrl,
+      classId: enrollment?.class.id,
+      className: enrollment?.class.name,
+      gradeName: yearLevel?.yearLevel?.levelName,
+      gradeNameAr: yearLevel?.yearLevel?.levelNameAr,
+      isPrimary: sg.isPrimary,
+    }
   })
-
-  // Get each student's current class
-  const children = await Promise.all(
-    studentGuardians.map(async (sg) => {
-      const enrollment = await db.studentClass.findFirst({
-        where: { studentId: sg.student.id, schoolId },
-        orderBy: { createdAt: "desc" },
-        select: {
-          class: { select: { id: true, name: true } },
-        },
-      })
-
-      return {
-        id: sg.student.id,
-        name: `${sg.student.givenName} ${sg.student.surname}`,
-        photoUrl: sg.student.profilePhotoUrl,
-        classId: enrollment?.class.id,
-        className: enrollment?.class.name,
-      }
-    })
-  )
 
   return { children }
 }
@@ -2696,172 +3522,2171 @@ type ValidationResult = {
 }
 
 /**
- * Validate a slot against all constraints
+ * Prepare data and generate a timetable using the AI algorithm
+ * Returns preview data that can be approved and saved
  */
-export async function validateSlotConstraints(input: {
+export async function generateTimetablePreview(input: {
   termId: string
-  dayOfWeek: number
+  config?: Partial<GenerationConfig>
+}): Promise<{
+  success: boolean
+  preview: GeneratedSlot[]
+  stats: GenerationResult["stats"]
+  unplacedClasses: string[]
+  warnings: string[]
+  errors: string[]
+}> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Get term info
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true },
+  })
+  if (!term) throw new Error("Invalid term")
+
+  // Get schedule config
+  const { config: scheduleConfig } = await getScheduleConfig({
+    termId: input.termId,
+  })
+
+  // Get periods
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true },
+  })
+
+  // Build generation config
+  const generationConfig: GenerationConfig = {
+    workingDays: scheduleConfig.workingDays,
+    periodsPerDay: periods
+      .filter(
+        (p) =>
+          !p.name.toLowerCase().includes("break") &&
+          !p.name.toLowerCase().includes("lunch")
+      )
+      .map((p) => p.id),
+    constraints: {
+      enforceTeacherExpertise:
+        input.config?.constraints?.enforceTeacherExpertise ?? true,
+      enforceRoomCapacity:
+        input.config?.constraints?.enforceRoomCapacity ?? true,
+      maxTeacherPeriodsPerDay:
+        input.config?.constraints?.maxTeacherPeriodsPerDay ?? 6,
+      maxTeacherPeriodsPerWeek:
+        input.config?.constraints?.maxTeacherPeriodsPerWeek ?? 25,
+      maxConsecutivePeriods:
+        input.config?.constraints?.maxConsecutivePeriods ?? 3,
+      requireLunchBreak: input.config?.constraints?.requireLunchBreak ?? true,
+      preventBackToBack: input.config?.constraints?.preventBackToBack ?? false,
+    },
+    preferences: {
+      balanceSubjectDistribution:
+        input.config?.preferences?.balanceSubjectDistribution ?? true,
+      preferMorningForCore:
+        input.config?.preferences?.preferMorningForCore ?? true,
+      avoidLastPeriodForLab:
+        input.config?.preferences?.avoidLastPeriodForLab ?? true,
+      groupSameSubjectDays:
+        input.config?.preferences?.groupSameSubjectDays ?? false,
+    },
+  }
+
+  // Get class requirements (classes to schedule)
+  const classes = await db.class.findMany({
+    where: { schoolId, termId: input.termId },
+    select: {
+      id: true,
+      name: true,
+      subjectId: true,
+      subject: {
+        select: {
+          id: true,
+          subjectName: true,
+        },
+      },
+      _count: { select: { studentClasses: true } },
+    },
+  })
+
+  // Get teacher expertise mapping
+  const teacherExpertise = await db.teacherSubjectExpertise.findMany({
+    where: { schoolId },
+    select: { teacherId: true, subjectId: true },
+  })
+
+  const subjectTeachers = new Map<string, string[]>()
+  for (const te of teacherExpertise) {
+    if (!subjectTeachers.has(te.subjectId)) {
+      subjectTeachers.set(te.subjectId, [])
+    }
+    subjectTeachers.get(te.subjectId)!.push(te.teacherId)
+  }
+
+  const requirements: ClassRequirement[] = classes.map((c) => ({
+    classId: c.id,
+    className: c.name,
+    subjectId: c.subjectId || "",
+    subjectName: c.subject?.subjectName || c.name,
+    hoursPerWeek: 3, // Default to 3 periods per week (can be enhanced with subject metadata)
+    preferredTeacherIds: subjectTeachers.get(c.subjectId || "") || [],
+    requiresLab:
+      c.subject?.subjectName?.toLowerCase().includes("lab") ||
+      c.subject?.subjectName?.toLowerCase().includes("science") ||
+      false,
+    yearLevelId: "", // Year level not directly on Class, extracted from related data if needed
+    studentCount: c._count.studentClasses,
+  }))
+
+  // Get teachers with constraints
+  const teachersData = await db.teacher.findMany({
+    where: { schoolId, employmentStatus: "ACTIVE" },
+    select: {
+      id: true,
+      givenName: true,
+      surname: true,
+      subjectExpertise: {
+        where: { schoolId },
+        select: { subjectId: true },
+      },
+      constraints: {
+        where: { schoolId, OR: [{ termId: input.termId }, { termId: null }] },
+        orderBy: { termId: "desc" },
+        take: 1,
+        select: {
+          maxPeriodsPerDay: true,
+          maxPeriodsPerWeek: true,
+          maxConsecutivePeriods: true,
+          dayPreferences: true,
+          periodPreferences: true,
+          unavailableBlocks: {
+            select: { dayOfWeek: true, periodId: true },
+          },
+        },
+      },
+    },
+  })
+
+  const teachers: TeacherAvailability[] = teachersData.map((t) => {
+    const constraint = t.constraints[0]
+    const dayPrefs =
+      (constraint?.dayPreferences as Record<string, string>) || {}
+    const periodPrefs =
+      (constraint?.periodPreferences as Record<string, string>) || {}
+
+    return {
+      teacherId: t.id,
+      teacherName: `${t.givenName} ${t.surname}`,
+      maxPeriodsPerDay: constraint?.maxPeriodsPerDay || 6,
+      maxPeriodsPerWeek: constraint?.maxPeriodsPerWeek || 25,
+      maxConsecutive: constraint?.maxConsecutivePeriods || 3,
+      subjectExpertise: t.subjectExpertise.map(
+        (e: { subjectId: string }) => e.subjectId
+      ),
+      unavailableBlocks: constraint?.unavailableBlocks || [],
+      preferredPeriods: Object.entries(periodPrefs)
+        .filter(([, v]) => v === "preferred")
+        .map(([periodId]) => ({ dayOfWeek: 0, periodId })),
+      avoidedPeriods: Object.entries(periodPrefs)
+        .filter(([, v]) => v === "avoid")
+        .map(([periodId]) => ({ dayOfWeek: 0, periodId })),
+    }
+  })
+
+  // Get rooms with constraints
+  const roomsData = await db.classroom.findMany({
+    where: { schoolId },
+    select: {
+      id: true,
+      roomName: true,
+      capacity: true,
+      classroomType: {
+        select: { name: true },
+      },
+      constraints: {
+        where: { schoolId, OR: [{ termId: input.termId }, { termId: null }] },
+        orderBy: { termId: "desc" },
+        take: 1,
+        select: {
+          allowedSubjectTypes: true,
+          reservedPeriods: true,
+        },
+      },
+    },
+  })
+
+  const rooms: RoomAvailability[] = roomsData.map((r) => {
+    const constraint = r.constraints[0]
+    const reserved =
+      (constraint?.reservedPeriods as Record<string, string[]>) || {}
+
+    const reservedBlocks: Array<{ dayOfWeek: number; periodId: string }> = []
+    for (const [dayStr, periodIds] of Object.entries(reserved)) {
+      for (const periodId of periodIds) {
+        reservedBlocks.push({ dayOfWeek: parseInt(dayStr), periodId })
+      }
+    }
+
+    return {
+      roomId: r.id,
+      roomName: r.roomName,
+      capacity: r.capacity || 30,
+      roomType: r.classroomType?.name || "regular",
+      allowedSubjectTypes: constraint?.allowedSubjectTypes || [],
+      reservedBlocks,
+      hasAccessibility: false,
+    }
+  })
+
+  // Run generation algorithm
+  const result = runGenerationAlgorithm(requirements, teachers, rooms, {
+    schoolId,
+    termId: input.termId,
+    yearId: term.yearId,
+    config: generationConfig,
+  })
+
+  await logTimetableAction("generate_preview", {
+    entityType: "generation",
+    metadata: {
+      termId: input.termId,
+      totalSlots: result.stats.totalSlots,
+      placedSlots: result.stats.placedSlots,
+      success: result.success,
+    },
+  })
+
+  return {
+    success: result.success,
+    preview: result.slots,
+    stats: result.stats,
+    unplacedClasses: result.unplacedClasses,
+    warnings: result.warnings,
+    errors: result.errors,
+  }
+}
+
+/**
+ * Apply generated timetable preview to the database
+ */
+export async function applyGeneratedTimetable(input: {
+  termId: string
+  slots: GeneratedSlot[]
+  clearExisting?: boolean
+}): Promise<{ success: boolean; createdCount: number; errors: string[] }> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const errors: string[] = []
+  let createdCount = 0
+
+  try {
+    await db.$transaction(async (tx) => {
+      // Clear existing slots if requested
+      if (input.clearExisting) {
+        await tx.timetable.deleteMany({
+          where: { schoolId, termId: input.termId },
+        })
+      }
+
+      // Insert new slots
+      for (const slot of input.slots) {
+        try {
+          await tx.timetable.create({
+            data: {
+              schoolId,
+              termId: input.termId,
+              dayOfWeek: slot.dayOfWeek,
+              periodId: slot.periodId,
+              classId: slot.classId,
+              teacherId: slot.teacherId,
+              classroomId: slot.classroomId,
+              weekOffset: 0,
+              constraintViolations: slot.violations,
+            },
+          })
+          createdCount++
+        } catch (error) {
+          // Handle unique constraint violation (slot already exists)
+          if (
+            error instanceof Error &&
+            error.message.includes("Unique constraint")
+          ) {
+            // Update existing slot instead
+            await tx.timetable.updateMany({
+              where: {
+                schoolId,
+                termId: input.termId,
+                dayOfWeek: slot.dayOfWeek,
+                periodId: slot.periodId,
+                classId: slot.classId,
+                weekOffset: 0,
+              },
+              data: {
+                teacherId: slot.teacherId,
+                classroomId: slot.classroomId,
+                constraintViolations: slot.violations,
+              },
+            })
+            createdCount++
+          } else {
+            throw error
+          }
+        }
+      }
+    })
+
+    await logTimetableAction("apply_generated", {
+      entityType: "generation",
+      metadata: {
+        termId: input.termId,
+        createdCount,
+        clearExisting: input.clearExisting,
+      },
+    })
+
+    return { success: true, createdCount, errors }
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : "Unknown error")
+    return { success: false, createdCount, errors }
+  }
+}
+
+// ============================================================================
+// BULK IMPORT SERVER ACTION
+// ============================================================================
+// Types ImportSlot and ImportResult are imported from ./types.ts
+
+/**
+ * Bulk import timetable slots with validation
+ * Supports Excel, CSV, JSON formats
+ */
+export async function importTimetableSlots(input: {
+  termId: string
+  slots: ImportSlot[]
+  options: {
+    overwrite: boolean
+    validateOnly: boolean
+  }
+}): Promise<ImportResult> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const result: ImportResult = {
+    success: false,
+    totalRows: input.slots.length,
+    successCount: 0,
+    failedCount: 0,
+    skippedCount: 0,
+    errors: [],
+    warnings: [],
+  }
+
+  // Validate term exists
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true },
+  })
+  if (!term) {
+    result.errors.push({ row: 0, message: "Invalid term ID" })
+    return result
+  }
+
+  // Get valid IDs for validation
+  const validClasses = new Set(
+    (
+      await db.class.findMany({
+        where: { schoolId, termId: input.termId },
+        select: { id: true },
+      })
+    ).map((c) => c.id)
+  )
+
+  const validTeachers = new Set(
+    (
+      await db.teacher.findMany({
+        where: { schoolId },
+        select: { id: true },
+      })
+    ).map((t) => t.id)
+  )
+
+  const validRooms = new Set(
+    (
+      await db.classroom.findMany({
+        where: { schoolId },
+        select: { id: true },
+      })
+    ).map((r) => r.id)
+  )
+
+  const validPeriods = new Set(
+    (
+      await db.period.findMany({
+        where: { schoolId, yearId: term.yearId },
+        select: { id: true },
+      })
+    ).map((p) => p.id)
+  )
+
+  // Get teacher expertise for validation
+  const teacherExpertise = await db.teacherSubjectExpertise.findMany({
+    where: { schoolId },
+    select: { teacherId: true, subjectId: true },
+  })
+  const expertiseMap = new Map<string, Set<string>>()
+  for (const te of teacherExpertise) {
+    if (!expertiseMap.has(te.teacherId)) {
+      expertiseMap.set(te.teacherId, new Set())
+    }
+    expertiseMap.get(te.teacherId)!.add(te.subjectId)
+  }
+
+  // Get class subjects for expertise validation
+  const classSubjects = await db.class.findMany({
+    where: { schoolId, termId: input.termId },
+    select: { id: true, subjectId: true },
+  })
+  const classSubjectMap = new Map(classSubjects.map((c) => [c.id, c.subjectId]))
+
+  // Validate each slot
+  const validSlots: ImportSlot[] = []
+
+  for (let i = 0; i < input.slots.length; i++) {
+    const slot = input.slots[i]
+    const rowNum = i + 1
+    let isValid = true
+
+    // Validate day of week
+    if (slot.dayOfWeek < 0 || slot.dayOfWeek > 6) {
+      result.errors.push({
+        row: rowNum,
+        message: `Invalid day of week: ${slot.dayOfWeek}`,
+      })
+      isValid = false
+    }
+
+    // Validate period
+    if (!validPeriods.has(slot.periodId)) {
+      result.errors.push({
+        row: rowNum,
+        message: `Invalid period ID: ${slot.periodId}`,
+      })
+      isValid = false
+    }
+
+    // Validate class
+    if (!validClasses.has(slot.classId)) {
+      result.errors.push({
+        row: rowNum,
+        message: `Invalid class ID: ${slot.classId}`,
+      })
+      isValid = false
+    }
+
+    // Validate teacher
+    if (!validTeachers.has(slot.teacherId)) {
+      result.errors.push({
+        row: rowNum,
+        message: `Invalid teacher ID: ${slot.teacherId}`,
+      })
+      isValid = false
+    }
+
+    // Validate room
+    if (!validRooms.has(slot.classroomId)) {
+      result.errors.push({
+        row: rowNum,
+        message: `Invalid classroom ID: ${slot.classroomId}`,
+      })
+      isValid = false
+    }
+
+    // Validate teacher expertise (warning only)
+    const classSubjectId = classSubjectMap.get(slot.classId)
+    if (classSubjectId) {
+      const teacherSubjects = expertiseMap.get(slot.teacherId)
+      if (!teacherSubjects?.has(classSubjectId)) {
+        result.warnings.push({
+          row: rowNum,
+          message: `Teacher ${slot.teacherId} may not be qualified for subject`,
+        })
+      }
+    }
+
+    if (isValid) {
+      validSlots.push(slot)
+    } else {
+      result.failedCount++
+    }
+  }
+
+  // If validate only, return results without inserting
+  if (input.options.validateOnly) {
+    result.success = result.failedCount === 0
+    result.successCount = validSlots.length
+    return result
+  }
+
+  // Insert valid slots
+  try {
+    await db.$transaction(async (tx) => {
+      // Clear existing if overwrite mode
+      if (input.options.overwrite) {
+        await tx.timetable.deleteMany({
+          where: { schoolId, termId: input.termId },
+        })
+      }
+
+      // Insert new slots
+      for (const slot of validSlots) {
+        try {
+          await tx.timetable.upsert({
+            where: {
+              schoolId_termId_dayOfWeek_periodId_classId_weekOffset: {
+                schoolId,
+                termId: input.termId,
+                dayOfWeek: slot.dayOfWeek,
+                periodId: slot.periodId,
+                classId: slot.classId,
+                weekOffset: slot.weekOffset ?? 0,
+              },
+            },
+            update: {
+              teacherId: slot.teacherId,
+              classroomId: slot.classroomId,
+            },
+            create: {
+              schoolId,
+              termId: input.termId,
+              dayOfWeek: slot.dayOfWeek,
+              periodId: slot.periodId,
+              classId: slot.classId,
+              teacherId: slot.teacherId,
+              classroomId: slot.classroomId,
+              weekOffset: slot.weekOffset ?? 0,
+            },
+          })
+          result.successCount++
+        } catch {
+          result.skippedCount++
+        }
+      }
+    })
+
+    result.success = true
+  } catch (error) {
+    result.errors.push({
+      row: 0,
+      message: error instanceof Error ? error.message : "Database error",
+    })
+  }
+
+  await logTimetableAction("bulk_import", {
+    entityType: "import",
+    metadata: {
+      termId: input.termId,
+      totalRows: result.totalRows,
+      successCount: result.successCount,
+      failedCount: result.failedCount,
+      overwrite: input.options.overwrite,
+    },
+  })
+
+  return result
+}
+
+// ============================================================================
+// PERIOD MANAGEMENT ACTIONS
+// ============================================================================
+
+/**
+ * Create a new period for a school year
+ */
+export async function createPeriod(input: {
+  yearId: string
+  name: string
+  startTime: string // HH:MM format
+  endTime: string // HH:MM format
+}): Promise<{ id: string }> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Validate time format
+  const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+  if (!timeRegex.test(input.startTime) || !timeRegex.test(input.endTime)) {
+    throw new Error("Invalid time format. Use HH:MM")
+  }
+
+  // Parse times to Date objects (using UTC for consistency)
+  const [startHour, startMin] = input.startTime.split(":").map(Number)
+  const [endHour, endMin] = input.endTime.split(":").map(Number)
+
+  const startTime = new Date(Date.UTC(1970, 0, 1, startHour, startMin))
+  const endTime = new Date(Date.UTC(1970, 0, 1, endHour, endMin))
+
+  if (startTime >= endTime) {
+    throw new Error("Start time must be before end time")
+  }
+
+  // Check for overlapping periods
+  const existingPeriods = await db.period.findMany({
+    where: { schoolId, yearId: input.yearId },
+    select: { id: true, name: true, startTime: true, endTime: true },
+  })
+
+  for (const existing of existingPeriods) {
+    const existStart = new Date(existing.startTime)
+    const existEnd = new Date(existing.endTime)
+
+    // Check for overlap
+    if (
+      (startTime >= existStart && startTime < existEnd) ||
+      (endTime > existStart && endTime <= existEnd) ||
+      (startTime <= existStart && endTime >= existEnd)
+    ) {
+      throw new Error(
+        `Time overlaps with existing period "${existing.name}" (${formatTimeOnly(existStart)}-${formatTimeOnly(existEnd)})`
+      )
+    }
+  }
+
+  const period = await db.period.create({
+    data: {
+      schoolId,
+      yearId: input.yearId,
+      name: input.name,
+      startTime,
+      endTime,
+    },
+  })
+
+  await logTimetableAction("create_period", {
+    entityType: "period",
+    entityId: period.id,
+    changes: input,
+  })
+
+  return { id: period.id }
+}
+
+function formatTimeOnly(date: Date): string {
+  const d = new Date(date)
+  return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`
+}
+
+/**
+ * Update an existing period
+ */
+export async function updatePeriod(input: {
   periodId: string
-  classId: string
-  teacherId: string
-  classroomId: string
-  weekOffset?: number
-}): Promise<ValidationResult> {
+  name?: string
+  startTime?: string // HH:MM format
+  endTime?: string // HH:MM format
+}): Promise<{ success: boolean }> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Get existing period
+  const existing = await db.period.findFirst({
+    where: { id: input.periodId, schoolId },
+    select: { id: true, yearId: true, startTime: true, endTime: true },
+  })
+  if (!existing) throw new Error("Period not found")
+
+  const updateData: { name?: string; startTime?: Date; endTime?: Date } = {}
+
+  if (input.name) {
+    updateData.name = input.name
+  }
+
+  if (input.startTime) {
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+    if (!timeRegex.test(input.startTime)) {
+      throw new Error("Invalid start time format. Use HH:MM")
+    }
+    const [hour, min] = input.startTime.split(":").map(Number)
+    updateData.startTime = new Date(Date.UTC(1970, 0, 1, hour, min))
+  }
+
+  if (input.endTime) {
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+    if (!timeRegex.test(input.endTime)) {
+      throw new Error("Invalid end time format. Use HH:MM")
+    }
+    const [hour, min] = input.endTime.split(":").map(Number)
+    updateData.endTime = new Date(Date.UTC(1970, 0, 1, hour, min))
+  }
+
+  // Validate times if both are being updated
+  const newStart = updateData.startTime || new Date(existing.startTime)
+  const newEnd = updateData.endTime || new Date(existing.endTime)
+
+  if (newStart >= newEnd) {
+    throw new Error("Start time must be before end time")
+  }
+
+  // Check for overlapping periods (excluding this one)
+  const otherPeriods = await db.period.findMany({
+    where: { schoolId, yearId: existing.yearId, NOT: { id: input.periodId } },
+    select: { id: true, name: true, startTime: true, endTime: true },
+  })
+
+  for (const other of otherPeriods) {
+    const existStart = new Date(other.startTime)
+    const existEnd = new Date(other.endTime)
+
+    if (
+      (newStart >= existStart && newStart < existEnd) ||
+      (newEnd > existStart && newEnd <= existEnd) ||
+      (newStart <= existStart && newEnd >= existEnd)
+    ) {
+      throw new Error(
+        `Time overlaps with period "${other.name}" (${formatTimeOnly(existStart)}-${formatTimeOnly(existEnd)})`
+      )
+    }
+  }
+
+  await db.period.update({
+    where: { id: input.periodId },
+    data: updateData,
+  })
+
+  await logTimetableAction("update_period", {
+    entityType: "period",
+    entityId: input.periodId,
+    changes: input,
+  })
+
+  return { success: true }
+}
+
+/**
+ * Delete a period
+ */
+export async function deletePeriod(input: {
+  periodId: string
+}): Promise<{ success: boolean }> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Check if period is used in any timetable slots
+  const usageCount = await db.timetable.count({
+    where: { schoolId, periodId: input.periodId },
+  })
+
+  if (usageCount > 0) {
+    throw new Error(
+      `Cannot delete period - it is used in ${usageCount} timetable slots. Remove or reassign slots first.`
+    )
+  }
+
+  await db.period.delete({
+    where: { id: input.periodId, schoolId },
+  })
+
+  await logTimetableAction("delete_period", {
+    entityType: "period",
+    entityId: input.periodId,
+  })
+
+  return { success: true }
+}
+
+/**
+ * Copy periods from one school year to another
+ */
+export async function copyPeriodsToYear(input: {
+  sourceYearId: string
+  targetYearId: string
+  overwrite?: boolean
+}): Promise<{ copiedCount: number; skippedCount: number }> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Get source periods
+  const sourcePeriods = await db.period.findMany({
+    where: { schoolId, yearId: input.sourceYearId },
+    orderBy: { startTime: "asc" },
+  })
+
+  if (sourcePeriods.length === 0) {
+    throw new Error("No periods found in source year")
+  }
+
+  // Check target year exists
+  const targetYear = await db.schoolYear.findFirst({
+    where: { id: input.targetYearId, schoolId },
+  })
+  if (!targetYear) throw new Error("Target school year not found")
+
+  // Get existing target periods
+  const existingTargetPeriods = await db.period.findMany({
+    where: { schoolId, yearId: input.targetYearId },
+  })
+
+  let copiedCount = 0
+  let skippedCount = 0
+
+  // Delete existing if overwrite mode
+  if (input.overwrite && existingTargetPeriods.length > 0) {
+    // Check if any are in use
+    const usedPeriods = await db.timetable.findMany({
+      where: {
+        schoolId,
+        periodId: { in: existingTargetPeriods.map((p) => p.id) },
+      },
+      select: { periodId: true },
+      distinct: ["periodId"],
+    })
+
+    if (usedPeriods.length > 0) {
+      throw new Error(
+        `Cannot overwrite - ${usedPeriods.length} periods are used in timetable slots`
+      )
+    }
+
+    await db.period.deleteMany({
+      where: { schoolId, yearId: input.targetYearId },
+    })
+  }
+
+  // Copy periods
+  for (const period of sourcePeriods) {
+    // Check if period with same name exists
+    const exists = existingTargetPeriods.find((p) => p.name === period.name)
+    if (exists && !input.overwrite) {
+      skippedCount++
+      continue
+    }
+
+    await db.period.create({
+      data: {
+        schoolId,
+        yearId: input.targetYearId,
+        name: period.name,
+        startTime: period.startTime,
+        endTime: period.endTime,
+      },
+    })
+    copiedCount++
+  }
+
+  await logTimetableAction("copy_periods", {
+    entityType: "period",
+    metadata: {
+      sourceYearId: input.sourceYearId,
+      targetYearId: input.targetYearId,
+      copiedCount,
+      skippedCount,
+    },
+  })
+
+  return { copiedCount, skippedCount }
+}
+
+/**
+ * Get school years for period management
+ */
+export async function getSchoolYearsForSelection(): Promise<{
+  years: Array<{ id: string; name: string; isCurrent: boolean }>
+}> {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  const violations: ValidationResult["violations"] = []
-
-  // 1. Check teacher unavailability
-  const teacherConstraint = await db.teacherConstraint.findFirst({
-    where: {
-      schoolId,
-      teacherId: input.teacherId,
-      OR: [{ termId: input.termId }, { termId: null }],
+  const years = await db.schoolYear.findMany({
+    where: { schoolId },
+    orderBy: { startDate: "desc" },
+    select: {
+      id: true,
+      yearName: true,
+      startDate: true,
+      endDate: true,
     },
-    include: { unavailableBlocks: true },
   })
 
-  if (teacherConstraint) {
-    // Check unavailable blocks
-    const isUnavailable = teacherConstraint.unavailableBlocks.some(
-      (block) =>
-        block.dayOfWeek === input.dayOfWeek &&
-        block.periodId === input.periodId &&
-        block.isRecurring
+  const now = new Date()
+
+  return {
+    years: years.map((y) => ({
+      id: y.id,
+      name: y.yearName,
+      isCurrent: now >= y.startDate && now <= y.endDate,
+    })),
+  }
+}
+
+/**
+ * Create a set of default periods for a school year
+ */
+export async function createDefaultPeriods(input: {
+  yearId: string
+  template: "standard_8" | "standard_6" | "half_day"
+}): Promise<{ createdCount: number }> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Check if periods already exist
+  const existing = await db.period.count({
+    where: { schoolId, yearId: input.yearId },
+  })
+
+  if (existing > 0) {
+    throw new Error(
+      "Periods already exist for this year. Delete existing periods first."
     )
+  }
 
-    if (isUnavailable) {
-      violations.push({
-        type: "teacher_unavailable",
-        severity: "error",
-        message: "Teacher is marked as unavailable for this time slot",
-      })
-    }
+  const templates: Record<
+    string,
+    Array<{ name: string; start: string; end: string }>
+  > = {
+    standard_8: [
+      { name: "Period 1", start: "07:30", end: "08:15" },
+      { name: "Period 2", start: "08:20", end: "09:05" },
+      { name: "Period 3", start: "09:10", end: "09:55" },
+      { name: "Break", start: "09:55", end: "10:15" },
+      { name: "Period 4", start: "10:15", end: "11:00" },
+      { name: "Period 5", start: "11:05", end: "11:50" },
+      { name: "Lunch", start: "11:50", end: "12:30" },
+      { name: "Period 6", start: "12:30", end: "13:15" },
+      { name: "Period 7", start: "13:20", end: "14:05" },
+      { name: "Period 8", start: "14:10", end: "14:55" },
+    ],
+    standard_6: [
+      { name: "Period 1", start: "08:00", end: "08:50" },
+      { name: "Period 2", start: "08:55", end: "09:45" },
+      { name: "Break", start: "09:45", end: "10:05" },
+      { name: "Period 3", start: "10:05", end: "10:55" },
+      { name: "Period 4", start: "11:00", end: "11:50" },
+      { name: "Lunch", start: "11:50", end: "12:30" },
+      { name: "Period 5", start: "12:30", end: "13:20" },
+      { name: "Period 6", start: "13:25", end: "14:15" },
+    ],
+    half_day: [
+      { name: "Period 1", start: "08:00", end: "08:45" },
+      { name: "Period 2", start: "08:50", end: "09:35" },
+      { name: "Break", start: "09:35", end: "09:50" },
+      { name: "Period 3", start: "09:50", end: "10:35" },
+      { name: "Period 4", start: "10:40", end: "11:25" },
+      { name: "Period 5", start: "11:30", end: "12:15" },
+    ],
+  }
 
-    // Check day preference
-    const dayPref = (
-      teacherConstraint.dayPreferences as Record<string, string>
-    )?.[input.dayOfWeek.toString()]
-    if (dayPref === "unavailable") {
-      violations.push({
-        type: "teacher_unavailable",
-        severity: "error",
-        message: "Teacher has marked this day as unavailable",
-      })
-    } else if (dayPref === "avoid") {
-      violations.push({
-        type: "teacher_unavailable",
-        severity: "warning",
-        message: "Teacher prefers to avoid this day",
-      })
-    }
+  const selectedTemplate = templates[input.template]
+  if (!selectedTemplate) {
+    throw new Error("Invalid template")
+  }
 
-    // Check workload limits
-    const teacherSlots = await db.timetable.count({
-      where: {
+  let createdCount = 0
+
+  for (const period of selectedTemplate) {
+    const [startHour, startMin] = period.start.split(":").map(Number)
+    const [endHour, endMin] = period.end.split(":").map(Number)
+
+    await db.period.create({
+      data: {
         schoolId,
-        termId: input.termId,
-        teacherId: input.teacherId,
-        weekOffset: input.weekOffset ?? 0,
+        yearId: input.yearId,
+        name: period.name,
+        startTime: new Date(Date.UTC(1970, 0, 1, startHour, startMin)),
+        endTime: new Date(Date.UTC(1970, 0, 1, endHour, endMin)),
       },
     })
+    createdCount++
+  }
 
-    if (teacherSlots >= teacherConstraint.maxPeriodsPerWeek) {
-      violations.push({
-        type: "teacher_overload",
-        severity: "error",
-        message: `Teacher would exceed max periods per week (${teacherConstraint.maxPeriodsPerWeek})`,
-        details: {
-          current: teacherSlots,
-          max: teacherConstraint.maxPeriodsPerWeek,
+  await logTimetableAction("create_default_periods", {
+    entityType: "period",
+    metadata: { yearId: input.yearId, template: input.template, createdCount },
+  })
+
+  return { createdCount }
+}
+
+// ============================================================================
+// TERM SETTINGS & HOLIDAY CALENDAR
+// ============================================================================
+
+/**
+ * Get term details for schedule settings
+ */
+export async function getTermDetails(input: { termId: string }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: {
+      id: true,
+      termNumber: true,
+      startDate: true,
+      endDate: true,
+      isActive: true,
+      schoolYear: {
+        select: { id: true, yearName: true },
+      },
+    },
+  })
+
+  if (!term) throw new Error("Term not found")
+
+  return term
+}
+
+/**
+ * Update term dates
+ */
+export async function updateTermDates(input: {
+  termId: string
+  startDate: Date
+  endDate: Date
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Validate dates
+  if (input.startDate >= input.endDate) {
+    throw new Error("Start date must be before end date")
+  }
+
+  const term = await db.term.update({
+    where: { id: input.termId },
+    data: {
+      startDate: input.startDate,
+      endDate: input.endDate,
+    },
+  })
+
+  await logTimetableAction("update_term_dates", {
+    entityId: input.termId,
+    entityType: "term",
+    metadata: {
+      startDate: input.startDate.toISOString(),
+      endDate: input.endDate.toISOString(),
+    },
+  })
+
+  return term
+}
+
+/**
+ * Get all schedule exceptions (holidays, events) for a term
+ */
+export async function getScheduleExceptions(input: { termId: string }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const exceptions = await db.scheduleException.findMany({
+    where: {
+      schoolId,
+      OR: [{ termId: input.termId }, { termId: null }], // Term-specific and school-wide
+    },
+    orderBy: { startDate: "asc" },
+    select: {
+      id: true,
+      exceptionType: true,
+      title: true,
+      description: true,
+      startDate: true,
+      endDate: true,
+      isAllDay: true,
+      affectsAllClasses: true,
+      isRecurring: true,
+      recurrenceRule: true,
+      termId: true,
+    },
+  })
+
+  return exceptions
+}
+
+/**
+ * Create a schedule exception (holiday, event, modified schedule)
+ */
+export async function createScheduleException(input: {
+  termId?: string
+  exceptionType: "HOLIDAY" | "EVENT" | "MODIFIED_SCHEDULE" | "CANCELLED"
+  title: string
+  description?: string
+  startDate: Date
+  endDate: Date
+  isAllDay?: boolean
+  affectsAllClasses?: boolean
+  isRecurring?: boolean
+  recurrenceRule?: string
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Validate dates
+  if (input.startDate > input.endDate) {
+    throw new Error("Start date must be before or equal to end date")
+  }
+
+  const exception = await db.scheduleException.create({
+    data: {
+      schoolId,
+      termId: input.termId || null,
+      exceptionType: input.exceptionType,
+      title: input.title,
+      description: input.description,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      isAllDay: input.isAllDay ?? true,
+      affectsAllClasses: input.affectsAllClasses ?? true,
+      isRecurring: input.isRecurring ?? false,
+      recurrenceRule: input.recurrenceRule,
+    },
+  })
+
+  await logTimetableAction("create_schedule_exception", {
+    entityId: exception.id,
+    entityType: "scheduleException",
+    metadata: {
+      type: input.exceptionType,
+      title: input.title,
+      startDate: input.startDate.toISOString(),
+      endDate: input.endDate.toISOString(),
+    },
+  })
+
+  return exception
+}
+
+/**
+ * Update a schedule exception
+ */
+export async function updateScheduleException(input: {
+  id: string
+  exceptionType?: "HOLIDAY" | "EVENT" | "MODIFIED_SCHEDULE" | "CANCELLED"
+  title?: string
+  description?: string
+  startDate?: Date
+  endDate?: Date
+  isAllDay?: boolean
+  affectsAllClasses?: boolean
+  isRecurring?: boolean
+  recurrenceRule?: string
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Verify ownership
+  const existing = await db.scheduleException.findFirst({
+    where: { id: input.id, schoolId },
+  })
+
+  if (!existing) throw new Error("Schedule exception not found")
+
+  // Validate dates if provided
+  const startDate = input.startDate ?? existing.startDate
+  const endDate = input.endDate ?? existing.endDate
+  if (startDate > endDate) {
+    throw new Error("Start date must be before or equal to end date")
+  }
+
+  const exception = await db.scheduleException.update({
+    where: { id: input.id },
+    data: {
+      exceptionType: input.exceptionType,
+      title: input.title,
+      description: input.description,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      isAllDay: input.isAllDay,
+      affectsAllClasses: input.affectsAllClasses,
+      isRecurring: input.isRecurring,
+      recurrenceRule: input.recurrenceRule,
+    },
+  })
+
+  await logTimetableAction("update_schedule_exception", {
+    entityId: input.id,
+    entityType: "scheduleException",
+    metadata: { title: exception.title },
+  })
+
+  return exception
+}
+
+/**
+ * Delete a schedule exception
+ */
+export async function deleteScheduleException(input: { id: string }) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Verify ownership
+  const existing = await db.scheduleException.findFirst({
+    where: { id: input.id, schoolId },
+  })
+
+  if (!existing) throw new Error("Schedule exception not found")
+
+  await db.scheduleException.delete({
+    where: { id: input.id },
+  })
+
+  await logTimetableAction("delete_schedule_exception", {
+    entityId: input.id,
+    entityType: "scheduleException",
+    metadata: { title: existing.title },
+  })
+
+  return { success: true }
+}
+
+/**
+ * Copy schedule settings (working days, lunch config) from one term to another
+ */
+export async function copyScheduleSettings(input: {
+  sourceTermId: string
+  targetTermId: string
+  includeExceptions?: boolean
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Get source config
+  const sourceConfig = await db.schoolWeekConfig.findFirst({
+    where: { schoolId, termId: input.sourceTermId },
+  })
+
+  if (!sourceConfig) {
+    throw new Error("Source term has no schedule configuration")
+  }
+
+  // Upsert target config
+  await db.schoolWeekConfig.upsert({
+    where: {
+      schoolId_termId: { schoolId, termId: input.targetTermId },
+    },
+    create: {
+      schoolId,
+      termId: input.targetTermId,
+      workingDays: sourceConfig.workingDays,
+      defaultLunchAfterPeriod: sourceConfig.defaultLunchAfterPeriod,
+      extraLunchRules: sourceConfig.extraLunchRules ?? Prisma.JsonNull,
+    },
+    update: {
+      workingDays: sourceConfig.workingDays,
+      defaultLunchAfterPeriod: sourceConfig.defaultLunchAfterPeriod,
+      extraLunchRules: sourceConfig.extraLunchRules ?? Prisma.JsonNull,
+    },
+  })
+
+  // Optionally copy exceptions
+  if (input.includeExceptions) {
+    const sourceExceptions = await db.scheduleException.findMany({
+      where: { schoolId, termId: input.sourceTermId },
+    })
+
+    for (const exc of sourceExceptions) {
+      await db.scheduleException.create({
+        data: {
+          schoolId,
+          termId: input.targetTermId,
+          exceptionType: exc.exceptionType,
+          title: exc.title,
+          description: exc.description,
+          startDate: exc.startDate,
+          endDate: exc.endDate,
+          isAllDay: exc.isAllDay,
+          affectsAllClasses: exc.affectsAllClasses,
+          affectedClassIds: exc.affectedClassIds,
+          affectedTeacherIds: exc.affectedTeacherIds,
+          isRecurring: exc.isRecurring,
+          recurrenceRule: exc.recurrenceRule,
         },
       })
     }
-
-    // Check consecutive periods
-    const sameDay = await db.timetable.findMany({
-      where: {
-        schoolId,
-        termId: input.termId,
-        teacherId: input.teacherId,
-        dayOfWeek: input.dayOfWeek,
-        weekOffset: input.weekOffset ?? 0,
-      },
-      include: { period: { select: { startTime: true } } },
-      orderBy: { period: { startTime: "asc" } },
-    })
-
-    if (sameDay.length >= teacherConstraint.maxConsecutivePeriods) {
-      violations.push({
-        type: "consecutive_limit",
-        severity: "warning",
-        message: `Teacher may have too many consecutive periods (limit: ${teacherConstraint.maxConsecutivePeriods})`,
-      })
-    }
   }
 
-  // 2. Check room constraints
-  const roomConstraint = await db.roomConstraint.findFirst({
-    where: {
-      schoolId,
-      classroomId: input.classroomId,
-      OR: [{ termId: input.termId }, { termId: null }],
+  await logTimetableAction("copy_schedule_settings", {
+    entityType: "scheduleConfig",
+    metadata: {
+      sourceTermId: input.sourceTermId,
+      targetTermId: input.targetTermId,
+      includeExceptions: input.includeExceptions,
     },
   })
 
-  if (roomConstraint) {
-    // Check reserved periods
-    const reserved = (
-      roomConstraint.reservedPeriods as Record<string, string[]>
-    )?.[input.dayOfWeek.toString()]
-    if (reserved?.includes(input.periodId)) {
-      violations.push({
-        type: "room_reserved",
-        severity: "error",
-        message: "Room is reserved during this period",
-      })
-    }
-  }
+  return { success: true }
+}
 
-  // 3. Check conflicts (teacher/room double-booking)
-  const existingSlot = await db.timetable.findFirst({
+/**
+ * Get list of all terms for copying settings
+ */
+export async function getTermsForCopy() {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const terms = await db.term.findMany({
+    where: { schoolId },
+    orderBy: [{ schoolYear: { yearName: "desc" } }, { termNumber: "asc" }],
+    select: {
+      id: true,
+      termNumber: true,
+      startDate: true,
+      endDate: true,
+      schoolYear: {
+        select: { id: true, yearName: true },
+      },
+    },
+  })
+
+  return terms.map((t) => ({
+    id: t.id,
+    label: `${t.schoolYear.yearName} - Term ${t.termNumber}`,
+    startDate: t.startDate,
+    endDate: t.endDate,
+    yearId: t.schoolYear.id,
+  }))
+}
+
+// ============================================================================
+// SUBSTITUTION MANAGEMENT
+// ============================================================================
+// Note: Constants moved to ./constants.ts to avoid "use server" export restrictions
+
+/**
+ * Create a teacher absence record
+ */
+export async function createTeacherAbsence(input: {
+  teacherId: string
+  startDate: Date
+  endDate: Date
+  absenceType: keyof typeof ABSENCE_TYPES
+  reason?: string
+  isAllDay?: boolean
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Verify teacher exists in this school
+  const teacher = await db.teacher.findFirst({
+    where: { id: input.teacherId, schoolId },
+    select: { id: true, givenName: true, surname: true },
+  })
+
+  if (!teacher) throw new Error("Teacher not found")
+
+  // Check for overlapping absences
+  const existing = await db.teacherAbsence.findFirst({
     where: {
       schoolId,
-      termId: input.termId,
-      dayOfWeek: input.dayOfWeek,
-      periodId: input.periodId,
-      weekOffset: input.weekOffset ?? 0,
-      OR: [{ teacherId: input.teacherId }, { classroomId: input.classroomId }],
-      NOT: { classId: input.classId },
+      teacherId: input.teacherId,
+      status: { not: "CANCELLED" },
+      OR: [
+        {
+          startDate: { lte: input.endDate },
+          endDate: { gte: input.startDate },
+        },
+      ],
+    },
+  })
+
+  if (existing) {
+    throw new Error("Overlapping absence already exists for this teacher")
+  }
+
+  const absence = await db.teacherAbsence.create({
+    data: {
+      schoolId,
+      teacherId: input.teacherId,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      absenceType: input.absenceType,
+      reason: input.reason,
+      isAllDay: input.isAllDay ?? true,
+      status: "PENDING",
     },
     include: {
-      class: { select: { name: true } },
       teacher: { select: { givenName: true, surname: true } },
     },
   })
 
-  if (existingSlot) {
-    if (existingSlot.teacherId === input.teacherId) {
-      violations.push({
-        type: "conflict",
-        severity: "error",
-        message: `Teacher is already assigned to ${existingSlot.class.name} at this time`,
-      })
+  await logTimetableAction("create_schedule_exception", {
+    entityType: "scheduleException",
+    entityId: absence.id,
+    metadata: {
+      teacherId: input.teacherId,
+      teacherName: `${teacher.givenName} ${teacher.surname}`,
+      absenceType: input.absenceType,
+      startDate: input.startDate.toISOString(),
+      endDate: input.endDate.toISOString(),
+    },
+  })
+
+  return { success: true, absence }
+}
+
+/**
+ * Update a teacher absence (status, dates, etc.)
+ */
+export async function updateTeacherAbsence(input: {
+  id: string
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED"
+  startDate?: Date
+  endDate?: Date
+  reason?: string
+  absenceType?: keyof typeof ABSENCE_TYPES
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const session = await auth()
+  const userId = session?.user?.id
+
+  const existing = await db.teacherAbsence.findFirst({
+    where: { id: input.id, schoolId },
+  })
+
+  if (!existing) throw new Error("Absence not found")
+
+  const updateData: Record<string, unknown> = {}
+  if (input.status) {
+    updateData.status = input.status
+    if (input.status === "APPROVED") {
+      updateData.approvedBy = userId
+      updateData.approvedAt = new Date()
     }
-    if (existingSlot.classroomId === input.classroomId) {
-      violations.push({
-        type: "conflict",
-        severity: "error",
-        message: `Room is already used by ${existingSlot.class.name} at this time`,
+  }
+  if (input.startDate) updateData.startDate = input.startDate
+  if (input.endDate) updateData.endDate = input.endDate
+  if (input.reason !== undefined) updateData.reason = input.reason
+  if (input.absenceType) updateData.absenceType = input.absenceType
+
+  const absence = await db.teacherAbsence.update({
+    where: { id: input.id },
+    data: updateData,
+    include: {
+      teacher: { select: { givenName: true, surname: true } },
+    },
+  })
+
+  await logTimetableAction("update_schedule_exception", {
+    entityType: "scheduleException",
+    entityId: input.id,
+    metadata: { changes: updateData },
+  })
+
+  return { success: true, absence }
+}
+
+/**
+ * Get teacher absences with filters
+ */
+export async function getTeacherAbsences(input: {
+  teacherId?: string
+  status?: string
+  startDate?: Date
+  endDate?: Date
+  limit?: number
+  offset?: number
+}) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const where: Record<string, unknown> = { schoolId }
+  if (input.teacherId) where.teacherId = input.teacherId
+  if (input.status) where.status = input.status
+  if (input.startDate || input.endDate) {
+    where.OR = []
+    if (input.startDate) {
+      ;(where.OR as unknown[]).push({ startDate: { gte: input.startDate } })
+    }
+    if (input.endDate) {
+      ;(where.OR as unknown[]).push({ endDate: { lte: input.endDate } })
+    }
+  }
+
+  const [absences, total] = await Promise.all([
+    db.teacherAbsence.findMany({
+      where,
+      orderBy: { startDate: "desc" },
+      take: input.limit ?? 50,
+      skip: input.offset ?? 0,
+      include: {
+        teacher: { select: { id: true, givenName: true, surname: true } },
+        substitutionRecords: {
+          include: {
+            substituteTeacher: {
+              select: { id: true, givenName: true, surname: true },
+            },
+            originalSlot: {
+              include: {
+                period: {
+                  select: { name: true, startTime: true, endTime: true },
+                },
+                class: {
+                  select: {
+                    name: true,
+                    subject: { select: { subjectName: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+    db.teacherAbsence.count({ where }),
+  ])
+
+  return {
+    absences: absences.map((a) => ({
+      id: a.id,
+      teacherId: a.teacherId,
+      teacherName: `${a.teacher.givenName} ${a.teacher.surname}`,
+      startDate: a.startDate,
+      endDate: a.endDate,
+      absenceType: a.absenceType,
+      reason: a.reason,
+      status: a.status,
+      isAllDay: a.isAllDay,
+      substitutions: a.substitutionRecords.map((s) => ({
+        id: s.id,
+        status: s.status,
+        slotDate: s.slotDate,
+        substituteId: s.substituteTeacherId,
+        substituteName: `${s.substituteTeacher.givenName} ${s.substituteTeacher.surname}`,
+        periodName: s.originalSlot.period.name,
+        className: s.originalSlot.class?.name,
+        subjectName: s.originalSlot.class?.subject?.subjectName,
+      })),
+    })),
+    total,
+  }
+}
+
+/**
+ * Find available substitute teachers for a specific slot
+ */
+export async function findAvailableSubstitutes(input: {
+  originalTeacherId: string
+  dayOfWeek: number
+  periodId: string
+  slotDate: Date
+  termId: string
+  subjectId?: string // Optional: prefer teachers with this subject expertise
+}) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Get all active teachers except the absent one
+  const teachers = await db.teacher.findMany({
+    where: {
+      schoolId,
+      id: { not: input.originalTeacherId },
+      employmentStatus: "ACTIVE",
+    },
+    include: {
+      subjectExpertise: {
+        select: { subjectId: true, expertiseLevel: true },
+      },
+      constraints: {
+        where: {
+          OR: [{ termId: input.termId }, { termId: null }],
+        },
+        include: {
+          unavailableBlocks: {
+            where: {
+              dayOfWeek: input.dayOfWeek,
+              periodId: input.periodId,
+            },
+          },
+        },
+      },
+      timetables: {
+        where: {
+          termId: input.termId,
+          dayOfWeek: input.dayOfWeek,
+          periodId: input.periodId,
+        },
+      },
+    },
+  })
+
+  const available: Array<{
+    id: string
+    name: string
+    hasSubjectExpertise: boolean
+    expertiseLevel: string | null
+    currentWorkload: number
+    isPreferred: boolean
+    unavailableReason: string | null
+  }> = []
+
+  for (const teacher of teachers) {
+    // Check if already teaching at this time
+    if (teacher.timetables.length > 0) {
+      continue // Skip - already scheduled
+    }
+
+    // Check for unavailable blocks
+    const hasUnavailableBlock = teacher.constraints.some(
+      (c) => c.unavailableBlocks.length > 0
+    )
+    if (hasUnavailableBlock) {
+      continue // Skip - marked as unavailable
+    }
+
+    // Check subject expertise
+    const subjectExp = input.subjectId
+      ? teacher.subjectExpertise.find((e) => e.subjectId === input.subjectId)
+      : null
+
+    // Count current workload (periods this week)
+    const weekSlots = await db.timetable.count({
+      where: {
+        schoolId,
+        termId: input.termId,
+        teacherId: teacher.id,
+      },
+    })
+
+    available.push({
+      id: teacher.id,
+      name: `${teacher.givenName} ${teacher.surname}`,
+      hasSubjectExpertise: !!subjectExp,
+      expertiseLevel: subjectExp?.expertiseLevel || null,
+      currentWorkload: weekSlots,
+      isPreferred: subjectExp?.expertiseLevel === "PRIMARY",
+      unavailableReason: null,
+    })
+  }
+
+  // Sort by preference: subject expertise first, then lower workload
+  available.sort((a, b) => {
+    if (a.isPreferred && !b.isPreferred) return -1
+    if (!a.isPreferred && b.isPreferred) return 1
+    if (a.hasSubjectExpertise && !b.hasSubjectExpertise) return -1
+    if (!a.hasSubjectExpertise && b.hasSubjectExpertise) return 1
+    return a.currentWorkload - b.currentWorkload
+  })
+
+  return { substitutes: available }
+}
+
+/**
+ * Assign a substitute teacher to a timetable slot
+ */
+export async function assignSubstitute(input: {
+  absenceId: string
+  originalSlotId: string
+  substituteTeacherId: string
+  slotDate: Date
+  notes?: string
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Verify absence exists
+  const absence = await db.teacherAbsence.findFirst({
+    where: { id: input.absenceId, schoolId },
+    include: { teacher: { select: { givenName: true, surname: true } } },
+  })
+
+  if (!absence) throw new Error("Absence not found")
+
+  // Verify original slot
+  const originalSlot = await db.timetable.findFirst({
+    where: { id: input.originalSlotId, schoolId },
+    include: {
+      teacher: { select: { id: true, givenName: true, surname: true } },
+      class: {
+        select: { name: true, subject: { select: { subjectName: true } } },
+      },
+      period: { select: { name: true } },
+    },
+  })
+
+  if (!originalSlot) throw new Error("Timetable slot not found")
+
+  // Verify substitute teacher
+  const substitute = await db.teacher.findFirst({
+    where: { id: input.substituteTeacherId, schoolId },
+    select: { id: true, givenName: true, surname: true },
+  })
+
+  if (!substitute) throw new Error("Substitute teacher not found")
+
+  // Check if substitution already exists for this slot on this date
+  const existing = await db.substitutionRecord.findFirst({
+    where: {
+      schoolId,
+      originalSlotId: input.originalSlotId,
+      slotDate: input.slotDate,
+      status: { not: "CANCELLED" },
+    },
+  })
+
+  if (existing) {
+    throw new Error("A substitution already exists for this slot on this date")
+  }
+
+  // Create substitution record
+  const substitution = await db.substitutionRecord.create({
+    data: {
+      schoolId,
+      absenceId: input.absenceId,
+      originalSlotId: input.originalSlotId,
+      originalTeacherId: originalSlot.teacherId,
+      substituteTeacherId: input.substituteTeacherId,
+      slotDate: input.slotDate,
+      status: "PENDING",
+      notes: input.notes,
+    },
+    include: {
+      substituteTeacher: { select: { givenName: true, surname: true } },
+      originalTeacher: { select: { givenName: true, surname: true } },
+    },
+  })
+
+  await logTimetableAction("create_schedule_exception", {
+    entityType: "scheduleException",
+    entityId: substitution.id,
+    metadata: {
+      type: "substitution",
+      originalTeacher: `${originalSlot.teacher?.givenName} ${originalSlot.teacher?.surname}`,
+      substituteTeacher: `${substitute.givenName} ${substitute.surname}`,
+      slotDate: input.slotDate.toISOString(),
+      periodName: originalSlot.period?.name,
+      className: originalSlot.class?.name,
+    },
+  })
+
+  return { success: true, substitution }
+}
+
+/**
+ * Confirm or decline a substitution assignment
+ */
+export async function respondToSubstitution(input: {
+  id: string
+  response: "CONFIRMED" | "DECLINED"
+  declineReason?: string
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const record = await db.substitutionRecord.findFirst({
+    where: { id: input.id, schoolId },
+  })
+
+  if (!record) throw new Error("Substitution record not found")
+  if (record.status !== "PENDING") {
+    throw new Error("Can only respond to pending substitutions")
+  }
+
+  const updateData: Record<string, unknown> = {
+    status: input.response,
+  }
+
+  if (input.response === "CONFIRMED") {
+    updateData.confirmedAt = new Date()
+  } else if (input.response === "DECLINED") {
+    updateData.declineReason = input.declineReason
+  }
+
+  const substitution = await db.substitutionRecord.update({
+    where: { id: input.id },
+    data: updateData,
+    include: {
+      substituteTeacher: { select: { givenName: true, surname: true } },
+      originalTeacher: { select: { givenName: true, surname: true } },
+    },
+  })
+
+  await logTimetableAction("update_schedule_exception", {
+    entityType: "scheduleException",
+    entityId: input.id,
+    metadata: {
+      action: input.response.toLowerCase(),
+      declineReason: input.declineReason,
+    },
+  })
+
+  return { success: true, substitution }
+}
+
+/**
+ * Get substitution records with filters
+ */
+export async function getSubstitutionRecords(input: {
+  absenceId?: string
+  substituteTeacherId?: string
+  originalTeacherId?: string
+  status?: string
+  startDate?: Date
+  endDate?: Date
+  limit?: number
+  offset?: number
+}) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const where: Record<string, unknown> = { schoolId }
+  if (input.absenceId) where.absenceId = input.absenceId
+  if (input.substituteTeacherId)
+    where.substituteTeacherId = input.substituteTeacherId
+  if (input.originalTeacherId) where.originalTeacherId = input.originalTeacherId
+  if (input.status) where.status = input.status
+  if (input.startDate || input.endDate) {
+    if (input.startDate && input.endDate) {
+      where.slotDate = {
+        gte: input.startDate,
+        lte: input.endDate,
+      }
+    } else if (input.startDate) {
+      where.slotDate = { gte: input.startDate }
+    } else {
+      where.slotDate = { lte: input.endDate }
+    }
+  }
+
+  const [records, total] = await Promise.all([
+    db.substitutionRecord.findMany({
+      where,
+      orderBy: { slotDate: "desc" },
+      take: input.limit ?? 50,
+      skip: input.offset ?? 0,
+      include: {
+        originalTeacher: {
+          select: { id: true, givenName: true, surname: true },
+        },
+        substituteTeacher: {
+          select: { id: true, givenName: true, surname: true },
+        },
+        originalSlot: {
+          include: {
+            period: { select: { name: true, startTime: true, endTime: true } },
+            class: {
+              select: {
+                name: true,
+                subject: { select: { subjectName: true } },
+              },
+            },
+            classroom: { select: { roomName: true } },
+          },
+        },
+        absence: {
+          select: { absenceType: true, reason: true },
+        },
+      },
+    }),
+    db.substitutionRecord.count({ where }),
+  ])
+
+  return {
+    records: records.map((r) => ({
+      id: r.id,
+      slotDate: r.slotDate,
+      status: r.status,
+      notes: r.notes,
+      declineReason: r.declineReason,
+      confirmedAt: r.confirmedAt,
+      originalTeacher: {
+        id: r.originalTeacher.id,
+        name: `${r.originalTeacher.givenName} ${r.originalTeacher.surname}`,
+      },
+      substituteTeacher: {
+        id: r.substituteTeacher.id,
+        name: `${r.substituteTeacher.givenName} ${r.substituteTeacher.surname}`,
+      },
+      slot: {
+        id: r.originalSlotId,
+        dayOfWeek: r.originalSlot.dayOfWeek,
+        periodName: r.originalSlot.period.name,
+        periodTime: `${r.originalSlot.period.startTime} - ${r.originalSlot.period.endTime}`,
+        className: r.originalSlot.class?.name,
+        subjectName: r.originalSlot.class?.subject?.subjectName,
+        roomName: r.originalSlot.classroom?.roomName,
+      },
+      absence: {
+        type: r.absence.absenceType,
+        reason: r.absence.reason,
+      },
+    })),
+    total,
+  }
+}
+
+/**
+ * Cancel a substitution assignment
+ */
+export async function cancelSubstitution(input: {
+  id: string
+  reason?: string
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const record = await db.substitutionRecord.findFirst({
+    where: { id: input.id, schoolId },
+  })
+
+  if (!record) throw new Error("Substitution record not found")
+  if (record.status === "COMPLETED") {
+    throw new Error("Cannot cancel a completed substitution")
+  }
+
+  const substitution = await db.substitutionRecord.update({
+    where: { id: input.id },
+    data: {
+      status: "CANCELLED",
+      notes: input.reason
+        ? `${record.notes || ""}\nCancellation reason: ${input.reason}`.trim()
+        : record.notes,
+    },
+  })
+
+  await logTimetableAction("delete_schedule_exception", {
+    entityType: "scheduleException",
+    entityId: input.id,
+    metadata: { reason: input.reason },
+  })
+
+  return { success: true, substitution }
+}
+
+/**
+ * Get upcoming substitutions for a teacher (as substitute)
+ */
+export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
+  await requireReadAccess()
+
+  const session = await auth()
+  const userId = session?.user?.id
+
+  if (!userId) throw new Error("Not authenticated")
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Find teacher by user ID
+  const teacher = await db.teacher.findFirst({
+    where: { userId, schoolId },
+  })
+
+  if (!teacher) {
+    return { substitutions: [] }
+  }
+
+  const records = await db.substitutionRecord.findMany({
+    where: {
+      schoolId,
+      substituteTeacherId: teacher.id,
+      status: { in: ["PENDING", "CONFIRMED"] },
+      slotDate: { gte: new Date() },
+    },
+    orderBy: { slotDate: "asc" },
+    take: input.limit ?? 10,
+    include: {
+      originalTeacher: { select: { givenName: true, surname: true } },
+      originalSlot: {
+        include: {
+          period: { select: { name: true, startTime: true, endTime: true } },
+          class: {
+            select: { name: true, subject: { select: { subjectName: true } } },
+          },
+          classroom: { select: { roomName: true } },
+        },
+      },
+    },
+  })
+
+  return {
+    substitutions: records.map((r) => ({
+      id: r.id,
+      slotDate: r.slotDate,
+      status: r.status,
+      originalTeacher: `${r.originalTeacher.givenName} ${r.originalTeacher.surname}`,
+      periodName: r.originalSlot.period.name,
+      periodTime: `${r.originalSlot.period.startTime} - ${r.originalSlot.period.endTime}`,
+      className: r.originalSlot.class?.name,
+      subjectName: r.originalSlot.class?.subject?.subjectName,
+      roomName: r.originalSlot.classroom?.roomName,
+      dayOfWeek: r.originalSlot.dayOfWeek,
+    })),
+  }
+}
+
+/**
+ * Get slots that need substitutes for an absence
+ */
+export async function getSlotsNeedingSubstitutes(input: {
+  absenceId: string
+  termId: string
+}) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Get the absence details
+  const absence = await db.teacherAbsence.findFirst({
+    where: { id: input.absenceId, schoolId },
+    include: {
+      teacher: { select: { id: true, givenName: true, surname: true } },
+      substitutionRecords: {
+        select: { originalSlotId: true, slotDate: true, status: true },
+      },
+    },
+  })
+
+  if (!absence) throw new Error("Absence not found")
+
+  // Get the teacher's timetable slots
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      teacherId: absence.teacherId,
+    },
+    include: {
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
+      class: {
+        select: {
+          id: true,
+          name: true,
+          subject: { select: { id: true, subjectName: true } },
+        },
+      },
+      classroom: { select: { id: true, roomName: true } },
+    },
+  })
+
+  // Calculate the dates in the absence range
+  const dates: Date[] = []
+  const current = new Date(absence.startDate)
+  const end = new Date(absence.endDate)
+  while (current <= end) {
+    dates.push(new Date(current))
+    current.setDate(current.getDate() + 1)
+  }
+
+  // Build list of slot-date combinations that need substitutes
+  const slotsNeeding: Array<{
+    slotId: string
+    date: Date
+    dayOfWeek: number
+    periodId: string
+    periodName: string
+    className: string | undefined
+    subjectId: string | undefined
+    subjectName: string | undefined
+    roomName: string | undefined
+    hasSubstitute: boolean
+    substituteStatus: string | null
+  }> = []
+
+  for (const date of dates) {
+    const dayOfWeek = date.getDay()
+
+    for (const slot of slots) {
+      if (slot.dayOfWeek !== dayOfWeek) continue
+
+      // Check if substitution already exists
+      const existing = absence.substitutionRecords.find(
+        (s) =>
+          s.originalSlotId === slot.id &&
+          s.slotDate.toDateString() === date.toDateString() &&
+          s.status !== "CANCELLED"
+      )
+
+      slotsNeeding.push({
+        slotId: slot.id,
+        date,
+        dayOfWeek,
+        periodId: slot.periodId,
+        periodName: slot.period.name,
+        className: slot.class?.name,
+        subjectId: slot.class?.subject?.id,
+        subjectName: slot.class?.subject?.subjectName,
+        roomName: slot.classroom?.roomName,
+        hasSubstitute: !!existing,
+        substituteStatus: existing?.status || null,
       })
     }
   }
 
+  // Sort by date then period
+  slotsNeeding.sort((a, b) => {
+    const dateCompare = a.date.getTime() - b.date.getTime()
+    if (dateCompare !== 0) return dateCompare
+    return a.periodName.localeCompare(b.periodName)
+  })
+
   return {
-    isValid: violations.filter((v) => v.severity === "error").length === 0,
-    violations,
+    teacher: {
+      id: absence.teacherId,
+      name: `${absence.teacher.givenName} ${absence.teacher.surname}`,
+    },
+    absence: {
+      id: absence.id,
+      startDate: absence.startDate,
+      endDate: absence.endDate,
+      absenceType: absence.absenceType,
+    },
+    slots: slotsNeeding,
+    unassignedCount: slotsNeeding.filter((s) => !s.hasSubstitute).length,
+    totalCount: slotsNeeding.length,
   }
 }

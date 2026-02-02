@@ -12,6 +12,10 @@ import {
   getEnrollmentList,
   getMeritList,
 } from "./queries"
+import {
+  campaignSchemaWithValidation,
+  type CampaignFormData,
+} from "./validation"
 
 type ActionResult<T = unknown> =
   | { success: true; data: T }
@@ -59,6 +63,193 @@ export async function getCampaigns(params: {
   } catch (error) {
     console.error("[getCampaigns]", error)
     return { success: false, error: "Failed to fetch campaigns" }
+  }
+}
+
+export async function getCampaign(params: { id: string }): Promise<
+  ActionResult<{
+    id: string
+    name: string
+    academicYear: string
+    startDate: string
+    endDate: string
+    status: string
+    description: string | null
+    totalSeats: number
+    applicationFee: string | null
+  }>
+> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const campaign = await db.admissionCampaign.findUnique({
+      where: { id: params.id, schoolId },
+    })
+
+    if (!campaign) {
+      return { success: false, error: "Campaign not found" }
+    }
+
+    return {
+      success: true,
+      data: {
+        id: campaign.id,
+        name: campaign.name,
+        academicYear: campaign.academicYear,
+        startDate: campaign.startDate.toISOString(),
+        endDate: campaign.endDate.toISOString(),
+        status: campaign.status,
+        description: campaign.description,
+        totalSeats: campaign.totalSeats,
+        applicationFee: campaign.applicationFee?.toString() ?? null,
+      },
+    }
+  } catch (error) {
+    console.error("[getCampaign]", error)
+    return { success: false, error: "Failed to fetch campaign" }
+  }
+}
+
+export async function createCampaign(
+  data: CampaignFormData
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // Validate input
+    const validated = campaignSchemaWithValidation.safeParse(data)
+    if (!validated.success) {
+      return {
+        success: false,
+        error: validated.error.issues[0]?.message ?? "Invalid data",
+      }
+    }
+
+    const campaign = await db.admissionCampaign.create({
+      data: {
+        schoolId,
+        name: validated.data.name,
+        academicYear: validated.data.academicYear,
+        startDate: validated.data.startDate,
+        endDate: validated.data.endDate,
+        status: validated.data.status,
+        description: validated.data.description ?? null,
+        totalSeats: validated.data.totalSeats,
+        applicationFee: validated.data.applicationFee ?? null,
+      },
+    })
+
+    revalidatePath("/admission")
+    return { success: true, data: { id: campaign.id } }
+  } catch (error) {
+    console.error("[createCampaign]", error)
+    // Check for unique constraint violation
+    if ((error as any)?.code === "P2002") {
+      return {
+        success: false,
+        error: "A campaign with this name already exists",
+      }
+    }
+    return { success: false, error: "Failed to create campaign" }
+  }
+}
+
+export async function updateCampaign(
+  data: CampaignFormData & { id: string }
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // Validate input
+    const validated = campaignSchemaWithValidation.safeParse(data)
+    if (!validated.success) {
+      return {
+        success: false,
+        error: validated.error.issues[0]?.message ?? "Invalid data",
+      }
+    }
+
+    await db.admissionCampaign.update({
+      where: { id: data.id, schoolId },
+      data: {
+        name: validated.data.name,
+        academicYear: validated.data.academicYear,
+        startDate: validated.data.startDate,
+        endDate: validated.data.endDate,
+        status: validated.data.status,
+        description: validated.data.description ?? null,
+        totalSeats: validated.data.totalSeats,
+        applicationFee: validated.data.applicationFee ?? null,
+      },
+    })
+
+    revalidatePath("/admission")
+    return { success: true, data: null }
+  } catch (error) {
+    console.error("[updateCampaign]", error)
+    // Check for unique constraint violation
+    if ((error as any)?.code === "P2002") {
+      return {
+        success: false,
+        error: "A campaign with this name already exists",
+      }
+    }
+    return { success: false, error: "Failed to update campaign" }
+  }
+}
+
+export async function deleteCampaign(params: {
+  id: string
+}): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // Check if campaign has applications
+    const campaign = await db.admissionCampaign.findUnique({
+      where: { id: params.id, schoolId },
+      include: { _count: { select: { applications: true } } },
+    })
+
+    if (!campaign) {
+      return { success: false, error: "Campaign not found" }
+    }
+
+    if (campaign._count.applications > 0) {
+      return {
+        success: false,
+        error: "Cannot delete campaign with existing applications",
+      }
+    }
+
+    await db.admissionCampaign.delete({
+      where: { id: params.id, schoolId },
+    })
+
+    revalidatePath("/admission")
+    return { success: true, data: null }
+  } catch (error) {
+    console.error("[deleteCampaign]", error)
+    return { success: false, error: "Failed to delete campaign" }
   }
 }
 

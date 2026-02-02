@@ -64,6 +64,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
   getAttendanceStats,
   getAttendanceTrends,
+  getCalendarData,
   getClassComparisonStats,
   getClassesForSelection,
   getDayWisePatterns,
@@ -72,6 +73,7 @@ import {
   getStudentsAtRisk,
 } from "../actions"
 import { AttendanceExport } from "../core/attendance-export"
+import { AttendanceCalendarView, type CalendarData } from "./calendar-view"
 import {
   AbsenceReasonsChart,
   AttendanceTrendsChart,
@@ -168,6 +170,14 @@ export default function AnalyticsContent({
   const [classStats, setClassStats] = useState<ClassStats[]>([])
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([])
   const [classes, setClasses] = useState<ClassOption[]>([])
+  const [calendarData, setCalendarData] = useState<CalendarData | null>(null)
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(
+    null
+  )
+  const [calendarMonth, setCalendarMonth] = useState({
+    year: new Date().getFullYear(),
+    month: new Date().getMonth(),
+  })
 
   // Fetch all analytics data in parallel
   // Handles mixed response formats across different server actions
@@ -250,15 +260,49 @@ export default function AnalyticsContent({
     }
   }, [dateRange, selectedClass])
 
+  // Fetch calendar data separately (can change independently of date range)
+  const fetchCalendarData = useCallback(async () => {
+    try {
+      const classFilter = selectedClass !== "all" ? selectedClass : undefined
+      const result = await getCalendarData({
+        year: calendarMonth.year,
+        month: calendarMonth.month,
+        classId: classFilter,
+      })
+
+      if (result.success && result.data) {
+        setCalendarData(result.data as CalendarData)
+      }
+    } catch (error) {
+      console.error("Error fetching calendar data:", error)
+    }
+  }, [calendarMonth, selectedClass])
+
   useEffect(() => {
     fetchAllData()
   }, [fetchAllData])
 
+  // Fetch calendar data when month or class changes
+  useEffect(() => {
+    fetchCalendarData()
+  }, [fetchCalendarData])
+
+  const handleCalendarMonthChange = useCallback(
+    (year: number, month: number) => {
+      setCalendarMonth({ year, month })
+    },
+    []
+  )
+
+  const handleCalendarDateSelect = useCallback((date: Date) => {
+    setSelectedCalendarDate(date)
+  }, [])
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
-    await fetchAllData()
+    await Promise.all([fetchAllData(), fetchCalendarData()])
     setTimeout(() => setRefreshing(false), 500)
-  }, [fetchAllData])
+  }, [fetchAllData, fetchCalendarData])
 
   // Memoize formatted chart data to prevent recalculation on every render
   const methodChartData = React.useMemo(
@@ -493,8 +537,9 @@ export default function AnalyticsContent({
 
       {/* Charts */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
           <TabsTrigger value="patterns">Patterns</TabsTrigger>
           <TabsTrigger value="methods">Methods</TabsTrigger>
@@ -519,6 +564,16 @@ export default function AnalyticsContent({
             <DayWisePatternChart data={dayChartData} />
             <TimeDistributionChart data={timeData} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-4">
+          <AttendanceCalendarView
+            data={calendarData}
+            selectedDate={selectedCalendarDate}
+            onDateSelect={handleCalendarDateSelect}
+            onMonthChange={handleCalendarMonthChange}
+            locale={locale}
+          />
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-4">

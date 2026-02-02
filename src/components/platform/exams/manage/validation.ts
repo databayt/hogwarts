@@ -20,6 +20,14 @@ const examBaseObjectSchema = z.object({
   passingMarks: z.number().min(1, "Passing marks must be at least 1"),
   examType: z.enum(["MIDTERM", "FINAL", "QUIZ", "TEST", "PRACTICAL"]),
   instructions: z.string().optional(),
+  // Proctoring settings
+  proctorMode: z.enum(["NONE", "BASIC", "STANDARD", "STRICT"]).default("BASIC"),
+  shuffleQuestions: z.boolean().default(true),
+  shuffleOptions: z.boolean().default(true),
+  maxAttempts: z.number().int().min(1).max(5).default(1),
+  retakePenalty: z.number().min(0).max(100).optional(), // % deduction per retake
+  allowLateSubmit: z.boolean().default(false),
+  lateSubmitMinutes: z.number().int().min(0).max(60).default(0),
 })
 
 // Refinement function to reuse
@@ -59,6 +67,17 @@ const examRefinement = <
         path: ["examDate"],
       })
     }
+
+    // Ensure exam date is not more than 1 year in the future
+    const oneYearFromNow = new Date()
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+    if (val.examDate > oneYearFromNow) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Exam date cannot be more than 1 year in the future",
+        path: ["examDate"],
+      })
+    }
   }
 
   // Ensure passing marks don't exceed total marks
@@ -72,6 +91,25 @@ const examRefinement = <
       message: "Passing marks cannot exceed total marks",
       path: ["passingMarks"],
     })
+  }
+
+  // Ensure passing marks percentage is realistic (10%-90%)
+  if (val.passingMarks !== undefined && val.totalMarks !== undefined) {
+    const passingPercentage = (val.passingMarks / val.totalMarks) * 100
+    if (passingPercentage < 10) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passing marks must be at least 10% of total marks",
+        path: ["passingMarks"],
+      })
+    }
+    if (passingPercentage > 90) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passing marks cannot exceed 90% of total marks",
+        path: ["passingMarks"],
+      })
+    }
   }
 }
 

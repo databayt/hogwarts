@@ -25,6 +25,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type {
   AttendanceMethod,
@@ -42,7 +43,7 @@ interface AttendanceStatsProps {
   records?: AttendanceRecord[]
   showDetails?: boolean
   className?: string
-  dictionary?: any
+  dictionary?: Dictionary["school"]
 }
 
 interface StatCardProps {
@@ -119,18 +120,28 @@ export function AttendanceStats({
   className,
   dictionary,
 }: AttendanceStatsProps) {
+  const t = dictionary?.attendance as Record<string, unknown> | undefined
+  const statsDict = t?.stats as Record<string, string> | undefined
+  const statusDict = t?.status as Record<string, string> | undefined
+  const methodDict = t?.method as Record<string, string> | undefined
+
   if (!stats) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Attendance Statistics</CardTitle>
-          <CardDescription>No data available</CardDescription>
+          <CardTitle>
+            {statsDict?.attendanceRate || "Attendance Statistics"}
+          </CardTitle>
+          <CardDescription>
+            {statsDict?.noDataAvailable || "No data available"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="py-8 text-center">
             <BarChart3 className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
             <p className="text-muted-foreground">
-              Select a class and date to view attendance statistics
+              {statsDict?.selectClassAndDate ||
+                "Select a class and date to view attendance statistics"}
             </p>
           </div>
         </CardContent>
@@ -166,32 +177,34 @@ export function AttendanceStats({
       {/* Main Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Total Students"
+          title={statsDict?.totalStudents || "Total Students"}
           value={stats.total}
           icon={<Users className="h-4 w-4" />}
-          description="Enrolled in class"
+          description={statsDict?.enrolledInClass || "Enrolled in class"}
           color="bg-primary/10"
         />
         <StatCard
-          title="Present"
+          title={statusDict?.PRESENT || "Present"}
           value={stats.present}
           icon={<UserCheck className="text-chart-2 h-4 w-4" />}
-          description={`${calculateAttendancePercentage(stats.present, stats.total)}% attendance`}
+          description={`${calculateAttendancePercentage(stats.present, stats.total)}% ${(t?.title as string | undefined)?.toLowerCase() || "attendance"}`}
           color="bg-chart-2/10"
           percentage={calculateAttendancePercentage(stats.present, stats.total)}
         />
         <StatCard
-          title="Absent"
+          title={statusDict?.ABSENT || "Absent"}
           value={stats.absent}
           icon={<UserX className="text-destructive h-4 w-4" />}
-          description={`${calculateAttendancePercentage(stats.absent, stats.total)}% absence`}
+          description={`${calculateAttendancePercentage(stats.absent, stats.total)}% ${statusDict?.ABSENT?.toLowerCase() || "absence"}`}
           color="bg-destructive/10"
         />
         <StatCard
-          title="Late"
+          title={statusDict?.LATE || "Late"}
           value={stats.late}
           icon={<Clock className="text-chart-4 h-4 w-4" />}
-          description="Arrived after start time"
+          description={
+            statsDict?.arrivedAfterStartTime || "Arrived after start time"
+          }
           color="bg-chart-4/10"
         />
       </div>
@@ -201,24 +214,26 @@ export function AttendanceStats({
           {/* Secondary Stats */}
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard
-              title="Excused"
+              title={statusDict?.EXCUSED || "Excused"}
               value={stats.excused}
               icon={<UserMinus className="text-primary h-4 w-4" />}
-              description="With valid excuse"
+              description={statsDict?.withValidExcuse || "With valid excuse"}
               color="bg-primary/10"
             />
             <StatCard
-              title="Sick"
+              title={statusDict?.SICK || "Sick"}
               value={stats.sick}
               icon={<Activity className="text-chart-1 h-4 w-4" />}
-              description="Health-related absence"
+              description={
+                statsDict?.healthRelatedAbsence || "Health-related absence"
+              }
               color="bg-chart-1/10"
             />
             <StatCard
-              title="Holiday"
+              title={statusDict?.HOLIDAY || "Holiday"}
               value={stats.holiday}
               icon={<Calendar className="text-chart-3 h-4 w-4" />}
-              description="On approved leave"
+              description={statsDict?.onApprovedLeave || "On approved leave"}
               color="bg-chart-3/10"
             />
           </div>
@@ -226,9 +241,12 @@ export function AttendanceStats({
           {/* Overall Attendance Rate */}
           <Card>
             <CardHeader>
-              <CardTitle>Overall Attendance Rate</CardTitle>
+              <CardTitle>
+                {statsDict?.overallAttendanceRate || "Overall Attendance Rate"}
+              </CardTitle>
               <CardDescription>
-                Combined present and late students
+                {statsDict?.combinedPresentLate ||
+                  "Combined present and late students"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -238,13 +256,22 @@ export function AttendanceStats({
                     {stats.attendanceRate.toFixed(1)}%
                   </span>
                   <div className="text-right">
-                    <p className="text-muted-foreground text-sm">Target: 95%</p>
+                    <p className="text-muted-foreground text-sm">
+                      {statsDict?.target?.replace("{percent}", "95") ||
+                        "Target: 95%"}
+                    </p>
                     <p className="text-muted-foreground text-xs">
                       {stats.attendanceRate >= 95 ? (
-                        <span className="text-chart-2">Above target</span>
+                        <span className="text-chart-2">
+                          {statsDict?.aboveTarget || "Above target"}
+                        </span>
                       ) : (
                         <span className="text-destructive">
-                          {(95 - stats.attendanceRate).toFixed(1)}% below target
+                          {statsDict?.belowTarget?.replace(
+                            "{percent}",
+                            (95 - stats.attendanceRate).toFixed(1)
+                          ) ||
+                            `${(95 - stats.attendanceRate).toFixed(1)}% below target`}
                         </span>
                       )}
                     </p>
@@ -259,9 +286,13 @@ export function AttendanceStats({
           {Object.keys(methodDistribution).length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Tracking Method Distribution</CardTitle>
+                <CardTitle>
+                  {statsDict?.trackingMethodDistribution ||
+                    "Tracking Method Distribution"}
+                </CardTitle>
                 <CardDescription>
-                  How attendance was recorded today
+                  {statsDict?.howAttendanceRecorded ||
+                    "How attendance was recorded today"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -272,7 +303,8 @@ export function AttendanceStats({
                       <div key={method} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
                           <span>
-                            {getMethodDisplayName(method as AttendanceMethod)}
+                            {methodDict?.[method as keyof typeof methodDict] ||
+                              getMethodDisplayName(method as AttendanceMethod)}
                           </span>
                           <span className="font-medium">
                             {count} ({percentage.toFixed(0)}%)
@@ -293,8 +325,14 @@ export function AttendanceStats({
             timeStats.late > 0) && (
             <Card>
               <CardHeader>
-                <CardTitle>Arrival Time Distribution</CardTitle>
-                <CardDescription>When students checked in</CardDescription>
+                <CardTitle>
+                  {statsDict?.arrivalTimeDistribution ||
+                    "Arrival Time Distribution"}
+                </CardTitle>
+                <CardDescription>
+                  {statsDict?.whenStudentsCheckedIn ||
+                    "When students checked in"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-4 text-center">
@@ -303,7 +341,7 @@ export function AttendanceStats({
                       {timeStats.early}
                     </div>
                     <p className="text-muted-foreground text-sm">
-                      Early (&lt;9 AM)
+                      {statsDict?.early || "Early (<9 AM)"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -311,7 +349,7 @@ export function AttendanceStats({
                       {timeStats.onTime}
                     </div>
                     <p className="text-muted-foreground text-sm">
-                      On Time (9-10 AM)
+                      {statsDict?.onTime || "On Time (9-10 AM)"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -319,7 +357,7 @@ export function AttendanceStats({
                       {timeStats.late}
                     </div>
                     <p className="text-muted-foreground text-sm">
-                      Late (&gt;10 AM)
+                      {statsDict?.late || "Late (>10 AM)"}
                     </p>
                   </div>
                 </div>
@@ -330,9 +368,12 @@ export function AttendanceStats({
           {/* Status Breakdown Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Status Breakdown</CardTitle>
+              <CardTitle>
+                {statsDict?.statusBreakdown || "Status Breakdown"}
+              </CardTitle>
               <CardDescription>
-                Visual representation of attendance status
+                {statsDict?.visualRepresentation ||
+                  "Visual representation of attendance status"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -342,7 +383,7 @@ export function AttendanceStats({
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
                       <div className="bg-chart-2 h-3 w-3 rounded-full" />
-                      Present
+                      {statusDict?.PRESENT || "Present"}
                     </span>
                     <span className="font-medium">{stats.present}</span>
                   </div>
@@ -357,7 +398,7 @@ export function AttendanceStats({
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
                       <div className="bg-destructive h-3 w-3 rounded-full" />
-                      Absent
+                      {statusDict?.ABSENT || "Absent"}
                     </span>
                     <span className="font-medium">{stats.absent}</span>
                   </div>
@@ -372,7 +413,7 @@ export function AttendanceStats({
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
                       <div className="bg-chart-4 h-3 w-3 rounded-full" />
-                      Late
+                      {statusDict?.LATE || "Late"}
                     </span>
                     <span className="font-medium">{stats.late}</span>
                   </div>
@@ -388,7 +429,7 @@ export function AttendanceStats({
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2">
                         <div className="bg-primary h-3 w-3 rounded-full" />
-                        Excused
+                        {statusDict?.EXCUSED || "Excused"}
                       </span>
                       <span className="font-medium">{stats.excused}</span>
                     </div>
@@ -407,7 +448,10 @@ export function AttendanceStats({
       {/* Last Updated */}
       {stats.lastUpdated && (
         <div className="text-muted-foreground text-center text-sm">
-          Last updated: {new Date(stats.lastUpdated).toLocaleString()}
+          {statsDict?.lastUpdated?.replace(
+            "{date}",
+            new Date(stats.lastUpdated).toLocaleString()
+          ) || `Last updated: ${new Date(stats.lastUpdated).toLocaleString()}`}
         </div>
       )}
     </div>

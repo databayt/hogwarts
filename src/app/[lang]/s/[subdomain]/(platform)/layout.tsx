@@ -36,14 +36,6 @@ export default async function PlatformLayout({
   const school = result.data
   const isRTL = checkIsRTL(lang as Locale)
 
-  // Debug logging
-  console.log("Platform layout - school data:", {
-    subdomain,
-    school,
-    lang,
-    isRTL,
-  })
-
   return (
     <SchoolProvider school={school}>
       <SidebarProvider>

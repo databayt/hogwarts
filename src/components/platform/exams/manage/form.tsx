@@ -45,6 +45,14 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
       examType: "MIDTERM",
       instructions: "",
       forceCreate: false,
+      // Proctoring defaults
+      proctorMode: "BASIC",
+      shuffleQuestions: true,
+      shuffleOptions: true,
+      maxAttempts: 1,
+      retakePenalty: undefined,
+      allowLateSubmit: false,
+      lateSubmitMinutes: 0,
     },
   })
 

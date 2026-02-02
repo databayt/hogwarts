@@ -374,7 +374,9 @@ export function StaffProfileContent({
           data={profile.contributionData}
           dictionary={dictionary}
           lang={lang}
-          onDayClick={(date) => console.log("Day clicked:", date)}
+          onDayClick={() => {
+            // TODO: Navigate to day's attendance/activity details
+          }}
         />
 
         {/* Recent Activity */}
@@ -382,9 +384,9 @@ export function StaffProfileContent({
           activities={profile.recentActivity}
           dictionary={dictionary}
           lang={lang}
-          onActivityClick={(activity) =>
-            console.log("Activity clicked:", activity)
-          }
+          onActivityClick={() => {
+            // TODO: Navigate to activity details
+          }}
           maxItems={10}
         />
 
@@ -444,11 +446,21 @@ export function StaffProfileContent({
           lang={lang}
           isOwner={isOwner}
           connectionStatus={isOwner ? undefined : "none"}
-          onEdit={() => console.log("Edit profile")}
-          onConnect={() => console.log("Connect")}
-          onMessage={() => console.log("Message")}
-          onShare={() => console.log("Share")}
-          onFollow={() => console.log("Follow")}
+          onEdit={() => {
+            // TODO: Open edit profile modal
+          }}
+          onConnect={() => {
+            // TODO: Send connection request
+          }}
+          onMessage={() => {
+            // TODO: Open message dialog
+          }}
+          onShare={() => {
+            // TODO: Open share dialog
+          }}
+          onFollow={() => {
+            // TODO: Toggle follow status
+          }}
           showExperience={true}
         />
 
@@ -467,11 +479,21 @@ export function StaffProfileContent({
         lang={lang}
         isOwner={isOwner}
         connectionStatus={isOwner ? undefined : "none"}
-        onEdit={() => console.log("Edit profile")}
-        onConnect={() => console.log("Connect")}
-        onMessage={() => console.log("Message")}
-        onShare={() => console.log("Share")}
-        onFollow={() => console.log("Follow")}
+        onEdit={() => {
+          // TODO: Open edit profile modal
+        }}
+        onConnect={() => {
+          // TODO: Send connection request
+        }}
+        onMessage={() => {
+          // TODO: Open message dialog
+        }}
+        onShare={() => {
+          // TODO: Open share dialog
+        }}
+        onFollow={() => {
+          // TODO: Toggle follow status
+        }}
       >
         {tabsContent}
       </ProfileGitHubLayout>

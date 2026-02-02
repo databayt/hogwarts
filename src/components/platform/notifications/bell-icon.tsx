@@ -58,6 +58,15 @@ export function NotificationBellIcon({
 
   return (
     <div className={cn("relative", className)} data-notification-bell>
+      {/* Live region for screen reader announcements */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {unreadCount > 0 &&
+          dictionary.accessibility.unreadCount.replace(
+            "{{count}}",
+            unreadCount.toString()
+          )}
+      </div>
+
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button

@@ -369,8 +369,8 @@ export default function AdminView({
               viewMode={viewMode}
               editable={true}
               onSlotClick={(day, periodId, slot) => {
-                console.log("Slot clicked:", day, periodId, slot)
                 // TODO: Open slot editor dialog
+                void { day, periodId, slot }
               }}
             />
           </CardContent>
@@ -390,8 +390,8 @@ export default function AdminView({
         open={showConflicts}
         onOpenChange={setShowConflicts}
         onApplySuggestion={(s) => {
-          console.log("Apply suggestion:", s)
           // TODO: Apply the suggestion
+          void s
         }}
       />
     </div>

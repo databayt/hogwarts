@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/tooltip"
 
 import { DAYS_OF_WEEK, GRID_SETTINGS } from "./config"
+import { TimetableMobile } from "./timetable-mobile"
 import {
   ClassroomInfo,
   DragDropEvent,
@@ -347,6 +348,66 @@ export function TimetableGridEnhanced({
   }
 
   const Backend = isMobile ? TouchBackend : HTML5Backend
+
+  // Use mobile-optimized view on small screens
+  if (isMobile) {
+    return (
+      <div className="h-full">
+        {conflicts.length > 0 && showConflicts && (
+          <div className="bg-chart-4 border-chart-4 mx-4 mb-4 rounded-lg border p-3">
+            <div className="flex items-center gap-2">
+              <CircleAlert className="text-chart-4 h-5 w-5" />
+              <h6 className="text-foreground">
+                {conflicts.length} conflict{conflicts.length > 1 ? "s" : ""}{" "}
+                detected
+              </h6>
+            </div>
+          </div>
+        )}
+        <TimetableMobile
+          slots={slots}
+          periods={periods}
+          workingDays={workingDays}
+          teachers={teachers}
+          subjects={subjects}
+          viewType={viewType}
+          editable={editable}
+          onSlotClick={onSlotClick}
+          onSlotEdit={onSlotEdit}
+          onEmptyCellClick={onEmptyCellClick}
+          dictionary={dictionary}
+        />
+
+        {/* Delete Dialog - shared with desktop */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                <h4>Delete Timetable Slot</h4>
+              </DialogTitle>
+              <DialogDescription>
+                <p className="muted">
+                  Are you sure you want to delete this slot? This action cannot
+                  be undone.
+                </p>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDelete}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    )
+  }
 
   return (
     <DndProvider backend={Backend}>

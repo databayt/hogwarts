@@ -377,7 +377,7 @@ export function NotificationCenter({
               {onStar && (
                 <DropdownMenuItem onClick={() => onStar(notification.id)}>
                   <Star className="me-2 h-4 w-4" />
-                  Star
+                  {dictionary.actions.star}
                 </DropdownMenuItem>
               )}
               {onArchive && (

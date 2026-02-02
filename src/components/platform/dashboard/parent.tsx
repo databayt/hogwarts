@@ -68,15 +68,17 @@ export async function ParentDashboard({
       weatherData = weather
     } catch (error) {
       console.error("[ParentDashboard] Error fetching data:", error)
+      const errorDict = dictionary?.parentDashboard?.errors || {
+        unableToLoad: "Unable to Load Dashboard",
+        loadError:
+          "There was an error loading the dashboard data. Please try refreshing the page.",
+      }
       return (
         <div className="space-y-6">
           <Card>
             <CardContent className="p-6">
-              <h3 className="mb-4">Unable to Load Dashboard</h3>
-              <p className="text-muted-foreground">
-                There was an error loading the dashboard data. Please try
-                refreshing the page.
-              </p>
+              <h3 className="mb-4">{errorDict.unableToLoad}</h3>
+              <p className="text-muted-foreground">{errorDict.loadError}</p>
             </CardContent>
           </Card>
         </div>
@@ -121,6 +123,9 @@ export async function ParentDashboard({
         upcomingAssignments: "Upcoming Assignments",
         announcements: "School Announcements",
         attendanceSummary: "Attendance Summary",
+        childProgress: "Child Progress",
+        academicProgress: "Academic Progress",
+        overallAttendance: "Overall Attendance",
       },
       labels: {
         enrolledStudents: "Enrolled students",
@@ -136,6 +141,63 @@ export async function ParentDashboard({
         attendance: "Attendance",
         recentGrades: "Recent Grades",
         presentDays: "Present Days",
+        target: "Target: {percent}%",
+        avgGrade: "Avg Grade",
+        tasksDue: "Tasks Due",
+        notAvailable: "N/A",
+        viewAll: "View all",
+        new: "new",
+        days: "days",
+        tasks: "tasks",
+        weeks: "weeks",
+      },
+      metrics: {
+        children: "Children",
+        attendance: "Attendance",
+        pendingTasks: "Pending Tasks",
+        announcements: "Announcements",
+      },
+      badges: {
+        excellent: "Excellent",
+        keepGoing: "Keep Going!",
+        good: "Good",
+        needsAttention: "Needs Attention",
+      },
+      dueStatus: {
+        overdue: "Overdue",
+        dueToday: "Due Today",
+        tomorrow: "Tomorrow",
+        daysRemaining: "{count} days",
+      },
+      emptyStates: {
+        childrenDescription: "Your children will appear here once enrolled",
+        gradesDescription: "Grades will appear here after assessments",
+        assignmentsDescription: "All caught up!",
+        announcementsDescription: "New announcements will appear here",
+        clickToView: "Click to view full announcement",
+      },
+      charts: {
+        performanceComparison: "Your child's performance compared to last term",
+        thisTerm: "This Term",
+        lastTerm: "Last Term",
+      },
+      progressCards: {
+        attendanceGoal: "Attendance Goal",
+        assignmentsCompleted: "Assignments Completed",
+        termProgress: "Term Progress",
+      },
+      errors: {
+        unableToLoad: "Unable to Load Dashboard",
+        loadError:
+          "There was an error loading the dashboard data. Please try refreshing the page.",
+        renderError: "Dashboard Rendering Error",
+        renderErrorMessage: "An error occurred while rendering the dashboard.",
+      },
+      quickActions: {
+        title: "Quick Actions",
+        messageTeacher: "Message Teacher",
+        viewReportCard: "View Report Card",
+        checkAttendance: "Check Attendance",
       },
     }
 
@@ -226,7 +288,9 @@ export async function ParentDashboard({
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <section>
-          <SectionHeading title="Quick Actions" />
+          <SectionHeading
+            title={dashDict.quickActions?.title || "Quick Actions"}
+          />
           <QuickActions
             actions={getQuickActionsByRole(
               "GUARDIAN",
@@ -249,15 +313,15 @@ export async function ParentDashboard({
         {/* Key Metrics Row */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <MetricCard
-            title="Children"
+            title={dashDict.metrics?.children || "Children"}
             value={data.children.length}
             iconName="Users"
             iconColor="text-blue-500"
           />
           <MetricCard
-            title="Attendance"
+            title={dashDict.metrics?.attendance || "Attendance"}
             value={`${data.attendanceSummary.percentage.toFixed(0)}%`}
-            description={`${data.attendanceSummary.presentDays}/${data.attendanceSummary.totalDays} days`}
+            description={`${data.attendanceSummary.presentDays}/${data.attendanceSummary.totalDays} ${dashDict.labels?.days || "days"}`}
             iconName="Calendar"
             iconColor={
               data.attendanceSummary.percentage >= 85
@@ -267,7 +331,7 @@ export async function ParentDashboard({
             href={`/${locale}/s/${school?.domain}/attendance`}
           />
           <MetricCard
-            title="Pending Tasks"
+            title={dashDict.metrics?.pendingTasks || "Pending Tasks"}
             value={pendingAssignments}
             iconName="FileText"
             iconColor={
@@ -276,7 +340,7 @@ export async function ParentDashboard({
             href={`/${locale}/s/${school?.domain}/assignments`}
           />
           <MetricCard
-            title="Announcements"
+            title={dashDict.metrics?.announcements || "Announcements"}
             value={data.announcements.length}
             iconName="Bell"
             iconColor="text-orange-500"
@@ -290,7 +354,9 @@ export async function ParentDashboard({
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="text-primary h-4 w-4" />
-                <span className="font-medium">Overall Attendance</span>
+                <span className="font-medium">
+                  {dashDict.sections?.overallAttendance || "Overall Attendance"}
+                </span>
               </div>
               <Badge
                 variant={
@@ -300,8 +366,8 @@ export async function ParentDashboard({
                 }
               >
                 {data.attendanceSummary.percentage >= 90
-                  ? "Excellent"
-                  : "Keep Going!"}
+                  ? dashDict.badges?.excellent || "Excellent"
+                  : dashDict.badges?.keepGoing || "Keep Going!"}
               </Badge>
             </div>
             <Progress
@@ -313,7 +379,10 @@ export async function ParentDashboard({
                 {data.attendanceSummary.presentDays}{" "}
                 {dashDict.labels.daysPresent}
               </span>
-              <span>Target: 90%</span>
+              <span>
+                {dashDict.labels?.target?.replace("{percent}", "90") ||
+                  "Target: 90%"}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -344,16 +413,17 @@ export async function ParentDashboard({
                       </div>
                       <Badge variant="outline">
                         {averageGrade >= 80
-                          ? "Excellent"
+                          ? dashDict.badges?.excellent || "Excellent"
                           : averageGrade >= 60
-                            ? "Good"
-                            : "Needs Attention"}
+                            ? dashDict.badges?.good || "Good"
+                            : dashDict.badges?.needsAttention ||
+                              "Needs Attention"}
                       </Badge>
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                          Attendance
+                          {dashDict.labels?.attendance || "Attendance"}
                         </p>
                         <div className="mt-1 flex items-center gap-2">
                           <Progress
@@ -367,17 +437,17 @@ export async function ParentDashboard({
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                          Avg Grade
+                          {dashDict.labels?.avgGrade || "Avg Grade"}
                         </p>
                         <p className="mt-1 text-lg font-bold">
                           {averageGrade > 0
                             ? `${averageGrade.toFixed(0)}%`
-                            : "N/A"}
+                            : dashDict.labels?.notAvailable || "N/A"}
                         </p>
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                          Tasks Due
+                          {dashDict.labels?.tasksDue || "Tasks Due"}
                         </p>
                         <p className="mt-1 text-lg font-bold">
                           {pendingAssignments}
@@ -390,14 +460,20 @@ export async function ParentDashboard({
                 <EmptyState
                   iconName="Users"
                   title={dashDict.labels.noChildren}
-                  description="Your children will appear here once enrolled"
+                  description={
+                    dashDict.emptyStates?.childrenDescription ||
+                    "Your children will appear here once enrolled"
+                  }
                 />
               )}
             </CardContent>
           </Card>
 
           {/* Activity Rings */}
-          <ActivityRings activities={activityData} title="Child Progress" />
+          <ActivityRings
+            activities={activityData}
+            title={dashDict.sections?.childProgress || "Child Progress"}
+          />
         </div>
 
         {/* Secondary Content Grid */}
@@ -413,7 +489,8 @@ export async function ParentDashboard({
                 href={`/${locale}/s/${school?.domain}/grades`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
-                View all <ChevronRight className="h-4 w-4" />
+                {dashDict.labels?.viewAll || "View all"}{" "}
+                <ChevronRight className="h-4 w-4" />
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -457,7 +534,10 @@ export async function ParentDashboard({
                 <EmptyState
                   iconName="Trophy"
                   title={dashDict.labels.noGrades}
-                  description="Grades will appear here after assessments"
+                  description={
+                    dashDict.emptyStates?.gradesDescription ||
+                    "Grades will appear here after assessments"
+                  }
                 />
               )}
             </CardContent>
@@ -473,7 +553,8 @@ export async function ParentDashboard({
               <Badge
                 variant={pendingAssignments > 0 ? "destructive" : "secondary"}
               >
-                {pendingAssignments} pending
+                {pendingAssignments}{" "}
+                {dashDict.labels?.pending?.toLowerCase() || "pending"}
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -514,12 +595,15 @@ export async function ParentDashboard({
                         </Badge>
                         <p className="text-muted-foreground mt-1 text-xs">
                           {isOverdue
-                            ? "Overdue"
+                            ? dashDict.dueStatus?.overdue || "Overdue"
                             : isDueToday
-                              ? "Due Today"
+                              ? dashDict.dueStatus?.dueToday || "Due Today"
                               : isDueTomorrow
-                                ? "Tomorrow"
-                                : `${daysUntil} days`}
+                                ? dashDict.dueStatus?.tomorrow || "Tomorrow"
+                                : dashDict.dueStatus?.daysRemaining?.replace(
+                                    "{count}",
+                                    String(daysUntil)
+                                  ) || `${daysUntil} days`}
                         </p>
                       </div>
                     </div>
@@ -529,7 +613,10 @@ export async function ParentDashboard({
                 <EmptyState
                   iconName="FileText"
                   title={dashDict.labels.noAssignments}
-                  description="All caught up!"
+                  description={
+                    dashDict.emptyStates?.assignmentsDescription ||
+                    "All caught up!"
+                  }
                 />
               )}
             </CardContent>
@@ -542,7 +629,9 @@ export async function ParentDashboard({
                 <Bell className="h-4 w-4" />
                 {dashDict.sections.announcements}
               </CardTitle>
-              <Badge variant="secondary">{data.announcements.length} new</Badge>
+              <Badge variant="secondary">
+                {data.announcements.length} {dashDict.labels?.new || "new"}
+              </Badge>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
@@ -554,7 +643,9 @@ export async function ParentDashboard({
                         key={announcement.id}
                         title={announcement.title}
                         content={
-                          announcement.body || "Click to view full announcement"
+                          announcement.body ||
+                          dashDict.emptyStates?.clickToView ||
+                          "Click to view full announcement"
                         }
                         date={announcement.createdAt}
                         priority={index === 0 ? "high" : "normal"}
@@ -565,7 +656,10 @@ export async function ParentDashboard({
                     <EmptyState
                       iconName="Bell"
                       title={dashDict.labels.noAnnouncements}
-                      description="New announcements will appear here"
+                      description={
+                        dashDict.emptyStates?.announcementsDescription ||
+                        "New announcements will appear here"
+                      }
                     />
                   </div>
                 )}
@@ -577,39 +671,45 @@ export async function ParentDashboard({
         {/* Grade Trend Chart */}
         <ComparisonLineChart
           data={gradeTrendData}
-          title="Academic Progress"
-          description="Your child's performance compared to last term"
-          currentLabel="This Term"
-          previousLabel="Last Term"
+          title={dashDict.sections?.academicProgress || "Academic Progress"}
+          description={
+            dashDict.charts?.performanceComparison ||
+            "Your child's performance compared to last term"
+          }
+          currentLabel={dashDict.charts?.thisTerm || "This Term"}
+          previousLabel={dashDict.charts?.lastTerm || "Last Term"}
         />
 
         {/* Progress Cards */}
         <div className="grid gap-6 md:grid-cols-3">
           <ProgressCard
-            title="Attendance Goal"
+            title={dashDict.progressCards?.attendanceGoal || "Attendance Goal"}
             current={data.attendanceSummary.presentDays}
             total={data.attendanceSummary.totalDays}
-            unit="days"
+            unit={dashDict.labels?.days || "days"}
             iconName="Calendar"
             showPercentage
           />
           <ProgressCard
-            title="Assignments Completed"
+            title={
+              dashDict.progressCards?.assignmentsCompleted ||
+              "Assignments Completed"
+            }
             current={
               data.upcomingAssignments.filter(
                 (a) => a.status !== "NOT_SUBMITTED"
               ).length
             }
             total={data.upcomingAssignments.length || 1}
-            unit="tasks"
+            unit={dashDict.labels?.tasks || "tasks"}
             iconName="FileText"
             showPercentage
           />
           <ProgressCard
-            title="Term Progress"
+            title={dashDict.progressCards?.termProgress || "Term Progress"}
             current={12}
             total={16}
-            unit="weeks"
+            unit={dashDict.labels?.weeks || "weeks"}
             iconName="Clock"
             showPercentage
           />
@@ -625,13 +725,17 @@ export async function ParentDashboard({
       renderError instanceof Error ? renderError.stack : undefined
     console.error("[ParentDashboard] Error message:", errorMessage)
     console.error("[ParentDashboard] Error stack:", errorStack)
+    const errorDict = dictionary?.parentDashboard?.errors || {
+      renderError: "Dashboard Rendering Error",
+      renderErrorMessage: "An error occurred while rendering the dashboard.",
+    }
     return (
       <div className="space-y-6">
         <Card>
           <CardContent className="p-6">
-            <h3 className="mb-4">Dashboard Rendering Error</h3>
+            <h3 className="mb-4">{errorDict.renderError}</h3>
             <p className="text-muted-foreground mb-2">
-              An error occurred while rendering the dashboard.
+              {errorDict.renderErrorMessage}
             </p>
             <pre className="bg-muted max-h-40 overflow-auto rounded p-2 text-xs">
               {errorMessage}

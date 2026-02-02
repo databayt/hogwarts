@@ -473,7 +473,9 @@ export function StudentProfileContent({
         <PinnedItems
           items={pinnedItems || []}
           isOwner={isOwner}
-          onCustomize={() => console.log("Customize pins")}
+          onCustomize={() => {
+            // TODO: Open pinned items customization modal
+          }}
           dictionary={dictionary}
           lang={lang}
         />
@@ -483,7 +485,9 @@ export function StudentProfileContent({
           data={profileWithRealData.contributionData}
           dictionary={dictionary}
           lang={lang}
-          onDayClick={(date) => console.log("Day clicked:", date)}
+          onDayClick={() => {
+            // TODO: Navigate to day's attendance/activity details
+          }}
         />
 
         {/* Recent Activity - use real data if available */}
@@ -502,9 +506,9 @@ export function StudentProfileContent({
           }
           dictionary={dictionary}
           lang={lang}
-          onActivityClick={(activity) =>
-            console.log("Activity clicked:", activity)
-          }
+          onActivityClick={() => {
+            // TODO: Navigate to activity details
+          }}
           maxItems={10}
         />
 
@@ -569,11 +573,21 @@ export function StudentProfileContent({
           lang={lang}
           isOwner={isOwner}
           connectionStatus={isOwner ? undefined : "none"}
-          onEdit={() => console.log("Edit profile")}
-          onConnect={() => console.log("Connect")}
-          onMessage={() => console.log("Message")}
-          onShare={() => console.log("Share")}
-          onFollow={() => console.log("Follow")}
+          onEdit={() => {
+            // TODO: Open edit profile modal
+          }}
+          onConnect={() => {
+            // TODO: Send connection request
+          }}
+          onMessage={() => {
+            // TODO: Open message dialog
+          }}
+          onShare={() => {
+            // TODO: Open share dialog
+          }}
+          onFollow={() => {
+            // TODO: Toggle follow status
+          }}
         />
 
         {/* Main Content */}
@@ -591,11 +605,21 @@ export function StudentProfileContent({
         lang={lang}
         isOwner={isOwner}
         connectionStatus={isOwner ? undefined : "none"}
-        onEdit={() => console.log("Edit profile")}
-        onConnect={() => console.log("Connect")}
-        onMessage={() => console.log("Message")}
-        onShare={() => console.log("Share")}
-        onFollow={() => console.log("Follow")}
+        onEdit={() => {
+          // TODO: Open edit profile modal
+        }}
+        onConnect={() => {
+          // TODO: Send connection request
+        }}
+        onMessage={() => {
+          // TODO: Open message dialog
+        }}
+        onShare={() => {
+          // TODO: Open share dialog
+        }}
+        onFollow={() => {
+          // TODO: Toggle follow status
+        }}
       >
         {tabsContent}
       </ProfileGitHubLayout>

@@ -1,11 +1,36 @@
 // Audit Log Model
+// NOTE: schoolId is optional to allow platform-level auditing by DEVELOPER role
+// For school-scoped actions, schoolId should always be provided
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String
-  schoolId  String?
+  schoolId  String?  // Optional for platform-level actions (DEVELOPER role)
   action    String
   reason    String?
   ip        String?
   userAgent String?
+
+  // Entity tracking for audit trail
+  entityType String? // "EXAM", "STUDENT", "GRADE", etc.
+  entityId   String?
+
+  // Value change tracking
+  previousValue String? @db.Text
+  newValue      String? @db.Text
+
+  // Metadata for additional context
+  metadata Json?
+
   createdAt DateTime @default(now())
+
+  // Relationships
+  school    School? @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  performer User    @relation("AuditPerformer", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([schoolId, userId])
+  @@index([schoolId, entityType, entityId])
+  @@index([schoolId, action])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

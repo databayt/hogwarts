@@ -18,6 +18,14 @@ export type ExamFormData = {
   examType: "MIDTERM" | "FINAL" | "QUIZ" | "TEST" | "PRACTICAL"
   instructions?: string
   forceCreate: boolean
+  // Proctoring settings
+  proctorMode: "NONE" | "BASIC" | "STANDARD" | "STRICT"
+  shuffleQuestions: boolean
+  shuffleOptions: boolean
+  maxAttempts: number
+  retakePenalty?: number
+  allowLateSubmit: boolean
+  lateSubmitMinutes: number
 }
 
 export type ExamDTO = {

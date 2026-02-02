@@ -134,6 +134,9 @@ model User {
   assignedLeads         Lead[]         @relation("LeadAssignment")
   leadActivitiesCreated LeadActivity[] @relation("LeadActivityCreator")
 
+  // Audit relations
+  auditLogs AuditLog[] @relation("AuditPerformer")
+
   // Profile relations (GitHub-style)
   userActivities UserActivity[]
   pinnedItems    PinnedItem[]

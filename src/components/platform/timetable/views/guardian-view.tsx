@@ -60,6 +60,9 @@ interface Child {
   photoUrl: string | null
   classId: string | undefined
   className: string | undefined
+  gradeName?: string | null
+  gradeNameAr?: string | null
+  isPrimary?: boolean
 }
 
 const DAY_NAMES = [
@@ -304,8 +307,14 @@ export default function GuardianView({
                 </Avatar>
                 <div className="text-start">
                   <p className="font-medium">{child.name}</p>
-                  {child.className && (
-                    <p className="text-xs opacity-80">{child.className}</p>
+                  {(child.gradeName || child.className) && (
+                    <p className="text-xs opacity-80">
+                      {isRTL
+                        ? child.gradeNameAr ||
+                          child.gradeName ||
+                          child.className
+                        : child.gradeName || child.className}
+                    </p>
                   )}
                 </div>
               </Button>
@@ -329,9 +338,15 @@ export default function GuardianView({
                 <h3 className="text-lg font-semibold">
                   {selectedChildData.name}
                 </h3>
-                {selectedChildData.className && (
+                {(selectedChildData.gradeName ||
+                  selectedChildData.className) && (
                   <p className="text-muted-foreground">
-                    Class: {selectedChildData.className}
+                    {isRTL
+                      ? selectedChildData.gradeNameAr ||
+                        selectedChildData.gradeName ||
+                        selectedChildData.className
+                      : selectedChildData.gradeName ||
+                        selectedChildData.className}
                   </p>
                 )}
               </div>

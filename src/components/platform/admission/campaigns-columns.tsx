@@ -50,9 +50,14 @@ const getStatusVariant = (status: string) => {
 
 export const getCampaignColumns = (
   dictionary: Dictionary["school"]["admission"],
-  locale: Locale
+  locale: Locale,
+  options?: {
+    onEdit?: (id: string) => void
+    onDelete?: (id: string) => void
+  }
 ): ColumnDef<CampaignRow>[] => {
   const t = dictionary
+  const { onEdit, onDelete } = options ?? {}
 
   return [
     {
@@ -163,13 +168,30 @@ export const getCampaignColumns = (
       cell: ({ row }) => {
         const campaign = row.original
         const router = useRouter()
+        const isRTL = locale === "ar"
 
-        const onView = () => {
+        const handleView = () => {
           router.push(`/admission/campaigns/${campaign.id}`)
         }
 
-        const onViewApplications = () => {
+        const handleViewApplications = () => {
           router.push(`/admission/applications?campaignId=${campaign.id}`)
+        }
+
+        const handleEdit = () => {
+          onEdit?.(campaign.id)
+        }
+
+        const handleDelete = () => {
+          if (
+            window.confirm(
+              isRTL
+                ? "هل أنت متأكد من حذف هذه الحملة؟"
+                : "Are you sure you want to delete this campaign?"
+            )
+          ) {
+            onDelete?.(campaign.id)
+          }
         }
 
         return (
@@ -185,14 +207,22 @@ export const getCampaignColumns = (
                 {t?.columns?.actions || "Actions"}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onView}>
+              <DropdownMenuItem onClick={handleView}>
                 {t?.campaigns?.overview || "View Details"}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onViewApplications}>
+              <DropdownMenuItem onClick={handleViewApplications}>
                 {t?.campaigns?.viewAllApplications || "View Applications"}
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleEdit}>
                 {t?.campaigns?.editCampaign || "Edit"}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleDelete}
+                className="text-destructive focus:text-destructive"
+                disabled={campaign.applicationsCount > 0}
+              >
+                {isRTL ? "حذف" : "Delete"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

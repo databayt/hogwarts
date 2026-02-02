@@ -6,6 +6,59 @@ import type { UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
+// In-memory cache for subdomain-to-schoolId lookups
+// Uses Map with TTL for efficient repeated lookups
+const subdomainCache = new Map<
+  string,
+  { schoolId: string | null; expiresAt: number }
+>()
+const CACHE_TTL_MS = 60 * 1000 // 1 minute cache
+
+/**
+ * Get schoolId from subdomain with caching
+ * Uses in-memory cache to avoid repeated DB lookups
+ */
+async function getSchoolIdFromSubdomain(
+  subdomain: string
+): Promise<string | null> {
+  const now = Date.now()
+  const cached = subdomainCache.get(subdomain)
+
+  // Return cached value if not expired
+  if (cached && cached.expiresAt > now) {
+    return cached.schoolId
+  }
+
+  // Lookup in database
+  try {
+    const school = await db.school.findUnique({
+      where: { domain: subdomain },
+      select: { id: true },
+    })
+    const schoolId = school?.id ?? null
+
+    // Cache the result
+    subdomainCache.set(subdomain, {
+      schoolId,
+      expiresAt: now + CACHE_TTL_MS,
+    })
+
+    // Cleanup old entries periodically (when cache grows large)
+    if (subdomainCache.size > 100) {
+      for (const [key, value] of subdomainCache) {
+        if (value.expiresAt < now) {
+          subdomainCache.delete(key)
+        }
+      }
+    }
+
+    return schoolId
+  } catch (error) {
+    // Don't cache errors - allow retry
+    return null
+  }
+}
+
 /**
  * Tenant Context Resolution
  *
@@ -53,23 +106,11 @@ export async function getTenantContext(): Promise<TenantContext> {
 
     // Priority 2: Subdomain from middleware header → resolve to schoolId via DB lookup
     // The x-subdomain header contains raw domain (e.g., "acme"), but queries need schoolId
+    // Uses cached lookup to avoid repeated DB queries
     let headerSchoolId: string | null = null
     const subdomain = hdrs.get("x-subdomain")
     if (subdomain) {
-      try {
-        // TODO(perf): Cache this lookup - runs on every request
-        const school = await db.school.findUnique({
-          where: { domain: subdomain },
-        })
-        headerSchoolId = school?.id ?? null
-      } catch (error) {
-        console.error(
-          "[getTenantContext] Failed to resolve subdomain:",
-          subdomain,
-          error
-        )
-        headerSchoolId = null
-      }
+      headerSchoolId = await getSchoolIdFromSubdomain(subdomain)
     }
 
     // Priority 3: Session schoolId (from JWT after auth)

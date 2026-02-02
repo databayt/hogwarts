@@ -52,8 +52,12 @@ const courseFormSchema = z.object({
 
 type CourseFormValues = z.infer<typeof courseFormSchema>
 
+// Dictionary type for course form - uses Record to allow for full dictionary pass-through
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DictionaryType = Record<string, unknown> | null
+
 interface StreamCourseFormProps {
-  dictionary: any
+  dictionary: DictionaryType
   lang: string
   categories?: Array<{ id: string; name: string }>
   onSuccess?: () => void
@@ -89,7 +93,10 @@ export function StreamCourseForm({
     : undefined
   const isEdit = !!currentId && !isView
 
-  const t = dictionary?.stream?.courseForm ?? {
+  // Type-safe dictionary access with fallback
+  const streamDict = (dictionary as Record<string, Record<string, unknown>>)
+    ?.stream as Record<string, unknown> | undefined
+  const t = (streamDict?.courseForm as Record<string, string>) ?? {
     createCourse: "Create Course",
     editCourse: "Edit Course",
     viewCourse: "View Course",

@@ -1,24 +1,19 @@
-import { SearchParams } from "nuqs/server"
-
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import TimetableTemplatesContent from "@/components/platform/timetable/templates/content"
+import { TemplatesContent } from "@/components/platform/timetable/templates/content"
 
 export const metadata = { title: "Dashboard: Timetable Templates" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
-  searchParams: Promise<SearchParams>
 }
 
-export default async function Page({ params, searchParams }: Props) {
+export default async function Page({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return (
-    <TimetableTemplatesContent
-      searchParams={searchParams}
-      dictionary={dictionary.school}
-    />
-  )
+  // TODO: Get termId from active term context
+  const termId = ""
+
+  return <TemplatesContent dictionary={dictionary.school} termId={termId} />
 }

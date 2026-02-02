@@ -46,10 +46,36 @@ interface LessonFormProps {
   }
   courseId: string
   chapterId: string
+  dictionary?: any
 }
 
-export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
+export function LessonForm({
+  data,
+  courseId,
+  chapterId,
+  dictionary,
+}: LessonFormProps) {
   const [isPending, setIsPending] = useState(false)
+
+  // Get stream dictionary with fallbacks
+  const t = dictionary?.stream?.courses?.lesson || {
+    pageTitle: "Edit Lesson",
+    cardTitle: "Lesson Details",
+    cardDescription: "Update the lesson information and content",
+    title: "Lesson Title",
+    titlePlaceholder: "Enter lesson title",
+    description: "Description",
+    descriptionPlaceholder: "Enter lesson description",
+    video: "Lesson Video",
+    videoDescription:
+      "Upload MP4, WebM, or MOV. Max 2GB for Vercel Blob, up to 5GB with S3.",
+    duration: "Duration (minutes)",
+    durationPlaceholder: "Enter duration",
+    saving: "Saving...",
+    saveButton: "Save Changes",
+    success: "Lesson updated successfully!",
+    error: "Failed to update lesson",
+  }
 
   const form = useForm<CreateLessonInput>({
     resolver: zodResolver(createLessonSchema),
@@ -75,12 +101,12 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
       })
 
       if (result.status === "success") {
-        toast.success("Lesson updated successfully!")
+        toast.success(t.success)
       } else {
-        toast.error(result.message || "Failed to update lesson")
+        toast.error(result.message || t.error)
       }
     } catch (error) {
-      toast.error("Failed to update lesson")
+      toast.error(t.error)
     } finally {
       setIsPending(false)
     }
@@ -98,15 +124,13 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
         >
           <Icons.arrowLeft className="size-4" />
         </Link>
-        <h2>Edit Lesson</h2>
+        <h2>{t.pageTitle}</h2>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Lesson Details</CardTitle>
-          <CardDescription>
-            Update the lesson information and content
-          </CardDescription>
+          <CardTitle>{t.cardTitle}</CardTitle>
+          <CardDescription>{t.cardDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -116,9 +140,9 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lesson Title</FormLabel>
+                    <FormLabel>{t.title}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter lesson title" {...field} />
+                      <Input placeholder={t.titlePlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -130,10 +154,10 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{t.description}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter lesson description"
+                        placeholder={t.descriptionPlaceholder}
                         className="min-h-[120px]"
                         {...field}
                         value={field.value || ""}
@@ -149,7 +173,7 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
                 name="videoUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lesson Video</FormLabel>
+                    <FormLabel>{t.video}</FormLabel>
                     <FormControl>
                       <FileUpload
                         accept="video"
@@ -159,10 +183,7 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
                         disabled={isPending}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Upload MP4, WebM, or MOV. Max 2GB for Vercel Blob, up to
-                      5GB with S3.
-                    </FormDescription>
+                    <FormDescription>{t.videoDescription}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -173,11 +194,11 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duration (minutes)</FormLabel>
+                    <FormLabel>{t.duration}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder="Enter duration"
+                        placeholder={t.durationPlaceholder}
                         {...field}
                         value={field.value ?? ""}
                         onChange={(e) => {
@@ -195,12 +216,12 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
                 {isPending ? (
                   <>
                     <Icons.loader2 className="mr-2 size-4 animate-spin" />
-                    Saving...
+                    {t.saving}
                   </>
                 ) : (
                   <>
                     <Icons.save className="mr-2 size-4" />
-                    Save Changes
+                    {t.saveButton}
                   </>
                 )}
               </Button>

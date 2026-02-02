@@ -21,9 +21,9 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  const { lang } = await params
+  // Parallelize independent async operations to avoid request waterfalls
+  const [{ lang }, session] = await Promise.all([params, auth()])
   const dictionary = await getDictionary(lang)
-  const session = await auth()
 
   // Check permissions - only ADMIN and TEACHER can access analytics
   if (

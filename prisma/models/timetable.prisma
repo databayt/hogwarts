@@ -25,6 +25,9 @@ model Timetable {
   teacher   Teacher   @relation(fields: [teacherId], references: [id])
   classroom Classroom @relation(fields: [classroomId], references: [id])
 
+  // Substitution records where this slot is the original
+  substitutionRecords SubstitutionRecord[] @relation("OriginalSlot")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -280,4 +283,85 @@ model ScheduleException {
   @@index([schoolId, termId])
   @@index([schoolId, status])
   @@map("schedule_exceptions")
+}
+
+// ============================================================================
+// SUBSTITUTION MANAGEMENT
+// ============================================================================
+
+// Teacher absence record
+model TeacherAbsence {
+  id        String   @id @default(cuid())
+  schoolId  String
+  teacherId String
+
+  // Absence details
+  startDate   DateTime
+  endDate     DateTime
+  reason      String?  @db.Text
+  absenceType String // SICK, PERSONAL, TRAINING, EMERGENCY, OTHER
+  isAllDay    Boolean  @default(true)
+
+  // Status tracking
+  status     String   @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  approvedBy String?
+  approvedAt DateTime?
+
+  // Notification tracking
+  notifiedAt       DateTime?
+  notificationSent Boolean   @default(false)
+
+  // Relations
+  school              School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher             Teacher              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  substitutionRecords SubstitutionRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, teacherId])
+  @@index([schoolId, startDate, endDate])
+  @@index([schoolId, status])
+  @@map("teacher_absences")
+}
+
+// Substitution assignment for a specific timetable slot
+model SubstitutionRecord {
+  id        String @id @default(cuid())
+  schoolId  String
+  absenceId String // Link to TeacherAbsence
+
+  // Original slot info
+  originalSlotId    String
+  originalTeacherId String
+
+  // Substitute assignment
+  substituteTeacherId String
+  slotDate            DateTime
+
+  // Status
+  status    String   @default("PENDING") // PENDING, CONFIRMED, DECLINED, COMPLETED, CANCELLED
+  notes     String?  @db.Text
+  declineReason String?
+
+  // Notification tracking
+  notifiedAt         DateTime?
+  confirmedAt        DateTime?
+
+  // Relations
+  school             School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  absence            TeacherAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
+  originalSlot       Timetable      @relation("OriginalSlot", fields: [originalSlotId], references: [id])
+  originalTeacher    Teacher        @relation("OriginalTeacher", fields: [originalTeacherId], references: [id])
+  substituteTeacher  Teacher        @relation("SubstituteTeacher", fields: [substituteTeacherId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, originalSlotId, slotDate])
+  @@index([schoolId, absenceId])
+  @@index([schoolId, substituteTeacherId])
+  @@index([schoolId, slotDate])
+  @@index([schoolId, status])
+  @@map("substitution_records")
 }

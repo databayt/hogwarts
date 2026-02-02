@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useMemo } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
   CURRENCIES,
@@ -50,6 +51,7 @@ interface OnboardingFormProps {
   onBack?: () => void
   isSubmitting?: boolean
   showNavigation?: boolean
+  dictionary?: Dictionary["school"]
 }
 
 export function OnboardingForm({
@@ -59,7 +61,76 @@ export function OnboardingForm({
   onBack,
   isSubmitting = false,
   showNavigation = true,
+  dictionary,
 }: OnboardingFormProps) {
+  // Get form dictionary with fallbacks
+  const t = useMemo(
+    () =>
+      dictionary?.onboarding?.form || {
+        stepTitles: {
+          title: "School Name",
+          description: "School Description",
+          location: "School Location",
+          capacity: "School Capacity",
+          price: "Pricing Setup",
+        },
+        navigation: {
+          back: "Back",
+          continue: "Continue",
+        },
+        titleStep: {
+          label: "School Name",
+          placeholder: "Enter your school name",
+          description: "This will be displayed as your school's main title",
+        },
+        descriptionStep: {
+          label: "School Description",
+          placeholder: "Tell us about your school and what makes it special...",
+          description:
+            "Provide a brief overview of your school's mission and values",
+          levelLabel: "School Level",
+          levelPlaceholder: "Select level",
+          typeLabel: "School Type",
+          typePlaceholder: "Select type",
+        },
+        locationStep: {
+          addressLabel: "School Address",
+          addressPlaceholder: "Enter the full address of your school",
+          cityLabel: "City",
+          cityPlaceholder: "City",
+          stateLabel: "State/Province",
+          statePlaceholder: "State",
+          countryLabel: "Country",
+          countryPlaceholder: "Country",
+        },
+        capacityStep: {
+          maxStudentsLabel: "Maximum Students",
+          maxStudentsPlaceholder: "400",
+          maxStudentsDescription: "Total enrollment capacity",
+          maxTeachersLabel: "Maximum Teachers",
+          maxTeachersPlaceholder: "25",
+          maxTeachersDescription: "Total faculty capacity",
+          maxClassesLabel: "Maximum Classes",
+          maxClassesPlaceholder: "30",
+          maxClassesDescription: "Total number of classes/sections",
+        },
+        priceStep: {
+          currencyLabel: "Currency",
+          currencyPlaceholder: "Select currency",
+          scheduleLabel: "Payment Schedule",
+          schedulePlaceholder: "Select schedule",
+          tuitionLabel: "Tuition Fee",
+          tuitionPlaceholder: "15000",
+          tuitionDescription: "Annual tuition fee amount",
+          registrationLabel: "Registration Fee",
+          registrationPlaceholder: "500",
+          applicationLabel: "Application Fee",
+          applicationPlaceholder: "100",
+        },
+      },
+    [dictionary]
+  )
+
   const getValidationSchema = () => {
     switch (step) {
       case "title":
@@ -93,15 +164,15 @@ export function OnboardingForm({
   const renderStepContent = () => {
     switch (step) {
       case "title":
-        return <TitleStepForm form={form} />
+        return <TitleStepForm form={form} t={t.titleStep} />
       case "description":
-        return <DescriptionStepForm form={form} />
+        return <DescriptionStepForm form={form} t={t.descriptionStep} />
       case "location":
-        return <LocationStepForm form={form} />
+        return <LocationStepForm form={form} t={t.locationStep} />
       case "capacity":
-        return <CapacityStepForm form={form} />
+        return <CapacityStepForm form={form} t={t.capacityStep} />
       case "price":
-        return <PriceStepForm form={form} />
+        return <PriceStepForm form={form} t={t.priceStep} />
       default:
         return <div>Step content not implemented</div>
     }
@@ -111,11 +182,11 @@ export function OnboardingForm({
     <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
         <CardTitle>
-          {step === "title" && "School Name"}
-          {step === "description" && "School Description"}
-          {step === "location" && "School Location"}
-          {step === "capacity" && "School Capacity"}
-          {step === "price" && "Pricing Setup"}
+          {step === "title" && t.stepTitles?.title}
+          {step === "description" && t.stepTitles?.description}
+          {step === "location" && t.stepTitles?.location}
+          {step === "capacity" && t.stepTitles?.capacity}
+          {step === "price" && t.stepTitles?.price}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -135,7 +206,7 @@ export function OnboardingForm({
                     onClick={onBack}
                     disabled={isSubmitting}
                   >
-                    Back
+                    {t.navigation?.back || "Back"}
                   </Button>
                 )}
                 <Button
@@ -146,7 +217,7 @@ export function OnboardingForm({
                   {isSubmitting && (
                     <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
                   )}
-                  Continue
+                  {t.navigation?.continue || "Continue"}
                 </Button>
               </div>
             )}
@@ -158,23 +229,24 @@ export function OnboardingForm({
 }
 
 // Individual step form components
-function TitleStepForm({ form }: { form: any }) {
+function TitleStepForm({ form, t }: { form: any; t: any }) {
   return (
     <FormField
       control={form.control}
       name="name"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>School Name *</FormLabel>
+          <FormLabel>{t?.label || "School Name"} *</FormLabel>
           <FormControl>
             <Input
-              placeholder="Enter your school name"
+              placeholder={t?.placeholder || "Enter your school name"}
               {...field}
               className="text-lg"
             />
           </FormControl>
           <FormDescription>
-            This will be displayed as your school's main title
+            {t?.description ||
+              "This will be displayed as your school's main title"}
           </FormDescription>
           <FormMessage />
         </FormItem>
@@ -183,7 +255,7 @@ function TitleStepForm({ form }: { form: any }) {
   )
 }
 
-function DescriptionStepForm({ form }: { form: any }) {
+function DescriptionStepForm({ form, t }: { form: any; t: any }) {
   return (
     <div className="space-y-6">
       <FormField
@@ -191,16 +263,20 @@ function DescriptionStepForm({ form }: { form: any }) {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>School Description *</FormLabel>
+            <FormLabel>{t?.label || "School Description"} *</FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Tell us about your school and what makes it special..."
+                placeholder={
+                  t?.placeholder ||
+                  "Tell us about your school and what makes it special..."
+                }
                 className="min-h-[120px]"
                 {...field}
               />
             </FormControl>
             <FormDescription>
-              Provide a brief overview of your school's mission and values
+              {t?.description ||
+                "Provide a brief overview of your school's mission and values"}
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -213,11 +289,13 @@ function DescriptionStepForm({ form }: { form: any }) {
           name="schoolLevel"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>School Level</FormLabel>
+              <FormLabel>{t?.levelLabel || "School Level"}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select level" />
+                    <SelectValue
+                      placeholder={t?.levelPlaceholder || "Select level"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -243,11 +321,13 @@ function DescriptionStepForm({ form }: { form: any }) {
           name="schoolType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>School Type</FormLabel>
+              <FormLabel>{t?.typeLabel || "School Type"}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue
+                      placeholder={t?.typePlaceholder || "Select type"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -272,7 +352,7 @@ function DescriptionStepForm({ form }: { form: any }) {
   )
 }
 
-function LocationStepForm({ form }: { form: any }) {
+function LocationStepForm({ form, t }: { form: any; t: any }) {
   return (
     <div className="space-y-6">
       <FormField
@@ -280,10 +360,13 @@ function LocationStepForm({ form }: { form: any }) {
         name="address"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>School Address *</FormLabel>
+            <FormLabel>{t?.addressLabel || "School Address"} *</FormLabel>
             <FormControl>
               <Input
-                placeholder="Enter the full address of your school"
+                placeholder={
+                  t?.addressPlaceholder ||
+                  "Enter the full address of your school"
+                }
                 {...field}
               />
             </FormControl>
@@ -298,9 +381,9 @@ function LocationStepForm({ form }: { form: any }) {
           name="city"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>City *</FormLabel>
+              <FormLabel>{t?.cityLabel || "City"} *</FormLabel>
               <FormControl>
-                <Input placeholder="City" {...field} />
+                <Input placeholder={t?.cityPlaceholder || "City"} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -312,9 +395,12 @@ function LocationStepForm({ form }: { form: any }) {
           name="state"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>State/Province *</FormLabel>
+              <FormLabel>{t?.stateLabel || "State/Province"} *</FormLabel>
               <FormControl>
-                <Input placeholder="State" {...field} />
+                <Input
+                  placeholder={t?.statePlaceholder || "State"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -326,9 +412,12 @@ function LocationStepForm({ form }: { form: any }) {
           name="country"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Country</FormLabel>
+              <FormLabel>{t?.countryLabel || "Country"}</FormLabel>
               <FormControl>
-                <Input placeholder="Country" {...field} />
+                <Input
+                  placeholder={t?.countryPlaceholder || "Country"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -339,7 +428,7 @@ function LocationStepForm({ form }: { form: any }) {
   )
 }
 
-function CapacityStepForm({ form }: { form: any }) {
+function CapacityStepForm({ form, t }: { form: any; t: any }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -348,20 +437,24 @@ function CapacityStepForm({ form }: { form: any }) {
           name="maxStudents"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Maximum Students *</FormLabel>
+              <FormLabel>
+                {t?.maxStudentsLabel || "Maximum Students"} *
+              </FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min="1"
                   max="10000"
-                  placeholder="400"
+                  placeholder={t?.maxStudentsPlaceholder || "400"}
                   {...field}
                   onChange={(e) =>
                     field.onChange(parseInt(e.target.value) || 0)
                   }
                 />
               </FormControl>
-              <FormDescription>Total enrollment capacity</FormDescription>
+              <FormDescription>
+                {t?.maxStudentsDescription || "Total enrollment capacity"}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -372,20 +465,24 @@ function CapacityStepForm({ form }: { form: any }) {
           name="maxTeachers"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Maximum Teachers *</FormLabel>
+              <FormLabel>
+                {t?.maxTeachersLabel || "Maximum Teachers"} *
+              </FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min="1"
                   max="1000"
-                  placeholder="25"
+                  placeholder={t?.maxTeachersPlaceholder || "25"}
                   {...field}
                   onChange={(e) =>
                     field.onChange(parseInt(e.target.value) || 0)
                   }
                 />
               </FormControl>
-              <FormDescription>Total faculty capacity</FormDescription>
+              <FormDescription>
+                {t?.maxTeachersDescription || "Total faculty capacity"}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -397,18 +494,20 @@ function CapacityStepForm({ form }: { form: any }) {
         name="maxClasses"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Maximum Classes</FormLabel>
+            <FormLabel>{t?.maxClassesLabel || "Maximum Classes"}</FormLabel>
             <FormControl>
               <Input
                 type="number"
                 min="1"
                 max="500"
-                placeholder="30"
+                placeholder={t?.maxClassesPlaceholder || "30"}
                 {...field}
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
               />
             </FormControl>
-            <FormDescription>Total number of classes/sections</FormDescription>
+            <FormDescription>
+              {t?.maxClassesDescription || "Total number of classes/sections"}
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -417,7 +516,7 @@ function CapacityStepForm({ form }: { form: any }) {
   )
 }
 
-function PriceStepForm({ form }: { form: any }) {
+function PriceStepForm({ form, t }: { form: any; t: any }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -426,11 +525,13 @@ function PriceStepForm({ form }: { form: any }) {
           name="currency"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Currency *</FormLabel>
+              <FormLabel>{t?.currencyLabel || "Currency"} *</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select currency" />
+                    <SelectValue
+                      placeholder={t?.currencyPlaceholder || "Select currency"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -451,11 +552,13 @@ function PriceStepForm({ form }: { form: any }) {
           name="paymentSchedule"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Payment Schedule *</FormLabel>
+              <FormLabel>{t?.scheduleLabel || "Payment Schedule"} *</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select schedule" />
+                    <SelectValue
+                      placeholder={t?.schedulePlaceholder || "Select schedule"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -483,20 +586,22 @@ function PriceStepForm({ form }: { form: any }) {
           name="tuitionFee"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tuition Fee *</FormLabel>
+              <FormLabel>{t?.tuitionLabel || "Tuition Fee"} *</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="15000"
+                  placeholder={t?.tuitionPlaceholder || "15000"}
                   {...field}
                   onChange={(e) =>
                     field.onChange(parseFloat(e.target.value) || 0)
                   }
                 />
               </FormControl>
-              <FormDescription>Annual tuition fee amount</FormDescription>
+              <FormDescription>
+                {t?.tuitionDescription || "Annual tuition fee amount"}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -508,13 +613,15 @@ function PriceStepForm({ form }: { form: any }) {
             name="registrationFee"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Registration Fee</FormLabel>
+                <FormLabel>
+                  {t?.registrationLabel || "Registration Fee"}
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="500"
+                    placeholder={t?.registrationPlaceholder || "500"}
                     {...field}
                     onChange={(e) =>
                       field.onChange(parseFloat(e.target.value) || 0)
@@ -531,13 +638,15 @@ function PriceStepForm({ form }: { form: any }) {
             name="applicationFee"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Application Fee</FormLabel>
+                <FormLabel>
+                  {t?.applicationLabel || "Application Fee"}
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="100"
+                    placeholder={t?.applicationPlaceholder || "100"}
                     {...field}
                     onChange={(e) =>
                       field.onChange(parseFloat(e.target.value) || 0)

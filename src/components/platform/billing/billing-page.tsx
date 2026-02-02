@@ -146,16 +146,15 @@ export function BillingPage({
   }
 
   const handleEditBillingAddress = () => {
-    // Could open a dialog or navigate to a form
-    console.log("Edit billing address")
+    // TODO: Open dialog or navigate to billing address form
   }
 
   const handleDownloadInvoice = (invoiceId: string) => {
     // Find the invoice - PDF URL would be fetched from Stripe separately
     const invoice = invoices.find((inv) => inv.id === invoiceId)
     if (invoice?.stripeInvoiceId) {
-      // In a real implementation, this would call Stripe API to get the PDF URL
-      console.log("Download invoice:", invoice.stripeInvoiceId)
+      // TODO: Call Stripe API to get the PDF URL and download
+      void invoice.stripeInvoiceId
     }
   }
 
@@ -175,7 +174,8 @@ export function BillingPage({
     method: PaymentMethod,
     data: PaymentFormData
   ) => {
-    console.log("Payment method selected:", method, data)
+    // TODO: Handle payment method selection
+    void { method, data }
   }
 
   const handlePay = async (data: {
@@ -183,19 +183,19 @@ export function BillingPage({
     expiry: string
     cvc: string
   }) => {
-    // This would integrate with Stripe or your payment processor
-    console.log("Processing payment:", data)
+    // TODO: Integrate with Stripe or payment processor
+    void data
     // Simulate payment processing
     await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   const handleSettingsChange = (settings: Record<string, unknown>) => {
-    console.log("Settings changed:", settings)
+    // TODO: Handle settings change
+    void settings
   }
 
   const handleSaveSettings = () => {
-    console.log("Saving settings...")
-    // This would call updateBillingPreferences action
+    // TODO: Call updateBillingPreferences action
   }
 
   return (

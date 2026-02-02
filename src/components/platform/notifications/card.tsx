@@ -127,6 +127,12 @@ export function NotificationCard({
           isDeleting && "pointer-events-none scale-95 opacity-50"
         )}
         onClick={handleClick}
+        role="article"
+        aria-label={`${
+          notification.read
+            ? dictionary.accessibility.readNotification
+            : dictionary.accessibility.unreadNotification
+        }: ${notification.title}`}
       >
         <div className="flex gap-3">
           {/* Icon */}

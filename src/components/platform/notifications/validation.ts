@@ -33,6 +33,7 @@
  * - Target: By role (all admins) or class (period 2 math) enables scalability
  */
 
+import { UserRole } from "@prisma/client"
 import { z } from "zod"
 
 // Notification type enum validation
@@ -58,6 +59,8 @@ export const notificationTypeSchema = z.enum([
   "login_alert",
   "document_shared",
   "report_ready",
+  "absence_intention",
+  "absence_intention_decision",
 ])
 
 export const notificationPrioritySchema = z.enum([
@@ -136,7 +139,7 @@ export const createNotificationBatchSchema = z
       .min(1, "Title is required")
       .max(255, "Title must be less than 255 characters"),
     body: z.string().min(1, "Body is required"),
-    targetRole: z.string().optional(),
+    targetRole: z.nativeEnum(UserRole).optional(),
     targetClassId: z.string().optional(),
     targetUserIds: z.array(z.string()).optional(),
     scheduledFor: z.string().datetime().optional().or(z.literal("")),

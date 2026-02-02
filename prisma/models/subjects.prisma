@@ -79,6 +79,10 @@ model Class {
   // Enhanced Attendance relations
   attendanceSessions AttendanceSession[]
   qrCodeSessions     QRCodeSession[]
+  hallPasses         HallPass[]
+
+  // Gamification relations
+  competitionEntries ClassCompetitionEntry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

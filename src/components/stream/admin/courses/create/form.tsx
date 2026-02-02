@@ -51,6 +51,24 @@ export function StreamCourseCreateForm({
   const { subdomain } = useParams<{ subdomain: string }>()
   const triggerConfetti = useConfetti()
 
+  // Get stream dictionary with fallbacks
+  const t = dictionary?.stream?.courses?.create || {
+    pageTitle: "Create Course",
+    cardTitle: "Basic Information",
+    cardDescription: "Provide basic information about the course",
+    title: "Title",
+    titlePlaceholder: "Course title",
+    description: "Description",
+    descriptionPlaceholder: "Course description",
+    coverImage: "Cover Image",
+    price: "Price ($)",
+    pricePlaceholder: "Price",
+    creating: "Creating...",
+    createButton: "Create Course",
+    success: "Course created successfully!",
+    error: "Failed to create course",
+  }
+
   const form = useForm<CreateCourseInput>({
     resolver: zodResolver(createCourseSchema),
     defaultValues: {
@@ -78,12 +96,12 @@ export function StreamCourseCreateForm({
       )
 
       if (error) {
-        toast.error(error.message || "Failed to create course")
+        toast.error(error.message || t.error)
         return
       }
 
       if (result?.success) {
-        toast.success("Course created successfully!")
+        toast.success(t.success)
         triggerConfetti()
         form.reset()
         router.push(`/stream/admin/courses`)
@@ -103,15 +121,13 @@ export function StreamCourseCreateForm({
         >
           <Icons.arrowLeft className="size-4" />
         </Link>
-        <h2>Create Course</h2>
+        <h2>{t.pageTitle}</h2>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-          <CardDescription>
-            Provide basic information about the course
-          </CardDescription>
+          <CardTitle>{t.cardTitle}</CardTitle>
+          <CardDescription>{t.cardDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -121,9 +137,9 @@ export function StreamCourseCreateForm({
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>{t.title}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Course title" {...field} />
+                      <Input placeholder={t.titlePlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -135,12 +151,12 @@ export function StreamCourseCreateForm({
                 name="description"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{t.description}</FormLabel>
                     <FormControl>
                       <RichTextEditor
                         value={field.value || ""}
                         onChange={field.onChange}
-                        placeholder="Course description"
+                        placeholder={t.descriptionPlaceholder}
                         disabled={pending}
                       />
                     </FormControl>
@@ -154,7 +170,7 @@ export function StreamCourseCreateForm({
                 name="imageUrl"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Cover Image</FormLabel>
+                    <FormLabel>{t.coverImage}</FormLabel>
                     <FormControl>
                       <FileUpload
                         accept="image"
@@ -174,10 +190,10 @@ export function StreamCourseCreateForm({
                 name="price"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Price ($)</FormLabel>
+                    <FormLabel>{t.price}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Price"
+                        placeholder={t.pricePlaceholder}
                         type="number"
                         {...field}
                         value={field.value ?? ""}
@@ -197,12 +213,12 @@ export function StreamCourseCreateForm({
               <Button type="submit" disabled={pending}>
                 {pending ? (
                   <>
-                    Creating...
+                    {t.creating}
                     <Icons.loader2 className="ml-1 size-4 animate-spin" />
                   </>
                 ) : (
                   <>
-                    Create Course <Icons.plus className="ml-1 size-4" />
+                    {t.createButton} <Icons.plus className="ml-1 size-4" />
                   </>
                 )}
               </Button>

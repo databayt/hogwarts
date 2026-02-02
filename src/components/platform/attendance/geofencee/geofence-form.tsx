@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { createCircularGeofence } from "./actions"
 import {
@@ -47,27 +48,42 @@ import {
 
 interface GeofenceFormProps {
   onSuccess?: () => void
+  dictionary?: Dictionary["school"]
 }
 
-const GEOFENCE_TYPES = [
-  { value: "SCHOOL_GROUNDS", label: "School Grounds (Main Campus)" },
-  { value: "CLASSROOM", label: "Classroom" },
-  { value: "BUS_ROUTE", label: "Bus Route" },
-  { value: "PLAYGROUND", label: "Playground" },
-  { value: "CAFETERIA", label: "Cafeteria" },
-  { value: "LIBRARY", label: "Library" },
-] as const
+type GeofenceZoneType =
+  | "SCHOOL_GROUNDS"
+  | "CLASSROOM"
+  | "BUS_ROUTE"
+  | "PLAYGROUND"
+  | "CAFETERIA"
+  | "LIBRARY"
 
-const PRESET_COLORS = [
-  { value: "#3b82f6", label: "Blue" },
-  { value: "#10b981", label: "Green" },
-  { value: "#f59e0b", label: "Orange" },
-  { value: "#ef4444", label: "Red" },
-  { value: "#8b5cf6", label: "Purple" },
-  { value: "#ec4899", label: "Pink" },
+const GEOFENCE_TYPE_VALUES: GeofenceZoneType[] = [
+  "SCHOOL_GROUNDS",
+  "CLASSROOM",
+  "BUS_ROUTE",
+  "PLAYGROUND",
+  "CAFETERIA",
+  "LIBRARY",
 ]
 
-export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
+type ColorKey = "blue" | "green" | "orange" | "red" | "purple" | "pink"
+
+const PRESET_COLORS: { value: string; key: ColorKey }[] = [
+  { value: "#3b82f6", key: "blue" },
+  { value: "#10b981", key: "green" },
+  { value: "#f59e0b", key: "orange" },
+  { value: "#ef4444", key: "red" },
+  { value: "#8b5cf6", key: "purple" },
+  { value: "#ec4899", key: "pink" },
+]
+
+export function GeofenceForm({ onSuccess, dictionary }: GeofenceFormProps) {
+  const t = dictionary?.attendance as Record<string, unknown> | undefined
+  const geofenceDict = t?.geofence as Record<string, unknown> | undefined
+  const formDict = t?.geofenceForm as Record<string, string> | undefined
+  const colorsDict = t?.colors as Record<string, string> | undefined
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -92,16 +108,26 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
       const result = await createCircularGeofence(data)
 
       if (result.success) {
-        toast.success("Geofence created successfully")
+        toast.success(
+          (t?.success as Record<string, string> | undefined)?.geofenceCreated ||
+            "Geofence created successfully"
+        )
         form.reset()
         setOpen(false)
         onSuccess?.()
       } else {
-        toast.error(result.error || "Failed to create geofence")
+        toast.error(
+          result.error ||
+            (t?.errors as Record<string, string> | undefined)?.serverError ||
+            "Failed to create geofence"
+        )
       }
     } catch (error) {
       console.error("Error creating geofence:", error)
-      toast.error("Failed to create geofence")
+      toast.error(
+        (t?.errors as Record<string, string> | undefined)?.serverError ||
+          "Failed to create geofence"
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -114,11 +140,15 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
         (position) => {
           form.setValue("centerLat", position.coords.latitude)
           form.setValue("centerLon", position.coords.longitude)
-          toast.success("Location set to current position")
+          toast.success(
+            formDict?.locationSetSuccess || "Location set to current position"
+          )
         },
         (error) => {
           console.error("Geolocation error:", error)
-          toast.error("Failed to get current location")
+          toast.error(
+            formDict?.locationError || "Failed to get current location"
+          )
         },
         {
           enableHighAccuracy: true,
@@ -126,21 +156,26 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
         }
       )
     } else {
-      toast.error("Geolocation not supported by your browser")
+      toast.error(
+        formDict?.geolocationNotSupported ||
+          "Geolocation not supported by your browser"
+      )
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Create Geofence</Button>
+        <Button>{formDict?.createGeofence || "Create Geofence"}</Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Geofence</DialogTitle>
+          <DialogTitle>
+            {formDict?.createNewGeofence || "Create New Geofence"}
+          </DialogTitle>
           <DialogDescription>
-            Define a circular area that will automatically mark attendance when
-            students enter
+            {formDict?.dialogDescription ||
+              "Define a circular area that will automatically mark attendance when students enter"}
           </DialogDescription>
         </DialogHeader>
 
@@ -152,15 +187,21 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Geofence Name *</FormLabel>
+                  <FormLabel>
+                    {formDict?.geofenceName || "Geofence Name"} *
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g., Main Campus, Math Building"
+                      placeholder={
+                        formDict?.geofenceNamePlaceholder ||
+                        "e.g., Main Campus, Math Building"
+                      }
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    A unique name to identify this geofence
+                    {formDict?.geofenceNameDescription ||
+                      "A unique name to identify this geofence"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -173,10 +214,15 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>
+                    {formDict?.description || "Description"}
+                  </FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Optional description..."
+                      placeholder={
+                        formDict?.descriptionPlaceholder ||
+                        "Optional description..."
+                      }
                       rows={2}
                       {...field}
                     />
@@ -192,27 +238,35 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Geofence Type *</FormLabel>
+                  <FormLabel>
+                    {formDict?.geofenceType || "Geofence Type"} *
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
+                        <SelectValue
+                          placeholder={formDict?.selectType || "Select type"}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {GEOFENCE_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
+                      {GEOFENCE_TYPE_VALUES.map((typeValue) => (
+                        <SelectItem key={typeValue} value={typeValue}>
+                          {(
+                            geofenceDict?.zoneType as
+                              | Record<string, string>
+                              | undefined
+                          )?.[typeValue] || typeValue}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    SCHOOL_GROUNDS type will trigger automatic attendance
-                    marking
+                    {formDict?.typeDescription ||
+                      "SCHOOL_GROUNDS type will trigger automatic attendance marking"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -226,12 +280,13 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                 name="centerLat"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Latitude *</FormLabel>
+                    <FormLabel>{formDict?.latitude || "Latitude"} *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.000001"
                         placeholder="24.7136"
+                        dir="ltr"
                         {...field}
                         onChange={(e) =>
                           field.onChange(parseFloat(e.target.value))
@@ -248,12 +303,15 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                 name="centerLon"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Longitude *</FormLabel>
+                    <FormLabel>
+                      {formDict?.longitude || "Longitude"} *
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.000001"
                         placeholder="46.6753"
+                        dir="ltr"
                         {...field}
                         onChange={(e) =>
                           field.onChange(parseFloat(e.target.value))
@@ -272,7 +330,7 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
               size="sm"
               onClick={handleUseCurrentLocation}
             >
-              Use Current Location
+              {formDict?.useCurrentLocation || "Use Current Location"}
             </Button>
 
             {/* Radius */}
@@ -281,7 +339,9 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
               name="radiusMeters"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Radius (meters) *</FormLabel>
+                  <FormLabel>
+                    {formDict?.radius || "Radius (meters)"} *
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -289,13 +349,14 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                       max={5000}
                       step={10}
                       placeholder="500"
+                      dir="ltr"
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value))}
                     />
                   </FormControl>
                   <FormDescription>
-                    Radius in meters (10m - 5000m). Larger radius covers more
-                    area.
+                    {formDict?.radiusDescription ||
+                      "Radius in meters (10m - 5000m). Larger radius covers more area."}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -308,7 +369,7 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
               name="color"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Map Color</FormLabel>
+                  <FormLabel>{formDict?.mapColor || "Map Color"}</FormLabel>
                   <div className="flex gap-2">
                     {PRESET_COLORS.map((color) => (
                       <button
@@ -321,7 +382,7 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                             field.value === color.value ? "#000" : color.value,
                         }}
                         onClick={() => field.onChange(color.value)}
-                        title={color.label}
+                        title={colorsDict?.[color.key] || color.key}
                       />
                     ))}
                     <FormControl>
@@ -329,7 +390,8 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                     </FormControl>
                   </div>
                   <FormDescription>
-                    Choose a color for this geofence on the map
+                    {formDict?.mapColorDescription ||
+                      "Choose a color for this geofence on the map"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -342,13 +404,13 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                 variant="outline"
                 onClick={() => setOpen(false)}
               >
-                Cancel
+                {formDict?.cancel || "Cancel"}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && (
                   <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create Geofence
+                {formDict?.createGeofence || "Create Geofence"}
               </Button>
             </DialogFooter>
           </form>

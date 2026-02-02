@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
+import { i18n } from "@/components/internationalization/config"
+import { sendCompletionEmail } from "@/components/stream/shared/email-service"
 
 type ApiResponse = {
   status: "success" | "error"
@@ -134,10 +137,10 @@ export async function markLessonComplete(
       })
 
       if (!existingCert) {
-        // Get course title for certificate
+        // Get course title and slug for certificate
         const course = await db.streamCourse.findUnique({
           where: { id: courseId },
-          select: { title: true },
+          select: { title: true, slug: true },
         })
 
         // Generate certificate
@@ -153,6 +156,36 @@ export async function markLessonComplete(
             completedAt: new Date(),
           },
         })
+
+        // Get user email and school name for completion email
+        const user = await db.user.findUnique({
+          where: { id: session.user.id },
+          select: { email: true, username: true },
+        })
+
+        const school = await db.school.findUnique({
+          where: { id: schoolId },
+          select: { name: true },
+        })
+
+        // Send completion email with certificate (fire and forget)
+        if (user?.email && course) {
+          const locale = i18n.defaultLocale
+          sendCompletionEmail({
+            to: user.email,
+            studentName: user.username || "Student",
+            courseTitle: course.title,
+            certificateUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/dashboard/${course.slug}/certificate`,
+            schoolName: school?.name || "School",
+            completionDate: new Date().toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+          }).catch((err) =>
+            console.error("Failed to send completion email:", err)
+          )
+        }
       }
     }
 

@@ -46,6 +46,11 @@ model Teacher {
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
 
+  // Substitution relations
+  absences              TeacherAbsence[]
+  originalSubstitutions SubstitutionRecord[] @relation("OriginalTeacher")
+  substituteAssignments SubstitutionRecord[] @relation("SubstituteTeacher")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

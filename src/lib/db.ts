@@ -33,6 +33,11 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.db = db
 
 // For debugging Prisma issues (simplified for Edge Runtime)
 export function debugPrismaEngine() {
+  // Only log in development
+  if (process.env.NODE_ENV !== "development") {
+    return { status: "ok", note: "Debug disabled in production" }
+  }
+
   try {
     console.log(
       "Prisma connection URL:",
