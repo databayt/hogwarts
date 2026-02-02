@@ -27,27 +27,28 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
 
   // Construct demo URL based on environment
   const getDemoUrl = () => {
-    // If demo URL is explicitly configured, use it
+    // Check if running on localhost using APP_URL (more reliable for local dev)
+    const appUrl = env.NEXT_PUBLIC_APP_URL || ""
+    const isLocalhost =
+      appUrl.includes("localhost") || appUrl.includes("127.0.0.1")
+
+    if (isLocalhost) {
+      // For localhost, use path-based routing (middleware rewrites /s/demo to demo subdomain)
+      return `${appUrl}/${lang || "en"}/s/demo/dashboard`
+    }
+
+    // If demo URL is explicitly configured for production, use it
     if (env.NEXT_PUBLIC_DEMO_URL) {
       return `${env.NEXT_PUBLIC_DEMO_URL}/${lang || "en"}`
     }
 
-    // Fallback to constructing from root domain for local development
-    const rootDomain = env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000"
-    const isLocal = rootDomain.includes("localhost")
-    const protocol = isLocal ? "http" : "https"
-
-    if (isLocal) {
-      // For localhost, keep the current behavior
-      return `${protocol}://demo.${rootDomain}/${lang || "en"}`
-    }
-
-    // For production domains, extract base domain (e.g., ed.databayt.org -> databayt.org)
+    // Fallback: construct from root domain for production
+    const rootDomain = env.NEXT_PUBLIC_ROOT_DOMAIN || "databayt.org"
     const parts = rootDomain.split(".")
     const baseDomain =
       parts.length >= 2 ? parts.slice(-2).join(".") : rootDomain
 
-    return `${protocol}://demo.${baseDomain}/${lang || "en"}`
+    return `https://demo.${baseDomain}/${lang || "en"}`
   }
 
   // Split title by newlines to render each line as a block
