@@ -1,155 +1,37 @@
 ---
 title: "Team Workflow"
-description: "Professional collaboration practices for teams working on Next.js projects. Covers forking, branching, commits, pull requests, code review, preview deployments, and production releases."
+description: "Fork, branch, commit, and deploy—following shadcn/ui and Next.js standards."
 ---
 
-**How teams collaborate effectively on modern web projects.**
+Professional collaboration practices for Next.js projects.
 
-This guide documents professional workflows inspired by top repositories like [shadcn/ui](https://github.com/shadcn-ui/ui), [Next.js](https://github.com/vercel/next.js), and [React](https://github.com/facebook/react). Whether you're a solo developer or part of a large team, these practices ensure code quality, prevent conflicts, and streamline deployments.
+## Quick Start
 
-## Workflow Overview
+1. Fork the repository (GitHub UI)
+2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/hogwarts.git`
+3. Add upstream: `git remote add upstream https://github.com/databayt/hogwarts.git`
+4. Create branch: `git checkout -b feature/my-feature`
+5. Make changes and commit
+6. Push and create PR: `gh pr create`
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        COLLABORATIVE DEVELOPMENT FLOW                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│   1. FORK/CLONE          2. BRANCH           3. DEVELOP                     │
-│   ┌──────────┐          ┌──────────┐        ┌──────────┐                    │
-│   │  Fork    │ ───────► │ Feature  │ ─────► │  Code    │                    │
-│   │  Repo    │          │ Branch   │        │  + Test  │                    │
-│   └──────────┘          └──────────┘        └──────────┘                    │
-│                                                   │                          │
-│                                                   ▼                          │
-│   6. DEPLOY              5. MERGE            4. PR + REVIEW                 │
-│   ┌──────────┐          ┌──────────┐        ┌──────────┐                    │
-│   │Production│ ◄─────── │  Main    │ ◄───── │  Code    │                    │
-│   │ Release  │          │  Branch  │        │  Review  │                    │
-│   └──────────┘          └──────────┘        └──────────┘                    │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+## Workflow Types
 
-## Fork vs Branch Workflow
+| Workflow | Best For | Example |
+|----------|----------|---------|
+| Fork-based | External contributors | Open source PRs |
+| Branch-based | Internal team | Direct repo access |
 
-Choose your workflow based on team structure:
-
-| Workflow | Best For | Access Level | Use Case |
-|----------|----------|--------------|----------|
-| **Fork-based** | Open source, external contributors | No write access needed | Community contributions |
-| **Branch-based** | Internal teams | Direct write access | Core team development |
-| **Hybrid** | Mixed teams | Core team + external | Enterprise with contractors |
-
-### Fork-Based Workflow (Open Source Style)
-
-Used by shadcn/ui, React, and most open source projects:
+**Sync your fork:**
 
 ```bash
-# 1. Fork the repository (via GitHub UI)
-# Click "Fork" button on the repository page
-
-# 2. Clone your fork locally
-git clone https://github.com/YOUR-USERNAME/hogwarts.git
-cd hogwarts
-
-# 3. Add upstream remote (original repo)
-git remote add upstream https://github.com/databayt/hogwarts.git
-
-# 4. Verify remotes
-git remote -v
-# origin    https://github.com/YOUR-USERNAME/hogwarts.git (fetch)
-# origin    https://github.com/YOUR-USERNAME/hogwarts.git (push)
-# upstream  https://github.com/databayt/hogwarts.git (fetch)
-# upstream  https://github.com/databayt/hogwarts.git (push)
-```
-
-**Keeping your fork in sync:**
-
-```bash
-# Fetch upstream changes
 git fetch upstream
-
-# Merge upstream/main into your local main
-git checkout main
-git merge upstream/main
-
-# Push updated main to your fork
+git checkout main && git merge upstream/main
 git push origin main
 ```
 
-### Branch-Based Workflow (Team Style)
+## Branching
 
-Used by internal teams with direct repository access:
-
-```bash
-# Clone the repository directly
-git clone https://github.com/databayt/hogwarts.git
-cd hogwarts
-
-# Create feature branch from main
-git checkout main
-git pull origin main
-git checkout -b feature/add-student-export
-```
-
-## Local Development Setup
-
-### Prerequisites
-
-```bash
-# Required tools
-node --version    # v20.x or higher
-pnpm --version    # v9.x (required for Vercel)
-git --version     # v2.x or higher
-```
-
-### Initial Setup
-
-```bash
-# 1. Clone repository (or your fork)
-git clone https://github.com/databayt/hogwarts.git
-cd hogwarts
-
-# 2. Install dependencies (ALWAYS use pnpm)
-pnpm install
-
-# 3. Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your values
-
-# 4. Generate Prisma client
-pnpm prisma generate
-
-# 5. Seed database (optional, for test data)
-pnpm db:seed
-
-# 6. Start development server
-pnpm dev
-
-# 7. Open in browser
-# https://localhost:3000
-```
-
-### Environment Configuration
-
-```bash
-# Required environment variables
-DATABASE_URL="postgresql://..."
-NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="https://localhost:3000"
-
-# OAuth providers (optional)
-GOOGLE_CLIENT_ID="..."
-GOOGLE_CLIENT_SECRET="..."
-FACEBOOK_CLIENT_ID="..."
-FACEBOOK_CLIENT_SECRET="..."
-```
-
-## Branching Strategy
-
-### Branch Naming Convention
-
-Follow a consistent naming pattern:
+### Naming Convention
 
 ```
 <type>/<short-description>
@@ -161,628 +43,163 @@ Follow a consistent naming pattern:
 | `fix/` | Bug fixes | `fix/login-redirect` |
 | `docs/` | Documentation | `docs/api-reference` |
 | `refactor/` | Code improvements | `refactor/auth-flow` |
-| `test/` | Test additions | `test/attendance-api` |
-| `chore/` | Maintenance tasks | `chore/update-deps` |
+| `chore/` | Maintenance | `chore/update-deps` |
 
-**Examples:**
+### Rules
 
-```bash
-# Feature branches
-git checkout -b feature/add-bulk-import
-git checkout -b feature/attendance-reports
+1. Never commit directly to main
+2. Keep branches short-lived (merge within days)
+3. Delete branches after merge
+4. Rebase before PR: `git rebase origin/main`
 
-# Bug fix branches
-git checkout -b fix/guardian-linking-error
-git checkout -b fix/rtl-layout-overflow
+## Commits
 
-# Documentation branches
-git checkout -b docs/team-workflow-guide
-```
+Follow [Conventional Commits](https://www.conventionalcommits.org/).
 
-### Branch Lifecycle
-
-```
-main (protected)
-  │
-  ├── feature/student-export ────► PR ────► merge ────► delete branch
-  │
-  ├── fix/login-bug ────► PR ────► merge ────► delete branch
-  │
-  └── docs/api-guide ────► PR ────► merge ────► delete branch
-```
-
-**Rules:**
-
-1. **Never commit directly to main** — always use feature branches
-2. **Keep branches short-lived** — merge within days, not weeks
-3. **Delete branches after merge** — keeps repository clean
-4. **Rebase before PR** — maintain linear history
-
-### Protected Branches
-
-Configure branch protection in GitHub Settings:
-
-| Protection Rule | main | develop |
-|-----------------|------|---------|
-| Require PR before merge | ✅ | ✅ |
-| Require approvals | 1+ | 1+ |
-| Require status checks | ✅ | ✅ |
-| Require conversation resolution | ✅ | Optional |
-| Restrict force push | ✅ | ✅ |
-| Restrict deletions | ✅ | ✅ |
-
-## Commit Convention
-
-We follow [Conventional Commits](https://www.conventionalcommits.org/) — the same standard used by shadcn/ui, Angular, and Vue.
-
-### Commit Message Format
+### Format
 
 ```
 <type>(<scope>): <description>
-
-[optional body]
-
-[optional footer]
 ```
 
-### Commit Types
+### Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `feat` | New feature | `feat(students): add bulk import functionality` |
-| `fix` | Bug fix | `fix(auth): resolve session expiration issue` |
-| `docs` | Documentation | `docs(readme): update installation steps` |
-| `style` | Formatting (no code change) | `style(ui): fix button alignment` |
-| `refactor` | Code restructuring | `refactor(api): simplify error handling` |
-| `test` | Adding tests | `test(attendance): add unit tests for API` |
-| `chore` | Maintenance | `chore(deps): update dependencies` |
-| `ci` | CI/CD changes | `ci(github): add deployment workflow` |
-| `build` | Build system | `build(turbo): optimize cache config` |
-| `perf` | Performance | `perf(queries): add database indexes` |
+| Type | Description |
+|------|-------------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation |
+| `refactor` | Code restructuring |
+| `test` | Adding tests |
+| `chore` | Maintenance |
 
-### Scope Examples
-
-Use folder names as scopes:
+### Examples
 
 ```bash
-# Platform features
-feat(platform): add dashboard analytics
-fix(attendance): correct barcode scanning
-feat(finance): implement invoice generation
+# Good
+git commit -m "feat(students): add bulk import"
+git commit -m "fix(auth): resolve OAuth redirect loop"
 
-# UI components
-feat(ui): add date range picker
-fix(atom): resolve modal z-index issue
-
-# Infrastructure
-chore(prisma): update schema for new fields
-ci(vercel): configure preview deployments
-```
-
-### Good vs Bad Commits
-
-```bash
-# ❌ BAD - vague, no type, no scope
+# Bad
 git commit -m "fixed stuff"
 git commit -m "updates"
-git commit -m "WIP"
-
-# ✅ GOOD - clear, typed, scoped
-git commit -m "fix(auth): resolve OAuth callback redirect loop"
-git commit -m "feat(students): add CSV export with filtering"
-git commit -m "docs(api): document attendance endpoints"
 ```
 
-### Multi-line Commits
+## Pull Requests
 
-For complex changes, add a body:
-
-```bash
-git commit -m "feat(finance): implement recurring invoice generation
-
-- Add cron job for monthly invoice creation
-- Support custom billing cycles (weekly, monthly, yearly)
-- Include email notifications for due invoices
-- Add retry logic for failed payment processing
-
-Closes #234"
-```
-
-## Pull Request Best Practices
-
-### Before Creating a PR
+### Before Creating
 
 ```bash
-# 1. Sync with main
 git fetch origin main
 git rebase origin/main
-
-# 2. Run type check
-pnpm tsc --noEmit
-
-# 3. Run linter
-pnpm lint
-
-# 4. Run tests
-pnpm test
-
-# 5. Build successfully
-pnpm build
+pnpm tsc --noEmit && pnpm lint && pnpm test && pnpm build
 ```
 
-### PR Size Guidelines
+### Size Guidelines
 
-Keep PRs small and focused:
+| Size | Lines | Action |
+|------|-------|--------|
+| XS/S | 1-200 | Ideal |
+| M | 201-500 | Acceptable |
+| L+ | 500+ | Split the PR |
 
-| PR Size | Lines Changed | Review Time | Recommendation |
-|---------|---------------|-------------|----------------|
-| **XS** | 1-50 | 5-10 min | Ideal |
-| **S** | 51-200 | 15-30 min | Good |
-| **M** | 201-500 | 30-60 min | Acceptable |
-| **L** | 501-1000 | 1-2 hours | Split if possible |
-| **XL** | 1000+ | 2+ hours | Must split |
+Small PRs = faster reviews, fewer bugs, easier reverts.
 
-**Why small PRs?**
-
-- Faster reviews (20 min vs 2 hours)
-- Fewer bugs slip through
-- Easier to revert if needed
-- Less merge conflict risk
-- Clearer git history
-
-### PR Title Format
-
-Follow the same convention as commits:
+### Title Format
 
 ```
 <type>(<scope>): <description>
 ```
 
-**Examples:**
+Example: `feat(students): add bulk import with CSV validation`
 
-```
-feat(students): add bulk import with CSV validation
-fix(auth): resolve OAuth redirect loop on mobile
-docs(api): document attendance tracking endpoints
-refactor(finance): simplify invoice calculation logic
-```
-
-### PR Description Template
+### Description Template
 
 ```markdown
 ## Summary
-Brief description of what this PR does (1-3 sentences).
+Brief description (1-3 sentences).
 
 ## Changes
-- Added bulk import functionality for students
-- Implemented CSV validation with error reporting
-- Added progress indicator for large imports
-
-## Screenshots (if UI changes)
-| Before | After |
-|--------|-------|
-| ![before](url) | ![after](url) |
+- Change 1
+- Change 2
 
 ## Testing
-- [ ] Unit tests added/updated
-- [ ] E2E tests added/updated
-- [ ] Manually tested on localhost
-- [ ] Tested on mobile viewport
+- [ ] Unit tests added
+- [ ] Manually tested
 
-## Related Issues
 Closes #123
-Related to #456
-
-## Checklist
-- [ ] Code follows project conventions
-- [ ] Self-reviewed the code
-- [ ] Added/updated documentation
-- [ ] No console.log statements
-- [ ] TypeScript strict mode passes
 ```
 
-### Draft PRs
-
-Use draft PRs for work-in-progress:
-
-```bash
-# Create PR via GitHub CLI
-gh pr create --draft --title "feat(students): WIP bulk import" --body "Work in progress"
-
-# Mark ready for review when complete
-gh pr ready
-```
-
-**When to use drafts:**
-
-- Early feedback on approach
-- Complex features needing discussion
-- Showing progress on long-running work
-- Blocking accidental merges
-
-## Code Review Guidelines
+## Code Review
 
 ### For Authors
 
-1. **Self-review first** — catch obvious issues before requesting review
-2. **Keep PRs focused** — one feature or fix per PR
-3. **Write descriptive commits** — help reviewers understand changes
-4. **Respond promptly** — address feedback within 24 hours
-5. **Don't take it personally** — feedback improves the code, not criticizes you
+1. Self-review first
+2. Keep PRs focused
+3. Respond within 24 hours
+4. Don't take feedback personally
 
 ### For Reviewers
 
-1. **Review within 24 hours** — don't block teammates
-2. **Be constructive** — suggest improvements, don't criticize
-3. **Explain the "why"** — help authors learn
-4. **Use suggestions** — GitHub's suggestion feature for small fixes
-5. **Approve when ready** — don't nitpick endlessly
+1. Review within 24 hours
+2. Be constructive
+3. Explain the "why"
+4. Use GitHub suggestions for small fixes
 
-### Code Review Checklist
-
-```markdown
-## Functionality
-- [ ] Code does what the PR claims
-- [ ] Edge cases handled
-- [ ] Error handling appropriate
-
-## Code Quality
-- [ ] Follows project conventions
-- [ ] No code duplication
-- [ ] Functions are focused and small
-- [ ] Variable names are clear
-
-## Security
-- [ ] No hardcoded secrets
-- [ ] Input validation present
-- [ ] schoolId included in queries (multi-tenant)
-- [ ] No SQL injection risks
-
-## Performance
-- [ ] No N+1 queries
-- [ ] Appropriate use of indexes
-- [ ] No unnecessary re-renders
-
-## Testing
-- [ ] Tests cover happy path
-- [ ] Tests cover error cases
-- [ ] Tests are maintainable
-```
-
-### Review Comments
-
-**Prefixes for clarity:**
+### Comment Prefixes
 
 | Prefix | Meaning | Action Required |
 |--------|---------|-----------------|
-| `blocking:` | Must fix before merge | Yes |
-| `suggestion:` | Would be better, but optional | No |
+| `blocking:` | Must fix | Yes |
+| `suggestion:` | Optional improvement | No |
 | `question:` | Need clarification | Response needed |
-| `nit:` | Minor style/preference | No |
-| `praise:` | Good work! | No |
+| `nit:` | Minor preference | No |
 
-**Examples:**
+### Checklist
 
-```
-blocking: This query is missing schoolId, which breaks multi-tenant isolation.
+- [ ] Code does what PR claims
+- [ ] Edge cases handled
+- [ ] No hardcoded secrets
+- [ ] `schoolId` included in queries
+- [ ] Tests cover happy path and errors
 
-suggestion: Consider using useMemo here to prevent unnecessary recalculations.
+## Deployment
 
-question: Why did we choose to use server actions instead of API routes here?
+### Preview Deployments
 
-nit: Could rename this variable to be more descriptive.
-
-praise: Great job handling all the edge cases in this validation logic!
-```
-
-## Preview Deployments
-
-### Vercel Preview URLs
-
-Every PR automatically gets a preview deployment:
+Every PR gets a Vercel preview:
 
 ```
 https://hogwarts-<branch>-<team>.vercel.app
 ```
 
-**Benefits:**
+### Commands
 
-- Test changes in production-like environment
-- Share with stakeholders for feedback
-- Run E2E tests against preview
-- No risk to production
+| Command | Use Case |
+|---------|----------|
+| `push` | Full validation + deploy |
+| `/quick` | Skip build (small changes) |
+| `/ship production` | Production release |
 
-### Preview URL Patterns
+### Before Merge
 
-| Branch | Preview URL |
-|--------|-------------|
-| `feature/student-export` | `hogwarts-feature-student-export-team.vercel.app` |
-| `fix/login-bug` | `hogwarts-fix-login-bug-team.vercel.app` |
+- [ ] CI checks passing
+- [ ] Review approved
+- [ ] Preview tested
+- [ ] TypeScript errors: 0
 
-### Commenting Preview URLs
-
-GitHub bot automatically comments preview URL on PRs:
-
-```
-✅ Preview deployment ready!
-
-🔗 https://hogwarts-git-feature-export-databayt.vercel.app
-
-Built with commit abc1234
-```
-
-### Testing on Preview
-
-```bash
-# Run E2E tests against preview
-PLAYWRIGHT_BASE_URL=https://preview-url.vercel.app pnpm test:e2e
-
-# Or configure in playwright.config.ts
-baseURL: process.env.PLAYWRIGHT_BASE_URL || 'https://localhost:3000'
-```
-
-## Deployment Workflow
-
-### Environment Progression
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Feature    │     │   Staging    │     │  Production  │
-│   Branch     │ ──► │   (Preview)  │ ──► │   (Main)     │
-│              │     │              │     │              │
-│ Development  │     │   Testing    │     │    Live      │
-└──────────────┘     └──────────────┘     └──────────────┘
-```
-
-### Deployment Checklist
-
-Before merging to main:
-
-```markdown
-## Pre-Merge Checklist
-- [ ] All CI checks passing
-- [ ] Code review approved
-- [ ] Preview deployment tested
-- [ ] No TypeScript errors
-- [ ] No console warnings
-- [ ] Database migrations reviewed
-- [ ] Environment variables configured
-- [ ] Documentation updated
-```
-
-### Using the Push Command
-
-Our project includes a streamlined deployment command:
-
-```bash
-# Full deployment workflow
-push
-
-# This runs:
-# 1. TypeScript check (pnpm tsc --noEmit)
-# 2. Lint check (pnpm lint --fix)
-# 3. Build check (pnpm build)
-# 4. Show changes (git status)
-# 5. Commit (conventional commit)
-# 6. Push (git push)
-# 7. Show Vercel URL
-```
-
-### Quick Deployments
-
-For small, low-risk changes:
-
-```bash
-# Skip build validation (use sparingly)
-/quick
-
-# This runs:
-# 1. Lint fix
-# 2. Commit
-# 3. Push
-```
-
-### Production Releases
-
-```bash
-# Full production deployment
-/ship production
-
-# This runs:
-# 1. Full validation suite
-# 2. Test execution
-# 3. Build verification
-# 4. Deployment to production
-# 5. Health check monitoring
-```
-
-## Security Best Practices
-
-### Repository Security
-
-| Practice | Implementation |
-|----------|----------------|
-| Branch protection | Require PR reviews, status checks |
-| Secret scanning | Enable GitHub secret scanning |
-| Dependabot | Auto-update vulnerable dependencies |
-| 2FA | Require for all team members |
-| CODEOWNERS | Require specific reviewers for sensitive files |
-
-### CODEOWNERS File
-
-```
-# .github/CODEOWNERS
-
-# Security-sensitive files require security team review
-/src/auth.ts @security-team
-/src/middleware.ts @security-team
-/.env.example @security-team
-
-# Database changes require DBA review
-/prisma/ @database-team
-
-# UI components require design review
-/src/components/ui/ @design-team
-```
-
-### Secrets Management
-
-```bash
-# ❌ NEVER commit secrets
-.env
-.env.local
-*.pem
-credentials.json
-
-# ✅ Commit example files
-.env.example
-
-# ✅ Use environment variables in Vercel
-vercel env add DATABASE_URL production
-```
-
-## Workflow Summary
-
-### Daily Development Flow
-
-```bash
-# 1. Start your day - sync with main
-git checkout main
-git pull origin main
-
-# 2. Create feature branch
-git checkout -b feature/my-feature
-
-# 3. Make changes, commit frequently
-git add .
-git commit -m "feat(scope): description"
-
-# 4. Push and create PR
-git push -u origin feature/my-feature
-gh pr create
-
-# 5. Address review feedback
-git add .
-git commit -m "fix(scope): address review feedback"
-git push
-
-# 6. After approval, merge via GitHub UI
-# (or use gh pr merge)
-
-# 7. Clean up
-git checkout main
-git pull origin main
-git branch -d feature/my-feature
-```
-
-### Quick Reference Card
+## Quick Reference
 
 | Action | Command |
 |--------|---------|
 | Sync fork | `git fetch upstream && git merge upstream/main` |
 | New branch | `git checkout -b feature/name` |
 | Commit | `git commit -m "type(scope): message"` |
-| Push | `git push -u origin branch-name` |
 | Create PR | `gh pr create` |
-| View PR | `gh pr view` |
 | Merge PR | `gh pr merge` |
-| Delete branch | `git branch -d branch-name` |
 
-## Tools & Automation
+## Resources
 
-### GitHub CLI (gh)
-
-Essential commands:
-
-```bash
-# PRs
-gh pr create              # Create PR
-gh pr list                # List PRs
-gh pr view                # View current PR
-gh pr checkout 123        # Checkout PR #123
-gh pr merge               # Merge PR
-gh pr review --approve    # Approve PR
-
-# Issues
-gh issue create           # Create issue
-gh issue list             # List issues
-gh issue close 123        # Close issue
-
-# Repo
-gh repo clone org/repo    # Clone repository
-gh repo fork              # Fork repository
-```
-
-### Pre-commit Hooks
-
-Configured via Husky:
-
-```json
-// package.json
-{
-  "scripts": {
-    "prepare": "husky install"
-  }
-}
-```
-
-```bash
-# .husky/pre-commit
-pnpm tsc --noEmit
-pnpm lint-staged
-pnpm test --run
-```
-
-### CI/CD Pipeline
-
-GitHub Actions workflow:
-
-```yaml
-# .github/workflows/ci.yml
-name: CI
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-      - uses: actions/setup-node@v4
-      - run: pnpm install
-      - run: pnpm tsc --noEmit
-      - run: pnpm lint
-      - run: pnpm test
-      - run: pnpm build
-```
-
-## Additional Resources
-
-- [Conventional Commits](https://www.conventionalcommits.org/) — Commit message standard
-- [GitHub Flow](https://docs.github.com/en/get-started/quickstart/github-flow) — GitHub's recommended workflow
-- [shadcn/ui Contributing](https://github.com/shadcn-ui/ui/blob/main/CONTRIBUTING.md) — Reference implementation
-- [Vercel Deployments](https://vercel.com/docs/deployments) — Preview and production deployments
-
----
-
-## Summary
-
-Effective team collaboration follows these principles:
-
-1. **Small, focused changes** — PRs under 500 lines
-2. **Clear communication** — descriptive commits and PR descriptions
-3. **Fast feedback loops** — review within 24 hours
-4. **Automated quality gates** — CI/CD catches issues early
-5. **Preview deployments** — test before merging
-6. **Protected branches** — main is always deployable
-
-Following these practices ensures code quality, reduces bugs, and keeps the team moving fast.
-
-**Sources:**
-- [GitHub Pull Request Best Practices](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/getting-started/best-practices-for-pull-requests)
-- [shadcn/ui Contributing Guide](https://github.com/shadcn-ui/ui/blob/main/CONTRIBUTING.md)
 - [Conventional Commits](https://www.conventionalcommits.org/)
-- [Git Fork Workflow](https://graphite.com/guides/understanding-git-fork-pull-request-workflow)
+- [GitHub Flow](https://docs.github.com/en/get-started/quickstart/github-flow)
+- [shadcn/ui Contributing](https://github.com/shadcn-ui/ui/blob/main/CONTRIBUTING.md)
