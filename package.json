@@ -117,7 +117,7 @@
     "framer-motion": "^12.23.12",
     "front-matter": "^4.0.2",
     "fumadocs-core": "16.0.5",
-    "fumadocs-mdx": "13.0.2",
+    "fumadocs-mdx": "14.2.4",
     "fumadocs-ui": "16.0.5",
     "geist": "^1.4.2",
     "html2canvas": "^1.4.1",
