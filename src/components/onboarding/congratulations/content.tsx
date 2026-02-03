@@ -99,7 +99,7 @@ export default function CongratulationsContent(props: Props) {
         } else {
           const errorMsg = safeGet(
             d,
-            "marketing.onboarding.errors.loadFailed",
+            "saas-marketing.onboarding.errors.loadFailed",
             "Failed to load school data"
           )
           setError(errorMsg)
@@ -109,7 +109,7 @@ export default function CongratulationsContent(props: Props) {
         console.error("Error fetching school data:", err)
         const errorMsg = safeGet(
           d,
-          "marketing.onboarding.errors.loadFailed",
+          "saas-marketing.onboarding.errors.loadFailed",
           "Failed to load school data"
         )
         setError(errorMsg)
@@ -155,106 +155,110 @@ export default function CongratulationsContent(props: Props) {
   const t = {
     congratulations: safeGet(
       d,
-      "marketing.onboarding.success.congratulations",
+      "saas-marketing.onboarding.success.congratulations",
       "Congratulations!"
     ),
     schoolReady: safeGet(
       d,
-      "marketing.onboarding.success.schoolReady",
+      "saas-marketing.onboarding.success.schoolReady",
       "is now set up and ready to go!"
     ),
     yourSchoolUrl: safeGet(
       d,
-      "marketing.onboarding.success.yourSchoolUrl",
+      "saas-marketing.onboarding.success.yourSchoolUrl",
       "Your school's URL:"
     ),
     goToDashboard: safeGet(
       d,
-      "marketing.onboarding.success.goToDashboard",
+      "saas-marketing.onboarding.success.goToDashboard",
       "Go to Dashboard"
     ),
     whatsNext: safeGet(
       d,
-      "marketing.onboarding.success.whatsNext",
+      "saas-marketing.onboarding.success.whatsNext",
       "What's Next?"
     ),
     inviteTeam: safeGet(
       d,
-      "marketing.onboarding.success.inviteTeam",
+      "saas-marketing.onboarding.success.inviteTeam",
       "Invite Your Team"
     ),
     inviteTeamDesc: safeGet(
       d,
-      "marketing.onboarding.success.inviteTeamDesc",
+      "saas-marketing.onboarding.success.inviteTeamDesc",
       "Add teachers, staff, and administrators to your school"
     ),
     addStudents: safeGet(
       d,
-      "marketing.onboarding.success.addStudents",
+      "saas-marketing.onboarding.success.addStudents",
       "Add Students"
     ),
     addStudentsDesc: safeGet(
       d,
-      "marketing.onboarding.success.addStudentsDesc",
+      "saas-marketing.onboarding.success.addStudentsDesc",
       "Import student data or add them individually"
     ),
     setUpClasses: safeGet(
       d,
-      "marketing.onboarding.success.setUpClasses",
+      "saas-marketing.onboarding.success.setUpClasses",
       "Set Up Classes"
     ),
     setUpClassesDesc: safeGet(
       d,
-      "marketing.onboarding.success.setUpClassesDesc",
+      "saas-marketing.onboarding.success.setUpClassesDesc",
       "Create class schedules and assign teachers"
     ),
     configureSettings: safeGet(
       d,
-      "marketing.onboarding.success.configureSettings",
+      "saas-marketing.onboarding.success.configureSettings",
       "Configure Settings"
     ),
     configureSettingsDesc: safeGet(
       d,
-      "marketing.onboarding.success.configureSettingsDesc",
+      "saas-marketing.onboarding.success.configureSettingsDesc",
       "Customize your school's preferences and policies"
     ),
     quickTips: safeGet(
       d,
-      "marketing.onboarding.success.quickTips",
+      "saas-marketing.onboarding.success.quickTips",
       "Quick Tips"
     ),
     tipPortalLive: safeGet(
       d,
-      "marketing.onboarding.success.tipPortalLive",
+      "saas-marketing.onboarding.success.tipPortalLive",
       "Your school portal is now live at"
     ),
     tipShareUrl: safeGet(
       d,
-      "marketing.onboarding.success.tipShareUrl",
+      "saas-marketing.onboarding.success.tipShareUrl",
       "Share this URL with your staff and parents for easy access"
     ),
     tipHelpCenter: safeGet(
       d,
-      "marketing.onboarding.success.tipHelpCenter",
+      "saas-marketing.onboarding.success.tipHelpCenter",
       "Check out the Help Center for guides and tutorials"
     ),
     tipContactSupport: safeGet(
       d,
-      "marketing.onboarding.success.tipContactSupport",
+      "saas-marketing.onboarding.success.tipContactSupport",
       "Contact support if you need any assistance getting started"
     ),
     reviewSettings: safeGet(
       d,
-      "marketing.onboarding.success.reviewSettings",
+      "saas-marketing.onboarding.success.reviewSettings",
       "Review Settings"
     ),
     goToSchoolDashboard: safeGet(
       d,
-      "marketing.onboarding.success.goToSchoolDashboard",
+      "saas-marketing.onboarding.success.goToSchoolDashboard",
       "Go to School Dashboard"
     ),
     loading: safeGet(d, "common.loading", "Loading..."),
-    yourSchool: safeGet(d, "marketing.onboarding.yourSchool", "Your school"),
+    yourSchool: safeGet(
+      d,
+      "saas-marketing.onboarding.yourSchool",
+      "Your school"
+    ),
   }
 
   if (loading) {

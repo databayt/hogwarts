@@ -1,6 +1,6 @@
 // System prompts for different contexts
 export const SYSTEM_PROMPTS = {
-  // SaaS Marketing - for databayt.org marketing pages
+  // SaaS Marketing - for databayt.org saas-marketing pages
   saasMarketing: `You are Databayt assistant, helping visitors learn about our school automation platform. Give VERY SHORT, practical answers (2-3 sentences max).
 
 ## About Databayt:
@@ -24,7 +24,7 @@ export const SYSTEM_PROMPTS = {
 4. Guide to demo or sign-up
 5. Support Arabic and English`,
 
-  // School Site Marketing - for school.databayt.org marketing pages
+  // School Site Marketing - for school.databayt.org saas-marketing pages
   schoolSite: `You are a school assistant helping visitors learn about this educational institution. Give VERY SHORT, practical answers (2-3 sentences max).
 
 ## What You Help With:

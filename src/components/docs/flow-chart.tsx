@@ -90,7 +90,7 @@ export function FlowChart({
 export function ProvisioningFlow() {
   const nodes: Node[] = [
     { id: "visitor", label: "Visitor", icon: Users },
-    { id: "marketing", label: "Marketing Site", icon: LayoutPanelLeft },
+    { id: "saas-marketing", label: "Marketing Site", icon: LayoutPanelLeft },
     { id: "choose", label: "Choose Plan" },
     { id: "checkout", label: "Checkout / Provision", icon: CreditCard },
     { id: "school", label: "Create School + Domain", icon: Building2 },
@@ -99,8 +99,8 @@ export function ProvisioningFlow() {
     { id: "dash", label: "Dashboards" },
   ]
   const edges: Edge[] = [
-    { from: "visitor", to: "marketing" },
-    { from: "marketing", to: "choose" },
+    { from: "visitor", to: "saas-marketing" },
+    { from: "saas-marketing", to: "choose" },
     { from: "choose", to: "checkout", note: "Trial / Basic / Pro" },
     { from: "checkout", to: "school" },
     { from: "school", to: "landing" },
@@ -113,7 +113,7 @@ export function ProvisioningFlow() {
 export function FullProcessFlow() {
   const nodes: Node[] = [
     { id: "visitor", label: "Visitor", icon: Users },
-    { id: "marketing", label: "Marketing", icon: LayoutPanelLeft },
+    { id: "saas-marketing", label: "Marketing", icon: LayoutPanelLeft },
     { id: "pricing", label: "Pricing" },
     { id: "login", label: "Login/Signup" },
     { id: "checkout", label: "Checkout", icon: CreditCard },
@@ -130,8 +130,8 @@ export function FullProcessFlow() {
     { id: "announce", label: "Announcements", icon: Megaphone },
   ]
   const edges: Edge[] = [
-    { from: "visitor", to: "marketing" },
-    { from: "marketing", to: "pricing" },
+    { from: "visitor", to: "saas-marketing" },
+    { from: "saas-marketing", to: "pricing" },
     { from: "pricing", to: "login" },
     { from: "login", to: "checkout" },
     { from: "checkout", to: "provision" },
@@ -154,7 +154,7 @@ export function FullProcessFlow() {
 export function CompactOneFlow() {
   const nodes: Node[] = [
     { id: "visitor", label: "Visitor" },
-    { id: "marketing", label: "Marketing" },
+    { id: "saas-marketing", label: "Marketing" },
     { id: "pricing", label: "Pricing" },
     { id: "signup", label: "Signup/Login" },
     { id: "checkout", label: "Checkout" },
@@ -166,8 +166,8 @@ export function CompactOneFlow() {
     { id: "ops", label: "Daily Ops" },
   ]
   const edges: Edge[] = [
-    { from: "visitor", to: "marketing" },
-    { from: "marketing", to: "pricing" },
+    { from: "visitor", to: "saas-marketing" },
+    { from: "saas-marketing", to: "pricing" },
     { from: "pricing", to: "signup" },
     { from: "signup", to: "checkout" },
     { from: "checkout", to: "provision" },

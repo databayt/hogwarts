@@ -53,7 +53,7 @@ export async function GET(_request: NextRequest) {
   try {
     const session = await auth()
 
-    // Only platform admins can run security scans
+    // Only school-dashboard admins can run security scans
     if (session?.user?.role !== "PLATFORM_ADMIN") {
       logger.warn("Unauthorized security scan attempt", {
         userId: session?.user?.id,

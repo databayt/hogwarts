@@ -157,7 +157,7 @@ getDictionaryValue(d, "stats", "Default") // ❌ Type error
 
 ```typescript
 // Agent invocation
-"Use dictionary-validator skill to scan src/components/platform/finance/content.tsx"
+"Use dictionary-validator skill to scan src/components/school-dashboard/finance/content.tsx"
 
 // Output:
 🔍 Scanning dictionary usage...
@@ -180,7 +180,7 @@ Auto-fix available? [Y/n]
 
 ```typescript
 // Agent invocation
-"Use dictionary-validator skill to scan and auto-fix src/components/platform/finance/"
+"Use dictionary-validator skill to scan and auto-fix src/components/school-dashboard/finance/"
 
 // Output:
 🔍 Scanning src/components/platform/finance/...

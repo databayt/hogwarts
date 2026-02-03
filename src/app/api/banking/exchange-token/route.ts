@@ -28,7 +28,7 @@
 
 import { NextResponse } from "next/server"
 
-import { plaidClient } from "@/components/platform/finance/banking/lib/plaid"
+import { plaidClient } from "@/components/school-dashboard/finance/banking/lib/plaid"
 
 export async function POST(request: Request) {
   try {

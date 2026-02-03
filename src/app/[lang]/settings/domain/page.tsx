@@ -2,7 +2,7 @@ import { Metadata } from "next"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { DomainRequestContent } from "@/components/platform/settings/domain-request/content"
+import { DomainRequestContent } from "@/components/school-dashboard/settings/domain-request/content"
 
 export const metadata: Metadata = {
   title: "Domain Settings | Hogwarts",

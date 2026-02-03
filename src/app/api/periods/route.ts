@@ -40,7 +40,7 @@ import { NextRequest } from "next/server"
 
 import { createErrorResponse } from "@/lib/auth-security"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/components/operator/lib/tenant"
+import { getTenantContext } from "@/components/saas-dashboard/lib/tenant"
 
 // WHY: Period definitions change during setup
 export const dynamic = "force-dynamic"

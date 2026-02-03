@@ -134,7 +134,7 @@ export default function StudentPage({ student }) {
 **After (App Router)**:
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/students/[id]/page.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/students/[id]/page.tsx
 export default async function StudentPage({
   params,
 }: {

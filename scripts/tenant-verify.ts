@@ -47,7 +47,7 @@ const SCOPED_OPERATIONS = [
 
 // Tables that should be globally accessible (no schoolId)
 const GLOBAL_TABLES = [
-  "User", // Has schoolId but can query across schools for platform admin
+  "User", // Has schoolId but can query across schools for school-dashboard admin
   "SubscriptionTier",
   "LegalDocument",
   "Account",

@@ -4,7 +4,7 @@ export default function RepositoryGrid() {
       name: "eMart",
       visibility: "Public",
       description:
-        "eMart is a Flutter-based e-commerce platform with separate applications for users and admins.",
+        "eMart is a Flutter-based e-commerce school-dashboard with separate applications for users and admins.",
       language: "Dart",
       stars: 3,
       forks: null,
@@ -13,7 +13,7 @@ export default function RepositoryGrid() {
       name: "reConnect",
       visibility: "Public",
       description:
-        "ReConnect is a powerful chat app designed to bring people closer together. It offers a seamless and user-friendly platform for reconnecting with old friends, family, and even making new connections.",
+        "ReConnect is a powerful chat app designed to bring people closer together. It offers a seamless and user-friendly school-dashboard for reconnecting with old friends, family, and even making new connections.",
       language: "Dart",
       stars: 1,
       forks: null,

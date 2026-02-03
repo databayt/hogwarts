@@ -42,7 +42,7 @@
  * RESPONSE FORMAT:
  * - users: Array with id, username, email, image, role
  *
- * @see /components/platform/messaging for usage
+ * @see /components/school-dashboard/messaging for usage
  */
 
 import { NextRequest, NextResponse } from "next/server"

@@ -358,7 +358,7 @@ Apply fix? [Y/n]
 **1. /validate-prisma Command**
 
 ```bash
-/validate-prisma src/components/platform/finance/expenses/actions.ts
+/validate-prisma src/components/school-dashboard/finance/expenses/actions.ts
 ```
 
 **2. /pre-commit-full Command**

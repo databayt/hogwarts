@@ -72,7 +72,7 @@ const HEALTH_RECORD_TYPES = [
     descriptions: [
       "Student treated at school clinic for minor injury",
       "First aid administered immediately after incident",
-      "Incident occurred during school activities, treated on-site",
+      "Incident occurred during school activities, treated on-school-marketing",
     ],
     severity: ["Low", "Medium"],
     weight: 15,

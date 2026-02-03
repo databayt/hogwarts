@@ -5,7 +5,7 @@
 "area: platform":
   - changed-files:
       - any-glob-to-any-file:
-          - src/components/platform/**/*
+          - src/components/school-dashboard/**/*
           - src/app/**/s/**/*
 
 "area: auth":
@@ -45,13 +45,13 @@
 "area: marketing":
   - changed-files:
       - any-glob-to-any-file:
-          - src/app/**/marketing/**/*
-          - src/components/marketing/**/*
+          - src/app/**/saas-marketing/**/*
+          - src/components/saas-marketing/**/*
 
 "area: finance":
   - changed-files:
       - any-glob-to-any-file:
-          - src/components/platform/finance/**/*
+          - src/components/school-dashboard/finance/**/*
           - prisma/models/fees.prisma
           - prisma/models/banking.prisma
           - prisma/models/invoice.prisma
@@ -59,13 +59,13 @@
 "area: attendance":
   - changed-files:
       - any-glob-to-any-file:
-          - src/components/platform/attendance/**/*
+          - src/components/school-dashboard/attendance/**/*
           - prisma/models/attendance.prisma
 
 "area: exams":
   - changed-files:
       - any-glob-to-any-file:
-          - src/components/platform/exams/**/*
+          - src/components/school-dashboard/exams/**/*
           - prisma/models/exam.prisma
           - prisma/models/assessments.prisma
 

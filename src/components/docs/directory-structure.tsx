@@ -30,12 +30,12 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
             description: "Internationalized routes",
             children: [
               {
-                name: "(marketing)/",
+                name: "(saas-saas-marketing)/",
                 type: "directory",
-                description: "Entry point 01: SaaS marketing",
+                description: "Entry point 01: SaaS saas-marketing",
               },
               {
-                name: "(operator)/",
+                name: "(saas-dashboard)/",
                 type: "directory",
                 description: "Entry point 02: SaaS dashboard",
               },
@@ -60,14 +60,14 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
                     description: "Tenant-specific routes",
                     children: [
                       {
-                        name: "(platform)/",
+                        name: "(school-dashboard)/",
                         type: "directory",
                         description: "Entry point 04: School dashboard",
                       },
                       {
-                        name: "(site)/",
+                        name: "(school-saas-marketing)/",
                         type: "directory",
-                        description: "Entry point 03: School marketing",
+                        description: "Entry point 03: School saas-marketing",
                       },
                     ],
                   },
@@ -113,22 +113,22 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
             description: "Onboarding flow components",
           },
           {
-            name: "marketing/",
+            name: "saas-marketing/",
             type: "directory",
-            description: "Entry point 01: SaaS marketing",
+            description: "Entry point 01: SaaS saas-marketing",
           },
           {
-            name: "operator/",
+            name: "saas-dashboard/",
             type: "directory",
             description: "Entry point 02: SaaS dashboard",
           },
           {
-            name: "site/",
+            name: "school-marketing/",
             type: "directory",
-            description: "Entry point 03: School marketing",
+            description: "Entry point 03: School saas-marketing",
           },
           {
-            name: "platform/",
+            name: "school-dashboard/",
             type: "directory",
             description: "Entry point 04: School dashboard",
           },

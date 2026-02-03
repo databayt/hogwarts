@@ -84,6 +84,12 @@ export const ADMIN_USERS = [
     usernameEn: "Staff",
     usernameAr: "الموظف",
   },
+  {
+    email: "user@databayt.org",
+    role: "USER",
+    usernameEn: "New User",
+    usernameAr: "مستخدم جديد",
+  },
 ]
 
 // ============================================================================

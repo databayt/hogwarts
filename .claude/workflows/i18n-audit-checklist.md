@@ -238,7 +238,7 @@ dictionaries/
 
 ```bash
 # Check for remaining hardcoded strings
-grep -r "title=\"[A-Z]" src/components/platform/ --include="*.tsx"
+grep -r "title=\"[A-Z]" src/components/school-dashboard/ --include="*.tsx"
 grep -r "placeholder=\"[A-Z]" src/components/ --include="*.tsx"
 grep -r "toast\.(success|error)\(\"" src/components/ --include="*.tsx"
 

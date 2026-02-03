@@ -39,14 +39,14 @@
  * - Returns 400 if no termId can be determined
  * - Time displayed in school's timezone (not UTC)
  *
- * @see /components/platform/timetable/actions.ts
+ * @see /components/school-dashboard/timetable/actions.ts
  */
 
 import { NextRequest } from "next/server"
 
 import { createErrorResponse } from "@/lib/auth-security"
 import { db } from "@/lib/db"
-import { getWeeklyTimetable } from "@/components/platform/timetable/actions"
+import { getWeeklyTimetable } from "@/components/school-dashboard/timetable/actions"
 
 // WHY: Timetable must be fresh, week offset depends on current date
 export const dynamic = "force-dynamic"

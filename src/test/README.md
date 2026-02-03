@@ -43,7 +43,7 @@ pnpm install
 pnpm test
 
 # Run specific test file
-pnpm test src/components/operator/tenants/__tests__/actions.test.ts
+pnpm test src/components/saas-dashboard/tenants/__tests__/actions.test.ts
 
 # Run with coverage
 pnpm test --coverage
@@ -81,7 +81,7 @@ import { createStudent } from "./actions"
 
 // Mock dependencies
 vi.mock("@/lib/db", () => ({ db: mockPrisma() }))
-vi.mock("@/components/platform/operator/lib/tenant", () => ({
+vi.mock("@/components/school-dashboard/saas-dashboard/lib/tenant", () => ({
   getTenantContext: mockTenantContext(),
 }))
 
@@ -113,7 +113,7 @@ describe("students/actions", () => {
 **3. Run your test:**
 
 ```bash
-pnpm test src/components/platform/students/actions.test.ts
+pnpm test src/components/school-dashboard/students/actions.test.ts
 ```
 
 ---
@@ -205,7 +205,7 @@ import { createItem, deleteItem, updateItem } from "./actions"
 vi.mock("@/lib/db", () => ({ db: mockPrisma() }))
 
 // Mock authentication/tenant context
-vi.mock("@/components/platform/operator/lib/tenant", () => ({
+vi.mock("@/components/school-dashboard/saas-dashboard/lib/tenant", () => ({
   getTenantContext: mockTenantContext({ schoolId: "s1", role: "ADMIN" }),
 }))
 
@@ -317,7 +317,7 @@ import { describe, expect, it, vi } from "vitest"
 import { createAnnouncement } from "../actions"
 
 const getTenantContext = vi.fn()
-vi.mock("@/components/platform/operator/lib/tenant", () => ({
+vi.mock("@/components/school-dashboard/saas-dashboard/lib/tenant", () => ({
   getTenantContext,
 }))
 
@@ -615,7 +615,7 @@ import { getStudents, updateStudent } from "./actions"
 
 const getTenantContext = mockTenantContext({ schoolId: "s1", role: "ADMIN" })
 
-vi.mock("@/components/platform/operator/lib/tenant", () => ({
+vi.mock("@/components/school-dashboard/saas-dashboard/lib/tenant", () => ({
   getTenantContext,
 }))
 
@@ -791,7 +791,7 @@ import { describe, expect, it, vi } from "vitest"
 import { getWeeklyTimetable, upsertTimetableSlot } from "./actions"
 
 const getTenantContext = vi.fn()
-vi.mock("@/components/platform/operator/lib/tenant", () => ({
+vi.mock("@/components/school-dashboard/saas-dashboard/lib/tenant", () => ({
   getTenantContext,
 }))
 
@@ -1203,7 +1203,7 @@ vi.mock("@/lib/db", () => ({ db: mockPrisma() }))
 vi.mock("@/auth", () => ({ auth: vi.fn().mockResolvedValue(mockSession()) }))
 
 // Mock tenant context
-vi.mock("@/components/platform/operator/lib/tenant", () => ({
+vi.mock("@/components/school-dashboard/saas-dashboard/lib/tenant", () => ({
   getTenantContext: mockTenantContext({ schoolId: "s1" }),
 }))
 

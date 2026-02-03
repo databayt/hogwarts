@@ -381,6 +381,68 @@ Route permissions (excerpt):
 
 ---
 
+## Test Credentials
+
+All test accounts use password: `1234`
+
+### Platform Accounts (No School)
+
+These accounts have no `schoolId` - they operate at platform level:
+
+| Email               | Role      | Purpose                               |
+| ------------------- | --------- | ------------------------------------- |
+| `dev@databayt.org`  | DEVELOPER | Platform admin, SaaS dashboard access |
+| `user@databayt.org` | USER      | Fresh user, potential SaaS subscriber |
+
+### Demo School Accounts
+
+These accounts are tied to the **demo** school only. They **cannot access other schools**:
+
+| Email                     | Role       | Purpose                |
+| ------------------------- | ---------- | ---------------------- |
+| `admin@databayt.org`      | ADMIN      | School administrator   |
+| `accountant@databayt.org` | ACCOUNTANT | Finance access         |
+| `staff@databayt.org`      | STAFF      | Staff member           |
+| `teacher@databayt.org`    | TEACHER    | Teacher access         |
+| `student@databayt.org`    | STUDENT    | Student access         |
+| `parent@databayt.org`     | GUARDIAN   | Parent/guardian access |
+
+> **Tenant Isolation**: If `admin@databayt.org` tries to access `other.localhost:3000`, access is denied because their `schoolId` doesn't match.
+
+### Bulk Accounts
+
+These accounts are tied to the demo school:
+
+- `teacher1@databayt.org` to `teacher99@databayt.org` (100 teachers)
+- `student1@databayt.org` to `student999@databayt.org` (1000 students)
+- `parent1@databayt.org` to `parent1999@databayt.org` (2000 guardians)
+
+### Testing Scenarios
+
+| Scenario            | Credential                | Domain                          | Expected Behavior                  |
+| ------------------- | ------------------------- | ------------------------------- | ---------------------------------- |
+| SaaS Dashboard      | `dev@databayt.org`        | `localhost:3000`                | Access to `/dashboard`, `/tenants` |
+| School Dashboard    | `admin@databayt.org`      | `demo.localhost:3000`           | Access to school platform          |
+| Onboarding Flow     | `user@databayt.org`       | `localhost:3000`                | Click "Get Started" → onboarding   |
+| RBAC - Admin Routes | `teacher@databayt.org`    | `demo.localhost:3000`           | Blocked from `/admin`, `/settings` |
+| RBAC - Finance      | `accountant@databayt.org` | `demo.localhost:3000`           | Full access to finance routes      |
+| Cross-subdomain SSO | Any school user           | Login on main, access subdomain | Auto-authenticated                 |
+| Tenant Isolation    | `admin@databayt.org`      | `other.localhost:3000`          | Access denied (wrong school)       |
+
+### Resetting Test User
+
+The `user@databayt.org` account should remain fresh (no schoolId, USER role) for onboarding tests.
+
+After testing modifies the account, reset it:
+
+```bash
+pnpm db:reset-test-user    # Reset user@databayt.org to fresh state
+```
+
+Or re-run the full seed: `pnpm db:seed`
+
+---
+
 ## Testing Checklist
 
 ### Localhost Tests

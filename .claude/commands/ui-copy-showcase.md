@@ -193,7 +193,7 @@ After copying, customize:
 Add to lab showcase page:
 
 ```tsx
-// src/components/platform/lab/dashboard-cards-showcase.tsx
+// src/components/school-dashboard/lab/dashboard-cards-showcase.tsx
 import { FieldDemo, InputGroupDemo } from "@/components/atom/lab"
 
 ;<DashboardSection title="shadcn 2025 Patterns">

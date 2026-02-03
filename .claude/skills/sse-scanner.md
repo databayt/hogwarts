@@ -280,12 +280,12 @@ export default async function Page() {
 
 ```typescript
 // URL: /en/admin/billing
-// Resolves to: src/app/[lang]/s/[subdomain]/(platform)/admin/billing/page.tsx
+// Resolves to: src/app/[lang]/s/[subdomain]/(school-dashboard)/admin/billing/page.tsx
 
 // URL patterns:
 // /[locale]/...        → src/app/[lang]/...
 // /s/[tenant]/...      → src/app/[lang]/s/[subdomain]/...
-// /(platform)/...      → src/app/[lang]/s/[subdomain]/(platform)/...
+// /(school-dashboard)/...      → src/app/[lang]/s/[subdomain]/(school-dashboard)/...
 ```
 
 ### 2. Component Chain Analysis

@@ -22,16 +22,16 @@ Validates Prisma queries for field types, required fields, includes, and multi-t
 
 ```bash
 # Validate single file
-/validate-prisma src/components/platform/finance/expenses/actions.ts
+/validate-prisma src/components/school-dashboard/finance/expenses/actions.ts
 
 # Validate directory
-/validate-prisma src/components/platform/finance/
+/validate-prisma src/components/school-dashboard/finance/
 
 # Validate with auto-fix
-/validate-prisma src/components/platform/finance/expenses/actions.ts --fix
+/validate-prisma src/components/school-dashboard/finance/expenses/actions.ts --fix
 
 # Validate specific model
-/validate-prisma src/components/platform/finance/ --model=Expense
+/validate-prisma src/components/school-dashboard/finance/ --model=Expense
 ```
 
 ---
@@ -69,7 +69,7 @@ Validates Prisma queries for field types, required fields, includes, and multi-t
 ### Example 1: Expense Actions Validation
 
 ```bash
-$ /validate-prisma src/components/platform/finance/expenses/actions.ts
+$ /validate-prisma src/components/school-dashboard/finance/expenses/actions.ts
 
 🔍 Validating Prisma queries in expenses/actions.ts...
 
@@ -186,7 +186,7 @@ Run: pnpm tsc --noEmit
 ### Example 2: Directory Scan
 
 ```bash
-$ /validate-prisma src/components/platform/finance/
+$ /validate-prisma src/components/school-dashboard/finance/
 
 🔍 Scanning directory for Prisma issues...
 
@@ -252,7 +252,7 @@ Running: pnpm tsc --noEmit
 Show diff? [Y/n]
 > Y
 
-diff --git a/src/components/platform/finance/expenses/actions.ts
+diff --git a/src/components/school-dashboard/finance/expenses/actions.ts
 @@ -32,11 +32,13 @@
 +  const expenseNumber = `EXP-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
 +
@@ -343,7 +343,7 @@ diff --git a/src/components/platform/finance/expenses/actions.ts
 
 ```bash
 # Before creating PR
-/validate-prisma src/components/platform/
+/validate-prisma src/components/school-dashboard/
 ```
 
 ---

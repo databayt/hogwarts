@@ -214,13 +214,13 @@ export function mockSession(overrides?: {
 /**
  * Mock Operator Authentication
  *
- * Mocks operator-specific auth functions.
+ * Mocks saas-dashboard-specific auth functions.
  *
  * @example
  * ```ts
  * import { mockOperatorAuth } from '@/test/mocks'
  *
- * vi.mock('@/components/operator/lib/operator-auth', () => mockOperatorAuth())
+ * vi.mock('@/components/saas-dashboard/lib/saas-dashboard-auth', () => mockOperatorAuth())
  * ```
  */
 export function mockOperatorAuth() {
@@ -244,7 +244,7 @@ export function mockOperatorAuth() {
  * ```ts
  * import { mockTenantContext } from '@/test/mocks'
  *
- * vi.mock('@/components/platform/operator/lib/tenant', () => ({
+ * vi.mock('@/components/school-dashboard/saas-dashboard/lib/tenant', () => ({
  *   getTenantContext: mockTenantContext()
  * }))
  * ```

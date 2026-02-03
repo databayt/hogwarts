@@ -62,7 +62,7 @@ interface UsePlatformDataReturn<TData> {
 }
 
 /**
- * Hook for managing platform data with optimistic updates and auto-refresh
+ * Hook for managing school-dashboard data with optimistic updates and auto-refresh
  */
 export function usePlatformData<
   TData extends { id: string },

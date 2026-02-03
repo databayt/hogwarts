@@ -1,16 +1,16 @@
 /**
  * Subdomain Utilities - Multi-Tenant Domain Resolution
  *
- * Handles subdomain detection, validation, and generation for the multi-tenant platform.
+ * Handles subdomain detection, validation, and generation for the multi-tenant school-dashboard.
  *
  * DOMAIN STRUCTURE:
- * - ed.databayt.org → Marketing site (NOT a tenant subdomain)
+ * - ed.databayt.org → Marketing school-marketing (NOT a tenant subdomain)
  * - school.databayt.org → Tenant "school"
  * - localhost:3000 → Development (no subdomain)
  * - subdomain.localhost:3000 → Development subdomain
  *
  * SPECIAL CASES:
- * - "ed" subdomain → Marketing site, not a school
+ * - "ed" subdomain → Marketing school-marketing, not a school
  * - "www" → Strip and treat as root domain
  * - Vercel preview → tenant---branch.vercel.app
  */
@@ -24,7 +24,7 @@ export interface SubdomainResult {
 /**
  * Extracts subdomain from hostname, handling special cases
  *
- * CRITICAL: "ed" is special-cased - it's the marketing site, not a school tenant
+ * CRITICAL: "ed" is special-cased - it's the saas-marketing school-marketing, not a school tenant
  */
 export function extractSubdomain(
   host: string,
@@ -56,13 +56,13 @@ export function extractSubdomain(
     if (subdomainEndIndex > 0) {
       const subdomain = host.substring(0, subdomainEndIndex)
 
-      // SPECIAL CASE: ed.databayt.org is the marketing site, NOT a tenant
+      // SPECIAL CASE: ed.databayt.org is the saas-marketing school-marketing, NOT a tenant
       // Without this check, users would see 404 or wrong tenant
       if (subdomain === "ed") {
         return {
           subdomain: null,
           isSpecialCase: true,
-          reason: "ed.databayt.org - using marketing route",
+          reason: "ed.databayt.org - using saas-marketing route",
         }
       }
 

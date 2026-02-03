@@ -302,7 +302,7 @@ describe("Document Extraction", () => {
 
 - [Anthropic Claude API](https://docs.anthropic.com/claude/docs)
 - [Vercel AI SDK](https://sdk.vercel.ai/docs)
-- [Pattern: Receipt Extraction](/src/components/platform/finance/receipt/ai/extract-receipt-data.ts)
+- [Pattern: Receipt Extraction](/src/components/school-dashboard/finance/receipt/ai/extract-receipt-data.ts)
 - [Pattern: Import Parser](/src/lib/import-parser.ts)
 
 ## Support

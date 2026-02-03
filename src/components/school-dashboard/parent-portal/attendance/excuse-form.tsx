@@ -1,0 +1,628 @@
+"use client"
+
+import { useCallback, useState, useTransition } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { format } from "date-fns"
+import { CheckCircle2, File, ImageIcon } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { IMAGEKIT_FOLDERS, useImageKitUpload } from "@/components/file"
+import { Icons } from "@/components/icons"
+import { submitExcuse } from "@/components/school-dashboard/attendance/actions"
+
+// Excuse reasons with labels (English and Arabic)
+const EXCUSE_REASONS = [
+  { value: "MEDICAL", labelEn: "Medical", labelAr: "طبي" },
+  {
+    value: "FAMILY_EMERGENCY",
+    labelEn: "Family Emergency",
+    labelAr: "طوارئ عائلية",
+  },
+  { value: "RELIGIOUS", labelEn: "Religious", labelAr: "ديني" },
+  {
+    value: "SCHOOL_ACTIVITY",
+    labelEn: "School Activity",
+    labelAr: "نشاط مدرسي",
+  },
+  { value: "TRANSPORTATION", labelEn: "Transportation", labelAr: "مواصلات" },
+  { value: "WEATHER", labelEn: "Weather", labelAr: "طقس" },
+  { value: "OTHER", labelEn: "Other", labelAr: "أخرى" },
+] as const
+
+// Form schema
+const excuseFormSchema = z.object({
+  reason: z.enum([
+    "MEDICAL",
+    "FAMILY_EMERGENCY",
+    "RELIGIOUS",
+    "SCHOOL_ACTIVITY",
+    "TRANSPORTATION",
+    "WEATHER",
+    "OTHER",
+  ]),
+  description: z
+    .string()
+    .max(2000, "Description must be less than 2000 characters")
+    .optional(),
+  attachments: z
+    .array(z.string().url())
+    .max(5, "Maximum 5 attachments allowed")
+    .optional(),
+})
+
+type ExcuseFormValues = z.infer<typeof excuseFormSchema>
+
+interface Absence {
+  id: string
+  studentId: string
+  studentName: string
+  classId: string
+  className: string
+  date: string
+  status: string
+}
+
+interface ExcuseFormProps {
+  absence: Absence
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSuccess?: () => void
+  locale?: string
+}
+
+// Allowed file types and max size
+const ALLOWED_FILE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+]
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_FILES = 5
+
+interface UploadedFile {
+  url: string
+  name: string
+  type: string
+  size: number
+}
+
+export function ExcuseForm({
+  absence,
+  open,
+  onOpenChange,
+  onSuccess,
+  locale = "en",
+}: ExcuseFormProps) {
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const form = useForm<ExcuseFormValues>({
+    resolver: zodResolver(excuseFormSchema),
+    defaultValues: {
+      reason: "MEDICAL",
+      description: "",
+      attachments: [],
+    },
+  })
+
+  const isArabic = locale === "ar"
+
+  // ImageKit upload hook
+  const {
+    upload,
+    isUploading,
+    progress,
+    error: ikError,
+    resetError,
+  } = useImageKitUpload({
+    folder: IMAGEKIT_FOLDERS.EXCUSE_ATTACHMENTS,
+    onSuccess: (result) => {
+      const newFile: UploadedFile = {
+        url: result.url,
+        name: result.name,
+        type: result.fileType,
+        size: result.size,
+      }
+      setUploadedFiles((prev) => {
+        const updated = [...prev, newFile]
+        // Update form value with all URLs
+        form.setValue(
+          "attachments",
+          updated.map((f) => f.url)
+        )
+        return updated
+      })
+      setUploadError(null)
+    },
+    onError: (err) => {
+      setUploadError(err)
+    },
+  })
+
+  // Handle file selection
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files
+      if (!files || files.length === 0) return
+
+      // Check if adding these files would exceed the limit
+      if (uploadedFiles.length + files.length > MAX_FILES) {
+        setUploadError(
+          isArabic
+            ? `الحد الأقصى ${MAX_FILES} ملفات مسموح بها`
+            : `Maximum ${MAX_FILES} files allowed`
+        )
+        return
+      }
+
+      for (const file of Array.from(files)) {
+        // Validate file type
+        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+          setUploadError(
+            isArabic
+              ? "نوع الملف غير مدعوم. يرجى استخدام PDF أو صور (JPG، PNG، WebP)"
+              : "File type not supported. Please use PDF or images (JPG, PNG, WebP)"
+          )
+          continue
+        }
+
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+          setUploadError(
+            isArabic
+              ? "حجم الملف كبير جدًا. الحد الأقصى 5 ميغابايت"
+              : "File size too large. Maximum 5MB allowed"
+          )
+          continue
+        }
+
+        // Upload the file
+        await upload(file)
+      }
+
+      // Reset the input
+      e.target.value = ""
+    },
+    [upload, uploadedFiles.length, isArabic]
+  )
+
+  // Remove uploaded file
+  const removeFile = useCallback(
+    (index: number) => {
+      setUploadedFiles((prev) => {
+        const updated = prev.filter((_, i) => i !== index)
+        form.setValue(
+          "attachments",
+          updated.map((f) => f.url)
+        )
+        return updated
+      })
+    },
+    [form]
+  )
+
+  // Get file icon based on type
+  const getFileIcon = (type: string) => {
+    if (type.startsWith("image/")) {
+      return <ImageIcon className="h-4 w-4" />
+    }
+    return <File className="h-4 w-4" />
+  }
+
+  // Format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  const onSubmit = (values: ExcuseFormValues) => {
+    setError(null)
+    setSuccess(false)
+
+    startTransition(async () => {
+      const result = await submitExcuse({
+        attendanceId: absence.id,
+        reason: values.reason,
+        description: values.description,
+        attachments: values.attachments,
+      })
+
+      if (result.success) {
+        setSuccess(true)
+        setTimeout(() => {
+          onOpenChange(false)
+          onSuccess?.()
+        }, 1500)
+      } else {
+        setError(result.error)
+      }
+    })
+  }
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return isArabic
+      ? date.toLocaleDateString("ar-SA", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : format(date, "PPPP")
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="sm:max-w-[500px]"
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        <DialogHeader>
+          <DialogTitle>
+            {isArabic ? "تقديم عذر للغياب" : "Submit Excuse for Absence"}
+          </DialogTitle>
+          <DialogDescription>
+            {isArabic
+              ? "قدم عذرًا للغياب وسيتم مراجعته من قبل المعلم"
+              : "Submit an excuse for the absence and it will be reviewed by the teacher"}
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Absence Details */}
+        <Card className="mb-4">
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <span className="text-muted-foreground">
+                  {isArabic ? "الطالب:" : "Student:"}
+                </span>
+                <p className="font-medium">{absence.studentName}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">
+                  {isArabic ? "الفصل:" : "Class:"}
+                </span>
+                <p className="font-medium">{absence.className}</p>
+              </div>
+              <div className="col-span-2">
+                <span className="text-muted-foreground">
+                  {isArabic ? "التاريخ:" : "Date:"}
+                </span>
+                <p className="font-medium">{formatDate(absence.date)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {success ? (
+          <Alert className="border-green-200 bg-green-50">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              {isArabic
+                ? "تم تقديم العذر بنجاح! سيتم مراجعته قريبًا."
+                : "Excuse submitted successfully! It will be reviewed soon."}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <Icons.alertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <FormField
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {isArabic ? "سبب الغياب" : "Reason for Absence"}
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              isArabic ? "اختر السبب" : "Select reason"
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {EXCUSE_REASONS.map((reason) => (
+                          <SelectItem key={reason.value} value={reason.value}>
+                            {isArabic ? reason.labelAr : reason.labelEn}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {isArabic
+                        ? "وصف إضافي (اختياري)"
+                        : "Additional Description (Optional)"}
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={
+                          isArabic
+                            ? "قدم تفاصيل إضافية حول سبب الغياب..."
+                            : "Provide additional details about the absence..."
+                        }
+                        className="resize-none"
+                        rows={4}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {isArabic
+                        ? "يمكنك تقديم تفاصيل إضافية لدعم عذرك"
+                        : "You can provide additional details to support your excuse"}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* File Upload Section */}
+              <div className="space-y-3">
+                <FormLabel>
+                  {isArabic ? "المرفقات (اختياري)" : "Attachments (Optional)"}
+                </FormLabel>
+
+                {/* Upload Error */}
+                {(uploadError || ikError) && (
+                  <Alert variant="destructive" className="py-2">
+                    <Icons.alertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      {uploadError || ikError}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Uploaded Files List */}
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div
+                        key={file.url}
+                        className="bg-muted/50 flex items-center justify-between rounded-md border p-2"
+                      >
+                        <div className="flex min-w-0 items-center gap-2">
+                          {getFileIcon(file.type)}
+                          <span className="max-w-[200px] truncate text-sm">
+                            {file.name}
+                          </span>
+                          <span className="text-muted-foreground text-xs">
+                            ({formatFileSize(file.size)})
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="hover:bg-destructive/10 hover:text-destructive h-6 w-6 p-0"
+                          onClick={() => removeFile(index)}
+                          disabled={isPending}
+                          aria-label={isArabic ? "إزالة الملف" : "Remove file"}
+                        >
+                          <Icons.x className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Upload Progress */}
+                {isUploading && (
+                  <div className="space-y-1">
+                    <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                      <Icons.loader2 className="h-4 w-4 animate-spin" />
+                      <span>{isArabic ? "جاري الرفع..." : "Uploading..."}</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-1" />
+                  </div>
+                )}
+
+                {/* Upload Drop Zone */}
+                {uploadedFiles.length < MAX_FILES && (
+                  <label
+                    className={`hover:border-primary/50 hover:bg-muted/30 cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition-colors ${isUploading ? "pointer-events-none opacity-50" : ""} `}
+                  >
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp"
+                      multiple
+                      onChange={handleFileSelect}
+                      disabled={isUploading || isPending}
+                    />
+                    <Icons.upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
+                    <p className="text-muted-foreground text-sm">
+                      {isArabic
+                        ? "انقر أو اسحب لرفع الملفات"
+                        : "Click or drag to upload files"}
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {isArabic
+                        ? "PDF، JPG، PNG، WebP (الحد الأقصى 5 ميغابايت لكل ملف)"
+                        : "PDF, JPG, PNG, WebP (max 5MB per file)"}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {isArabic
+                        ? `${uploadedFiles.length}/${MAX_FILES} ملفات`
+                        : `${uploadedFiles.length}/${MAX_FILES} files`}
+                    </p>
+                  </label>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isPending}
+                >
+                  {isArabic ? "إلغاء" : "Cancel"}
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {isArabic ? "جاري الإرسال..." : "Submitting..."}
+                    </>
+                  ) : isArabic ? (
+                    "تقديم العذر"
+                  ) : (
+                    "Submit Excuse"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Card view for unexcused absences with submit button
+interface UnexcusedAbsenceCardProps {
+  absence: Absence
+  onSubmitExcuse: (absence: Absence) => void
+  locale?: string
+}
+
+export function UnexcusedAbsenceCard({
+  absence,
+  onSubmitExcuse,
+  locale = "en",
+}: UnexcusedAbsenceCardProps) {
+  const isArabic = locale === "ar"
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return isArabic
+      ? date.toLocaleDateString("ar-SA", { month: "short", day: "numeric" })
+      : format(date, "MMM d, yyyy")
+  }
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-red-100 bg-red-50/50 p-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+          <Icons.alertCircle className="h-5 w-5 text-red-600" />
+        </div>
+        <div>
+          <p className="font-medium">{absence.studentName}</p>
+          <p className="text-muted-foreground text-sm">
+            {absence.className} - {formatDate(absence.date)}
+          </p>
+        </div>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onSubmitExcuse(absence)}
+        className="border-red-200 hover:bg-red-50"
+      >
+        <Icons.fileText className="mr-2 h-4 w-4" />
+        {isArabic ? "تقديم عذر" : "Submit Excuse"}
+      </Button>
+    </div>
+  )
+}
+
+// Excuse status badge
+interface ExcuseStatusBadgeProps {
+  status: string
+  locale?: string
+}
+
+export function ExcuseStatusBadge({
+  status,
+  locale = "en",
+}: ExcuseStatusBadgeProps) {
+  const isArabic = locale === "ar"
+
+  switch (status) {
+    case "PENDING":
+      return (
+        <Badge className="border-yellow-200 bg-yellow-100 text-yellow-800">
+          {isArabic ? "قيد المراجعة" : "Pending Review"}
+        </Badge>
+      )
+    case "APPROVED":
+      return (
+        <Badge className="border-green-200 bg-green-100 text-green-800">
+          {isArabic ? "تمت الموافقة" : "Approved"}
+        </Badge>
+      )
+    case "REJECTED":
+      return (
+        <Badge className="border-red-200 bg-red-100 text-red-800">
+          {isArabic ? "مرفوض" : "Rejected"}
+        </Badge>
+      )
+    default:
+      return <Badge variant="outline">{status}</Badge>
+  }
+}

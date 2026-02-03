@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 
-import { ParentAnnouncementsContent } from "@/components/platform/parent-portal/announcements/content"
+import { ParentAnnouncementsContent } from "@/components/school-dashboard/parent-portal/announcements/content"
 
 export const metadata: Metadata = {
   title: "Announcements | Parent Portal",

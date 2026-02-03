@@ -45,7 +45,7 @@ interface EmptyStateCardProps {
  * <EmptyStateCard
  *   icon={<Inbox className="h-12 w-12" />}
  *   title="No Students Yet"
- *   description="Add your first student to get started with the platform"
+ *   description="Add your first student to get started with the school-dashboard"
  *   action={<Button>Add Student</Button>}
  * />
  * ```

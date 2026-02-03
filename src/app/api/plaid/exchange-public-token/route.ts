@@ -54,7 +54,7 @@ import { auth } from "@/auth"
 import { Configuration, PlaidApi, PlaidEnvironments } from "plaid"
 
 import { db } from "@/lib/db"
-import { parseStringify } from "@/components/platform/finance/banking/lib/utils"
+import { parseStringify } from "@/components/school-dashboard/finance/banking/lib/utils"
 
 const configuration = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV || "sandbox"],

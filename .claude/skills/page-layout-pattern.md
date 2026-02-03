@@ -35,7 +35,7 @@ src/app/[lang]/s/[subdomain]/(platform)/[block]/
 ### 1. Layout File Pattern
 
 ```typescript
-// src/app/[lang]/s/[subdomain]/(platform)/[block]/layout.tsx
+// src/app/[lang]/s/[subdomain]/(school-dashboard)/[block]/layout.tsx
 
 import { type Locale } from '@/components/internationalization/config'
 import PageHeader from '@/components/atom/page-header'
@@ -82,7 +82,7 @@ export default async function BlockLayout({ children, params }: Props) {
 ### 2. Content Page Pattern
 
 ```typescript
-// src/components/platform/[block]/content.tsx
+// src/components/school-dashboard/[block]/content.tsx
 
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
@@ -117,9 +117,9 @@ export default async function BlockContent({ dictionary, lang }: Props) {
 ### 3. Page File Pattern
 
 ```typescript
-// src/app/[lang]/s/[subdomain]/(platform)/[block]/page.tsx
+// src/app/[lang]/s/[subdomain]/(school-dashboard)/[block]/page.tsx
 
-import { BlockContent } from '@/components/platform/[block]/content'
+import { BlockContent } from '@/components/school-dashboard/[block]/content'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
 
@@ -174,13 +174,13 @@ export default async function FinanceLayout({ children, params }: Props) {
 
 ```bash
 # Find content files with PageHeader imports
-grep -r "import.*PageHeader" src/components/platform/*/
+grep -r "import.*PageHeader" src/components/school-dashboard/*/
 
 # Find content files with PageNav imports
-grep -r "import.*PageNav" src/components/platform/*/
+grep -r "import.*PageNav" src/components/school-dashboard/*/
 
 # Find navigation array definitions in content files
-grep -r "PageNavItem\[\]" src/components/platform/*/
+grep -r "PageNavItem\[\]" src/components/school-dashboard/*/
 ```
 
 ### Step 2: Fix Content Files

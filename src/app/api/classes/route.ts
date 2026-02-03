@@ -25,12 +25,12 @@
  * - Classes change during term setup
  * - Must return current data
  *
- * @see /components/platform/timetable/actions.ts
+ * @see /components/school-dashboard/timetable/actions.ts
  */
 
 import { NextRequest } from "next/server"
 
-import { getClassesForSelection } from "@/components/platform/timetable/actions"
+import { getClassesForSelection } from "@/components/school-dashboard/timetable/actions"
 
 // WHY: Class list changes during setup
 export const dynamic = "force-dynamic"

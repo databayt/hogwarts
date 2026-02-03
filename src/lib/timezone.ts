@@ -55,7 +55,7 @@
 import {
   supportedTimezones,
   type SupportedTimezone,
-} from "@/components/platform/settings/validation"
+} from "@/components/school-dashboard/settings/validation"
 
 export class TimezoneHelper {
   /**

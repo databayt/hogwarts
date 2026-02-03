@@ -15,7 +15,7 @@ Perform comprehensive refactoring across the entire codebase or specific modules
 /refactor-all naming                 # Fix naming conventions across codebase
 /refactor-all types                  # Add missing TypeScript types
 /refactor-all imports                 # Organize and optimize imports
-/refactor-all components/platform    # Refactor specific directory
+/refactor-all components/school-dashboard    # Refactor specific directory
 ```
 
 ## Refactoring Types
@@ -227,7 +227,7 @@ export const validateEmail = (email: string): boolean => {
 
 ```bash
 /refactor-all students            # Student module
-/refactor-all platform/finance    # Finance module
+/refactor-all school-dashboard/finance    # Finance module
 /refactor-all auth                # Auth module
 ```
 

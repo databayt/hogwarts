@@ -46,7 +46,7 @@ export const platformNav: PlatformNavItem[] = [
     roles: ["ADMIN", "DEVELOPER"],
   },
 
-  // School platform – recommended visibility
+  // School school-dashboard – recommended visibility
   {
     title: "Announcements",
     href: "/announcements",

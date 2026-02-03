@@ -20,7 +20,7 @@ import { UserButton } from "@/components/auth/user-button"
 import { LanguageSwitcher } from "@/components/internationalization/language-switcher"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
-import { useBreadcrumbs } from "@/components/operator/hooks/use-breadcrumbs"
+import { useBreadcrumbs } from "@/components/saas-dashboard/hooks/use-breadcrumbs"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 import { MobileNav } from "@/components/template/mobile-nav"
 import { platformNav } from "@/components/template/saas-sidebar/config"
@@ -30,7 +30,7 @@ export default function SaasHeader() {
   const { dictionary } = useDictionary()
   const { isRTL, locale } = useLocale()
 
-  // Transform operator nav items for mobile menu
+  // Transform saas-dashboard nav items for mobile menu
   const mobileNavItems = useMemo(() => {
     return platformNav.map((item) => ({
       href: item.href,

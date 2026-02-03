@@ -33,7 +33,7 @@ Run performance benchmarks on components, functions, and API endpoints
 // benchmark/StudentTable.bench.ts
 import { bench, describe } from 'vitest';
 import { render } from '@testing-library/react';
-import { StudentTable } from '@/components/platform/listings/students/table';
+import { StudentTable } from '@/components/school-dashboard/listings/students/table';
 
 describe('StudentTable Performance', () => {
   bench('render with 100 students', () => {

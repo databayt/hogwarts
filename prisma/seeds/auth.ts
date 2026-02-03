@@ -45,8 +45,11 @@ export async function seedAdminUsers(
 
   for (const userData of ADMIN_USERS) {
     try {
-      // Developer role has no schoolId
-      const userSchoolId = userData.role === "DEVELOPER" ? null : schoolId
+      // Developer and USER roles have no schoolId (platform-level accounts)
+      const userSchoolId =
+        userData.role === "DEVELOPER" || userData.role === "USER"
+          ? null
+          : schoolId
 
       const user = await prisma.user.upsert({
         where: {

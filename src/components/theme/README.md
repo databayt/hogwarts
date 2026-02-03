@@ -665,7 +665,7 @@ Quick fixes:
 
 - [User Documentation](../../app/[lang]/docs/theme/page.mdx)
 - [Known Issues](./ISSUE.md)
-- [Marking System README](../platform/exams/mark/README.md)
+- [Marking System README](../school-dashboard/exams/mark/README.md)
 - [Typography System](../../../styles/typography.css)
 - [CLAUDE.md](../../../CLAUDE.md) - Project guidelines
 

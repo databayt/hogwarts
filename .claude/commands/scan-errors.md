@@ -32,7 +32,7 @@ Scans the entire codebase for common error patterns that cause TypeScript build 
 /scan-errors all
 
 # Scan specific directory
-/scan-errors --path=src/components/platform/finance/
+/scan-errors --path=src/components/school-dashboard/finance/
 
 # Scan with auto-fix
 /scan-errors --fix
@@ -128,7 +128,7 @@ Total Warnings: 3
 🔍 DICTIONARY ERRORS (189 issues)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📁 src/components/platform/finance/content.tsx
+📁 src/components/school-dashboard/finance/content.tsx
    ❌ 102 invalid dictionary property accesses
 
    Patterns found:
@@ -141,12 +141,12 @@ Total Warnings: 3
    Line 302: d?.blocks?.invoice?.title || 'Invoicing'
    Line 677: d?.workflow?.step1?.title || 'Step 1'
 
-📁 src/components/platform/finance/budget/content.tsx
+📁 src/components/school-dashboard/finance/budget/content.tsx
    ❌ 16 invalid dictionary property accesses
 
    Pattern: d?.stats?.* (16 occurrences)
 
-📁 src/components/platform/finance/expenses/content.tsx
+📁 src/components/school-dashboard/finance/expenses/content.tsx
    ❌ 29 invalid dictionary property accesses
 
    Patterns found:
@@ -155,7 +155,7 @@ Total Warnings: 3
    - d?.sections?.* (10 occurrences)
    - d?.actions?.* (10 occurrences)
 
-📁 src/components/platform/finance/fees/content.tsx
+📁 src/components/school-dashboard/finance/fees/content.tsx
    ❌ 42 invalid dictionary property accesses
 
    Same patterns as expenses
@@ -164,7 +164,7 @@ Total Warnings: 3
 🔍 PRISMA FIELD TYPE ERRORS (13 issues)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📁 src/components/platform/finance/expenses/actions.ts
+📁 src/components/school-dashboard/finance/expenses/actions.ts
    ❌ 8 field type errors
 
    Issues:
@@ -179,7 +179,7 @@ Total Warnings: 3
 🔍 ENUM COMPLETENESS ISSUES (2 issues)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📁 src/components/platform/finance/expenses/config.ts
+📁 src/components/school-dashboard/finance/expenses/config.ts
    ❌ 2 incomplete enum mappings
 
    ExpenseStatus enum has 5 values:
@@ -195,13 +195,13 @@ Total Warnings: 3
 ⚠️  TYPE SAFETY WARNINGS (3 issues)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📁 src/components/platform/finance/expenses/util.ts
+📁 src/components/school-dashboard/finance/expenses/util.ts
    ⚠️  Line 45: Implicit any on parameter 'data'
 
-📁 src/components/platform/finance/fees/validation.ts
+📁 src/components/school-dashboard/finance/fees/validation.ts
    ⚠️  Line 78: Object is possibly 'undefined'
 
-📁 src/components/platform/finance/banking/actions.ts
+📁 src/components/school-dashboard/finance/banking/actions.ts
    ⚠️  Line 123: Non-null assertion on possibly undefined
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

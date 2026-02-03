@@ -8,7 +8,7 @@ import type {
   AttendanceRecord,
   AttendanceStats,
   AttendanceUpdate,
-} from "@/components/platform/attendance/shared/types"
+} from "@/components/school-dashboard/attendance/shared/types"
 
 import socketService, { SocketEvents } from "./socket-service"
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 
-import type { UserRole } from "@/components/platform/settings/role-management"
+import type { UserRole } from "@/components/school-dashboard/settings/role-management"
 
 /**
  * Hook to get the current effective role (considering preview mode)

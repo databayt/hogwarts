@@ -502,12 +502,12 @@ export const {
      * - Detects subdomain from host (school.databayt.org → "school")
      * - Looks up user's schoolId from JWT → fetches school domain from DB
      * - Constructs school-specific dashboard URL
-     * - Special case: ed.databayt.org is the marketing site, NOT a tenant
+     * - Special case: ed.databayt.org is the saas-marketing school-marketing, NOT a tenant
      *
      * GOTCHAS:
      * - Facebook OAuth adds #_=_ hash that must be stripped
      * - Callback URLs must be validated for same-origin security
-     * - DEVELOPERs (platform admins) go to ed.databayt.org, not a school subdomain
+     * - DEVELOPERs (school-dashboard admins) go to ed.databayt.org, not a school subdomain
      *
      * See: src/app/api/auth/store-callback/route.ts for how callback URL is stored
      */

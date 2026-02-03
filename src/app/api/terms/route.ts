@@ -28,11 +28,11 @@
  * - Returns empty terms array instead of errors
  * - WHY: Dropdowns should render (empty) not crash
  *
- * @see /components/platform/timetable/actions.ts
+ * @see /components/school-dashboard/timetable/actions.ts
  */
 
 import { db } from "@/lib/db"
-import { getTermsForSelection } from "@/components/platform/timetable/actions"
+import { getTermsForSelection } from "@/components/school-dashboard/timetable/actions"
 
 // WHY: Terms list changes during setup
 export const dynamic = "force-dynamic"

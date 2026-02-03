@@ -17,7 +17,7 @@
  *
  * MULTI-TENANT VALIDATION:
  * - Pathname must start with `stream/{schoolId}/`
- * - DEVELOPER can delete any file (platform admin)
+ * - DEVELOPER can delete any file (school-dashboard admin)
  * - School users can only delete their school's files
  *
  * WHY PATHNAME CHECK (not DB lookup):

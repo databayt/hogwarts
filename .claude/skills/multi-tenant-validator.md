@@ -542,7 +542,7 @@ export async function getPlatformStats() {
     throw new Error("Platform admin only")
   }
 
-  // No schoolId filter for platform admins
+  // No schoolId filter for school-dashboard admins
   return db.school.findMany({
     include: {
       _count: {

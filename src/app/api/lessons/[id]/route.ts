@@ -17,7 +17,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createErrorResponse } from "@/lib/auth-security"
 import { db } from "@/lib/db"
 import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
-import { getTenantContext } from "@/components/operator/lib/tenant"
+import { getTenantContext } from "@/components/saas-dashboard/lib/tenant"
 
 export async function GET(
   request: NextRequest,

@@ -29,13 +29,13 @@
  * - Products must match Plaid dashboard config
  * - CountryCode affects institution availability
  *
- * @see /components/platform/finance/banking/lib/plaid.ts
+ * @see /components/school-dashboard/finance/banking/lib/plaid.ts
  */
 
 import { NextResponse } from "next/server"
 import { CountryCode, Products } from "plaid"
 
-import { plaidClient } from "@/components/platform/finance/banking/lib/plaid"
+import { plaidClient } from "@/components/school-dashboard/finance/banking/lib/plaid"
 
 export async function POST(request: Request) {
   try {

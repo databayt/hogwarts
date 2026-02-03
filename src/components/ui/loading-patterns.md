@@ -249,7 +249,7 @@ Pre-built card skeletons.
 **Used in:** Students, Teachers, Classes, Parents, Announcements, Events, Lessons, Assignments, Grades
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/students/loading.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/students/loading.tsx
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonDataTable } from "@/components/atom/loading"
 
@@ -271,7 +271,7 @@ export default function Loading() {
 **Used in:** Finance, Exams, Admin, Facility
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/finance/loading.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/finance/loading.tsx
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonCard, SkeletonPageNavWide } from "@/components/atom/loading"
 
@@ -300,7 +300,7 @@ export default function Loading() {
 **Used in:** Dashboard (all roles)
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/lab/loading.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/lab/loading.tsx
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   SkeletonChartGrid,
@@ -335,7 +335,7 @@ export default function Loading() {
 **Used in:** Attendance
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/attendance/loading.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/attendance/loading.tsx
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   SkeletonCard,
@@ -365,7 +365,7 @@ export default function Loading() {
 **Used in:** Timetable
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/timetable/loading.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/timetable/loading.tsx
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonCalendarCompact } from "@/components/atom/loading"
 
@@ -388,7 +388,7 @@ export default function Loading() {
 **Used in:** Notifications
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/notifications/loading.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/notifications/loading.tsx
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   SkeletonList,
@@ -413,7 +413,7 @@ export default function Loading() {
 **Used in:** Profile, Settings
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/profile/loading.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/profile/loading.tsx
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonFormSection, SkeletonPageNav } from "@/components/atom/loading"
 
@@ -457,7 +457,7 @@ Match your layout to one of the 7 patterns above, or combine multiple skeleton c
 Place the file at the route level:
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/[feature]/loading.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/[feature]/loading.tsx
 export default function Loading() {
   return (
     <div className="space-y-6">

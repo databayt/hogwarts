@@ -8,7 +8,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { db } from "@/lib/db"
-import { KioskContent } from "@/components/platform/attendance/kiosk/content"
+import { KioskContent } from "@/components/school-dashboard/attendance/kiosk/content"
 
 interface KioskPageProps {
   params: Promise<{ lang: string }>

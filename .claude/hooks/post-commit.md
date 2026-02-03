@@ -13,7 +13,7 @@ Automatically updates documentation, README files, and metrics after successful 
 ```bash
 # Detect changed features
 git diff HEAD~1 --name-only | grep -E "src/components/platform/.*/(content|actions|form)\.tsx?" | while read file; do
-  FEATURE=$(echo $file | sed 's/.*platform\/\([^/]*\).*/\1/')
+  FEATURE=$(echo $file | sed 's/.*school-dashboard\/\([^/]*\).*/\1/')
   /docs-manager update $FEATURE
 done
 ```

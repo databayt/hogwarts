@@ -21,7 +21,7 @@
  * SECURITY:
  * - Protected by secureDebugEndpoint
  * - Logs marked as AUTHORIZED (security audit trail)
- * - Only accessible to platform operators
+ * - Only accessible to school-dashboard operators
  *
  * DEBUG OUTPUT:
  * - Full request details (url, host, pathname)

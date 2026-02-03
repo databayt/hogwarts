@@ -460,7 +460,7 @@ export const CATEGORY_TAGS: Record<IconCategory, string[]> = {
   [IconCategory.MARKETING]: [
     "promo",
     "landing",
-    "marketing",
+    "saas-marketing",
     "feature",
     "showcase",
     "hero",

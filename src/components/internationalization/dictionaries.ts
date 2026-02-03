@@ -163,8 +163,8 @@ export const getMarketingDictionary = async (locale: Locale) => {
 }
 
 /**
- * Platform core pages - general + school + operator + messages
- * Used for: lab, attendance, basic platform features
+ * Platform core pages - general + school + saas-dashboard + messages
+ * Used for: lab, attendance, basic school-dashboard features
  */
 export const getPlatformCoreDictionary = async (locale: Locale) => {
   try {
@@ -190,7 +190,7 @@ export const getPlatformCoreDictionary = async (locale: Locale) => {
 }
 
 /**
- * Stream pages - platform core + stream
+ * Stream pages - school-dashboard core + stream
  * Used for: course/stream management pages
  */
 export const getStreamDictionary = async (locale: Locale) => {
@@ -215,7 +215,7 @@ export const getStreamDictionary = async (locale: Locale) => {
 }
 
 /**
- * Library pages - platform core + library
+ * Library pages - school-dashboard core + library
  * Used for: library management pages
  */
 export const getLibraryDictionary = async (locale: Locale) => {
@@ -240,7 +240,7 @@ export const getLibraryDictionary = async (locale: Locale) => {
 }
 
 /**
- * Banking pages - platform core + banking
+ * Banking pages - school-dashboard core + banking
  * Used for: banking/accounts pages
  */
 export const getBankingDictionary = async (locale: Locale) => {
@@ -265,7 +265,7 @@ export const getBankingDictionary = async (locale: Locale) => {
 }
 
 /**
- * Finance pages - platform core + finance
+ * Finance pages - school-dashboard core + finance
  * Used for: finance/accounting pages
  */
 export const getFinanceDictionary = async (locale: Locale) => {
@@ -290,7 +290,7 @@ export const getFinanceDictionary = async (locale: Locale) => {
 }
 
 /**
- * Admin pages - platform core + admin
+ * Admin pages - school-dashboard core + admin
  * Used for: admin/settings pages
  */
 export const getAdminDictionary = async (locale: Locale) => {
@@ -315,7 +315,7 @@ export const getAdminDictionary = async (locale: Locale) => {
 }
 
 /**
- * Exam pages - platform core + marking + generate + results
+ * Exam pages - school-dashboard core + marking + generate + results
  * Used for: exam management, marking, results pages
  */
 export const getExamDictionary = async (locale: Locale) => {
@@ -346,7 +346,7 @@ export const getExamDictionary = async (locale: Locale) => {
 }
 
 /**
- * Notification pages - platform core + notifications
+ * Notification pages - school-dashboard core + notifications
  * Used for: notification center, notification preferences
  */
 export const getNotificationDictionary = async (locale: Locale) => {
@@ -372,7 +372,7 @@ export const getNotificationDictionary = async (locale: Locale) => {
 }
 
 /**
- * Sales pages - platform core + sales
+ * Sales pages - school-dashboard core + sales
  * Used for: leads management, CRM, B2B sales
  */
 export const getSalesDictionary = async (locale: Locale) => {
@@ -397,7 +397,7 @@ export const getSalesDictionary = async (locale: Locale) => {
 }
 
 /**
- * Attendance pages - platform core + attendance
+ * Attendance pages - school-dashboard core + attendance
  * Used for: attendance tracking, QR codes, geofencing, interventions
  */
 export const getAttendanceDictionary = async (locale: Locale) => {
@@ -428,7 +428,7 @@ export const getAttendanceDictionary = async (locale: Locale) => {
 }
 
 /**
- * Messaging pages - platform core + messaging
+ * Messaging pages - school-dashboard core + messaging
  * Used for: chat, conversations, direct messages
  */
 export const getMessagingDictionary = async (locale: Locale) => {

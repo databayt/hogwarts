@@ -1,5 +1,5 @@
 // File Record Model
-// Stores metadata for all uploaded files across the platform
+// Stores metadata for all uploaded files across the school-dashboard
 
 model FileRecord {
   id           String  @id @default(cuid())

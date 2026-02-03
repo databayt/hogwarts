@@ -10,7 +10,7 @@
  * 4. Performance: Response times, requests/minute (requires integration)
  *
  * ACCESS CONTROL:
- * - DEVELOPER role only (platform admins)
+ * - DEVELOPER role only (school-dashboard admins)
  * - Returns 403 for non-developers
  * - Logged for audit trail
  *

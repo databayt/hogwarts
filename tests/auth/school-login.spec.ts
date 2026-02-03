@@ -88,7 +88,7 @@ test.describe("School Subdomain Login - Stay in Context", () => {
     await loginAs(page, "developer")
     const finalUrl = await waitForRedirect(page)
 
-    // DEVELOPER always goes to main platform dashboard regardless of entry point
+    // DEVELOPER always goes to main school-dashboard dashboard regardless of entry point
     expect(finalUrl).toMatch(/\/en\/dashboard/)
     // Should NOT have school subdomain
     expect(finalUrl).not.toContain("demo.")

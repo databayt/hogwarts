@@ -96,7 +96,7 @@ export const login = async (
   }
 
   // Smart redirect based on user role AND school context:
-  // - DEVELOPER: Redirect to /dashboard (platform operator dashboard)
+  // - DEVELOPER: Redirect to /dashboard (school-dashboard saas-dashboard dashboard)
   // - Users with school: Redirect to their school's subdomain dashboard
   // - Users without school: Redirect to onboarding
   let finalRedirectUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT
@@ -107,10 +107,10 @@ export const login = async (
     : "ar"
 
   if (existingUser.role === "DEVELOPER") {
-    // DEVELOPER → Platform operator dashboard (main domain)
+    // DEVELOPER → Platform saas-dashboard dashboard (main domain)
     finalRedirectUrl = `/${locale}/dashboard`
     console.log(
-      "[LOGIN-ACTION] 👑 DEVELOPER - redirecting to operator dashboard:",
+      "[LOGIN-ACTION] 👑 DEVELOPER - redirecting to saas-dashboard dashboard:",
       {
         role: existingUser.role,
         redirectUrl: finalRedirectUrl,
@@ -126,10 +126,13 @@ export const login = async (
     if (school?.domain) {
       // Redirect to school subdomain dashboard
       // The /dashboard is role-aware - UI adapts based on user role
+      // Use HTTPS in dev mode if NEXTAUTH_URL uses https (for HTTPS dev testing)
+      const useHttps = process.env.NEXTAUTH_URL?.startsWith("https")
+      const protocol = useHttps ? "https" : "http"
       const baseUrl =
         process.env.NODE_ENV === "production"
           ? `https://${school.domain}.databayt.org`
-          : `http://${school.domain}.localhost:3000`
+          : `${protocol}://${school.domain}.localhost:3000`
       finalRedirectUrl = `${baseUrl}/${locale}/dashboard`
       console.log(
         "[LOGIN-ACTION] 🏫 School member - redirecting to school dashboard:",

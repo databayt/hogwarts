@@ -21,7 +21,7 @@ export const iconItems: IconItem[] = [
     name: "Logo",
     category: IconCategory.SYSTEM,
     tags: ["system", "branding", "logo"],
-    description: "Hogwarts platform logo icon",
+    description: "Hogwarts school-dashboard logo icon",
   },
   {
     id: "patreon",
@@ -142,7 +142,7 @@ export const iconItems: IconItem[] = [
     name: "PlanetScale",
     category: IconCategory.INTEGRATIONS,
     tags: ["integration", "database", "mysql", "planetscale"],
-    description: "PlanetScale database platform logo",
+    description: "PlanetScale database school-dashboard logo",
   },
   {
     id: "prismaIcon",
@@ -177,7 +177,7 @@ export const iconItems: IconItem[] = [
     name: "GitHub",
     category: IconCategory.INTEGRATIONS,
     tags: ["integration", "git", "github", "version-control"],
-    description: "GitHub platform logo",
+    description: "GitHub school-dashboard logo",
   },
   {
     id: "git",
@@ -198,7 +198,7 @@ export const iconItems: IconItem[] = [
     name: "Discord",
     category: IconCategory.INTEGRATIONS,
     tags: ["integration", "chat", "discord", "community"],
-    description: "Discord chat platform logo",
+    description: "Discord chat school-dashboard logo",
   },
   {
     id: "framer",

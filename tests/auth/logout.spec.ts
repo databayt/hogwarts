@@ -22,7 +22,7 @@ test.describe("Logout - Marketing Site Context", () => {
     await clearAuthState(page)
     await goToMarketingLogin(page, "en", env)
 
-    // Login as DEVELOPER (goes to marketing dashboard)
+    // Login as DEVELOPER (goes to saas-marketing dashboard)
     await loginAs(page, "developer")
     await waitForRedirect(page)
 
@@ -55,7 +55,7 @@ test.describe("Logout - Marketing Site Context", () => {
 
     await waitForRedirect(page)
 
-    // Should be on marketing homepage or login page (not school subdomain)
+    // Should be on saas-marketing homepage or login page (not school subdomain)
     const finalUrl = page.url()
     expect(finalUrl).not.toContain("demo.")
     expect(finalUrl).toMatch(

@@ -17,7 +17,7 @@ const CONFIG = {
   sourcePatterns: {
     api: "src/**/actions.ts",
     components: "src/components/**/content.tsx",
-    features: "src/components/platform/*/README.md",
+    features: "src/components/school-dashboard/*/README.md",
     validation: "src/**/validation.ts",
   },
 }
@@ -292,7 +292,7 @@ export async function generateDocumentation(type?: string) {
   }
 
   if (!type || type === "features") {
-    const features = await glob("src/components/platform/*/")
+    const features = await glob("src/components/school-dashboard/*/")
     for (const feature of features) {
       const readmePath = path.join(feature, "README.md")
       await generateFeatureReadme(readmePath)

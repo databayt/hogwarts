@@ -29,7 +29,7 @@
 
 import { NextRequest } from "next/server"
 
-import { detectTimetableConflicts } from "@/components/platform/timetable/actions"
+import { detectTimetableConflicts } from "@/components/school-dashboard/timetable/actions"
 
 // WHY: Timetable conflicts change frequently during editing
 export const dynamic = "force-dynamic"

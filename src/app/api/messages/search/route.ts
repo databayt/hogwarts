@@ -36,7 +36,7 @@
  * - messages: Array with id, content, sender, createdAt
  * - total: Total matching count (for pagination)
  *
- * @see /components/platform/messaging/queries.ts
+ * @see /components/school-dashboard/messaging/queries.ts
  */
 
 import { NextRequest, NextResponse } from "next/server"
@@ -46,7 +46,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import {
   isConversationParticipant,
   searchMessages,
-} from "@/components/platform/messaging/queries"
+} from "@/components/school-dashboard/messaging/queries"
 
 // WHY: Messages change constantly
 export const dynamic = "force-dynamic"

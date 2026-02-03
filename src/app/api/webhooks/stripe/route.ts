@@ -40,8 +40,8 @@ import { headers } from "next/headers"
 
 // WHY NO STRIPE TYPES: Keeps route lean, avoids version conflicts
 import { db } from "@/lib/db"
-import { getTierIdFromStripePrice } from "@/components/marketing/pricing/lib/get-tier-id"
-import { stripe } from "@/components/marketing/pricing/lib/stripe"
+import { getTierIdFromStripePrice } from "@/components/saas-marketing/pricing/lib/get-tier-id"
+import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 
 export async function POST(req: Request) {
   if (!stripe) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { processPendingEmailNotifications } from "@/components/platform/notifications/email-service"
+import { processPendingEmailNotifications } from "@/components/school-dashboard/notifications/email-service"
 
 /**
  * Cron job to process pending notification emails

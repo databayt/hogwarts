@@ -123,7 +123,7 @@ export function createAdminAuthContext(
 }
 
 /**
- * Create a mock auth context for platform developer
+ * Create a mock auth context for school-dashboard developer
  */
 export function createDeveloperAuthContext(
   overrides: Partial<MockAuthContext> = {}
@@ -233,7 +233,7 @@ export function createAdminSession(
 }
 
 /**
- * Create a developer session (platform admin)
+ * Create a developer session (school-dashboard admin)
  */
 export function createDeveloperSession(
   overrides: Partial<MockSessionUser> = {}

@@ -40,7 +40,7 @@ Automatically detects and fixes common build errors that cause TypeScript compil
 /fix-build enum
 
 # Fix specific file
-/fix-build src/components/platform/finance/expenses/actions.ts
+/fix-build src/components/school-dashboard/finance/expenses/actions.ts
 
 # Fix with confirmation (interactive)
 /fix-build --confirm
@@ -468,7 +468,7 @@ Check logs for details.
 /fix-build --rollback 2025-10-29
 
 # Rollback specific file
-/fix-build --rollback 2025-10-29 src/components/platform/finance/content.tsx
+/fix-build --rollback 2025-10-29 src/components/school-dashboard/finance/content.tsx
 
 # List available backups
 /fix-build --list-backups

@@ -189,7 +189,7 @@ $ /feature "student attendance tracking with calendar view"
   ℹ️  Branch: feature branch (warnings only, no blocking)
 
 📚 Phase 8: Documentation
-  ✅ README updated: src/components/platform/attendance/README.md
+  ✅ README updated: src/components/school-dashboard/attendance/README.md
   ✅ GitHub issue created: #123 "Student Attendance Tracking Feature"
   ✅ Changelog updated: CHANGELOG.md
 

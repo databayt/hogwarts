@@ -86,7 +86,7 @@ export const ONBOARDING_STEPS: Record<OnboardingStep, StepConfig> = {
   join: {
     step: "join",
     title: "Join Our Platform",
-    description: "Create your platform account.",
+    description: "Create your school-dashboard account.",
     group: "business",
     isRequired: true,
     order: 9,

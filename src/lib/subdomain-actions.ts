@@ -197,7 +197,7 @@ export async function updateSubdomain(
       data: { domain: normalizeSubdomain(newSubdomain) },
     })
 
-    revalidatePath("/operator/tenants")
+    revalidatePath("/saas-dashboard/tenants")
     return { success: true }
   } catch (error) {
     console.error("Error updating subdomain:", error)

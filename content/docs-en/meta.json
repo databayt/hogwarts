@@ -21,6 +21,7 @@
     "dashboard",
     "authentication",
     "multi-tenancy",
+    "multi-tenancy-tests",
     "onboarding",
     "admission",
     "attendance",

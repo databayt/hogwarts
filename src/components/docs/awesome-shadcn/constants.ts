@@ -117,7 +117,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "page",
     title: "Page",
     description:
-      "Landing page UI components for React and Next.js, built on TailwindCSS. Great for marketing pages and quick page assembly.",
+      "Landing page UI components for React and Next.js, built on TailwindCSS. Great for saas-marketing pages and quick page assembly.",
     link: "https://pageai.pro/",
     repository: "https://github.com/pageai/pageai",
     tags: ["components", "templates"],
@@ -264,7 +264,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "blocks",
     title: "Blocks",
     description:
-      "Premium collection of 700+ uniquely crafted blocks and components tailored for shadcn/ui, Tailwind, and React. High-quality, interactive, and fully responsive sections for building landing and marketing pages in minutes. Lifetime access and updates.",
+      "Premium collection of 700+ uniquely crafted blocks and components tailored for shadcn/ui, Tailwind, and React. High-quality, interactive, and fully responsive sections for building landing and saas-marketing pages in minutes. Lifetime access and updates.",
     link: "https://www.shadcnblocks.com/",
     repository: "https://github.com/shadcnblocks/shadcnblocks",
     tags: ["templates", "components", "specialized", "enhanced"],
@@ -282,7 +282,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "tailark",
     title: "Tailark",
     description:
-      "Modern, responsive, pre-built UI blocks for creating marketing websites with Shadcn UI. Accelerate page assembly with opinionated, polished sections.",
+      "Modern, responsive, pre-built UI blocks for creating saas-marketing websites with Shadcn UI. Accelerate page assembly with opinionated, polished sections.",
     link: "https://nsui.irung.me/",
     repository: "https://github.com/nsui/nsui",
     tags: ["templates", "specialized"],
@@ -309,7 +309,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "neobrutalism",
     title: "Neobrutalism",
     description:
-      "Collection of neobrutalism-styled Tailwind components. A distinct aesthetic for standout marketing and content layouts.",
+      "Collection of neobrutalism-styled Tailwind components. A distinct aesthetic for standout saas-marketing and content layouts.",
     link: "https://github.com/ekmas/neobrutalism-components",
     repository: "https://github.com/ekmas/neobrutalism-components",
     tags: ["components", "modern"],
@@ -365,7 +365,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "landing-react",
     title: "Landing React",
     description:
-      "A polished landing page template leveraging Shadcn/React patterns to quickly bootstrap marketing experiences with sensible defaults.",
+      "A polished landing page template leveraging Shadcn/React patterns to quickly bootstrap saas-marketing experiences with sensible defaults.",
     link: "https://shadcn-landing-page.vercel.app/",
     repository: "https://github.com/shadcn-landing-page/shadcn-landing-page",
     tags: ["templates"],
@@ -590,7 +590,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "bird-software",
     title: "BirdSoftware",
     description:
-      "Landing page created using nextjs, shadcn, tailwindcss and typescript. E-commerce platform with customizable templates, fast performance, and comprehensive business features.",
+      "Landing page created using nextjs, shadcn, tailwindcss and typescript. E-commerce school-dashboard with customizable templates, fast performance, and comprehensive business features.",
     link: "https://landing-page-darthdevv.vercel.app/",
     repository:
       "https://github.com/landing-page-darthdevv/landing-page-darthdevv",
@@ -610,7 +610,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "saas-wallet",
     title: "SaasWallet",
     description:
-      "A SaaS landing page built with Nextjs 14, Typescript, Tailwind and Shadcn. Digital wallet platform with customizable cards, no payment fees, and comprehensive financial management.",
+      "A SaaS landing page built with Nextjs 14, Typescript, Tailwind and Shadcn. Digital wallet school-dashboard with customizable cards, no payment fees, and comprehensive financial management.",
     link: "https://saas-wallet.vercel.app/",
     repository: "https://github.com/saas-wallet/saas-wallet",
     tags: ["templates", "modern"],
@@ -649,7 +649,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "open-enterprise",
     title: "OpenEnterprise",
     description:
-      "Open enterprise landing page built with Nextjs, Shadcn, and Tailwind. Professional business platform with modern design and enterprise-grade features.",
+      "Open enterprise landing page built with Nextjs, Shadcn, and Tailwind. Professional business school-dashboard with modern design and enterprise-grade features.",
     link: "https://open-enterprise-beta.vercel.app/",
     repository: "https://github.com/open-enterprise-beta/open-enterprise-beta",
     tags: ["templates", "landing", "modern"],
@@ -739,25 +739,25 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "alvest-finance",
     title: "Alvest Finance",
     description:
-      "AI-powered financial analytics platform with automated insights and recommendations. Features expense tracking, real-time data, and secure authentication built with Next.js, Supabase, and shadcn/ui.",
+      "AI-powered financial analytics school-dashboard with automated insights and recommendations. Features expense tracking, real-time data, and secure authentication built with Next.js, Supabase, and shadcn/ui.",
     link: "https://alvest-finance.vercel.app/",
     repository: "https://github.com/ezeslucky/Ai-Saas-Finance",
     tags: ["templates", "finance", "ai", "saas", "enhanced", "modern"],
   },
   {
-    id: "ai-finance-platform-piyush",
+    id: "ai-finance-school-dashboard-piyush",
     title: "AI Finance Platform",
     description:
-      "Full-stack AI finance platform powered by Google Gemini API. Includes intelligent financial analysis, expense tracking, and automated recommendations with Supabase, Prisma, Inngest, and ArcJet security.",
+      "Full-stack AI finance school-dashboard powered by Google Gemini API. Includes intelligent financial analysis, expense tracking, and automated recommendations with Supabase, Prisma, Inngest, and ArcJet security.",
     link: "https://github.com/piyush-eon/ai-finance-platform",
     repository: "https://github.com/piyush-eon/ai-finance-platform",
     tags: ["templates", "finance", "ai", "saas", "enhanced", "modern"],
   },
   {
-    id: "finance-platform-josue",
+    id: "finance-school-dashboard-josue",
     title: "Finance Platform",
     description:
-      "Personal finance SaaS platform with Plaid integration for bank connectivity. Features transaction tracking, categorization, account management, and CSV imports built with Next.js 14, Hono.js, and PostgreSQL.",
+      "Personal finance SaaS school-dashboard with Plaid integration for bank connectivity. Features transaction tracking, categorization, account management, and CSV imports built with Next.js 14, Hono.js, and PostgreSQL.",
     link: "https://github.com/JosueIsOffline/finance-platform",
     repository: "https://github.com/JosueIsOffline/finance-platform",
     tags: ["templates", "finance", "saas", "enhanced", "modern"],
@@ -892,7 +892,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     tags: ["templates", "specialized", "modern"],
   },
   {
-    id: "lms-course-platform",
+    id: "lms-course-school-dashboard",
     title: "LMSCoursePlatform",
     description:
       "A modern, feature-rich Learning Management System built with Next.js 15, Sanity CMS, Clerk, and Stripe. Features real-time content updates, course progress tracking, and secure payment processing.",
@@ -1033,7 +1033,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "booking-clone",
     title: "BookingClone",
     description:
-      "Booking.com clone built with Next.js 14, shadcn, tailwind, typescript, and oxylabs. Complete travel booking platform template.",
+      "Booking.com clone built with Next.js 14, shadcn, tailwind, typescript, and oxylabs. Complete travel booking school-dashboard template.",
     link: "https://github.com/sonnysangha/booking.com-clone-nextjs-14-shadcn-tailwind-typescript-oxylabs",
     repository:
       "https://github.com/sonnysangha/booking.com-clone-nextjs-14-shadcn-tailwind-typescript-oxylabs",
@@ -1088,7 +1088,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "pinoyoverflow",
     title: "Pinoyoverflow",
     description:
-      "React | TypeScript | NextJS | MongoDB | Tailwind CSS | Clerk | shadcn/ui | Prism | zod. Full-stack development platform.",
+      "React | TypeScript | NextJS | MongoDB | Tailwind CSS | Clerk | shadcn/ui | Prism | zod. Full-stack development school-dashboard.",
     link: "https://www.pinoyoverflow.com/",
     repository: "https://github.com/pinoyoverflow/pinoyoverflow",
     tags: ["templates", "fullstack", "enhanced", "modern"],
@@ -1217,7 +1217,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "mkdocs-shadcn",
     title: "MkdocsShadcn",
     description:
-      "MkDocs in NextJs. Documentation site template with shadcn/ui styling.",
+      "MkDocs in NextJs. Documentation school-marketing template with shadcn/ui styling.",
     link: "https://www.mkdocs-shadcn.org/",
     repository: "https://github.com/mkdocs-shadcn/mkdocs-shadcn",
     tags: ["templates", "documentation", "modern"],
@@ -1301,7 +1301,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "furniro-ecommerce",
     title: "FurniroEcommerce",
     description:
-      "A fullstack ecommerce application built with Nextjs, Shadcn, Zod, MongoDB, Stripe and Framer motion. Complete e-commerce platform template.",
+      "A fullstack ecommerce application built with Nextjs, Shadcn, Zod, MongoDB, Stripe and Framer motion. Complete e-commerce school-dashboard template.",
     link: "https://furniro-ecommerce-blue.vercel.app/",
     repository:
       "https://github.com/furniro-ecommerce-blue/furniro-ecommerce-blue",
@@ -1311,7 +1311,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "relative",
     title: "Relative",
     description:
-      "Marketing site template crafted with Next.js, shadcn/ui, and Tailwind. Provides essential sections to launch quickly with consistent design.",
+      "Marketing school-marketing template crafted with Next.js, shadcn/ui, and Tailwind. Provides essential sections to launch quickly with consistent design.",
     link: "https://www.shadcntemplates.com/theme/shadcnblockscom-relative/",
     repository: "https://github.com/shadcnblockscom/shadcnblockscom-relative",
     tags: ["templates", "modern"],
@@ -1412,7 +1412,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "sidebar",
     title: "Sidebar",
     description:
-      "Composable, themeable, and customizable sidebar component documented in the official shadcn/ui site. Practical foundation for app shells.",
+      "Composable, themeable, and customizable sidebar component documented in the official shadcn/ui school-marketing. Practical foundation for app shells.",
     link: "https://ui.shadcn.com/docs/components/sidebar",
     repository: "https://github.com/shadcn/ui/tree/main/components/ui/sidebar",
     tags: ["components", "enhanced"],
@@ -1495,7 +1495,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "giats-portfolio",
     title: "GiatsPortfolio",
     description:
-      "Award-winning personal portfolio website by Evangelos Giatsidis built with Next.js, React Three Fiber, and GSAP animations. Multi-award-winning site with CSS Design Awards, Awwwards, and GSAP recognition.",
+      "Award-winning personal portfolio website by Evangelos Giatsidis built with Next.js, React Three Fiber, and GSAP animations. Multi-award-winning school-marketing with CSS Design Awards, Awwwards, and GSAP recognition.",
     link: "https://giats.me/",
     repository: "https://github.com/Giats2498/giats-portfolio",
     tags: ["templates", "portfolio", "award", "modern", "enhanced"],

@@ -1,0 +1,199 @@
+"use client"
+
+import * as React from "react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useSchool } from "@/components/school-dashboard/context/school-context"
+import { updateSchoolSettings } from "@/app/[lang]/s/[subdomain]/(school-dashboard)/settings/actions"
+
+import {
+  getCurrentTimeInTimezone,
+  getTimezoneDisplayName,
+  supportedTimezones,
+  type SupportedTimezone,
+} from "./validation"
+
+interface Props {
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export const SettingsContent = React.memo(function SettingsContent({
+  dictionary,
+  lang,
+}: Props) {
+  const { school } = useSchool()
+  const [name, setName] = React.useState(school.name || "")
+  const [timezone, setTimezone] = React.useState<SupportedTimezone>(
+    (school.timezone as SupportedTimezone) || "Africa/Khartoum"
+  )
+  const [locale, setLocale] = React.useState<"ar" | "en">(
+    (school.locale as "ar" | "en") || "ar"
+  )
+  const [logoUrl, setLogoUrl] = React.useState(school.logoUrl || "")
+  const [submitting, setSubmitting] = React.useState(false)
+  const [currentTime, setCurrentTime] = React.useState("")
+
+  // Update current time in selected timezone
+  React.useEffect(() => {
+    const updateTime = () => {
+      setCurrentTime(getCurrentTimeInTimezone(timezone))
+    }
+
+    updateTime() // Initial update
+    const interval = setInterval(updateTime, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [timezone])
+
+  const onSubmit = React.useCallback(async () => {
+    setSubmitting(true)
+    try {
+      await updateSchoolSettings({ name, timezone, locale, logoUrl })
+      SuccessToast("Settings updated successfully")
+    } catch (e) {
+      ErrorToast(e instanceof Error ? e.message : "Failed to update settings")
+    } finally {
+      setSubmitting(false)
+    }
+  }, [name, timezone, locale, logoUrl])
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          {dictionary?.school?.settings?.schoolSettings || "School Settings"}
+        </CardTitle>
+        <CardDescription>
+          {dictionary?.school?.settings?.description ||
+            "Configure your school's basic information and preferences"}
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="grid gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="school-name" className="text-sm font-medium">
+            {dictionary?.school?.settings?.schoolName || "School Name"}
+          </Label>
+          <Input
+            id="school-name"
+            placeholder="Enter school name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="timezone" className="text-sm font-medium">
+            {dictionary?.school?.settings?.timezone || "Timezone"}
+          </Label>
+          <Select
+            value={timezone}
+            onValueChange={(value) => setTimezone(value as SupportedTimezone)}
+          >
+            <SelectTrigger id="timezone">
+              <SelectValue placeholder="Select timezone">
+                {getTimezoneDisplayName(timezone)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {supportedTimezones.map((tz) => (
+                <SelectItem key={tz} value={tz}>
+                  <div className="flex flex-col items-start">
+                    <span>{getTimezoneDisplayName(tz)}</span>
+                    <span className="text-xs text-gray-500">
+                      Current time: {getCurrentTimeInTimezone(tz)}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {currentTime && (
+            <p className="text-muted-foreground text-xs">
+              Current time in {getTimezoneDisplayName(timezone)}:{" "}
+              <span className="font-mono">{currentTime}</span>
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="locale" className="text-sm font-medium">
+            {dictionary?.school?.settings?.language || "Language"}
+          </Label>
+          <Select
+            value={locale}
+            onValueChange={(value) => setLocale(value as "ar" | "en")}
+          >
+            <SelectTrigger id="locale">
+              <SelectValue>
+                {locale === "ar" ? "العربية (Arabic)" : "English"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ar">العربية (Arabic)</SelectItem>
+              <SelectItem value="en">English</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="logo-url" className="text-sm font-medium">
+            {dictionary?.school?.settings?.schoolLogo || "Logo URL"} (Optional)
+          </Label>
+          <Input
+            id="logo-url"
+            type="url"
+            placeholder="https://example.com/logo.png"
+            value={logoUrl}
+            onChange={(e) => setLogoUrl(e.target.value)}
+          />
+          {logoUrl && (
+            <p className="text-muted-foreground text-xs">
+              Preview:{" "}
+              <a
+                href={logoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {logoUrl}
+              </a>
+            </p>
+          )}
+        </div>
+
+        <Button
+          onClick={onSubmit}
+          disabled={submitting || !name.trim()}
+          className="w-fit"
+        >
+          {submitting
+            ? dictionary?.school?.settings?.userManagementLabels?.saving ||
+              "Saving..."
+            : dictionary?.school?.settings?.userManagementLabels
+                ?.saveSettings || "Save Settings"}
+        </Button>
+      </CardContent>
+    </Card>
+  )
+})

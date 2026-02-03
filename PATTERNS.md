@@ -649,11 +649,11 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 // 5. Actions and utilities
-import { createStudent } from "@/components/platform/listings/students/actions"
+import { createStudent } from "@/components/school-dashboard/listings/students/actions"
 // 4. Internal components
-import { StudentCard } from "@/components/platform/listings/students/card"
-import { StudentForm } from "@/components/platform/listings/students/form"
-import { studentSchema } from "@/components/platform/listings/students/validation"
+import { StudentCard } from "@/components/school-dashboard/listings/students/card"
+import { StudentForm } from "@/components/school-dashboard/listings/students/form"
+import { studentSchema } from "@/components/school-dashboard/listings/students/validation"
 
 // 7. Styles (if needed)
 import styles from "./styles.module.css"

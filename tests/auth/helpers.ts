@@ -56,7 +56,7 @@ export const TEST_CREDENTIALS = {
 export type TestUserRole = keyof typeof TEST_CREDENTIALS
 
 /**
- * Get base URL for the marketing/SaaS site
+ * Get base URL for the saas-marketing/SaaS school-marketing
  */
 export function getBaseUrl(env: TestEnv = "local"): string {
   return env === "production"
@@ -94,9 +94,42 @@ export async function loginWithCredentials(
   email: string,
   password: string
 ): Promise<void> {
-  await page.fill('input[name="email"]', email)
-  await page.fill('input[name="password"]', password)
-  await page.click('button[type="submit"]')
+  // Wait for form fields to be visible and ready
+  await page.waitForSelector('input[name="email"]', { state: "visible" })
+  await page.waitForSelector('input[name="password"]', { state: "visible" })
+
+  // Clear and fill email field, then verify value is set
+  const emailInput = page.locator('input[name="email"]')
+  await emailInput.clear()
+  await emailInput.fill(email)
+
+  // Wait for email to be properly filled
+  await page.waitForFunction(
+    (expectedEmail) => {
+      const input = document.querySelector(
+        'input[name="email"]'
+      ) as HTMLInputElement
+      return input && input.value === expectedEmail
+    },
+    email,
+    { timeout: 5000 }
+  )
+
+  // Fill password
+  const passwordInput = page.locator('input[name="password"]')
+  await passwordInput.clear()
+  await passwordInput.fill(password)
+
+  // Small delay to ensure form state is updated
+  await page.waitForTimeout(100)
+
+  // Click submit and wait for navigation
+  await Promise.all([
+    page
+      .waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 })
+      .catch(() => null),
+    page.click('button[type="submit"]'),
+  ])
 }
 
 /**
@@ -108,7 +141,7 @@ export async function loginAs(page: Page, role: TestUserRole): Promise<void> {
 }
 
 /**
- * Navigate to login page for marketing site
+ * Navigate to login page for saas-marketing school-marketing
  */
 export async function goToMarketingLogin(
   page: Page,
@@ -137,9 +170,16 @@ export async function goToSchoolLogin(
  */
 export async function waitForRedirect(
   page: Page,
-  timeout: number = 10000
+  timeout: number = 15000
 ): Promise<string> {
-  await page.waitForLoadState("networkidle", { timeout })
+  // Wait for either networkidle or domcontentloaded - whichever comes first
+  // This handles cases where persistent connections keep the page from reaching networkidle
+  try {
+    await page.waitForLoadState("networkidle", { timeout })
+  } catch {
+    // If networkidle times out, wait for domcontentloaded as fallback
+    await page.waitForLoadState("domcontentloaded", { timeout: 5000 })
+  }
   return page.url()
 }
 
@@ -198,7 +238,7 @@ export function getExpectedRedirect(
   const credentials = TEST_CREDENTIALS[role]
 
   if (role === "developer") {
-    // DEVELOPER goes to platform operator dashboard
+    // DEVELOPER goes to school-dashboard saas-dashboard dashboard
     const baseUrl = getBaseUrl(env)
     return `${baseUrl}/${locale}/dashboard`
   }
@@ -219,8 +259,20 @@ export function getExpectedRedirect(
  */
 export async function clearAuthState(page: Page): Promise<void> {
   await page.context().clearCookies()
-  await page.evaluate(() => {
-    localStorage.clear()
-    sessionStorage.clear()
-  })
+  // Only try to clear localStorage if we're on a page
+  try {
+    const url = page.url()
+    if (url && url !== "about:blank") {
+      await page.evaluate(() => {
+        try {
+          localStorage.clear()
+          sessionStorage.clear()
+        } catch {
+          // Ignore if localStorage is not accessible
+        }
+      })
+    }
+  } catch {
+    // Ignore errors - we still cleared cookies
+  }
 }

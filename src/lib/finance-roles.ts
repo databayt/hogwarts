@@ -31,7 +31,7 @@
  * - manage: Configure module settings
  *
  * GOTCHAS:
- * - DEVELOPER role bypasses schoolId filtering (platform admin)
+ * - DEVELOPER role bypasses schoolId filtering (school-dashboard admin)
  * - GUARDIAN permissions are derived from linked student(s)
  * - 'approve' and 'process' are separate - approve authorizes, process executes
  * - Changes here must sync with UI component visibility checks

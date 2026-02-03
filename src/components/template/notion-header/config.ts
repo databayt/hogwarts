@@ -166,7 +166,7 @@ export const marketingConfig: MarketingConfig = {
 
     {
       title: "Platform",
-      href: "/platform",
+      href: "/school-dashboard",
     },
   ],
 }

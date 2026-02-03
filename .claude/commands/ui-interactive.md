@@ -708,7 +708,7 @@ Use standard mode for:
 [AUTO] Validating... ✅ 99/100 PASS
 [AUTO] Committing... ✅ abc123d
 
-✅ Component ready at src/components/platform/multi-step-form/
+✅ Component ready at src/components/school-dashboard/multi-step-form/
 ```
 
 ### Example 2: Pricing Card (Atom)

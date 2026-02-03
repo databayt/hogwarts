@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Hogwarts School Management",
     short_name: "Hogwarts",
     description:
-      "A comprehensive school automation platform that manages students, faculty, and academic processes with an intuitive interface. Features QR code attendance and geofence tracking.",
+      "A comprehensive school automation school-dashboard that manages students, faculty, and academic processes with an intuitive interface. Features QR code attendance and geofence tracking.",
     start_url: "/",
     scope: "/",
     display: "standalone",

@@ -1,0 +1,328 @@
+---
+title: Multi-Tenancy Test Plan
+description: Comprehensive atomic test plan with 75 tests across 15 stories covering multi-tenant infrastructure
+---
+
+# Multi-Tenancy Atomic Test Plan
+
+## Overview
+
+| Metric                      | Value                   |
+| --------------------------- | ----------------------- |
+| **Total Routes Discovered** | 324                     |
+| **SaaS Marketing**          | 6 pages                 |
+| **SaaS Dashboard**          | 14 pages + 4 API routes |
+| **School Marketing**        | 19 pages                |
+| **School Dashboard**        | 285 pages               |
+
+**Test Strategy**: Atomic tests - one assertion per test, executed sequentially via Playwright MCP.
+
+## Test Coverage Summary
+
+| Story       | Tests | What It Covers                           |
+| ----------- | ----- | ---------------------------------------- |
+| Story 1-2   | 10    | Public pages & login UI                  |
+| Story 3-6   | 22    | DEVELOPER auth flow & SaaS dashboard     |
+| Story 7-10  | 23    | School marketing, ADMIN auth & dashboard |
+| Story 11-12 | 10    | RBAC enforcement & tenant isolation      |
+| Story 13-15 | 10    | i18n, fresh user, SSO                    |
+
+## Test Credentials
+
+| Email                   | Role       | School | Purpose                 |
+| ----------------------- | ---------- | ------ | ----------------------- |
+| dev@databayt.org        | DEVELOPER  | None   | Platform admin          |
+| user@databayt.org       | USER       | None   | Fresh user (onboarding) |
+| admin@databayt.org      | ADMIN      | demo   | School admin            |
+| teacher@databayt.org    | TEACHER    | demo   | Teacher                 |
+| student@databayt.org    | STUDENT    | demo   | Student                 |
+| accountant@databayt.org | ACCOUNTANT | demo   | Finance                 |
+| parent@databayt.org     | GUARDIAN   | demo   | Parent                  |
+| staff@databayt.org      | STAFF      | demo   | Staff                   |
+
+**Password**: `1234` for all accounts
+
+---
+
+## Story 1: SaaS Marketing Public Access
+
+Tests that marketing pages load without authentication.
+
+| #   | Test ID | Test Name           | URL                               | Expected                 |
+| --- | ------- | ------------------- | --------------------------------- | ------------------------ |
+| 1   | SM-001  | Landing page loads  | http://localhost:3000/en          | 200, contains "Hogwarts" |
+| 2   | SM-002  | Features page loads | http://localhost:3000/en/features | 200, contains features   |
+| 3   | SM-003  | Pricing page loads  | http://localhost:3000/en/pricing  | 200, contains pricing    |
+| 4   | SM-004  | Blog page loads     | http://localhost:3000/en/blog     | 200, contains blog       |
+| 5   | SM-005  | Docs page loads     | http://localhost:3000/en/docs     | 200, contains docs       |
+| 6   | SM-006  | Arabic locale works | http://localhost:3000/ar          | 200, RTL direction       |
+
+---
+
+## Story 2: Authentication - Login Page
+
+Tests that login page renders correctly.
+
+| #   | Test ID  | Test Name                     | URL                            | Expected             |
+| --- | -------- | ----------------------------- | ------------------------------ | -------------------- |
+| 7   | AUTH-001 | Login page loads              | http://localhost:3000/en/login | 200, has email input |
+| 8   | AUTH-002 | Login page has password field | http://localhost:3000/en/login | Has password input   |
+| 9   | AUTH-003 | Login page has submit button  | http://localhost:3000/en/login | Has submit button    |
+| 10  | AUTH-004 | Login page has social buttons | http://localhost:3000/en/login | Has Google/Facebook  |
+
+---
+
+## Story 3: Protected Routes Redirect
+
+Tests that protected routes redirect unauthenticated users to login.
+
+| #   | Test ID  | Test Name                    | URL                                | Expected           |
+| --- | -------- | ---------------------------- | ---------------------------------- | ------------------ |
+| 11  | PROT-001 | Dashboard redirects to login | http://localhost:3000/en/dashboard | Redirect to /login |
+| 12  | PROT-002 | Analytics redirects to login | http://localhost:3000/en/analytics | Redirect to /login |
+| 13  | PROT-003 | Tenants redirects to login   | http://localhost:3000/en/tenants   | Redirect to /login |
+| 14  | PROT-004 | Billing redirects to login   | http://localhost:3000/en/billing   | Redirect to /login |
+| 15  | PROT-005 | Profile redirects to login   | http://localhost:3000/en/profile   | Redirect to /login |
+| 16  | PROT-006 | Kanban redirects to login    | http://localhost:3000/en/kanban    | Redirect to /login |
+
+---
+
+## Story 4: DEVELOPER Login Flow
+
+Tests DEVELOPER role login and SaaS dashboard access.
+
+| #   | Test ID | Test Name           | Action                | Expected                |
+| --- | ------- | ------------------- | --------------------- | ----------------------- |
+| 17  | DEV-001 | Fill email field    | Type dev@databayt.org | Email filled            |
+| 18  | DEV-002 | Fill password field | Type 1234             | Password filled         |
+| 19  | DEV-003 | Submit login form   | Click submit          | Form submits            |
+| 20  | DEV-004 | Login succeeds      | Wait for redirect     | URL contains /dashboard |
+| 21  | DEV-005 | Dashboard loads     | Check page content    | Contains dashboard UI   |
+
+---
+
+## Story 5: SaaS Dashboard Access (DEVELOPER)
+
+Tests that DEVELOPER can access all SaaS dashboard routes.
+
+| #   | Test ID  | Test Name                | URL               | Expected               |
+| --- | -------- | ------------------------ | ----------------- | ---------------------- |
+| 22  | SAAS-001 | Dashboard accessible     | /en/dashboard     | 200, dashboard content |
+| 23  | SAAS-002 | Analytics accessible     | /en/analytics     | 200, analytics content |
+| 24  | SAAS-003 | Tenants accessible       | /en/tenants       | 200, tenant list       |
+| 25  | SAAS-004 | Billing accessible       | /en/billing       | 200, billing content   |
+| 26  | SAAS-005 | Domains accessible       | /en/domains       | 200, domains content   |
+| 27  | SAAS-006 | Kanban accessible        | /en/kanban        | 200, kanban board      |
+| 28  | SAAS-007 | Sales accessible         | /en/sales         | 200, sales content     |
+| 29  | SAAS-008 | Observability accessible | /en/observability | 200, observability     |
+
+---
+
+## Story 6: DEVELOPER Logout
+
+Tests logout flow for DEVELOPER.
+
+| #   | Test ID    | Test Name          | Action            | Expected           |
+| --- | ---------- | ------------------ | ----------------- | ------------------ |
+| 30  | LOGOUT-001 | Find logout button | Look for logout   | Logout visible     |
+| 31  | LOGOUT-002 | Click logout       | Click logout      | Logout triggered   |
+| 32  | LOGOUT-003 | Redirected to home | Wait for redirect | URL is / or /login |
+
+---
+
+## Story 7: School Marketing Public Access
+
+Tests school marketing pages on subdomain.
+
+| #   | Test ID   | Test Name             | URL                                      | Expected              |
+| --- | --------- | --------------------- | ---------------------------------------- | --------------------- |
+| 33  | SCH-M-001 | School home loads     | http://demo.localhost:3000/en            | 200, school content   |
+| 34  | SCH-M-002 | About page loads      | http://demo.localhost:3000/en/about      | 200, about content    |
+| 35  | SCH-M-003 | Academic page loads   | http://demo.localhost:3000/en/academic   | 200, academic info    |
+| 36  | SCH-M-004 | Admissions page loads | http://demo.localhost:3000/en/admissions | 200, admissions       |
+| 37  | SCH-M-005 | Apply page loads      | http://demo.localhost:3000/en/apply      | 200, application form |
+| 38  | SCH-M-006 | Tour page loads       | http://demo.localhost:3000/en/tour       | 200, tour info        |
+
+---
+
+## Story 8: School Protected Routes Redirect
+
+Tests school dashboard routes redirect without auth.
+
+| #   | Test ID   | Test Name                  | URL                                     | Expected           |
+| --- | --------- | -------------------------- | --------------------------------------- | ------------------ |
+| 39  | SCH-P-001 | School dashboard redirects | http://demo.localhost:3000/en/dashboard | Redirect to /login |
+| 40  | SCH-P-002 | Students page redirects    | http://demo.localhost:3000/en/students  | Redirect to /login |
+| 41  | SCH-P-003 | Teachers page redirects    | http://demo.localhost:3000/en/teachers  | Redirect to /login |
+| 42  | SCH-P-004 | Finance page redirects     | http://demo.localhost:3000/en/finance   | Redirect to /login |
+
+---
+
+## Story 9: ADMIN Login Flow
+
+Tests ADMIN role login to school dashboard.
+
+| #   | Test ID | Test Name         | Action                             | Expected                |
+| --- | ------- | ----------------- | ---------------------------------- | ----------------------- |
+| 43  | ADM-001 | Navigate to login | Go to demo.localhost:3000/en/login | Login page              |
+| 44  | ADM-002 | Fill email        | Type admin@databayt.org            | Email filled            |
+| 45  | ADM-003 | Fill password     | Type 1234                          | Password filled         |
+| 46  | ADM-004 | Submit login      | Click submit                       | Form submits            |
+| 47  | ADM-005 | Login succeeds    | Wait for redirect                  | URL contains /dashboard |
+
+---
+
+## Story 10: School Dashboard Access (ADMIN)
+
+Tests ADMIN can access school dashboard routes.
+
+| #   | Test ID   | Test Name             | URL            | Expected          |
+| --- | --------- | --------------------- | -------------- | ----------------- |
+| 48  | SCH-A-001 | Dashboard accessible  | /en/dashboard  | 200, dashboard    |
+| 49  | SCH-A-002 | Students accessible   | /en/students   | 200, student list |
+| 50  | SCH-A-003 | Teachers accessible   | /en/teachers   | 200, teacher list |
+| 51  | SCH-A-004 | Classes accessible    | /en/classes    | 200, class list   |
+| 52  | SCH-A-005 | Finance accessible    | /en/finance    | 200, finance      |
+| 53  | SCH-A-006 | Attendance accessible | /en/attendance | 200, attendance   |
+| 54  | SCH-A-007 | Exams accessible      | /en/exams      | 200, exams        |
+| 55  | SCH-A-008 | Settings accessible   | /en/settings   | 200, settings     |
+
+---
+
+## Story 11: RBAC - STUDENT Restrictions
+
+Tests that STUDENT cannot access admin routes.
+
+| #   | Test ID  | Test Name         | URL as STUDENT                | Expected     |
+| --- | -------- | ----------------- | ----------------------------- | ------------ |
+| 56  | RBAC-001 | Student login     | Login as student@databayt.org | Success      |
+| 57  | RBAC-002 | Dashboard allowed | /en/dashboard                 | 200, allowed |
+| 58  | RBAC-003 | Teachers blocked  | /en/teachers                  | Redirect/403 |
+| 59  | RBAC-004 | Settings blocked  | /en/settings                  | Redirect/403 |
+| 60  | RBAC-005 | Admin blocked     | /en/admin                     | Redirect/403 |
+| 61  | RBAC-006 | My-grades allowed | /en/my-grades                 | 200, allowed |
+
+---
+
+## Story 12: Tenant Isolation
+
+Tests that users cannot access other schools.
+
+| #   | Test ID | Test Name             | Action                                        | Expected             |
+| --- | ------- | --------------------- | --------------------------------------------- | -------------------- |
+| 62  | ISO-001 | Login to demo school  | Login as admin@databayt.org on demo           | Success              |
+| 63  | ISO-002 | Access demo dashboard | /en/dashboard on demo                         | 200, demo school     |
+| 64  | ISO-003 | Try other school URL  | Navigate to other.localhost:3000/en/dashboard | Access denied        |
+| 65  | ISO-004 | No data leak          | Check no demo data visible                    | No cross-school data |
+
+---
+
+## Story 13: Locale Switching
+
+Tests language switching works correctly.
+
+| #   | Test ID  | Test Name     | Action             | Expected   |
+| --- | -------- | ------------- | ------------------ | ---------- |
+| 66  | I18N-001 | English loads | /en/dashboard      | English UI |
+| 67  | I18N-002 | Arabic loads  | /ar/dashboard      | Arabic UI  |
+| 68  | I18N-003 | RTL direction | Check Arabic page  | dir="rtl"  |
+| 69  | I18N-004 | LTR direction | Check English page | dir="ltr"  |
+
+---
+
+## Story 14: Fresh User (USER role)
+
+Tests user@databayt.org has no school access.
+
+| #   | Test ID  | Test Name             | Action                     | Expected             |
+| --- | -------- | --------------------- | -------------------------- | -------------------- |
+| 70  | USER-001 | User login            | Login as user@databayt.org | Success              |
+| 71  | USER-002 | No school dashboard   | Try /en/dashboard          | No school content    |
+| 72  | USER-003 | Get Started available | Check for onboarding       | Can start onboarding |
+
+---
+
+## Story 15: Cross-Subdomain SSO
+
+Tests session sharing across subdomains (production behavior).
+
+| #   | Test ID | Test Name               | Action                    | Expected                |
+| --- | ------- | ----------------------- | ------------------------- | ----------------------- |
+| 73  | SSO-001 | Login on main domain    | Login on localhost:3000   | Session cookie set      |
+| 74  | SSO-002 | Check cookie domain     | Inspect cookie            | Domain is set correctly |
+| 75  | SSO-003 | Document SSO limitation | Note localhost limitation | Documented              |
+
+---
+
+## Execution Summary
+
+| Story     | Tests  | Focus Area                 |
+| --------- | ------ | -------------------------- |
+| Story 1   | 6      | SaaS Marketing Public      |
+| Story 2   | 4      | Login Page UI              |
+| Story 3   | 6      | Protected Route Redirects  |
+| Story 4   | 5      | DEVELOPER Login            |
+| Story 5   | 8      | SaaS Dashboard Access      |
+| Story 6   | 3      | Logout Flow                |
+| Story 7   | 6      | School Marketing Public    |
+| Story 8   | 4      | School Protected Redirects |
+| Story 9   | 5      | ADMIN Login                |
+| Story 10  | 8      | School Dashboard Access    |
+| Story 11  | 6      | RBAC Restrictions          |
+| Story 12  | 4      | Tenant Isolation           |
+| Story 13  | 4      | Locale/i18n                |
+| Story 14  | 3      | Fresh User Flow            |
+| Story 15  | 3      | SSO Documentation          |
+| **TOTAL** | **75** |                            |
+
+---
+
+## Execution Process
+
+For each test:
+
+1. **EXECUTE**: Run single test via Playwright MCP
+2. **REPORT**: Document result (Pass / Fail / Issue)
+3. **FIX**: If fail, diagnose and fix before proceeding
+4. **NEXT**: Move to next test only after current passes
+
+---
+
+## Test Report Template
+
+After each test, report:
+
+```markdown
+## Test [ID]: [Name]
+
+- **Status**: Pass / Fail / Issue
+- **URL**: [tested URL]
+- **Expected**: [expected result]
+- **Actual**: [actual result]
+- **Screenshot**: [if applicable]
+- **Notes**: [any observations]
+```
+
+---
+
+## Critical Files
+
+| File                        | Purpose                                     |
+| --------------------------- | ------------------------------------------- |
+| `src/proxy.ts`              | Edge middleware - subdomain detection, RBAC |
+| `src/lib/tenant-context.ts` | Tenant resolution                           |
+| `src/auth.ts`               | Auth configuration                          |
+| `src/routes.ts`             | RBAC matrix                                 |
+| `src/lib/finance-roles.ts`  | Finance permissions                         |
+
+---
+
+## Quick Start
+
+**Start with**: Story 1, Test SM-001 - Landing page loads
+
+**Dev server**: Must be running on `http://localhost:3000`
+
+```bash
+pnpm dev
+```

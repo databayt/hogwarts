@@ -115,7 +115,7 @@ test("dark mode", async ({ page }) => {
 # Snapshot all shadcn/ui components
 /snapshot components/ui/* --update
 
-# Specific platform components
+# Specific school-dashboard components
 /snapshot StudentCard TeacherCard ClassroomCard
 ```
 

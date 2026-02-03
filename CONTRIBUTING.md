@@ -500,7 +500,7 @@ pnpm test
 Run specific tests:
 
 ```bash
-pnpm test src/components/platform/students/**/*.test.tsx
+pnpm test src/components/school-dashboard/students/**/*.test.tsx
 ```
 
 Run in watch mode:

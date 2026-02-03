@@ -96,7 +96,7 @@ export const AIBrainIcon = ({ className }: { className?: string }) => (
 )
 
 /**
- * Icon library for the Hogwarts platform.
+ * Icon library for the Hogwarts school-dashboard.
  * All icons accept standard SVG/HTML attributes via props spreading.
  *
  * @example

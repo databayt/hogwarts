@@ -24,16 +24,15 @@ import { UserButton } from "@/components/auth/user-button"
 import { LanguageSwitcher } from "@/components/internationalization/language-switcher"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
-import { useBreadcrumbs } from "@/components/operator/hooks/use-breadcrumbs"
-import type { School } from "@/components/site/types"
+import { useBreadcrumbs } from "@/components/saas-dashboard/hooks/use-breadcrumbs"
+import ImpersonationBanner from "@/components/saas-dashboard/impersonation-banner"
+import type { School } from "@/components/school-marketing/types"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 import { MobileNav } from "@/components/template/mobile-nav"
 import {
   platformNav,
   type Role as PlatformRole,
 } from "@/components/template/platform-sidebar/config"
-
-import ImpersonationBanner from "../../operator/impersonation-banner"
 
 interface PlatformHeaderProps {
   school?: School
@@ -55,7 +54,7 @@ export default function PlatformHeader({
   const messagesUrl = `/${locale}/messages`
   const notificationsUrl = `/${locale}/notifications`
 
-  // Filter platform nav items by role for mobile menu
+  // Filter school-dashboard nav items by role for mobile menu
   const mobileNavItems = useMemo(() => {
     return platformNav
       .filter((item) => !role || item.roles.includes(role as PlatformRole))

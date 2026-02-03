@@ -33,7 +33,7 @@ export const LogoutButton = ({ children, className }: LogoutButtonProps) => {
     const localeMatch = pathname.match(/^\/([a-z]{2})\//)
     const locale = localeMatch ? localeMatch[1] : "ar"
 
-    // If on school subdomain platform, return to school homepage
+    // If on school subdomain school-dashboard, return to school homepage
     if (pathname.includes("/s/")) {
       const match = pathname.match(/\/s\/([^/]+)/)
       if (match) {
@@ -41,7 +41,7 @@ export const LogoutButton = ({ children, className }: LogoutButtonProps) => {
         returnUrl = `/${locale}/s/${subdomain}/` // School homepage
       }
     } else {
-      // For marketing site and operator dashboard, go to homepage with locale
+      // For saas-marketing school-marketing and saas-dashboard dashboard, go to homepage with locale
       returnUrl = `/${locale}`
     }
 

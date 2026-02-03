@@ -3,7 +3,7 @@ import "server-only"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/components/operator/lib/tenant"
+import { getTenantContext } from "@/components/saas-dashboard/lib/tenant"
 import { filterColumns } from "@/components/table/lib/prisma-filter-columns"
 import { unstable_cache } from "@/components/table/lib/unstable-cache"
 

@@ -11,7 +11,7 @@ interface UsePlatformViewOptions {
 }
 
 /**
- * Hook for managing platform view mode (table/grid) with URL persistence
+ * Hook for managing school-dashboard view mode (table/grid) with URL persistence
  */
 export function usePlatformView(options: UsePlatformViewOptions = {}) {
   const { defaultView = "table" } = options

@@ -20,7 +20,7 @@ model: sonnet
 ### Server Component Pattern
 
 ```typescript
-// app/[lang]/s/[subdomain]/(platform)/students/page.tsx
+// app/[lang]/s/[subdomain]/(school-dashboard)/students/page.tsx
 export default async function StudentsPage() {
   const session = await auth()
   const schoolId = session?.user?.schoolId

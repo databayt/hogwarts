@@ -15,13 +15,13 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { LeadForm } from "@/components/sales/form"
 import {
   GridCard,
   GridContainer,
   GridEmptyState,
   PlatformToolbar,
-} from "@/components/platform/shared"
-import { LeadForm } from "@/components/sales/form"
+} from "@/components/school-dashboard/shared"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 

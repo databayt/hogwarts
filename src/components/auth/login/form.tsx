@@ -64,10 +64,14 @@ export const LoginForm = ({
 
     if (tenant && success) {
       // Redirect back to tenant subdomain after successful login
+      // Use HTTPS if current page is HTTPS (for dev mode with self-signed certs)
+      const useHttps =
+        typeof window !== "undefined" && window.location.protocol === "https:"
+      const protocol = useHttps ? "https" : "http"
       const tenantUrl =
         process.env.NODE_ENV === "production"
           ? `https://${tenant}.databayt.org/dashboard`
-          : `http://${tenant}.localhost:3000/dashboard`
+          : `${protocol}://${tenant}.localhost:3000/dashboard`
 
       console.log("🔄 Redirecting to tenant after login:", tenantUrl)
       window.location.href = tenantUrl

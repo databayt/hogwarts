@@ -19,7 +19,7 @@
  * WHY PRINCIPAL FOR LOGOS (not ADMIN):
  * - ADMIN role is school-scoped but may be too broad
  * - Principal is specifically the school leader role
- * - DEVELOPER included for platform support/testing
+ * - DEVELOPER included for school-dashboard support/testing
  *
  * DATABASE UPDATES:
  * - Logo: Updates School.logoUrl for tenant branding

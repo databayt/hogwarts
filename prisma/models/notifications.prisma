@@ -1,6 +1,6 @@
 // Notifications System
 
-// Notification types covering all platform events
+// Notification types covering all school-dashboard events
 enum NotificationType {
   message // New direct/group message
   message_mention // User mentioned in message
@@ -145,7 +145,7 @@ model NotificationPreference {
 // Notification templates for consistent messaging
 model NotificationTemplate {
   id       String  @id @default(cuid())
-  schoolId String? // null for platform-wide templates
+  schoolId String? // null for school-dashboard-wide templates
 
   // Template identification
   type    NotificationType
@@ -172,7 +172,7 @@ model NotificationTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Unique per type+channel per school (or platform-wide if schoolId is null)
+  // Unique per type+channel per school (or school-dashboard-wide if schoolId is null)
   @@unique([schoolId, type, channel])
   @@index([schoolId, type])
   @@index([type, channel, active])

@@ -18,7 +18,7 @@ import { getCurrentTimeInTimezone } from "@/lib/timezone"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getTimezoneDisplayName } from "@/components/platform/settings/validation"
+import { getTimezoneDisplayName } from "@/components/school-dashboard/settings/validation"
 
 interface School {
   id: string

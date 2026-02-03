@@ -27,7 +27,7 @@ const exploreRoles = [
   { title: "Business Intelligence Analyst", href: "/courses?role=bi-analyst" },
   {
     title: "Digital Marketing Specialist",
-    href: "/courses?role=digital-marketing",
+    href: "/courses?role=digital-saas-marketing",
   },
   { title: "UI / UX Designer", href: "/courses?role=ui-ux" },
   { title: "Machine Learning Engineer", href: "/courses?role=ml-engineer" },
@@ -70,7 +70,7 @@ const trendingSkills = [
   { title: "SQL", href: "/courses?skill=sql" },
   { title: "Project Management", href: "/courses?skill=project-management" },
   { title: "Power BI", href: "/courses?skill=power-bi" },
-  { title: "Marketing", href: "/courses?skill=marketing" },
+  { title: "Marketing", href: "/courses?skill=saas-marketing" },
 ]
 
 export function Explore({ lang, dictionary }: ExploreProps) {

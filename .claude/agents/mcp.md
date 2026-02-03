@@ -90,7 +90,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
       {
         uri: "hogwarts://schools",
         name: "Schools",
-        description: "List all schools in the platform",
+        description: "List all schools in the school-dashboard",
         mimeType: "application/json",
       },
       {

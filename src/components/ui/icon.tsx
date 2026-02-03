@@ -115,7 +115,7 @@ export interface IconProps extends Omit<IconComponentProps, "ref"> {
 }
 
 /**
- * Unified Icon component for the platform
+ * Unified Icon component for the school-dashboard
  * Supports lucide-react icons with backwards compatibility for legacy icon names
  *
  * @example

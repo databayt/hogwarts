@@ -38,7 +38,7 @@ function getImageKit(): ImageKit {
 }
 
 /**
- * Folder structure for Hogwarts platform
+ * Folder structure for Hogwarts school-dashboard
  */
 export const IMAGEKIT_FOLDERS = {
   LIBRARY_BOOKS: "hogwarts/library/books",

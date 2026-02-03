@@ -3,10 +3,9 @@ import { Bell, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { UserButton } from "@/components/auth/user-button"
-import { Breadcrumbs } from "@/components/operator/breadcrumbs"
+import { Breadcrumbs } from "@/components/saas-dashboard/breadcrumbs"
+import ImpersonationBanner from "@/components/saas-dashboard/impersonation-banner"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
-
-import ImpersonationBanner from "../../operator/impersonation-banner"
 
 export default function DashboardHeader() {
   return (

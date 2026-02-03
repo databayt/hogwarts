@@ -90,7 +90,7 @@ export default function BrandingContent({ dictionary }: Props) {
           title={dict.schoolBranding || "Upload your school logo"}
           description={
             dict.brandingDescription ||
-            "Add your school's logo to personalize your platform. This is optional - you can always add it later."
+            "Add your school's logo to personalize your school-dashboard. This is optional - you can always add it later."
           }
         />
         <div>

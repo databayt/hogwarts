@@ -50,7 +50,7 @@ import type {
   AIGradeResult,
   OCRProcessResult,
   RubricWithCriteria,
-} from "@/components/platform/exams/mark/types"
+} from "@/components/school-dashboard/exams/mark/types"
 
 import {
   AIErrorType,

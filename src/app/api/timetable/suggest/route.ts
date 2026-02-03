@@ -37,12 +37,12 @@
  * - Consider pagination for large schools
  * - Teacher availability != preference
  *
- * @see /components/platform/timetable/actions.ts
+ * @see /components/school-dashboard/timetable/actions.ts
  */
 
 import { NextRequest } from "next/server"
 
-import { suggestFreeSlots } from "@/components/platform/timetable/actions"
+import { suggestFreeSlots } from "@/components/school-dashboard/timetable/actions"
 
 // WHY: Suggestions change as timetable is edited
 export const dynamic = "force-dynamic"

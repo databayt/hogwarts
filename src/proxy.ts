@@ -40,7 +40,7 @@ const publicRoutes = [
 ]
 const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
 
-// Public site routes (school subdomain public pages - no auth required)
+// Public school-marketing routes (school subdomain public pages - no auth required)
 const publicSiteRoutes = [
   "/about",
   "/academic",
@@ -140,7 +140,7 @@ export function proxy(req: NextRequest) {
     : url.pathname
 
   // Detect subdomain early - needed for auth redirects and URL rewriting
-  // CRITICAL: ed.databayt.org is the main domain (marketing site), NOT a tenant
+  // CRITICAL: ed.databayt.org is the main domain (saas-marketing school-marketing), NOT a tenant
   let subdomain: string | null = null
 
   if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
@@ -163,7 +163,7 @@ export function proxy(req: NextRequest) {
     pathWithoutLocale.startsWith("/docs") ||
     pathWithoutLocale.startsWith("/stream")
 
-  // Check if it's a public site route (for subdomains)
+  // Check if it's a public school-marketing route (for subdomains)
   // Handle both clean URLs (/apply) and internal paths (/s/{subdomain}/apply)
   const pathForRouteCheck = pathWithoutLocale.startsWith(`/s/${subdomain}/`)
     ? pathWithoutLocale.replace(`/s/${subdomain}`, "")
@@ -193,7 +193,7 @@ export function proxy(req: NextRequest) {
   }
 
   // Redirect unauthenticated users to login for protected routes
-  // Skip redirect for public site routes on subdomains (admission portal, etc.)
+  // Skip redirect for public school-marketing routes on subdomains (admission portal, etc.)
   if (!isPublic && !isPublicSiteRoute && !isAuth && !authenticated) {
     const callbackUrl = url.pathname + url.search
     const loginUrl = new URL(`/${locale}/login`, req.url)
@@ -263,7 +263,7 @@ export function proxy(req: NextRequest) {
     // URL REWRITE: This is the core multi-tenant magic
     // User sees: school.databayt.org/dashboard
     // Server sees: school.databayt.org/en/s/school/dashboard
-    // File lives at: src/app/[lang]/s/[subdomain]/(platform)/dashboard/page.tsx
+    // File lives at: src/app/[lang]/s/[subdomain]/(school-dashboard)/dashboard/page.tsx
     url.pathname = `/${locale}/s/${subdomain}${pathWithoutLocale}`
 
     const response = NextResponse.rewrite(url)

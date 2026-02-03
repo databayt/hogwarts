@@ -35,7 +35,7 @@ import { NextRequest } from "next/server"
 import { createErrorResponse } from "@/lib/auth-security"
 import { db } from "@/lib/db"
 import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
-import { getTenantContext } from "@/components/operator/lib/tenant"
+import { getTenantContext } from "@/components/saas-dashboard/lib/tenant"
 
 // WHY: Room list changes
 export const dynamic = "force-dynamic"

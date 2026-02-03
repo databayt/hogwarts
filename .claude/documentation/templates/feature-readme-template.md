@@ -9,7 +9,7 @@
 ### Import
 
 ```typescript
-import { {{mainComponent}} } from '@/components/platform/{{feature}}/content'
+import { {{mainComponent}} } from '@/components/school-dashboard/{{feature}}/content'
 ```
 
 ### Basic Usage

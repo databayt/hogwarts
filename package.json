@@ -19,6 +19,7 @@
     "postinstall": "prisma generate && fumadocs-mdx",
     "db:seed": "tsx prisma/seeds/index.ts",
     "db:seed:single": "tsx prisma/seeds/run-single.ts",
+    "db:reset-test-user": "tsx prisma/seeds/reset-test-user.ts",
     "test": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -57,6 +58,7 @@
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-direction": "^1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-hover-card": "^1.1.15",
     "@radix-ui/react-icons": "^1.3.2",
@@ -194,7 +196,8 @@
     "vaul": "^1.1.2",
     "ws": "^8.18.3",
     "xlsx": "^0.18.5",
-    "zod": "^4.0.14"
+    "zod": "^4.0.14",
+    "radix-ui": "latest"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

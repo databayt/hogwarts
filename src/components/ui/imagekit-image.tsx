@@ -1,11 +1,3 @@
-/**
- * ImageKit Image Component
- *
- * Optimized image component using ImageKit CDN transformations.
- * Wraps Next.js Image with automatic URL transformations,
- * responsive srcset generation, and blur placeholder support.
- */
-
 "use client"
 
 import { useMemo } from "react"

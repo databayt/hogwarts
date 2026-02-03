@@ -142,7 +142,7 @@ test.describe("Protected Routes - Role-Based Access", () => {
     await loginAs(page, "developer")
     await waitForRedirect(page)
 
-    // DEVELOPER should be on main platform dashboard
+    // DEVELOPER should be on main school-dashboard dashboard
     expect(page.url()).toMatch(/\/dashboard/)
     expect(page.url()).not.toContain("demo.")
   })
@@ -186,7 +186,7 @@ test.describe("Protected Routes - Cross-School Access", () => {
     await page.goto(`${schoolUrl}/en/dashboard`)
     await page.waitForLoadState("networkidle")
 
-    // Should have access (DEVELOPER has platform-wide access)
+    // Should have access (DEVELOPER has school-dashboard-wide access)
     expect(page.url()).not.toMatch(/\/login/)
   })
 })
@@ -317,7 +317,7 @@ test.describe("Protected Routes - Public Routes", () => {
     await page.goto(`${schoolUrl}/en`)
     await page.waitForLoadState("networkidle")
 
-    // Should not redirect to login (school marketing page)
+    // Should not redirect to login (school saas-marketing page)
     expect(page.url()).not.toMatch(/\/login/)
   })
 })

@@ -75,7 +75,7 @@ enum GradingMethod {
 }
 
 enum SubmissionType {
-  DIGITAL // Answered directly in platform
+  DIGITAL // Answered directly in school-dashboard
   UPLOAD // Uploaded file (PDF/image)
   OCR // Scanned and processed via OCR
 }

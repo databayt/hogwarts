@@ -157,9 +157,9 @@ interface MenuProps {
 }
 
 /**
- * Marketing Menu (SaaS marketing site - ed.databayt.org)
+ * Marketing Menu (SaaS saas-marketing school-marketing - ed.databayt.org)
  * Role-based menu items:
- * - DEVELOPER: Dashboard (operator), Tenants
+ * - DEVELOPER: Dashboard (saas-dashboard), Tenants
  * - Users with schoolId: My School (go to school dashboard)
  * - Users without schoolId: Get Started (onboarding)
  */
@@ -219,12 +219,12 @@ function MarketingMenu({ locale, role, schoolId }: MenuProps) {
 }
 
 /**
- * Site Menu (School marketing site - school.databayt.org)
+ * Site Menu (School saas-marketing school-marketing - school.databayt.org)
  * - Go to Platform (enter school dashboard)
  * - Profile
  */
 function SiteMenu({ locale, subdomain }: MenuProps) {
-  // For school sites, platform URL uses the subdomain routing
+  // For school sites, school-dashboard URL uses the subdomain routing
   const platformUrl = subdomain
     ? `/${locale}/s/${subdomain}/dashboard`
     : `/${locale}/dashboard`
@@ -248,7 +248,7 @@ function SiteMenu({ locale, subdomain }: MenuProps) {
 }
 
 /**
- * SaaS Menu (Operator dashboard - /(operator)/*)
+ * SaaS Menu (Operator dashboard - /(saas-dashboard)/*)
  * - Profile
  * - Account/Billing
  * - Tenants (DEVELOPER only)
@@ -292,7 +292,7 @@ function SaasMenu({ locale, role }: MenuProps) {
 }
 
 /**
- * Platform Menu (School platform - /s/[subdomain]/*)
+ * Platform Menu (School school-dashboard - /s/[subdomain]/*)
  * - Profile
  * - My Account
  * - Switch School (if has multiple)

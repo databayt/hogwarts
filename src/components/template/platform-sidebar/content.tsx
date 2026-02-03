@@ -17,7 +17,7 @@ import {
 import { useCurrentRole } from "@/components/auth/use-current-role"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
-import type { School } from "@/components/site/types"
+import type { School } from "@/components/school-marketing/types"
 import { platformNav } from "@/components/template/platform-sidebar/config"
 import type { Role } from "@/components/template/platform-sidebar/config"
 import { Icons } from "@/components/template/platform-sidebar/icons"

@@ -353,7 +353,7 @@ export const roleRoutes: Record<string, Role[]> = {
  * @returns true if the route is allowed, false otherwise
  */
 export function isRouteAllowedForRole(pathname: string, role: Role): boolean {
-  // DEVELOPER has access to everything (platform admin)
+  // DEVELOPER has access to everything (school-dashboard admin)
   if (role === "DEVELOPER") {
     return true
   }
@@ -374,6 +374,6 @@ export function isRouteAllowedForRole(pathname: string, role: Role): boolean {
   }
 
   // Default: allow all authenticated users for routes not in the matrix
-  // This includes /dashboard, /profile, common platform features
+  // This includes /dashboard, /profile, common school-dashboard features
   return true
 }

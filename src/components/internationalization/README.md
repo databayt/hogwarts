@@ -551,7 +551,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 mkdir -p src/app/[lang]
 
 # Move existing pages
-mv src/app/(marketing)/* src/app/[lang]/
+mv src/app/(saas-marketing)/* src/app/[lang]/
 mv src/app/(auth)/* src/app/[lang]/
 mv src/app/about/* src/app/[lang]/about/
 ```

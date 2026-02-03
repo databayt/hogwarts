@@ -143,14 +143,14 @@ Phase 3: Build (not reached)
 🔍 DICTIONARY ERRORS (3 issues)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📁 src/components/platform/finance/expenses/form.tsx
+📁 src/components/school-dashboard/finance/expenses/form.tsx
    ❌ Line 45: d?.stats?.totalExpenses
    Property 'stats' does not exist in Dictionary type
 
    Current: d?.stats?.totalExpenses || 'Total Expenses'
    Fix: 'Total Expenses'
 
-📁 src/components/platform/finance/budget/content.tsx
+📁 src/components/school-dashboard/finance/budget/content.tsx
    ❌ Line 102: d?.blocks?.budget?.title
    ❌ Line 108: d?.blocks?.budget?.description
 
@@ -158,7 +158,7 @@ Phase 3: Build (not reached)
 🔍 ENUM COMPLETENESS (1 issue)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📁 src/components/platform/finance/fees/config.ts
+📁 src/components/school-dashboard/finance/fees/config.ts
    ❌ Line 12: FeeStatusLabels missing CANCELLED
 
    Enum: FeeStatus (5 values)

@@ -25,12 +25,12 @@
  * - Teacher roster changes
  * - Must return current data
  *
- * @see /components/platform/timetable/actions.ts
+ * @see /components/school-dashboard/timetable/actions.ts
  */
 
 import { NextRequest } from "next/server"
 
-import { getTeachersForSelection } from "@/components/platform/timetable/actions"
+import { getTeachersForSelection } from "@/components/school-dashboard/timetable/actions"
 
 // WHY: Teacher availability changes
 export const dynamic = "force-dynamic"

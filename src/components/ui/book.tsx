@@ -53,7 +53,7 @@ export function Book(props: BookProps) {
         >
           {variant !== "simple" && (
             <div className="relative min-w-[calc(var(--book-width))] flex-1 overflow-hidden bg-[var(--book-color)]">
-              <div className="bg-book-bind-bg absolute inset-y-0 left-0 z-10 w-[8.2%] opacity-100 mix-blend-overlay" />
+              <div className="bg-book-bind-bg absolute inset-y-0 start-0 z-10 w-[8.2%] opacity-100 mix-blend-overlay" />
               {coverUrl ? (
                 <img
                   src={coverUrl}
@@ -88,7 +88,7 @@ export function Book(props: BookProps) {
         />
         <div
           aria-hidden={true}
-          className="book-bg absolute left-0 h-full w-full rounded-l-md rounded-r bg-[var(--book-color)]"
+          className="book-bg absolute start-0 h-full w-full rounded-s-md rounded-r bg-[var(--book-color)]"
           style={{
             transform: "translateZ(calc(-1 * var(--book-depth)))",
           }}

@@ -87,7 +87,7 @@ For new features or when you want to improve UX with infinite scroll:
 #### Step 1: Update Server Action
 
 ```typescript
-// src/components/platform/students/actions.ts
+// src/components/school-dashboard/students/actions.ts
 "use server"
 
 import { auth } from "@/auth"
@@ -129,7 +129,7 @@ export async function fetchStudents(params: {
 #### Step 2: Update Client Component
 
 ```tsx
-// src/components/platform/students/table.tsx
+// src/components/school-dashboard/students/table.tsx
 "use client"
 
 import { useMemo, useState } from "react"
@@ -179,9 +179,9 @@ export function StudentsTable({ initialData, totalCount }) {
 #### Step 3: Update Route Page
 
 ```tsx
-// src/app/[lang]/s/[subdomain]/(platform)/students/page.tsx
-import { fetchStudents } from "@/components/platform/listings/students/actions"
-import { StudentsTable } from "@/components/platform/listings/students/table"
+// src/app/[lang]/s/[subdomain]/(school-dashboard)/students/page.tsx
+import { fetchStudents } from "@/components/school-dashboard/listings/students/actions"
+import { StudentsTable } from "@/components/school-dashboard/listings/students/table"
 
 export default async function StudentsPage() {
   // Fetch initial batch

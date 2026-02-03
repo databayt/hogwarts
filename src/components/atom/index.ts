@@ -13,7 +13,7 @@ export { SearchInput } from "./search-input"
 // View toggle atoms
 export { ViewToggle, ViewToggleSegmented } from "./view-toggle"
 
-// Grid layout atoms (card components are feature-specific in platform/{feature}/card.tsx)
+// Grid layout atoms (card components are feature-specific in school-dashboard/{feature}/card.tsx)
 export { GridContainer } from "./grid-container"
 export { EmptyState, GridEmptyState } from "./empty-state"
 

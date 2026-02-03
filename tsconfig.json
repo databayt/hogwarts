@@ -42,7 +42,7 @@
     "**/*.test.tsx",
     "**/__tests__/**",
     "src/test/**",
-    "src/components/platform/file/**",
-    "src/components/site/apply/**"
+    "src/components/school-dashboard/file/**",
+    "src/components/school-marketing/apply/**"
   ]
 }

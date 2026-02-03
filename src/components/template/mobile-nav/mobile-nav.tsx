@@ -18,7 +18,7 @@ import type { Role } from "@/components/atom/generic-command-menu/types"
 import { UserButton } from "@/components/auth/user-button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { LanguageSwitcher } from "@/components/internationalization/language-switcher"
-import type { School } from "@/components/site/types"
+import type { School } from "@/components/school-marketing/types"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 
 export interface NavItem {
@@ -47,7 +47,7 @@ interface MobileNavProps {
   currentPath?: string
   role?: Role
   subdomain?: string
-  // Marketing mode - show basic actions without platform toolbar
+  // Marketing mode - show basic actions without school-dashboard toolbar
   showMarketingActions?: boolean
 }
 
@@ -69,7 +69,7 @@ export function MobileNav({
   const [open, setOpen] = React.useState(false)
   const pathname = usePathname()
 
-  // Check if toolbar props are provided (platform mode)
+  // Check if toolbar props are provided (school-dashboard mode)
   const showToolbar = !!(notificationsUrl || messagesUrl || subdomain)
 
   // Determine contextual section based on route

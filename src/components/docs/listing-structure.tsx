@@ -38,7 +38,7 @@ export function ListingStructure({ className }: ListingStructureProps) {
       description: "Source code",
       children: [
         {
-          name: "app/[lang]/s/[subdomain]/(platform)/(listings)/",
+          name: "app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/",
           type: "directory",
           description: "Route layer",
           children: [
@@ -183,7 +183,7 @@ export function ListingStructure({ className }: ListingStructureProps) {
               ],
             },
             {
-              name: "platform/listings/",
+              name: "school-dashboard/listings/",
               type: "directory",
               description: "Listings components",
               children: [
@@ -269,12 +269,12 @@ export function ListingStructure({ className }: ListingStructureProps) {
           description: "Shared hooks",
           children: [
             {
-              name: "use-platform-data.ts",
+              name: "use-school-dashboard-data.ts",
               type: "file",
               description: "Optimistic updates + infinite scroll",
             },
             {
-              name: "use-platform-view.ts",
+              name: "use-school-dashboard-view.ts",
               type: "file",
               description: "View mode (URL-persisted)",
             },

@@ -132,7 +132,7 @@ This guide documents the **automated TDD-first development workflows** for the H
 **Example Test Structure**:
 
 ```typescript
-// src/components/platform/attendance/content.test.tsx
+// src/components/school-dashboard/attendance/content.test.tsx
 describe("AttendanceContent", () => {
   it("should render attendance calendar", () => {
     // Test implementation
@@ -147,7 +147,7 @@ describe("AttendanceContent", () => {
   })
 })
 
-// src/components/platform/attendance/actions.test.ts
+// src/components/school-dashboard/attendance/actions.test.ts
 describe("markAttendance", () => {
   it("should mark student as present", async () => {
     // Test implementation - FAILS (not implemented yet)
@@ -221,7 +221,7 @@ src/
 **Automated Actions**: 8. **Run Tests**: Execute test suite
 
 ```bash
-pnpm test src/components/platform/attendance/**/*.test.tsx
+pnpm test src/components/school-dashboard/attendance/**/*.test.tsx
 ```
 
 9. **If Tests Fail**:
@@ -467,7 +467,7 @@ Solution: Wrap object creation in useMemo hook
 **Test Example**:
 
 ```typescript
-// src/components/platform/timetable/content.test.tsx
+// src/components/school-dashboard/timetable/content.test.tsx
 describe('TimetableContent - Bug Fixes', () => {
   it('should not cause infinite loop when rendering', () => {
     const renderSpy = vi.fn()
@@ -520,7 +520,7 @@ function TimetableContent({ timetable }) {
 
 ```bash
 # Run tests to verify bug is fixed
-pnpm test src/components/platform/timetable/**/*.test.tsx
+pnpm test src/components/school-dashboard/timetable/**/*.test.tsx
 
 # Run comprehensive review
 /review

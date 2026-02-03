@@ -1,0 +1,62 @@
+import * as React from "react"
+import Link from "next/link"
+
+import { buttonVariants } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import { cn, formatDate } from "@/components/saas-marketing/pricing/lib/utils"
+import { UserSubscriptionPlan } from "@/components/saas-marketing/pricing/types"
+import { CustomerPortalButton } from "@/components/school-dashboard/school/billing/customer-portal-button"
+
+interface BillingInfoProps extends React.HTMLAttributes<HTMLFormElement> {
+  userSubscriptionPlan: UserSubscriptionPlan
+  lang?: Locale
+}
+
+export function BillingInfo({ userSubscriptionPlan, lang }: BillingInfoProps) {
+  const {
+    title,
+    description,
+    stripeCustomerId,
+    isPaid,
+    isCanceled,
+    stripeCurrentPeriodEnd,
+  } = userSubscriptionPlan
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Subscription Plan</CardTitle>
+        <CardDescription>
+          You are currently on the <strong>{title}</strong> plan.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>{description}</CardContent>
+      <CardFooter className="bg-accent flex flex-col items-center space-y-2 border-t py-2 md:flex-row md:justify-between md:space-y-0">
+        {isPaid ? (
+          <p className="muted">
+            {isCanceled
+              ? "Your plan will be canceled on "
+              : "Your plan renews on "}
+            {formatDate(stripeCurrentPeriodEnd)}.
+          </p>
+        ) : null}
+
+        {isPaid && stripeCustomerId ? (
+          <CustomerPortalButton userStripeId={stripeCustomerId as string} />
+        ) : (
+          <Link href={`/${lang}/pricing`} className={cn(buttonVariants())}>
+            Choose a plan
+          </Link>
+        )}
+      </CardFooter>
+    </Card>
+  )
+}

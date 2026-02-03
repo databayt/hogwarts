@@ -13,7 +13,7 @@
  * - description: About text from brochures
  * - location: Address from official documents
  * - capacity: Student/staff counts from reports
- * - branding: Colors/logos from marketing materials
+ * - branding: Colors/logos from saas-marketing materials
  * - import: Student/teacher data from rosters
  * - price: Fee structures from pricing sheets
  * - legal: Terms from legal documents

@@ -11,14 +11,14 @@
  *
  * ACCESS CONTROL:
  * - PLATFORM_ADMIN only (not school admins)
- * - WHY: Backup operations affect entire platform, not single tenant
+ * - WHY: Backup operations affect entire school-dashboard, not single tenant
  * - Destructive operations require highest privilege level
  *
  * WHY PLATFORM_ADMIN vs ADMIN:
  * - School ADMIN can only manage their tenant
  * - Backups contain ALL schools' data (cross-tenant)
  * - Restore could overwrite other schools' data
- * - Only platform operators should have this access
+ * - Only school-dashboard operators should have this access
  *
  * WHY POST FOR ACTIONS (not GET):
  * - All backup operations have side effects (create files, modify DB)

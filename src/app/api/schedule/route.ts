@@ -23,12 +23,12 @@
  * WHY force-dynamic:
  * - Schedule config changes during setup
  *
- * @see /components/platform/timetable/actions.ts
+ * @see /components/school-dashboard/timetable/actions.ts
  */
 
 import { NextRequest } from "next/server"
 
-import { getScheduleConfig } from "@/components/platform/timetable/actions"
+import { getScheduleConfig } from "@/components/school-dashboard/timetable/actions"
 
 // WHY: Schedule config changes during setup
 export const dynamic = "force-dynamic"

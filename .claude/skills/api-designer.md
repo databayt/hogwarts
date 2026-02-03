@@ -529,7 +529,7 @@ export async function POST(request: NextRequest) {
 /api/schools/:subdomain/teachers
 /api/schools/:subdomain/courses
 
-// Admin endpoints (platform level)
+// Admin endpoints (school-dashboard level)
 /api/admin/schools
 /api/admin/subscriptions
 /api/admin/analytics

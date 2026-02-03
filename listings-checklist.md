@@ -610,8 +610,8 @@ export async function deleteFeature(input: {
 ### Page Layout
 
 ```tsx
-import { DashboardHeader } from "@/components/platform/dashboard/header"
-import { PlatformToolbar } from "@/components/platform/shared/platform-toolbar"
+import { DashboardHeader } from "@/components/school-dashboard/dashboard/header"
+import { PlatformToolbar } from "@/components/school-dashboard/shared/school-dashboard-toolbar"
 
 <DashboardHeader heading={t.pageTitle} text={t.pageDescription}>
   <PlatformToolbar
@@ -1087,7 +1087,7 @@ export function getLocalizedTitle(
 
 ```bash
 # 1. Copy reference implementation
-cp -r src/components/platform/listings/grades src/components/platform/listings/new-feature
+cp -r src/components/school-dashboard/listings/grades src/components/school-dashboard/listings/new-feature
 
 # 2. Update in order:
 # - types.ts       - Define row types
@@ -1101,7 +1101,7 @@ cp -r src/components/platform/listings/grades src/components/platform/listings/n
 # - content.tsx    - Server wrapper
 
 # 3. Create route
-mkdir -p src/app/[lang]/s/[subdomain]/(platform)/new-feature
+mkdir -p src/app/[lang]/s/[subdomain]/(school-dashboard)/new-feature
 # Copy page.tsx from another listing
 ```
 
@@ -1134,7 +1134,7 @@ After migration, update imports:
 
 // After
 import { ViewToggle } from "@/components/atom/view-toggle"
-import { ViewToggle } from "@/components/platform/shared/view-toggle"
+import { ViewToggle } from "@/components/school-dashboard/shared/view-toggle"
 ```
 
 ---

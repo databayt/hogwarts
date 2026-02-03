@@ -21,12 +21,12 @@
  * WHY force-dynamic:
  * - Write operation (must not be cached)
  *
- * @see /components/platform/timetable/actions.ts
+ * @see /components/school-dashboard/timetable/actions.ts
  */
 
 import { NextRequest } from "next/server"
 
-import { upsertSchoolWeekConfig } from "@/components/platform/timetable/actions"
+import { upsertSchoolWeekConfig } from "@/components/school-dashboard/timetable/actions"
 
 // WHY: Write operation
 export const dynamic = "force-dynamic"

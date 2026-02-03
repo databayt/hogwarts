@@ -56,7 +56,7 @@ export async function canUserAccessSchool(
       return { hasAccess: false, reason: "User not found" }
     }
 
-    // Developers (platform admins) can access any school
+    // Developers (school-dashboard admins) can access any school
     if (user.role === "DEVELOPER") {
       const school = await db.school.findUnique({
         where: { id: schoolId },
@@ -385,7 +385,7 @@ export async function validateSchoolOwnership(
       return { isValid: false, error: "User not found" }
     }
 
-    // Developers (platform admins) bypass all checks
+    // Developers (school-dashboard admins) bypass all checks
     if (user.role === "DEVELOPER") {
       return { isValid: true }
     }

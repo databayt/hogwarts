@@ -18,7 +18,7 @@
  * 2. PRODUCTION (ed.databayt.org structure):
  *    - Main app: ed.databayt.org → null (no subdomain)
  *    - Schools: school.databayt.org → "school"
- *    - Note: ed.databayt.org is special (platform root)
+ *    - Note: ed.databayt.org is special (school-dashboard root)
  *
  * 3. OTHER DOMAINS (configurable root):
  *    - Uses NEXT_PUBLIC_ROOT_DOMAIN

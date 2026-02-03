@@ -19,7 +19,7 @@
  * - Easy to reactivate with Prisma queries
  *
  * TODO: Implement with Prisma Invoice model or remove if unused
- * @see /components/platform/finance/invoice for current implementation
+ * @see /components/school-dashboard/finance/invoice for current implementation
  */
 
 import { NextResponse } from "next/server"

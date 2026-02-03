@@ -29,7 +29,7 @@ export function ChatButton({
 
       // Check if button overlaps with dark sections (footer and blue sections)
       const darkSections = document.querySelectorAll(
-        '[data-slot="site-footer"], [data-section="sales"], [data-section="ready"], [data-section="ready-to-build"], [data-section="enterprise"]'
+        '[data-slot="school-marketing-footer"], [data-section="sales"], [data-section="ready"], [data-section="ready-to-build"], [data-section="enterprise"]'
       )
 
       let isOverDarkSection = false

@@ -5,7 +5,7 @@ import OnboardingContent from "@/components/onboarding/content"
 export const metadata = {
   title: "School Onboarding | Hogwarts SaaS",
   description:
-    "Create and manage your school in our multi-tenant platform. Start with templates or build from scratch.",
+    "Create and manage your school in our multi-tenant school-dashboard. Start with templates or build from scratch.",
 }
 
 interface Props {

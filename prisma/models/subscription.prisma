@@ -68,7 +68,7 @@ model AppliedDiscount {
   @@map("applied_discounts")
 }
 
-// Billing Payment Methods - Stored payment methods for platform subscriptions
+// Billing Payment Methods - Stored payment methods for school-dashboard subscriptions
 model BillingPaymentMethod {
   id       String @id @default(cuid())
   schoolId String

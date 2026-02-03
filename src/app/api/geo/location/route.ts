@@ -41,7 +41,7 @@
  * - Battery saver mode reduces updates
  * - VPN/proxy affects accuracy
  *
- * @see /components/platform/attendance/geofencee/actions.ts
+ * @see /components/school-dashboard/attendance/geofencee/actions.ts
  */
 
 import { NextRequest, NextResponse } from "next/server"
@@ -52,8 +52,8 @@ import {
   RATE_LIMITS,
   rateLimit,
 } from "@/lib/rate-limit"
-import { submitLocation } from "@/components/platform/attendance/geofencee/actions"
-import type { LocationInput } from "@/components/platform/attendance/geofencee/validation"
+import { submitLocation } from "@/components/school-dashboard/attendance/geofencee/actions"
+import type { LocationInput } from "@/components/school-dashboard/attendance/geofencee/validation"
 
 export async function POST(request: NextRequest) {
   try {

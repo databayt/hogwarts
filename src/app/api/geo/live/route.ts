@@ -44,7 +44,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 
-import { getLiveStudentLocations } from "@/components/platform/attendance/geofencee/actions"
+import { getLiveStudentLocations } from "@/components/school-dashboard/attendance/geofencee/actions"
 
 export async function GET(request: NextRequest) {
   try {

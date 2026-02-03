@@ -33,7 +33,7 @@
  * SECURITY:
  * - Protected by secureDebugEndpoint
  * - Sensitive data sanitized before logging
- * - Only platform operators can access
+ * - Only school-dashboard operators can access
  *
  * COMMON ISSUES DEBUGGED:
  * - Cookie not set on subdomain (domain config issue)

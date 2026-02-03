@@ -36,12 +36,12 @@
  * - Otherwise returns the created/updated slot
  * - No bulk endpoint (call multiple times)
  *
- * @see /components/platform/timetable/actions.ts
+ * @see /components/school-dashboard/timetable/actions.ts
  */
 
 import { NextRequest } from "next/server"
 
-import { upsertTimetableSlot } from "@/components/platform/timetable/actions"
+import { upsertTimetableSlot } from "@/components/school-dashboard/timetable/actions"
 
 // WHY: Write operation, must not be cached
 export const dynamic = "force-dynamic"

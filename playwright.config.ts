@@ -173,7 +173,7 @@ export default defineConfig({
     : {
         command: "pnpm dev:https",
         url: "https://localhost:3000",
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: true, // Always reuse existing server
         timeout: 120_000, // 2 minutes for server startup
         ignoreHTTPSErrors: true,
       },

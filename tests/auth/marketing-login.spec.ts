@@ -30,7 +30,7 @@ test.describe("Marketing Site Login - Credentials", () => {
     await loginAs(page, "developer")
     const finalUrl = await waitForRedirect(page)
 
-    // DEVELOPER should go to platform operator dashboard on main domain
+    // DEVELOPER should go to school-dashboard saas-dashboard dashboard on main domain
     expect(finalUrl).toMatch(/\/en\/dashboard/)
     expect(finalUrl).not.toMatch(/demo\./)
   })

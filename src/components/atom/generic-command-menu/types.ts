@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react"
 
-// User roles from platform config
+// User roles from school-dashboard config
 export type Role =
   | "DEVELOPER"
   | "ADMIN"

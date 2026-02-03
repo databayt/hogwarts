@@ -151,7 +151,7 @@ class Logger {
                   )
                 )
               : undefined,
-            service: "hogwarts-platform",
+            service: "hogwarts-school-dashboard",
             environment: process.env.NODE_ENV,
           })
         )

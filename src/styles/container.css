@@ -4,12 +4,12 @@
  * Two specialized containers for different contexts:
  *
  * 1. Marketing Container (generous spacing, max-width centered):
- *    <div className="marketing-container">Landing page content</div>
- *    Used in: (marketing)/layout.tsx, (site)/layout.tsx
+ *    <div className="saas-marketing-container">Landing page content</div>
+ *    Used in: (saas-saas-marketing)/layout.tsx, (school-saas-marketing)/layout.tsx
  *
  * 2. Dashboard Container (tighter spacing, data-dense views):
  *    <div className="dashboard-container">Admin content</div>
- *    Used in: (operator)/layout.tsx, (platform)/layout.tsx
+ *    Used in: (saas-dashboard)/layout.tsx, (school-dashboard)/layout.tsx
  *
  * 3. Full-width section with aligned content:
  *    <section className="full-bleed bg-blue-500">
@@ -89,29 +89,30 @@
   }
 
   /* ===== MARKETING CONTAINER ===== */
-  /* For: marketing pages, tenant site pages */
+  /* For: saas-marketing pages, tenant school-marketing pages */
   /* Characteristics: generous spacing, max-width centered */
   .marketing-container {
-    @apply mx-auto w-full;
-    padding-left: var(--marketing-px);
-    padding-right: var(--marketing-px);
+    @apply w-full;
+    margin-inline: auto;
+    padding-inline-start: var(--marketing-px);
+    padding-inline-end: var(--marketing-px);
     max-width: var(--marketing-max);
   }
 
-  /* Full-width marketing variant (no max-width) */
+  /* Full-width saas-marketing variant (no max-width) */
   .marketing-container-fluid {
     @apply w-full;
-    padding-left: var(--marketing-px);
-    padding-right: var(--marketing-px);
+    padding-inline-start: var(--marketing-px);
+    padding-inline-end: var(--marketing-px);
   }
 
   /* ===== DASHBOARD CONTAINER ===== */
-  /* For: operator admin, platform dashboards */
+  /* For: saas-dashboard admin, school-dashboard dashboards */
   /* Characteristics: tighter spacing, optimized for sidebar layouts */
   .dashboard-container {
     @apply w-full min-w-0;
-    padding-left: var(--dashboard-px);
-    padding-right: var(--dashboard-px);
+    padding-inline-start: var(--dashboard-px);
+    padding-inline-end: var(--dashboard-px);
   }
 
   /* ===== LEGACY CONTAINERS ===== */
@@ -119,15 +120,16 @@
   /* Global layout container - Applied to body or root layout */
   .layout-container {
     @apply w-full;
-    padding-left: var(--container-px) !important;
-    padding-right: var(--container-px) !important;
+    padding-inline-start: var(--container-px) !important;
+    padding-inline-end: var(--container-px) !important;
   }
 
   /* Standard container with max-width constraint */
   .container {
-    @apply mx-auto w-full;
-    padding-left: var(--container-px);
-    padding-right: var(--container-px);
+    @apply w-full;
+    margin-inline: auto;
+    padding-inline-start: var(--container-px);
+    padding-inline-end: var(--container-px);
     max-width: var(--container-max);
   }
 
@@ -152,42 +154,42 @@
   /* Full-bleed with smart inner content alignment */
   .full-bleed {
     width: 100vw;
-    margin-left: calc(-1 * var(--container-px));
-    margin-right: calc(-1 * var(--container-px));
+    margin-inline-start: calc(-1 * var(--container-px));
+    margin-inline-end: calc(-1 * var(--container-px));
     max-width: none;
   }
 
   /* Inner content that aligns with page padding inside full-bleed */
   .full-bleed > .inner,
   .full-bleed-inner {
-    padding-left: var(--container-px);
-    padding-right: var(--container-px);
+    padding-inline-start: var(--container-px);
+    padding-inline-end: var(--container-px);
   }
 
   /* Full-bleed with centered max-width inner content */
   .full-bleed > .inner-contained,
   .full-bleed-contained {
-    @apply mx-auto;
-    padding-left: var(--container-px);
-    padding-right: var(--container-px);
+    margin-inline: auto;
+    padding-inline-start: var(--container-px);
+    padding-inline-end: var(--container-px);
     max-width: var(--container-max);
   }
 
   /* Utility to negate parent padding (for nested full-width elements) */
   .breakout {
-    margin-left: calc(-1 * var(--container-px));
-    margin-right: calc(-1 * var(--container-px));
+    margin-inline-start: calc(-1 * var(--container-px));
+    margin-inline-end: calc(-1 * var(--container-px));
   }
 
   /* Simple spacing utilities using the same values */
   .px-container {
-    padding-left: var(--container-px);
-    padding-right: var(--container-px);
+    padding-inline-start: var(--container-px);
+    padding-inline-end: var(--container-px);
   }
 
   .mx-container {
-    margin-left: var(--container-px);
-    margin-right: var(--container-px);
+    margin-inline-start: var(--container-px);
+    margin-inline-end: var(--container-px);
   }
 
   /* Responsive vertical spacing utilities */

@@ -16,7 +16,7 @@ Diagnose and fix Next.js server-side exceptions ("Application error: a server-si
 /diagnose-sse /en/students/123
 
 # Diagnose by file path
-/diagnose-sse src/components/platform/billing/content.tsx
+/diagnose-sse src/components/school-dashboard/billing/content.tsx
 
 # Diagnose by error digest
 /diagnose-sse digest:2286872223
@@ -25,7 +25,7 @@ Diagnose and fix Next.js server-side exceptions ("Application error: a server-si
 /diagnose-sse --full
 
 # Scan specific route group
-/diagnose-sse (platform)
+/diagnose-sse (school-dashboard)
 ```
 
 ---

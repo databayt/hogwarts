@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import * as ProgressPrimitive from "@radix-ui/react-progress"
 import { motion } from "framer-motion"
+import { Progress as ProgressPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
@@ -22,7 +22,7 @@ function Progress({
     >
       <motion.div
         data-slot="progress-indicator"
-        className="bg-primary h-full w-full flex-1 origin-left"
+        className="bg-primary origin-start h-full w-full flex-1"
         initial={{ transform: "translateX(-100%)" }}
         animate={{ transform: `translateX(-${100 - (value || 0)}%)` }}
         transition={{

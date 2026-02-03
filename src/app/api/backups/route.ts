@@ -1,7 +1,7 @@
 /**
  * Backup Management API - Read/Write Operations
  *
- * Full backup lifecycle management for platform administrators.
+ * Full backup lifecycle management for school-dashboard administrators.
  *
  * ACCESS CONTROL:
  * - DEVELOPER role only
@@ -22,7 +22,7 @@
  * - Different role requirements
  *
  * WHY DEVELOPER vs PLATFORM_ADMIN:
- * - DEVELOPER is platform operator (engineering team)
+ * - DEVELOPER is school-dashboard saas-dashboard (engineering team)
  * - PLATFORM_ADMIN may be support staff
  * - Restore should be engineering-only
  *

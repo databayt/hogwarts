@@ -15,6 +15,7 @@ import {
 } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AnalyticsProvider } from "@/components/monitoring/analytics-provider"
+import { DirectionProvider } from "@/components/providers/direction-provider"
 import { ServiceWorkerProvider } from "@/components/providers/service-worker-provider"
 import { UserThemeProvider } from "@/components/theme/theme-provider"
 
@@ -41,7 +42,7 @@ export async function generateMetadata({
     title: dictionary.metadata?.title || "Hogwarts - School Management System",
     description:
       dictionary.metadata?.description ||
-      "A comprehensive school management platform",
+      "A comprehensive school management school-dashboard",
     other: {
       "accept-language": lang,
     },
@@ -82,7 +83,7 @@ export default async function LocaleLayout({
   const subdomain = headersList.get("x-subdomain")
   const isSubdomain = !!subdomain
 
-  // Use dynamic font for subdomain pages, hardcoded fonts for marketing/lab pages
+  // Use dynamic font for subdomain pages, hardcoded fonts for saas-marketing/lab pages
   const fontClass = isSubdomain
     ? "font-sans"
     : isRTL
@@ -90,22 +91,24 @@ export default async function LocaleLayout({
       : GeistSans.className
 
   return (
-    <div
-      className={`${fontClass} ${GeistSans.variable} ${rubik.variable} layout-container antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}
-    >
-      <SessionProvider session={session}>
-        <NuqsAdapter>
-          <ThemeProvider>
-            <UserThemeProvider>
-              {children}
-              <Toaster />
-              <AnalyticsProvider />
-              <ServiceWorkerProvider />
-            </UserThemeProvider>
-          </ThemeProvider>
-        </NuqsAdapter>
-      </SessionProvider>
-    </div>
+    <DirectionProvider direction={config.dir} lang={lang}>
+      <div
+        className={`${fontClass} ${GeistSans.variable} ${rubik.variable} layout-container antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}
+      >
+        <SessionProvider session={session}>
+          <NuqsAdapter>
+            <ThemeProvider>
+              <UserThemeProvider>
+                {children}
+                <Toaster />
+                <AnalyticsProvider />
+                <ServiceWorkerProvider />
+              </UserThemeProvider>
+            </ThemeProvider>
+          </NuqsAdapter>
+        </SessionProvider>
+      </div>
+    </DirectionProvider>
   )
 }
 

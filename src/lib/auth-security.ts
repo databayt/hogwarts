@@ -18,7 +18,7 @@ async function getAuth() {
  * KEY CONCEPTS:
  * - AuthContext: User identity + school assignment + role
  * - Tenant isolation: CRITICAL - all DB queries must include schoolId
- * - Role hierarchy: DEVELOPER (platform) > ADMIN (school) > specific roles (TEACHER, STUDENT, etc.)
+ * - Role hierarchy: DEVELOPER (school-dashboard) > ADMIN (school) > specific roles (TEACHER, STUDENT, etc.)
  * - Extended session: NextAuth session includes schoolId, role, isPlatformAdmin
  *
  * SECURITY PATTERNS:
@@ -30,7 +30,7 @@ async function getAuth() {
  * 6. createTenantSafeWhere(): Inject schoolId into DB queries
  *
  * CRITICAL RULES - MUST FOLLOW:
- * - DEVELOPER role bypasses school checks (platform admin)
+ * - DEVELOPER role bypasses school checks (school-dashboard admin)
  * - All non-DEVELOPER users must have schoolId in session
  * - Every DB query must include schoolId in WHERE clause
  * - Cross-tenant access throws TenantError (403 Forbidden)

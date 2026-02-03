@@ -2,7 +2,7 @@ import { Metadata } from "next"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { CsvImportComponent } from "@/components/platform/import/csv-import"
+import { CsvImportComponent } from "@/components/school-dashboard/import/csv-import"
 
 export const metadata: Metadata = {
   title: "Import Data | Settings",

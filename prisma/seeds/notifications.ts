@@ -231,7 +231,7 @@ const ANNOUNCEMENT_TITLES = [
 
 const SYSTEM_MESSAGES = [
   "System maintenance scheduled for tonight.",
-  "New features have been added to the platform.",
+  "New features have been added to the school-dashboard.",
   "Please update your contact information.",
   "The grading system has been updated.",
   "New security measures are in effect.",

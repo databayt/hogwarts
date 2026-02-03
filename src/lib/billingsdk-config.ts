@@ -2,7 +2,7 @@
  * BillingSDK Configuration
  *
  * Maps existing Hogwarts pricing data to BillingSDK component interfaces.
- * Used by all BillingSDK components in the platform billing page.
+ * Used by all BillingSDK components in the school-dashboard billing page.
  */
 
 import { env } from "@/env.mjs"

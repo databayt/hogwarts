@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
 
     // Import and execute sync
     const { syncTransactions } =
-      await import("@/components/platform/finance/banking/actions/bank.actions")
+      await import("@/components/school-dashboard/finance/banking/actions/bank.actions")
 
     const result = await syncTransactions({ accountId })
 
