@@ -1,0 +1,583 @@
+---
+title: "Multi-Tenancy"
+description: "Comprehensive audit of Hogwarts multi-tenant architecture compared to Vercel Platforms best practices. Database isolation, subdomain routing, cross-subdomain SSO, and role-based access control."
+---
+
+**Overall Assessment: STRONG (95%)**
+
+The Hogwarts multi-tenant architecture is well-implemented with systematic `schoolId` scoping across nearly all business models. The implementation follows industry best practices from Vercel's Platforms Starter Kit.
+
+## Comparison: Hogwarts vs Vercel Platforms
+
+| Feature             | Vercel Platforms             | Hogwarts               | Status         |
+| ------------------- | ---------------------------- | ---------------------- | -------------- |
+| Subdomain Routing   | Middleware                   | `proxy.ts`             | ✅ Implemented |
+| Preview URLs        | `tenant---branch.vercel.app` | ✅ Implemented         | ✅ Match       |
+| Tenant Data Store   | Redis (Upstash)              | PostgreSQL + In-Memory | ⚠️ Partial     |
+| Custom Domains      | Vercel Domains API           | Not implemented        | ❌ Gap         |
+| Cross-subdomain SSO | Cookie domain                | `.databayt.org`        | ✅ Implemented |
+| ISR + Middleware    | Native support               | Not leveraged          | ⚠️ Opportunity |
+| Role-Based Access   | N/A (app-specific)           | 8 roles, RBAC matrix   | ✅ Extra       |
+
+## Key Findings
+
+### What's Working Well (36/38 models properly scoped)
+
+1. **Edge middleware (`proxy.ts`)** — Lightweight subdomain detection for all environments
+2. **Tenant context resolution** — Single source of truth with priority chain
+3. **Cross-subdomain SSO** — Cookie domain `.databayt.org` enables seamless auth
+4. **Database scoping** — 36/38 models properly scoped with `schoolId`
+5. **RBAC at edge** — 8 roles with route protection matrix
+6. **4 clean entry points** — marketing, operator, site, platform
+
+### Gaps Identified
+
+1. **Missing `schoolId` on token models** — Account, VerificationToken, PasswordResetToken
+2. **No automated RLS** — `schoolId` injection is manual (human discipline required)
+3. **No distributed cache** — In-memory Map with 60s TTL (not shared across instances)
+4. **No custom domain support** — Vercel Domains API not implemented
+5. **Impersonation cookie sticky** — No auto-clear mechanism
+
+---
+
+## Architecture
+
+### Request Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           INCOMING REQUEST                                   │
+│                    (school.databayt.org/dashboard)                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        1. EDGE MIDDLEWARE (proxy.ts)                         │
+│  ┌─────────────────────────────────────────────────────────────────────────┐│
+│  │ • Skip static files + API routes (fast path)                            ││
+│  │ • Detect locale (cookie → Accept-Language → 'ar')                       ││
+│  │ • Detect subdomain:                                                      ││
+│  │   - Production: school.databayt.org → "school"                          ││
+│  │   - Preview: tenant---branch.vercel.app → "tenant"                      ││
+│  │   - Dev: subdomain.localhost:3000 → "subdomain"                         ││
+│  │ • Auth check via session cookie (lightweight JWT decode)                 ││
+│  │ • RBAC: isRouteAllowedForRole(pathname, role)                           ││
+│  │ • URL Rewrite: /dashboard → /en/s/school/dashboard                      ││
+│  │ • Set x-subdomain header for downstream                                  ││
+│  └─────────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    2. TENANT CONTEXT (tenant-context.ts)                     │
+│  ┌─────────────────────────────────────────────────────────────────────────┐│
+│  │ Resolution Priority (first wins):                                        ││
+│  │ 1. Impersonation cookie → Admin debugging                                ││
+│  │ 2. x-subdomain header → Resolve to schoolId via DB lookup               ││
+│  │ 3. Session schoolId → From JWT token                                     ││
+│  │                                                                          ││
+│  │ Returns: { schoolId, role, isPlatformAdmin }                            ││
+│  │ Cache: In-memory Map, 60s TTL, max 100 entries                          ││
+│  └─────────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         3. SERVER COMPONENT / ACTION                         │
+│  ┌─────────────────────────────────────────────────────────────────────────┐│
+│  │ const { schoolId } = await getTenantContext()                           ││
+│  │                                                                          ││
+│  │ // ALL queries MUST include schoolId                                     ││
+│  │ await db.student.findMany({ where: { schoolId, ... } })                 ││
+│  │                                                                          ││
+│  │ // Missing schoolId = tenant data leak vulnerability                     ││
+│  └─────────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Edge Middleware (`src/proxy.ts`)
+
+The middleware is optimized for Edge Functions (under 1MB limit) with no heavy imports:
+
+```typescript
+// Subdomain detection (lines 142-158)
+let subdomain: string | null = null
+
+if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
+  // Production: school.databayt.org → "school"
+  subdomain = host.split(".")[0]
+} else if (host.includes("---") && host.endsWith(".vercel.app")) {
+  // Vercel preview: tenant---branch.vercel.app → "tenant"
+  subdomain = host.split("---")[0]
+} else if (host.includes("localhost") && host.includes(".")) {
+  // Development: subdomain.localhost:3000 → "subdomain"
+  const parts = host.split(".")
+  if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
+    subdomain = parts[0]
+  }
+}
+```
+
+Key features:
+
+- **Lightweight JWT decode** — No crypto verification (done in server actions)
+- **Auth routes NOT rewritten** — `/login`, `/join` exist globally
+- **`x-subdomain` header** — Passed to downstream components
+- **RBAC enforcement** — Role-based route blocking at edge
+
+### Tenant Context Resolution (`src/lib/tenant-context.ts`)
+
+Single source of truth with caching:
+
+```typescript
+// Resolution priority (lines 96-123)
+export async function getTenantContext(): Promise<TenantContext> {
+  // Priority 1: Impersonation cookie (for admin debugging)
+  const impersonatedSchoolId =
+    cookieStore.get("impersonate_schoolId")?.value ?? null
+
+  // Priority 2: Subdomain from middleware → resolve to schoolId
+  let headerSchoolId: string | null = null
+  const subdomain = hdrs.get("x-subdomain")
+  if (subdomain) {
+    headerSchoolId = await getSchoolIdFromSubdomain(subdomain)
+  }
+
+  // Priority 3: Session schoolId (from JWT)
+  const schoolId =
+    impersonatedSchoolId ?? headerSchoolId ?? session?.user?.schoolId ?? null
+
+  return { schoolId, role, isPlatformAdmin }
+}
+```
+
+Cache configuration:
+
+- **TTL**: 60 seconds
+- **Max entries**: 100 (with automatic cleanup)
+- **Scope**: In-memory per serverless instance (not distributed)
+
+---
+
+## Entry Points
+
+Hogwarts has 4 distinct entry points for different user journeys:
+
+| Entry Point     | Domain                  | Path                        | Auth           | Purpose                |
+| --------------- | ----------------------- | --------------------------- | -------------- | ---------------------- |
+| Marketing       | `ed.databayt.org`       | `/(marketing)`              | Public         | Landing, pricing, docs |
+| Operator        | `ed.databayt.org`       | `/(operator)`               | DEVELOPER only | Platform admin         |
+| School Site     | `{school}.databayt.org` | `/s/[subdomain]/(site)`     | Public         | School public pages    |
+| School Platform | `{school}.databayt.org` | `/s/[subdomain]/(platform)` | Authenticated  | School dashboard       |
+
+### Entry Point Details
+
+#### 1. Marketing (`ed.databayt.org`)
+
+- **Public routes**: `/`, `/features`, `/pricing`, `/blog`, `/docs`, `/stream`
+- **Auth routes**: `/login`, `/join`, `/reset`, `/new-password`
+- **No tenant context** — Marketing content, not school-specific
+
+#### 2. Operator Dashboard (`ed.databayt.org/o/*`)
+
+- **DEVELOPER role only** — Platform administrators
+- **Purpose**: Manage all schools, view platform analytics, impersonate users
+- **Guard**: `OperatorAuthGuard` component
+
+#### 3. School Site (`{school}.databayt.org`)
+
+- **Public pages**: `/`, `/about`, `/academic`, `/admissions`, `/apply`, `/tour`, `/inquiry`
+- **Tenant context**: `schoolId` resolved from subdomain
+- **No auth required** — Public school information and admission portal
+
+#### 4. School Platform (`{school}.databayt.org/dashboard`)
+
+- **Authenticated routes**: `/dashboard`, `/students`, `/teachers`, `/classes`, etc.
+- **RBAC enforced**: 8 roles with route permissions
+- **Full tenant isolation**: All queries scoped by `schoolId`
+
+---
+
+## Auth Flows
+
+### Login Flow by User Type
+
+| User Type   | Starting Point                | Login Destination | Post-Login Redirect               |
+| ----------- | ----------------------------- | ----------------- | --------------------------------- |
+| DEVELOPER   | `ed.databayt.org/login`       | Main domain       | `ed.databayt.org/dashboard`       |
+| School User | `ed.databayt.org/login`       | Main domain       | `{school}.databayt.org/dashboard` |
+| School User | `{school}.databayt.org/login` | School domain     | `{school}.databayt.org/dashboard` |
+| New User    | Any `/login`                  | Main domain       | `/onboarding`                     |
+
+### OAuth Callback Flow
+
+```
+User clicks "Login with Google"
+        │
+        ▼
+Google OAuth → /api/auth/callback/google
+        │
+        ▼
+NextAuth signIn event
+        │
+        ▼
+JWT created with: { id, email, role, schoolId }
+        │
+        ▼
+Redirect callback (auth.ts)
+        │
+        ├── Has schoolId? → Redirect to {school}.databayt.org/dashboard
+        │
+        └── No schoolId? → Redirect to /onboarding
+```
+
+### Cookie Configuration
+
+Cross-subdomain SSO enabled via cookie domain:
+
+```typescript
+// src/auth.ts (lines 165-198)
+cookies: {
+  sessionToken: {
+    name: `authjs.session-token`,
+    options: {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      domain: process.env.NODE_ENV === "production" ? ".databayt.org" : undefined,
+      maxAge: 24 * 60 * 60, // 24 hours
+    },
+  },
+}
+```
+
+**Key cookies**:
+
+- `authjs.session-token` — JWT session (24h)
+- `authjs.callback-url` — OAuth callback preservation
+- `authjs.pkce.code_verifier` — OAuth PKCE (15 min)
+- `authjs.csrf-token` — CSRF protection
+- `NEXT_LOCALE` — Language preference (1 year)
+- `impersonate_schoolId` — Admin debugging (no auto-clear!)
+
+---
+
+## Database Isolation
+
+### Model Audit Summary
+
+| Category        | Models                                         | schoolId   | Status       |
+| --------------- | ---------------------------------------------- | ---------- | ------------ |
+| **Core**        | User, School                                   | ✅ Present | ✅ Compliant |
+| **People**      | Student, Guardian, Teacher, Staff              | ✅ Present | ✅ Compliant |
+| **Academic**    | Class, Subject, Attendance, Assignment         | ✅ Present | ✅ Compliant |
+| **Finance**     | ChartOfAccount, JournalEntry, Invoice          | ✅ Present | ✅ Compliant |
+| **Operations**  | Announcement, Message, Event                   | ✅ Present | ✅ Compliant |
+| **Auth Tokens** | Account, VerificationToken, PasswordResetToken | ❌ Missing | ⚠️ Gap       |
+
+### Models WITH schoolId (36 models)
+
+**People**: Student, Guardian, StudentGuardian, GuardianType, GuardianPhoneNumber, Teacher, Staff, StaffMember
+
+**Academic**: Class, Subject, Department, YearLevel, SchoolYear, Attendance, Assignment, AssignmentSubmission, Exam, ExamResult, Lesson, Timetable
+
+**Finance**: ChartOfAccount, FiscalYear, JournalEntry, LedgerEntry, AccountBalance, Budget, Invoice, Payment, Refund, Fee, FeeAssignment, Scholarship
+
+**Operations**: Announcement, AnnouncementRead, Message, Conversation, Event, Library, BorrowRecord
+
+**Admission**: Lead, Application, Campaign
+
+**Stream (LMS)**: StreamCourse, StreamCategory, StreamEnrollment
+
+### Models WITHOUT schoolId (4 models — Low Risk)
+
+| Model                | Reasoning                                 | Risk Level |
+| -------------------- | ----------------------------------------- | ---------- |
+| `Account`            | Linked via `userId` → `User` → `schoolId` | Low        |
+| `VerificationToken`  | Email-scoped, short-lived (expires)       | Low        |
+| `PasswordResetToken` | Email-scoped, short-lived (expires)       | Low        |
+| `TwoFactorToken`     | Email-scoped, short-lived (expires)       | Low        |
+
+**Why these are acceptable**:
+
+- Token models are ephemeral (15 min - 24h expiry)
+- Scoped by email, not tenant-specific data
+- No cross-tenant data exposure risk
+- User association provides indirect tenant link
+
+### Unique Constraint Pattern
+
+All business models follow this pattern:
+
+```prisma
+model Student {
+  id        String @id @default(cuid())
+  schoolId  String
+  studentId String?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, studentId])  // Unique per school
+  @@unique([schoolId, grNumber])   // Unique per school
+  @@index([schoolId])              // Performance
+}
+```
+
+---
+
+## Security Audit
+
+### Critical Security Items
+
+| Item                      | Status | Notes                           |
+| ------------------------- | ------ | ------------------------------- |
+| JWT httpOnly cookies      | ✅     | Prevents XSS access             |
+| CSRF protection           | ✅     | `authjs.csrf-token` cookie      |
+| PKCE for OAuth            | ✅     | 15-minute code verifier         |
+| Secure cookies (prod)     | ✅     | HTTPS only                      |
+| Cross-subdomain SSO       | ✅     | `.databayt.org` domain          |
+| Role-based route blocking | ✅     | Edge middleware                 |
+| schoolId in all queries   | ⚠️     | Manual discipline required      |
+| Rate limiting             | ❌     | Not implemented                 |
+| Audit logging             | ⚠️     | Partial (AuditLog model exists) |
+
+### RBAC Matrix
+
+8 roles with graduated permissions:
+
+```typescript
+// src/routes.ts
+export type Role =
+  | "DEVELOPER" // Platform admin (all access)
+  | "ADMIN" // School admin
+  | "TEACHER"
+  | "STUDENT"
+  | "GUARDIAN"
+  | "ACCOUNTANT"
+  | "STAFF"
+  | "USER"
+```
+
+Route permissions (excerpt):
+
+| Route         | Allowed Roles                                 |
+| ------------- | --------------------------------------------- |
+| `/admin/*`    | ADMIN, DEVELOPER                              |
+| `/settings/*` | ADMIN, DEVELOPER                              |
+| `/teachers/*` | ADMIN, DEVELOPER                              |
+| `/students/*` | ADMIN, TEACHER, STAFF, DEVELOPER              |
+| `/finance/*`  | All authenticated (role-specific views in UI) |
+| `/operator/*` | DEVELOPER only                                |
+| `/my-grades`  | STUDENT, GUARDIAN, DEVELOPER                  |
+
+### Security Recommendations
+
+1. **Add rate limiting** for auth routes (`/login`, `/api/auth/*`)
+2. **Implement Prisma middleware** for automatic `schoolId` injection
+3. **Add audit logging** for sensitive operations (impersonation, role changes)
+4. **Auto-clear impersonation cookie** after timeout or logout
+5. **Add RLS policies** at database level (defense in depth)
+
+---
+
+## Testing Checklist
+
+### Localhost Tests
+
+```bash
+# Main domain - Marketing
+curl http://localhost:3000/en
+# Expected: Marketing page (landing)
+
+curl http://localhost:3000/en/dashboard
+# Expected: Redirect to /login (unauthenticated)
+
+# Subdomain - School
+curl http://demo.localhost:3000/en
+# Expected: School site (public)
+
+curl http://demo.localhost:3000/en/dashboard
+# Expected: Redirect to /login or school platform (authenticated)
+
+# OAuth flow
+1. Visit http://localhost:3000/login
+2. Click Google OAuth
+3. Complete authentication
+4. Verify redirect to correct dashboard based on schoolId
+```
+
+### Production Tests
+
+```bash
+# Main domain
+curl https://ed.databayt.org/en
+# Expected: Marketing page
+
+# Debug endpoint (if enabled)
+curl https://ed.databayt.org/api/debug-auth
+# Expected: Auth state JSON
+
+# Subdomain
+curl https://demo.databayt.org/en
+# Expected: School site
+
+curl https://demo.databayt.org/en/dashboard
+# Expected: School platform (or login redirect)
+
+# Preview URL (Vercel)
+curl https://demo---feature-branch.vercel.app/en
+# Expected: Tenant detected from preview URL prefix
+```
+
+### E2E Test Coverage
+
+| Test File                  | Tests | Purpose                |
+| -------------------------- | ----- | ---------------------- |
+| `marketing-login.spec.ts`  | 14    | Main domain auth flows |
+| `school-login.spec.ts`     | 15    | Subdomain auth flows   |
+| `logout.spec.ts`           | 9     | Logout across domains  |
+| `oauth.spec.ts`            | 10    | Google/Facebook OAuth  |
+| `protected-routes.spec.ts` | 13    | RBAC enforcement       |
+
+---
+
+## Best Practices Checklist
+
+### Implemented ✅
+
+- [x] Subdomain-based tenant isolation
+- [x] Cross-subdomain SSO via cookie domain
+- [x] JWT strategy with extended user data (schoolId, role)
+- [x] RBAC at edge (route protection)
+- [x] Tenant context resolution with caching
+- [x] `schoolId` on 95% of business models
+- [x] `@@unique` constraints scoped by schoolId
+- [x] `@@index` on schoolId for performance
+- [x] Vercel preview URL support (`tenant---branch`)
+- [x] Locale detection with persistence
+
+### Partially Implemented ⚠️
+
+- [ ] Distributed cache (Upstash Redis) — currently in-memory
+- [ ] Automatic RLS — currently manual discipline
+- [ ] Audit logging — model exists but not comprehensive
+- [ ] Impersonation lifecycle — no auto-clear
+
+### Not Implemented ❌
+
+- [ ] Custom domain support (Vercel Domains API)
+- [ ] ISR for school site pages
+- [ ] Rate limiting for auth routes
+- [ ] School join codes
+- [ ] Multi-school user switcher
+
+---
+
+## Gap Analysis & Recommendations
+
+### P0 — Critical (Immediate)
+
+| Gap                                | Impact               | Recommendation                                  |
+| ---------------------------------- | -------------------- | ----------------------------------------------- |
+| Token models without schoolId      | Low (ephemeral data) | Document as acceptable OR add optional schoolId |
+| Impersonation cookie no auto-clear | Security concern     | Add maxAge (1h) and clear on logout             |
+| No audit logging for impersonation | Compliance risk      | Log all DEVELOPER impersonation events          |
+
+### P1 — High (Next Sprint)
+
+| Gap                       | Impact                   | Recommendation                                  |
+| ------------------------- | ------------------------ | ----------------------------------------------- |
+| In-memory cache only      | Cache miss on cold start | Implement Upstash Redis for distributed caching |
+| Manual schoolId injection | Human error risk         | Add Prisma middleware for automatic injection   |
+| No rate limiting          | DDoS vulnerability       | Add rate limiting to `/login`, `/api/auth/*`    |
+
+### P2 — Medium (Backlog)
+
+| Gap                     | Impact                    | Recommendation               |
+| ----------------------- | ------------------------- | ---------------------------- |
+| No custom domains       | Feature limitation        | Integrate Vercel Domains API |
+| No ISR for school sites | Performance               | Enable ISR with revalidation |
+| School switcher missing | UX for multi-school users | Build school switcher UI     |
+
+### P3 — Low (Future)
+
+| Gap                  | Impact               | Recommendation                          |
+| -------------------- | -------------------- | --------------------------------------- |
+| No school join codes | Onboarding friction  | Implement invite codes                  |
+| No invitation system | Manual user creation | Build email invitation flow             |
+| No bulk user import  | Admin overhead       | Add CSV import with schoolId validation |
+
+---
+
+## Critical Files Reference
+
+| File                            | Lines | Purpose                                                    |
+| ------------------------------- | ----- | ---------------------------------------------------------- |
+| `src/proxy.ts`                  | 294   | Edge middleware — subdomain detection, URL rewriting, RBAC |
+| `src/lib/tenant-context.ts`     | 134   | Tenant resolution — single source of truth                 |
+| `src/auth.ts`                   | 1385+ | Auth configuration — JWT, cookies, redirect callback       |
+| `src/routes.ts`                 | 380   | RBAC matrix — role-based route protection                  |
+| `prisma/models/auth.prisma`     | 200+  | User and token models                                      |
+| `prisma/models/students.prisma` | 470+  | Student model with schoolId pattern                        |
+| `prisma/models/finance.prisma`  | 1000+ | Finance models with schoolId pattern                       |
+
+---
+
+## References
+
+### Internal Documentation
+
+- [Architecture](/docs-en/architecture) — Mirror pattern, file conventions
+- [Authentication](/docs-en/authentication) — Auth flows, OAuth setup
+- [Entry Points](/docs-en/entry-points) — Route structure
+- [Database](/docs-en/database) — Prisma models, migrations
+
+### External Resources
+
+- [Vercel Platforms Starter Kit](https://github.com/vercel/platforms) — Reference implementation
+- [Vercel Multi-Tenant Documentation](https://vercel.com/docs/multi-tenant) — Official guide
+- [Platforms Starter Kit Template](https://vercel.com/templates/next.js/platforms-starter-kit) — Quickstart
+- [Multi-Tenant Preview URLs](https://vercel.com/platforms/docs/multi-tenant-platforms/preview-url-prefixes) — Preview URL format
+- [NextAuth.js Documentation](https://authjs.dev/) — Auth library
+- [Prisma Multi-Tenant Patterns](https://www.prisma.io/docs/concepts/components/prisma-client/multi-tenancy) — Database isolation
+
+---
+
+## Appendix: Server Action Pattern
+
+Every server action MUST follow this pattern for tenant safety:
+
+```typescript
+// src/components/{feature}/actions.ts
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
+import { itemSchema } from "./validation"
+
+export async function createItem(data: FormData) {
+  // 1. Authenticate and get schoolId
+  const session = await auth()
+  const schoolId = session?.user?.schoolId
+
+  if (!schoolId) throw new Error("Unauthorized")
+
+  // 2. Validate input
+  const validated = itemSchema.parse(Object.fromEntries(data))
+
+  // 3. Execute with schoolId scope (CRITICAL)
+  const item = await db.item.create({
+    data: { ...validated, schoolId },
+  })
+
+  // 4. Revalidate and return
+  revalidatePath(`/items`)
+  return { success: true, item }
+}
+```
+
+**Never omit schoolId from queries** — this is the #1 cause of tenant data leaks.

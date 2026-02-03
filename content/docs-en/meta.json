@@ -20,6 +20,7 @@
     "entry-points",
     "dashboard",
     "authentication",
+    "multi-tenancy",
     "onboarding",
     "admission",
     "attendance",
