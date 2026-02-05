@@ -910,13 +910,19 @@ export const {
           return tenantDashboardUrl
         }
 
-        // If we're on the main domain (ed.databayt.org), check for callback URL first
-        if (originalHost === "ed.databayt.org") {
+        // If we're on the main domain (ed.databayt.org or localhost:3000), check for callback URL first
+        const isMainDomain =
+          originalHost === "ed.databayt.org" ||
+          originalHost === "localhost:3000" ||
+          originalHost === "localhost"
+
+        if (isMainDomain) {
           // Don't immediately redirect to lab - check if we have a callback URL
           log("🏢 MAIN DOMAIN DETECTED:", {
             host: originalHost,
             hasCallbackUrl: !!callbackUrl,
             callbackUrl,
+            originalUrl: url,
             environment: process.env.NODE_ENV,
             source: "main_domain_detection",
           })
@@ -926,7 +932,20 @@ export const {
             log("✅ Using callback URL on main domain:", callbackUrl)
             // Continue to validate and use the callback URL below
           }
-          // No else block - let smart subdomain redirect (lines 885-954) handle users without callbackUrl
+          // Check if the original URL is a valid locale-based path (e.g., /en, /ar, /en/, /ar/)
+          // This handles the case where login action sets redirectTo: "/${locale}"
+          else if (url.match(/^\/(en|ar)\/?$/)) {
+            const localeHomeUrl = `${baseUrl}${url.endsWith("/") ? url.slice(0, -1) : url}`
+            log("🏠 MAIN DOMAIN LOCALE HOME REDIRECT:", {
+              host: originalHost,
+              originalUrl: url,
+              redirectUrl: localeHomeUrl,
+              reason:
+                "Login action requested locale homepage (non-DEVELOPER user)",
+            })
+            return localeHomeUrl
+          }
+          // No else block - let smart subdomain redirect handle users without callbackUrl
         }
 
         // Additional safety check: if host contains 'ed.databayt.org' in any form, treat as main domain

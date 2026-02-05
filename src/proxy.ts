@@ -34,13 +34,14 @@ import { i18n, type Locale } from "@/components/internationalization/config"
  */
 
 // Inlined route arrays to avoid imports
+// NOTE: /onboarding removed from public routes - requires authentication
+// This ensures server-side redirect to login instead of unreliable client-side check
 const publicRoutes = [
   "/",
   "/new-verification",
   "/features",
   "/pricing",
   "/blog",
-  "/onboarding",
 ]
 const authRoutes = [
   "/login",
