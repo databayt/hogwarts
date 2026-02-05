@@ -15,7 +15,7 @@ export function Houses() {
       description: "Leadership & Social",
       longDescription:
         "Develop courage and leadership skills through history, government, and community service programs.",
-      image: "/school-marketing/gryffindor.jpeg",
+      image: "/site/gryffindor.jpeg",
       color: "bg-red-600",
       lightColor: "bg-red-50",
       textColor: "text-red-800",
@@ -31,7 +31,7 @@ export function Houses() {
       description: "Sciences & Innovation",
       longDescription:
         "Pursue wisdom through cutting-edge STEM programs and innovative problem-solving challenges.",
-      image: "/school-marketing/ravenclaw.jpeg",
+      image: "/site/ravenclaw.jpeg",
       color: "bg-blue-600",
       lightColor: "bg-blue-50",
       textColor: "text-blue-900",
@@ -47,7 +47,7 @@ export function Houses() {
       description: "Arts & Humanities",
       longDescription:
         "Cultivate creativity and empathy through comprehensive arts, literature, and humanities programs.",
-      image: "/school-marketing/hupplepuff.jpeg",
+      image: "/site/hupplepuff.jpeg",
       color: "bg-yellow-600",
       lightColor: "bg-yellow-50",
       textColor: "text-yellow-500",
@@ -63,7 +63,7 @@ export function Houses() {
       description: "Business & Mathematics",
       longDescription:
         "Foster determination and strategic reasoning through finance, business studies, and innovation programs.",
-      image: "/school-marketing/slytherin.jpg",
+      image: "/site/slytherin.jpg",
       color: "bg-green-600",
       lightColor: "bg-green-50",
       textColor: "text-green-700",

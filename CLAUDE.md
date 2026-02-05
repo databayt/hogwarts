@@ -10,13 +10,15 @@ This file provides guidance to Claude Code when working with this repository.
 pnpm install && pnpm prisma generate && pnpm db:seed && pnpm dev
 ```
 
-### The 5 Critical Rules
+### The 7 Critical Rules
 
 1. **Always use pnpm** (Vercel requirement)
 2. **Always include schoolId** in database queries (multi-tenant isolation)
 3. **Follow mirror pattern** (routes ↔ components)
 4. **Use semantic HTML** (no hardcoded `text-*` or `font-*` classes)
 5. **Run `pnpm tsc --noEmit`** before builds (catches silent failures)
+6. **Always use port 3000** for dev server - NEVER switch to another port
+7. **Only use central `.env`** - NEVER create `.env.local`, `.env.development`, or any `.env.x` files
 
 ---
 
@@ -192,6 +194,8 @@ push                      # Full checklist → commit → push → Vercel
 9. **Vercel Deployments** - Requires up-to-date pnpm lockfile
 10. **Onboarding Flow** - Exact sequence in `host-footer.tsx`
 11. **Server-Side Exceptions** - Hooks in server components, missing error.tsx boundaries; run `/diagnose-sse`
+12. **Port 3000 Only** - ALWAYS use port 3000 for dev server; kill existing processes with `lsof -ti:3000 | xargs kill -9` before starting
+13. **Central .env Only** - NEVER create `.env.local`, `.env.development`, or any `.env.x` files; all env vars go in central `.env`
 
 ---
 

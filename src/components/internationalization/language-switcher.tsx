@@ -25,11 +25,13 @@ import {
 interface LanguageSwitcherProps {
   className?: string
   variant?: "dropdown" | "inline" | "toggle"
+  iconClassName?: string
 }
 
 export function LanguageSwitcher({
   className,
   variant = "dropdown",
+  iconClassName,
 }: LanguageSwitcherProps) {
   const router = useRouter()
   const getSwitchLocaleHref = useSwitchLocaleHref()
@@ -65,7 +67,7 @@ export function LanguageSwitcher({
         )}
         onClick={() => handleLocaleChange(nextLocale)}
       >
-        <Languages className="h-4 w-4" />
+        <Languages className={cn("h-4 w-4", iconClassName)} />
         <span className="sr-only">{switchLanguageLabel}</span>
       </Button>
     )

@@ -61,16 +61,15 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
           locale={locale}
           showMarketingActions
         />
-        {/* Right: Actions */}
-        <nav className="flex flex-1 items-center justify-end gap-0.5">
+        {/* Right: Actions - all hidden on mobile, shown in menu */}
+        <nav className="hidden flex-1 items-center justify-end gap-0.5 lg:flex">
           <CommandMenu dictionary={dictionary} />
-          <Separator orientation="vertical" className="ms-2 hidden lg:block" />
+          <Separator orientation="vertical" className="ms-2" />
           <GitHubLink />
-          {/* Desktop: Show all actions */}
-          <Separator orientation="vertical" className="mx-1 hidden lg:block" />
-          <LangSwitcher className="hidden lg:flex" />
-          <ModeSwitcher className="hidden lg:flex" />
-          <UserButton variant="marketing" className="hidden lg:flex" />
+          <Separator orientation="vertical" className="mx-1" />
+          <LangSwitcher />
+          <ModeSwitcher />
+          <UserButton variant="marketing" />
         </nav>
       </div>
     </header>

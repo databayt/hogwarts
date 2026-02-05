@@ -31,7 +31,7 @@ import { FormError } from "../error/form-error"
 import { FormSuccess } from "../form-success"
 import { Social } from "../social"
 import { createLoginSchema } from "../validation"
-import { login } from "./action"
+import { login, type LoginContext, type LoginOptions } from "./action"
 
 interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
   dictionary?: Dictionary
@@ -45,6 +45,9 @@ export const LoginForm = ({
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl")
   const tenant = searchParams.get("tenant")
+  // New context params for user flow distinction
+  const context = (searchParams.get("context") as LoginContext) || "saas"
+  const subdomain = searchParams.get("subdomain")
 
   // Get localized error messages
   const oauthError =
@@ -123,15 +126,24 @@ export const LoginForm = ({
       finalCallbackUrl = `${finalCallbackUrl || "/dashboard"}${separator}tenant=${tenant}`
     }
 
+    // Build login options with context for user flow distinction
+    const loginOptions: LoginOptions = {
+      callbackUrl: finalCallbackUrl,
+      context,
+      subdomain,
+    }
+
     console.log("📋 LOGIN FORM SUBMIT:", {
       tenant,
       callbackUrl,
       finalCallbackUrl,
+      context,
+      subdomain,
       hasValues: !!values,
     })
 
     startTransition(() => {
-      login(values, finalCallbackUrl)
+      login(values, loginOptions)
         .then((data) => {
           if (data?.error) {
             form.reset()

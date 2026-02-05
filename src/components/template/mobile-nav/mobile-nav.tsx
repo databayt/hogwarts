@@ -3,10 +3,18 @@
 import * as React from "react"
 import Link, { LinkProps } from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, Mail } from "lucide-react"
+import { Bell, Mail, Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
@@ -19,6 +27,8 @@ import { UserButton } from "@/components/auth/user-button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { LanguageSwitcher } from "@/components/internationalization/language-switcher"
 import type { School } from "@/components/school-marketing/types"
+import { siteConfig } from "@/components/template/marketing-header/config"
+import { Icons } from "@/components/template/marketing-header/icons"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 
 export interface NavItem {
@@ -219,15 +229,12 @@ export function MobileNav({
             </div>
           )}
 
-          {/* Marketing Actions (language, theme, sign in) */}
+          {/* Marketing Actions (search, github, language, theme, sign in) */}
           {showMarketingActions && (
-            <div className="flex flex-col gap-4 border-t pt-4">
-              <div className="flex items-center gap-2">
-                <LanguageSwitcher variant="toggle" />
-                <ModeSwitcher />
-                <UserButton variant="marketing" />
-              </div>
-            </div>
+            <MarketingActionsSection
+              dictionary={dictionary}
+              onClose={() => setOpen(false)}
+            />
           )}
         </div>
       </PopoverContent>
@@ -278,5 +285,74 @@ function MobileLink({
     >
       {children}
     </Link>
+  )
+}
+
+// Marketing-specific actions section with bigger icons
+function MarketingActionsSection({
+  dictionary,
+  onClose,
+}: {
+  dictionary?: Dictionary
+  onClose: () => void
+}) {
+  const [searchOpen, setSearchOpen] = React.useState(false)
+
+  return (
+    <div className="flex flex-col gap-4 border-t pt-4">
+      <div className="flex items-center gap-3">
+        {/* Search button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-10"
+          onClick={() => {
+            onClose()
+            setSearchOpen(true)
+          }}
+        >
+          <Search className="size-5" aria-hidden="true" />
+          <span className="sr-only">Search</span>
+        </Button>
+
+        {/* GitHub link */}
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="size-10"
+          onClick={onClose}
+        >
+          <Link href={siteConfig.links.github} target="_blank" rel="noreferrer">
+            <Icons.gitHub className="size-5" />
+            <span className="sr-only">GitHub</span>
+          </Link>
+        </Button>
+
+        {/* Language, Theme, User */}
+        <LanguageSwitcher variant="toggle" iconClassName="size-5" />
+        <ModeSwitcher iconClassName="size-5" />
+        <UserButton variant="marketing" />
+      </div>
+
+      {/* Search Dialog */}
+      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <CommandInput placeholder="Type a command or search..." />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Suggestions">
+            <CommandItem>
+              <span>Documentation</span>
+            </CommandItem>
+            <CommandItem>
+              <span>Components</span>
+            </CommandItem>
+            <CommandItem>
+              <span>Examples</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
+    </div>
   )
 }

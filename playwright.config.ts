@@ -1,23 +1,44 @@
 import { defineConfig, devices } from "@playwright/test"
 
 /**
- * Playwright Configuration - Multi-Environment Testing
- * Supports both local development and production testing
+ * Playwright Configuration - Multi-Tenant Testing
+ *
+ * Supports:
+ * - Local development (localhost:3000)
+ * - Production testing (ed.databayt.org)
+ * - Multiple projects for different test suites
+ * - Tagged test filtering (@smoke, @rbac, @multi-tenant)
  *
  * Usage:
- *   Local:       pnpm test:e2e (default)
- *   Production:  TEST_ENV=production pnpm test:e2e --project=production-chromium
+ *   All tests:     pnpm test:e2e
+ *   Smoke only:    pnpm test:e2e --project=smoke
+ *   RBAC only:     pnpm test:e2e --grep @rbac
+ *   Production:    TEST_ENV=production pnpm test:e2e
  *
  * @see https://playwright.dev/docs/test-configuration
  */
 
 const isProduction = process.env.TEST_ENV === "production"
+/* IMPORTANT: Always use port 3000 for local development, never switch ports */
 const baseURL = isProduction
   ? "https://ed.databayt.org"
-  : "https://localhost:3000"
+  : "http://localhost:3000"
 
 export default defineConfig({
   testDir: "./tests",
+
+  /* Match only .spec.ts files in e2e and smoke directories */
+  testMatch: ["**/*.spec.ts"],
+
+  /* Ignore old test files during migration */
+  testIgnore: [
+    "**/auth/helpers.ts",
+    "**/exams/helpers.ts",
+    "**/saas-marketing/*.ts",
+    "**/saas-dashboard/*.ts",
+    "**/school-marketing/*.ts",
+    "**/school-dashboard/*.ts",
+  ],
 
   /* Parallel execution for faster test runs */
   fullyParallel: true,
@@ -35,6 +56,7 @@ export default defineConfig({
   reporter: [
     ["html", { open: "never" }],
     ["list"], // Console output for CI
+    ...(process.env.CI ? ([["github", {}]] as const) : []),
   ],
 
   /* Global timeout for each test (longer for production network latency) */
@@ -86,58 +108,84 @@ export default defineConfig({
     },
   },
 
-  /* Configure projects for major browsers */
+  /* Configure projects for different test suites */
   projects: [
     // ============================================
-    // Local Development Testing (default)
+    // Smoke Tests (run first, fast critical path)
     // ============================================
     {
-      name: "chromium",
+      name: "smoke",
+      testDir: "./tests/smoke",
       use: {
         ...devices["Desktop Chrome"],
         channel: "chromium",
-        baseURL: "https://localhost:3000",
+        baseURL: "http://localhost:3000",
       },
     },
 
+    // ============================================
+    // E2E Tests - Chromium (default)
+    // ============================================
+    {
+      name: "chromium",
+      testDir: "./tests/e2e",
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chromium",
+        baseURL: "http://localhost:3000",
+      },
+    },
+
+    // ============================================
+    // E2E Tests - Firefox
+    // ============================================
     {
       name: "firefox",
+      testDir: "./tests/e2e",
       use: {
         ...devices["Desktop Firefox"],
-        baseURL: "https://localhost:3000",
+        baseURL: "http://localhost:3000",
       },
     },
 
+    // ============================================
+    // E2E Tests - WebKit (Safari)
+    // ============================================
     {
       name: "webkit",
+      testDir: "./tests/e2e",
       use: {
         ...devices["Desktop Safari"],
-        baseURL: "https://localhost:3000",
+        baseURL: "http://localhost:3000",
       },
     },
 
-    /* Mobile viewports - Local */
+    // ============================================
+    // Mobile Tests
+    // ============================================
     {
       name: "mobile-chrome",
+      testDir: "./tests/e2e",
       use: {
         ...devices["Pixel 5"],
-        baseURL: "https://localhost:3000",
+        baseURL: "http://localhost:3000",
       },
     },
     {
       name: "mobile-safari",
+      testDir: "./tests/e2e",
       use: {
         ...devices["iPhone 12"],
-        baseURL: "https://localhost:3000",
+        baseURL: "http://localhost:3000",
       },
     },
 
     // ============================================
-    // Production Testing
-    // Run with: TEST_ENV=production pnpm test:e2e --project=production-chromium
+    // Production Tests
     // ============================================
     {
-      name: "production-chromium",
+      name: "production-smoke",
+      testDir: "./tests/smoke",
       use: {
         ...devices["Desktop Chrome"],
         channel: "chromium",
@@ -145,35 +193,24 @@ export default defineConfig({
       },
     },
     {
-      name: "production-firefox",
+      name: "production-chromium",
+      testDir: "./tests/e2e",
       use: {
-        ...devices["Desktop Firefox"],
-        baseURL: "https://ed.databayt.org",
-      },
-    },
-    {
-      name: "production-webkit",
-      use: {
-        ...devices["Desktop Safari"],
-        baseURL: "https://ed.databayt.org",
-      },
-    },
-    {
-      name: "production-mobile-chrome",
-      use: {
-        ...devices["Pixel 5"],
+        ...devices["Desktop Chrome"],
+        channel: "chromium",
         baseURL: "https://ed.databayt.org",
       },
     },
   ],
 
   /* Run local dev server before starting tests (only for local) */
+  /* IMPORTANT: Always use port 3000, never switch to another port */
   webServer: isProduction
     ? undefined
     : {
-        command: "pnpm dev:https",
-        url: "https://localhost:3000",
-        reuseExistingServer: true, // Always reuse existing server
+        command: "pnpm dev",
+        url: "http://localhost:3000",
+        reuseExistingServer: true, // Always reuse existing server - NEVER start on different port
         timeout: 120_000, // 2 minutes for server startup
         ignoreHTTPSErrors: true,
       },

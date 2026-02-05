@@ -445,6 +445,175 @@ Users may navigate between entry points based on their role and context:
     └──────────────────────────────────────────────────────────────┘
 ```
 
+### Flow: School Site → School Platform ("Platform" Link)
+
+```
+       All Possible Scenarios After Clicking "Platform" Link
+
+  Click "Platform" from {school}.databayt.org header
+                      │
+                      ▼
+          ┌─────────────────────┐
+          │  Is user logged in? │
+          └─────────────────────┘
+                      │
+           ┌──────────┴──────────┐
+           ▼                     ▼
+      [NO - Guest]          [YES - Authenticated]
+           │                     │
+           ▼                     ▼
+     Redirect to            ┌────────────────┐
+     /{locale}/login        │ Correct school?│
+           │                └────────────────┘
+           │                     │
+           │              ┌──────┴──────┐
+           │              ▼             ▼
+           │         [NO - Wrong]  [YES - Match]
+           │              │             │
+           │              ▼             ▼
+           │         Access Denied  ┌─────────────┐
+           │         or Redirect    │  User Role? │
+           │                        └─────────────┘
+           │                             │
+           │              ┌──────┬───────┼───────┬──────┐
+           │              ▼      ▼       ▼       ▼      ▼
+           │           ADMIN  TEACHER STUDENT STAFF  OTHER
+           │              │      │       │       │      │
+           │              ▼      ▼       ▼       ▼      ▼
+           │           Full   Teacher Student Staff  Limited
+           │           Dashboard View   View   View   View
+           │
+           ▼
+     ┌─────────────┐
+     │ Login Form  │
+     └─────────────┘
+           │
+           ▼
+     ┌─────────────────┐
+     │ Valid login?    │
+     └─────────────────┘
+           │
+      ┌────┴────┐
+      ▼         ▼
+    [NO]      [YES]
+      │         │
+      ▼         ▼
+    Error    Redirect to
+    message  /{locale}/dashboard
+```
+
+### Flow: SaaS Marketing → "Get Started"
+
+```
+       All Possible Scenarios After Clicking "Get Started"
+
+  Click "Get Started" from ed.databayt.org hero
+                      │
+                      ▼
+          ┌─────────────────────┐
+          │  Is user logged in? │
+          └─────────────────────┘
+                      │
+           ┌──────────┴──────────┐
+           ▼                     ▼
+      [NO - Guest]          [YES - Authenticated]
+           │                     │
+           ▼                     ▼
+     Redirect to            ┌────────────────┐
+     /login?callback=       │ Has schoolId?  │
+     /onboarding            └────────────────┘
+           │                     │
+           │              ┌──────┴──────┐
+           │              ▼             ▼
+           │         [YES - Has]   [NO - None]
+           │              │             │
+           │              ▼             ▼
+           │         Redirect to   Continue to
+           │         school dash   /onboarding
+           │
+           ▼
+     ┌─────────────┐
+     │ Login/Join  │
+     │ Options     │
+     └─────────────┘
+           │
+           ▼
+     ┌─────────────────┐
+     │ OAuth or Creds  │
+     └─────────────────┘
+           │
+           ▼
+     ┌─────────────────────┐
+     │ User created/found  │
+     │ schoolId: null      │
+     └─────────────────────┘
+           │
+           ▼
+     ┌─────────────────────┐
+     │ Onboarding Wizard   │
+     │ (16 steps)          │
+     └─────────────────────┘
+           │
+           ▼
+     School created →
+     User = ADMIN →
+     Redirect to {school}.databayt.org
+```
+
+### Flow: SaaS Marketing → "Live Demo"
+
+```
+       All Possible Scenarios After Clicking "Live Demo"
+
+  Click "Live Demo" from ed.databayt.org hero
+                      │
+                      ▼
+          ┌─────────────────────┐
+          │ Opens new tab to    │
+          │ demo.databayt.org   │
+          └─────────────────────┘
+                      │
+                      ▼
+          ┌─────────────────────┐
+          │ Demo school site    │
+          │ (public marketing)  │
+          └─────────────────────┘
+                      │
+                      ▼
+          User can browse:
+          • School homepage
+          • About page
+          • Academic programs
+          • Faculty/Houses
+          • Contact info
+                      │
+                      ▼
+     ┌────────────────┴────────────────┐
+     │                                 │
+     ▼                                 ▼
+Click "Platform"              Click "Apply"
+     │                                 │
+     ▼                                 ▼
+(See Platform                 Redirect to
+ Link flow above)             /apply form
+```
+
+### Navigation Scenarios Summary
+
+| From           | Action      | Auth State   | Destination                    |
+| -------------- | ----------- | ------------ | ------------------------------ |
+| SaaS Marketing | Get Started | Guest        | Login → Onboarding             |
+| SaaS Marketing | Get Started | Has school   | Redirect to school dashboard   |
+| SaaS Marketing | Get Started | No school    | Onboarding wizard              |
+| SaaS Marketing | Live Demo   | Any          | demo.databayt.org (new tab)    |
+| SaaS Marketing | Login       | Guest        | Login page                     |
+| SaaS Marketing | Login       | DEVELOPER    | Operator dashboard             |
+| School Site    | Platform    | Guest        | Login → Dashboard              |
+| School Site    | Platform    | Correct user | Role-based dashboard           |
+| School Site    | Platform    | Wrong school | Access denied                  |
+| School Site    | Apply       | Any          | Application form               |
+| Operator Dash  | View School | DEVELOPER    | School dashboard (impersonate) |
+
 ### UserButton Variants
 
 The `UserButton` component adapts its menu based on entry point:

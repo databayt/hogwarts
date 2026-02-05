@@ -935,6 +935,7 @@ export const {
             host: originalHost,
             hasCallbackUrl: !!callbackUrl,
             callbackUrl,
+            originalUrl: url,
             environment: process.env.NODE_ENV,
             source: "safety_check",
           })
@@ -946,6 +947,19 @@ export const {
               callbackUrl
             )
             // Continue to validate and use the callback URL below
+          }
+          // Check if the original URL is a valid locale-based path (e.g., /en, /ar, /en/, /ar/)
+          // This handles the case where login action sets redirectTo: "/${locale}"
+          else if (url.match(/^\/(en|ar)\/?$/)) {
+            const localeHomeUrl = `${baseUrl}${url.endsWith("/") ? url.slice(0, -1) : url}`
+            log("🏠 MAIN DOMAIN LOCALE HOME REDIRECT:", {
+              host: originalHost,
+              originalUrl: url,
+              redirectUrl: localeHomeUrl,
+              reason:
+                "Login action requested locale homepage (non-DEVELOPER user)",
+            })
+            return localeHomeUrl
           } else {
             const mainDomainDashboard =
               process.env.NODE_ENV === "production"
@@ -984,6 +998,7 @@ export const {
           host: originalHost,
           hasCallbackUrl: !!callbackUrl,
           callbackUrl,
+          originalUrl: url,
           environment: process.env.NODE_ENV,
           source: "final_fallback",
         })
@@ -994,6 +1009,19 @@ export const {
             callbackUrl
           )
           // Continue to validate and use the callback URL below
+        }
+        // Check if the original URL is a valid locale-based path (e.g., /en, /ar, /en/, /ar/)
+        // This handles the case where login action sets redirectTo: "/${locale}"
+        else if (url.match(/^\/(en|ar)\/?$/)) {
+          const localeHomeUrl = `${baseUrl}${url.endsWith("/") ? url.slice(0, -1) : url}`
+          log("🏠 FINAL MAIN DOMAIN LOCALE HOME REDIRECT:", {
+            host: originalHost,
+            originalUrl: url,
+            redirectUrl: localeHomeUrl,
+            reason:
+              "Login action requested locale homepage (non-DEVELOPER user)",
+          })
+          return localeHomeUrl
         } else {
           const mainDomainDashboard =
             process.env.NODE_ENV === "production"

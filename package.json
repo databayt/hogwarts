@@ -21,10 +21,17 @@
     "db:seed:single": "tsx prisma/seeds/run-single.ts",
     "db:reset-test-user": "tsx prisma/seeds/reset-test-user.ts",
     "test": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:all": "playwright test",
+    "test:e2e:smoke": "playwright test --project=smoke",
+    "test:e2e:rbac": "playwright test --project=chromium --grep @rbac",
+    "test:e2e:auth": "playwright test --project=chromium --grep @auth",
+    "test:e2e:multi-tenant": "playwright test --project=chromium --grep @multi-tenant",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:prod": "TEST_ENV=production playwright test --project=production-chromium",
+    "test:e2e:prod:smoke": "TEST_ENV=production playwright test --project=production-smoke"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.37",

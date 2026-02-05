@@ -52,8 +52,23 @@ export const UserButton = ({
   const params = useParams()
   const locale = (params?.lang as string) || "ar"
 
-  // Build URLs based on variant and locale
-  const loginUrl = `/${locale}/login`
+  // Build login URL with context params
+  // - SaaS marketing: ?context=saas
+  // - School marketing: ?context=school&subdomain=X
+  // This helps the login action determine where to redirect after authentication
+  const buildLoginUrl = () => {
+    const base = `/${locale}/login`
+    if (variant === "site" && subdomain) {
+      return `${base}?context=school&subdomain=${subdomain}`
+    }
+    if (variant === "marketing" && subdomain) {
+      return `${base}?context=school&subdomain=${subdomain}`
+    }
+    // Default: SaaS context (no subdomain)
+    return `${base}?context=saas`
+  }
+
+  const loginUrl = buildLoginUrl()
 
   // Not logged in - show login button (matches other header icons)
   if (!user) {

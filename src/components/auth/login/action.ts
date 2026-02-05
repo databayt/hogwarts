@@ -19,10 +19,47 @@ import { LoginSchema } from "@/components/auth/validation"
 import { getTwoFactorConfirmationByUserId } from "@/components/auth/verification/2f-confirmation"
 import { getTwoFactorTokenByEmail } from "@/components/auth/verification/2f-token"
 
+/**
+ * Login Context - Distinguishes between SaaS and School marketing entry points
+ *
+ * CRITICAL BEHAVIOR:
+ * - "saas": User logged in from SaaS marketing (ed.databayt.org)
+ *   → Stay on SaaS marketing after login (unless callbackUrl specified)
+ * - "school": User logged in from School marketing (demo.databayt.org)
+ *   → Stay on school marketing after login (unless callbackUrl specified)
+ *
+ * The ONLY path to /onboarding is via explicit callbackUrl (from "Get Started" button)
+ */
+export type LoginContext = "saas" | "school"
+
+export interface LoginOptions {
+  /** Explicit redirect URL (e.g., from "Get Started" or "Platform" link) */
+  callbackUrl?: string | null
+  /** Login context - determines where to stay after login */
+  context?: LoginContext
+  /** School subdomain (when context is "school") */
+  subdomain?: string | null
+}
+
 export const login = async (
   values: z.infer<typeof LoginSchema>,
-  callbackUrl?: string | null
+  callbackUrlOrOptions?: string | null | LoginOptions
 ) => {
+  // Handle both legacy (string callbackUrl) and new (options object) signatures
+  let callbackUrl: string | null | undefined
+  let context: LoginContext = "saas"
+  let subdomain: string | null | undefined
+
+  if (
+    typeof callbackUrlOrOptions === "object" &&
+    callbackUrlOrOptions !== null
+  ) {
+    callbackUrl = callbackUrlOrOptions.callbackUrl
+    context = callbackUrlOrOptions.context || "saas"
+    subdomain = callbackUrlOrOptions.subdomain
+  } else {
+    callbackUrl = callbackUrlOrOptions
+  }
   const validatedFields = LoginSchema.safeParse(values)
 
   if (!validatedFields.success) {
@@ -95,70 +132,175 @@ export const login = async (
     }
   }
 
-  // Smart redirect based on user role AND school context:
-  // - DEVELOPER: Redirect to /dashboard (school-dashboard saas-dashboard dashboard)
-  // - Users with school: Redirect to their school's subdomain dashboard
-  // - Users without school: Redirect to onboarding
-  let finalRedirectUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT
+  // ============================================================================
+  // SMART REDIRECT LOGIC - User Flow Distinction
+  // ============================================================================
+  //
+  // CRITICAL RULES:
+  // 1. /onboarding is ONLY reachable via explicit callbackUrl (from "Get Started" button)
+  // 2. Login button alone → STAY on current marketing page (SaaS or School)
+  // 3. Platform link → attempts /dashboard with membership check
+  // 4. DEVELOPER role → always has access to SaaS dashboard
+  //
+  // ============================================================================
 
   // Extract locale from callbackUrl or default to 'ar'
   const locale = callbackUrl?.match(/^\/(ar|en)\//)
     ? callbackUrl.match(/^\/(ar|en)\//)?.[1]
     : "ar"
 
-  if (existingUser.role === "DEVELOPER") {
-    // DEVELOPER → Platform saas-dashboard dashboard (main domain)
-    finalRedirectUrl = `/${locale}/dashboard`
-    console.log(
-      "[LOGIN-ACTION] 👑 DEVELOPER - redirecting to saas-dashboard dashboard:",
-      {
-        role: existingUser.role,
-        redirectUrl: finalRedirectUrl,
-      }
-    )
-  } else if (existingUser.schoolId) {
-    // User has a school → look up school subdomain and redirect there
-    const school = await db.school.findUnique({
-      where: { id: existingUser.schoolId },
-      select: { domain: true },
-    })
+  let finalRedirectUrl: string
 
-    if (school?.domain) {
-      // Redirect to school subdomain dashboard
-      // The /dashboard is role-aware - UI adapts based on user role
-      // Use HTTPS in dev mode if NEXTAUTH_URL uses https (for HTTPS dev testing)
+  // CASE 1: Explicit callbackUrl provided (from "Get Started" or "Platform" link)
+  if (callbackUrl && callbackUrl !== "/" && callbackUrl !== `/${locale}`) {
+    // Check if requesting /onboarding
+    if (callbackUrl.includes("/onboarding")) {
+      // Only "Get Started" button leads here - allow it
+      finalRedirectUrl = callbackUrl
+      console.log(
+        "[LOGIN-ACTION] 🚀 Get Started flow - redirecting to onboarding:",
+        {
+          callbackUrl,
+          finalRedirectUrl,
+        }
+      )
+    }
+    // Check if requesting /dashboard on school subdomain
+    else if (callbackUrl.includes("/dashboard") && subdomain) {
+      // User clicked "Platform" on school marketing
+      // Check if user is a member of THIS school
+      if (existingUser.schoolId) {
+        const school = await db.school.findUnique({
+          where: { id: existingUser.schoolId },
+          select: { domain: true },
+        })
+
+        if (school?.domain === subdomain) {
+          // User is a member of this school - allow dashboard access
+          finalRedirectUrl = callbackUrl
+          console.log(
+            "[LOGIN-ACTION] 🏫 School member accessing their dashboard:",
+            {
+              subdomain,
+              userSchool: school.domain,
+              finalRedirectUrl,
+            }
+          )
+        } else {
+          // User belongs to a DIFFERENT school - deny access
+          finalRedirectUrl = `/${locale}/access-denied`
+          console.log("[LOGIN-ACTION] ⛔ User belongs to different school:", {
+            requestedSchool: subdomain,
+            userSchool: school?.domain,
+            finalRedirectUrl,
+          })
+        }
+      } else if (existingUser.role === "DEVELOPER") {
+        // DEVELOPER can access any school's dashboard
+        finalRedirectUrl = callbackUrl
+        console.log("[LOGIN-ACTION] 👑 DEVELOPER accessing school dashboard:", {
+          subdomain,
+          finalRedirectUrl,
+        })
+      } else {
+        // User has no school - deny dashboard access
+        finalRedirectUrl = `/${locale}/access-denied`
+        console.log(
+          "[LOGIN-ACTION] ⛔ User has no school - cannot access dashboard:",
+          {
+            requestedSchool: subdomain,
+            finalRedirectUrl,
+          }
+        )
+      }
+    }
+    // Check if requesting SaaS dashboard on main domain
+    else if (callbackUrl.includes("/dashboard") && !subdomain) {
+      if (existingUser.role === "DEVELOPER") {
+        // DEVELOPER can access SaaS dashboard
+        finalRedirectUrl = callbackUrl
+        console.log("[LOGIN-ACTION] 👑 DEVELOPER accessing SaaS dashboard:", {
+          finalRedirectUrl,
+        })
+      } else if (existingUser.schoolId) {
+        // User has a school - redirect to THEIR school's dashboard
+        const school = await db.school.findUnique({
+          where: { id: existingUser.schoolId },
+          select: { domain: true },
+        })
+
+        if (school?.domain) {
+          const useHttps = process.env.NEXTAUTH_URL?.startsWith("https")
+          const protocol = useHttps ? "https" : "http"
+          const baseUrl =
+            process.env.NODE_ENV === "production"
+              ? `https://${school.domain}.databayt.org`
+              : `${protocol}://${school.domain}.localhost:3000`
+          finalRedirectUrl = `${baseUrl}/${locale}/dashboard`
+          console.log(
+            "[LOGIN-ACTION] 🏫 Redirecting to user's school dashboard:",
+            {
+              school: school.domain,
+              finalRedirectUrl,
+            }
+          )
+        } else {
+          finalRedirectUrl = `/${locale}`
+          console.log(
+            "[LOGIN-ACTION] ⚠️ School domain not found, staying on homepage"
+          )
+        }
+      } else {
+        // No school, not DEVELOPER - deny SaaS dashboard access
+        finalRedirectUrl = `/${locale}/access-denied`
+        console.log(
+          "[LOGIN-ACTION] ⛔ Non-DEVELOPER without school cannot access SaaS dashboard"
+        )
+      }
+    }
+    // Other callbackUrl - follow it
+    else {
+      finalRedirectUrl = callbackUrl
+      console.log("[LOGIN-ACTION] 📍 Following explicit callbackUrl:", {
+        callbackUrl,
+      })
+    }
+  }
+  // CASE 2: No callbackUrl - Login button clicked (stay on current page)
+  else {
+    // Determine where to "stay" based on context
+    if (context === "school" && subdomain) {
+      // Logged in from school marketing - stay there
       const useHttps = process.env.NEXTAUTH_URL?.startsWith("https")
       const protocol = useHttps ? "https" : "http"
       const baseUrl =
         process.env.NODE_ENV === "production"
-          ? `https://${school.domain}.databayt.org`
-          : `${protocol}://${school.domain}.localhost:3000`
-      finalRedirectUrl = `${baseUrl}/${locale}/dashboard`
-      console.log(
-        "[LOGIN-ACTION] 🏫 School member - redirecting to school dashboard:",
-        {
-          role: existingUser.role,
-          school: school.domain,
-          redirectUrl: finalRedirectUrl,
-        }
-      )
+          ? `https://${subdomain}.databayt.org`
+          : `${protocol}://${subdomain}.localhost:3000`
+      finalRedirectUrl = `${baseUrl}/${locale}`
+      console.log("[LOGIN-ACTION] 🏠 Staying on school marketing:", {
+        subdomain,
+        finalRedirectUrl,
+      })
     } else {
-      // Fallback: if school domain not found, go to locale homepage
-      finalRedirectUrl = `/${locale}`
-      console.log(
-        "[LOGIN-ACTION] ⚠️ School domain not found, falling back to homepage"
-      )
-    }
-  } else {
-    // No school → onboarding (user needs to create/join a school)
-    finalRedirectUrl = `/${locale}/onboarding`
-    console.log(
-      "[LOGIN-ACTION] 🆕 New user without school - redirecting to onboarding:",
-      {
-        role: existingUser.role,
-        redirectUrl: finalRedirectUrl,
+      // Logged in from SaaS marketing
+      if (existingUser.role === "DEVELOPER") {
+        // DEVELOPER → auto-redirect to SaaS dashboard
+        finalRedirectUrl = `/${locale}/dashboard`
+        console.log(
+          "[LOGIN-ACTION] 👑 DEVELOPER auto-redirect to SaaS dashboard:",
+          {
+            finalRedirectUrl,
+          }
+        )
+      } else {
+        // Non-DEVELOPER → stay on SaaS marketing
+        finalRedirectUrl = `/${locale}`
+        console.log("[LOGIN-ACTION] 🏠 Staying on SaaS marketing:", {
+          finalRedirectUrl,
+        })
       }
-    )
+    }
   }
 
   try {

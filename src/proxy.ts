@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { isRouteAllowedForRole, type Role } from "@/routes"
+import {
+  isRouteAllowedForRole,
+  isSaasDashboardRoute,
+  type Role,
+} from "@/routes"
 
 import { i18n, type Locale } from "@/components/internationalization/config"
 
@@ -38,7 +42,14 @@ const publicRoutes = [
   "/blog",
   "/onboarding",
 ]
-const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
+const authRoutes = [
+  "/login",
+  "/join",
+  "/error",
+  "/reset",
+  "/new-password",
+  "/access-denied",
+]
 
 // Public school-marketing routes (school subdomain public pages - no auth required)
 const publicSiteRoutes = [
@@ -184,11 +195,22 @@ export function proxy(req: NextRequest) {
 
   // Redirect logged-in users away from auth pages
   if (isAuth && authenticated) {
-    // If on subdomain, redirect to subdomain dashboard
-    const dashboardPath = subdomain
-      ? `/${locale}/s/${subdomain}/dashboard`
-      : `/${locale}/dashboard`
-    const response = NextResponse.redirect(new URL(dashboardPath, req.url))
+    let redirectPath: string
+    if (subdomain) {
+      // School subdomain: redirect to school dashboard
+      redirectPath = `/${locale}/s/${subdomain}/dashboard`
+    } else {
+      // Main domain: check role
+      const role = getRoleFromCookie(req)
+      if (role === "DEVELOPER") {
+        // DEVELOPER → SaaS dashboard
+        redirectPath = `/${locale}/dashboard`
+      } else {
+        // Non-DEVELOPER → stay on homepage (NOT dashboard, NOT onboarding)
+        redirectPath = `/${locale}`
+      }
+    }
+    const response = NextResponse.redirect(new URL(redirectPath, req.url))
     return response
   }
 
@@ -205,6 +227,25 @@ export function proxy(req: NextRequest) {
   // Check if user's role is allowed to access this route
   if (!isPublic && !isPublicSiteRoute && !isAuth && authenticated) {
     const role = getRoleFromCookie(req)
+
+    // CRITICAL: SaaS Dashboard protection (main domain only, DEVELOPER required)
+    // Main domain SaaS routes (/dashboard, /analytics, etc.) are DEVELOPER-only
+    // School subdomain routes with same paths use school-dashboard (different file structure)
+    if (!subdomain && role && isSaasDashboardRoute(pathForRouteCheck)) {
+      if (role !== "DEVELOPER") {
+        // Non-DEVELOPER trying to access SaaS dashboard on main domain
+        // Redirect to onboarding (they likely need to join/create a school)
+        const onboardingUrl = `/${locale}/onboarding`
+        const response = NextResponse.redirect(new URL(onboardingUrl, req.url))
+        response.headers.set("x-blocked-role", role)
+        response.headers.set("x-blocked-route", pathForRouteCheck)
+        response.headers.set(
+          "x-blocked-reason",
+          "saas-dashboard-developer-only"
+        )
+        return response
+      }
+    }
 
     // If role is available, check route permissions
     // If role is null (JWT decode failed), allow through - auth() in actions will verify

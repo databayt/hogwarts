@@ -1,18 +1,28 @@
 ---
 title: "Playwright"
-description: "E2E testing with Playwright - optimized for headless mode and HTTPS localhost"
+description: "E2E testing and AI-powered browser automation with Playwright MCP"
 ---
 
 ## Overview
 
-This project uses [Playwright](https://playwright.dev/) for end-to-end testing with optimizations for headless mode, GPU acceleration, and HTTPS localhost support.
+This project uses [Playwright](https://playwright.dev/) for end-to-end testing with:
 
-## Installation
+- **Multi-environment support** - Test locally or against production
+- **GPU acceleration** - 30% faster headless execution
+- **Playwright MCP** - AI-assisted browser automation
+- **Multi-tenant testing** - Subdomain routing and tenant isolation
 
-Playwright is already configured. To install browsers:
+## Quick Start
 
 ```bash
+# Install browsers
 pnpm exec playwright install
+
+# Run tests (requires dev server on port 3000)
+pnpm test:e2e
+
+# Run against production
+TEST_ENV=production pnpm test:e2e --project=production-chromium
 ```
 
 ## Commands
@@ -33,9 +43,136 @@ pnpm test:e2e --headed               # Show browser window
 pnpm test:e2e tests/login.spec.ts    # Single test file
 ```
 
+---
+
+## Test Credentials
+
+All test accounts use password: `1234`
+
+### Platform Accounts
+
+These accounts have no `schoolId` and are used for platform-level testing.
+
+| Email               | Role      | Purpose                               |
+| ------------------- | --------- | ------------------------------------- |
+| `dev@databayt.org`  | DEVELOPER | Platform admin, SaaS dashboard access |
+| `user@databayt.org` | USER      | Fresh user, onboarding flow testing   |
+
+### Demo School Accounts
+
+These accounts are tied to the demo school only. They **cannot access other schools**.
+
+| Email                     | Role       | Purpose                |
+| ------------------------- | ---------- | ---------------------- |
+| `admin@databayt.org`      | ADMIN      | School administrator   |
+| `accountant@databayt.org` | ACCOUNTANT | Finance access         |
+| `staff@databayt.org`      | STAFF      | Staff member           |
+| `teacher@databayt.org`    | TEACHER    | Teacher access         |
+| `student@databayt.org`    | STUDENT    | Student access         |
+| `parent@databayt.org`     | GUARDIAN   | Parent/guardian access |
+
+### Bulk Accounts
+
+For load testing and performance benchmarks:
+
+| Pattern                                | Count | Role     |
+| -------------------------------------- | ----- | -------- |
+| `teacher1@databayt.org` → `teacher99`  | 100   | TEACHER  |
+| `student1@databayt.org` → `student999` | 1000  | STUDENT  |
+| `parent1@databayt.org` → `parent1999`  | 2000  | GUARDIAN |
+
+### Reset Test User
+
+If `user@databayt.org` gets modified during testing, reset it:
+
+```bash
+pnpm db:reset-test-user    # Reset to fresh state
+pnpm db:seed               # Or re-run full seed
+```
+
+---
+
+## Multi-Tenant Testing
+
+### URL Patterns
+
+| Environment       | Main Domain                      | School Subdomain                     |
+| ----------------- | -------------------------------- | ------------------------------------ |
+| Local Development | `http://localhost:3000/en/...`   | `http://demo.localhost:3000/en/...`  |
+| Production        | `https://ed.databayt.org/en/...` | `https://demo.databayt.org/en/...`   |
+| Vercel Preview    | `https://branch.vercel.app`      | `https://tenant---branch.vercel.app` |
+
+### Testing Scenarios
+
+| Scenario            | Credential             | Domain                           | Expected Result                   |
+| ------------------- | ---------------------- | -------------------------------- | --------------------------------- |
+| SaaS Dashboard      | `dev@databayt.org`     | `localhost:3000`                 | Access to /dashboard, /tenants    |
+| School Dashboard    | `admin@databayt.org`   | `demo.localhost:3000`            | Access to school platform         |
+| Onboarding Flow     | `user@databayt.org`    | `localhost:3000`                 | "Get Started" → onboarding wizard |
+| RBAC Testing        | `teacher@databayt.org` | `demo.localhost:3000`            | Blocked from /admin, /settings    |
+| Tenant Isolation    | `admin@databayt.org`   | `other.localhost:3000`           | Access denied (wrong school)      |
+| Cross-Subdomain SSO | Any logged-in user     | Login on main → school subdomain | Session persists                  |
+
+### Multi-Tenant Test Example
+
+```typescript
+import { expect, test } from "@playwright/test"
+
+test.describe("tenant isolation", () => {
+  test("admin cannot access other schools", async ({ page }) => {
+    // Login as demo school admin
+    await page.goto("http://demo.localhost:3000/en/login")
+    await page.fill('[name="email"]', "admin@databayt.org")
+    await page.fill('[name="password"]', "1234")
+    await page.click('button[type="submit"]')
+
+    // Try to access different school
+    await page.goto("http://other.localhost:3000/en/dashboard")
+
+    // Should be denied
+    await expect(page).toHaveURL(/unauthorized|login/)
+  })
+
+  test("RBAC - teacher blocked from admin routes", async ({ page }) => {
+    await page.goto("http://demo.localhost:3000/en/login")
+    await page.fill('[name="email"]', "teacher@databayt.org")
+    await page.fill('[name="password"]', "1234")
+    await page.click('button[type="submit"]')
+
+    // Try admin route
+    await page.goto("http://demo.localhost:3000/en/s/demo/admin")
+
+    // Should redirect or show forbidden
+    await expect(page.locator("body")).not.toContainText("Admin Panel")
+  })
+})
+```
+
+---
+
 ## Configuration
 
-The configuration is optimized for performance and HTTPS localhost support.
+### Multi-Environment Setup
+
+The config supports both local and production testing:
+
+```typescript
+const isProduction = process.env.TEST_ENV === "production"
+const baseURL = isProduction
+  ? "https://ed.databayt.org"
+  : "http://localhost:3000" // IMPORTANT: HTTP, not HTTPS
+```
+
+### Key Settings
+
+| Setting               | Local     | Production      | Purpose                      |
+| --------------------- | --------- | --------------- | ---------------------------- |
+| `baseURL`             | localhost | ed.databayt.org | Target environment           |
+| `timeout`             | 30s       | 60s             | Network latency buffer       |
+| `actionTimeout`       | 10s       | 15s             | Click, fill, etc.            |
+| `navigationTimeout`   | 15s       | 30s             | Page loads                   |
+| `retries`             | 0         | 1               | Production network flakiness |
+| `reuseExistingServer` | true      | N/A             | Never start new dev server   |
 
 ### Full Config
 
@@ -43,62 +180,184 @@ The configuration is optimized for performance and HTTPS localhost support.
 // playwright.config.ts
 import { defineConfig, devices } from "@playwright/test"
 
+const isProduction = process.env.TEST_ENV === "production"
+const baseURL = isProduction
+  ? "https://ed.databayt.org"
+  : "http://localhost:3000"
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : isProduction ? 1 : 0,
   workers: process.env.CI ? 1 : undefined,
-  timeout: 30_000,
+  timeout: isProduction ? 60_000 : 30_000,
+
+  expect: {
+    timeout: isProduction ? 10_000 : 5_000,
+  },
 
   use: {
-    baseURL: "https://localhost:3000",
+    baseURL,
     ignoreHTTPSErrors: true,
     headless: true,
     viewport: { width: 1280, height: 720 },
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "on-first-retry",
-    actionTimeout: 10_000,
-    navigationTimeout: 15_000,
+    actionTimeout: isProduction ? 15_000 : 10_000,
+    navigationTimeout: isProduction ? 30_000 : 15_000,
 
-    // GPU acceleration
+    // GPU acceleration (30% faster)
     launchOptions: {
-      args: ["--use-gl=egl", "--disable-dev-shm-usage", "--no-sandbox"],
+      args: [
+        "--use-gl=egl",
+        "--disable-dev-shm-usage",
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+      ],
     },
   },
 
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
-    { name: "mobile-chrome", use: { ...devices["Pixel 5"] } },
-    { name: "mobile-safari", use: { ...devices["iPhone 12"] } },
+    // Local development
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"], baseURL: "http://localhost:3000" },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"], baseURL: "http://localhost:3000" },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"], baseURL: "http://localhost:3000" },
+    },
+    {
+      name: "mobile-chrome",
+      use: { ...devices["Pixel 5"], baseURL: "http://localhost:3000" },
+    },
+    {
+      name: "mobile-safari",
+      use: { ...devices["iPhone 12"], baseURL: "http://localhost:3000" },
+    },
+
+    // Production testing
+    {
+      name: "production-chromium",
+      use: { ...devices["Desktop Chrome"], baseURL: "https://ed.databayt.org" },
+    },
+    {
+      name: "production-firefox",
+      use: {
+        ...devices["Desktop Firefox"],
+        baseURL: "https://ed.databayt.org",
+      },
+    },
+    {
+      name: "production-webkit",
+      use: { ...devices["Desktop Safari"], baseURL: "https://ed.databayt.org" },
+    },
+    {
+      name: "production-mobile-chrome",
+      use: { ...devices["Pixel 5"], baseURL: "https://ed.databayt.org" },
+    },
   ],
 
-  webServer: {
-    command: "pnpm dev:https",
-    url: "https://localhost:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    ignoreHTTPSErrors: true,
-  },
+  webServer: isProduction
+    ? undefined
+    : {
+        command: "pnpm dev",
+        url: "http://localhost:3000",
+        reuseExistingServer: true, // CRITICAL: Never start on different port
+        timeout: 120_000,
+      },
 })
 ```
 
-## Headless Optimizations
+---
 
-### GPU Hardware Acceleration
+## Browser Options
 
-GPU acceleration reduces test execution time by ~30%.
+### Recommended Browser
 
-| Setting                   | Value            | Purpose                        |
-| ------------------------- | ---------------- | ------------------------------ |
-| `--use-gl=egl`            | GPU acceleration | 30% faster rendering           |
-| `--disable-dev-shm-usage` | Memory fix       | Prevents crashes in Docker/CI  |
-| `--no-sandbox`            | CI compatibility | Required for some environments |
+**Chromium** is the default and recommended browser for AI automation:
+
+- Best supported by Playwright MCP
+- Fastest execution with GPU acceleration
+- Most stable accessibility tree snapshots
+
+### Browser Comparison
+
+| Browser    | Flag                 | Use Case                    |
+| ---------- | -------------------- | --------------------------- |
+| `chromium` | `--project=chromium` | Default, best AI automation |
+| `chrome`   | `--browser chrome`   | Real Chrome (new headless)  |
+| `firefox`  | `--project=firefox`  | Cross-browser testing       |
+| `webkit`   | `--project=webkit`   | Safari/iOS testing          |
+| `msedge`   | `--browser msedge`   | Edge-specific features      |
+
+### Running Different Browsers
+
+```bash
+# Single browser
+pnpm test:e2e --project=chromium
+pnpm test:e2e --project=firefox
+pnpm test:e2e --project=webkit
+
+# Multiple browsers
+pnpm test:e2e --project=chromium --project=firefox
+
+# Mobile viewports
+pnpm test:e2e --project=mobile-chrome
+pnpm test:e2e --project=mobile-safari
+```
+
+---
+
+## Headless Mode
+
+### Two Headless Modes
+
+Playwright supports two headless modes with different tradeoffs:
+
+**1. Chromium Headless Shell** (Default)
+
+- Lightweight, fastest execution
+- Lowest resource usage
+- Best for CI/CD pipelines
+- Used with `--headless` flag
+
+**2. New Chrome Headless**
+
+- Full Chrome browser binary
+- More accurate rendering
+- Better for visual testing
+- Use with `--browser chrome --headless`
 
 ### Performance Comparison
+
+| Mode                    | Speed   | Resources | Accuracy |
+| ----------------------- | ------- | --------- | -------- |
+| Chromium Headless Shell | Fastest | Lowest    | Good     |
+| Chrome New Headless     | Fast    | Medium    | Best     |
+| Headed Mode             | Slower  | Highest   | Best     |
+
+### GPU Acceleration
+
+GPU acceleration provides ~30% faster test execution:
+
+```typescript
+launchOptions: {
+  args: [
+    "--use-gl=egl",           // GPU hardware acceleration
+    "--disable-dev-shm-usage", // Avoid /dev/shm issues in Docker
+    "--no-sandbox",            // Required for CI environments
+  ],
+}
+```
+
+### Performance Benchmarks
 
 | Mode                      | Time per Test | 100 Tests |
 | ------------------------- | ------------- | --------- |
@@ -108,8 +367,6 @@ GPU acceleration reduces test execution time by ~30%.
 ### Verify GPU Acceleration
 
 ```typescript
-import { expect, test } from "@playwright/test"
-
 test("GPU hardware acceleration", async ({ page }) => {
   await page.goto("chrome://gpu")
   const featureStatus = page.locator(".feature-status-list")
@@ -117,40 +374,7 @@ test("GPU hardware acceleration", async ({ page }) => {
 })
 ```
 
-## HTTPS Localhost
-
-The project uses self-signed certificates for local HTTPS testing.
-
-### Why HTTPS?
-
-- **OAuth providers** require HTTPS callback URLs
-- **Secure cookies** need HTTPS in development
-- **Production parity** for realistic testing
-
-### Setup
-
-Certificates are pre-generated in `./certificates/`:
-
-```
-certificates/
-  localhost+2.pem      # Certificate
-  localhost+2-key.pem  # Private key
-```
-
-### Start HTTPS Server
-
-```bash
-pnpm dev:https   # Starts at https://localhost:3000
-```
-
-### Playwright Config for HTTPS
-
-```typescript
-use: {
-  baseURL: "https://localhost:3000",
-  ignoreHTTPSErrors: true,  // Trust self-signed certs
-}
-```
+---
 
 ## Writing Tests
 
@@ -165,33 +389,32 @@ test("homepage has title", async ({ page }) => {
 })
 ```
 
-### Login Flow Test
+### Authentication Test
 
 ```typescript
 import { expect, test } from "@playwright/test"
 
-test("login with credentials", async ({ page }) => {
+test("login with test credentials", async ({ page }) => {
   await page.goto("/en/login")
 
-  await page.getByRole("textbox", { name: "Email" }).fill("test@example.com")
-  await page.getByRole("textbox", { name: "Password" }).fill("password123")
+  await page.getByRole("textbox", { name: "Email" }).fill("admin@databayt.org")
+  await page.getByRole("textbox", { name: "Password" }).fill("1234")
   await page.getByRole("button", { name: "Login" }).click()
 
   await expect(page).toHaveURL(/dashboard/)
 })
 ```
 
-### Test with Authentication
+### Test with Auth State
 
 ```typescript
 import { expect, test } from "@playwright/test"
 
 test.describe("authenticated user", () => {
   test.beforeEach(async ({ page }) => {
-    // Login before each test
-    await page.goto("/en/login")
-    await page.fill('[name="email"]', "admin@test.com")
-    await page.fill('[name="password"]', "password")
+    await page.goto("http://demo.localhost:3000/en/login")
+    await page.fill('[name="email"]', "admin@databayt.org")
+    await page.fill('[name="password"]', "1234")
     await page.click('button[type="submit"]')
     await page.waitForURL("**/dashboard")
   })
@@ -202,6 +425,163 @@ test.describe("authenticated user", () => {
   })
 })
 ```
+
+### RBAC Test
+
+```typescript
+import { expect, test } from "@playwright/test"
+
+const rolePermissions = [
+  { email: "admin@databayt.org", route: "/admin", allowed: true },
+  { email: "teacher@databayt.org", route: "/admin", allowed: false },
+  { email: "student@databayt.org", route: "/grades", allowed: true },
+  { email: "student@databayt.org", route: "/admin", allowed: false },
+]
+
+for (const { email, route, allowed } of rolePermissions) {
+  test(`${email} ${allowed ? "can" : "cannot"} access ${route}`, async ({
+    page,
+  }) => {
+    await page.goto("http://demo.localhost:3000/en/login")
+    await page.fill('[name="email"]', email)
+    await page.fill('[name="password"]', "1234")
+    await page.click('button[type="submit"]')
+    await page.waitForURL("**/dashboard")
+
+    await page.goto(`http://demo.localhost:3000/en/s/demo${route}`)
+
+    if (allowed) {
+      await expect(page).not.toHaveURL(/unauthorized|forbidden/)
+    } else {
+      await expect(page).toHaveURL(/unauthorized|forbidden|dashboard/)
+    }
+  })
+}
+```
+
+---
+
+## Playwright MCP (AI Integration)
+
+Playwright MCP enables AI-assisted browser automation, allowing Claude to control browsers through natural language.
+
+### Overview
+
+The MCP server provides:
+
+- **Accessibility-first automation** - Uses accessibility tree, not screenshots
+- **Natural language control** - "Click the login button" just works
+- **Session persistence** - Login state preserved across interactions
+- **Multi-tab support** - Manage multiple browser tabs
+
+### Installation
+
+Add to your Claude Code MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
+```
+
+### With Headless Chromium (Recommended)
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--headless", "--browser", "chromium"]
+    }
+  }
+}
+```
+
+### Configuration Options
+
+| Category | Options                                                       |
+| -------- | ------------------------------------------------------------- |
+| Browser  | `--browser`, `--headless`, `--viewport-size`, `--device`      |
+| Network  | `--allowed-origins`, `--blocked-origins`, `--proxy-server`    |
+| Timeouts | `--timeout-action` (5000ms), `--timeout-navigation` (60000ms) |
+| Session  | `--user-data-dir`, `--storage-state`, `--isolated`            |
+| Output   | `--save-trace`, `--save-video`, `--codegen`                   |
+
+### Running Modes
+
+**1. Persistent Profile** (Default)
+
+- Stores login state between sessions
+- Best for testing authenticated flows
+- State persists in `--user-data-dir`
+
+**2. Isolated Mode**
+
+- Fresh browser session each time
+- Use `--isolated` flag
+- Best for testing clean-slate scenarios
+
+**3. Browser Extension**
+
+- Connect to existing browser via DevTools
+- Useful for debugging specific pages
+
+### Available Tools
+
+| Tool                       | Purpose                              |
+| -------------------------- | ------------------------------------ |
+| `browser_navigate`         | Go to URL                            |
+| `browser_click`            | Click element by accessibility label |
+| `browser_type`             | Type text at cursor                  |
+| `browser_fill`             | Fill form field                      |
+| `browser_snapshot`         | Get accessibility tree (key for AI)  |
+| `browser_screenshot`       | Capture screenshot                   |
+| `browser_pdf_save`         | Save page as PDF                     |
+| `browser_console_messages` | Get console logs                     |
+| `browser_network_requests` | Monitor network activity             |
+| `browser_tabs_list`        | List open tabs                       |
+| `browser_tab_new`          | Open new tab                         |
+| `browser_tab_select`       | Switch between tabs                  |
+| `browser_file_upload`      | Upload files                         |
+| `browser_handle_dialog`    | Handle alerts/dialogs                |
+| `browser_close`            | Close browser                        |
+
+### MCP Best Practices
+
+**For AI Automation:**
+
+- Use accessibility tree snapshots (LLM-friendly, no vision required)
+- Prefer roles, labels, or `data-testid` selectors
+- Assert real state changes (title, URL, visible text)
+- Use MCP for exploratory automation, not regression suites
+
+**For Multi-Tenant Testing:**
+
+- Always specify the correct subdomain in navigation
+- Test tenant isolation (user A can't access school B)
+- Test RBAC (each role has different permissions)
+- Use bulk accounts for load testing
+
+### Example MCP Session
+
+```
+// Natural language commands Claude can execute via MCP:
+
+Navigate to http://demo.localhost:3000/en/login
+Fill email field with admin@databayt.org
+Fill password field with 1234
+Click the Login button
+Wait for navigation to dashboard
+Take a snapshot of the current page
+Verify "Welcome" text is visible
+```
+
+---
 
 ## Debugging
 
@@ -228,6 +608,16 @@ Automatically captured on failure:
 - Screenshots: `test-results/*/screenshot.png`
 - Videos: `test-results/*/video.webm`
 - Traces: `test-results/*/trace.zip`
+
+### UI Mode
+
+Interactive test runner with time-travel debugging:
+
+```bash
+pnpm test:e2e:ui
+```
+
+---
 
 ## CI/CD Integration
 
@@ -261,33 +651,32 @@ jobs:
           path: playwright-report/
 ```
 
-## Best Practices
+### Production Testing in CI
 
-### Do
+```yaml
+- name: Test Production
+  run: TEST_ENV=production pnpm test:e2e --project=production-chromium
+  env:
+    TEST_ENV: production
+```
 
-- Use `getByRole()` for accessible selectors
-- Wait for network idle on navigation
-- Use `test.describe()` for grouping related tests
-- Add `data-testid` for complex elements
-- Run tests in parallel with `fullyParallel: true`
+---
 
-### Avoid
+## Timeouts Reference
 
-- Hardcoded waits (`page.waitForTimeout`)
-- Fragile CSS selectors
-- Tests that depend on execution order
-- Shared state between tests
+| Setting             | Local | Production | Purpose             |
+| ------------------- | ----- | ---------- | ------------------- |
+| `timeout`           | 30s   | 60s        | Global test timeout |
+| `actionTimeout`     | 10s   | 15s        | Click, fill, etc.   |
+| `navigationTimeout` | 15s   | 30s        | Page navigation     |
+| `expect.timeout`    | 5s    | 10s        | Assertion timeout   |
+| `webServer.timeout` | 120s  | N/A        | Server startup      |
 
-## Timeouts
-
-| Setting             | Default | Purpose             |
-| ------------------- | ------- | ------------------- |
-| `timeout`           | 30s     | Global test timeout |
-| `actionTimeout`     | 10s     | Click, fill, etc.   |
-| `navigationTimeout` | 15s     | Page navigation     |
-| `expect.timeout`    | 5s      | Assertion timeout   |
+---
 
 ## Browser Projects
+
+### Local Development
 
 | Project         | Device          | Use Case         |
 | --------------- | --------------- | ---------------- |
@@ -297,34 +686,54 @@ jobs:
 | `mobile-chrome` | Pixel 5         | Android mobile   |
 | `mobile-safari` | iPhone 12       | iOS mobile       |
 
-## MCP Integration
+### Production Testing
 
-The Playwright MCP server enables AI-assisted browser automation.
+| Project                    | Target                    |
+| -------------------------- | ------------------------- |
+| `production-chromium`      | ed.databayt.org (Chrome)  |
+| `production-firefox`       | ed.databayt.org (Firefox) |
+| `production-webkit`        | ed.databayt.org (Safari)  |
+| `production-mobile-chrome` | ed.databayt.org (Mobile)  |
 
-### Available Tools
+### Running Production Tests
 
-| Tool                 | Purpose                |
-| -------------------- | ---------------------- |
-| `browser_navigate`   | Go to URL              |
-| `browser_snapshot`   | Get accessibility tree |
-| `browser_click`      | Click element          |
-| `browser_type`       | Type text              |
-| `browser_fill_form`  | Fill multiple fields   |
-| `browser_screenshot` | Capture screenshot     |
+```bash
+# Single browser against production
+TEST_ENV=production pnpm test:e2e --project=production-chromium
 
-### Example Usage
-
+# All production browsers
+TEST_ENV=production pnpm test:e2e --project=production-chromium --project=production-firefox
 ```
-Navigate to https://localhost:3000
-Click the Login button
-Fill email field with test@example.com
-Take a screenshot
-```
+
+---
+
+## Best Practices
+
+### Do
+
+- Use `getByRole()` for accessible selectors
+- Wait for network idle on navigation
+- Use `test.describe()` for grouping related tests
+- Add `data-testid` for complex elements
+- Run tests in parallel with `fullyParallel: true`
+- Always test on port 3000 (never switch ports)
+- Include `schoolId` validation in multi-tenant tests
+
+### Avoid
+
+- Hardcoded waits (`page.waitForTimeout`)
+- Fragile CSS selectors
+- Tests that depend on execution order
+- Shared state between tests
+- Testing against wrong subdomain for role
+
+---
 
 ## Sources
 
 - [Playwright Documentation](https://playwright.dev/docs/intro)
-- [Playwright TestOptions](https://playwright.dev/docs/api/class-testoptions)
+- [Playwright Test Configuration](https://playwright.dev/docs/test-configuration)
+- [Playwright Browsers](https://playwright.dev/docs/browsers)
+- [Microsoft Playwright MCP](https://github.com/microsoft/playwright-mcp)
+- [Playwright MCP NPM](https://www.npmjs.com/package/@playwright/mcp)
 - [GPU Acceleration for Headless Mode](https://michelkraemer.com/enable-gpu-for-slow-playwright-tests-in-headless-mode/)
-- [Speed Up Headless Browser](https://medium.com/@mikestopcontinues/speed-up-the-headless-browser-in-playwright-112c045669f1)
-- [Headless vs Headed Modes](https://dev.to/johnnyv5g/understanding-headless-vs-headed-modes-in-playwright-a-guide-for-qa-automation-engineers-sdets-4h7e)

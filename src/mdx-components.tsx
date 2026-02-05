@@ -64,6 +64,17 @@ import { TabsNav } from "@/components/atom/tabs"
 import { ThemeProvider } from "@/components/atom/theme-provider"
 import { TwoButtonsPreview } from "@/components/atom/two-buttons-preview"
 import { UserInfoCard } from "@/components/atom/user-info-card"
+// Flow diagram components
+import {
+  AuthFlowDiagram,
+  GetStartedFlow,
+  LiveDemoFlow,
+  LoginFlow,
+  LogoutFlow,
+  PlatformLinkFlow,
+  TestCredentialsReference,
+  UrlsReference,
+} from "@/components/docs/auth-flow"
 import { CodeBlockCommand } from "@/components/docs/code-block-command"
 import { CodeTabs } from "@/components/docs/code-tabs"
 import { ComponentPreview } from "@/components/docs/component-preview"
@@ -399,6 +410,15 @@ const mdxComponents = {
   CardForm,
   ButtonGroup,
   StoryVideo,
+  // Flow diagram components
+  AuthFlowDiagram,
+  PlatformLinkFlow,
+  GetStartedFlow,
+  LiveDemoFlow,
+  LoginFlow,
+  LogoutFlow,
+  TestCredentialsReference,
+  UrlsReference,
 }
 
 export function useMDXComponents(

@@ -12,7 +12,7 @@ export function Faculty() {
       name: "Albus Dumbledore",
       title: "Headmaster & Chief Warlock",
       subject: "Transfiguration & Ancient Magic",
-      image: "/school-marketing/dumbledore.jpeg",
+      image: "/site/dumbledore.jpeg",
       description:
         "Leading our school with wisdom and extraordinary magical knowledge, Professor Dumbledore guides students through the most complex magical arts.",
       specialties: ["Ancient Magic", "Transfiguration", "Leadership"],
@@ -26,7 +26,7 @@ export function Faculty() {
       name: "Severus Snape",
       title: "Potions Master & Head of Slytherin",
       subject: "Potions & Dark Arts Defense",
-      image: "/school-marketing/snape.jpeg",
+      image: "/site/snape.jpeg",
       description:
         "With precision and dedication, Professor Snape guides students through the intricate art of potion-making and magical defense.",
       specialties: ["Potions", "Dark Arts Defense", "Occlumency"],
@@ -40,7 +40,7 @@ export function Faculty() {
       name: "Minerva McGonagall",
       title: "Deputy & Head of Gryffindor",
       subject: "Transfiguration",
-      image: "/school-marketing/mcgonagall.jpeg",
+      image: "/site/mcgonagall.jpeg",
       description:
         "Professor McGonagall transforms students' understanding of magic through her mastery of Transfiguration and unwavering dedication to excellence.",
       specialties: ["Transfiguration", "Animagus Studies", "Quidditch"],
@@ -53,7 +53,7 @@ export function Faculty() {
       name: "Rubeus Hagrid",
       title: "Keeper of Keys & Grounds",
       subject: "Care of Magical Creatures",
-      image: "/school-marketing/hagrid.jpeg",
+      image: "/site/hagrid.jpeg",
       description:
         "Hagrid nurtures both magical creatures and students with his boundless enthusiasm and deep knowledge of the magical world.",
       specialties: ["Magical Creatures", "Groundskeeping", "Dragon Studies"],

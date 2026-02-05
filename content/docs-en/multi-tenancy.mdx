@@ -200,14 +200,69 @@ Hogwarts has 4 distinct entry points for different user journeys:
 
 ## Auth Flows
 
+### User Flow Distinction (CRITICAL)
+
+The login behavior differs based on **where** the user logs in from and **what action** they took:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         CRITICAL RULE                                    │
+│                                                                         │
+│   /onboarding is ONLY reachable via "Get Started" button                │
+│   in SaaS Marketing hero section. No other path leads there.            │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### SaaS Marketing (ed.databayt.org / localhost:3000)
+
+| Action              | Expected Result                              |
+| ------------------- | -------------------------------------------- |
+| Click "Login"       | After auth → **STAY on SaaS marketing**      |
+| Click "Get Started" | After auth → **/onboarding** (create school) |
+
+#### School Marketing (demo.databayt.org / demo.localhost:3000)
+
+| Action           | User Type     | Expected Result                              |
+| ---------------- | ------------- | -------------------------------------------- |
+| Click "Login"    | Any           | After auth → **STAY on school marketing**    |
+| Click "Platform" | School member | After auth → **/dashboard**                  |
+| Click "Platform" | Non-member    | After auth → **/access-denied**              |
+| Click "Platform" | DEVELOPER     | After auth → **/dashboard** (always allowed) |
+
+### Login Context Implementation
+
+The login form passes context parameters to determine post-login redirect:
+
+```typescript
+// Login URL from SaaS marketing
+/login?context=saas
+
+// Login URL from school marketing
+/login?context=school&subdomain=demo
+```
+
+The login action uses these parameters:
+
+- **No callbackUrl** → Stay on current marketing page (SaaS or school)
+- **callbackUrl=/onboarding** → Go to onboarding (only from "Get Started")
+- **callbackUrl=/dashboard** → Check membership, allow or deny
+
 ### Login Flow by User Type
 
-| User Type   | Starting Point                | Login Destination | Post-Login Redirect               |
-| ----------- | ----------------------------- | ----------------- | --------------------------------- |
-| DEVELOPER   | `ed.databayt.org/login`       | Main domain       | `ed.databayt.org/dashboard`       |
-| School User | `ed.databayt.org/login`       | Main domain       | `{school}.databayt.org/dashboard` |
-| School User | `{school}.databayt.org/login` | School domain     | `{school}.databayt.org/dashboard` |
-| New User    | Any `/login`                  | Main domain       | `/onboarding`                     |
+| User Type    | Starting Point          | Action        | Post-Login Redirect               |
+| ------------ | ----------------------- | ------------- | --------------------------------- |
+| DEVELOPER    | `ed.databayt.org`       | Login button  | Stay on SaaS marketing            |
+| DEVELOPER    | `ed.databayt.org`       | Get Started   | `/onboarding`                     |
+| DEVELOPER    | Any                     | Platform link | Dashboard (always allowed)        |
+| School User  | `ed.databayt.org`       | Login button  | Stay on SaaS marketing            |
+| School User  | `{school}.databayt.org` | Login button  | Stay on school marketing          |
+| School User  | `{school}.databayt.org` | Platform link | `{school}.databayt.org/dashboard` |
+| Fresh User   | `ed.databayt.org`       | Login button  | Stay on SaaS marketing            |
+| Fresh User   | `ed.databayt.org`       | Get Started   | `/onboarding` (create school)     |
+| Fresh User   | `{school}.databayt.org` | Login button  | Stay on school marketing          |
+| Fresh User   | `{school}.databayt.org` | Platform link | `/access-denied` (not a member)   |
+| Wrong School | `{other}.databayt.org`  | Platform link | `/access-denied` (wrong school)   |
 
 ### OAuth Callback Flow
 
@@ -224,11 +279,18 @@ NextAuth signIn event
 JWT created with: { id, email, role, schoolId }
         │
         ▼
-Redirect callback (auth.ts)
+Redirect callback (login/action.ts)
         │
-        ├── Has schoolId? → Redirect to {school}.databayt.org/dashboard
+        ├── Has callbackUrl=/onboarding? → /onboarding (Get Started flow)
         │
-        └── No schoolId? → Redirect to /onboarding
+        ├── Has callbackUrl=/dashboard?
+        │   │
+        │   ├── On subdomain + user is member? → School dashboard ✓
+        │   ├── On subdomain + user not member? → /access-denied ✗
+        │   ├── On main domain + DEVELOPER? → SaaS dashboard ✓
+        │   └── On main domain + not DEVELOPER? → /access-denied ✗
+        │
+        └── No callbackUrl? → Stay on current marketing page
 ```
 
 ### Cookie Configuration

@@ -594,6 +594,81 @@ This section maps **every possible way** a user can enter, authenticate, and exi
                     └─────────────────────────────────────┘
 ```
 
+### Platform Link Flow (School Site → School Dashboard)
+
+This flow covers all scenarios when clicking the "Platform" link from a school marketing site header (e.g., `demo.localhost:3000/en`):
+
+```
+       All Possible Scenarios After Clicking "Platform" Link
+
+  Click "Platform" from demo.localhost:3000/en header
+                      │
+                      ▼
+          ┌─────────────────────┐
+          │  Is user logged in? │
+          └─────────────────────┘
+                      │
+           ┌──────────┴──────────┐
+           ▼                     ▼
+      [NO - Guest]          [YES - Authenticated]
+           │                     │
+           ▼                     ▼
+     Redirect to            ┌────────────────┐
+     /en/login              │ Correct school?│
+           │                └────────────────┘
+           │                     │
+           │              ┌──────┴──────┐
+           │              ▼             ▼
+           │         [NO - Wrong]  [YES - Demo]
+           │              │             │
+           │              ▼             ▼
+           │         Access Denied  ┌─────────────┐
+           │         or Redirect    │  User Role? │
+           │                        └─────────────┘
+           │                             │
+           │              ┌──────┬───────┼───────┬──────┐
+           │              ▼      ▼       ▼       ▼      ▼
+           │           ADMIN  TEACHER STUDENT STAFF  OTHER
+           │              │      │       │       │      │
+           │              ▼      ▼       ▼       ▼      ▼
+           │           Full   Teacher Student Staff  Limited
+           │           Dashboard View   View   View   View
+           │
+           ▼
+     ┌─────────────┐
+     │ Login Form  │
+     │ displayed   │
+     └─────────────┘
+           │
+           ▼
+     Fill credentials
+     (admin@databayt.org)
+           │
+           ▼
+     ┌─────────────────┐
+     │ Valid login?    │
+     └─────────────────┘
+           │
+      ┌────┴────┐
+      ▼         ▼
+    [NO]      [YES]
+      │         │
+      ▼         ▼
+    Error    Redirect to
+    message  /en/dashboard
+```
+
+#### Key Scenarios
+
+| Scenario                  | User State           | School Match | Result                       |
+| ------------------------- | -------------------- | ------------ | ---------------------------- |
+| Guest clicks Platform     | Not logged in        | N/A          | Redirect to `/login`         |
+| Admin clicks Platform     | Logged in as ADMIN   | Matches      | Full dashboard access        |
+| Teacher clicks Platform   | Logged in as TEACHER | Matches      | Teacher-scoped dashboard     |
+| Student clicks Platform   | Logged in as STUDENT | Matches      | Student-scoped dashboard     |
+| Wrong school user         | Logged in            | Mismatch     | Access denied or redirect    |
+| DEVELOPER clicks Platform | Logged in            | Any          | Full access (platform admin) |
+
 ### Entry Points Inventory
 
 | #   | Entry Point   | Location            | Trigger      | Requires Auth? | Destination                             |
@@ -604,6 +679,7 @@ This section maps **every possible way** a user can enter, authenticate, and exi
 | 4   | "Sign In"     | School login page   | Button click | YES            | School dashboard                        |
 | 5   | Direct URL    | Any protected route | URL access   | YES            | Original page (after auth)              |
 | 6   | Avatar menu   | Platform header     | Click        | Already authed | Profile/Settings/Logout                 |
+| 7   | "Platform"    | School site header  | Button click | YES            | School dashboard (role-based)           |
 
 ### Logout Points Inventory
 

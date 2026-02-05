@@ -20,6 +20,7 @@
     "entry-points",
     "dashboard",
     "authentication",
+    "flow-diagrams",
     "multi-tenancy",
     "multi-tenancy-tests",
     "onboarding",

@@ -42,6 +42,7 @@ export const authRoutes = [
   "/new-password",
   "/new-verification",
   "/reset",
+  "/access-denied",
 ]
 
 /**
@@ -344,6 +345,37 @@ export const roleRoutes: Record<string, Role[]> = {
   // ============================================================================
   "/operator": ["DEVELOPER"],
   "/operator/*": ["DEVELOPER"],
+}
+
+/**
+ * SaaS Dashboard routes - DEVELOPER only (main domain only, not school subdomains)
+ * These routes exist at the platform level (ed.databayt.org/dashboard)
+ * NOT on school subdomains (school.databayt.org/dashboard uses school-dashboard)
+ *
+ * IMPORTANT: This is separate from roleRoutes because the same path ("/dashboard")
+ * means different things on main domain vs subdomain:
+ * - Main domain: SaaS dashboard (DEVELOPER only)
+ * - Subdomain: School dashboard (school roles allowed)
+ */
+export const saasDashboardRoutes = [
+  "/dashboard",
+  "/analytics",
+  "/kanban",
+  "/sales",
+  "/tenants",
+  "/billing",
+  "/domains",
+  "/observability",
+  "/product",
+]
+
+/**
+ * Check if a route is a SaaS dashboard route (main domain only, DEVELOPER required)
+ */
+export function isSaasDashboardRoute(pathname: string): boolean {
+  return saasDashboardRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  )
 }
 
 /**

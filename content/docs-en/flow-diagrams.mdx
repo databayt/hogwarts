@@ -1,0 +1,237 @@
+---
+title: "Flow Diagrams"
+description: "Interactive flow diagrams for all user journeys, authentication paths, and navigation scenarios"
+---
+
+## Overview
+
+This document contains interactive flow diagrams for user journeys across the platform. Each diagram includes:
+
+- **URLs** at each step for easy navigation
+- **Test credentials** for testing different scenarios
+- **Collapsible branches** showing all possible paths
+
+---
+
+## Critical Rule: User Flow Distinction
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│   /onboarding is ONLY reachable via "Get Started" button                │
+│   in SaaS Marketing hero section. No other path leads there.            │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### The Two Marketing Contexts
+
+| Context          | Domain                  | Login Behavior                      |
+| ---------------- | ----------------------- | ----------------------------------- |
+| SaaS Marketing   | `ed.databayt.org`       | Stay on SaaS marketing after auth   |
+| School Marketing | `{school}.databayt.org` | Stay on school marketing after auth |
+
+### Key Distinction
+
+- **Fresh user on SaaS** → Potential SaaS customer → "Get Started" leads to onboarding
+- **Fresh user on School** → Potential student/teacher → "Login" keeps them on school site
+
+Login button alone **never redirects to onboarding** - it keeps users on their current marketing page.
+
+---
+
+## Quick Reference
+
+<div className="mt-6 grid gap-6 md:grid-cols-2">
+  <TestCredentialsReference />
+  <UrlsReference />
+</div>
+
+---
+
+## Navigation Flows
+
+### Platform Link Flow
+
+When a user clicks the "Platform" link from a school marketing site header.
+
+<PlatformLinkFlow />
+
+---
+
+### Get Started Flow
+
+When a user clicks "Get Started" from the SaaS marketing hero to create a new school.
+
+<GetStartedFlow />
+
+---
+
+### Live Demo Flow
+
+When a user clicks "Live Demo" to explore the demo school.
+
+<LiveDemoFlow />
+
+---
+
+## Authentication Flows
+
+### Login Flow
+
+Complete authentication flow with role-based redirects.
+
+<LoginFlow />
+
+---
+
+### Logout Flow
+
+Context-aware logout with appropriate redirects based on current location.
+
+<LogoutFlow />
+
+---
+
+## Quick Reference Tables
+
+### Entry Points
+
+| #   | Entry Point   | Location            | Trigger      | Auth Required? | Destination                                   |
+| --- | ------------- | ------------------- | ------------ | -------------- | --------------------------------------------- |
+| 1   | "Get Started" | Marketing hero      | Button click | YES            | Onboarding → School creation (ONLY path)      |
+| 2   | "Login"       | SaaS marketing      | Button click | YES            | **Stay on SaaS marketing** (no redirect)      |
+| 3   | "Login"       | School marketing    | Button click | YES            | **Stay on school marketing** (no redirect)    |
+| 4   | "Platform"    | School site header  | Button click | YES            | Dashboard (if member) or Access Denied        |
+| 5   | "Apply Now"   | School public page  | Button click | YES            | Application form                              |
+| 6   | Direct URL    | Any protected route | URL access   | YES            | Original page (after auth + membership check) |
+| 7   | Avatar menu   | Platform header     | Click        | Already authed | Profile/Settings/Logout                       |
+| 8   | "Live Demo"   | Marketing hero      | Button click | NO             | demo.databayt.org (new tab)                   |
+
+### Logout Points
+
+| #   | Logout Point    | Location         | Redirect After                      |
+| --- | --------------- | ---------------- | ----------------------------------- |
+| 1   | Avatar dropdown | Marketing header | `/{locale}` (homepage)              |
+| 2   | Avatar dropdown | Operator header  | `/{locale}` (homepage)              |
+| 3   | Avatar dropdown | School platform  | `/{locale}/s/{subdomain}/` (school) |
+| 4   | Session expiry  | Automatic        | `/login?callbackUrl={current}`      |
+
+### Navigation Scenarios
+
+| From           | Action      | Auth State    | Destination                          |
+| -------------- | ----------- | ------------- | ------------------------------------ |
+| SaaS Marketing | Login       | Guest         | Login page → **Stay on SaaS**        |
+| SaaS Marketing | Login       | Any user      | **Stay on SaaS marketing**           |
+| SaaS Marketing | Get Started | Guest         | Login → Onboarding                   |
+| SaaS Marketing | Get Started | Any user      | Onboarding (only path to onboarding) |
+| SaaS Marketing | Live Demo   | Any           | demo.databayt.org (new tab)          |
+| School Site    | Login       | Guest         | Login page → **Stay on school**      |
+| School Site    | Login       | Any user      | **Stay on school marketing**         |
+| School Site    | Platform    | Guest         | Login → Check membership             |
+| School Site    | Platform    | School member | Role-based dashboard ✓               |
+| School Site    | Platform    | Non-member    | **/access-denied** ✗                 |
+| School Site    | Platform    | Wrong school  | **/access-denied** ✗                 |
+| School Site    | Platform    | DEVELOPER     | Dashboard (always allowed) ✓         |
+| School Site    | Apply       | Any           | Application form                     |
+| Operator Dash  | View School | DEVELOPER     | School dashboard (impersonate)       |
+
+### Role-Based Dashboard Views
+
+| Role       | Dashboard Modules Visible                             |
+| ---------- | ----------------------------------------------------- |
+| DEVELOPER  | All modules + platform admin link                     |
+| ADMIN      | All school modules + settings                         |
+| TEACHER    | Classes, lessons, attendance, grades, assignments     |
+| STUDENT    | My classes, my grades, my attendance, assignments     |
+| GUARDIAN   | Children's progress, fees, communication              |
+| ACCOUNTANT | Finance modules only                                  |
+| STAFF      | Limited operational views (attendance, announcements) |
+
+---
+
+## DEVELOPER SaaS Dashboard Flow
+
+When a DEVELOPER user accesses the SaaS dashboard at `ed.databayt.org/en/dashboard`.
+
+### Two Access Paths
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                 DEVELOPER SaaS DASHBOARD ACCESS                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  WAY 1: Login from SaaS Marketing                                       │
+│  ─────────────────────────────────                                      │
+│  ed.databayt.org/en → Login icon → /login?context=saas                  │
+│  → Enter DEVELOPER credentials                                          │
+│  → AUTO-REDIRECT to /dashboard ✓                                        │
+│                                                                         │
+│  (USER role in same flow → stays on /en marketing page)                 │
+│                                                                         │
+│  WAY 2: Direct URL to Dashboard                                         │
+│  ──────────────────────────────                                         │
+│  ed.databayt.org/en/dashboard (protected route)                         │
+│  → Proxy redirects to /login?callbackUrl=/en/dashboard                  │
+│  → Enter DEVELOPER credentials                                          │
+│  → Redirect to /dashboard ✓                                             │
+│                                                                         │
+│  (USER role in same flow → /access-denied)                              │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### DEVELOPER vs USER Comparison
+
+| Scenario                    | DEVELOPER (`dev@databayt.org`) | USER (`user@databayt.org`) |
+| --------------------------- | ------------------------------ | -------------------------- |
+| Login from SaaS marketing   | → `/dashboard` (auto-redirect) | → Stay on `/` (marketing)  |
+| Direct URL to `/dashboard`  | → `/dashboard` ✓               | → `/access-denied` ✗       |
+| Login from school marketing | → Stay on school marketing     | → Stay on school marketing |
+
+### Security Layers (DEVELOPER-only access)
+
+```
+Request to /dashboard
+        │
+        ▼
+┌───────────────────────────────────────┐
+│   Layer 1: Proxy Middleware           │
+│   (proxy.ts)                          │
+│                                       │
+│   - Extract role from JWT cookie      │
+│   - Check isSaasDashboardRoute()      │
+│   - If !DEVELOPER → redirect to       │
+│     /onboarding (blocked)             │
+└───────────────────────────────────────┘
+        │ (DEVELOPER passes)
+        ▼
+┌───────────────────────────────────────┐
+│   Layer 2: Layout Server Component    │
+│   (layout.tsx)                        │
+│                                       │
+│   - Full auth() verification          │
+│   - Check session.user.role           │
+│   - If !DEVELOPER → redirect to       │
+│     /onboarding                       │
+└───────────────────────────────────────┘
+        │ (DEVELOPER passes)
+        ▼
+    Dashboard Renders ✓
+```
+
+### Test Scenarios
+
+| #   | User                           | Starting Point             | Action            | Expected Result       |
+| --- | ------------------------------ | -------------------------- | ----------------- | --------------------- |
+| 1   | `dev@databayt.org` (DEVELOPER) | `ed.databayt.org/en`       | Click "Login"     | → `/en/dashboard`     |
+| 2   | `user@databayt.org` (USER)     | `ed.databayt.org/en`       | Click "Login"     | → Stay on `/en`       |
+| 3   | `dev@databayt.org` (DEVELOPER) | Direct URL `/en/dashboard` | Enter credentials | → `/en/dashboard`     |
+| 4   | `user@databayt.org` (USER)     | Direct URL `/en/dashboard` | Enter credentials | → `/en/access-denied` |
+
+---
+
+## Related Documentation
+
+- [Authentication](/docs/authentication) - Login/logout implementation details
+- [Entry Points](/docs/entry-points) - Four main entry points architecture
+- [Multi-Tenancy](/docs/multi-tenancy) - Tenant isolation and schoolId scoping
+- [Onboarding](/docs/onboarding) - School creation wizard

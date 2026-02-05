@@ -29,7 +29,7 @@ export function Hero({ lang = "en", dictionary }: HeroProps) {
         <div
           className="absolute inset-0 overflow-hidden rounded-none md:inset-y-8 lg:rounded-sm"
           style={{
-            backgroundImage: "url('/school-marketing/harry-potter.png')",
+            backgroundImage: "url('/site/harry-potter.png')",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

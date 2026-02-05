@@ -61,7 +61,7 @@ export type TestUserRole = keyof typeof TEST_CREDENTIALS
 export function getBaseUrl(env: TestEnv = "local"): string {
   return env === "production"
     ? "https://ed.databayt.org"
-    : "https://localhost:3000"
+    : "http://localhost:3000"
 }
 
 /**
@@ -73,7 +73,7 @@ export function getSchoolUrl(
 ): string {
   return env === "production"
     ? `https://${subdomain}.databayt.org`
-    : `https://${subdomain}.localhost:3000`
+    : `http://${subdomain}.localhost:3000`
 }
 
 /**
