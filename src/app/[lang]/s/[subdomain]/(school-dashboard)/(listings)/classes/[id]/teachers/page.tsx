@@ -48,7 +48,7 @@ export default async function Page({ params }: Props) {
       <div className="space-y-4">
         <Button variant="ghost" asChild>
           <Link href={`/${lang}/classes`}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="me-2 h-4 w-4" />
             {t.back}
           </Link>
         </Button>

@@ -10,10 +10,8 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { getSubjectImage } from "./image-map"
 
 interface SubjectHeroProps {
-  /** Subject name (English) */
+  /** Subject name */
   subjectName: string
-  /** Subject name (Arabic) */
-  subjectNameAr?: string | null
   /** Number of topics/lessons (optional) */
   topicsCount?: number
   /** Number of resources (optional) */
@@ -33,14 +31,12 @@ interface SubjectHeroProps {
  */
 export function SubjectHero({
   subjectName,
-  subjectNameAr,
   topicsCount = 0,
   resourcesCount = 0,
   lang,
 }: SubjectHeroProps) {
   const { dictionary } = useDictionary()
-  const displayName =
-    lang === "ar" && subjectNameAr ? subjectNameAr : subjectName
+  const displayName = subjectName
   const imageUrl = getSubjectImage(subjectName)
 
   // Get translations with fallbacks

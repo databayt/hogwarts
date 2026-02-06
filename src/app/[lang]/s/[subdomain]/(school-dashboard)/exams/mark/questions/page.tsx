@@ -74,7 +74,7 @@ export default async function QuestionBankPage({
           <PageHeadingSetter title="Questions" />
           <Button asChild>
             <Link href={`/${lang}/exams/mark/questions/create`}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               {dict.buttons.createQuestion}
             </Link>
           </Button>
@@ -119,7 +119,7 @@ export default async function QuestionBankPage({
               </p>
               <Button asChild>
                 <Link href={`/${lang}/exams/mark/questions/create`}>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="me-2 h-4 w-4" />
                   {dict.questionBank.createFirst}
                 </Link>
               </Button>

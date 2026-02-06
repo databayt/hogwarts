@@ -1,34 +1,19 @@
 "use server"
 
-import { personalSchema, type PersonalSchemaType } from "./validation"
+import type { ActionResponse } from "@/lib/action-response"
 
-export interface SavePersonalResult {
-  success: boolean
-  data?: PersonalSchemaType
-  error?: string
-}
+import { personalSchema, type PersonalSchemaType } from "./validation"
 
 export async function savePersonalStep(
   data: PersonalSchemaType
-): Promise<SavePersonalResult> {
+): Promise<ActionResponse<PersonalSchemaType>> {
   try {
-    // Validate data
     const validatedData = personalSchema.parse(data)
-
-    return {
-      success: true,
-      data: validatedData,
-    }
+    return { success: true, data: validatedData }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        error: error.message,
-      }
-    }
     return {
       success: false,
-      error: "Validation failed",
+      error: error instanceof Error ? error.message : "Validation failed",
     }
   }
 }

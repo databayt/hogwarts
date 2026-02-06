@@ -42,9 +42,9 @@ export default function StatsStatus() {
             <p className="text-foreground text-3xl font-semibold">
               {item.stat}
             </p>
-            <div className="group bg-muted/60 hover:bg-muted relative mt-6 flex items-center space-x-4 rounded-md p-2">
+            <div className="group bg-muted/60 hover:bg-muted relative mt-6 flex items-center gap-4 rounded-md p-2">
               <div className="flex w-full items-center justify-between truncate">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3">
                   <span
                     className={cn(
                       "flex h-9 w-9 shrink-0 items-center justify-center rounded",

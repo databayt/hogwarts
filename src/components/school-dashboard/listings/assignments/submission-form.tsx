@@ -441,17 +441,17 @@ export function SubmissionForm({
             disabled={isSubmitting || isUploading}
           >
             {isSubmitting ? (
-              <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
             ) : (
-              <Icons.save className="mr-2 h-4 w-4" />
+              <Icons.save className="me-2 h-4 w-4" />
             )}
             Save as Draft
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting || isUploading}>
             {isSubmitting ? (
-              <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
             ) : (
-              <Send className="mr-2 h-4 w-4" />
+              <Send className="me-2 h-4 w-4" />
             )}
             Submit Assignment
           </Button>

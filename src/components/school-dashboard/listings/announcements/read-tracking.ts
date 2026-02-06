@@ -87,6 +87,7 @@ export async function markAnnouncementAsRead(input: {
       create: {
         announcementId,
         userId,
+        schoolId,
         readAt: new Date(),
       },
       update: {
@@ -169,6 +170,7 @@ export async function markMultipleAnnouncementsAsRead(input: {
     const readRecords = validIds.map((announcementId) => ({
       announcementId,
       userId,
+      schoolId,
       readAt: now,
     }))
 
@@ -294,8 +296,8 @@ export async function getAnnouncementReadStatistics(
       where: { id: announcementId },
       select: {
         id: true,
-        titleEn: true,
-        titleAr: true,
+        title: true,
+        lang: true,
         schoolId: true,
         scope: true,
         classId: true,
@@ -332,7 +334,7 @@ export async function getAnnouncementReadStatistics(
       success: true,
       data: {
         id: announcement.id,
-        title: announcement.titleEn || announcement.titleAr || "",
+        title: announcement.title || "",
         totalReads: reads.length,
         uniqueReaders,
         readPercentage,

@@ -66,7 +66,7 @@ export default function ProjectGrid() {
           <div className="mb-2 flex items-start justify-between">
             <div className="flex items-center">
               <svg
-                className="text-muted-foreground mr-2 h-4 w-4"
+                className="text-muted-foreground me-2 h-4 w-4"
                 fill="currentColor"
                 viewBox="0 0 16 16"
               >
@@ -84,10 +84,10 @@ export default function ProjectGrid() {
           <p className="muted mb-3 line-clamp-2">{project.description}</p>
 
           <div className="muted flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
               <div className="flex items-center">
                 <div
-                  className={`mr-1 h-3 w-3 rounded-full ${
+                  className={`me-1 h-3 w-3 rounded-full ${
                     project.subject === "Physics"
                       ? "bg-[#1f6feb]"
                       : project.subject === "Computer Science"
@@ -107,7 +107,7 @@ export default function ProjectGrid() {
               {project.grade && project.grade !== "Ongoing" && (
                 <div className="flex items-center">
                   <svg
-                    className="mr-1 h-3 w-3"
+                    className="me-1 h-3 w-3"
                     fill="currentColor"
                     viewBox="0 0 16 16"
                   >

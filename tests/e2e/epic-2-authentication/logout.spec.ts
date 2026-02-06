@@ -33,6 +33,7 @@ test.describe("Story 2.4: Logout Flow @auth", () => {
     await loginPage.loginAs("developer")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -122,6 +123,7 @@ test.describe("Story 2.4: Logout Flow @auth", () => {
     await loginPage.loginAs("admin")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -144,6 +146,7 @@ test.describe("Story 2.5: Session Management @auth", () => {
     await loginPage.loginAs("developer")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -177,6 +180,7 @@ test.describe("Story 2.5: Session Management @auth", () => {
     }
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -204,7 +208,8 @@ test.describe("Story 2.5: Session Management @auth", () => {
     await loginPage.loginAs("developer")
 
     if (page.url().includes("chrome-error://")) {
-      console.log("Protocol mismatch - checking cookies anyway")
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
     }
 
     const cookies = await context.cookies()

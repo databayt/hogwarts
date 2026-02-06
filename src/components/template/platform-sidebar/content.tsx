@@ -59,7 +59,7 @@ export default function PlatformSidebar({
             <SidebarMenuButton size="lg" asChild>
               <Link href="/lab" className="flex items-center" onClick={handleLinkClick}>
                 <div className="flex flex-col leading-none">
-                  <span className="font-medium text-foreground -ml-1">{schoolName}</span>
+                  <span className="font-medium text-foreground -ms-1">{schoolName}</span>
                 </div>
               </Link>
             </SidebarMenuButton>

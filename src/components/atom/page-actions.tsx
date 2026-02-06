@@ -34,7 +34,7 @@ export function PageActions({ actions, className }: PageActionsProps) {
           <Icon
             className={cn(
               "h-4 w-4",
-              action.iconPosition === "left" ? "mr-2" : "ml-2"
+              action.iconPosition === "left" ? "me-2" : "ms-2"
             )}
           />
         )

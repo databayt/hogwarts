@@ -12,6 +12,7 @@ model DomainRequest {
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@unique([schoolId, domain])
+  @@unique([domain]) // Fast lookup by domain for custom domain routing
   @@index([schoolId])
   @@index([status])
   @@map("domain_requests")

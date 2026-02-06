@@ -108,10 +108,10 @@ interface ExportButtonProps<T> {
 // ============================================================================
 
 const formatIcons: Record<ExportFormat, React.ReactNode> = {
-  csv: <FileText className="mr-2 h-4 w-4" />,
-  excel: <FileSpreadsheet className="mr-2 h-4 w-4" />,
-  pdf: <FileText className="mr-2 h-4 w-4 text-red-500" />,
-  json: <FileJson className="mr-2 h-4 w-4" />,
+  csv: <FileText className="me-2 h-4 w-4" />,
+  excel: <FileSpreadsheet className="me-2 h-4 w-4" />,
+  pdf: <FileText className="me-2 h-4 w-4 text-red-500" />,
+  json: <FileJson className="me-2 h-4 w-4" />,
 }
 
 const formatLabels: Record<ExportFormat, string> = {
@@ -216,7 +216,7 @@ export function ExportButton<T>({
     if (isExporting) {
       return (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="me-2 h-4 w-4 animate-spin" />
           {dictionary?.exporting || "Exporting..."}
         </>
       )
@@ -224,9 +224,9 @@ export function ExportButton<T>({
 
     return (
       <>
-        <Download className="mr-2 h-4 w-4" />
+        <Download className="me-2 h-4 w-4" />
         {label || dictionary?.export || "Export"}
-        <ChevronDown className="ml-2 h-4 w-4" />
+        <ChevronDown className="ms-2 h-4 w-4" />
       </>
     )
   }
@@ -299,7 +299,7 @@ export function ExportButton<T>({
               {config.columns
                 .filter((col) => !col.hidden)
                 .map((column) => (
-                  <div key={column.key} className="flex items-center space-x-2">
+                  <div key={column.key} className="flex items-center gap-2">
                     <Checkbox
                       id={column.key}
                       checked={selectedColumns.includes(column.key)}
@@ -343,12 +343,12 @@ export function ExportButton<T>({
             >
               {isExporting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
                   {dictionary?.exporting || "Exporting..."}
                 </>
               ) : (
                 <>
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   {dictionary?.export || "Export"}{" "}
                   {selectedFormat?.toUpperCase()}
                 </>
@@ -411,7 +411,7 @@ export function SimpleExportButton<T>({
       className={cn(className)}
     >
       {isExporting ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <Loader2 className="me-2 h-4 w-4 animate-spin" />
       ) : (
         formatIcons[format]
       )}

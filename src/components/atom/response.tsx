@@ -129,7 +129,7 @@ export const Response = memo(
       <div className="relative" ref={containerRef}>
         {/* Status indicator */}
         {currentStatus && (
-          <div className="absolute -top-2 -right-2 z-10">
+          <div className="absolute -end-2 -top-2 z-10">
             {currentStatus === "streaming" && (
               <div className="text-primary flex animate-pulse items-center gap-1 text-xs">
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -167,11 +167,11 @@ export const Response = memo(
             "prose-code:text-xs prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md",
             "prose-code:bg-muted prose-code:text-foreground prose-code:font-mono",
             "prose-pre:bg-muted prose-pre:text-foreground prose-pre:rounded-lg",
-            "prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground",
+            "prose-blockquote:border-s-primary prose-blockquote:text-muted-foreground",
             "prose-ul:list-disc prose-ol:list-decimal",
             "prose-li:text-muted-foreground prose-li:marker:text-primary",
             "prose-a:text-primary prose-a:no-underline hover:prose-a:underline",
-            "text-left", // Ensure text is aligned to start
+            "text-start", // Ensure text is aligned to start
             className
           )}
           parseIncompleteMarkdown={parseIncompleteMarkdown}

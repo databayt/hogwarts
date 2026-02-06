@@ -29,7 +29,7 @@ export default async function AnnouncementsContent({
   if (schoolId) {
     try {
       // Use shared query builder (caching removed due to multi-tenant complexity)
-      // Admin table shows ALL announcements - bilingual with locale-based display
+      // Admin table shows ALL announcements - single-language display
       const { rows, count } = await getAnnouncementsList(schoolId, {
         title: sp.title,
         scope: sp.scope,
@@ -39,12 +39,12 @@ export default async function AnnouncementsContent({
         sort: sp.sort,
       })
 
-      // Map results to table format with bilingual fields
+      // Map results to table format with single-language fields
       // CRITICAL FIX: Handle null/undefined dates to prevent server-side exceptions
       data = rows.map((a) => ({
         id: a.id,
-        titleEn: a.titleEn,
-        titleAr: a.titleAr,
+        title: a.title,
+        lang: a.lang,
         scope: a.scope,
         published: a.published,
         // Safe date serialization - fallback to current time if null/undefined

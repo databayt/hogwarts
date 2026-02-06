@@ -506,7 +506,7 @@ export function DocumentsTab({
                 placeholder="Search documents..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="ps-9"
               />
             </div>
             <select
@@ -529,7 +529,7 @@ export function DocumentsTab({
               <ListFilter className="h-4 w-4" />
             </Button>
             <Button>
-              <Upload className="mr-2 h-4 w-4" />
+              <Upload className="me-2 h-4 w-4" />
               Upload Document
             </Button>
           </div>
@@ -573,7 +573,7 @@ export function DocumentsTab({
                       )}
                     </div>
                     <Button size="sm">
-                      <Upload className="mr-1 h-3 w-3" />
+                      <Upload className="me-1 h-3 w-3" />
                       Upload
                     </Button>
                   </div>

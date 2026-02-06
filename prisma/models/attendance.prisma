@@ -467,9 +467,8 @@ model AttendanceBadge {
   schoolId    String
   code        String   // Unique code: PERFECT_WEEK, EARLY_BIRD, COMEBACK_KID, etc.
   name        String   // Display name
-  nameAr      String?  // Arabic name
   description String   // Badge description
-  descriptionAr String? // Arabic description
+  lang        String   @default("ar") // Content language
   icon        String   // Icon name or URL
   color       String   @default("#10B981") // Badge color (hex)
   pointValue  Int      @default(0) // Points awarded when badge is earned
@@ -553,7 +552,7 @@ model AttendanceCompetition {
   id          String   @id @default(cuid())
   schoolId    String
   name        String   // Competition name
-  nameAr      String?  // Arabic name
+  lang        String   @default("ar") // Content language
   description String?
   startDate   DateTime
   endDate     DateTime

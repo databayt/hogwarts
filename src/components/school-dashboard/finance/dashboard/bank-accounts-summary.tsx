@@ -132,7 +132,7 @@ export function BankAccountsSummary({
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-sm font-semibold">
                         {formatBalance(account.balance)}
                       </p>

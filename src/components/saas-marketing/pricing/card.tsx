@@ -103,7 +103,7 @@ export function PricingCard({
     <Card
       key={offer.title}
       className={cn(
-        "bg-muted text-card-foreground relative flex h-full w-full flex-col items-start overflow-hidden rounded-2xl border-none text-left shadow-none"
+        "bg-muted text-card-foreground relative flex h-full w-full flex-col items-start overflow-hidden rounded-2xl border-none text-start shadow-none"
       )}
     >
       <CardHeader className="pb-4">

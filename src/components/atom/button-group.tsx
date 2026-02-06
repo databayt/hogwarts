@@ -16,11 +16,17 @@ export interface ButtonGroupProps {
   className?: string
   disabled?: boolean
   loading?: boolean
+  /** Labels for i18n (optional, English defaults) */
+  dictionary?: {
+    submit?: string
+    cancel?: string
+    loading?: string
+  }
 }
 
 export function ButtonGroup({
-  primaryLabel = "Submit",
-  secondaryLabel = "Cancel",
+  primaryLabel,
+  secondaryLabel,
   onPrimaryClick,
   onSecondaryClick,
   primaryVariant = "default",
@@ -29,7 +35,11 @@ export function ButtonGroup({
   className,
   disabled,
   loading,
+  dictionary,
 }: ButtonGroupProps) {
+  const submitText = primaryLabel ?? dictionary?.submit ?? "Submit"
+  const cancelText = secondaryLabel ?? dictionary?.cancel ?? "Cancel"
+  const loadingText = dictionary?.loading ?? "Loading..."
   return (
     <div className={cn("flex gap-2", className)} data-slot="button-group">
       <Button
@@ -38,7 +48,7 @@ export function ButtonGroup({
         onClick={onSecondaryClick}
         disabled={disabled || loading}
       >
-        {secondaryLabel}
+        {cancelText}
       </Button>
       <Button
         variant={primaryVariant}
@@ -46,7 +56,7 @@ export function ButtonGroup({
         onClick={onPrimaryClick}
         disabled={disabled || loading}
       >
-        {loading ? "Loading..." : primaryLabel}
+        {loading ? loadingText : submitText}
       </Button>
     </div>
   )

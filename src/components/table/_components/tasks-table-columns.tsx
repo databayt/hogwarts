@@ -196,7 +196,7 @@ export function getTasksTableColumns({
       ),
       cell: ({ cell }) => {
         const estimatedHours = cell.getValue<number>()
-        return <div className="w-20 text-right">{estimatedHours}</div>
+        return <div className="w-20 text-end">{estimatedHours}</div>
       },
       meta: {
         label: "Est. Hours",

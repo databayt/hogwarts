@@ -341,7 +341,7 @@ export function ParentDirectoryContent({
               placeholder="Search by parent name, email, guardian ID, or child name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
 
@@ -470,7 +470,7 @@ export function ParentDirectoryContent({
                   </div>
                   <div className="space-y-1">
                     {parent.children.map((child) => (
-                      <div key={child.id} className="pl-5 text-sm">
+                      <div key={child.id} className="ps-5 text-sm">
                         <span className="font-medium">{child.name}</span>
                         <span className="text-muted-foreground">
                           {" "}
@@ -515,7 +515,7 @@ export function ParentDirectoryContent({
                   <Link href={`/profile/${parent.id}`}>
                     <Button size="sm" variant="ghost">
                       View
-                      <ChevronRight className="ml-1 h-4 w-4" />
+                      <ChevronRight className="ms-1 h-4 w-4" />
                     </Button>
                   </Link>
                 </div>
@@ -529,20 +529,20 @@ export function ParentDirectoryContent({
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="p-4 text-left">Parent</th>
-                  <th className="hidden p-4 text-left md:table-cell">
+                  <th className="p-4 text-start">Parent</th>
+                  <th className="hidden p-4 text-start md:table-cell">
                     Children
                   </th>
-                  <th className="hidden p-4 text-left lg:table-cell">
+                  <th className="hidden p-4 text-start lg:table-cell">
                     Engagement
                   </th>
-                  <th className="hidden p-4 text-left lg:table-cell">
+                  <th className="hidden p-4 text-start lg:table-cell">
                     Payment
                   </th>
-                  <th className="hidden p-4 text-left xl:table-cell">
+                  <th className="hidden p-4 text-start xl:table-cell">
                     Contact
                   </th>
-                  <th className="p-4 text-left">Actions</th>
+                  <th className="p-4 text-start">Actions</th>
                 </tr>
               </thead>
               <tbody>

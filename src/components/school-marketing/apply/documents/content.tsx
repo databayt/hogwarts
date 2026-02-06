@@ -6,7 +6,7 @@ import { Upload } from "lucide-react"
 
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import type { DocumentsStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
 import { DOCUMENTS_STEP_CONFIG } from "./config"
@@ -26,7 +26,7 @@ export default function DocumentsContent({ dictionary }: Props) {
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
-  const { session, getStepData } = useApplication()
+  const { session, getStepData } = useApplySession()
   const documentsFormRef = useRef<DocumentsFormRef>(null)
 
   const initialData = getStepData("documents")
@@ -60,16 +60,10 @@ export default function DocumentsContent({ dictionary }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {dict.title ||
-                (isRTL
-                  ? DOCUMENTS_STEP_CONFIG.labelAr
-                  : DOCUMENTS_STEP_CONFIG.label)}
+              {dict.title || DOCUMENTS_STEP_CONFIG.label}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {dict.description ||
-                (isRTL
-                  ? DOCUMENTS_STEP_CONFIG.descriptionAr
-                  : DOCUMENTS_STEP_CONFIG.description)}
+              {dict.description || DOCUMENTS_STEP_CONFIG.description}
             </p>
           </div>
         </div>

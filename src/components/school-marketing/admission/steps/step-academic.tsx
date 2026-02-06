@@ -33,17 +33,17 @@ interface Props {
 }
 
 const STREAMS = [
-  { value: "Science", labelEn: "Science", labelAr: "العلوم" },
-  { value: "Arts", labelEn: "Arts", labelAr: "الآداب" },
-  { value: "Commerce", labelEn: "Commerce", labelAr: "التجارة" },
-  { value: "General", labelEn: "General", labelAr: "عام" },
+  { value: "Science", label: "العلوم" },
+  { value: "Arts", label: "الآداب" },
+  { value: "Commerce", label: "التجارة" },
+  { value: "General", label: "عام" },
 ]
 
 const LANGUAGES = [
-  { value: "Arabic", labelEn: "Arabic", labelAr: "العربية" },
-  { value: "English", labelEn: "English", labelAr: "الإنجليزية" },
-  { value: "French", labelEn: "French", labelAr: "الفرنسية" },
-  { value: "None", labelEn: "None", labelAr: "لا شيء" },
+  { value: "Arabic", label: "العربية" },
+  { value: "English", label: "الإنجليزية" },
+  { value: "French", label: "الفرنسية" },
+  { value: "None", label: "لا شيء" },
 ]
 
 export default function StepAcademic({ dictionary, lang, campaign }: Props) {
@@ -208,7 +208,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
                   <SelectContent>
                     {DEFAULT_GRADES.map((grade) => (
                       <SelectItem key={grade.grade} value={grade.grade}>
-                        {isRTL ? grade.gradeAr : grade.grade}
+                        {grade.grade}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -241,7 +241,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
                     <SelectContent>
                       {STREAMS.map((stream) => (
                         <SelectItem key={stream.value} value={stream.value}>
-                          {isRTL ? stream.labelAr : stream.labelEn}
+                          {stream.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -272,7 +272,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
                     <SelectContent>
                       {LANGUAGES.map((language) => (
                         <SelectItem key={language.value} value={language.value}>
-                          {isRTL ? language.labelAr : language.labelEn}
+                          {language.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -303,7 +303,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
                     <SelectContent>
                       {LANGUAGES.map((language) => (
                         <SelectItem key={language.value} value={language.value}>
-                          {isRTL ? language.labelAr : language.labelEn}
+                          {language.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

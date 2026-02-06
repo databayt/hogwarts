@@ -69,8 +69,12 @@ export function checkLessonPermission(
     // Teachers can update/delete lessons for their classes
     if (action === "update" || action === "delete") {
       if (!lesson?.schoolId) return false
-      // For now, allow if in same school (would need teacherId check)
-      return schoolId === lesson.schoolId
+      if (schoolId !== lesson.schoolId) return false
+      // If teacherId available, check ownership
+      if (lesson.teacherId) {
+        return lesson.teacherId === auth.userId
+      }
+      return true // Allow if no teacher tracking
     }
 
     // Teachers can export lessons
@@ -96,6 +100,24 @@ export function checkLessonPermission(
 
   // STAFF can read lessons
   if (role === "STAFF") {
+    if (action === "read") {
+      if (!lesson?.schoolId) return false
+      return schoolId === lesson.schoolId
+    }
+    return false
+  }
+
+  // ACCOUNTANT can read lessons
+  if (role === "ACCOUNTANT") {
+    if (action === "read") {
+      if (!lesson?.schoolId) return false
+      return schoolId === lesson.schoolId
+    }
+    return false
+  }
+
+  // GUARDIAN can read lessons
+  if (role === "GUARDIAN") {
     if (action === "read") {
       if (!lesson?.schoolId) return false
       return schoolId === lesson.schoolId
@@ -167,6 +189,8 @@ export function getAllowedActions(role: UserRole): LessonAction[] {
       return ["create", "read", "update", "delete", "export"]
     case "STUDENT":
     case "STAFF":
+    case "ACCOUNTANT":
+    case "GUARDIAN":
       return ["read"]
     default:
       return []

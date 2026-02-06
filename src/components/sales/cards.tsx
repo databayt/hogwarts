@@ -157,7 +157,7 @@ export function Cards({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onEditLead?.(lead)}>
-                    <Edit className="mr-2 h-4 w-4" />
+                    <Edit className="me-2 h-4 w-4" />
                     {d?.edit || "Edit"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -165,7 +165,7 @@ export function Cards({
                     onClick={() => handleDelete(lead.id)}
                     className="text-destructive"
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash2 className="me-2 h-4 w-4" />
                     {d?.delete || "Delete"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -219,7 +219,7 @@ export function Cards({
               <div className="flex flex-wrap gap-1">
                 {lead.tags.map((tag) => (
                   <Badge key={tag} variant="outline" className="text-xs">
-                    <Tag className="mr-1 h-3 w-3" />
+                    <Tag className="me-1 h-3 w-3" />
                     {tag}
                   </Badge>
                 ))}

@@ -78,7 +78,7 @@ const JoinContent = (props: Props) => {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <div className="flex items-center gap-3">
                       <h5 className="text-sm font-medium sm:text-base">
                         {option.title}
                       </h5>

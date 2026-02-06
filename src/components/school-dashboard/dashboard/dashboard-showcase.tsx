@@ -421,11 +421,11 @@ export function DashboardShowcase() {
             actions={
               <div className="flex gap-2">
                 <Button size="sm" variant="outline">
-                  <Mail className="mr-2 h-4 w-4" />
+                  <Mail className="me-2 h-4 w-4" />
                   Message
                 </Button>
                 <Button size="sm" variant="outline">
-                  <Phone className="mr-2 h-4 w-4" />
+                  <Phone className="me-2 h-4 w-4" />
                   Call
                 </Button>
               </div>

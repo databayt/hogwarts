@@ -1,11 +1,11 @@
 ---
 title: Database Seeds
-description: Full K-12 school simulation with bilingual support (AR/EN) for Hogwarts Academy
+description: Full K-12 school simulation with single-language storage and on-demand translation for Demo Academy
 ---
 
 # Database Seeds
 
-The seed system creates a **realistic K-12 school simulation** for **demo.databayt.org** with full **bilingual support (Arabic/English)**.
+The seed system creates a **realistic K-12 school simulation** for **demo.databayt.org** with **single-language storage** (Arabic primary) and **on-demand translation** via Google Translate API.
 
 ## Quick Start
 
@@ -14,31 +14,55 @@ The seed system creates a **realistic K-12 school simulation** for **demo.databa
 pnpm db:seed
 ```
 
-**Total seed time:** ~26 minutes (first run), ~5 minutes (subsequent runs)
+**Total seed time:** ~45 minutes (first run), ~10 minutes (subsequent runs)
 
 ---
 
 ## Data Summary
 
-| Entity              | Count  | Notes                               |
-| ------------------- | ------ | ----------------------------------- |
-| Users               | 3,104  | All roles with @databayt.org emails |
-| Teachers            | 100    | Arabic names, department assigned   |
-| Students            | 970    | K-12 distribution                   |
-| Guardians           | ~1,940 | 2 per student (father + mother)     |
-| Departments         | 6      | Bilingual AR+EN                     |
-| Subjects            | 19     | Bilingual AR+EN                     |
-| Year Levels         | 14     | KG1-12, Bilingual AR+EN             |
-| Classrooms          | 28     | Labs, rooms, special facilities     |
-| Classes             | 187    | Subject-level combinations          |
-| Student Enrollments | 12,950 | Across all classes                  |
-| Stream Categories   | 12     | EN + AR versions                    |
-| Stream Courses      | 38     | EN + AR with chapters               |
-| Exams               | 100    | Midterm + Final per class           |
-| Exam Results        | 1,000  | With grade distribution             |
-| Score Ranges        | 9      | A+ to F (Sudanese grading)          |
-| Bank Accounts       | 3      | Operating, Savings, Petty Cash      |
-| Books               | 480    | Multiple copies each                |
+| Entity              | Count   | Notes                                   |
+| ------------------- | ------- | --------------------------------------- |
+| Users               | 3,105   | All roles with @databayt.org emails     |
+| Teachers            | 100     | Arabic names, qualifications, expertise |
+| Students            | 970     | K-12 distribution                       |
+| Guardians           | ~1,940  | 2 per student (father + mother)         |
+| Staff Members       | 26      | Non-teaching (admin, IT, facilities)    |
+| Departments         | 6       | Arabic primary + `lang` field           |
+| Subjects            | 19      | Arabic primary + `lang` field           |
+| Year Levels         | 14      | KG1-12, Arabic + `lang` field           |
+| Classrooms          | 28      | Labs, rooms, special facilities         |
+| Classes             | 187     | Subject-level combinations              |
+| Student Enrollments | 12,950  | Across all classes                      |
+| Assignments         | 188     | Across all classes                      |
+| Submissions         | 13,371  | With grade distribution                 |
+| Stream Categories   | 8       | Arabic LMS categories                   |
+| Stream Courses      | 59      | With chapters + Arabic content          |
+| Stream Enrollments  | 200     | Student course enrollments              |
+| Books               | 90      | Unique Arabic-titled collection         |
+| Borrow Records      | 99      | Active, overdue, returned               |
+| Exams               | ~200    | Midterm + Final + Quizzes               |
+| Exam Results        | ~1,500  | With grade distribution                 |
+| Question Bank       | ~950    | Arabic educational questions            |
+| Fee Structures      | 8       | 2-year history (2024-2026)              |
+| Fee Assignments     | ~1,940  | Per student per year                    |
+| Payments            | ~500    | With receipt numbers                    |
+| Invoices            | 10      | Sample with items + addresses           |
+| Expense Receipts    | 10      | With OCR data (SDG)                     |
+| Salary Structures   | 100     | With allowances + deductions            |
+| Timesheet Entries   | ~6,000  | Daily records, 3 months                 |
+| Payroll Runs        | 3       | Oct-Dec 2025, all PAID                  |
+| Bank Accounts       | 3       | Operating, Savings, Petty Cash          |
+| Transactions        | 100     | Oct-Dec 2025 (SDG)                      |
+| Finance             | ~500    | Chart of accounts, journal entries      |
+| Attendance          | ~60,000 | 60 days with student patterns           |
+| Timetable Entries   | ~1,500  | Conflict-free schedules                 |
+| Gamification        | ~350    | Badges, streaks, competitions           |
+| Conversations       | ~50     | With 300+ messages                      |
+| Notifications       | ~500    | Mixed types                             |
+| Admission           | ~50     | Campaigns + applications                |
+| Audit Logs          | ~500    | System-wide activity                    |
+| Health Records      | ~110    | Health, disciplinary, achievements      |
+| Student Documents   | 200     | Birth certs, passports, medical         |
 
 ---
 
@@ -65,67 +89,91 @@ All accounts use password: **1234**
 
 ---
 
-## Execution Phases (12 Total)
+## Execution Phases (16 Total)
 
 The seed runs in dependency order:
 
 ```
 PHASE 1: CORE FOUNDATION
 ├── School (demo.databayt.org)
-├── School Branding
-└── User Accounts (3,104 users)
+└── School Branding
 
-PHASE 2: ACADEMIC STRUCTURE
+PHASE 2: USER ACCOUNTS
+└── All Users (3,105 across all roles)
+
+PHASE 3: ACADEMIC STRUCTURE
 ├── School Year (2025-2026)
 ├── Terms (Term 1, Term 2)
 ├── Periods (8 teaching + 2 breaks)
 ├── Departments (6)
 └── Year Levels (14: KG1-12)
 
-PHASE 3: PEOPLE
-├── Teachers (100)
-├── Students (970)
-├── Guardian Types (5)
-└── Guardians (~1,940)
-
 PHASE 4: SUBJECTS & CLASSROOMS
-├── Subjects (19 bilingual)
+├── Subjects (19)
 ├── Classroom Types (8)
 └── Classrooms (28)
 
-PHASE 5: CLASSES & ENROLLMENTS
+PHASE 5: PEOPLE
+├── Teachers (100 + qualifications, experience, expertise)
+├── Students (970 + documents)
+├── Guardians (~1,940 + phone numbers)
+└── Staff Members (26 + phones, qualifications, experience)
+
+PHASE 6: CLASSES & ENROLLMENTS
 ├── Classes (187)
 ├── Student Enrollments (12,950)
 └── Teacher Assignments (187)
 
-PHASE 6: LIBRARY
-└── Books (480)
-
 PHASE 7: LMS / STREAM
-├── Stream Categories (12)
-├── Stream Courses (38)
-└── Course Chapters (10 per course)
+├── Stream Categories (8)
+├── Stream Courses (59 + chapters)
+├── Stream Enrollments (200)
+├── Lessons
+└── Library (90 books + 99 borrow records)
 
-PHASE 8: EXAMS & GRADES
-├── Exams (100)
-├── Exam Results (1,000)
-├── Score Ranges (9)
-└── Report Cards
+PHASE 8: ASSIGNMENTS
+├── Assignments (188)
+└── Submissions (13,371 with grade distribution)
 
-PHASE 9: FINANCE
-└── Chart of Accounts
+PHASE 9: ANNOUNCEMENTS & EVENTS
+├── Announcements (temporal spread, mixed scopes)
+└── Events (MENA calendar Sep 2025 - Jun 2026)
 
-PHASE 10: FEES & INVOICES
-├── Fee Structures
-├── Fee Records
-└── Sample Invoices
+PHASE 10: EXAMS, QBANK & GRADES
+├── Exams (Midterm + Final + Quizzes)
+├── Exam Results (~1,500)
+├── Question Bank (~950 Arabic questions)
+├── Grading Config
+└── Grades + Report Cards
 
-PHASE 11: BANKING
-└── Bank Accounts (3)
+PHASE 11: FINANCE
+├── Chart of Accounts (2-year history)
+├── Fee Structures (8) + Assignments (~1,940)
+├── Payments (~500) + Fines + Scholarships
+├── Invoices (10) + Expense Receipts (10)
+└── Payroll (structures, timesheets, runs, slips)
 
-PHASE 12: OPERATIONS
-├── Attendance Records
-└── Timetable Entries
+PHASE 12: BANKING
+├── Bank Accounts (3)
+└── Transactions (100, Oct-Dec 2025)
+
+PHASE 13: OPERATIONS
+├── Attendance (~60,000 records, 60 days)
+├── Attendance Excuses + Interventions
+├── Timetable (~1,500 entries)
+└── Gamification (badges, streaks, competitions)
+
+PHASE 14: COMMUNICATIONS
+├── Messages & Conversations (~50 + 300 messages)
+└── Notifications (~500)
+
+PHASE 15: ADMISSION
+├── Campaigns
+└── Applications (~50)
+
+PHASE 16: COMPLIANCE & WELLNESS
+├── Audit Logs (~500)
+└── Health Records + Disciplinary + Achievements
 ```
 
 ---
@@ -134,37 +182,53 @@ PHASE 12: OPERATIONS
 
 ```
 prisma/seeds/
-├── index.ts              # Main orchestrator
-├── types.ts              # TypeScript interfaces
-├── constants.ts          # All data constants (bilingual)
+├── index.ts              # Main orchestrator (16 phases)
+├── types.ts              # TypeScript interfaces (generic field names)
+├── constants.ts          # All data constants (generic names, Arabic values)
 ├── utils.ts              # Helpers (upsert, batch, logging)
 │
 ├── school.ts             # School + Branding
 ├── auth.ts               # User accounts (all roles)
 ├── academic.ts           # Years, Terms, Periods, Departments
-├── subjects.ts           # Subjects (bilingual)
+├── subjects.ts           # Subjects (Arabic + lang)
 ├── classrooms.ts         # Classrooms + Types
-├── people.ts             # Teachers, Students, Guardians
+├── people.ts             # Teachers, Students, Guardians, Documents
+├── staff-members.ts      # Non-teaching staff (+ phones, quals, experience)
 ├── classes.ts            # Classes, Enrollments
 │
-├── lessons.ts            # Lessons
-├── stream.ts             # LMS: Courses, Chapters
-├── library.ts            # Books
-├── announcements.ts      # Announcements (bilingual)
-├── events.ts             # School events
-├── exams.ts              # Exams, Results
-├── qbank.ts              # Question Bank
+├── lessons.ts            # Lessons (subject-specific templates)
+├── stream.ts             # LMS: Courses, Chapters, Enrollments
+├── library.ts            # Books + Borrow Records
+├── assignments.ts        # Assignments + Submissions
+├── announcements.ts      # Announcements (Arabic + lang)
+├── events.ts             # School events (MENA calendar)
+├── exams.ts              # Exams, Results, Grading Config
+├── qbank.ts              # Question Bank (Arabic educational)
 ├── grades.ts             # Grades, Report Cards
 │
-├── finance.ts            # Chart of Accounts
-├── fees.ts               # Fee Structures
-├── invoices.ts           # Invoices
-├── banking.ts            # Bank Accounts
+├── finance.ts            # Chart of Accounts, Journal Entries
+├── fees.ts               # Fee Structures, Assignments, Payments
+├── invoices.ts           # Invoices + Expense Receipts
+├── payroll.ts            # Salary Structures, Timesheets, Runs, Slips
+├── banking.ts            # Bank Accounts + Transactions
 │
-├── attendance.ts         # Attendance (10 days)
-├── timetable.ts          # Timetables
+├── attendance.ts         # Attendance (60 days, student patterns)
+├── attendance-extras.ts  # Excuses + Interventions
+├── timetable.ts          # Timetables (conflict-free)
+├── gamification.ts       # Badges, Streaks, Competitions
 │
-└── ensure-demo.ts        # Vercel deployment safety
+├── messages.ts           # Conversations + Messages
+├── notifications.ts      # Notification records
+├── admission.ts          # Campaigns + Applications
+├── audit.ts              # Audit Logs
+├── health.ts             # Health Records, Disciplinary, Achievements
+│
+├── data/
+│   ├── courses.ts        # Stream course data (Arabic)
+│   └── questions.ts      # Question bank data (Arabic educational)
+│
+├── ensure-demo.ts        # Vercel deployment safety
+└── reset-test-user.ts    # Reset user@databayt.org for testing
 ```
 
 ---
@@ -180,17 +244,17 @@ await prisma.subject.upsert({
     schoolId_departmentId_subjectName: {
       schoolId,
       departmentId,
-      subjectName: "Mathematics",
+      subjectName: "الرياضيات",
     },
   },
   update: {
-    subjectNameAr: "الرياضيات",
+    lang: "ar",
   },
   create: {
     schoolId,
     departmentId,
-    subjectName: "Mathematics",
-    subjectNameAr: "الرياضيات",
+    subjectName: "الرياضيات",
+    lang: "ar",
   },
 })
 ```
@@ -204,41 +268,49 @@ await prisma.subject.upsert({
 
 ---
 
-## Bilingual Strategy
+## Language Strategy
 
-All data supports Arabic (RTL) and English (LTR):
+Content is stored in **one language** with a `lang` field. Translation happens on-demand when the user's display locale differs from the content language.
 
-| Language         | Usage                               | Priority |
-| ---------------- | ----------------------------------- | -------- |
-| **Arabic (AR)**  | Primary display language, RTL       | Default  |
-| **English (EN)** | Database storage, API compatibility | Fallback |
+| Aspect          | Description                                                |
+| --------------- | ---------------------------------------------------------- |
+| **Storage**     | Single column + `lang` field (no dual columns)             |
+| **Field Names** | Generic only (`title`, `name`) - never `titleAr`/`titleEn` |
+| **Primary**     | Arabic (default for demo school)                           |
+| **Translation** | On-demand via Google Translate API with DB caching         |
+| **Cache**       | `TranslationCache` model scoped by `schoolId`              |
 
 ### Schema Pattern
 
 ```prisma
 model Subject {
-  subjectName   String   // English (e.g., "Mathematics")
-  subjectNameAr String?  // Arabic (e.g., "الرياضيات")
+  subjectName String         // Content in admin's chosen language
+  lang        String @default("ar") // "ar" or "en"
 }
 
 model YearLevel {
-  levelName   String   // English (e.g., "Grade 1")
-  levelNameAr String?  // Arabic (e.g., "الصف الأول")
+  levelName String
+  lang      String @default("ar")
 }
 
 model Department {
-  departmentName   String   // English
-  departmentNameAr String?  // Arabic
+  departmentName String
+  lang           String @default("ar")
 }
 ```
 
 ### Display Logic
 
 ```typescript
-const displayName =
-  lang === "ar"
-    ? item.nameAr || item.name // Arabic with English fallback
-    : item.name // English
+import { getDisplayText } from "@/lib/content-display"
+
+// Server-side: auto-translates if needed, caches result
+const title = await getDisplayText(
+  subject.subjectName, // stored text
+  subject.lang, // content language
+  displayLocale, // user's locale
+  schoolId // for cache scoping
+)
 ```
 
 ---
@@ -317,6 +389,20 @@ const displayName =
 
 ---
 
+## Staff Members (26)
+
+Non-teaching staff with MENA positions, qualifications, and experience:
+
+| Category   | Count | Positions                                             |
+| ---------- | ----- | ----------------------------------------------------- |
+| Admin      | 8     | VP, Secretary, Student Affairs, HR, PR, etc.          |
+| Finance    | 4     | Senior Accountant, Accountant, Cashier, Payroll       |
+| IT         | 3     | IT Manager, Technician, Network Admin                 |
+| Facilities | 6     | Building Manager, Maintenance x2, Security x2, Driver |
+| Support    | 5     | Librarian, Nurse, Counselor, Cafeteria, Transport     |
+
+---
+
 ## Classrooms (28)
 
 | Type      | Count | Examples                            |
@@ -332,6 +418,33 @@ const displayName =
 
 ---
 
+## Finance Overview
+
+### Fee Structures
+
+4 tiers with 2-year history (2024-2025 historical, 2025-2026 current):
+
+| Level        | Tuition (SDG) | Total (SDG) |
+| ------------ | ------------- | ----------- |
+| Kindergarten | 15,000        | ~18,000     |
+| Primary      | 18,000        | ~22,000     |
+| Intermediate | 22,000        | ~27,000     |
+| Secondary    | 28,000        | ~34,000     |
+
+### Payroll
+
+- 100 salary structures (SDG 80,000-350,000 monthly)
+- Allowances: housing (25%), transport (10%), phone (5%)
+- Deductions: tax (8%), insurance (3%), pension (5%)
+- 3 payroll runs (Oct-Dec 2025)
+
+### Banking
+
+- 3 accounts (Operating: 500K, Savings: 1.5M, Petty Cash: 10K SDG)
+- 100 transactions over Oct-Dec 2025 (credit + debit mix)
+
+---
+
 ## Troubleshooting
 
 ### Reset and Reseed
@@ -342,6 +455,9 @@ pnpm prisma migrate reset
 
 # Or just reseed (additive)
 pnpm db:seed
+
+# Reset test user only
+pnpm db:reset-test-user
 ```
 
 ### Common Issues
@@ -353,6 +469,7 @@ pnpm db:seed
 | "Unknown field"           | Check Prisma schema, run generate |
 | "Foreign key constraint"  | Seeds run in dependency order     |
 | "Prisma client not found" | Run `pnpm prisma generate`        |
+| "Can't reach database"    | Neon auto-suspend, retry once     |
 
 ### Verify Data
 

@@ -262,7 +262,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               className="text-primary inline-flex items-center text-xs hover:underline"
             >
               {d?.cards?.invoicing?.viewAll || "View All"}{" "}
-              <ChevronRight className="ml-1 h-3 w-3" />
+              <ChevronRight className="ms-1 h-3 w-3" />
             </Link>
           </CardContent>
         </Card>
@@ -293,7 +293,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               className="text-primary inline-flex items-center text-xs hover:underline"
             >
               {d?.cards?.fees?.viewStructures || "View Fees"}{" "}
-              <ChevronRight className="ml-1 h-3 w-3" />
+              <ChevronRight className="ms-1 h-3 w-3" />
             </Link>
           </CardContent>
         </Card>
@@ -326,7 +326,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               className="text-primary inline-flex items-center text-xs hover:underline"
             >
               {d?.cards?.payroll?.viewRuns || "View Payroll"}{" "}
-              <ChevronRight className="ml-1 h-3 w-3" />
+              <ChevronRight className="ms-1 h-3 w-3" />
             </Link>
           </CardContent>
         </Card>
@@ -355,7 +355,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               className="text-primary inline-flex items-center text-xs hover:underline"
             >
               {d?.cards?.reports?.viewReports || "View Reports"}{" "}
-              <ChevronRight className="ml-1 h-3 w-3" />
+              <ChevronRight className="ms-1 h-3 w-3" />
             </Link>
           </CardContent>
         </Card>

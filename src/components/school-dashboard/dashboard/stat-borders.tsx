@@ -60,9 +60,9 @@ export default function StatsBorders() {
                 )}
               >
                 {item.trend === "up" ? (
-                  <TrendingUp className="mr-0.5 -ml-1 h-5 w-5 shrink-0 self-center text-emerald-500" />
+                  <TrendingUp className="-ms-1 me-0.5 h-5 w-5 shrink-0 self-center text-emerald-500" />
                 ) : (
-                  <TrendingDown className="mr-0.5 -ml-1 h-5 w-5 shrink-0 self-center text-red-500" />
+                  <TrendingDown className="-ms-1 me-0.5 h-5 w-5 shrink-0 self-center text-red-500" />
                 )}
 
                 <span className="sr-only">

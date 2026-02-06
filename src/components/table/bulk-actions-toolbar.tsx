@@ -72,7 +72,7 @@ export function BulkActionsToolbar<TData>({
               className="h-8"
             >
               {action.icon}
-              <span className="ml-1.5">{action.label}</span>
+              <span className="ms-1.5">{action.label}</span>
             </Button>
           ))}
         </div>
@@ -87,7 +87,7 @@ export function BulkActionsToolbar<TData>({
           className="h-8"
         >
           <X className="h-4 w-4" />
-          <span className="sr-only ml-1.5 sm:not-sr-only">
+          <span className="sr-only ms-1.5 sm:not-sr-only">
             {t.clearSelection}
           </span>
         </Button>

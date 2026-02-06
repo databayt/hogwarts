@@ -54,7 +54,7 @@ export function FormStepNavigation({
           disabled={isLoading}
           className="gap-2"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {backLabel}
         </Button>
       ) : (
@@ -71,7 +71,9 @@ export function FormStepNavigation({
         {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
         {!isLoading && isLastStep && <Check className="h-4 w-4" />}
         {isLastStep ? submitLabel : nextLabel}
-        {!isLoading && !isLastStep && <ArrowRight className="h-4 w-4" />}
+        {!isLoading && !isLastStep && (
+          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+        )}
       </Button>
     </div>
   )

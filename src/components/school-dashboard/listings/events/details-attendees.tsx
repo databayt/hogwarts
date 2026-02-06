@@ -104,7 +104,7 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
           control={form.control}
           name="isPublic"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+            <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
               <FormControl>
                 <Checkbox
                   checked={field.value}
@@ -128,7 +128,7 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
           control={form.control}
           name="registrationRequired"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+            <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
               <FormControl>
                 <Checkbox
                   checked={field.value}

@@ -1,10 +1,16 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
 
+import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  assertSubjectPermission,
+  getAuthContext,
+} from "@/components/school-dashboard/listings/subjects/authorization"
 import {
   getSubjectsSchema,
   subjectCreateSchema,
@@ -27,9 +33,21 @@ export async function createSubject(
   input: z.infer<typeof subjectCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertSubjectPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to create subjects" }
     }
 
     const parsed = subjectCreateSchema.parse(input)
@@ -67,9 +85,21 @@ export async function updateSubject(
   input: z.infer<typeof subjectUpdateSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertSubjectPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update subjects" }
     }
 
     const parsed = subjectUpdateSchema.parse(input)
@@ -119,9 +149,21 @@ export async function deleteSubject(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertSubjectPermission(authContext, "delete", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to delete subjects" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -223,17 +265,17 @@ type SubjectSelectResult = {
   id: string
   schoolId: string
   subjectName: string
-  subjectNameAr: string | null
+  lang: string
   departmentId: string | null
   department: {
     id: string
     departmentName: string
-    departmentNameAr: string | null
+    lang: string
   } | null
   classes: {
     id: string
     name: string
-    nameAr: string | null
+    lang: string
     lessons: {
       id: string
       title: string
@@ -249,9 +291,21 @@ export async function getSubject(input: {
   id: string
 }): Promise<ActionResponse<SubjectSelectResult | null>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertSubjectPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to view subjects" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -264,20 +318,20 @@ export async function getSubject(input: {
         id: true,
         schoolId: true,
         subjectName: true,
-        subjectNameAr: true,
+        lang: true,
         departmentId: true,
         department: {
           select: {
             id: true,
             departmentName: true,
-            departmentNameAr: true,
+            lang: true,
           },
         },
         classes: {
           select: {
             id: true,
             name: true,
-            nameAr: true,
+            lang: true,
             lessons: {
               select: {
                 id: true,
@@ -314,9 +368,8 @@ export async function getSubject(input: {
 type SubjectListResult = {
   id: string
   subjectName: string
-  subjectNameAr: string | null
+  lang: string
   departmentName: string
-  departmentNameAr: string | null
   createdAt: string
 }
 
@@ -324,9 +377,21 @@ export async function getSubjects(
   input: Partial<z.infer<typeof getSubjectsSchema>>
 ): Promise<ActionResponse<{ rows: SubjectListResult[]; total: number }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertSubjectPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read subjects" }
     }
 
     const sp = getSubjectsSchema.parse(input ?? {})
@@ -358,7 +423,6 @@ export async function getSubjects(
           department: {
             select: {
               departmentName: true,
-              departmentNameAr: true,
             },
           },
         },
@@ -369,10 +433,8 @@ export async function getSubjects(
     const mapped: SubjectListResult[] = (rows as Array<any>).map((s) => ({
       id: s.id as string,
       subjectName: s.subjectName as string,
-      subjectNameAr: (s.subjectNameAr as string | null) || null,
+      lang: (s.lang as string) || "ar",
       departmentName: s.department?.departmentName || "Unknown",
-      departmentNameAr:
-        (s.department?.departmentNameAr as string | null) || null,
       createdAt: (s.createdAt as Date).toISOString(),
     }))
 
@@ -391,6 +453,127 @@ export async function getSubjects(
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to fetch subjects",
+    }
+  }
+}
+
+export async function bulkDeleteSubjects(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertSubjectPermission(authContext, "bulk_action", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized for bulk operations" }
+    }
+
+    const { ids } = z
+      .object({ ids: z.array(z.string().min(1)).min(1) })
+      .parse(input)
+
+    const subjectModel = getModelOrThrow("subject")
+    const existing = await subjectModel.findMany({
+      where: { id: { in: ids }, schoolId },
+      select: { id: true },
+    })
+    const validIds = existing.map((s: any) => s.id)
+
+    const result = await subjectModel.deleteMany({
+      where: { id: { in: validIds }, schoolId },
+    })
+
+    revalidatePath("/subjects")
+    return { success: true, data: { count: result.count } }
+  } catch (error) {
+    console.error("[bulkDeleteSubjects] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk delete subjects",
+    }
+  }
+}
+
+export async function getSubjectsCSV(
+  input?: Partial<z.infer<typeof getSubjectsSchema>>
+): Promise<ActionResponse<string>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertSubjectPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to export subjects" }
+    }
+
+    const sp = getSubjectsSchema.parse(input ?? {})
+    const subjectModel = getModelOrThrow("subject")
+
+    const where: any = {
+      schoolId,
+      ...(sp.subjectName
+        ? { subjectName: { contains: sp.subjectName, mode: "insensitive" } }
+        : {}),
+      ...(sp.departmentId ? { departmentId: sp.departmentId } : {}),
+    }
+
+    const subjects = await subjectModel.findMany({
+      where,
+      include: {
+        department: {
+          select: { departmentName: true },
+        },
+      },
+      orderBy: [{ subjectName: "asc" }],
+    })
+
+    const headers = [
+      "ID",
+      "Subject Name",
+      "Language",
+      "Department",
+      "Created Date",
+    ]
+    const csvRows = (subjects as Array<any>).map((s) =>
+      [
+        s.id,
+        `"${(s.subjectName || "").replace(/"/g, '""')}"`,
+        s.lang || "ar",
+        `"${(s.department?.departmentName || "").replace(/"/g, '""')}"`,
+        new Date(s.createdAt).toISOString().split("T")[0],
+      ].join(",")
+    )
+
+    const csv = [headers.join(","), ...csvRows].join("\n")
+    return { success: true, data: csv }
+  } catch (error) {
+    console.error("[getSubjectsCSV] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to export subjects",
     }
   }
 }

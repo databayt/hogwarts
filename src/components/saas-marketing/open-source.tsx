@@ -70,7 +70,7 @@ export default async function OpenSource({
           href={`${GITHUB_URL}/graphs/contributors`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex justify-center -space-x-2 transition-opacity hover:opacity-90"
+          className="inline-flex justify-center -space-x-2 transition-opacity hover:opacity-90 rtl:space-x-reverse"
         >
           {contributors.length > 0
             ? contributors.map((contributor) => (

@@ -105,7 +105,7 @@ export function ProfileHeaderCompact({
     if (isOwner) {
       return (
         <Button variant="outline" size="sm" onClick={onEdit}>
-          <PencilLine className="mr-2 h-4 w-4" />
+          <PencilLine className="me-2 h-4 w-4" />
           Edit
         </Button>
       )
@@ -115,7 +115,7 @@ export function ProfileHeaderCompact({
       case "connected":
         return (
           <Button variant="secondary" size="sm" onClick={onMessage}>
-            <MessageSquare className="mr-2 h-4 w-4" />
+            <MessageSquare className="me-2 h-4 w-4" />
             Message
           </Button>
         )
@@ -128,14 +128,14 @@ export function ProfileHeaderCompact({
       case "requested":
         return (
           <Button variant="default" size="sm" onClick={onConnect}>
-            <UserPlus className="mr-2 h-4 w-4" />
+            <UserPlus className="me-2 h-4 w-4" />
             Accept
           </Button>
         )
       default:
         return (
           <Button variant="default" size="sm" onClick={onConnect}>
-            <UserPlus className="mr-2 h-4 w-4" />
+            <UserPlus className="me-2 h-4 w-4" />
             Connect
           </Button>
         )

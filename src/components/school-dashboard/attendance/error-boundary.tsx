@@ -120,7 +120,7 @@ export class AttendanceErrorBoundary extends Component<
                   variant="outline"
                   className="flex-1"
                 >
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <RefreshCw className="me-2 h-4 w-4" />
                   Try Again
                 </Button>
                 <Button

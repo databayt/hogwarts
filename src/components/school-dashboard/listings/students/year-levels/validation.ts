@@ -9,10 +9,7 @@ export const createYearLevelSchema = z.object({
     .string()
     .min(1, "Level name is required")
     .max(50, "Level name must be less than 50 characters"),
-  levelNameAr: z
-    .string()
-    .max(50, "Arabic name must be less than 50 characters")
-    .optional(),
+  lang: z.enum(["ar", "en"]).default("ar").optional(),
   levelOrder: z
     .number()
     .int("Level order must be an integer")
@@ -26,11 +23,7 @@ export const updateYearLevelSchema = z.object({
     .min(1, "Level name is required")
     .max(50, "Level name must be less than 50 characters")
     .optional(),
-  levelNameAr: z
-    .string()
-    .max(50, "Arabic name must be less than 50 characters")
-    .optional()
-    .nullable(),
+  lang: z.enum(["ar", "en"]).optional(),
   levelOrder: z
     .number()
     .int("Level order must be an integer")

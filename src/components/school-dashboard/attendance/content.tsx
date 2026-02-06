@@ -252,7 +252,7 @@ export function AttendanceContent({ dictionary }: Props) {
                 onChange={(e) => setDate(e.target.value)}
                 disabled={isLoading}
               />
-              <div className="ml-auto flex items-center gap-2">
+              <div className="ms-auto flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"

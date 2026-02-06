@@ -203,7 +203,7 @@ const LegalContent = (props: Props) => {
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5 lg:gap-20">
           {/* Left column - Hosting type */}
           <div className="lg:col-span-2">
-            <div className="mb-3 flex items-center space-x-2 sm:mb-4 rtl:space-x-reverse">
+            <div className="mb-3 flex items-center gap-2 sm:mb-4">
               <h5 className="text-foreground">
                 {dict.operationalStatus ||
                   "What is your school's operational status?"}
@@ -215,7 +215,7 @@ const LegalContent = (props: Props) => {
             </div>
 
             <div className="space-y-2">
-              <label className="flex cursor-pointer items-center space-x-2 rtl:space-x-reverse">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="radio"
                   name="hosting-type"
@@ -247,7 +247,7 @@ const LegalContent = (props: Props) => {
                 </small>
               </label>
 
-              <label className="flex cursor-pointer items-center space-x-2 rtl:space-x-reverse">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="radio"
                   name="hosting-type"
@@ -285,7 +285,7 @@ const LegalContent = (props: Props) => {
           <div className="space-y-3 sm:space-y-4 lg:col-span-3">
             {/* Safety Features */}
             <div>
-              <div className="mb-3 flex items-center space-x-2 rtl:space-x-reverse">
+              <div className="mb-3 flex items-center gap-2">
                 <h5 className="text-foreground">
                   {dict.schoolSafetyFeatures ||
                     "Does your school have any of these?"}

@@ -15,6 +15,7 @@ interface Props {
   availableCopies: number
   hasBorrowedBook: boolean
   borrowRecordId?: string
+  dictionary?: Record<string, string>
 }
 
 export default function BorrowBook({
@@ -24,6 +25,7 @@ export default function BorrowBook({
   availableCopies,
   hasBorrowedBook,
   borrowRecordId,
+  dictionary: lib,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -44,7 +46,7 @@ export default function BorrowBook({
       } else {
         toast.error(result.error || "Failed to borrow book")
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred")
     } finally {
       setIsLoading(false)
@@ -68,7 +70,7 @@ export default function BorrowBook({
       } else {
         toast.error(result.error || "Failed to return book")
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred")
     } finally {
       setIsLoading(false)
@@ -79,10 +81,12 @@ export default function BorrowBook({
     return (
       <div>
         <p className="mb-2 text-sm text-emerald-600">
-          You have borrowed this book
+          {lib?.borrowedThisBook || "You have borrowed this book"}
         </p>
         <Button onClick={handleReturn} disabled={isLoading} variant="outline">
-          {isLoading ? "Returning..." : "Return Book"}
+          {isLoading
+            ? lib?.returning || "Returning..."
+            : lib?.returnBook || "Return Book"}
         </Button>
       </div>
     )
@@ -91,14 +95,16 @@ export default function BorrowBook({
   if (availableCopies === 0) {
     return (
       <Button disabled variant="secondary">
-        Currently Unavailable
+        {lib?.currentlyUnavailable || "Currently Unavailable"}
       </Button>
     )
   }
 
   return (
     <Button onClick={handleBorrow} disabled={isLoading}>
-      {isLoading ? "Borrowing..." : "Borrow Book"}
+      {isLoading
+        ? lib?.borrowing || "Borrowing..."
+        : lib?.borrowBook || "Borrow Book"}
     </Button>
   )
 }

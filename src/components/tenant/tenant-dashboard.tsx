@@ -120,7 +120,7 @@ export default function TenantDashboard({
       <div className="border-b bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
               <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                 <Building2 className="text-primary h-6 w-6" />
               </div>
@@ -130,7 +130,7 @@ export default function TenantDashboard({
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/settings">
                   <Settings className="me-2 h-4 w-4" />

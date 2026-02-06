@@ -80,7 +80,7 @@ export default function BankActions(props: Props) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleSync} disabled={isPending}>
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="me-2 h-4 w-4" />
             {props.dictionary.syncData || "Sync Data"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -89,7 +89,7 @@ export default function BankActions(props: Props) {
             disabled={isPending}
             className="text-destructive"
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className="me-2 h-4 w-4" />
             {props.dictionary.remove || "Remove"}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -112,7 +112,7 @@ export default function BankActions(props: Props) {
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isPending}>
               {isPending ? (
-                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
               ) : null}
               {props.dictionary.remove || "Remove"}
             </AlertDialogAction>

@@ -126,19 +126,19 @@ export function EnrollmentForm({
         <Tabs defaultValue="student" className="space-y-4">
           <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="student">
-              <Users className="mr-2 h-4 w-4" />
+              <Users className="me-2 h-4 w-4" />
               Student
             </TabsTrigger>
             <TabsTrigger value="academic">
-              <BookOpen className="mr-2 h-4 w-4" />
+              <BookOpen className="me-2 h-4 w-4" />
               Academic
             </TabsTrigger>
             <TabsTrigger value="fees">
-              <CreditCard className="mr-2 h-4 w-4" />
+              <CreditCard className="me-2 h-4 w-4" />
               Fees & Services
             </TabsTrigger>
             <TabsTrigger value="documents">
-              <Icons.fileText className="mr-2 h-4 w-4" />
+              <Icons.fileText className="me-2 h-4 w-4" />
               Documents
             </TabsTrigger>
           </TabsList>
@@ -208,11 +208,11 @@ export function EnrollmentForm({
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  "w-full justify-start text-left font-normal",
+                                  "w-full justify-start text-start font-normal",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
-                                <Icons.calendar className="mr-2 h-4 w-4" />
+                                <Icons.calendar className="me-2 h-4 w-4" />
                                 {field.value
                                   ? format(field.value, "PPP")
                                   : "Pick a date"}
@@ -442,7 +442,7 @@ export function EnrollmentForm({
                           {mandatorySubjects.map((subject) => (
                             <div
                               key={subject.id}
-                              className="flex items-center space-x-2"
+                              className="flex items-center gap-2"
                             >
                               <Checkbox
                                 checked={field.value?.includes(subject.id)}
@@ -460,7 +460,7 @@ export function EnrollmentForm({
                                 {subject.credits && (
                                   <Badge
                                     variant="outline"
-                                    className="ml-2 text-xs"
+                                    className="ms-2 text-xs"
                                   >
                                     {subject.credits} credits
                                   </Badge>
@@ -489,7 +489,7 @@ export function EnrollmentForm({
                             {electiveSubjects.map((subject) => (
                               <div
                                 key={subject.id}
-                                className="flex items-center space-x-2"
+                                className="flex items-center gap-2"
                               >
                                 <Checkbox
                                   checked={field.value?.includes(subject.id)}
@@ -507,7 +507,7 @@ export function EnrollmentForm({
                                   {subject.credits && (
                                     <Badge
                                       variant="outline"
-                                      className="ml-2 text-xs"
+                                      className="ms-2 text-xs"
                                     >
                                       {subject.credits} credits
                                     </Badge>
@@ -566,11 +566,11 @@ export function EnrollmentForm({
                             <Button
                               variant="outline"
                               className={cn(
-                                "w-full justify-start text-left font-normal",
+                                "w-full justify-start text-start font-normal",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
-                              <Icons.calendar className="mr-2 h-4 w-4" />
+                              <Icons.calendar className="me-2 h-4 w-4" />
                               {field.value
                                 ? format(field.value, "PPP")
                                 : "Pick a date"}
@@ -701,7 +701,7 @@ export function EnrollmentForm({
                       control={form.control}
                       name="transportRequired"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                        <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -722,7 +722,7 @@ export function EnrollmentForm({
                       control={form.control}
                       name="hostelRequired"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                        <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -743,7 +743,7 @@ export function EnrollmentForm({
                       control={form.control}
                       name="libraryAccess"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                        <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -764,7 +764,7 @@ export function EnrollmentForm({
                       control={form.control}
                       name="labAccess"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                        <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -810,7 +810,7 @@ export function EnrollmentForm({
                     control={form.control}
                     name="transferCertificate"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                      <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -831,7 +831,7 @@ export function EnrollmentForm({
                     control={form.control}
                     name="previousMarksheets"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                      <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -852,7 +852,7 @@ export function EnrollmentForm({
                     control={form.control}
                     name="migrationCertificate"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                      <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -899,7 +899,7 @@ export function EnrollmentForm({
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && (
-              <Icons.circleCheck className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.circleCheck className="me-2 h-4 w-4 animate-spin" />
             )}
             {isSubmitting ? "Enrolling..." : "Enroll Student"}
           </Button>

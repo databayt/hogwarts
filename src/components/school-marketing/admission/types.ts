@@ -77,27 +77,21 @@ export interface DocumentUpload {
 export interface FormStep {
   id: string
   label: string
-  labelAr: string
   description: string
-  descriptionAr: string
   fields: (keyof ApplicationFormData)[]
 }
 
 export const FORM_STEPS: FormStep[] = [
   {
     id: "campaign",
-    label: "Select Program",
-    labelAr: "اختر البرنامج",
-    description: "Choose the admission program you're applying for",
-    descriptionAr: "اختر برنامج القبول الذي تتقدم إليه",
+    label: "اختر البرنامج",
+    description: "اختر برنامج القبول الذي تتقدم إليه",
     fields: ["campaignId"],
   },
   {
     id: "personal",
-    label: "Personal Info",
-    labelAr: "المعلومات الشخصية",
-    description: "Student's personal information",
-    descriptionAr: "المعلومات الشخصية للطالب",
+    label: "المعلومات الشخصية",
+    description: "المعلومات الشخصية للطالب",
     fields: [
       "firstName",
       "middleName",
@@ -111,10 +105,8 @@ export const FORM_STEPS: FormStep[] = [
   },
   {
     id: "contact",
-    label: "Contact",
-    labelAr: "معلومات الاتصال",
-    description: "Contact and address details",
-    descriptionAr: "تفاصيل الاتصال والعنوان",
+    label: "معلومات الاتصال",
+    description: "تفاصيل الاتصال والعنوان",
     fields: [
       "email",
       "phone",
@@ -128,10 +120,8 @@ export const FORM_STEPS: FormStep[] = [
   },
   {
     id: "guardian",
-    label: "Guardian",
-    labelAr: "ولي الأمر",
-    description: "Parent or guardian information",
-    descriptionAr: "معلومات الوالدين أو ولي الأمر",
+    label: "ولي الأمر",
+    description: "معلومات الوالدين أو ولي الأمر",
     fields: [
       "fatherName",
       "fatherOccupation",
@@ -149,10 +139,8 @@ export const FORM_STEPS: FormStep[] = [
   },
   {
     id: "academic",
-    label: "Education",
-    labelAr: "التعليم",
-    description: "Previous education and applying class",
-    descriptionAr: "التعليم السابق والصف المتقدم إليه",
+    label: "التعليم",
+    description: "التعليم السابق والصف المتقدم إليه",
     fields: [
       "previousSchool",
       "previousClass",
@@ -166,18 +154,14 @@ export const FORM_STEPS: FormStep[] = [
   },
   {
     id: "documents",
-    label: "Documents",
-    labelAr: "المستندات",
-    description: "Upload required documents",
-    descriptionAr: "رفع المستندات المطلوبة",
+    label: "المستندات",
+    description: "رفع المستندات المطلوبة",
     fields: ["photoUrl", "signatureUrl", "documents"],
   },
   {
     id: "review",
-    label: "Review",
-    labelAr: "المراجعة",
-    description: "Review and submit your application",
-    descriptionAr: "مراجعة وتقديم طلبك",
+    label: "المراجعة",
+    description: "مراجعة وتقديم طلبك",
     fields: [],
   },
 ]
@@ -217,10 +201,8 @@ export interface PublicCampaign {
 export interface RequiredDocument {
   type: string
   name: string
-  nameAr: string
   required: boolean
   description?: string
-  descriptionAr?: string
 }
 
 export interface EligibilityCriteria {
@@ -253,7 +235,6 @@ export interface StatusStep {
 export interface StatusTimelineEntry {
   status: AdmissionApplicationStatus
   label: string
-  labelAr: string
   date?: Date
   completed: boolean
   current: boolean
@@ -262,7 +243,6 @@ export interface StatusTimelineEntry {
 export interface ChecklistItem {
   id: string
   label: string
-  labelAr: string
   completed: boolean
   required: boolean
   type: "document" | "payment" | "interview" | "tour" | "other"
@@ -321,16 +301,12 @@ export interface InquiryFormData {
 }
 
 export const INQUIRY_SOURCES = [
-  { value: "website", label: "Website", labelAr: "الموقع الإلكتروني" },
-  {
-    value: "social",
-    label: "Social Media",
-    labelAr: "وسائل التواصل الاجتماعي",
-  },
-  { value: "referral", label: "Friend/Family", labelAr: "صديق/عائلة" },
-  { value: "advertisement", label: "Advertisement", labelAr: "إعلان" },
-  { value: "event", label: "School Event", labelAr: "فعالية مدرسية" },
-  { value: "other", label: "Other", labelAr: "أخرى" },
+  { value: "website", label: "الموقع الإلكتروني" },
+  { value: "social", label: "وسائل التواصل الاجتماعي" },
+  { value: "referral", label: "صديق/عائلة" },
+  { value: "advertisement", label: "إعلان" },
+  { value: "event", label: "فعالية مدرسية" },
+  { value: "other", label: "أخرى" },
 ] as const
 
 // ============================================
@@ -352,12 +328,8 @@ export interface OTPVerifyResult {
 // Action Response Types
 // ============================================
 
-export interface ActionResult<T = unknown> {
-  success: boolean
-  data?: T
-  error?: string
-  message?: string
-}
+// Re-export shared ActionResponse as ActionResult for backward compatibility
+export type { ActionResponse as ActionResult } from "@/lib/action-response"
 
 export interface SubmitApplicationResult {
   applicationNumber: string
@@ -373,27 +345,26 @@ export interface SubmitApplicationResult {
 
 export interface GradeMapping {
   grade: string
-  gradeAr: string
   minAge: number
   maxAge: number
   description?: string
 }
 
 export const DEFAULT_GRADES: GradeMapping[] = [
-  { grade: "KG1", gradeAr: "روضة 1", minAge: 3, maxAge: 4 },
-  { grade: "KG2", gradeAr: "روضة 2", minAge: 4, maxAge: 5 },
-  { grade: "Grade 1", gradeAr: "الصف الأول", minAge: 5, maxAge: 6 },
-  { grade: "Grade 2", gradeAr: "الصف الثاني", minAge: 6, maxAge: 7 },
-  { grade: "Grade 3", gradeAr: "الصف الثالث", minAge: 7, maxAge: 8 },
-  { grade: "Grade 4", gradeAr: "الصف الرابع", minAge: 8, maxAge: 9 },
-  { grade: "Grade 5", gradeAr: "الصف الخامس", minAge: 9, maxAge: 10 },
-  { grade: "Grade 6", gradeAr: "الصف السادس", minAge: 10, maxAge: 11 },
-  { grade: "Grade 7", gradeAr: "الصف السابع", minAge: 11, maxAge: 12 },
-  { grade: "Grade 8", gradeAr: "الصف الثامن", minAge: 12, maxAge: 13 },
-  { grade: "Grade 9", gradeAr: "الصف التاسع", minAge: 13, maxAge: 14 },
-  { grade: "Grade 10", gradeAr: "الصف العاشر", minAge: 14, maxAge: 15 },
-  { grade: "Grade 11", gradeAr: "الصف الحادي عشر", minAge: 15, maxAge: 16 },
-  { grade: "Grade 12", gradeAr: "الصف الثاني عشر", minAge: 16, maxAge: 17 },
+  { grade: "روضة 1", minAge: 3, maxAge: 4 },
+  { grade: "روضة 2", minAge: 4, maxAge: 5 },
+  { grade: "الصف الأول", minAge: 5, maxAge: 6 },
+  { grade: "الصف الثاني", minAge: 6, maxAge: 7 },
+  { grade: "الصف الثالث", minAge: 7, maxAge: 8 },
+  { grade: "الصف الرابع", minAge: 8, maxAge: 9 },
+  { grade: "الصف الخامس", minAge: 9, maxAge: 10 },
+  { grade: "الصف السادس", minAge: 10, maxAge: 11 },
+  { grade: "الصف السابع", minAge: 11, maxAge: 12 },
+  { grade: "الصف الثامن", minAge: 12, maxAge: 13 },
+  { grade: "الصف التاسع", minAge: 13, maxAge: 14 },
+  { grade: "الصف العاشر", minAge: 14, maxAge: 15 },
+  { grade: "الصف الحادي عشر", minAge: 15, maxAge: 16 },
+  { grade: "الصف الثاني عشر", minAge: 16, maxAge: 17 },
 ]
 
 // Utility function to suggest grade based on date of birth

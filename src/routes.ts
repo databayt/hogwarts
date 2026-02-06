@@ -13,7 +13,6 @@ export const publicRoutes = [
   "/features",
   "/pricing",
   "/blog",
-  "/debug",
   "/docs",
   "/stream",
   "/stream/courses",

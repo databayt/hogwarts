@@ -419,12 +419,12 @@ export function ReportCardGenerator({
         <table className="w-full border-collapse border">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border p-2 text-left">Subject</th>
+              <th className="border p-2 text-start">Subject</th>
               <th className="border p-2 text-center">Marks</th>
               <th className="border p-2 text-center">Grade</th>
               <th className="border p-2 text-center">GPA</th>
               <th className="border p-2 text-center">Attendance</th>
-              <th className="border p-2 text-left">Teacher</th>
+              <th className="border p-2 text-start">Teacher</th>
             </tr>
           </thead>
           <tbody>

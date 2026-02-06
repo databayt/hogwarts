@@ -61,7 +61,7 @@ export const EnrollmentEmail = ({
           <Text className="mb-2 text-sm text-gray-600">
             <strong>What's next?</strong>
           </Text>
-          <ul className="mb-4 pl-5 text-sm text-gray-600">
+          <ul className="mb-4 ps-5 text-sm text-gray-600">
             <li>Access your course dashboard</li>
             <li>Watch video lessons</li>
             <li>Download course materials</li>

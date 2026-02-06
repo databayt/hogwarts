@@ -314,7 +314,7 @@ An error occurred while processing your request. Please try again.`)
                 reasoning={aiReasoning}
                 isStreaming={isProcessing}
                 showReasoning={!!aiReasoning}
-                className="mb-4 pr-3"
+                className="mb-4 pe-3"
                 streamDelay={10}
               />
 
@@ -465,7 +465,7 @@ An error occurred while processing your request. Please try again.`)
                     </SelectContent>
                   </Select>
 
-                  <div className="ml-auto flex items-center gap-1">
+                  <div className="ms-auto flex items-center gap-1">
                     <div className="relative flex items-center gap-1 md:gap-2">
                       <PromptInputButton className="focus-visible:ring-ring border-input bg-muted text-muted-foreground relative z-10 flex h-8 w-8 items-center justify-center gap-2 rounded-full border p-0 text-sm font-medium whitespace-nowrap transition-opacity duration-150 ease-in-out hover:border-transparent hover:bg-blue-100 focus-visible:ring-1 focus-visible:outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50">
                         <VoiceIcon className="relative z-10 h-5 w-5 shrink-0" />

@@ -38,7 +38,7 @@ export default function ImpersonationBanner() {
       <div className="text-xs">
         Impersonating: <span className="font-semibold">{schoolId}</span>
         {expiresAt && (
-          <span className="ml-2">
+          <span className="ms-2">
             (expires {new Date(expiresAt).toLocaleTimeString()})
           </span>
         )}

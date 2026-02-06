@@ -52,7 +52,7 @@ function SelectionCard<T extends string = string>({
             ? "flex-col space-y-2"
             : description
               ? "justify-between"
-              : "space-x-3"
+              : "gap-3"
         )}
       >
         <div
@@ -60,7 +60,7 @@ function SelectionCard<T extends string = string>({
             "flex",
             compact
               ? "flex-col items-center space-y-1"
-              : "flex-1 items-center space-x-3"
+              : "flex-1 items-center gap-3"
           )}
         >
           {icon && !description && (

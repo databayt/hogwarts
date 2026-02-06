@@ -98,7 +98,7 @@ export function AssignmentDetailContent({
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="me-2 h-4 w-4" />
           {t.back || "Back"}
         </Button>
         <Alert variant="destructive">

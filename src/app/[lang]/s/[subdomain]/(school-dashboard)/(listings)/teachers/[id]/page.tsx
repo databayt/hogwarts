@@ -70,7 +70,7 @@ export default async function TeacherDetailPage({ params }: Props) {
             select: {
               id: true,
               subjectName: true,
-              subjectNameAr: true,
+              lang: true,
             },
           },
         },
@@ -83,7 +83,7 @@ export default async function TeacherDetailPage({ params }: Props) {
             select: {
               id: true,
               departmentName: true,
-              departmentNameAr: true,
+              lang: true,
             },
           },
         },
@@ -92,7 +92,7 @@ export default async function TeacherDetailPage({ params }: Props) {
         select: {
           id: true,
           className: true,
-          classNameAr: true,
+          lang: true,
         },
       },
       user: {

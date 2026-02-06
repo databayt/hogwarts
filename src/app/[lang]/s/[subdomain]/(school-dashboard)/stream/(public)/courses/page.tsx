@@ -8,13 +8,14 @@ import {
   StreamCoursesContent,
   StreamCoursesLoadingSkeleton,
 } from "@/components/stream/courses/content"
-import { getAllCourses } from "@/components/stream/data/course/get-all-courses"
+import { streamCoursesSearchParams } from "@/components/stream/list-params"
+import { getCoursesList } from "@/components/stream/queries"
 
 export const dynamic = "force-dynamic"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
-  searchParams?: Promise<{ category?: string; search?: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -33,10 +34,10 @@ export default async function StreamCoursesPage({
   params,
   searchParams,
 }: Props) {
-  const { lang, subdomain } = await params
+  const { lang } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
-  const search = await searchParams
+  const search = streamCoursesSearchParams.parse(await searchParams)
 
   return (
     <Suspense fallback={<StreamCoursesLoadingSkeleton />}>
@@ -44,7 +45,7 @@ export default async function StreamCoursesPage({
         lang={lang}
         schoolId={schoolId}
         dictionary={dictionary.stream}
-        searchParams={search}
+        search={search}
       />
     </Suspense>
   )
@@ -54,23 +55,53 @@ async function CoursesRenderer({
   lang,
   schoolId,
   dictionary,
-  searchParams,
+  search,
 }: {
   lang: string
   schoolId: string | null
   dictionary: any
-  searchParams?: { category?: string; search?: string }
+  search: {
+    page: number
+    perPage: number
+    title: string
+    category: string
+    level: string
+    sort: { id: string; desc: boolean }[]
+  }
 }) {
-  // Fetch courses filtered by language
-  const courses = await getAllCourses(schoolId, lang)
+  if (!schoolId) {
+    return (
+      <StreamCoursesContent
+        dictionary={dictionary}
+        lang={lang}
+        schoolId={schoolId}
+        courses={[]}
+        totalCount={0}
+        page={1}
+        perPage={12}
+      />
+    )
+  }
+
+  const { rows, count } = await getCoursesList(schoolId, {
+    page: search.page,
+    perPage: search.perPage,
+    title: search.title || undefined,
+    category: search.category || undefined,
+    level: search.level || undefined,
+    lang,
+    sort: search.sort.length > 0 ? search.sort : undefined,
+  })
 
   return (
     <StreamCoursesContent
       dictionary={dictionary}
       lang={lang}
       schoolId={schoolId}
-      courses={courses}
-      searchParams={searchParams}
+      courses={rows}
+      totalCount={count}
+      page={search.page}
+      perPage={search.perPage}
     />
   )
 }

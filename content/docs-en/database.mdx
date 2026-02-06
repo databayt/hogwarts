@@ -11,9 +11,10 @@ Our database design is guided by fundamental principles that ensure scalability,
 
 - **Row-Level Security** – Every model includes a `schoolId` field ensuring complete data isolation between schools
 - **Shared Schema Architecture** – All schools use the same database schema, optimizing resource utilization
-- **Domain-Based Tenant Identification** – Schools are uniquely identified by subdomain (e.g., `hogwarts.hogwarts.app`), with optional custom domains via CNAME
+- **Domain-Based Tenant Identification** – Schools are uniquely identified by subdomain (e.g., `demo.databayt.org`), with optional custom domains via CNAME
 - **Type-Safe Database Operations** – Prisma ORM provides end-to-end type safety from database to frontend
 - **Multi-File Schema Organization** – Schema is organized into logical domains for better maintainability
+- **Single-Language Storage** – Content stored in one language with a `lang` field; translation happens on-demand via Google Translate API with database caching
 
 ## Database Design
 
@@ -31,14 +32,15 @@ The tenant isolation strategy ensures that each school's data remains completely
 
 ```typescript
 model School {
-  id          String  @id @default(cuid())
-  name        String
-  domain      String  @unique // e.g., "hogwarts"
-  logoUrl     String?
-  address     String?
-  phoneNumber String?
-  email       String?
-  timezone    String  @default("UTC")
+  id                String  @id @default(cuid())
+  name              String
+  domain            String  @unique // e.g., "demo"
+  preferredLanguage String  @default("ar") // Admin's chosen content language
+  logoUrl           String?
+  address           String?
+  phoneNumber       String?
+  email             String?
+  timezone          String  @default("UTC")
 
   // Subscription/billing
   planType    String  @default("basic")
@@ -68,97 +70,75 @@ The Prisma directory follows a well-organized structure that supports both devel
 
 ## Schema Tables
 
-Each model contains realistic sample data that demonstrates the relationships and data structure of our multi-tenant school management system.
+Each model contains realistic sample data that demonstrates the relationships and data structure of our multi-tenant school management system. The demo school uses Arabic as its primary content language with on-demand translation.
 
 ### School (Tenant Entity)
 
-Main tenant entities representing different schools in the multi-tenant system.
+The demo school representing a Sudanese K-12 academy.
 
-| ID        | School Name | Domain      | Plan    | Max Students | Active |
-| --------- | ----------- | ----------- | ------- | ------------ | ------ |
-| `sch_001` | Hogwarts    | hogwarts    | premium | 1000         | Yes    |
-| `sch_002` | Beauxbatons | beauxbatons | premium | 500          | Yes    |
-| `sch_003` | Durmstrang  | durmstrang  | basic   | 300          | Yes    |
+| ID        | School Name | Domain | Preferred Language | Plan    | Active |
+| --------- | ----------- | ------ | ------------------ | ------- | ------ |
+| `sch_001` | Demo School | demo   | ar                 | premium | Yes    |
 
 ### Teacher
 
-Teaching staff with school-specific isolation and department assignments.
+Teaching staff with Arabic names and department assignments. 100 teachers across 6 departments.
 
-| ID        | School ID | First Name | Last Name  | Email                 | Gender |
-| --------- | --------- | ---------- | ---------- | --------------------- | ------ |
-| `tch_001` | `sch_001` | Minerva    | McGonagall | m.mcg@hogwarts.edu    | F      |
-| `tch_002` | `sch_001` | Severus    | Snape      | s.snape@hogwarts.edu  | M      |
-| `tch_003` | `sch_001` | Rubeus     | Hagrid     | r.hagrid@hogwarts.edu | M      |
+| ID        | School ID | Given Name | Surname | Email                 | Gender |
+| --------- | --------- | ---------- | ------- | --------------------- | ------ |
+| `tch_001` | `sch_001` | Ahmed      | Hassan  | teacher@databayt.org  | M      |
+| `tch_002` | `sch_001` | Fatima     | Ali     | teacher1@databayt.org | F      |
+| `tch_003` | `sch_001` | Mohamed    | Ibrahim | teacher2@databayt.org | M      |
 
 ### Student
 
-Student enrollment records with guardian relationships and year-level tracking.
+970 students across KG1-Grade 12 with guardian relationships.
 
-| ID        | School ID | First Name | Middle | Last Name | Date of Birth | Gender |
-| --------- | --------- | ---------- | ------ | --------- | ------------- | ------ |
-| `std_001` | `sch_001` | Harry      | J      | Potter    | 1980-07-31    | M      |
-| `std_002` | `sch_001` | Hermione   | J      | Granger   | 1979-09-19    | F      |
-| `std_003` | `sch_001` | Ron        | B      | Weasley   | 1980-03-01    | M      |
+| ID        | School ID | Given Name | Surname | GR Number | Gender |
+| --------- | --------- | ---------- | ------- | --------- | ------ |
+| `std_001` | `sch_001` | Omar       | Hassan  | GR-0001   | M      |
+| `std_002` | `sch_001` | Amira      | Ali     | GR-0002   | F      |
+| `std_003` | `sch_001` | Khalid     | Mohamed | GR-0003   | M      |
 
 ### Department
 
-Academic departments organizing subjects and teacher assignments.
+6 academic departments with single-language storage (Arabic primary + `lang` field).
 
-| ID        | School ID | Department Name |
-| --------- | --------- | --------------- |
-| `dep_001` | `sch_001` | Transfiguration |
-| `dep_002` | `sch_001` | Potions         |
-| `dep_003` | `sch_001` | Creatures       |
+| ID        | School ID | Department Name | Lang |
+| --------- | --------- | --------------- | ---- |
+| `dep_001` | `sch_001` | Languages       | ar   |
+| `dep_002` | `sch_001` | Sciences        | ar   |
+| `dep_003` | `sch_001` | Humanities      | ar   |
 
 ### Subject
 
-Academic subjects within departments that form the basis of classes.
+19 academic subjects within departments, stored in Arabic with on-demand translation.
 
-| ID        | School ID | Department ID | Subject Name    |
-| --------- | --------- | ------------- | --------------- |
-| `sub_001` | `sch_001` | `dep_001`     | Transfiguration |
-| `sub_002` | `sch_001` | `dep_002`     | Potions         |
-| `sub_003` | `sch_001` | `dep_003`     | Creatures       |
+| ID        | School ID | Department ID | Subject Name | Lang |
+| --------- | --------- | ------------- | ------------ | ---- |
+| `sub_001` | `sch_001` | `dep_001`     | Arabic       | ar   |
+| `sub_002` | `sch_001` | `dep_002`     | Mathematics  | ar   |
+| `sub_003` | `sch_001` | `dep_002`     | Physics      | ar   |
 
 ### Classroom
 
-Physical classroom locations with capacity and type information.
+28 physical classroom locations across 5 buildings.
 
-| ID        | School ID | Room Name  | Capacity | Type  |
-| --------- | --------- | ---------- | -------- | ----- |
-| `cls_001` | `sch_001` | Great Hall | 400      | Hall  |
-| `cls_002` | `sch_001` | Dungeon    | 30       | Lab   |
-| `cls_003` | `sch_001` | Room 101   | 35       | Class |
-
-### Assignment
-
-Assessment tasks including homework, quizzes, tests, and projects.
-
-| ID        | School ID | Title   | Type    | Status      | Points | Due Date   |
-| --------- | --------- | ------- | ------- | ----------- | ------ | ---------- |
-| `asg_001` | `sch_001` | Essay   | ESSAY   | PUBLISHED   | 100    | 2024-02-15 |
-| `asg_002` | `sch_001` | Quiz    | QUIZ    | COMPLETED   | 50     | 2024-02-10 |
-| `asg_003` | `sch_001` | Project | PROJECT | IN_PROGRESS | 150    | 2024-02-20 |
-
-### Attendance
-
-Daily attendance tracking per student per class with detailed status information.
-
-| ID        | School ID | Student ID | Date       | Status  | Notes |
-| --------- | --------- | ---------- | ---------- | ------- | ----- |
-| `att_001` | `sch_001` | `std_001`  | 2024-02-08 | PRESENT | —     |
-| `att_002` | `sch_001` | `std_002`  | 2024-02-08 | PRESENT | —     |
-| `att_003` | `sch_001` | `std_003`  | 2024-02-08 | LATE    | Late  |
+| ID        | School ID | Room Name     | Capacity | Type      |
+| --------- | --------- | ------------- | -------- | --------- |
+| `cls_001` | `sch_001` | Assembly Hall | 300      | Hall      |
+| `cls_002` | `sch_001` | Science Lab 1 | 30       | Lab       |
+| `cls_003` | `sch_001` | Room 101      | 35       | Classroom |
 
 ### User (Authentication)
 
 Multi-tenant user accounts with role-based access control and school isolation.
 
-| ID        | Email         | Role      | School ID          | Verified |
-| --------- | ------------- | --------- | ------------------ | -------- |
-| `usr_001` | harry@hog.edu | STUDENT   | `sch_001`          | Yes      |
-| `usr_002` | mcg@hog.edu   | TEACHER   | `sch_001`          | Yes      |
-| `usr_003` | admin@dev.com | DEVELOPER | null (all schools) | Yes      |
+| ID        | Email                | Role      | School ID          | Verified |
+| --------- | -------------------- | --------- | ------------------ | -------- |
+| `usr_001` | dev@databayt.org     | DEVELOPER | null (all schools) | Yes      |
+| `usr_002` | admin@databayt.org   | ADMIN     | `sch_001`          | Yes      |
+| `usr_003` | teacher@databayt.org | TEACHER   | `sch_001`          | Yes      |
 
 ## Subscription & Pricing
 
@@ -458,37 +438,84 @@ pnpm prisma migrate deploy
 pnpm prisma db seed
 ```
 
-## Sample Schools & Test Data
+## Single-Language Storage with On-Demand Translation
 
-The seeding system creates **three sample schools** with complete datasets:
+Content is stored in **one language** with a `lang` field. When a user views content in a different locale, translation happens on-demand via Google Translate API with database caching.
 
-| School      | Domain          | Description                       |
-| ----------- | --------------- | --------------------------------- |
-| Hogwarts    | hogwarts.com    | School of Witchcraft and Wizardry |
-| Beauxbatons | beauxbatons.com | Academy of Magic                  |
-| Durmstrang  | durmstrang.com  | Institute for Magical Learning    |
+### Storage Pattern
 
-### Sample Data Statistics
+```prisma
+model Announcement {
+  title String?
+  body  String? @db.Text
+  lang  String  @default("ar") // "ar" or "en"
+}
+```
 
-**Hogwarts:**
+### Translation Cache
 
-- Complete academic structure
-- 4 houses with qualified professors
-- 1000+ active students
-- Full magical curriculum
+```prisma
+model TranslationCache {
+  id             String   @id @default(cuid())
+  schoolId       String
+  sourceText     String   @db.Text
+  sourceLanguage String   // "ar" or "en"
+  targetLanguage String   // "ar" or "en"
+  translatedText String   @db.Text
+  provider       String   @default("google")
+  hitCount       Int      @default(0)
+  lastAccessedAt DateTime @default(now())
 
-**Beauxbatons:**
+  @@unique([schoolId, sourceText, sourceLanguage, targetLanguage])
+  @@index([schoolId, sourceLanguage, targetLanguage])
+  @@index([lastAccessedAt])
+}
+```
 
-- French academic system
-- 6 departments
-- 700+ students
-- Specialized courses
+### Translation Flow
 
-**Durmstrang:**
+```typescript
+import { getDisplayText } from "@/lib/content-display"
 
-- Nordic education model
-- 5 faculties
-- 500+ students
-- Advanced programs
+// Content stored in Arabic, user viewing in English
+const title = await getDisplayText("مرحبا", "ar", "en", schoolId)
+// Returns "Hello" (translated and cached)
+
+// Same language - no API call
+const title = await getDisplayText("مرحبا", "ar", "ar", schoolId)
+// Returns "مرحبا" directly
+```
+
+### Models Using `lang` Field
+
+| Model                 | Content Fields                       | Default Lang |
+| --------------------- | ------------------------------------ | ------------ |
+| Announcement          | title, body                          | ar           |
+| AnnouncementTemplate  | title, body                          | ar           |
+| NotificationTemplate  | title, body, emailSubject, emailBody | ar           |
+| Subject               | subjectName                          | ar           |
+| Class                 | name                                 | ar           |
+| YearLevel             | levelName                            | ar           |
+| Department            | departmentName                       | ar           |
+| AttendanceBadge       | name, description                    | ar           |
+| AttendanceCompetition | name                                 | ar           |
+| StreamCourse          | title                                | en           |
+| StreamCategory        | name                                 | en           |
+
+## Demo School & Test Data
+
+The seeding system creates a **single demo school** (`demo.databayt.org`) with a complete K-12 Sudanese school simulation:
+
+| Entity      | Count  | Notes                               |
+| ----------- | ------ | ----------------------------------- |
+| Users       | 3,104  | All roles with @databayt.org emails |
+| Teachers    | 100    | Arabic names, 6 departments         |
+| Students    | 970    | KG1-Grade 12 distribution           |
+| Guardians   | ~1,940 | 2 per student                       |
+| Departments | 6      | Arabic primary + lang field         |
+| Subjects    | 19     | Arabic primary + lang field         |
+| Year Levels | 14     | KG1-12                              |
+| Classrooms  | 28     | Labs, rooms, special facilities     |
+| Classes     | 187    | Subject-level combinations          |
 
 This comprehensive database architecture provides the foundation for building scalable, secure, and feature-rich educational management systems.

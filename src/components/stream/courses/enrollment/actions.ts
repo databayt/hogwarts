@@ -10,6 +10,10 @@ import { db } from "@/lib/db"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
 import { i18n } from "@/components/internationalization/config"
+import {
+  assertStreamPermission,
+  getAuthContext,
+} from "@/components/stream/authorization"
 import { sendEnrollmentEmail } from "@/components/stream/shared/email-service"
 
 export async function enrollInCourseAction(courseId: string) {
@@ -20,9 +24,11 @@ export async function enrollInCourseAction(courseId: string) {
   const subdomain = host.split(".")[0]
   const locale = i18n.defaultLocale
 
-  if (!session?.user) {
-    throw new Error("Authentication required")
-  }
+  // Check authentication and enroll permission
+  const authCtx = getAuthContext(session)
+  if (!authCtx || !session?.user) throw new Error("Authentication required")
+  authCtx.schoolId = schoolId
+  assertStreamPermission(authCtx, "enroll")
 
   if (!schoolId) {
     throw new Error("School context required")

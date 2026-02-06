@@ -155,7 +155,7 @@ export function PeriodSelector({
                 key={period.periodId}
                 onClick={() => onPeriodSelect(period)}
                 className={cn(
-                  "flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors",
+                  "flex w-full items-center justify-between rounded-lg border p-3 text-start transition-colors",
                   isSelected
                     ? "bg-primary/10 border-primary"
                     : period.hasAttendance

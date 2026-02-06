@@ -46,7 +46,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { SortableList } from "@/components/stream/shared/sortable-list"
 
-import { VideoInput } from "../video-input"
+import { VideoInput, type VideoInputMetadata } from "../video-input"
 import {
   createChapter,
   createLesson,
@@ -63,10 +63,16 @@ interface Lesson {
   title: string
   description: string | null
   videoUrl: string | null
+  thumbnailUrl: string | null
   position: number
   isPublished: boolean
   isFree: boolean
   duration: number | null
+  videoDuration: number | null
+  videoResolution: string | null
+  videoSize: number | null
+  storageProvider: string | null
+  storageKey: string | null
 }
 
 interface Chapter {
@@ -105,6 +111,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
   const [lessonTitle, setLessonTitle] = useState("")
   const [lessonDescription, setLessonDescription] = useState("")
   const [lessonVideoUrl, setLessonVideoUrl] = useState("")
+  const [lessonMetadata, setLessonMetadata] = useState<VideoInputMetadata>({})
 
   // Expanded chapters
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
@@ -242,6 +249,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
     setLessonTitle("")
     setLessonDescription("")
     setLessonVideoUrl("")
+    setLessonMetadata({})
     setIsLessonDialogOpen(true)
   }
 
@@ -251,6 +259,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
     setLessonTitle(lesson.title)
     setLessonDescription(lesson.description || "")
     setLessonVideoUrl(lesson.videoUrl || "")
+    setLessonMetadata({})
     setIsLessonDialogOpen(true)
   }
 
@@ -273,6 +282,21 @@ export function CourseStructure({ data }: CourseStructureProps) {
             title: lessonTitle,
             description: lessonDescription || null,
             videoUrl: lessonVideoUrl || null,
+            ...(lessonMetadata.videoDuration !== undefined && {
+              videoDuration: lessonMetadata.videoDuration,
+            }),
+            ...(lessonMetadata.videoResolution && {
+              videoResolution: lessonMetadata.videoResolution,
+            }),
+            ...(lessonMetadata.videoSize && {
+              videoSize: lessonMetadata.videoSize,
+            }),
+            ...(lessonMetadata.storageProvider && {
+              storageProvider: lessonMetadata.storageProvider,
+            }),
+            ...(lessonMetadata.thumbnailDataUrl && {
+              thumbnailUrl: lessonMetadata.thumbnailDataUrl,
+            }),
           })
 
           if (result.status === "error") {
@@ -308,6 +332,11 @@ export function CourseStructure({ data }: CourseStructureProps) {
             videoUrl: lessonVideoUrl || null,
             chapterId: selectedChapterId,
             courseId: data.id,
+            videoDuration: lessonMetadata.videoDuration,
+            videoResolution: lessonMetadata.videoResolution,
+            videoSize: lessonMetadata.videoSize,
+            storageProvider: lessonMetadata.storageProvider,
+            thumbnailUrl: lessonMetadata.thumbnailDataUrl,
           })
 
           if (result.status === "error") {
@@ -323,6 +352,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
         setLessonTitle("")
         setLessonDescription("")
         setLessonVideoUrl("")
+        setLessonMetadata({})
         setEditingLesson(null)
         setSelectedChapterId(null)
       } catch {
@@ -403,9 +433,9 @@ export function CourseStructure({ data }: CourseStructureProps) {
           <DialogTrigger asChild>
             <Button onClick={handleCreateChapter} disabled={isPending}>
               {isPending ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
+                <Loader2 className="me-2 size-4 animate-spin" />
               ) : (
-                <PlusIcon className="mr-2 size-4" />
+                <PlusIcon className="me-2 size-4" />
               )}
               Add Chapter
             </Button>
@@ -440,7 +470,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
                 Cancel
               </Button>
               <Button onClick={handleSaveChapter} disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                {isPending && <Loader2 className="me-2 size-4 animate-spin" />}
                 {editingChapter ? "Save Changes" : "Create Chapter"}
               </Button>
             </DialogFooter>
@@ -606,7 +636,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
                       onClick={() => handleCreateLesson(chapter.id)}
                       disabled={isPending}
                     >
-                      <PlusIcon className="mr-2 size-3" />
+                      <PlusIcon className="me-2 size-3" />
                       Add Lesson
                     </Button>
                   </CardContent>
@@ -664,7 +694,10 @@ export function CourseStructure({ data }: CourseStructureProps) {
               <Label>Video (optional)</Label>
               <VideoInput
                 value={lessonVideoUrl}
-                onChange={(url) => setLessonVideoUrl(url || "")}
+                onChange={(url, meta) => {
+                  setLessonVideoUrl(url || "")
+                  if (meta) setLessonMetadata(meta)
+                }}
                 disabled={isPending}
               />
             </div>
@@ -677,7 +710,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
               Cancel
             </Button>
             <Button onClick={handleSaveLesson} disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {isPending && <Loader2 className="me-2 size-4 animate-spin" />}
               {editingLesson ? "Save Changes" : "Create Lesson"}
             </Button>
           </DialogFooter>

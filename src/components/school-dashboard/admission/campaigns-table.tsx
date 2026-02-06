@@ -70,7 +70,7 @@ export function CampaignsTable({
         ...params,
         name: deferredSearch || undefined,
       })
-      if (result.success) {
+      if (result.success && result.data) {
         return {
           rows: result.data.rows as CampaignRow[],
           total: result.data.total,

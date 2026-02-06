@@ -369,14 +369,14 @@ export function DocumentsTab({
                 placeholder="Search documents..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="ps-9"
               />
             </div>
             <div className="flex gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
-                    <ListFilter className="mr-2 h-4 w-4" />
+                    <ListFilter className="me-2 h-4 w-4" />
                     Category
                   </Button>
                 </DropdownMenuTrigger>
@@ -409,7 +409,7 @@ export function DocumentsTab({
               </DropdownMenu>
 
               <Button variant="default" size="sm">
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="me-2 h-4 w-4" />
                 Upload Document
               </Button>
             </div>
@@ -504,24 +504,24 @@ export function DocumentsTab({
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
+                          <Eye className="me-2 h-4 w-4" />
                           View
                         </DropdownMenuItem>
                         {document.canDownload && (
                           <DropdownMenuItem>
-                            <Download className="mr-2 h-4 w-4" />
+                            <Download className="me-2 h-4 w-4" />
                             Download
                           </DropdownMenuItem>
                         )}
                         {document.canShare && (
                           <DropdownMenuItem>
-                            <Share2 className="mr-2 h-4 w-4" />
+                            <Share2 className="me-2 h-4 w-4" />
                             Share
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">
-                          <Trash className="mr-2 h-4 w-4" />
+                          <Trash className="me-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>

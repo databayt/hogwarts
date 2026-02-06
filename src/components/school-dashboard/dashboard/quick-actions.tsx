@@ -129,7 +129,7 @@ export function QuickActions({
           ) : (
             <button
               onClick={action.onClick}
-              className="focus-visible:ring-primary block w-full rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              className="focus-visible:ring-primary block w-full rounded-lg text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               type="button"
             >
               {content}

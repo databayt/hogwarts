@@ -79,7 +79,7 @@ export default function TenantWelcome({
       <div className="border-b bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
               <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                 <Building2 className="text-primary h-6 w-6" />
               </div>
@@ -89,7 +89,7 @@ export default function TenantWelcome({
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-3">
               {getStatusBadge(school.isActive)}
               {getPlanBadge(school.planType)}
             </div>
@@ -151,7 +151,7 @@ export default function TenantWelcome({
         <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Card className="cursor-pointer transition-shadow hover:shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center gap-2">
                 <Globe className="h-5 w-5" />
                 <span>Access Your Portal</span>
               </CardTitle>
@@ -172,7 +172,7 @@ export default function TenantWelcome({
 
           <Card className="cursor-pointer transition-shadow hover:shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
                 <span>Get Started</span>
               </CardTitle>

@@ -54,8 +54,9 @@ describe("Announcement Actions", () => {
       } as any)
 
       const result = await createAnnouncement({
-        titleEn: "Test Announcement",
-        bodyEn: "Test body content",
+        title: "Test Announcement",
+        body: "Test body content",
+        lang: "ar",
         scope: "school",
         published: false,
       })

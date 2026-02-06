@@ -1,0 +1,23 @@
+// Translation cache for on-demand Google Translate API results
+
+model TranslationCache {
+  id             String   @id @default(cuid())
+  schoolId       String
+  sourceText     String   @db.Text
+  sourceLanguage String   // "ar" or "en"
+  targetLanguage String   // "ar" or "en"
+  translatedText String   @db.Text
+  provider       String   @default("google")
+  hitCount       Int      @default(0)
+  lastAccessedAt DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, sourceText, sourceLanguage, targetLanguage])
+  @@index([schoolId, sourceLanguage, targetLanguage])
+  @@index([lastAccessedAt])
+  @@map("translation_cache")
+}

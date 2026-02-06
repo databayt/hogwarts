@@ -99,9 +99,9 @@ export function PrintButton({
       {...buttonProps}
     >
       {isPrinting ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <Loader2 className="me-2 h-4 w-4 animate-spin" />
       ) : (
-        <Printer className="mr-2 h-4 w-4" />
+        <Printer className="me-2 h-4 w-4" />
       )}
       {children || (isPrinting ? "Printing..." : "Print")}
     </Button>

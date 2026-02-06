@@ -321,21 +321,21 @@ function StatusBadge({ status }: { status: ExamAttempt["status"] }) {
     case "completed":
       return (
         <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-          <CheckCircle className="mr-1 h-3 w-3" />
+          <CheckCircle className="me-1 h-3 w-3" />
           Completed
         </Badge>
       )
     case "in_progress":
       return (
         <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-          <Clock className="mr-1 h-3 w-3" />
+          <Clock className="me-1 h-3 w-3" />
           In Progress
         </Badge>
       )
     case "pending":
       return (
         <Badge variant="outline">
-          <Clock className="mr-1 h-3 w-3" />
+          <Clock className="me-1 h-3 w-3" />
           Pending
         </Badge>
       )

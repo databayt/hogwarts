@@ -90,7 +90,7 @@ export async function PrincipalDashboard({
     let totalClasses = 0
     let recentAnnouncements: {
       id: string
-      titleEn: string | null
+      title: string | null
       createdAt: Date
     }[] = []
 
@@ -105,7 +105,7 @@ export async function PrincipalDashboard({
             where: { schoolId: user.schoolId, published: true },
             take: 5,
             orderBy: { createdAt: "desc" },
-            select: { id: true, titleEn: true, createdAt: true },
+            select: { id: true, title: true, createdAt: true },
           }),
         ])
         totalStudents = students
@@ -313,7 +313,7 @@ export async function PrincipalDashboard({
                       {alert.message}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <Badge
                       variant={
                         alert.severity === "high" ? "destructive" : "secondary"
@@ -536,7 +536,7 @@ export async function PrincipalDashboard({
                         {evaluation.department}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <Badge
                         variant={
                           evaluation.status === "in-progress"
@@ -709,7 +709,7 @@ export async function PrincipalDashboard({
                         {format(new Date(meeting.date), "EEEE, MMM d")}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <Badge
                         variant={
                           meeting.status === "confirmed"

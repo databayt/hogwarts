@@ -11,6 +11,7 @@ description: "User journey flows with ASCII diagrams and URL references"
 4. [Login Flow](#4-login-flow) - Authentication with role redirects
 5. [Logout Flow](#5-logout-flow) - Context-aware logout
 6. [DEVELOPER Dashboard Flow](#6-developer-dashboard-flow) - SaaS dashboard access
+7. [Onboarding Wizard Flow](#7-onboarding-wizard-flow) - School creation wizard steps
 
 ---
 
@@ -33,15 +34,15 @@ All passwords: `1234`
 
 ## URLs
 
-| Name               | Localhost                        | Production                     |
-| ------------------ | -------------------------------- | ------------------------------ |
-| SaaS Marketing     | localhost:3000/en                | ed.databayt.org/en             |
-| SaaS Dashboard     | localhost:3000/en/dashboard      | ed.databayt.org/en/dashboard   |
-| Operator Dashboard | localhost:3000/en/o              | ed.databayt.org/en/o           |
-| Login              | localhost:3000/en/login          | ed.databayt.org/en/login       |
-| Onboarding         | localhost:3000/en/onboarding     | ed.databayt.org/en/onboarding  |
-| Demo School        | demo.localhost:3000/en           | demo.databayt.org/en           |
-| Demo Dashboard     | demo.localhost:3000/en/dashboard | demo.databayt.org/en/dashboard |
+| Name               | Localhost                        | Production                                        |
+| ------------------ | -------------------------------- | ------------------------------------------------- |
+| SaaS Marketing     | localhost:3000/en                | ed.databayt.org/en                                |
+| SaaS Dashboard     | localhost:3000/en/dashboard      | ed.databayt.org/en/dashboard                      |
+| Operator Dashboard | localhost:3000/en/operator       | ed.databayt.org/en/operator (not yet implemented) |
+| Login              | localhost:3000/en/login          | ed.databayt.org/en/login                          |
+| Onboarding         | localhost:3000/en/onboarding     | ed.databayt.org/en/onboarding                     |
+| Demo School        | demo.localhost:3000/en           | demo.databayt.org/en                              |
+| Demo Dashboard     | demo.localhost:3000/en/dashboard | demo.databayt.org/en/dashboard                    |
 
 ---
 
@@ -95,6 +96,8 @@ User clicks "Platform" from school marketing header.
 | 4    | Dashboard        | -                  | .../en/dashboard       | .../en/dashboard     |
 | 4b   | Access Denied    | Non-member         | .../en/access-denied   | .../en/access-denied |
 
+> **Test Coverage**: `school-login-flow.spec.ts`, `saas-dashboard.spec.ts` (EP-013 to EP-025)
+
 ---
 
 ## 2. Get Started Flow
@@ -147,17 +150,19 @@ User clicks "Get Started" from SaaS marketing hero to create a new school.
         ▼
 ┌───────────────────┐
 │ New School Dash   │
-│ (newschool.domain)│
+│ (newschool.domain) │
 └───────────────────┘
 ```
 
-| Step | Action            | Credentials       | Localhost                            | Production                         |
-| ---- | ----------------- | ----------------- | ------------------------------------ | ---------------------------------- |
-| 1    | Click Get Started | -                 | localhost:3000/en                    | ed.databayt.org/en                 |
-| 2    | Login (if guest)  | user@databayt.org | .../en/login                         | .../en/login                       |
-| 3    | Onboarding wizard | -                 | .../en/onboarding                    | .../en/onboarding                  |
-| 4    | Create school     | USER → ADMIN      | -                                    | -                                  |
-| 5    | New dashboard     | -                 | {school}.localhost:3000/en/dashboard | {school}.databayt.org/en/dashboard |
+| Step | Action            | Credentials       | Localhost                              | Production                           |
+| ---- | ----------------- | ----------------- | -------------------------------------- | ------------------------------------ |
+| 1    | Click Get Started | -                 | localhost:3000/en                      | ed.databayt.org/en                   |
+| 2    | Login (if guest)  | user@databayt.org | .../en/login                           | .../en/login                         |
+| 3    | Onboarding wizard | -                 | .../en/onboarding                      | .../en/onboarding                    |
+| 4    | Create school     | USER → ADMIN      | -                                      | -                                    |
+| 5    | New dashboard     | -                 | \{school\}.localhost:3000/en/dashboard | \{school\}.databayt.org/en/dashboard |
+
+> **Test Coverage**: `get-started.spec.ts` (OB-001 to OB-004)
 
 ---
 
@@ -209,6 +214,8 @@ User clicks "Live Demo" to explore the demo school without authentication.
 | 3    | Click Platform  | -                  | -                      | -                    |
 | 4    | Login           | admin@databayt.org | .../en/login           | .../en/login         |
 | 5    | Demo Dashboard  | ADMIN role         | .../en/dashboard       | .../en/dashboard     |
+
+> **Test Coverage**: `get-started.spec.ts` (OB-005 to OB-008)
 
 ---
 
@@ -269,6 +276,8 @@ Complete authentication flow with role-based redirects.
 | 3b   | USER on SaaS      | user@databayt.org     | Stay on .../en          | Stay on .../en           |
 | 3c   | Any on school     | Any school member     | Stay on school          | Stay on school           |
 
+> **Test Coverage**: `login.spec.ts` (AUTH-001 to AUTH-022), `saas-login-flow.spec.ts`
+
 ---
 
 ## 5. Logout Flow
@@ -303,13 +312,15 @@ Context-aware logout with appropriate redirects.
 └───────┘└───────┘└───────┘
 ```
 
-| Location           | Redirect After Logout                  |
-| ------------------ | -------------------------------------- |
-| SaaS Marketing     | /{locale} (homepage)                   |
-| Operator Dashboard | /{locale} (homepage)                   |
-| School Marketing   | /{locale}/s/{subdomain}/ (school home) |
-| School Dashboard   | /{locale}/s/{subdomain}/ (school home) |
-| Session Expiry     | /login?callbackUrl={current}           |
+| Location           | Redirect After Logout                      |
+| ------------------ | ------------------------------------------ |
+| SaaS Marketing     | /\{locale\} (homepage)                     |
+| Operator Dashboard | /\{locale\} (homepage)                     |
+| School Marketing   | /\{locale\}/s/\{subdomain\}/ (school home) |
+| School Dashboard   | /\{locale\}/s/\{subdomain\}/ (school home) |
+| Session Expiry     | /login?callbackUrl=\{current\}             |
+
+> **Test Coverage**: `logout.spec.ts` (AUTH-038 to AUTH-045)
 
 ---
 
@@ -408,6 +419,112 @@ Request to /dashboard
 | 1b   | Direct to dashboard | dev@databayt.org | localhost:3000/en/dashboard | ed.databayt.org/en/dashboard |
 | 2    | Auth check          | DEVELOPER role   | -                           | -                            |
 | 3    | SaaS Dashboard      | -                | .../en/dashboard            | .../en/dashboard             |
+
+> **Test Coverage**: `saas-dashboard.spec.ts` (EP-017 to EP-022), `saas-login-flow.spec.ts`
+
+---
+
+## 7. Onboarding Wizard Flow
+
+Multi-step school creation wizard after user clicks "Get Started" and logs in.
+
+**Prerequisite**: User must be authenticated (redirected from Get Started flow).
+
+```
+┌───────────────────┐
+│  Onboarding Hub   │
+│  /en/onboarding   │
+└────────┬──────────┘
+         │ "Create a new school"
+         ▼
+┌───────────────────┐
+│  1. About School  │ ← Overview/intro
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│  2. Title         │ ← School name (required)
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│  3. Description   │ ← School description + type
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│  4. Location      │ ← Address, city, state, country
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│  5. Stand Out     │ ← Unique selling points
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│  6. Capacity      │ ← Max students + teachers
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│  7. Branding      │ ← Logo, colors (optional)
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│  8. Import        │ ← Import existing data
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│  9. Finish Setup  │ ← Final configuration
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│ 10. Join          │ ← Invite staff/teachers
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│ 11. Visibility    │ ← Public/private setting
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│ 12. Price         │ ← Tuition fees
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│ 13. Discount      │ ← Discount rules
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│ 14. Legal         │ ← Terms & privacy acceptance
+└────────┬──────────┘
+         ▼
+┌───────────────────┐
+│ 15. Subdomain     │ ← Reserve {name}.databayt.org
+└────────┬──────────┘
+         ▼
+┌───────────────────────┐
+│  Congratulations!     │
+│  USER → ADMIN role    │
+│  → School Dashboard   │
+└───────────────────────┘
+```
+
+| Step | Page            | URL Pattern                           | Required |
+| ---- | --------------- | ------------------------------------- | -------- |
+| Hub  | Onboarding Hub  | /en/onboarding                        | -        |
+| 1    | About School    | /en/onboarding/\{id\}/about-school    | No       |
+| 2    | Title           | /en/onboarding/\{id\}/title           | Yes      |
+| 3    | Description     | /en/onboarding/\{id\}/description     | No       |
+| 4    | Location        | /en/onboarding/\{id\}/location        | No       |
+| 5    | Stand Out       | /en/onboarding/\{id\}/stand-out       | No       |
+| 6    | Capacity        | /en/onboarding/\{id\}/capacity        | No       |
+| 7    | Branding        | /en/onboarding/\{id\}/branding        | No       |
+| 8    | Import          | /en/onboarding/\{id\}/import          | No       |
+| 9    | Finish Setup    | /en/onboarding/\{id\}/finish-setup    | No       |
+| 10   | Join            | /en/onboarding/\{id\}/join            | No       |
+| 11   | Visibility      | /en/onboarding/\{id\}/visibility      | No       |
+| 12   | Price           | /en/onboarding/\{id\}/price           | No       |
+| 13   | Discount        | /en/onboarding/\{id\}/discount        | No       |
+| 14   | Legal           | /en/onboarding/\{id\}/legal           | Yes      |
+| 15   | Subdomain       | /en/onboarding/\{id\}/subdomain       | Yes      |
+| Done | Congratulations | /en/onboarding/\{id\}/congratulations | -        |
+
+> **Test Coverage**: `onboarding-school.spec.ts` (access control, school initialization, form steps, subdomain, complete flow, navigation)
 
 ---
 

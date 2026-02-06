@@ -111,7 +111,7 @@ export function ViewToggleSegmented({
         className="h-7 px-2.5"
         aria-pressed={view === "table"}
       >
-        <List className="mr-1.5 h-4 w-4" />
+        <List className="me-1.5 h-4 w-4" />
         {t.tableView}
       </Button>
       <Button
@@ -121,7 +121,7 @@ export function ViewToggleSegmented({
         className="h-7 px-2.5"
         aria-pressed={view === "grid"}
       >
-        <LayoutGrid className="mr-1.5 h-4 w-4" />
+        <LayoutGrid className="me-1.5 h-4 w-4" />
         {t.gridView}
       </Button>
     </div>

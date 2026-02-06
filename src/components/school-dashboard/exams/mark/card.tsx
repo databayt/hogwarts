@@ -99,7 +99,7 @@ export function QuestionCard({
               </Badge>
               {hasRubric && (
                 <Badge variant="secondary" className="text-xs">
-                  <FileText className="mr-1 h-3 w-3" />
+                  <FileText className="me-1 h-3 w-3" />
                   {dict.rubric.title}
                 </Badge>
               )}
@@ -125,19 +125,19 @@ export function QuestionCard({
             <DropdownMenuContent align="end">
               {onPreview && (
                 <DropdownMenuItem onClick={() => onPreview(id)}>
-                  <Eye className="mr-2 h-4 w-4" />
+                  <Eye className="me-2 h-4 w-4" />
                   {dict.buttons.viewAnswer}
                 </DropdownMenuItem>
               )}
               {onEdit && (
                 <DropdownMenuItem onClick={() => onEdit(id)}>
-                  <Pencil className="mr-2 h-4 w-4" />
+                  <Pencil className="me-2 h-4 w-4" />
                   {dict.buttons.editQuestion}
                 </DropdownMenuItem>
               )}
               {onDuplicate && (
                 <DropdownMenuItem onClick={() => onDuplicate(id)}>
-                  <Copy className="mr-2 h-4 w-4" />
+                  <Copy className="me-2 h-4 w-4" />
                   Duplicate
                 </DropdownMenuItem>
               )}
@@ -147,7 +147,7 @@ export function QuestionCard({
                   onClick={() => onDelete(id)}
                   className="text-destructive"
                 >
-                  <Trash className="mr-2 h-4 w-4" />
+                  <Trash className="me-2 h-4 w-4" />
                   {dict.buttons.deleteQuestion}
                 </DropdownMenuItem>
               )}

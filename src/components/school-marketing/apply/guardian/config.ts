@@ -2,18 +2,16 @@
 
 export const GUARDIAN_STEP_CONFIG = {
   id: "guardian",
-  label: "Guardian Information",
-  labelAr: "معلومات ولي الأمر",
-  description: "Enter parent or guardian details",
-  descriptionAr: "أدخل معلومات الوالدين أو ولي الأمر",
+  label: "معلومات ولي الأمر",
+  description: "أدخل معلومات الوالدين أو ولي الأمر",
 }
 
 export const GUARDIAN_RELATION_OPTIONS = [
-  { value: "father", label: "Father", labelAr: "الأب" },
-  { value: "mother", label: "Mother", labelAr: "الأم" },
-  { value: "grandfather", label: "Grandfather", labelAr: "الجد" },
-  { value: "grandmother", label: "Grandmother", labelAr: "الجدة" },
-  { value: "uncle", label: "Uncle", labelAr: "العم/الخال" },
-  { value: "aunt", label: "Aunt", labelAr: "العمة/الخالة" },
-  { value: "other", label: "Other", labelAr: "أخرى" },
+  { value: "father", label: "الأب" },
+  { value: "mother", label: "الأم" },
+  { value: "grandfather", label: "الجد" },
+  { value: "grandmother", label: "الجدة" },
+  { value: "uncle", label: "العم/الخال" },
+  { value: "aunt", label: "العمة/الخالة" },
+  { value: "other", label: "أخرى" },
 ] as const

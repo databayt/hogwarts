@@ -139,12 +139,30 @@ export function buildLessonWhere(
 ): Prisma.LessonWhereInput {
   const where: Prisma.LessonWhereInput = { schoolId }
 
-  // Search by title
+  // Search by title, description, or class name
   if (filters.search) {
-    where.title = {
-      contains: filters.search,
-      mode: Prisma.QueryMode.insensitive,
-    }
+    where.OR = [
+      {
+        title: {
+          contains: filters.search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        description: {
+          contains: filters.search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        class: {
+          name: {
+            contains: filters.search,
+            mode: Prisma.QueryMode.insensitive,
+          },
+        },
+      },
+    ]
   }
 
   // Class filter
@@ -319,5 +337,47 @@ export function getLessonStatusColor(
       return "red"
     default:
       return "gray"
+  }
+}
+
+/**
+ * Get lesson statistics for a school
+ * @param schoolId - School ID
+ * @returns Promise with statistics
+ */
+export async function getLessonStats(schoolId: string) {
+  const now = new Date()
+  const weekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+  const [total, byStatus, thisWeek, completed] = await Promise.all([
+    db.lesson.count({ where: { schoolId } }),
+    db.lesson.groupBy({
+      by: ["status"],
+      where: { schoolId },
+      _count: { status: true },
+    }),
+    db.lesson.count({
+      where: {
+        schoolId,
+        lessonDate: { gte: now, lte: weekFromNow },
+      },
+    }),
+    db.lesson.count({
+      where: { schoolId, status: "COMPLETED" },
+    }),
+  ])
+
+  return {
+    total,
+    byStatus: byStatus.reduce(
+      (acc, item) => {
+        acc[item.status] = item._count.status
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    thisWeek,
+    completionRate:
+      total > 0 ? Math.round((completed / total) * 100 * 10) / 10 : 0,
   }
 }

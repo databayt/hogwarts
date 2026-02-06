@@ -114,7 +114,7 @@ export function ShadcnFieldDemo() {
         <fieldset className="space-y-4">
           <legend className="text-sm font-medium">Billing Address</legend>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Checkbox id="same-as-shipping" defaultChecked />
             <label
               htmlFor="same-as-shipping"

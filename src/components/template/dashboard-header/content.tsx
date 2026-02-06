@@ -15,7 +15,7 @@ export default function DashboardHeader() {
         <div className="hidden h-7 items-center md:flex">
           <Breadcrumbs />
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ms-auto flex items-center gap-1.5">
           <Button variant="ghost" size="icon" className="size-7">
             <Bell className="h-4 w-4" />
             <span className="sr-only">Notifications</span>

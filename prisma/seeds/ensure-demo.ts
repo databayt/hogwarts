@@ -42,13 +42,14 @@ async function ensureDemoSchool() {
   // Create the demo school with only existing schema fields
   const school = await prisma.school.create({
     data: {
-      name: DEMO_SCHOOL.nameEn,
+      name: DEMO_SCHOOL.name,
       domain: DEMO_SCHOOL.domain,
       email: DEMO_SCHOOL.email,
       website: DEMO_SCHOOL.website,
-      phoneNumber: DEMO_SCHOOL.phoneEn,
-      address: DEMO_SCHOOL.addressEn,
+      phoneNumber: DEMO_SCHOOL.phone,
+      address: DEMO_SCHOOL.address,
       timezone: DEMO_SCHOOL.timezone,
+      preferredLanguage: DEMO_SCHOOL.preferredLanguage,
       planType: DEMO_SCHOOL.planType,
       maxStudents: DEMO_SCHOOL.maxStudents,
       maxTeachers: DEMO_SCHOOL.maxTeachers,

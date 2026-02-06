@@ -61,6 +61,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
@@ -75,6 +76,8 @@ import {
   getClassesSchema,
   type ClassTeacherCreateInput,
 } from "@/components/school-dashboard/listings/classes/validation"
+
+import { assertClassPermission, getAuthContext } from "./authorization"
 
 // ============================================================================
 // Types
@@ -129,9 +132,21 @@ export async function createClass(
   input: z.infer<typeof classCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     const parsed = classCreateSchema.parse(input)
@@ -179,9 +194,21 @@ export async function updateClass(
   input: z.infer<typeof classUpdateSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     const parsed = classUpdateSchema.parse(input)
@@ -247,9 +274,21 @@ export async function deleteClass(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "delete", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -305,9 +344,21 @@ export async function enrollStudentInClass(input: {
   }>
 > {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update classes" }
     }
 
     const { classId, studentId } = z
@@ -417,9 +468,21 @@ export async function unenrollStudentFromClass(input: {
   studentId: string
 }): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update classes" }
     }
 
     const { classId, studentId } = z
@@ -486,9 +549,21 @@ export async function getClassCapacityStatus(input: {
   }>
 > {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read classes" }
     }
 
     const { classId } = z
@@ -563,9 +638,21 @@ export async function getClass(input: {
   id: string
 }): Promise<ActionResponse<ClassSelectResult | null>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read classes" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -616,7 +703,7 @@ export async function getClass(input: {
 export type ClassDetailResult = {
   id: string
   name: string
-  nameAr: string | null
+  lang: string
   courseCode: string | null
   credits: number | null
   evaluationType: string
@@ -627,7 +714,7 @@ export type ClassDetailResult = {
   subject: {
     id: string
     subjectName: string
-    subjectNameAr: string | null
+    lang: string
   } | null
   teacher: {
     id: string
@@ -664,9 +751,21 @@ export async function getClassById(input: {
   id: string
 }): Promise<ActionResponse<ClassDetailResult | null>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read classes" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -679,7 +778,7 @@ export async function getClassById(input: {
           select: {
             id: true,
             subjectName: true,
-            subjectNameAr: true,
+            lang: true,
           },
         },
         teacher: {
@@ -735,7 +834,7 @@ export async function getClassById(input: {
     const result: ClassDetailResult = {
       id: classItem.id,
       name: classItem.name,
-      nameAr: classItem.nameAr,
+      lang: classItem.lang || "ar",
       courseCode: classItem.courseCode,
       credits: classItem.credits ? Number(classItem.credits) : null,
       evaluationType: classItem.evaluationType,
@@ -777,9 +876,21 @@ export async function getClasses(
   input: Partial<z.infer<typeof getClassesSchema>>
 ): Promise<ActionResponse<{ rows: ClassListResult[]; total: number }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read classes" }
     }
 
     const sp = getClassesSchema.parse(input ?? {})
@@ -873,9 +984,21 @@ export async function getClassesCSV(
   input?: Partial<z.infer<typeof getClassesSchema>>
 ): Promise<ActionResponse<string>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to export classes" }
     }
 
     const sp = getClassesSchema.parse(input ?? {})
@@ -1012,9 +1135,21 @@ export async function getAllClassesCapacity(): Promise<
   ActionResponse<CapacityOverview>
 > {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read classes" }
     }
 
     const classes = await db.class.findMany({
@@ -1150,9 +1285,21 @@ export async function getClassesExportData(
   >
 > {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to export classes" }
     }
 
     const sp = getClassesSchema.parse(input ?? {})
@@ -1253,9 +1400,21 @@ export async function assignSubjectTeacher(
   input: ClassTeacherCreateInput
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update classes" }
     }
 
     const parsed = classTeacherCreateSchema.parse(input)
@@ -1338,9 +1497,21 @@ export async function updateSubjectTeacher(input: {
   role?: string
 }): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update classes" }
     }
 
     const parsed = classTeacherUpdateSchema.parse(input)
@@ -1390,9 +1561,21 @@ export async function removeSubjectTeacher(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update classes" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -1441,9 +1624,21 @@ export async function getClassSubjectTeachers(input: {
   classId: string
 }): Promise<ActionResponse<ClassTeacherRow[]>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read classes" }
     }
 
     const { classId } = z.object({ classId: z.string().min(1) }).parse(input)
@@ -1514,9 +1709,21 @@ export async function getAvailableTeachersForClass(input: {
   ActionResponse<Array<{ id: string; name: string; email: string | null }>>
 > {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read classes" }
     }
 
     const { classId } = z.object({ classId: z.string().min(1) }).parse(input)
@@ -1562,6 +1769,55 @@ export async function getAvailableTeachersForClass(input: {
         error instanceof Error
           ? error.message
           : "Failed to fetch available teachers",
+    }
+  }
+}
+
+export async function bulkDeleteClasses(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertClassPermission(authContext, "bulk_action", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized for bulk operations" }
+    }
+
+    const { ids } = z
+      .object({ ids: z.array(z.string().min(1)).min(1) })
+      .parse(input)
+
+    const existing = await db.class.findMany({
+      where: { id: { in: ids }, schoolId },
+      select: { id: true },
+    })
+    const validIds = existing.map((c: any) => c.id)
+
+    const result = await db.class.deleteMany({
+      where: { id: { in: validIds }, schoolId },
+    })
+
+    revalidatePath("/classes")
+    return { success: true, data: { count: result.count } }
+  } catch (error) {
+    console.error("[bulkDeleteClasses] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk delete classes",
     }
   }
 }

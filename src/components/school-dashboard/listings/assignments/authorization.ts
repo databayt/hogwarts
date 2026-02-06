@@ -76,8 +76,12 @@ export function checkAssignmentPermission(
       action === "export"
     ) {
       if (!assignment?.schoolId) return false
-      // For now, allow if in same school (would need teacherId check)
-      return schoolId === assignment.schoolId
+      if (schoolId !== assignment.schoolId) return false
+      // If teacherId available, check ownership
+      if (assignment.teacherId) {
+        return assignment.teacherId === auth.userId
+      }
+      return true // Allow if no teacher tracking
     }
 
     // Teachers cannot bulk action
@@ -115,6 +119,15 @@ export function checkAssignmentPermission(
 
   // STAFF can read assignments
   if (role === "STAFF") {
+    if (action === "read") {
+      if (!assignment?.schoolId) return false
+      return schoolId === assignment.schoolId
+    }
+    return false
+  }
+
+  // ACCOUNTANT can read assignments
+  if (role === "ACCOUNTANT") {
     if (action === "read") {
       if (!assignment?.schoolId) return false
       return schoolId === assignment.schoolId
@@ -204,6 +217,7 @@ export function getAllowedActions(role: UserRole): AssignmentAction[] {
       return ["read", "submit"]
     case "GUARDIAN":
     case "STAFF":
+    case "ACCOUNTANT":
       return ["read"]
     default:
       return []

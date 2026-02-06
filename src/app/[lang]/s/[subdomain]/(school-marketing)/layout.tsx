@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
@@ -10,6 +11,24 @@ import SiteHeader from "@/components/template/site-header/content"
 interface SiteLayoutProps {
   children: React.ReactNode
   params: Promise<{ subdomain: string; lang: string }>
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ subdomain: string; lang: string }>
+}): Promise<Metadata> {
+  const { subdomain, lang } = await params
+  const isProd = process.env.NODE_ENV === "production"
+  const baseUrl = isProd
+    ? `https://${subdomain}.databayt.org`
+    : `http://${subdomain}.localhost:3000`
+
+  return {
+    alternates: {
+      canonical: `${baseUrl}/${lang}`,
+    },
+  }
 }
 
 export default async function SiteLayout({

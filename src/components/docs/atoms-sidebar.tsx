@@ -97,7 +97,7 @@ export function AtomsSidebar({
     >
       <SidebarContent className="gap-0 overflow-y-auto">
         <ScrollArea className="h-full w-full">
-          <div className="pt-2 pb-4 pl-0">
+          <div className="ps-0 pt-2 pb-4">
             <SidebarGroup className="p-0">
               <SidebarGroupContent>
                 <SidebarMenu>

@@ -45,14 +45,10 @@ const PHASE_ICONS = [
 /**
  * Log phase header
  */
-export function logPhase(
-  phase: number,
-  titleEn: string,
-  titleAr: string
-): void {
+export function logPhase(phase: number, title: string, subtitle: string): void {
   const icon = PHASE_ICONS[phase - 1] || "📌"
-  console.log(`\n${icon} PHASE ${phase}: ${titleEn}`)
-  console.log(`   ${titleAr}`)
+  console.log(`\n${icon} PHASE ${phase}: ${title}`)
+  console.log(`   ${subtitle}`)
   console.log("-".repeat(50))
 }
 

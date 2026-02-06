@@ -34,7 +34,7 @@
 //             placeholder="Search issues..."
 //             value={searchText}
 //             onChange={(e) => setSearchText(e.target.value)}
-//             className="pl-10 bg-white"
+//             className="ps-10 bg-white"
 //           />
 //         </div>
 //         <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -62,7 +62,7 @@
 //               <div className="p-4 bg-white hover:bg-gray-50">
 //                 <div className="flex items-start justify-between">
 //                   <div className="flex items-start">
-//                     <div className={`mt-1 mr-3 w-5 h-5 rounded-full flex items-center justify-center ${
+//                     <div className={`mt-1 me-3 w-5 h-5 rounded-full flex items-center justify-center ${
 //                       issue.status === "open" ? "text-green-600 border-2 border-green-600" : "bg-purple-600 text-white"
 //                     }`}>
 //                       {issue.status === "open" ? (
@@ -94,7 +94,7 @@
 //                     <Button
 //                       variant="outline"
 //                       size="sm"
-//                       className="ml-2"
+//                       className="ms-2"
 //                       onClick={() => toggleStatus(issue.id)}
 //                     >
 //                       {issue.status === "open" ? "Close" : "Reopen"}

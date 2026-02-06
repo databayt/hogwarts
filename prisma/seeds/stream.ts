@@ -1,8 +1,7 @@
 /**
  * Stream (LMS) Seed - ClickView Educational Content
  *
- * 59 K-12 courses with beautiful illustrations from ClickView
- * Each course has 5-8 topic-specific chapters in English and Arabic
+ * 59 K-12 courses with chapters (Arabic for demo school)
  *
  * Phase 7: LMS / Stream
  */
@@ -10,58 +9,40 @@
 import type { PrismaClient } from "@prisma/client"
 
 import { CLICKVIEW_COURSES, STREAM_CATEGORIES } from "./data/courses"
-import type { UserRef } from "./types"
-import { logSuccess, processBatch } from "./utils"
+import type { StudentRef, UserRef } from "./types"
+import { logSuccess, processBatch, randomNumber } from "./utils"
+
+// Map English category slugs (used in course data) to Arabic names (used in DB)
+const CATEGORY_SLUG_TO_NAME: Record<string, string> = {
+  Mathematics: "الرياضيات",
+  Sciences: "العلوم",
+  "Languages & Literature": "اللغات والأدب",
+  "Social Studies & History": "الدراسات الاجتماعية والتاريخ",
+  "Health & Wellness": "الصحة والعافية",
+  "Arts & Media": "الفنون والإعلام",
+  "Technology & Computing": "التكنولوجيا والحوسبة",
+  "Life Skills": "المهارات الحياتية",
+}
 
 // ============================================================================
 // STREAM SEEDING
 // ============================================================================
 
 /**
- * Seed stream categories (creates both EN and AR versions)
+ * Seed stream categories
  */
 async function seedStreamCategories(
   prisma: PrismaClient,
   schoolId: string
-): Promise<Map<string, { en: string; ar: string }>> {
-  const categoryMap = new Map<string, { en: string; ar: string }>()
+): Promise<Map<string, string>> {
+  const categoryMap = new Map<string, string>()
 
   for (const cat of STREAM_CATEGORIES) {
-    let enId = ""
-    let arId = ""
-
-    // Create English version
     try {
-      const categoryEn = await prisma.streamCategory.upsert({
+      const category = await prisma.streamCategory.upsert({
         where: {
           name_schoolId_lang: {
-            name: cat.nameEn,
-            schoolId,
-            lang: "en",
-          },
-        },
-        update: {},
-        create: {
-          schoolId,
-          name: cat.nameEn,
-          lang: "en",
-        },
-      })
-      enId = categoryEn.id
-    } catch {
-      // Find existing
-      const existing = await prisma.streamCategory.findFirst({
-        where: { name: cat.nameEn, schoolId, lang: "en" },
-      })
-      enId = existing?.id || ""
-    }
-
-    // Create Arabic version
-    try {
-      const categoryAr = await prisma.streamCategory.upsert({
-        where: {
-          name_schoolId_lang: {
-            name: cat.nameAr,
+            name: cat.name,
             schoolId,
             lang: "ar",
           },
@@ -69,23 +50,20 @@ async function seedStreamCategories(
         update: {},
         create: {
           schoolId,
-          name: cat.nameAr,
+          name: cat.name,
           lang: "ar",
         },
       })
-      arId = categoryAr.id
+      categoryMap.set(cat.name, category.id)
     } catch {
-      // Find existing
       const existing = await prisma.streamCategory.findFirst({
-        where: { name: cat.nameAr, schoolId, lang: "ar" },
+        where: { name: cat.name, schoolId, lang: "ar" },
       })
-      arId = existing?.id || ""
+      categoryMap.set(cat.name, existing?.id || "")
     }
-
-    categoryMap.set(cat.nameEn, { en: enId, ar: arId })
   }
 
-  logSuccess("Stream Categories", STREAM_CATEGORIES.length * 2, "EN + AR")
+  logSuccess("Stream Categories", STREAM_CATEGORIES.length, "AR")
 
   return categoryMap
 }
@@ -107,89 +85,138 @@ export async function seedStreamCourses(
   if (!instructor) return 0
 
   await processBatch(CLICKVIEW_COURSES, 5, async (courseData) => {
-    const categoryIds = categoryMap.get(courseData.category)
+    // Resolve category: course.category is an English slug, map to Arabic name for DB lookup
+    const categoryName = CATEGORY_SLUG_TO_NAME[courseData.category]
+    const categoryId = categoryName ? categoryMap.get(categoryName) : undefined
 
-    // Create English course
     try {
       const course = await prisma.streamCourse.upsert({
         where: {
           slug_schoolId_lang: {
             slug: courseData.slug,
             schoolId,
-            lang: "en",
-          },
-        },
-        update: {
-          title: courseData.titleEn,
-          description: courseData.descriptionEn,
-          imageUrl: courseData.image,
-          isPublished: true,
-        },
-        create: {
-          schoolId,
-          lang: "en",
-          title: courseData.titleEn,
-          slug: courseData.slug,
-          description: courseData.descriptionEn,
-          imageUrl: courseData.image,
-          categoryId: categoryIds?.en || null,
-          userId: instructor.id,
-          isPublished: true,
-          status: "PUBLISHED",
-        },
-      })
-
-      // Create topic-specific chapters
-      await seedCourseChapters(prisma, course.id, courseData.chapters, "en")
-      courseCount++
-    } catch (error) {
-      console.error(`Failed to create EN course ${courseData.slug}:`, error)
-    }
-
-    // Create Arabic course
-    try {
-      const courseAr = await prisma.streamCourse.upsert({
-        where: {
-          slug_schoolId_lang: {
-            slug: courseData.slug + "-ar",
-            schoolId,
             lang: "ar",
           },
         },
         update: {
-          title: courseData.titleAr,
-          description: courseData.descriptionAr,
+          title: courseData.title,
+          description: courseData.description,
           imageUrl: courseData.image,
           isPublished: true,
         },
         create: {
           schoolId,
           lang: "ar",
-          title: courseData.titleAr,
-          slug: courseData.slug + "-ar",
-          description: courseData.descriptionAr,
+          title: courseData.title,
+          slug: courseData.slug,
+          description: courseData.description,
           imageUrl: courseData.image,
-          categoryId: categoryIds?.ar || null,
+          categoryId: categoryId || null,
           userId: instructor.id,
           isPublished: true,
           status: "PUBLISHED",
         },
       })
 
-      await seedCourseChapters(prisma, courseAr.id, courseData.chapters, "ar")
+      await seedCourseChapters(prisma, course.id, courseData.chapters)
       courseCount++
     } catch (error) {
-      console.error(`Failed to create AR course ${courseData.slug}:`, error)
+      console.error(`Failed to create course ${courseData.slug}:`, error)
     }
   })
 
   logSuccess(
     "Stream Courses",
     courseCount,
-    `${CLICKVIEW_COURSES.length} topics (EN + AR) with ${courseCount} chapters`
+    `${CLICKVIEW_COURSES.length} topics with chapters`
   )
 
   return courseCount
+}
+
+/**
+ * Seed stream enrollments (~200 student enrollments across courses)
+ */
+export async function seedStreamEnrollments(
+  prisma: PrismaClient,
+  schoolId: string,
+  students: StudentRef[]
+): Promise<number> {
+  // Get all published courses
+  const courses = await prisma.streamCourse.findMany({
+    where: { schoolId, isPublished: true },
+    select: { id: true },
+  })
+
+  if (courses.length === 0 || students.length === 0) {
+    logSuccess("Stream Enrollments", 0, "no courses or students")
+    return 0
+  }
+
+  // Clean existing enrollments
+  await prisma.streamEnrollment.deleteMany({ where: { schoolId } })
+
+  const enrollmentData: Array<{
+    schoolId: string
+    userId: string
+    courseId: string
+    isActive: boolean
+    status: "ACTIVE" | "COMPLETED" | "PENDING"
+  }> = []
+
+  // Each student enrolls in 1-3 random courses, up to ~200 enrollments
+  const enrolledPairs = new Set<string>()
+  const targetEnrollments = Math.min(200, students.length * 2)
+  let attempts = 0
+
+  while (enrollmentData.length < targetEnrollments && attempts < 500) {
+    attempts++
+    const student = students[randomNumber(0, students.length - 1)]
+    const course = courses[randomNumber(0, courses.length - 1)]
+    const key = `${student.userId}_${course.id}`
+
+    if (enrolledPairs.has(key)) continue
+    enrolledPairs.add(key)
+
+    // Status distribution: 60% ACTIVE, 25% COMPLETED, 15% PENDING
+    const rand = enrollmentData.length % 20
+    const status: "ACTIVE" | "COMPLETED" | "PENDING" =
+      rand < 12 ? "ACTIVE" : rand < 17 ? "COMPLETED" : "PENDING"
+
+    enrollmentData.push({
+      schoolId,
+      userId: student.userId,
+      courseId: course.id,
+      isActive: status === "ACTIVE",
+      status,
+    })
+  }
+
+  // Insert in batches
+  let totalCreated = 0
+  for (let i = 0; i < enrollmentData.length; i += 50) {
+    const batch = enrollmentData.slice(i, i + 50)
+    try {
+      const result = await prisma.streamEnrollment.createMany({
+        data: batch,
+        skipDuplicates: true,
+      })
+      totalCreated += result.count
+    } catch {
+      // Fall back to individual creates
+      for (const entry of batch) {
+        try {
+          await prisma.streamEnrollment.create({ data: entry })
+          totalCreated++
+        } catch {
+          // Skip duplicate
+        }
+      }
+    }
+  }
+
+  logSuccess("Stream Enrollments", totalCreated, "student course enrollments")
+  return totalCreated
 }
 
 /**
@@ -198,15 +225,12 @@ export async function seedStreamCourses(
 async function seedCourseChapters(
   prisma: PrismaClient,
   courseId: string,
-  chapters: Array<{ titleEn: string; titleAr: string }>,
-  lang: string
+  chapters: Array<{ title: string }>
 ): Promise<void> {
   for (let i = 0; i < chapters.length; i++) {
-    const chapter = chapters[i]
-    const title = lang === "ar" ? chapter.titleAr : chapter.titleEn
+    const title = chapters[i].title
 
     try {
-      // Check if chapter already exists at this position
       const existing = await prisma.streamChapter.findFirst({
         where: { courseId, position: i + 1 },
       })
@@ -216,12 +240,9 @@ async function seedCourseChapters(
           data: {
             courseId,
             title,
-            description:
-              lang === "ar"
-                ? `الفصل ${i + 1}: ${title}`
-                : `Chapter ${i + 1}: ${title}`,
+            description: `الفصل ${i + 1}: ${title}`,
             position: i + 1,
-            isFree: i === 0, // First chapter is free
+            isFree: i === 0,
             isPublished: true,
           },
         })

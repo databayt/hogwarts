@@ -58,7 +58,7 @@ interface TeacherScheduleData {
   teacherDepartments?: Array<{
     department: {
       departmentName: string
-      departmentNameAr?: string | null
+      lang?: string
     }
   }>
   workload: {
@@ -380,13 +380,10 @@ export function TeacherScheduleContent({
                       {teacher.teacherDepartments &&
                       teacher.teacherDepartments.length > 0 ? (
                         <span className="text-sm">
-                          {lang === "ar"
-                            ? teacher.teacherDepartments[0].department
-                                .departmentNameAr ||
-                              teacher.teacherDepartments[0].department
-                                .departmentName
-                            : teacher.teacherDepartments[0].department
-                                .departmentName}
+                          {
+                            teacher.teacherDepartments[0].department
+                              .departmentName
+                          }
                         </span>
                       ) : (
                         <span className="text-muted-foreground">-</span>

@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { nanoid } from "nanoid"
 import { Resend } from "resend"
 
@@ -212,6 +213,10 @@ export async function saveApplicationSession(
 
     const schoolId = schoolResult.data.id
 
+    // Get authenticated user ID
+    const session = await auth()
+    const userId = session?.user?.id ?? undefined
+
     // Validate session data
     const validated = sessionDataSchema.parse(data)
 
@@ -234,6 +239,7 @@ export async function saveApplicationSession(
         data: {
           formData: validated.formData as unknown as object,
           currentStep: validated.currentStep,
+          userId,
           expiresAt,
         },
       })
@@ -251,6 +257,7 @@ export async function saveApplicationSession(
           currentStep: validated.currentStep,
           email: validated.email,
           campaignId: validated.campaignId,
+          userId,
           expiresAt,
         },
       })
@@ -440,16 +447,20 @@ export async function submitApplication(
 
     const schoolId = schoolResult.data.id
 
+    // Get authenticated user ID
+    const authSession = await auth()
+    const userId = authSession?.user?.id ?? undefined
+
     // Validate the full application
     const schema = createFullApplicationSchema()
     const validated = schema.parse(data)
 
     // Verify session exists and belongs to this school
-    const session = await db.applicationSession.findUnique({
+    const appSession = await db.applicationSession.findUnique({
       where: { sessionToken },
     })
 
-    if (session && session.schoolId !== schoolId) {
+    if (appSession && appSession.schoolId !== schoolId) {
       return { success: false, error: "Invalid session" }
     }
 
@@ -517,6 +528,7 @@ export async function submitApplication(
         schoolId,
         campaignId: validated.campaignId,
         applicationNumber,
+        userId,
         // Personal
         firstName: validated.firstName,
         middleName: validated.middleName || null,
@@ -578,7 +590,7 @@ export async function submitApplication(
     })
 
     // Mark session as converted
-    if (session) {
+    if (appSession) {
       await db.applicationSession.update({
         where: { sessionToken },
         data: { convertedToApplicationId: application.id },

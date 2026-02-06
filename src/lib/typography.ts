@@ -27,12 +27,12 @@ export const typography = {
   muted: "text-sm text-muted-foreground",
 
   // Special elements
-  blockquote: "mt-6 border-l-2 pl-6 italic",
+  blockquote: "mt-6 border-s-2 ps-6 italic",
   code: "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
 
   // Lists
-  ul: "my-6 ml-6 list-disc [&>li]:mt-2",
-  ol: "my-6 ml-6 list-decimal [&>li]:mt-2",
+  ul: "my-6 ms-6 list-disc [&>li]:mt-2",
+  ol: "my-6 ms-6 list-decimal [&>li]:mt-2",
   li: "mt-2",
 
   // Links
@@ -64,7 +64,7 @@ export const typographyVariants = {
 
   // Table
   tableHeader:
-    "h-12 px-4 text-left align-middle font-medium text-muted-foreground",
+    "h-12 px-4 text-start align-middle font-medium text-muted-foreground",
   tableCell: "p-4 align-middle",
 } as const
 

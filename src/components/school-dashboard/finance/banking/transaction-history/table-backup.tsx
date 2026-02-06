@@ -68,7 +68,7 @@ export function TransactionsTable({
               <TableHead>{dictionary?.account || "Account"}</TableHead>
               <TableHead>{dictionary?.category || "Category"}</TableHead>
               <TableHead>{dictionary?.status || "Status"}</TableHead>
-              <TableHead className="text-right">
+              <TableHead className="text-end">
                 {dictionary?.amount || "Amount"}
               </TableHead>
             </TableRow>
@@ -107,7 +107,7 @@ export function TransactionsTable({
                         : dictionary?.completed || "Completed"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-end">
                     <span
                       className={`font-medium ${
                         transaction.type === "credit"

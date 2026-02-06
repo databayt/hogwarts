@@ -120,7 +120,7 @@ export function ExportButton({
           <Download className="h-4 w-4" />
         ) : (
           <>
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="me-2 h-4 w-4" />
             {isExporting ? t.exporting : t.export}
           </>
         )}
@@ -143,7 +143,7 @@ export function ExportButton({
             <Download className="h-4 w-4" />
           ) : (
             <>
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               {isExporting ? t.exporting : t.export}
             </>
           )}
@@ -152,19 +152,19 @@ export function ExportButton({
       <DropdownMenuContent align="end">
         {formats.includes("csv") && (
           <DropdownMenuItem onClick={() => handleExport("csv")}>
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="me-2 h-4 w-4" />
             {t.exportCSV}
           </DropdownMenuItem>
         )}
         {formats.includes("excel") && (
           <DropdownMenuItem onClick={() => handleExport("excel")}>
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            <FileSpreadsheet className="me-2 h-4 w-4" />
             {t.exportExcel}
           </DropdownMenuItem>
         )}
         {formats.includes("pdf") && (
           <DropdownMenuItem onClick={() => handleExport("pdf")}>
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="me-2 h-4 w-4" />
             {t.exportPDF}
           </DropdownMenuItem>
         )}

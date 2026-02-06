@@ -81,10 +81,10 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
           <span className="sr-only">{`Move column: ${column.title}`}</span>
           <IconGripVertical />
         </Button>
-        {/* <span className="mr-auto mt-0!"> {column.title}</span> */}
+        {/* <span className="me-auto mt-0!"> {column.title}</span> */}
         {/* <Input
           defaultValue={column.title}
-          className="text-base mt-0! mr-auto"
+          className="text-base mt-0! me-auto"
         /> */}
         <ColumnActions id={column.id} title={column.title} />
       </CardHeader>

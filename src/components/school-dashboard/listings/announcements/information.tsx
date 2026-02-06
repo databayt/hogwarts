@@ -39,9 +39,9 @@ export function InformationStep({
   const t = dictionary
   const isRTL = lang === "ar"
 
-  // Determine which fields to show based on language
-  const titleField = isRTL ? "titleAr" : "titleEn"
-  const bodyField = isRTL ? "bodyAr" : "bodyEn"
+  // Single-language fields
+  const titleField = "title" as const
+  const bodyField = "body" as const
 
   // Previous announcements for autocomplete
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([])
@@ -55,12 +55,8 @@ export function InformationStep({
           setSuggestions(
             result.data.map((a) => ({
               id: a.id,
-              title: isRTL
-                ? a.titleAr || a.titleEn || ""
-                : a.titleEn || a.titleAr || "",
-              body: isRTL
-                ? a.bodyAr || a.bodyEn || ""
-                : a.bodyEn || a.bodyAr || "",
+              title: a.title || "",
+              body: a.body || "",
             }))
           )
         }

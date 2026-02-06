@@ -6,7 +6,7 @@ import { Phone } from "lucide-react"
 
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import type { ContactStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
 import { CONTACT_STEP_CONFIG } from "./config"
@@ -26,7 +26,7 @@ export default function ContactContent({ dictionary }: Props) {
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
-  const { session, getStepData } = useApplication()
+  const { session, getStepData } = useApplySession()
   const contactFormRef = useRef<ContactFormRef>(null)
 
   const initialData = getStepData("contact")
@@ -80,16 +80,10 @@ export default function ContactContent({ dictionary }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {dict.title ||
-                (isRTL
-                  ? CONTACT_STEP_CONFIG.labelAr
-                  : CONTACT_STEP_CONFIG.label)}
+              {dict.title || CONTACT_STEP_CONFIG.label}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {dict.description ||
-                (isRTL
-                  ? CONTACT_STEP_CONFIG.descriptionAr
-                  : CONTACT_STEP_CONFIG.description)}
+              {dict.description || CONTACT_STEP_CONFIG.description}
             </p>
           </div>
         </div>

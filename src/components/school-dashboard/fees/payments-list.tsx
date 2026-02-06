@@ -81,7 +81,7 @@ export function PaymentsList({ payments, dictionary }: Props) {
           <CardDescription>Track and manage fee payments</CardDescription>
         </div>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="me-2 h-4 w-4" />
           Record Payment
         </Button>
       </CardHeader>
@@ -96,7 +96,7 @@ export function PaymentsList({ payments, dictionary }: Props) {
               <TableHead>Method</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-end">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -139,7 +139,7 @@ export function PaymentsList({ payments, dictionary }: Props) {
                       {payment.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-end">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm">
                         <Eye className="h-4 w-4" />

@@ -328,7 +328,7 @@ export function QRScanner({
             <div className="flex items-center gap-2">
               {scanning && (
                 <Badge variant="secondary" className="animate-pulse">
-                  <Scan className="mr-1 h-3 w-3" />
+                  <Scan className="me-1 h-3 w-3" />
                   Scanning
                 </Badge>
               )}
@@ -379,10 +379,10 @@ export function QRScanner({
                 <div className="pointer-events-none absolute inset-0">
                   {/* Corner markers - larger for mobile visibility */}
                   <div className="border-primary absolute inset-8 rounded-lg border-2" />
-                  <div className="border-primary absolute top-8 left-8 h-10 w-10 border-t-4 border-l-4 sm:h-8 sm:w-8" />
-                  <div className="border-primary absolute top-8 right-8 h-10 w-10 border-t-4 border-r-4 sm:h-8 sm:w-8" />
-                  <div className="border-primary absolute bottom-8 left-8 h-10 w-10 border-b-4 border-l-4 sm:h-8 sm:w-8" />
-                  <div className="border-primary absolute right-8 bottom-8 h-10 w-10 border-r-4 border-b-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute top-8 left-8 h-10 w-10 border-s-4 border-t-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute top-8 right-8 h-10 w-10 border-e-4 border-t-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute bottom-8 left-8 h-10 w-10 border-s-4 border-b-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute right-8 bottom-8 h-10 w-10 border-e-4 border-b-4 sm:h-8 sm:w-8" />
 
                   {/* Animated scan line */}
                   <div
@@ -441,7 +441,7 @@ export function QRScanner({
                   size="lg"
                   className="h-14 px-8 text-lg sm:h-10 sm:px-4 sm:text-sm"
                 >
-                  <Camera className="mr-2 h-5 w-5" />
+                  <Camera className="me-2 h-5 w-5" />
                   Start Camera
                 </Button>
               </div>
@@ -467,7 +467,7 @@ export function QRScanner({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="ml-4"
+                  className="ms-4"
                   onClick={requestPermission}
                 >
                   Grant Permission
@@ -490,7 +490,7 @@ export function QRScanner({
                 size="lg"
                 className="h-12 flex-1 px-6 text-base sm:h-10 sm:flex-none sm:px-4 sm:text-sm"
               >
-                <CameraOff className="mr-2 h-5 w-5" />
+                <CameraOff className="me-2 h-5 w-5" />
                 Stop
               </Button>
             ) : (
@@ -499,7 +499,7 @@ export function QRScanner({
                 size="lg"
                 className="h-12 flex-1 px-6 text-base sm:h-10 sm:flex-none sm:px-4 sm:text-sm"
               >
-                <Camera className="mr-2 h-5 w-5" />
+                <Camera className="me-2 h-5 w-5" />
                 Scan
               </Button>
             )}
@@ -509,7 +509,7 @@ export function QRScanner({
               className="h-12 px-6 text-base sm:h-10 sm:px-4 sm:text-sm"
               onClick={() => document.getElementById("qr-upload")?.click()}
             >
-              <Upload className="mr-2 h-5 w-5" />
+              <Upload className="me-2 h-5 w-5" />
               Upload
             </Button>
             {isFullscreen && (
@@ -519,7 +519,7 @@ export function QRScanner({
                 className="h-12 px-6 text-base sm:h-10 sm:px-4 sm:text-sm"
                 onClick={toggleFullscreen}
               >
-                <Minimize2 className="mr-2 h-5 w-5" />
+                <Minimize2 className="me-2 h-5 w-5" />
                 Exit
               </Button>
             )}

@@ -34,6 +34,10 @@ model Application {
   campaignId        String
   applicationNumber String @unique
 
+  // User coupling (mirrors onboarding's user.schoolId pattern)
+  userId String?
+  user   User?   @relation("UserApplications", fields: [userId], references: [id], onDelete: SetNull)
+
   // Applicant Details
   firstName   String
   middleName  String?
@@ -128,6 +132,7 @@ model Application {
   @@unique([schoolId, applicationNumber])
   @@index([schoolId])
   @@index([campaignId])
+  @@index([userId])
   @@index([status])
   @@index([email])
   @@index([meritRank])
@@ -321,11 +326,14 @@ model TourBooking {
   @@index([bookingNumber])
 }
 
-// Application Sessions (for save/resume functionality without login)
+// Application Sessions (for save/resume functionality)
 model ApplicationSession {
   id         String  @id @default(cuid())
   schoolId   String
   campaignId String?
+
+  // Authenticated user who owns this session
+  userId String?
 
   // Session Token (secure random for resume)
   sessionToken String @unique
@@ -350,6 +358,7 @@ model ApplicationSession {
   campaign AdmissionCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
 
   @@index([schoolId])
+  @@index([userId])
   @@index([sessionToken])
   @@index([email, schoolId])
   @@index([campaignId])

@@ -345,7 +345,7 @@ export function StudentDirectoryContent({
               placeholder="Search by name, email, student ID, or roll number..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
 
@@ -519,7 +519,7 @@ export function StudentDirectoryContent({
                   <Link href={`/profile/${student.id}`}>
                     <Button size="sm" variant="ghost">
                       View
-                      <ChevronRight className="ml-1 h-4 w-4" />
+                      <ChevronRight className="ms-1 h-4 w-4" />
                     </Button>
                   </Link>
                 </div>
@@ -533,14 +533,16 @@ export function StudentDirectoryContent({
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="p-4 text-left">Student</th>
-                  <th className="hidden p-4 text-left md:table-cell">Class</th>
-                  <th className="hidden p-4 text-left lg:table-cell">GPA</th>
-                  <th className="hidden p-4 text-left lg:table-cell">
+                  <th className="p-4 text-start">Student</th>
+                  <th className="hidden p-4 text-start md:table-cell">Class</th>
+                  <th className="hidden p-4 text-start lg:table-cell">GPA</th>
+                  <th className="hidden p-4 text-start lg:table-cell">
                     Attendance
                   </th>
-                  <th className="hidden p-4 text-left xl:table-cell">Status</th>
-                  <th className="p-4 text-left">Actions</th>
+                  <th className="hidden p-4 text-start xl:table-cell">
+                    Status
+                  </th>
+                  <th className="p-4 text-start">Actions</th>
                 </tr>
               </thead>
               <tbody>

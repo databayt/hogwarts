@@ -30,12 +30,12 @@ export default function AddBankButton(props: Props) {
       <Button size={props.size} onClick={handleLinkStart} disabled={isLinking}>
         {isLinking ? (
           <>
-            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
             {props.dictionary.processing}
           </>
         ) : (
           <>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             {props.dictionary.addBank}
           </>
         )}

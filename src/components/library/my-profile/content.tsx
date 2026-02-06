@@ -7,16 +7,27 @@ import { Button } from "@/components/ui/button"
 
 interface Props {
   userId: string
+  dictionary?: Record<string, unknown>
 }
 
-export default async function LibraryMyProfileContent({ userId }: Props) {
+export default async function LibraryMyProfileContent({
+  userId,
+  dictionary,
+}: Props) {
   const { schoolId } = await getTenantContext()
+  const lib = (dictionary as Record<string, Record<string, unknown>>)
+    ?.library as Record<string, string> | undefined
 
   if (!schoolId) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2 className="mb-4">School context not found</h2>
-        <p className="muted">Unable to load profile. Please contact support.</p>
+        <h2 className="mb-4">
+          {lib?.schoolContextNotFound || "School context not found"}
+        </h2>
+        <p className="muted">
+          {lib?.unableToLoadProfile ||
+            "Unable to load profile. Please contact support."}
+        </p>
       </div>
     )
   }
@@ -46,16 +57,21 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
 
   return (
     <div className="library-profile-container">
-      <h1 className="library-profile-title">My Library Profile</h1>
+      <h1 className="library-profile-title">
+        {lib?.myProfile || "My Library Profile"}
+      </h1>
 
       {/* Active Borrows Section */}
       <section className="library-profile-section">
         <h2 className="library-profile-section-title">
-          Currently Borrowed ({activeBorrows.length})
+          {lib?.currentlyBorrowed || "Currently Borrowed"} (
+          {activeBorrows.length})
         </h2>
 
         {activeBorrows.length === 0 ? (
-          <p className="muted">You haven't borrowed any books yet</p>
+          <p className="muted">
+            {lib?.noBorrowedBooks || "You haven't borrowed any books yet"}
+          </p>
         ) : (
           <div className="library-profile-grid">
             {activeBorrows.map((record) => (
@@ -72,26 +88,30 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
 
                 <div className="library-profile-card-content">
                   <h5>{record.book.title}</h5>
-                  <p className="muted">by {record.book.author}</p>
+                  <p className="muted">
+                    {lib?.by || "by"} {record.book.author}
+                  </p>
 
                   <div className="library-profile-card-meta">
                     <small>
-                      <strong>Borrowed:</strong>{" "}
+                      <strong>{lib?.borrowDate || "Borrowed"}:</strong>{" "}
                       {new Date(record.borrowDate).toLocaleDateString()}
                     </small>
                     <small>
-                      <strong>Due:</strong>{" "}
+                      <strong>{lib?.dueDate || "Due"}:</strong>{" "}
                       {new Date(record.dueDate).toLocaleDateString()}
                     </small>
 
                     {new Date(record.dueDate) < new Date() && (
-                      <small className="text-destructive">Overdue!</small>
+                      <small className="text-destructive">
+                        {lib?.overdue || "Overdue!"}
+                      </small>
                     )}
                   </div>
 
                   <Button asChild size="sm" className="mt-2">
                     <Link href={`/library/books/${record.book.id}`}>
-                      View Book
+                      {lib?.viewBook || "View Book"}
                     </Link>
                   </Button>
                 </div>
@@ -104,11 +124,13 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
       {/* Borrow History Section */}
       <section className="library-profile-section">
         <h2 className="library-profile-section-title">
-          Borrow History ({borrowHistory.length})
+          {lib?.borrowHistory || "Borrow History"} ({borrowHistory.length})
         </h2>
 
         {borrowHistory.length === 0 ? (
-          <p className="muted">No borrow history yet</p>
+          <p className="muted">
+            {lib?.noBorrowHistory || "No borrow history yet"}
+          </p>
         ) : (
           <div className="library-profile-history">
             {borrowHistory.map((record) => (
@@ -125,15 +147,17 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
 
                 <div className="library-profile-history-content">
                   <h6>{record.book.title}</h6>
-                  <p className="muted">by {record.book.author}</p>
+                  <p className="muted">
+                    {lib?.by || "by"} {record.book.author}
+                  </p>
 
                   <div className="library-profile-history-dates">
                     <small className="muted">
-                      Borrowed:{" "}
+                      {lib?.borrowDate || "Borrowed"}:{" "}
                       {new Date(record.borrowDate).toLocaleDateString()}
                     </small>
                     <small className="muted">
-                      Returned:{" "}
+                      {lib?.returnDate || "Returned"}:{" "}
                       {record.returnDate
                         ? new Date(record.returnDate).toLocaleDateString()
                         : "N/A"}
@@ -142,7 +166,9 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
                 </div>
 
                 <Button asChild variant="outline" size="sm">
-                  <Link href={`/library/books/${record.book.id}`}>View</Link>
+                  <Link href={`/library/books/${record.book.id}`}>
+                    {lib?.viewBook || "View"}
+                  </Link>
                 </Button>
               </div>
             ))}

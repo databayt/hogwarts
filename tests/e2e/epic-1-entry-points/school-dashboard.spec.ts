@@ -93,7 +93,8 @@ test.describe("Story 1.4: ADMIN Dashboard Access @entry-points @rbac", () => {
 
     // Skip if protocol mismatch
     if (page.url().includes("chrome-error://")) {
-      test.skip()
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
     }
   })
 
@@ -169,7 +170,8 @@ test.describe("Story 1.4: Dashboard Sidebar & Navigation", () => {
     await loginAsSchoolAdmin(page)
 
     if (page.url().includes("chrome-error://")) {
-      test.skip()
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
     }
   })
 

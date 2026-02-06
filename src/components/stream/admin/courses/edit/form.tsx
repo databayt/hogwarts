@@ -146,12 +146,12 @@ export function EditCourseForm({ data, dictionary }: EditCourseFormProps) {
         <Button type="submit" disabled={isPending}>
           {isPending ? (
             <>
-              <Icons.loader2 className="mr-2 size-4 animate-spin" />
+              <Icons.loader2 className="me-2 size-4 animate-spin" />
               {t.saving}
             </>
           ) : (
             <>
-              <Icons.save className="mr-2 size-4" />
+              <Icons.save className="me-2 size-4" />
               {t.saveButton}
             </>
           )}

@@ -47,8 +47,8 @@ export async function GET(
         schoolId,
       },
       select: {
-        titleEn: true,
-        titleAr: true,
+        title: true,
+        lang: true,
       },
     })
 
@@ -59,8 +59,7 @@ export async function GET(
       )
     }
 
-    // Prefer Arabic title if available, otherwise use English
-    const name = announcement.titleAr || announcement.titleEn || "Announcement"
+    const name = announcement.title || "Announcement"
 
     return NextResponse.json({ name })
   } catch (error) {

@@ -131,7 +131,7 @@ export function BrandingSection({ schoolId, initialData, lang }: Props) {
                     }}
                     title={`Secondary: ${initialData.secondaryColor || "#1e40af"}`}
                   />
-                  <span className="text-muted-foreground ml-1 font-mono text-xs">
+                  <span className="text-muted-foreground ms-1 font-mono text-xs">
                     {initialData.primaryColor || "#3b82f6"} /{" "}
                     {initialData.secondaryColor || "#1e40af"}
                   </span>
@@ -263,12 +263,12 @@ export function BrandingSection({ schoolId, initialData, lang }: Props) {
         <Button onClick={handleSave} disabled={isPending} size="sm">
           {isPending ? (
             <>
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              <Loader2 className="me-1 h-4 w-4 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <Check className="mr-1 h-4 w-4" />
+              <Check className="me-1 h-4 w-4" />
               Save Changes
             </>
           )}
@@ -279,7 +279,7 @@ export function BrandingSection({ schoolId, initialData, lang }: Props) {
           disabled={isPending}
           size="sm"
         >
-          <X className="mr-1 h-4 w-4" />
+          <X className="me-1 h-4 w-4" />
           Cancel
         </Button>
       </div>

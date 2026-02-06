@@ -405,12 +405,12 @@ export function AttendanceTracking({
             <div className="flex items-center gap-2">
               {isLiveMode ? (
                 <Badge variant="default" className="animate-pulse">
-                  <Wifi className="mr-1 h-3 w-3" />
+                  <Wifi className="me-1 h-3 w-3" />
                   Live Mode
                 </Badge>
               ) : (
                 <Badge variant="outline">
-                  <WifiOff className="mr-1 h-3 w-3" />
+                  <WifiOff className="me-1 h-3 w-3" />
                   Offline
                 </Badge>
               )}
@@ -518,7 +518,7 @@ export function AttendanceTracking({
                       onClick={() => markAllStudents("PRESENT")}
                       className="bg-green-600 hover:bg-green-700"
                     >
-                      <CircleCheck className="mr-1 h-4 w-4" />
+                      <CircleCheck className="me-1 h-4 w-4" />
                       All Present
                     </Button>
                     <Button
@@ -527,7 +527,7 @@ export function AttendanceTracking({
                       onClick={() => markAllStudents("ABSENT")}
                       className="text-red-600 hover:bg-red-50"
                     >
-                      <CircleX className="mr-1 h-4 w-4" />
+                      <CircleX className="me-1 h-4 w-4" />
                       All Absent
                     </Button>
                     <Button
@@ -536,7 +536,7 @@ export function AttendanceTracking({
                       onClick={() => markAllStudents("LATE")}
                       className="text-yellow-600 hover:bg-yellow-50"
                     >
-                      <Clock className="mr-1 h-4 w-4" />
+                      <Clock className="me-1 h-4 w-4" />
                       All Late
                     </Button>
                     <Button
@@ -596,7 +596,7 @@ export function AttendanceTracking({
                               statusConfig[record?.status || "ABSENT"].color
                             }
                           >
-                            <StatusIcon className="mr-1 h-3 w-3" />
+                            <StatusIcon className="me-1 h-3 w-3" />
                             {record?.status || "ABSENT"}
                           </Badge>
                         </TableCell>
@@ -675,12 +675,12 @@ export function AttendanceTracking({
               >
                 {saving ? (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    <RefreshCw className="me-2 h-4 w-4 animate-spin" />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <CircleCheck className="mr-2 h-4 w-4" />
+                    <CircleCheck className="me-2 h-4 w-4" />
                     Save Attendance
                   </>
                 )}

@@ -453,16 +453,16 @@ export function ChatInterface({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onViewDetails}>
-                <Info className="mr-2 h-4 w-4" />
+                <Info className="me-2 h-4 w-4" />
                 {locale === "ar" ? "التفاصيل" : "Details"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled>
-                <Phone className="mr-2 h-4 w-4" />
+                <Phone className="me-2 h-4 w-4" />
                 {locale === "ar" ? "مكالمة صوتية" : "Voice call"}
               </DropdownMenuItem>
               <DropdownMenuItem disabled>
-                <Video className="mr-2 h-4 w-4" />
+                <Video className="me-2 h-4 w-4" />
                 {locale === "ar" ? "مكالمة فيديو" : "Video call"}
               </DropdownMenuItem>
             </DropdownMenuContent>

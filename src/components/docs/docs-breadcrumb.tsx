@@ -16,11 +16,13 @@ export function DocsBreadcrumb({ segments }: DocsBreadcrumbProps) {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="text-muted-foreground flex items-center space-x-1 text-sm"
+      className="text-muted-foreground flex items-center gap-1 text-sm"
     >
       {segments.map((segment, index) => (
         <div key={segment.href} className="flex items-center">
-          {index > 0 && <ChevronRight className="mx-1 h-4 w-4" />}
+          {index > 0 && (
+            <ChevronRight className="mx-1 h-4 w-4 rtl:rotate-180" />
+          )}
           <Link
             href={segment.href}
             className={cn(

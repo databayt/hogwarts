@@ -1,11 +1,7 @@
-"use client"
-
-import { useEffect, useState } from "react"
-
+import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { EmptyState } from "@/components/saas-dashboard/common/empty-state"
-import { DataTableSkeleton } from "@/components/table/data-table-skeleton"
 import { Shell as PageContainer } from "@/components/table/shell"
 
 import { auditColumns, type AuditRow } from "./logs-table/columns"
@@ -16,86 +12,64 @@ interface Props {
   lang: Locale
 }
 
-export function ObservabilityContent(props: Props) {
-  const [data, setData] = useState<{ rows: AuditRow[] } | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+export async function ObservabilityContent({ dictionary, lang }: Props) {
+  const t = dictionary?.operator?.observability
 
-  useEffect(() => {
-    // For now, use sample data to show the working table structure
-    // This can be replaced with actual API call when the endpoint is ready
-    const sampleData = {
-      rows: [
-        {
-          id: "1",
-          createdAt: new Date().toISOString(),
-          userEmail: "admin@example.com",
-          schoolName: "Sample School",
-          action: "login",
-          reason: null,
-          ip: "192.168.1.1",
-          level: "info",
-          requestId: "req-123",
+  let rows: AuditRow[] = []
+
+  try {
+    const logs = await db.auditLog.findMany({
+      select: {
+        id: true,
+        createdAt: true,
+        action: true,
+        reason: true,
+        ip: true,
+        performer: {
+          select: { email: true },
         },
-      ],
-    }
+        school: {
+          select: { name: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    })
 
-    setData(sampleData)
-    setIsLoading(false)
-  }, [])
-
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-4">
-          <div>
-            <h1 className="text-xl font-semibold">Audit Logs</h1>
-            <p className="text-muted-foreground text-sm">
-              Recent sensitive operator actions
-            </p>
-          </div>
-          <DataTableSkeleton columnCount={auditColumns.length} />
-        </div>
-      </PageContainer>
-    )
+    rows = logs.map((log) => ({
+      id: log.id,
+      createdAt: log.createdAt.toISOString(),
+      userEmail: log.performer.email ?? "",
+      schoolName: log.school?.name ?? null,
+      action: log.action,
+      reason: log.reason,
+      ip: log.ip,
+    }))
+  } catch {
+    // Graceful fallback: table may not have data yet
+    rows = []
   }
-
-  if (error) {
-    return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-4">
-          <div>
-            <h1 className="text-xl font-semibold">Audit Logs</h1>
-            <p className="text-muted-foreground text-sm">
-              Recent sensitive operator actions
-            </p>
-          </div>
-          <EmptyState
-            title="Error loading audit logs"
-            description="Please try again later."
-          />
-        </div>
-      </PageContainer>
-    )
-  }
-
-  const { rows } = data || { rows: [] }
 
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Audit Logs</h1>
+          <h1 className="text-xl font-semibold">
+            {t?.auditLogs || "Audit Logs"}
+          </h1>
           <p className="text-muted-foreground text-sm">
-            Recent sensitive operator actions
+            {t?.recentActions || "Recent sensitive operator actions"}
           </p>
         </div>
-        {rows && rows.length > 0 ? (
+        {rows.length > 0 ? (
           <AuditLogTable data={rows} columns={auditColumns} />
         ) : (
           <EmptyState
-            title="No audit entries"
-            description="Actions will be listed here as they happen."
+            title={t?.noAuditEntries || "No audit entries"}
+            description={
+              t?.actionsWillAppear ||
+              "Actions will be listed here as they happen."
+            }
           />
         )}
       </div>

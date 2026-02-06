@@ -45,7 +45,7 @@ export function CardForm({
         {children}
       </CardContent>
       {footer && (
-        <CardFooter className="justify-between space-x-2">{footer}</CardFooter>
+        <CardFooter className="justify-between gap-2">{footer}</CardFooter>
       )}
     </Card>
   )

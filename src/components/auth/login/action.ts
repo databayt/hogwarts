@@ -39,6 +39,8 @@ export interface LoginOptions {
   context?: LoginContext
   /** School subdomain (when context is "school") */
   subdomain?: string | null
+  /** Locale for emails (default: "en") */
+  locale?: string
 }
 
 export const login = async (
@@ -49,6 +51,7 @@ export const login = async (
   let callbackUrl: string | null | undefined
   let context: LoginContext = "saas"
   let subdomain: string | null | undefined
+  let locale = "en"
 
   if (
     typeof callbackUrlOrOptions === "object" &&
@@ -57,6 +60,7 @@ export const login = async (
     callbackUrl = callbackUrlOrOptions.callbackUrl
     context = callbackUrlOrOptions.context || "saas"
     subdomain = callbackUrlOrOptions.subdomain
+    locale = callbackUrlOrOptions.locale || "en"
   } else {
     callbackUrl = callbackUrlOrOptions
   }
@@ -81,7 +85,8 @@ export const login = async (
 
     await sendVerificationEmail(
       verificationToken.email,
-      verificationToken.token
+      verificationToken.token,
+      locale
     )
 
     return { success: "Confirmation email sent!" }
@@ -126,7 +131,11 @@ export const login = async (
       })
     } else {
       const twoFactorToken = await generateTwoFactorToken(existingUser.email)
-      await sendTwoFactorTokenEmail(twoFactorToken.email, twoFactorToken.token)
+      await sendTwoFactorTokenEmail(
+        twoFactorToken.email,
+        twoFactorToken.token,
+        locale
+      )
 
       return { twoFactor: true }
     }
@@ -145,14 +154,18 @@ export const login = async (
   // ============================================================================
 
   // Extract locale from callbackUrl or default to 'ar'
-  const locale = callbackUrl?.match(/^\/(ar|en)\//)
+  const redirectLocale = callbackUrl?.match(/^\/(ar|en)\//)
     ? callbackUrl.match(/^\/(ar|en)\//)?.[1]
     : "ar"
 
   let finalRedirectUrl: string
 
   // CASE 1: Explicit callbackUrl provided (from "Get Started" or "Platform" link)
-  if (callbackUrl && callbackUrl !== "/" && callbackUrl !== `/${locale}`) {
+  if (
+    callbackUrl &&
+    callbackUrl !== "/" &&
+    callbackUrl !== `/${redirectLocale}`
+  ) {
     // Check if requesting /onboarding
     if (callbackUrl.includes("/onboarding")) {
       // Only "Get Started" button leads here - allow it
@@ -188,7 +201,7 @@ export const login = async (
           )
         } else {
           // User belongs to a DIFFERENT school - deny access
-          finalRedirectUrl = `/${locale}/access-denied`
+          finalRedirectUrl = `/${redirectLocale}/access-denied`
           console.log("[LOGIN-ACTION] ⛔ User belongs to different school:", {
             requestedSchool: subdomain,
             userSchool: school?.domain,
@@ -204,7 +217,7 @@ export const login = async (
         })
       } else {
         // User has no school - deny dashboard access
-        finalRedirectUrl = `/${locale}/access-denied`
+        finalRedirectUrl = `/${redirectLocale}/access-denied`
         console.log(
           "[LOGIN-ACTION] ⛔ User has no school - cannot access dashboard:",
           {
@@ -236,7 +249,7 @@ export const login = async (
             process.env.NODE_ENV === "production"
               ? `https://${school.domain}.databayt.org`
               : `${protocol}://${school.domain}.localhost:3000`
-          finalRedirectUrl = `${baseUrl}/${locale}/dashboard`
+          finalRedirectUrl = `${baseUrl}/${redirectLocale}/dashboard`
           console.log(
             "[LOGIN-ACTION] 🏫 Redirecting to user's school dashboard:",
             {
@@ -245,14 +258,14 @@ export const login = async (
             }
           )
         } else {
-          finalRedirectUrl = `/${locale}`
+          finalRedirectUrl = `/${redirectLocale}`
           console.log(
             "[LOGIN-ACTION] ⚠️ School domain not found, staying on homepage"
           )
         }
       } else {
         // No school, not DEVELOPER - deny SaaS dashboard access
-        finalRedirectUrl = `/${locale}/access-denied`
+        finalRedirectUrl = `/${redirectLocale}/access-denied`
         console.log(
           "[LOGIN-ACTION] ⛔ Non-DEVELOPER without school cannot access SaaS dashboard"
         )
@@ -277,7 +290,7 @@ export const login = async (
         process.env.NODE_ENV === "production"
           ? `https://${subdomain}.databayt.org`
           : `${protocol}://${subdomain}.localhost:3000`
-      finalRedirectUrl = `${baseUrl}/${locale}`
+      finalRedirectUrl = `${baseUrl}/${redirectLocale}`
       console.log("[LOGIN-ACTION] 🏠 Staying on school marketing:", {
         subdomain,
         finalRedirectUrl,
@@ -286,7 +299,7 @@ export const login = async (
       // Logged in from SaaS marketing
       if (existingUser.role === "DEVELOPER") {
         // DEVELOPER → auto-redirect to SaaS dashboard
-        finalRedirectUrl = `/${locale}/dashboard`
+        finalRedirectUrl = `/${redirectLocale}/dashboard`
         console.log(
           "[LOGIN-ACTION] 👑 DEVELOPER auto-redirect to SaaS dashboard:",
           {
@@ -295,7 +308,7 @@ export const login = async (
         )
       } else {
         // Non-DEVELOPER → stay on SaaS marketing
-        finalRedirectUrl = `/${locale}`
+        finalRedirectUrl = `/${redirectLocale}`
         console.log("[LOGIN-ACTION] 🏠 Staying on SaaS marketing:", {
           finalRedirectUrl,
         })

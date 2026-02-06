@@ -237,9 +237,9 @@ function FlowStep({
             <CollapsibleTrigger asChild>
               <Button variant="outline" size="sm" className="w-full">
                 {isOpen ? (
-                  <ChevronDown className="mr-2 h-4 w-4" />
+                  <ChevronDown className="me-2 h-4 w-4" />
                 ) : (
-                  <ChevronRight className="mr-2 h-4 w-4" />
+                  <ChevronRight className="me-2 h-4 w-4" />
                 )}
                 {step.branches.length} Possible Paths
               </Button>

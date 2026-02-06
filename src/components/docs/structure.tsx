@@ -175,14 +175,14 @@ export function Structure({ className }: StructureProps) {
                 !isLastParent && (
                   <div
                     key={idx}
-                    className="absolute h-full border-l"
+                    className="absolute h-full border-s"
                     style={{ left: `${(idx + 1) * 24 - 20}px` }}
                   />
                 )
             )}
           {!isLast && (
             <div
-              className="absolute h-full border-l"
+              className="absolute h-full border-s"
               style={{ left: `${level * 24 - 20}px` }}
             />
           )}

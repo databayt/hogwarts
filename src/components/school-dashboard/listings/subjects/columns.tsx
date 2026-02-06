@@ -21,9 +21,8 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 export type SubjectRow = {
   id: string
   subjectName: string
-  subjectNameAr: string | null
+  lang: string
   departmentName: string
-  departmentNameAr: string | null
   createdAt: string
 }
 
@@ -34,10 +33,7 @@ export function getLocalizedSubjectName(
   row: SubjectRow,
   locale: Locale
 ): string {
-  if (locale === "ar") {
-    return row.subjectNameAr || row.subjectName || ""
-  }
-  return row.subjectName || row.subjectNameAr || ""
+  return row.subjectName || ""
 }
 
 /**
@@ -47,10 +43,7 @@ export function getLocalizedDepartmentName(
   row: SubjectRow,
   locale: Locale
 ): string {
-  if (locale === "ar") {
-    return row.departmentNameAr || row.departmentName || ""
-  }
-  return row.departmentName || row.departmentNameAr || ""
+  return row.departmentName || ""
 }
 
 export interface SubjectColumnCallbacks {

@@ -24,7 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import { DEFAULT_GRADES } from "../types"
 import { saveAcademicStep } from "./actions"
 import { LANGUAGE_OPTIONS, STREAM_OPTIONS } from "./config"
@@ -37,7 +37,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
     const subdomain = params.subdomain as string
     const { locale: lang } = useLocale()
     const isRTL = lang === "ar"
-    const { session, updateStepData } = useApplication()
+    const { session, updateStepData } = useApplySession()
 
     const form = useForm<AcademicSchemaType>({
       resolver: zodResolver(academicSchema),
@@ -216,7 +216,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                       <SelectContent>
                         {DEFAULT_GRADES.map((grade) => (
                           <SelectItem key={grade.grade} value={grade.grade}>
-                            {isRTL ? grade.gradeAr : grade.grade}
+                            {grade.grade}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -248,7 +248,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                       <SelectContent>
                         {STREAM_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
-                            {isRTL ? option.labelAr : option.label}
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -289,7 +289,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                       <SelectContent>
                         {LANGUAGE_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
-                            {isRTL ? option.labelAr : option.label}
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -321,7 +321,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                       <SelectContent>
                         {LANGUAGE_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
-                            {isRTL ? option.labelAr : option.label}
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>

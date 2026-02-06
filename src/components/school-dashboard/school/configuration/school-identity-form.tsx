@@ -225,10 +225,10 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
             id="domain"
             {...form.register("domain")}
             placeholder="your-school"
-            className="rounded-r-none"
+            className="rounded-e-none"
             disabled={isPending}
           />
-          <span className="bg-muted text-muted-foreground rounded-r-md border border-l-0 px-3 py-2 text-sm">
+          <span className="bg-muted text-muted-foreground rounded-e-md border border-s-0 px-3 py-2 text-sm">
             .databayt.org
           </span>
         </div>
@@ -291,12 +291,12 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
         <Button onClick={handleSave} disabled={isPending} size="sm">
           {isPending ? (
             <>
-              <Icons.loader2 className="mr-1 h-4 w-4 animate-spin" />
+              <Icons.loader2 className="me-1 h-4 w-4 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <Icons.check className="mr-1 h-4 w-4" />
+              <Icons.check className="me-1 h-4 w-4" />
               Save Changes
             </>
           )}
@@ -307,7 +307,7 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
           disabled={isPending}
           size="sm"
         >
-          <Icons.x className="mr-1 h-4 w-4" />
+          <Icons.x className="me-1 h-4 w-4" />
           Cancel
         </Button>
       </div>

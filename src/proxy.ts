@@ -7,6 +7,45 @@ import {
 
 import { i18n, type Locale } from "@/components/internationalization/config"
 
+// --- Custom domain routing via Upstash Redis (Edge-compatible) ---
+let _edgeRedis: import("@upstash/redis").Redis | null = null
+let _edgeRedisAvailable: boolean | null = null
+
+function getEdgeRedis(): import("@upstash/redis").Redis | null {
+  if (_edgeRedisAvailable === false) return null
+  if (_edgeRedis) return _edgeRedis
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) {
+    _edgeRedisAvailable = false
+    return null
+  }
+  try {
+    const { Redis } =
+      require("@upstash/redis") as typeof import("@upstash/redis")
+    _edgeRedis = new Redis({ url, token })
+    _edgeRedisAvailable = true
+    return _edgeRedis
+  } catch {
+    _edgeRedisAvailable = false
+    return null
+  }
+}
+
+/**
+ * Look up a custom domain → subdomain mapping from Redis
+ * Returns the school's subdomain if the host is a verified custom domain
+ */
+async function resolveCustomDomain(host: string): Promise<string | null> {
+  const r = getEdgeRedis()
+  if (!r) return null
+  try {
+    return await r.get<string>(`custom-domain:${host}`)
+  } catch {
+    return null
+  }
+}
+
 /**
  * Edge Function Middleware - Multi-Tenant URL Rewriting
  *
@@ -53,11 +92,11 @@ const authRoutes = [
 ]
 
 // Public school-marketing routes (school subdomain public pages - no auth required)
+// NOTE: /apply removed - requires auth to couple application to userId
 const publicSiteRoutes = [
   "/about",
   "/academic",
   "/admissions",
-  "/apply",
   "/tour",
   "/inquiry",
 ]
@@ -118,7 +157,7 @@ function getRoleFromCookie(request: NextRequest): Role | null {
   }
 }
 
-export function proxy(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const url = req.nextUrl.clone()
   const host = req.headers.get("host") || ""
 
@@ -166,6 +205,15 @@ export function proxy(req: NextRequest) {
     const parts = host.split(".")
     if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
       subdomain = parts[0]
+    }
+  }
+
+  // Custom domain detection (e.g., school.edu.sa → resolve to subdomain via Redis)
+  // Only check if no subdomain was found via standard patterns
+  if (!subdomain) {
+    const customSubdomain = await resolveCustomDomain(host)
+    if (customSubdomain) {
+      subdomain = customSubdomain
     }
   }
 

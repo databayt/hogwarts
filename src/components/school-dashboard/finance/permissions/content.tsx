@@ -233,7 +233,7 @@ export function PermissionManagementContent() {
                   placeholder="Name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
+                  className="ps-8"
                 />
               </div>
             </div>
@@ -374,7 +374,7 @@ function UserPermissionCard({
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <UserPlus className="mr-2 h-4 w-4" />
+                  <UserPlus className="me-2 h-4 w-4" />
                   Edit Permissions
                 </Button>
               </DialogTrigger>
@@ -389,7 +389,7 @@ function UserPermissionCard({
             <Dialog open={copyDialogOpen} onOpenChange={setCopyDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Copy className="mr-2 h-4 w-4" />
+                  <Copy className="me-2 h-4 w-4" />
                   Copy
                 </Button>
               </DialogTrigger>
@@ -638,12 +638,12 @@ function EditPermissionsDialog({
         {FINANCE_MODULES.map((module) => (
           <div key={module} className="space-y-2">
             <h4 className="font-semibold">{MODULE_LABELS[module]}</h4>
-            <div className="grid grid-cols-2 gap-2 pl-4">
+            <div className="grid grid-cols-2 gap-2 ps-4">
               {FINANCE_ACTIONS.map((action) => {
                 const isChecked =
                   selectedPermissions.get(module)?.has(action) || false
                 return (
-                  <div key={action} className="flex items-center space-x-2">
+                  <div key={action} className="flex items-center gap-2">
                     <Checkbox
                       id={`${module}-${action}`}
                       checked={isChecked}

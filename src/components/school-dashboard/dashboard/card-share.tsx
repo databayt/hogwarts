@@ -91,7 +91,7 @@ export function CardsShare() {
                 </ItemContent>
                 <ItemActions>
                   <Select defaultValue="edit">
-                    <SelectTrigger className="ml-auto pr-2" aria-label="Edit">
+                    <SelectTrigger className="ms-auto pe-2" aria-label="Edit">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent align="end">

@@ -1654,12 +1654,12 @@ export async function getTimetableByStudentGrade(input: {
     where: { studentId: student.id, schoolId },
     orderBy: { createdAt: "desc" },
     select: {
-      yearLevel: { select: { id: true, levelName: true, levelNameAr: true } },
+      yearLevel: { select: { id: true, levelName: true, lang: true } },
     },
   })
 
   const gradeName = studentYearLevel?.yearLevel?.levelName || "Unknown Grade"
-  const gradeNameAr = studentYearLevel?.yearLevel?.levelNameAr
+  const gradeLang = studentYearLevel?.yearLevel?.lang
 
   // Filter enrolled classes by the requested term
   // StudentClass now directly gives us the classes the student is enrolled in
@@ -1748,7 +1748,7 @@ export async function getTimetableByStudentGrade(input: {
       id: student.id,
       name: `${student.givenName} ${student.surname}`,
       gradeName,
-      gradeNameAr,
+      gradeLang,
     },
     schoolName: school?.name || "",
     subjectCount,
@@ -1852,13 +1852,13 @@ export async function getTimetableByGradeLevel(input: {
   // Get year level info for Arabic name
   const yearLevel = await db.yearLevel.findFirst({
     where: { schoolId, levelName: input.gradeName },
-    select: { levelNameAr: true },
+    select: { lang: true },
   })
 
   return {
     gradeInfo: {
       name: input.gradeName,
-      nameAr: yearLevel?.levelNameAr || input.gradeName,
+      lang: yearLevel?.lang || "ar",
     },
     subjectCount: gradeClasses.length,
     subjects: gradeClasses.map((c) => ({
@@ -1909,7 +1909,7 @@ export async function getGradeLevelsForSelection(input?: { termId?: string }) {
     select: {
       id: true,
       levelName: true,
-      levelNameAr: true,
+      lang: true,
       levelOrder: true,
     },
   })
@@ -1936,7 +1936,7 @@ export async function getGradeLevelsForSelection(input?: { termId?: string }) {
         .map((yl) => ({
           id: yl.id,
           name: yl.levelName,
-          nameAr: yl.levelNameAr,
+          lang: yl.lang,
           order: yl.levelOrder,
         })),
     }
@@ -1946,7 +1946,7 @@ export async function getGradeLevelsForSelection(input?: { termId?: string }) {
     gradeLevels: yearLevels.map((yl) => ({
       id: yl.id,
       name: yl.levelName,
-      nameAr: yl.levelNameAr,
+      lang: yl.lang,
       order: yl.levelOrder,
     })),
   }
@@ -2681,7 +2681,7 @@ export async function getGuardianChildren() {
                   yearLevel: {
                     select: {
                       levelName: true,
-                      levelNameAr: true,
+                      lang: true,
                     },
                   },
                 },
@@ -2709,7 +2709,7 @@ export async function getGuardianChildren() {
       classId: enrollment?.class.id,
       className: enrollment?.class.name,
       gradeName: yearLevel?.yearLevel?.levelName,
-      gradeNameAr: yearLevel?.yearLevel?.levelNameAr,
+      gradeLang: yearLevel?.yearLevel?.lang,
       isPrimary: sg.isPrimary,
     }
   })

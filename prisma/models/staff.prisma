@@ -63,7 +63,7 @@ model Department {
   id               String  @id @default(cuid())
   schoolId         String
   departmentName   String
-  departmentNameAr String? // Arabic name for bilingual support
+  lang             String  @default("ar") // Content language
 
   school             School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   subjects           Subject[]

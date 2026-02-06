@@ -55,6 +55,7 @@ interface Props {
   dictionary: Dictionary
   lang: Locale
   subdomain: string
+  tourDaysOfWeek?: number[]
 }
 
 const bookingSchema = z.object({
@@ -74,6 +75,7 @@ export default function TourBookingContent({
   dictionary: initialDictionary,
   lang,
   subdomain,
+  tourDaysOfWeek = [0, 1, 2, 3, 4],
 }: Props) {
   const router = useRouter()
   const { dictionary } = useDictionary()
@@ -231,11 +233,14 @@ export default function TourBookingContent({
         </Card>
 
         <div className="flex justify-center gap-4">
-          <Button variant="outline" onClick={() => router.push(`/${lang}`)}>
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/${lang}/s/${subdomain}`)}
+          >
             {tour?.backToHome || "Back to Home"}
           </Button>
           <Button
-            onClick={() => router.push(`/${lang}/apply`)}
+            onClick={() => router.push(`/${lang}/s/${subdomain}/apply`)}
             className="group"
           >
             {tour?.applyNow || "Apply Now"}
@@ -279,9 +284,7 @@ export default function TourBookingContent({
               disabled={(date) => {
                 const today = new Date()
                 today.setHours(0, 0, 0, 0)
-                return (
-                  date < today || date.getDay() === 5 || date.getDay() === 6
-                )
+                return date < today || !tourDaysOfWeek.includes(date.getDay())
               }}
               className="rounded-md border"
             />
@@ -465,7 +468,7 @@ export default function TourBookingContent({
                           <SelectContent>
                             {DEFAULT_GRADES.map((grade) => (
                               <SelectItem key={grade.grade} value={grade.grade}>
-                                {isRTL ? grade.gradeAr : grade.grade}
+                                {grade.grade}
                               </SelectItem>
                             ))}
                           </SelectContent>

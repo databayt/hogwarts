@@ -254,9 +254,9 @@ export default function StudentView({
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" disabled={isExporting}>
                     {isExporting ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <Download className="mr-2 h-4 w-4" />
+                      <Download className="me-2 h-4 w-4" />
                     )}
                     {isRTL ? "تحميل" : "Download"}
                   </Button>
@@ -266,12 +266,12 @@ export default function StudentView({
                     onClick={handleDownloadPDF}
                     disabled={isExporting || slots.length === 0}
                   >
-                    <FileText className="mr-2 h-4 w-4" />
+                    <FileText className="me-2 h-4 w-4" />
                     {isRTL ? "تحميل PDF" : "Download PDF"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handlePrint}>
-                    <Printer className="mr-2 h-4 w-4" />
+                    <Printer className="me-2 h-4 w-4" />
                     {isRTL ? "طباعة" : "Print"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -320,7 +320,7 @@ export default function StudentView({
                     : "bg-blue-500"
                 )}
               >
-                <ChevronRight className="h-6 w-6 text-white" />
+                <ChevronRight className="h-6 w-6 text-white rtl:rotate-180" />
               </div>
               <div className="flex-1">
                 <p className="text-muted-foreground text-sm">

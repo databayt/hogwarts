@@ -208,7 +208,7 @@ export function SubjectTeachers({
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={handleOpenAddDialog} size="sm">
-              <UserPlus className="mr-2 h-4 w-4" />
+              <UserPlus className="me-2 h-4 w-4" />
               {t.addTeacher}
             </Button>
           </DialogTrigger>
@@ -286,7 +286,7 @@ export function SubjectTeachers({
               >
                 {isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
                     {t.assigning}
                   </>
                 ) : (
@@ -323,7 +323,7 @@ export function SubjectTeachers({
                     <div className="flex items-center gap-2">
                       <p className="font-medium">{teacher.teacherName}</p>
                       <Badge variant={getRoleBadgeVariant(teacher.role)}>
-                        <Shield className="mr-1 h-3 w-3" />
+                        <Shield className="me-1 h-3 w-3" />
                         {t.roles[teacher.role as ClassTeacherRole] ||
                           teacher.role}
                       </Badge>
@@ -362,7 +362,7 @@ export function SubjectTeachers({
                       >
                         {isPending ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="me-2 h-4 w-4 animate-spin" />
                             {t.removing}
                           </>
                         ) : (

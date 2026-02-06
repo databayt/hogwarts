@@ -225,7 +225,7 @@ export const getTemplateColumns = (
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onView}>
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye className="me-2 h-4 w-4" />
               {dictionary?.generate?.columns?.view || "View"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>

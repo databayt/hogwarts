@@ -10,7 +10,7 @@ import {
   ACCEPT_IMAGES,
   FileUploader,
   type UploadedFileResult,
-} from "@/components/file"
+} from "@/components/file/upload/file-uploader"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 import { useListing } from "@/components/onboarding/use-listing"
@@ -142,7 +142,7 @@ export default function BrandingContent({ dictionary }: Props) {
               <Button
                 size="icon"
                 variant="destructive"
-                className="absolute top-2 right-2"
+                className="absolute end-2 top-2"
                 onClick={handleRemoveLogo}
               >
                 <X className="h-4 w-4" />

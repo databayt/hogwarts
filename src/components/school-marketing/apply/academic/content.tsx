@@ -6,7 +6,7 @@ import { GraduationCap } from "lucide-react"
 
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import type { AcademicStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
 import { ACADEMIC_STEP_CONFIG } from "./config"
@@ -26,7 +26,7 @@ export default function AcademicContent({ dictionary }: Props) {
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
-  const { session, getStepData } = useApplication()
+  const { session, getStepData } = useApplySession()
   const academicFormRef = useRef<AcademicFormRef>(null)
 
   const initialData = getStepData("academic")
@@ -75,16 +75,10 @@ export default function AcademicContent({ dictionary }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {dict.title ||
-                (isRTL
-                  ? ACADEMIC_STEP_CONFIG.labelAr
-                  : ACADEMIC_STEP_CONFIG.label)}
+              {dict.title || ACADEMIC_STEP_CONFIG.label}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {dict.description ||
-                (isRTL
-                  ? ACADEMIC_STEP_CONFIG.descriptionAr
-                  : ACADEMIC_STEP_CONFIG.description)}
+              {dict.description || ACADEMIC_STEP_CONFIG.description}
             </p>
           </div>
         </div>

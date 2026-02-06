@@ -38,7 +38,7 @@ export function StreamNotAdminContent({ dictionary, lang, subdomain }: Props) {
               className: "w-full",
             })}
           >
-            <ArrowLeft className="mr-1 size-4" />
+            <ArrowLeft className="me-1 size-4" />
             Back to home
           </Link>
         </CardContent>

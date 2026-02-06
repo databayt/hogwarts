@@ -388,7 +388,7 @@ export function ActivitiesTab({
                         variant="secondary"
                         className="text-xs"
                       >
-                        <Trophy className="mr-1 h-3 w-3" />
+                        <Trophy className="me-1 h-3 w-3" />
                         {achievement}
                       </Badge>
                     ))}
@@ -456,7 +456,7 @@ export function ActivitiesTab({
             ))}
             <Button variant="outline" size="sm" className="w-full">
               View All Events
-              <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
@@ -525,7 +525,7 @@ export function ActivitiesTab({
                 {project.achievement && (
                   <div className="mt-2 border-t pt-2">
                     <Badge variant="secondary" className="text-xs">
-                      <Trophy className="mr-1 h-3 w-3" />
+                      <Trophy className="me-1 h-3 w-3" />
                       {project.achievement}
                     </Badge>
                   </div>

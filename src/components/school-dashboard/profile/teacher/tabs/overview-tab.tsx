@@ -217,7 +217,7 @@ export function OverviewTab({
             ))}
             <Button variant="outline" size="sm" className="w-full">
               View All Classes
-              <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
@@ -356,7 +356,7 @@ export function OverviewTab({
             </span>
             <Button variant="outline" size="sm">
               View All Reviews
-              <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardTitle>
         </CardHeader>

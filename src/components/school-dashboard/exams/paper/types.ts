@@ -128,7 +128,7 @@ export interface FillBlankOptions {
 export interface SchoolForPaper {
   id: string
   name: string
-  nameAr?: string
+  preferredLanguage?: string
   logoUrl?: string | null
   address?: string | null
   phoneNumber?: string | null
@@ -255,96 +255,60 @@ export interface PaperRow {
 /** Available paper template styles */
 export const PAPER_TEMPLATES: Record<
   ExamPaperTemplate,
-  {
-    label: string
-    labelAr: string
-    description: string
-    descriptionAr: string
-  }
+  { label: string; description: string }
 > = {
   CLASSIC: {
-    label: "Classic Academic",
-    labelAr: "كلاسيكي أكاديمي",
-    description:
-      "Traditional exam format with school header and numbered questions",
-    descriptionAr: "تنسيق الاختبار التقليدي مع رأس المدرسة والأسئلة المرقمة",
+    label: "كلاسيكي أكاديمي",
+    description: "تنسيق الاختبار التقليدي مع رأس المدرسة والأسئلة المرقمة",
   },
   MODERN: {
-    label: "Modern Minimal",
-    labelAr: "حديث بسيط",
-    description: "Clean, spacious layout with minimal decorations",
-    descriptionAr: "تخطيط نظيف وواسع مع زخارف قليلة",
+    label: "حديث بسيط",
+    description: "تخطيط نظيف وواسع مع زخارف قليلة",
   },
   FORMAL: {
-    label: "Formal Official",
-    labelAr: "رسمي",
-    description: "Government exam style with strict formatting and watermarks",
-    descriptionAr: "نمط الاختبار الحكومي مع تنسيق صارم وعلامات مائية",
+    label: "رسمي",
+    description: "نمط الاختبار الحكومي مع تنسيق صارم وعلامات مائية",
   },
   CUSTOM: {
-    label: "Custom Branded",
-    labelAr: "مخصص",
-    description: "Uses school branding colors and custom styling",
-    descriptionAr: "يستخدم ألوان العلامة التجارية للمدرسة والتنسيق المخصص",
+    label: "مخصص",
+    description: "يستخدم ألوان العلامة التجارية للمدرسة والتنسيق المخصص",
   },
 }
 
 /** Answer sheet type options */
 export const ANSWER_SHEET_TYPES: Record<
   AnswerSheetType,
-  {
-    label: string
-    labelAr: string
-    description: string
-    descriptionAr: string
-  }
+  { label: string; description: string }
 > = {
   NONE: {
-    label: "Inline Answers",
-    labelAr: "الإجابات مباشرة",
-    description: "Students write answers below each question",
-    descriptionAr: "يكتب الطلاب الإجابات أسفل كل سؤال",
+    label: "الإجابات مباشرة",
+    description: "يكتب الطلاب الإجابات أسفل كل سؤال",
   },
   SEPARATE: {
-    label: "Separate Sheet",
-    labelAr: "ورقة منفصلة",
-    description: "Dedicated answer sheet at the end of the paper",
-    descriptionAr: "ورقة إجابة مخصصة في نهاية الاختبار",
+    label: "ورقة منفصلة",
+    description: "ورقة إجابة مخصصة في نهاية الاختبار",
   },
   BUBBLE: {
-    label: "OMR Bubble Sheet",
-    labelAr: "ورقة الفقاعات",
-    description: "Scantron-style bubble sheet for optical scanning (MCQ only)",
-    descriptionAr: "ورقة فقاعات للمسح الضوئي (اختيار متعدد فقط)",
+    label: "ورقة الفقاعات",
+    description: "ورقة فقاعات للمسح الضوئي (اختيار متعدد فقط)",
   },
 }
 
 /** Paper layout options */
 export const PAPER_LAYOUTS: Record<
   PaperLayout,
-  {
-    label: string
-    labelAr: string
-    description: string
-    descriptionAr: string
-  }
+  { label: string; description: string }
 > = {
   SINGLE_COLUMN: {
-    label: "Single Column",
-    labelAr: "عمود واحد",
-    description: "Questions stacked vertically in one column",
-    descriptionAr: "الأسئلة مرتبة عموديًا في عمود واحد",
+    label: "عمود واحد",
+    description: "الأسئلة مرتبة عموديًا في عمود واحد",
   },
   TWO_COLUMN: {
-    label: "Two Columns",
-    labelAr: "عمودان",
-    description: "Questions arranged in two columns (space-efficient)",
-    descriptionAr: "الأسئلة مرتبة في عمودين (موفر للمساحة)",
+    label: "عمودان",
+    description: "الأسئلة مرتبة في عمودين (موفر للمساحة)",
   },
   BOOKLET: {
-    label: "Booklet",
-    labelAr: "كتيب",
-    description: "Multi-page booklet with answer sheet at the end",
-    descriptionAr: "كتيب متعدد الصفحات مع ورقة الإجابة في النهاية",
+    label: "كتيب",
+    description: "كتيب متعدد الصفحات مع ورقة الإجابة في النهاية",
   },
 }

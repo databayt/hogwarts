@@ -9,7 +9,7 @@ export interface YearLevel {
   id: string
   schoolId: string
   levelName: string
-  levelNameAr?: string | null
+  lang?: string | null
   levelOrder: number
   createdAt: Date
   updatedAt: Date
@@ -22,14 +22,14 @@ export interface YearLevel {
 
 export interface CreateYearLevelInput {
   levelName: string
-  levelNameAr?: string
+  lang?: string
   levelOrder: number
 }
 
 export interface UpdateYearLevelInput {
   id: string
   levelName?: string
-  levelNameAr?: string
+  lang?: string
   levelOrder?: number
 }
 

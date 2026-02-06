@@ -116,7 +116,7 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
                   <h6>{invoice.invoiceNumber}</h6>
                   <small className="muted">{invoice.clientName}</small>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <div className="font-medium tabular-nums">
                     {formatCurrency(invoice.amount)}
                   </div>

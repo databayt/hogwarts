@@ -88,8 +88,8 @@ export function TrendingStats({
             key={item.label}
             className={cn(
               "rounded-none border-0 shadow-none",
-              index === 0 && "rounded-l-xl",
-              index === items.length - 1 && "rounded-r-xl",
+              index === 0 && "rounded-s-xl",
+              index === items.length - 1 && "rounded-e-xl",
               onItemClick &&
                 "hover:bg-accent/50 cursor-pointer transition-colors"
             )}

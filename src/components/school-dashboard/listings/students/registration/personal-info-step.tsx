@@ -97,7 +97,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full pl-3 text-left font-normal",
+                        "w-full ps-3 text-start font-normal",
                         !field.value && "text-muted-foreground"
                       )}
                     >
@@ -106,7 +106,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
                       ) : (
                         <span>Pick a date</span>
                       )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
@@ -238,7 +238,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full pl-3 text-left font-normal",
+                          "w-full ps-3 text-start font-normal",
                           !field.value && "text-muted-foreground"
                         )}
                       >
@@ -247,7 +247,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
                         ) : (
                           <span>Pick a date</span>
                         )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
@@ -364,7 +364,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full pl-3 text-left font-normal",
+                        "w-full ps-3 text-start font-normal",
                         !field.value && "text-muted-foreground"
                       )}
                     >
@@ -373,7 +373,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
                       ) : (
                         <span>Pick a date</span>
                       )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>

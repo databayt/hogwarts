@@ -241,11 +241,11 @@ export function ExpenseChart({
                   />
                   <span className="text-sm">{cat.category}</span>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <span className="text-sm font-medium">
                     SDG {new Intl.NumberFormat("en-SD").format(cat.amount)}
                   </span>
-                  <span className="text-muted-foreground ml-2 text-xs">
+                  <span className="text-muted-foreground ms-2 text-xs">
                     ({cat.percentage.toFixed(1)}%)
                   </span>
                 </div>

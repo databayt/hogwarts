@@ -178,7 +178,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                 </div>
               </div>
             </div>
-            <div className="space-y-2 text-right">
+            <div className="space-y-2 text-end">
               {onEdit && (
                 <Button
                   onClick={onEdit}

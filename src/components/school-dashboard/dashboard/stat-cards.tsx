@@ -39,7 +39,7 @@ export default function StatsCards() {
             <p className="text-muted-foreground text-sm font-medium">
               {item.name}
             </p>
-            <div className="mt-2 flex items-baseline space-x-2.5">
+            <div className="mt-2 flex items-baseline gap-2.5">
               <span className="text-foreground text-3xl font-semibold">
                 {item.stat}
               </span>

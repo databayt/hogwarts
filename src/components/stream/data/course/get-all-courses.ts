@@ -3,6 +3,9 @@
 import { db } from "@/lib/db"
 
 /**
+ * @deprecated Use `getCoursesList` from `@/components/stream/queries` instead.
+ * This function loads ALL courses without pagination.
+ *
  * Fetches all published courses for a school filtered by language
  * Multi-tenant: Scoped by schoolId
  * @param schoolId - The school ID for multi-tenant filtering

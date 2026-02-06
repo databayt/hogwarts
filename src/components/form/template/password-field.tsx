@@ -27,6 +27,20 @@ interface PasswordFieldProps {
   className?: string
   showStrengthMeter?: boolean
   minLength?: number
+  /** Labels for i18n (optional, English defaults) */
+  dictionary?: {
+    placeholder?: string
+    showPassword?: string
+    hidePassword?: string
+    strengthLabel?: string
+    veryWeak?: string
+    weak?: string
+    fair?: string
+    good?: string
+    strong?: string
+    addMore?: string
+    gettingBetter?: string
+  }
 }
 
 /**
@@ -57,13 +71,16 @@ export function PasswordField({
   name,
   label,
   description,
-  placeholder = "Enter password",
+  placeholder,
   required,
   disabled,
   className,
   showStrengthMeter = false,
   minLength = 8,
+  dictionary,
 }: PasswordFieldProps) {
+  const placeholderText =
+    placeholder ?? dictionary?.placeholder ?? "Enter password"
   const form = useFormContext()
   const [showPassword, setShowPassword] = React.useState(false)
 
@@ -94,12 +111,19 @@ export function PasswordField({
   }, [password, minLength])
 
   const strengthLabel = React.useMemo(() => {
-    if (strength < 25) return { label: "Very weak", color: "bg-destructive" }
-    if (strength < 50) return { label: "Weak", color: "bg-orange-500" }
-    if (strength < 75) return { label: "Fair", color: "bg-yellow-500" }
-    if (strength < 100) return { label: "Good", color: "bg-green-500" }
-    return { label: "Strong", color: "bg-green-600" }
-  }, [strength])
+    if (strength < 25)
+      return {
+        label: dictionary?.veryWeak ?? "Very weak",
+        color: "bg-destructive",
+      }
+    if (strength < 50)
+      return { label: dictionary?.weak ?? "Weak", color: "bg-orange-500" }
+    if (strength < 75)
+      return { label: dictionary?.fair ?? "Fair", color: "bg-yellow-500" }
+    if (strength < 100)
+      return { label: dictionary?.good ?? "Good", color: "bg-green-500" }
+    return { label: dictionary?.strong ?? "Strong", color: "bg-green-600" }
+  }, [strength, dictionary])
 
   return (
     <FormField
@@ -118,7 +142,7 @@ export function PasswordField({
               <Input
                 {...field}
                 type={showPassword ? "text" : "password"}
-                placeholder={placeholder}
+                placeholder={placeholderText}
                 disabled={disabled}
                 className="pe-10"
               />
@@ -136,7 +160,9 @@ export function PasswordField({
                   <Eye className="h-4 w-4" />
                 )}
                 <span className="sr-only">
-                  {showPassword ? "Hide password" : "Show password"}
+                  {showPassword
+                    ? (dictionary?.hidePassword ?? "Hide password")
+                    : (dictionary?.showPassword ?? "Show password")}
                 </span>
               </Button>
             </div>
@@ -152,14 +178,15 @@ export function PasswordField({
               />
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">
-                  Password strength:{" "}
+                  {dictionary?.strengthLabel ?? "Password strength"}:{" "}
                   <span className="font-medium">{strengthLabel.label}</span>
                 </span>
                 {strength < 75 && (
                   <span className="text-muted-foreground">
                     {strength < 50
-                      ? "Add uppercase, numbers, or symbols"
-                      : "Getting better!"}
+                      ? (dictionary?.addMore ??
+                        "Add uppercase, numbers, or symbols")
+                      : (dictionary?.gettingBetter ?? "Getting better!")}
                   </span>
                 )}
               </div>

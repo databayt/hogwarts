@@ -371,7 +371,7 @@ export async function StaffDashboard({
                         {request.requester} • {request.department}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <Badge
                         variant={
                           request.urgency === "high"
@@ -424,7 +424,7 @@ export async function StaffDashboard({
                         {approval.requester}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <Badge
                         variant={
                           approval.daysLeft <= 2
@@ -576,7 +576,7 @@ export async function StaffDashboard({
                         {visitor.purpose}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <Badge
                         variant={
                           visitor.status === "checked-in"

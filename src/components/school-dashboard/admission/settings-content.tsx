@@ -343,7 +343,7 @@ export default function SettingsContent({ dictionary, lang }: Props) {
                 settings.entranceWeight +
                 settings.interviewWeight !==
                 100 && (
-                <span className="text-destructive ml-2">
+                <span className="text-destructive ms-2">
                   (should equal 100%)
                 </span>
               )}

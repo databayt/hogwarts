@@ -53,11 +53,11 @@ export default function ProjectSwitcher({
             className="h-8 px-2"
             variant={openPopover ? "secondary" : "ghost"}
           >
-            <div className="flex items-center space-x-3 pr-2">
+            <div className="flex items-center gap-3 pe-2">
               <div
                 className={cn("size-3 shrink-0 rounded-full", selected.color)}
               />
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <span
                   className={cn(
                     "muted inline-block truncate xl:max-w-[120px]",
@@ -116,7 +116,7 @@ function ProjectList({
             {slug}
           </span>
           {selected.slug === slug && (
-            <span className="text-foreground absolute inset-y-0 right-0 flex items-center pr-3">
+            <span className="text-foreground absolute inset-y-0 right-0 flex items-center pe-3">
               <Check size={18} aria-hidden="true" />
             </span>
           )}
@@ -138,7 +138,7 @@ function ProjectList({
 
 function ProjectSwitcherPlaceholder() {
   return (
-    <div className="flex animate-pulse items-center space-x-1.5 rounded-lg px-1.5 py-2 sm:w-60">
+    <div className="flex animate-pulse items-center gap-1.5 rounded-lg px-1.5 py-2 sm:w-60">
       <div className="bg-muted h-8 w-36 animate-pulse rounded-md xl:w-[180px]" />
     </div>
   )

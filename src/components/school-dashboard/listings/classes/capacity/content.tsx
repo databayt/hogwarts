@@ -212,22 +212,22 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                  <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
                     Class
                   </th>
-                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                  <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
                     Subject
                   </th>
-                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                  <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
                     Teacher
                   </th>
-                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                  <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
                     Enrollment
                   </th>
-                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                  <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
                     Capacity
                   </th>
-                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                  <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
                     Status
                   </th>
                 </tr>

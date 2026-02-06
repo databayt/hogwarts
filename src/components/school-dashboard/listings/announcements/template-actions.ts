@@ -16,10 +16,9 @@ export interface TemplateInput {
   name: string
   description?: string
   type?: AnnouncementTemplateType
-  titleEn?: string
-  titleAr?: string
-  bodyEn?: string
-  bodyAr?: string
+  title?: string
+  body?: string
+  lang?: string
   scope?: AnnouncementScope
   priority?: AnnouncementPriority
   classId?: string
@@ -98,10 +97,9 @@ export async function createTemplate(input: TemplateInput) {
         name: input.name,
         description: input.description,
         type: input.type || "custom",
-        titleEn: input.titleEn,
-        titleAr: input.titleAr,
-        bodyEn: input.bodyEn,
-        bodyAr: input.bodyAr,
+        title: input.title,
+        body: input.body,
+        lang: input.lang || "ar",
         scope: input.scope || "school",
         priority: input.priority || "normal",
         classId: input.classId,
@@ -158,10 +156,9 @@ export async function updateTemplate(
         name: input.name,
         description: input.description,
         type: input.type,
-        titleEn: input.titleEn,
-        titleAr: input.titleAr,
-        bodyEn: input.bodyEn,
-        bodyAr: input.bodyAr,
+        title: input.title,
+        body: input.body,
+        lang: input.lang,
         scope: input.scope,
         priority: input.priority,
         classId: input.classId,

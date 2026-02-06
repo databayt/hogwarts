@@ -62,92 +62,77 @@ const INTERVENTION_TYPES: Record<
   string,
   {
     label: string
-    labelAr: string
     icon: React.ReactNode
     color: string
   }
 > = {
   PARENT_PHONE_CALL: {
-    label: "Phone Call",
-    labelAr: "مكالمة هاتفية",
+    label: "مكالمة هاتفية",
     icon: <Phone className="h-4 w-4" />,
     color: "text-blue-500",
   },
   PARENT_EMAIL: {
-    label: "Email",
-    labelAr: "بريد إلكتروني",
+    label: "بريد إلكتروني",
     icon: <Mail className="h-4 w-4" />,
     color: "text-blue-500",
   },
   PARENT_MEETING: {
-    label: "Parent Meeting",
-    labelAr: "اجتماع مع ولي الأمر",
+    label: "اجتماع مع ولي الأمر",
     icon: <Users className="h-4 w-4" />,
     color: "text-green-500",
   },
   HOME_VISIT: {
-    label: "Home Visit",
-    labelAr: "زيارة منزلية",
+    label: "زيارة منزلية",
     icon: <Home className="h-4 w-4" />,
     color: "text-purple-500",
   },
   COUNSELOR_REFERRAL: {
-    label: "Counselor",
-    labelAr: "إحالة للمرشد",
+    label: "إحالة للمرشد",
     icon: <GraduationCap className="h-4 w-4" />,
     color: "text-yellow-500",
   },
   SOCIAL_WORKER_REFERRAL: {
-    label: "Social Worker",
-    labelAr: "إحالة للأخصائي",
+    label: "إحالة للأخصائي",
     icon: <UserCheck className="h-4 w-4" />,
     color: "text-orange-500",
   },
   ADMINISTRATOR_MEETING: {
-    label: "Admin Meeting",
-    labelAr: "اجتماع إداري",
+    label: "اجتماع إداري",
     icon: <Building className="h-4 w-4" />,
     color: "text-red-500",
   },
   ATTENDANCE_CONTRACT: {
-    label: "Contract",
-    labelAr: "عقد حضور",
+    label: "عقد حضور",
     icon: <FileText className="h-4 w-4" />,
     color: "text-red-500",
   },
   TRUANCY_REFERRAL: {
-    label: "Truancy Referral",
-    labelAr: "إحالة تهرب",
+    label: "إحالة تهرب",
     icon: <AlertTriangle className="h-4 w-4" />,
     color: "text-red-700",
   },
   COMMUNITY_RESOURCE: {
-    label: "Community",
-    labelAr: "موارد مجتمعية",
+    label: "موارد مجتمعية",
     icon: <Building className="h-4 w-4" />,
     color: "text-teal-500",
   },
   ACADEMIC_SUPPORT: {
-    label: "Academic Support",
-    labelAr: "دعم أكاديمي",
+    label: "دعم أكاديمي",
     icon: <GraduationCap className="h-4 w-4" />,
     color: "text-indigo-500",
   },
   MENTORSHIP_ASSIGNMENT: {
-    label: "Mentorship",
-    labelAr: "إرشاد",
+    label: "إرشاد",
     icon: <Award className="h-4 w-4" />,
     color: "text-pink-500",
   },
   INCENTIVE_PROGRAM: {
-    label: "Incentive",
-    labelAr: "حوافز",
+    label: "حوافز",
     icon: <Award className="h-4 w-4" />,
     color: "text-green-500",
   },
   OTHER: {
-    label: "Other",
-    labelAr: "أخرى",
+    label: "أخرى",
     icon: <HelpCircle className="h-4 w-4" />,
     color: "text-gray-500",
   },
@@ -156,49 +141,41 @@ const INTERVENTION_TYPES: Record<
 // Status configuration
 const STATUS_CONFIG: Record<
   string,
-  { label: string; labelAr: string; color: string; bgColor: string }
+  { label: string; color: string; bgColor: string }
 > = {
   SCHEDULED: {
-    label: "Scheduled",
-    labelAr: "مجدول",
+    label: "مجدول",
     color: "text-blue-700",
     bgColor: "bg-blue-100",
   },
   IN_PROGRESS: {
-    label: "In Progress",
-    labelAr: "قيد التنفيذ",
+    label: "قيد التنفيذ",
     color: "text-yellow-700",
     bgColor: "bg-yellow-100",
   },
   COMPLETED: {
-    label: "Completed",
-    labelAr: "مكتمل",
+    label: "مكتمل",
     color: "text-green-700",
     bgColor: "bg-green-100",
   },
   CANCELLED: {
-    label: "Cancelled",
-    labelAr: "ملغى",
+    label: "ملغى",
     color: "text-gray-700",
     bgColor: "bg-gray-100",
   },
   ESCALATED: {
-    label: "Escalated",
-    labelAr: "تم التصعيد",
+    label: "تم التصعيد",
     color: "text-red-700",
     bgColor: "bg-red-100",
   },
 }
 
 // Priority configuration
-const PRIORITY_CONFIG: Record<
-  number,
-  { label: string; labelAr: string; color: string }
-> = {
-  1: { label: "Low", labelAr: "منخفض", color: "text-gray-500" },
-  2: { label: "Medium", labelAr: "متوسط", color: "text-blue-500" },
-  3: { label: "High", labelAr: "مرتفع", color: "text-orange-500" },
-  4: { label: "Critical", labelAr: "حرج", color: "text-red-500" },
+const PRIORITY_CONFIG: Record<number, { label: string; color: string }> = {
+  1: { label: "منخفض", color: "text-gray-500" },
+  2: { label: "متوسط", color: "text-blue-500" },
+  3: { label: "مرتفع", color: "text-orange-500" },
+  4: { label: "حرج", color: "text-red-500" },
 }
 
 interface Intervention {
@@ -332,7 +309,7 @@ export function InterventionsContent({
     const config = STATUS_CONFIG[status] || STATUS_CONFIG.SCHEDULED
     return (
       <Badge className={cn(config.bgColor, config.color, "font-normal")}>
-        {isArabic ? config.labelAr : config.label}
+        {config.label}
       </Badge>
     )
   }
@@ -428,7 +405,7 @@ export function InterventionsContent({
                 }
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10"
+                className="ps-10"
               />
             </div>
             <Select value={statusFilter} onValueChange={handleStatusChange}>
@@ -441,7 +418,7 @@ export function InterventionsContent({
                 </SelectItem>
                 {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
-                    {isArabic ? config.labelAr : config.label}
+                    {config.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -456,7 +433,7 @@ export function InterventionsContent({
                 </SelectItem>
                 {Object.entries(INTERVENTION_TYPES).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
-                    {isArabic ? config.labelAr : config.label}
+                    {config.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -535,7 +512,7 @@ export function InterventionsContent({
                             >
                               {typeInfo.icon}
                               <span className="hidden text-sm md:inline">
-                                {isArabic ? typeInfo.labelAr : typeInfo.label}
+                                {typeInfo.label}
                               </span>
                             </div>
                           </TableCell>
@@ -574,9 +551,7 @@ export function InterventionsContent({
                               variant="outline"
                               className={priorityInfo.color}
                             >
-                              {isArabic
-                                ? priorityInfo.labelAr
-                                : priorityInfo.label}
+                              {priorityInfo.label}
                             </Badge>
                           </TableCell>
                           <TableCell>

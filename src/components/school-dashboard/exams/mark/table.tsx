@@ -132,7 +132,7 @@ function MarkingTableInner({ data, dictionary }: MarkingTableProps) {
           {dict.table.showing} {table.getFilteredRowModel().rows.length}{" "}
           {dict.table.of} {data.length} {dict.table.submissions}
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"

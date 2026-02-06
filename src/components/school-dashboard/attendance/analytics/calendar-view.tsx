@@ -395,7 +395,7 @@ export function AttendanceCalendarView({
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="text-right">
+                    <div className="text-end">
                       <div className="flex items-center gap-2">
                         <Badge
                           variant={

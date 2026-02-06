@@ -44,10 +44,7 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
     levelName:
       lang === "ar" ? "اسم المرحلة (بالإنجليزية)" : "Level Name (English)",
     levelNamePlaceholder: lang === "ar" ? "مثال: Grade 1" : "e.g., Grade 1",
-    levelNameAr:
-      lang === "ar" ? "اسم المرحلة (بالعربية)" : "Level Name (Arabic)",
-    levelNameArPlaceholder:
-      lang === "ar" ? "مثال: الصف الأول" : "e.g., الصف الأول",
+    language: lang === "ar" ? "اللغة" : "Language",
     levelOrder: lang === "ar" ? "ترتيب المرحلة" : "Level Order",
     levelOrderPlaceholder: lang === "ar" ? "مثال: 1" : "e.g., 1",
     cancel: lang === "ar" ? "إلغاء" : "Cancel",
@@ -67,7 +64,7 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
     resolver: zodResolver(yearLevelCreateSchema) as any,
     defaultValues: {
       levelName: "",
-      levelNameAr: "",
+      lang: "ar",
       levelOrder: 1,
     },
   })
@@ -80,7 +77,7 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
         if (result.success && result.data) {
           form.reset({
             levelName: result.data.levelName,
-            levelNameAr: result.data.levelNameAr || "",
+            lang: (result.data.lang as "ar" | "en") || "ar",
             levelOrder: result.data.levelOrder,
           })
         }
@@ -133,18 +130,24 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
 
           <FormField
             control={form.control}
-            name="levelNameAr"
+            name="lang"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t.levelNameAr}</FormLabel>
+                <FormLabel>{t.language}</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder={t.levelNameArPlaceholder}
-                    {...field}
-                    value={field.value || ""}
+                  <select
+                    value={field.value || "ar"}
+                    onChange={field.onChange}
                     disabled={isPending}
-                    dir="rtl"
-                  />
+                    className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
+                  >
+                    <option value="ar">
+                      {lang === "ar" ? "عربي" : "Arabic"}
+                    </option>
+                    <option value="en">
+                      {lang === "ar" ? "إنجليزي" : "English"}
+                    </option>
+                  </select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -186,7 +189,7 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
-                  <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
                   {t.saving}
                 </>
               ) : (

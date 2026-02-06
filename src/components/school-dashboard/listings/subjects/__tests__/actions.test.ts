@@ -192,7 +192,7 @@ describe("Subject Actions", () => {
         {
           id: "1",
           subjectName: "Mathematics",
-          subjectNameAr: null,
+          lang: "ar",
           schoolId: mockSchoolId,
           departmentId: "dept-1",
           createdAt: now,
@@ -203,7 +203,7 @@ describe("Subject Actions", () => {
         {
           id: "2",
           subjectName: "English",
-          subjectNameAr: null,
+          lang: "ar",
           schoolId: mockSchoolId,
           departmentId: "dept-2",
           createdAt: now,

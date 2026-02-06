@@ -548,7 +548,7 @@ export function AchievementsTab({
                     </div>
                   </div>
                   <Button variant="outline" size="sm">
-                    <Download className="mr-1 h-3 w-3" />
+                    <Download className="me-1 h-3 w-3" />
                     Download
                   </Button>
                 </div>

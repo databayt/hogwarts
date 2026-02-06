@@ -3,6 +3,10 @@
  * Handles campaigns, applications, merit lists, and enrollment
  */
 
+import type {
+  AdmissionApplicationStatus,
+  AdmissionStatus,
+} from "@prisma/client"
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
@@ -181,7 +185,7 @@ export function buildCampaignWhere(
   }
 
   if (filters.status) {
-    where.status = filters.status as any
+    where.status = filters.status as AdmissionStatus
   }
 
   if (filters.academicYear) {
@@ -228,7 +232,7 @@ export function buildApplicationWhere(
   }
 
   if (filters.status) {
-    where.status = filters.status as any
+    where.status = filters.status as AdmissionApplicationStatus
   }
 
   if (filters.applyingForClass) {
@@ -256,7 +260,7 @@ export function buildMeritWhere(
   }
 
   if (filters.status) {
-    where.status = filters.status as any
+    where.status = filters.status as AdmissionApplicationStatus
   }
 
   return where
@@ -268,7 +272,9 @@ export function buildEnrollmentWhere(
 ): Prisma.ApplicationWhereInput {
   const where: Prisma.ApplicationWhereInput = {
     schoolId,
-    status: { in: ["SELECTED", "ADMITTED"] as any },
+    status: {
+      in: ["SELECTED", "ADMITTED"] as AdmissionApplicationStatus[],
+    },
   }
 
   if (filters.campaignId) {
@@ -515,13 +521,21 @@ export async function getMeritStats(schoolId: string, campaignId?: string) {
 
   const [totalRanked, selected, waitlisted, avgScoreResult] = await Promise.all(
     [
-      db.application.count({ where: where as any }),
-      db.application.count({ where: { ...where, status: "SELECTED" } as any }),
+      db.application.count({ where }),
       db.application.count({
-        where: { ...where, status: "WAITLISTED" } as any,
+        where: {
+          ...where,
+          status: "SELECTED" as AdmissionApplicationStatus,
+        },
+      }),
+      db.application.count({
+        where: {
+          ...where,
+          status: "WAITLISTED" as AdmissionApplicationStatus,
+        },
       }),
       db.application.aggregate({
-        where: where as any,
+        where,
         _avg: { meritScore: true },
       }),
     ]
@@ -541,7 +555,9 @@ export async function getEnrollmentStats(
 ) {
   const baseWhere = {
     schoolId,
-    status: { in: ["SELECTED", "ADMITTED"] as any },
+    status: {
+      in: ["SELECTED", "ADMITTED"] as AdmissionApplicationStatus[],
+    },
   }
   const where = campaignId ? { ...baseWhere, campaignId } : baseWhere
 

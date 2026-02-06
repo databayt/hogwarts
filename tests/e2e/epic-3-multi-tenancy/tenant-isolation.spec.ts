@@ -34,6 +34,7 @@ test.describe("Story 3.3: Tenant Context Resolution @multi-tenant", () => {
     await loginPage.loginAs("admin")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -50,6 +51,7 @@ test.describe("Story 3.3: Tenant Context Resolution @multi-tenant", () => {
     await loginPage.loginAs("developer")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -66,6 +68,7 @@ test.describe("Story 3.3: Tenant Context Resolution @multi-tenant", () => {
     await loginPage.login("user@databayt.org", "1234")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -87,6 +90,7 @@ test.describe("Story 3.4: Tenant Isolation @multi-tenant @critical", () => {
     await loginPage.loginAs("admin")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -112,6 +116,7 @@ test.describe("Story 3.4: Tenant Isolation @multi-tenant @critical", () => {
     await loginPage.loginAs("developer")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -156,6 +161,7 @@ test.describe("Story 3.4: Cross-Tenant Access Prevention @multi-tenant @critical
     await loginPage.loginAs("admin")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 

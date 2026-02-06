@@ -27,7 +27,7 @@ export function AnnouncementCard({
     <div
       className={cn(
         "hover:bg-muted/50 rounded-lg border p-4 transition-colors",
-        priority === "high" && "border-l-destructive border-l-4",
+        priority === "high" && "border-s-destructive border-s-4",
         className
       )}
     >

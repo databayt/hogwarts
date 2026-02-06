@@ -43,7 +43,7 @@ export default function DomainsError({
             </div>
           )}
           <Button onClick={() => reset()} className="w-full">
-            <Icons.refresh className="mr-2 h-4 w-4" />
+            <Icons.refresh className="me-2 h-4 w-4" />
             Retry loading domains
           </Button>
         </CardContent>

@@ -58,7 +58,7 @@ export function ToolbarGroup({
     <div
       className={cn(
         "flex flex-wrap items-center gap-2",
-        position === "end" && "ml-auto",
+        position === "end" && "ms-auto",
         className
       )}
     >

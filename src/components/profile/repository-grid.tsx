@@ -62,7 +62,7 @@ export default function RepositoryGrid() {
           <div className="mb-2 flex items-start justify-between">
             <div className="flex items-center">
               <svg
-                className="text-muted-foreground mr-2 h-4 w-4"
+                className="text-muted-foreground me-2 h-4 w-4"
                 fill="currentColor"
                 viewBox="0 0 16 16"
               >
@@ -80,10 +80,10 @@ export default function RepositoryGrid() {
           <p className="muted mb-3 line-clamp-2">{repo.description}</p>
 
           <div className="muted flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
               <div className="flex items-center">
                 <div
-                  className={`mr-1 h-3 w-3 rounded-full ${repo.language === "Dart" ? "bg-[#00b4ab]" : "bg-[#e34c26]"}`}
+                  className={`me-1 h-3 w-3 rounded-full ${repo.language === "Dart" ? "bg-[#00b4ab]" : "bg-[#e34c26]"}`}
                 ></div>
                 <span>{repo.language}</span>
               </div>
@@ -91,7 +91,7 @@ export default function RepositoryGrid() {
               {repo.stars && (
                 <div className="flex items-center">
                   <svg
-                    className="mr-1 h-3 w-3"
+                    className="me-1 h-3 w-3"
                     fill="currentColor"
                     viewBox="0 0 16 16"
                   >
@@ -104,7 +104,7 @@ export default function RepositoryGrid() {
               {repo.forks && (
                 <div className="flex items-center">
                   <svg
-                    className="mr-1 h-3 w-3"
+                    className="me-1 h-3 w-3"
                     fill="currentColor"
                     viewBox="0 0 16 16"
                   >

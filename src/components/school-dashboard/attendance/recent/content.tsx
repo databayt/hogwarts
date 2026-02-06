@@ -271,7 +271,7 @@ export function RecentActivityContent({
           disabled={refreshing}
         >
           <RefreshCw
-            className={cn("mr-2 h-4 w-4", refreshing && "animate-spin")}
+            className={cn("me-2 h-4 w-4", refreshing && "animate-spin")}
           />
           Refresh
         </Button>
@@ -453,7 +453,7 @@ export function RecentActivityContent({
                         </div>
                       </div>
                     </div>
-                    <div className="text-muted-foreground text-right text-sm">
+                    <div className="text-muted-foreground text-end text-sm">
                       <p>{safeFormatDate(record.date, locale)}</p>
                       <p className="text-xs">
                         {safeFormatDistanceToNow(record.markedAt)}

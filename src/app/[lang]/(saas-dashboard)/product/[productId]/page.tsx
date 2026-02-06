@@ -18,15 +18,15 @@ export default async function ProductDetail({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
-  // Define product page navigation
+  const n = d?.nav
   const productPages: PageNavItem[] = [
-    { name: "All Products", href: `/${lang}/product` },
-    { name: "Detail", href: `/${lang}/product/${productId}` },
+    { name: n?.allProducts || "All Products", href: `/${lang}/product` },
+    { name: n?.detail || "Detail", href: `/${lang}/product/${productId}` },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter title="Product Detail" />
+      <PageHeadingSetter title={n?.detail || "Product Detail"} />
       <PageNav pages={productPages} />
       <ProductDetailContent
         dictionary={dictionary}

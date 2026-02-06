@@ -87,7 +87,7 @@ describe("Timetable Production Readiness - Logic Verification", () => {
                 {
                   yearLevel: {
                     levelName: "Grade 10",
-                    levelNameAr: "الصف العاشر",
+                    lang: "ar",
                   },
                 },
               ],
@@ -108,7 +108,7 @@ describe("Timetable Production Readiness - Logic Verification", () => {
           classId: enrollment?.class.id,
           className: enrollment?.class.name,
           gradeName: yearLevel?.yearLevel?.levelName,
-          gradeNameAr: yearLevel?.yearLevel?.levelNameAr,
+          gradeLang: yearLevel?.yearLevel?.lang,
           isPrimary: sg.isPrimary,
         }
       })
@@ -121,7 +121,7 @@ describe("Timetable Production Readiness - Logic Verification", () => {
         classId: "class-1",
         className: "Grade 10A",
         gradeName: "Grade 10",
-        gradeNameAr: "الصف العاشر",
+        gradeLang: "ar",
         isPrimary: true,
       })
     })

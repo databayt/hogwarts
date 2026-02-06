@@ -130,7 +130,7 @@ export function ConversationCard({
       )}
 
       {/* Avatar */}
-      <div className="relative ml-2 flex-shrink-0">
+      <div className="relative ms-2 flex-shrink-0">
         <Avatar
           className={cn(
             "transition-all",
@@ -243,7 +243,7 @@ export function ConversationCard({
                 onPin?.(conversation.id)
               }}
             >
-              <Pin className="mr-2 h-4 w-4" />
+              <Pin className="me-2 h-4 w-4" />
               {isPinned
                 ? locale === "ar"
                   ? "إلغاء التثبيت"
@@ -260,12 +260,12 @@ export function ConversationCard({
             >
               {isMuted ? (
                 <>
-                  <Volume2 className="mr-2 h-4 w-4" />
+                  <Volume2 className="me-2 h-4 w-4" />
                   {locale === "ar" ? "إلغاء الكتم" : "Unmute"}
                 </>
               ) : (
                 <>
-                  <VolumeX className="mr-2 h-4 w-4" />
+                  <VolumeX className="me-2 h-4 w-4" />
                   {locale === "ar" ? "كتم" : "Mute"}
                 </>
               )}
@@ -277,7 +277,7 @@ export function ConversationCard({
                 onArchive?.(conversation.id)
               }}
             >
-              <Archive className="mr-2 h-4 w-4" />
+              <Archive className="me-2 h-4 w-4" />
               {locale === "ar" ? "أرشفة" : "Archive"}
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -287,7 +287,7 @@ export function ConversationCard({
               }}
               className="text-destructive focus:text-destructive"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="me-2 h-4 w-4" />
               {locale === "ar" ? "حذف" : "Delete"}
             </DropdownMenuItem>
           </DropdownMenuContent>

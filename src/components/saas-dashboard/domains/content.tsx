@@ -16,7 +16,7 @@ import { domainColumns, type DomainRow } from "./columns"
 import { DomainsTable } from "./table"
 
 interface Props {
-  dictionary: any // TODO: Add proper saas-dashboard dictionary types
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
   searchParams?: {
     page?: string
@@ -127,6 +127,8 @@ export async function DomainsContent({
   lang,
   searchParams,
 }: Props) {
+  const t = dictionary?.operator?.domains
+
   const [domainData, stats] = await Promise.all([
     getDomainRequestsData(searchParams),
     getDomainStats(),
@@ -136,10 +138,9 @@ export async function DomainsContent({
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
         <div>
-          <h2>{dictionary?.title || "Domain Requests"}</h2>
+          <h2>{t?.title || "Domain Requests"}</h2>
           <p className="muted">
-            {dictionary?.description ||
-              "Manage custom domain requests for schools"}
+            {t?.description || "Manage custom domain requests for schools"}
           </p>
         </div>
 
@@ -148,63 +149,76 @@ export async function DomainsContent({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Requests
+                {t?.totalRequests || "Total Requests"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalRequests}</div>
-              <p className="text-muted-foreground text-xs">All time</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Review
-              </CardTitle>
-              <Badge variant="default">Action Required</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingRequests}</div>
-              <p className="text-muted-foreground text-xs">Awaiting approval</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Approved</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.approvedRequests}</div>
               <p className="text-muted-foreground text-xs">
-                Ready for DNS setup
+                {t?.allTime || "All time"}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Verified</CardTitle>
-              <Badge variant="outline" className="text-green-600">
-                Active
+              <CardTitle className="text-sm font-medium">
+                {t?.pendingReview || "Pending Review"}
+              </CardTitle>
+              <Badge variant="default">
+                {t?.actionRequired || "Action Required"}
               </Badge>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.verifiedRequests}</div>
-              <p className="text-muted-foreground text-xs">DNS configured</p>
+              <div className="text-2xl font-bold">{stats.pendingRequests}</div>
+              <p className="text-muted-foreground text-xs">
+                {t?.awaitingApproval || "Awaiting approval"}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Approval Rate
+                {t?.approved || "Approved"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.approvedRequests}</div>
+              <p className="text-muted-foreground text-xs">
+                {t?.readyForDNS || "Ready for DNS setup"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t?.verified || "Verified"}
+              </CardTitle>
+              <Badge variant="outline" className="text-green-600">
+                {dictionary?.operator?.common?.status?.active || "Active"}
+              </Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.verifiedRequests}</div>
+              <p className="text-muted-foreground text-xs">
+                {t?.dnsConfigured || "DNS configured"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t?.approvalRate || "Approval Rate"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.approvalRate}%</div>
               <p className="text-muted-foreground text-xs">
-                {stats.approvedRequests + stats.verifiedRequests} of{" "}
+                {stats.approvedRequests + stats.verifiedRequests}{" "}
+                {dictionary?.operator?.tenants?.of || "of"}{" "}
                 {stats.totalRequests}
               </p>
             </CardContent>
@@ -215,11 +229,12 @@ export async function DomainsContent({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">
-              {dictionary?.table?.title || "Domain Requests"}
+              {t?.domainRequests || "Domain Requests"}
             </h3>
             {stats.pendingRequests > 0 && (
               <Badge variant="default">
-                {stats.pendingRequests} pending review
+                {stats.pendingRequests}{" "}
+                {t?.pendingReview?.toLowerCase() || "pending review"}
               </Badge>
             )}
           </div>
@@ -233,8 +248,11 @@ export async function DomainsContent({
             />
           ) : (
             <EmptyState
-              title="No domain requests"
-              description="New domain requests from schools will appear here."
+              title={t?.noDomainRequests || "No domain requests"}
+              description={
+                t?.domainRequestsWillAppear ||
+                "New domain requests from schools will appear here."
+              }
             />
           )}
         </div>
@@ -244,22 +262,30 @@ export async function DomainsContent({
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                DNS Configuration Required
+                {t?.dnsConfigRequired || "DNS Configuration Required"}
               </CardTitle>
               <CardDescription>
-                {stats.approvedRequests} domain(s) are approved and waiting for
-                DNS configuration
+                {stats.approvedRequests}{" "}
+                {t?.dnsConfigDescription
+                  ? t.dnsConfigDescription.replace(
+                      "{count}",
+                      String(stats.approvedRequests)
+                    )
+                  : "domain(s) are approved and waiting for DNS configuration"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
                 <p>
-                  For each approved domain, configure the following DNS records:
+                  {t?.configureDNS ||
+                    "For each approved domain, configure the following DNS records:"}
                 </p>
                 <ul className="text-muted-foreground list-inside list-disc space-y-1">
-                  <li>A record pointing to our IP address</li>
-                  <li>CNAME record for www subdomain</li>
-                  <li>TXT record for domain verification</li>
+                  <li>{t?.aRecord || "A record pointing to our IP address"}</li>
+                  <li>{t?.cnameRecord || "CNAME record for www subdomain"}</li>
+                  <li>
+                    {t?.txtRecord || "TXT record for domain verification"}
+                  </li>
                 </ul>
               </div>
             </CardContent>

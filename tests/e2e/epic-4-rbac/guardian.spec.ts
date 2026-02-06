@@ -31,7 +31,8 @@ test.describe("Story 4.5: GUARDIAN Permissions @rbac", () => {
     await loginPage.loginAs("guardian")
 
     if (page.url().includes("chrome-error://")) {
-      test.skip()
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
     }
   })
 

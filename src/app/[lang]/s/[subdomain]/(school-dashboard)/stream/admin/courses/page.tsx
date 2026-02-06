@@ -7,9 +7,12 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import AdminCoursesContent from "@/components/stream/admin/courses/content"
+import { streamCoursesSearchParams } from "@/components/stream/list-params"
+import { getAdminCoursesList } from "@/components/stream/queries"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,30 +20,6 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "Your Courses - Stream Admin",
     description: "Manage your courses",
   }
-}
-
-async function getCourses(schoolId: string) {
-  const courses = await db.streamCourse.findMany({
-    where: { schoolId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      category: true,
-      chapters: {
-        include: {
-          lessons: true,
-        },
-      },
-      _count: {
-        select: {
-          enrollments: {
-            where: { isActive: true },
-          },
-        },
-      },
-    },
-  })
-
-  return courses
 }
 
 async function getCategories(schoolId: string) {
@@ -56,11 +35,15 @@ async function getCategories(schoolId: string) {
   return categories
 }
 
-export default async function StreamAdminCoursesPage({ params }: Props) {
+export default async function StreamAdminCoursesPage({
+  params,
+  searchParams,
+}: Props) {
   const { lang, subdomain } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
   const session = await auth()
+  const search = streamCoursesSearchParams.parse(await searchParams)
 
   // Check admin access
   if (!session?.user) {
@@ -75,16 +58,37 @@ export default async function StreamAdminCoursesPage({ params }: Props) {
     redirect(`/${lang}/s/${subdomain}/stream/not-admin`)
   }
 
-  // Fetch courses and categories in parallel
-  const [courses, categories] = schoolId
-    ? await Promise.all([getCourses(schoolId), getCategories(schoolId)])
-    : [[], []]
+  if (!schoolId) {
+    return (
+      <AdminCoursesContent
+        dictionary={dictionary.stream}
+        lang={lang}
+        initialData={[]}
+        total={0}
+        categories={[]}
+      />
+    )
+  }
+
+  const [{ rows, count }, categories] = await Promise.all([
+    getAdminCoursesList(schoolId, {
+      page: search.page,
+      perPage: search.perPage,
+      title: search.title || undefined,
+      category: search.category || undefined,
+      level: search.level || undefined,
+      isPublished: search.isPublished || undefined,
+      sort: search.sort.length > 0 ? search.sort : undefined,
+    }),
+    getCategories(schoolId),
+  ])
 
   return (
     <AdminCoursesContent
       dictionary={dictionary.stream}
       lang={lang}
-      courses={courses}
+      initialData={rows}
+      total={count}
       categories={categories}
     />
   )

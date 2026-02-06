@@ -159,12 +159,12 @@ export function AttendanceOverviewContent({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-sm">
-            <Clock className="mr-1 h-3 w-3" />
+            <Clock className="me-1 h-3 w-3" />
             {currentTime}
           </Badge>
           <Button asChild>
             <Link href={`${basePath}/manual`}>
-              <PlayCircle className="mr-2 h-4 w-4" />
+              <PlayCircle className="me-2 h-4 w-4" />
               {d?.markAttendance || "Mark Attendance"}
             </Link>
           </Button>
@@ -318,7 +318,7 @@ export function AttendanceOverviewContent({
                         variant="outline"
                         className="border-emerald-200 bg-emerald-50 text-emerald-700"
                       >
-                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                        <CheckCircle2 className="me-1 h-3 w-3" />
                         Done
                       </Badge>
                     ) : (
@@ -331,7 +331,7 @@ export function AttendanceOverviewContent({
                           "Marking..."
                         ) : (
                           <>
-                            <Zap className="mr-1 h-3 w-3" />
+                            <Zap className="me-1 h-3 w-3" />
                             {d?.allPresent || "All Present"}
                           </>
                         )}
@@ -434,7 +434,7 @@ export function AttendanceOverviewContent({
                       href={student.actionUrl || `${basePath}/early-warning`}
                     >
                       View
-                      <ChevronRight className="ml-1 h-4 w-4" />
+                      <ChevronRight className="ms-1 h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
@@ -472,7 +472,7 @@ export function AttendanceOverviewContent({
                 >
                   <Link href={`${basePath}/manual?classId=${cls.id}`}>
                     {cls.name}
-                    <span className="text-muted-foreground ml-1 text-xs">
+                    <span className="text-muted-foreground ms-1 text-xs">
                       ({cls.studentCount})
                     </span>
                   </Link>

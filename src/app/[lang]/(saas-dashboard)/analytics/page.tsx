@@ -20,11 +20,11 @@ export default async function AnalyticsPage({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
-  // Define analytics page navigation (linked with dashboard)
+  const n = d?.nav
   const analyticsPages: PageNavItem[] = [
-    { name: "Overview", href: `/${lang}/dashboard` },
-    { name: "Analytics", href: `/${lang}/analytics` },
-    { name: "Kanban", href: `/${lang}/kanban` },
+    { name: n?.overview || "Overview", href: `/${lang}/dashboard` },
+    { name: n?.analytics || "Analytics", href: `/${lang}/analytics` },
+    { name: n?.kanban || "Kanban", href: `/${lang}/kanban` },
   ]
 
   return (

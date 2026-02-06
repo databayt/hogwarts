@@ -241,13 +241,13 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild>
                 <Link href={`/${lang}/admin/membership/users`}>
-                  <Users className="mr-2 h-4 w-4" />
+                  <Users className="me-2 h-4 w-4" />
                   View All Users
                 </Link>
               </Button>
               <Button asChild variant="outline" size="sm">
                 <Link href={`/${lang}/admin/membership/users/new`}>
-                  <UserPlus className="mr-2 h-4 w-4" />
+                  <UserPlus className="me-2 h-4 w-4" />
                   Add New User
                 </Link>
               </Button>
@@ -272,7 +272,7 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/membership/roles`}>
-                  <Shield className="mr-2 h-4 w-4" />
+                  <Shield className="me-2 h-4 w-4" />
                   Manage Roles
                 </Link>
               </Button>
@@ -302,13 +302,13 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/membership/import`}>
-                  <Upload className="mr-2 h-4 w-4" />
+                  <Upload className="me-2 h-4 w-4" />
                   Import Users
                 </Link>
               </Button>
               <Button asChild variant="outline" size="sm">
                 <Link href={`/${lang}/admin/membership/export`}>
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Export Users
                 </Link>
               </Button>
@@ -333,7 +333,7 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/membership/settings`}>
-                  <UserCog className="mr-2 h-4 w-4" />
+                  <UserCog className="me-2 h-4 w-4" />
                   Account Settings
                 </Link>
               </Button>
@@ -364,7 +364,7 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/membership/email`}>
-                  <Mail className="mr-2 h-4 w-4" />
+                  <Mail className="me-2 h-4 w-4" />
                   Email Settings
                 </Link>
               </Button>
@@ -395,7 +395,7 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/membership/passwords`}>
-                  <Key className="mr-2 h-4 w-4" />
+                  <Key className="me-2 h-4 w-4" />
                   Password Settings
                 </Link>
               </Button>

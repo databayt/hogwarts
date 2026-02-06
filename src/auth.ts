@@ -77,6 +77,197 @@ function extractLocaleFromUrl(url: string): string {
   return match ? match[1] : "ar" // Default to Arabic
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// REDIRECT HELPERS - Extracted from redirect callback for maintainability
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Resolve callback URL from multiple sources (first wins):
+ * 0. Server-side cookie (oauth_callback_intended)
+ * 1. URL searchParams (callbackUrl / redirect)
+ * 2. URL regex match (callbackUrl=...)
+ * 3. baseUrl searchParams
+ */
+async function resolveCallbackUrl(
+  url: string,
+  baseUrl: string
+): Promise<string | null> {
+  // Method 0: Server-side cookie (most reliable for OAuth flows)
+  try {
+    const cookieStore = await cookies()
+    const stored = cookieStore.get("oauth_callback_intended")
+    if (stored?.value) return stored.value
+  } catch {
+    // cookies() not available in this context
+  }
+
+  // Method 1: URL searchParams
+  try {
+    const urlObj = new URL(url, baseUrl)
+    const fromParams =
+      urlObj.searchParams.get("callbackUrl") ||
+      urlObj.searchParams.get("redirect")
+    if (fromParams) return fromParams
+  } catch {
+    // Invalid URL
+  }
+
+  // Method 2: Regex fallback
+  if (url.includes("callbackUrl=")) {
+    const match = url.match(/callbackUrl=([^&]+)/)
+    if (match) return decodeURIComponent(match[1])
+  }
+
+  // Method 3: baseUrl searchParams (during OAuth flow)
+  try {
+    const baseUrlObj = new URL(baseUrl)
+    const fromBase = baseUrlObj.searchParams.get("callbackUrl")
+    if (fromBase) return fromBase
+  } catch {
+    // Invalid baseUrl
+  }
+
+  return null
+}
+
+/**
+ * Validate callback URL for same-origin security.
+ * Returns absolute URL if valid, null if rejected.
+ */
+function validateCallbackUrl(
+  callbackUrl: string,
+  baseUrl: string
+): string | null {
+  try {
+    if (callbackUrl.startsWith("/")) {
+      return `${baseUrl}${callbackUrl}`
+    }
+    const callbackOrigin = new URL(callbackUrl, baseUrl).origin
+    const baseOrigin = new URL(baseUrl).origin
+    if (callbackOrigin === baseOrigin) {
+      return callbackUrl
+    }
+  } catch {
+    // Parse error — try relative path as last resort
+    if (callbackUrl.startsWith("/")) {
+      return `${baseUrl}${callbackUrl}`
+    }
+  }
+  return null
+}
+
+/** Extract host from url (full URL) or baseUrl (relative URL) */
+function getHostFromUrl(url: string, baseUrl: string): string {
+  try {
+    if (url.startsWith("http")) return new URL(url).host
+    return new URL(baseUrl).host
+  } catch {
+    try {
+      return new URL(baseUrl).host
+    } catch {
+      return ""
+    }
+  }
+}
+
+/**
+ * Detect subdomain from host.
+ * Returns null for main domain (ed.databayt.org, localhost:3000).
+ */
+function detectSubdomainFromHost(host: string): string | null {
+  // Production: school.databayt.org → "school" (exclude ed.databayt.org)
+  if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
+    return host.split(".")[0]
+  }
+  // Development: school.localhost:3000 → "school"
+  if (
+    host.includes(".localhost") &&
+    host !== "localhost:3000" &&
+    host !== "localhost"
+  ) {
+    const sub = host.split(".")[0]
+    if (sub !== "www" && sub !== "localhost") return sub
+  }
+  return null
+}
+
+/** Check if host is the main domain (not a tenant subdomain) */
+function isMainDomain(host: string): boolean {
+  return (
+    host === "ed.databayt.org" ||
+    host.includes("ed.databayt.org") ||
+    host === "localhost:3000" ||
+    host === "localhost"
+  )
+}
+
+/** Extract tenant parameter from URL or baseUrl searchParams */
+function extractTenantParam(url: string, baseUrl: string): string | null {
+  try {
+    const urlObj = new URL(url, baseUrl)
+    const tenant = urlObj.searchParams.get("tenant")
+    if (tenant) return tenant
+  } catch {
+    // Invalid URL
+  }
+
+  // Regex fallback for tenant=... in URL string
+  const match = url.match(/tenant=([^&]+)/)
+  if (match) return match[1]
+
+  try {
+    const baseUrlObj = new URL(baseUrl)
+    return baseUrlObj.searchParams.get("tenant")
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Smart redirect: decode JWT → look up user's school → redirect to school subdomain.
+ * Returns null if unable to determine redirect (caller should use fallback).
+ */
+async function getSmartRedirectUrl(
+  url: string,
+  baseUrl: string
+): Promise<string | null> {
+  try {
+    const token = await getToken({
+      req: {
+        headers: {
+          cookie: (await cookies()).toString(),
+        },
+      } as any,
+      secret: process.env.AUTH_SECRET,
+    })
+
+    if (!token) return null
+
+    const userSchoolId = token.schoolId as string | null | undefined
+    const userRole = token.role as string | undefined
+
+    // DEVELOPER or no school → main dashboard
+    if (!userSchoolId || userRole === "DEVELOPER") {
+      return `${baseUrl}/dashboard`
+    }
+
+    // Regular user → look up school subdomain
+    const schoolDomain = await getSchoolDomain(userSchoolId)
+    if (schoolDomain) {
+      const locale = extractLocaleFromUrl(url)
+      return constructSchoolUrl(schoolDomain, `/${locale}/dashboard`)
+    }
+
+    // School not found — fall through
+    return null
+  } catch (error) {
+    authLogger.error("Smart redirect failed", {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
+
 export const {
   handlers: { GET, POST },
   auth,
@@ -89,11 +280,9 @@ export const {
     maxAge: 24 * 60 * 60, // 24 hours
     updateAge: process.env.NODE_ENV === "production" ? 5 * 60 : 60 * 60, // 5 minutes in prod (for critical updates), 1 hour in dev
     generateSessionToken: () => {
-      const token = `session_${Date.now()}`
-      if (process.env.NODE_ENV === "development") {
-        console.log("🔑 Generated session token:", token)
-      }
-      return token
+      const bytes = new Uint8Array(32)
+      crypto.getRandomValues(bytes)
+      return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
     },
   },
   pages: {
@@ -101,7 +290,7 @@ export const {
     error: "/error",
   },
   secret: process.env.AUTH_SECRET,
-  debug: true, // TEMPORARILY enable debug for all environments to see Facebook OAuth errors
+  debug: process.env.NODE_ENV === "development",
   trustHost: true, // Required for OAuth in production (Vercel proxies)
   logger: {
     error(code, ...message: unknown[]) {
@@ -150,6 +339,14 @@ export const {
           isNewUser,
           timestamp: new Date().toISOString(),
         })
+      }
+    },
+    async signOut() {
+      try {
+        const cookieStore = await cookies()
+        cookieStore.delete("impersonate_schoolId")
+      } catch {
+        // cookies() may not be available in all contexts
       }
     },
   },
@@ -485,947 +682,93 @@ export const {
       return session
     },
     /**
-     * Redirect Callback - Complex Multi-Tenant Routing
+     * Redirect Callback - Multi-Tenant Post-Auth Routing
      *
-     * This callback handles post-authentication redirects with several challenges:
+     * Handles post-authentication redirects across subdomains.
      *
-     * PROBLEM: OAuth providers redirect to a fixed callback URL, losing the intended destination.
-     * SOLUTION: 5 methods to retrieve the callback URL (first successful wins):
-     *   0. Server-side cookie (oauth_callback_intended) - most reliable
-     *   1. URL searchParams (callbackUrl parameter)
-     *   2. URL regex match (fallback parser)
-     *   3. baseUrl analysis (during OAuth flow)
-     *   4. Client-side cookies (authjs.callback-url, oauth_callback_intended)
-     *   5. Session storage (oauth_callback_intended)
-     *
-     * MULTI-TENANT ROUTING:
-     * - Detects subdomain from host (school.databayt.org → "school")
-     * - Looks up user's schoolId from JWT → fetches school domain from DB
-     * - Constructs school-specific dashboard URL
-     * - Special case: ed.databayt.org is the saas-marketing school-marketing, NOT a tenant
+     * PRIORITY ORDER:
+     * 1. Callback URL (from cookie → URL params → baseUrl params)
+     * 2. Subdomain detection from host → school dashboard
+     * 3. Main domain locale path (e.g., /en, /ar) → locale homepage
+     * 4. Smart redirect: JWT → school lookup → school subdomain dashboard
+     * 5. Fallback: main domain dashboard
      *
      * GOTCHAS:
      * - Facebook OAuth adds #_=_ hash that must be stripped
-     * - Callback URLs must be validated for same-origin security
-     * - DEVELOPERs (school-dashboard admins) go to ed.databayt.org, not a school subdomain
-     *
-     * See: src/app/api/auth/store-callback/route.ts for how callback URL is stored
+     * - Callback URLs validated for same-origin security
+     * - ed.databayt.org is main domain, NOT a tenant
      */
     async redirect({ url, baseUrl }) {
-      const isDev = process.env.NODE_ENV === "development"
-      const log = isDev ? console.log : () => {}
-
-      log("=====================================")
-      log("🔄 REDIRECT CALLBACK START")
-      log("=====================================")
-      log("📍 Input Parameters:", {
-        url,
-        baseUrl,
-        urlLength: url?.length,
-        baseUrlLength: baseUrl?.length,
-      })
-
-      // Try to get callback URL from the original request if possible
-      // This is a workaround for NextAuth not properly passing callbackUrl through OAuth
-      const intendedCallbackUrl: string | null = null
-
-      // Check if we're coming from an OAuth callback
-      if (url.includes("/api/auth/callback/")) {
-        log("🔐 OAuth callback detected - checking for stored callback URL")
-        // The callback URL should have been stored before OAuth redirect
-        // We'll check for it in multiple places below
-      }
-
-      // Check if this is an OAuth callback
-      const isOAuthCallback = url.includes("/api/auth/callback/")
-      if (isOAuthCallback) {
-        const provider = url.match(/callback\/(\w+)/)?.[1]
-        log("🔐 OAUTH CALLBACK DETECTED:", {
-          provider,
-          url,
-          urlLength: url.length,
-          hasHash: url.includes("#"),
-          hashContent: url.includes("#") ? url.split("#")[1] : null,
-          hasQuery: url.includes("?"),
-          queryContent: url.includes("?")
-            ? url.split("?")[1]?.split("#")[0]
-            : null,
-          timestamp: new Date().toISOString(),
-        })
-
-        // Log request headers if available (for debugging)
-        if (typeof process !== "undefined" && process.env) {
-          log("🌍 Environment:", {
-            NODE_ENV: process.env.NODE_ENV,
-            NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-          })
-        }
-      }
-
-      // Handle Facebook redirect with #_=_ hash FIRST - clean it completely
+      // Strip Facebook's #_=_ hash
       if (url.includes("#_=_")) {
-        log("📘 Facebook redirect detected, cleaning hash")
-        log("Original URL with hash:", url)
-
-        // Clean the Facebook hash and redirect appropriately
-        const cleanUrl = url.replace(/#.*$/, "")
-        log("🎯 Cleaned Facebook URL:", cleanUrl)
-
-        // Check if the cleaned URL has callback parameters
-        try {
-          const cleanUrlObj = new URL(cleanUrl, baseUrl)
-          log("📘 Facebook cleaned URL analysis:", {
-            pathname: cleanUrlObj.pathname,
-            search: cleanUrlObj.search,
-            searchParams: Array.from(cleanUrlObj.searchParams.entries()),
-            hasCallbackUrl: cleanUrlObj.searchParams.has("callbackUrl"),
-          })
-        } catch (e) {
-          log("Error parsing cleaned URL:", e)
-        }
-
-        // Continue with the cleaned URL
-        url = cleanUrl
+        url = url.replace(/#.*$/, "")
       }
 
-      // PRIORITY: Check for callbackUrl parameter first (from login redirect)
-      log("\n🎯 CHECKING FOR CALLBACK URL...")
-      let callbackUrl: string | null = intendedCallbackUrl
-
-      // First check if this is coming back from OAuth and we had a stored callback
-      const isReturningFromOAuth = url.includes("/api/auth/callback/")
-      log("🔐 OAuth return check:", { isReturningFromOAuth, url })
-
-      // Method 0: Check server-side cookies using Next.js cookies helper
-      if (!callbackUrl) {
-        try {
-          log("🔍 Method 0 - Checking server-side cookies...")
-          const cookieStore = await cookies()
-
-          // List ALL server-side cookies for debugging
-          const allCookies = cookieStore.getAll()
-          log("🍪 ALL SERVER-SIDE COOKIES:", {
-            count: allCookies.length,
-            cookies: allCookies.map((c) => ({
-              name: c.name,
-              value: c.value?.substring(0, 50) + "...",
-            })),
-          })
-
-          const oauthCallbackCookie = cookieStore.get("oauth_callback_intended")
-          if (oauthCallbackCookie) {
-            callbackUrl = oauthCallbackCookie.value
-            log("✅ Method 0 - Server-side cookie FOUND:", {
-              callbackUrl,
-              cookieName: "oauth_callback_intended",
-              fullValue: oauthCallbackCookie.value,
-            })
-            // NOTE: We do NOT delete the cookie here because:
-            // 1. The redirect callback is triggered multiple times during OAuth flow
-            // 2. We can't reliably detect when we're "done" with OAuth
-            // 3. The cookie has a 15-minute expiry (set in store-callback route)
-            // 4. This ensures the callback URL is available for the final redirect
-            log("⏳ Cookie preserved (will expire naturally after 15 minutes)")
-          } else {
-            log("❌ Method 0 - No oauth_callback_intended cookie found")
-            // Check if any cookies start with oauth
-            const oauthRelatedCookies = allCookies.filter(
-              (c) =>
-                c.name.toLowerCase().includes("oauth") ||
-                c.name.toLowerCase().includes("callback")
-            )
-            log(
-              "🔍 OAuth-related cookies found:",
-              oauthRelatedCookies.length > 0 ? oauthRelatedCookies : "NONE"
-            )
-          }
-        } catch (error) {
-          log("⚠️ Could not check server-side cookies:", error)
-        }
+      // --- Step 1: Resolve callback URL ---
+      const callbackUrl = await resolveCallbackUrl(url, baseUrl)
+      if (callbackUrl) {
+        const validated = validateCallbackUrl(callbackUrl, baseUrl)
+        if (validated) return validated
       }
 
-      try {
-        // Method 1: Parse as URL and check searchParams
-        const urlObj = new URL(url, baseUrl)
-        log("📊 URL Object Analysis:", {
-          href: urlObj.href,
-          pathname: urlObj.pathname,
-          search: urlObj.search,
-          searchParams: Array.from(urlObj.searchParams.entries()),
-          hash: urlObj.hash,
-        })
-        // Only check URL params if we don't already have a callback URL from cookies
-        if (!callbackUrl) {
-          callbackUrl =
-            urlObj.searchParams.get("callbackUrl") ||
-            urlObj.searchParams.get("redirect")
-        }
-        log("🔍 Method 1 - URL searchParams:", {
-          callbackUrl,
-          hasCallbackParam: urlObj.searchParams.has("callbackUrl"),
-          hasRedirectParam: urlObj.searchParams.has("redirect"),
-          allParams: Object.fromEntries(urlObj.searchParams.entries()),
-          skipped: !!callbackUrl,
-        })
+      // --- Step 2: Detect subdomain from host → redirect to school dashboard ---
+      const host = getHostFromUrl(url, baseUrl)
+      const subdomain = detectSubdomainFromHost(host)
 
-        // Method 2: Check if the URL itself contains a callback parameter
-        if (!callbackUrl && url.includes("callbackUrl=")) {
-          const match = url.match(/callbackUrl=([^&]+)/)
-          if (match) {
-            callbackUrl = decodeURIComponent(match[1])
-            log("🔍 Method 2 - URL regex match:", {
-              callbackUrl,
-              match: match[1],
-            })
-          }
-        }
-
-        // Method 3: Check baseUrl for callback parameter (during OAuth flow)
-        if (!callbackUrl && baseUrl) {
-          try {
-            const baseUrlObj = new URL(baseUrl)
-            const baseCallbackUrl = baseUrlObj.searchParams.get("callbackUrl")
-            if (baseCallbackUrl) {
-              callbackUrl = baseCallbackUrl
-              log("🔍 Method 3 - baseUrl searchParams:", { callbackUrl })
-            }
-          } catch (error) {
-            log("❌ Error parsing baseUrl for callback:", error)
-          }
-        }
-
-        // Method 4: Check cookies for stored callback URL
-        if (!callbackUrl && typeof document !== "undefined") {
-          try {
-            const cookies = document.cookie.split(";")
-
-            // Check for NextAuth callback cookie
-            const callbackCookie = cookies.find((cookie) =>
-              cookie.trim().startsWith("authjs.callback-url=")
-            )
-            if (callbackCookie) {
-              callbackUrl = decodeURIComponent(callbackCookie.split("=")[1])
-              log("🔍 Method 4a - NextAuth cookie callback:", { callbackUrl })
-            }
-
-            // Check for our custom OAuth callback cookie
-            if (!callbackUrl) {
-              const oauthCookie = cookies.find((cookie) =>
-                cookie.trim().startsWith("oauth_callback_intended=")
-              )
-              if (oauthCookie) {
-                callbackUrl = decodeURIComponent(oauthCookie.split("=")[1])
-                log("🔍 Method 4b - OAuth intended cookie callback:", {
-                  callbackUrl,
-                })
-                // Clear the cookie after use
-                document.cookie = "oauth_callback_intended=; path=/; max-age=0"
-              }
-            }
-          } catch (error) {
-            log("❌ Error reading callback from cookies:", error)
-          }
-        }
-
-        // Method 5: Check session storage for intended callback URL (OAuth flow)
-        if (
-          !callbackUrl &&
-          typeof window !== "undefined" &&
-          window.sessionStorage
-        ) {
-          try {
-            const intendedCallback = window.sessionStorage.getItem(
-              "oauth_callback_intended"
-            )
-            const allStorageKeys = Object.keys(window.sessionStorage)
-            log("💾 Session Storage Check:", {
-              intendedCallback,
-              hasIntendedCallback: !!intendedCallback,
-              allKeys: allStorageKeys,
-              allValues: allStorageKeys.reduce(
-                (acc, key) => {
-                  acc[key] = window.sessionStorage.getItem(key)
-                  return acc
-                },
-                {} as Record<string, string | null>
-              ),
-            })
-            if (intendedCallback) {
-              callbackUrl = intendedCallback
-              log("🔍 Method 5 - session storage intended callback:", {
-                callbackUrl,
-              })
-              // Clear it after use
-              window.sessionStorage.removeItem("oauth_callback_intended")
-            }
-          } catch (error) {
-            log(
-              "❌ Error reading intended callback from session storage:",
-              error
-            )
-          }
-        }
-
-        log("\n📋 CALLBACK URL RESOLUTION SUMMARY:", {
-          found: !!callbackUrl,
-          value: callbackUrl,
-          type: typeof callbackUrl,
-        })
-
-        if (callbackUrl) {
-          log("\n✅ CALLBACK URL FOUND!")
-          log("🎯 Attempting redirect to:", callbackUrl)
-          // Validate callback URL is from same origin for security
-          try {
-            const callbackUrlObj = new URL(callbackUrl, baseUrl)
-            const baseUrlObj = new URL(baseUrl)
-
-            // Check if it's a relative URL or same origin
-            if (
-              callbackUrl.startsWith("/") ||
-              callbackUrlObj.origin === baseUrlObj.origin
-            ) {
-              log("✅ CALLBACK URL VALIDATED - Redirecting:", callbackUrl)
-
-              // If it's a relative URL, make it absolute with the current baseUrl
-              if (callbackUrl.startsWith("/")) {
-                const absoluteUrl = `${baseUrl}${callbackUrl}`
-                log("✅ RETURNING CALLBACK URL (relative->absolute):", {
-                  original: callbackUrl,
-                  absolute: absoluteUrl,
-                })
-                log("=====================================")
-                log("🔄 REDIRECT CALLBACK END")
-                log("=====================================\n")
-                return absoluteUrl
-              }
-              log("✅ RETURNING CALLBACK URL (absolute):", callbackUrl)
-              log("=====================================")
-              log("🔄 REDIRECT CALLBACK END")
-              log("=====================================\n")
-              return callbackUrl
-            } else {
-              log("⚠️ SECURITY: Callback URL origin mismatch, ignoring:", {
-                callbackOrigin: callbackUrlObj.origin,
-                baseOrigin: baseUrlObj.origin,
-                callbackPath: callbackUrlObj.pathname,
-              })
-            }
-          } catch (error) {
-            log("❌ Error validating callback URL:", error)
-            // If it's a relative path, still try to use it
-            if (callbackUrl.startsWith("/")) {
-              const absoluteUrl = `${baseUrl}${callbackUrl}`
-              log("📍 Using relative callback URL (fallback):", {
-                original: callbackUrl,
-                absolute: absoluteUrl,
-              })
-              log("=====================================")
-              log("🔄 REDIRECT CALLBACK END")
-              log("=====================================\n")
-              return absoluteUrl
-            }
-          }
-        }
-      } catch (error) {
-        log("❌ Error parsing callback URL:", error)
+      if (subdomain) {
+        return constructSchoolUrl(subdomain, "/dashboard")
       }
 
-      // Debug: Log the exact URL and baseUrl we're working with
-      log("🔍 RAW URL ANALYSIS:", {
-        originalUrl: url,
-        baseUrl: baseUrl,
-        hasHash: url.includes("#"),
-        hasQueryParams: url.includes("?"),
-        isFullUrl: url.startsWith("http"),
-      })
-
-      // Extract host information from the callback URL which preserves the original domain
-      let originalHost = ""
-      try {
-        // If url is a full URL, extract the host from it
-        if (url.startsWith("http")) {
-          const urlObj = new URL(url)
-          originalHost = urlObj.host
-        } else {
-          // If url is relative, use baseUrl
-          const baseUrlObj = new URL(baseUrl)
-          originalHost = baseUrlObj.host
+      // --- Step 3: Main domain handling ---
+      if (isMainDomain(host)) {
+        // Locale homepage path (e.g., /en, /ar) — used by login action for non-DEVELOPER users
+        if (url.match(/^\/(en|ar)\/?$/)) {
+          return `${baseUrl}${url.endsWith("/") ? url.slice(0, -1) : url}`
         }
 
-        log("🔍 Host detection:", { originalHost, url, baseUrl })
-
-        // Enhanced subdomain detection for both production and development
-        let detectedSubdomain = null
-
-        // Production subdomain detection - EXCLUDE ed.databayt.org as main domain
-        if (
-          originalHost.endsWith(".databayt.org") &&
-          originalHost !== "ed.databayt.org"
-        ) {
-          detectedSubdomain = originalHost.split(".")[0]
-          log("🎯 PRODUCTION SUBDOMAIN DETECTED:", {
-            host: originalHost,
-            subdomain: detectedSubdomain,
-          })
-        }
-        // Development subdomain detection
-        else if (
-          originalHost.includes(".localhost") &&
-          originalHost !== "localhost:3000" &&
-          originalHost !== "localhost"
-        ) {
-          detectedSubdomain = originalHost.split(".")[0]
-          log("🎯 DEVELOPMENT SUBDOMAIN DETECTED:", {
-            host: originalHost,
-            subdomain: detectedSubdomain,
-          })
+        // Check for tenant parameter in URL
+        const tenant = extractTenantParam(url, baseUrl)
+        if (tenant) {
+          return constructSchoolUrl(tenant, "/dashboard")
         }
 
-        // Debug: Log what we're NOT detecting as subdomain
-        if (
-          originalHost.endsWith(".databayt.org") &&
-          originalHost === "ed.databayt.org"
-        ) {
-          log("🏢 MAIN DOMAIN IDENTIFIED (not subdomain):", {
-            host: originalHost,
-            reason: "explicitly excluded from subdomain detection",
-          })
+        // Logout: URL is exactly "/"
+        if (url === "/") {
+          return `${baseUrl}/ar`
         }
 
-        // Direct subdomain redirect if detected
-        if (detectedSubdomain) {
-          const tenantDashboardUrl =
-            process.env.NODE_ENV === "production"
-              ? `https://${detectedSubdomain}.databayt.org/dashboard`
-              : `http://${detectedSubdomain}.localhost:3000/dashboard`
-
-          log("🚀 DIRECT SUBDOMAIN REDIRECT:", {
-            subdomain: detectedSubdomain,
-            redirectUrl: tenantDashboardUrl,
-            environment: process.env.NODE_ENV,
-            source: "host_detection",
-          })
-
-          return tenantDashboardUrl
+        // School subdomain logout path (e.g., /ar/s/school/)
+        const schoolLogoutMatch = url.match(/^\/([a-z]{2})\/s\/([^/]+)\/?$/)
+        if (schoolLogoutMatch) {
+          return `${baseUrl}/${schoolLogoutMatch[1]}/s/${schoolLogoutMatch[2]}/`
         }
 
-        // If we're on the main domain (ed.databayt.org or localhost:3000), check for callback URL first
-        const isMainDomain =
-          originalHost === "ed.databayt.org" ||
-          originalHost === "localhost:3000" ||
-          originalHost === "localhost"
+        // --- Step 4: Smart redirect based on user's JWT ---
+        const smartUrl = await getSmartRedirectUrl(url, baseUrl)
+        if (smartUrl) return smartUrl
 
-        if (isMainDomain) {
-          // Don't immediately redirect to lab - check if we have a callback URL
-          log("🏢 MAIN DOMAIN DETECTED:", {
-            host: originalHost,
-            hasCallbackUrl: !!callbackUrl,
-            callbackUrl,
-            originalUrl: url,
-            environment: process.env.NODE_ENV,
-            source: "main_domain_detection",
-          })
-
-          // If we have a callback URL, use it
-          if (callbackUrl) {
-            log("✅ Using callback URL on main domain:", callbackUrl)
-            // Continue to validate and use the callback URL below
-          }
-          // Check if the original URL is a valid locale-based path (e.g., /en, /ar, /en/, /ar/)
-          // This handles the case where login action sets redirectTo: "/${locale}"
-          else if (url.match(/^\/(en|ar)\/?$/)) {
-            const localeHomeUrl = `${baseUrl}${url.endsWith("/") ? url.slice(0, -1) : url}`
-            log("🏠 MAIN DOMAIN LOCALE HOME REDIRECT:", {
-              host: originalHost,
-              originalUrl: url,
-              redirectUrl: localeHomeUrl,
-              reason:
-                "Login action requested locale homepage (non-DEVELOPER user)",
-            })
-            return localeHomeUrl
-          }
-          // No else block - let smart subdomain redirect handle users without callbackUrl
-        }
-
-        // Additional safety check: if host contains 'ed.databayt.org' in any form, treat as main domain
-        if (originalHost.includes("ed.databayt.org")) {
-          log("🏢 MAIN DOMAIN SAFETY CHECK:", {
-            host: originalHost,
-            hasCallbackUrl: !!callbackUrl,
-            callbackUrl,
-            originalUrl: url,
-            environment: process.env.NODE_ENV,
-            source: "safety_check",
-          })
-
-          // If we have a callback URL, use it
-          if (callbackUrl) {
-            log(
-              "✅ Using callback URL on main domain (safety check):",
-              callbackUrl
-            )
-            // Continue to validate and use the callback URL below
-          }
-          // Check if the original URL is a valid locale-based path (e.g., /en, /ar, /en/, /ar/)
-          // This handles the case where login action sets redirectTo: "/${locale}"
-          else if (url.match(/^\/(en|ar)\/?$/)) {
-            const localeHomeUrl = `${baseUrl}${url.endsWith("/") ? url.slice(0, -1) : url}`
-            log("🏠 MAIN DOMAIN LOCALE HOME REDIRECT:", {
-              host: originalHost,
-              originalUrl: url,
-              redirectUrl: localeHomeUrl,
-              reason:
-                "Login action requested locale homepage (non-DEVELOPER user)",
-            })
-            return localeHomeUrl
-          } else {
-            const mainDomainDashboard =
-              process.env.NODE_ENV === "production"
-                ? "https://ed.databayt.org/dashboard"
-                : "http://localhost:3000/dashboard"
-
-            log("🏢 MAIN DOMAIN SAFETY REDIRECT (no callback):", {
-              host: originalHost,
-              redirectUrl: mainDomainDashboard,
-            })
-
-            return mainDomainDashboard
-          }
-        }
-      } catch (error) {
-        log("❌ Error parsing URLs:", error)
-        // Fall back to baseUrl parsing
-        const baseUrlObj = new URL(baseUrl)
-        originalHost = baseUrlObj.host
+        // --- Step 5: Fallback to main dashboard ---
+        return `${baseUrl}/dashboard`
       }
 
-      // If we still don't have a host, use baseUrl as fallback
-      if (!originalHost) {
-        try {
-          const baseUrlObj = new URL(baseUrl)
-          originalHost = baseUrlObj.host
-          log("🔄 Fallback host detection:", { originalHost, baseUrl })
-        } catch (error) {
-          log("❌ Error in fallback host detection:", error)
-        }
-      }
-
-      // Final check: if we're on ed.databayt.org, check callback URL first
-      if (originalHost === "ed.databayt.org") {
-        log("🏢 FINAL MAIN DOMAIN CHECK:", {
-          host: originalHost,
-          hasCallbackUrl: !!callbackUrl,
-          callbackUrl,
-          originalUrl: url,
-          environment: process.env.NODE_ENV,
-          source: "final_fallback",
-        })
-
-        if (callbackUrl) {
-          log(
-            "✅ Using callback URL on main domain (final check):",
-            callbackUrl
-          )
-          // Continue to validate and use the callback URL below
-        }
-        // Check if the original URL is a valid locale-based path (e.g., /en, /ar, /en/, /ar/)
-        // This handles the case where login action sets redirectTo: "/${locale}"
-        else if (url.match(/^\/(en|ar)\/?$/)) {
-          const localeHomeUrl = `${baseUrl}${url.endsWith("/") ? url.slice(0, -1) : url}`
-          log("🏠 FINAL MAIN DOMAIN LOCALE HOME REDIRECT:", {
-            host: originalHost,
-            originalUrl: url,
-            redirectUrl: localeHomeUrl,
-            reason:
-              "Login action requested locale homepage (non-DEVELOPER user)",
-          })
-          return localeHomeUrl
-        } else {
-          const mainDomainDashboard =
-            process.env.NODE_ENV === "production"
-              ? "https://ed.databayt.org/dashboard"
-              : "http://localhost:3000/dashboard"
-
-          log("🏢 FINAL MAIN DOMAIN REDIRECT (no callback):", {
-            host: originalHost,
-            redirectUrl: mainDomainDashboard,
-          })
-
-          return mainDomainDashboard
-        }
-      }
-
-      // Extract tenant from callbackUrl if present - check multiple sources
-      let tenant = null
-
-      // Method 1: Check URL searchParams
-      try {
-        const urlObj = new URL(url, baseUrl)
-        tenant = urlObj.searchParams.get("tenant")
-        log("🔍 Tenant from URL params:", { tenant, url: urlObj.href })
-      } catch (error) {
-        log("❌ Error parsing URL for tenant:", error)
-      }
-
-      // Method 2: Check if URL contains tenant info in path
-      if (!tenant && url.includes("/callback/")) {
-        const urlMatch = url.match(/tenant=([^&]+)/)
-        if (urlMatch) {
-          tenant = urlMatch[1]
-          log("🔍 Tenant from URL regex match:", tenant)
-        }
-      }
-
-      // Method 3: Check baseUrl for tenant info
-      if (!tenant) {
-        try {
-          const baseUrlObj = new URL(baseUrl)
-          tenant = baseUrlObj.searchParams.get("tenant")
-          if (tenant) {
-            log("🔍 Tenant from baseUrl params:", { tenant, baseUrl })
-          }
-        } catch (error) {
-          log("❌ Error parsing baseUrl for tenant:", error)
-        }
-      }
-
-      // Method 4: Check session storage for tenant (client-side fallback)
-      // Note: This won't work on server-side, but useful for debugging
-      if (!tenant && typeof window !== "undefined") {
-        try {
-          const sessionTenant = window.sessionStorage?.getItem("oauth_tenant")
-          if (sessionTenant) {
-            tenant = sessionTenant
-            log("🔍 Tenant from session storage:", { tenant })
-            // Clear it after use
-            window.sessionStorage.removeItem("oauth_tenant")
-          }
-        } catch (error) {
-          log("❌ Error accessing session storage:", error)
-        }
-      }
-
+      // --- Step 4 (non-main domain): Smart redirect ---
+      const tenant = extractTenantParam(url, baseUrl)
       if (tenant) {
-        // Redirect back to tenant subdomain
-        const tenantUrl =
-          process.env.NODE_ENV === "production"
-            ? `https://${tenant}.databayt.org/dashboard`
-            : `http://${tenant}.localhost:3000/dashboard`
-        log("🔄 Redirecting to tenant via parameter:", {
-          tenant,
-          tenantUrl,
-          originalUrl: url,
-        })
-        return tenantUrl
+        return constructSchoolUrl(tenant, "/dashboard")
       }
 
-      log("⚠️ No tenant parameter found in:", { url, baseUrl })
-
-      // Handle OAuth callback completion
-      if (url.includes("/api/auth/callback/")) {
-        log("🔄 OAuth callback detected, processing redirect")
-        // Let the default behavior handle the redirect
-        // The middleware will handle subdomain routing
+      // Logout paths
+      if (url === "/") return `${baseUrl}/ar`
+      const schoolLogoutMatch = url.match(/^\/([a-z]{2})\/s\/([^/]+)\/?$/)
+      if (schoolLogoutMatch) {
+        return `${baseUrl}/${schoolLogoutMatch[1]}/s/${schoolLogoutMatch[2]}/`
       }
 
-      // Log all redirect attempts for debugging
-      log("🔄 Processing redirect:", { url, baseUrl })
+      const smartUrl = await getSmartRedirectUrl(url, baseUrl)
+      if (smartUrl) return smartUrl
 
-      // Check if this is an error
-      if (url.includes("/error")) {
-        log("❌ Error page detected, investigating...")
-      }
-
-      // Final redirect decision
-      log("\n🎯 FINAL REDIRECT DECISION")
-      log("Current state:", {
-        hasCallbackUrl: !!callbackUrl,
-        callbackUrl,
-        url,
-        baseUrl,
-        urlStartsWithSlash: url.startsWith("/"),
-        isSameOrigin: url.startsWith("http")
-          ? new URL(url).origin === baseUrl
-          : false,
-      })
-
-      // Special case: if URL is exactly "/" (home page), respect it (for logout)
-      if (url === "/") {
-        // Include locale in redirect to ensure proper routing
-        // Default to 'ar' if no locale can be detected
-        const defaultLocale = "ar"
-        const homeUrl = `${baseUrl}/${defaultLocale}`
-        log("🏠 Redirecting to home page (logout):", {
-          reason: "URL is exactly /",
-          originalUrl: url,
-          locale: defaultLocale,
-          finalUrl: homeUrl,
-        })
-        console.log("[AUTH-REDIRECT] 🏠 Logout redirect to homepage:", {
-          url,
-          homeUrl,
-          locale: defaultLocale,
-        })
-        log("=====================================")
-        log("🔄 REDIRECT CALLBACK END")
-        log("=====================================\n")
-        return homeUrl
-      }
-
-      // Special case: School subdomain logout paths (e.g., /ar/s/school/)
-      // These are explicit redirect targets from context-aware logout
-      const schoolSubdomainMatch = url.match(/^\/([a-z]{2})\/s\/([^/]+)\/?$/)
-      if (schoolSubdomainMatch) {
-        const locale = schoolSubdomainMatch[1]
-        const subdomain = schoolSubdomainMatch[2]
-        const schoolHomeUrl = `${baseUrl}/${locale}/s/${subdomain}/`
-        log("🏫 Redirecting to school homepage (logout):", {
-          reason: "School subdomain logout path",
-          locale,
-          subdomain,
-          originalUrl: url,
-          finalUrl: schoolHomeUrl,
-        })
-        log("=====================================")
-        log("🔄 REDIRECT CALLBACK END")
-        log("=====================================\n")
-        return schoolHomeUrl
-      }
-
-      // 🎯 SMART SUBDOMAIN REDIRECT BASED ON USER'S SCHOOL
-      log("\n🎯 SMART SUBDOMAIN REDIRECT - Getting user school info...")
-      console.log("[AUTH-REDIRECT] 🎯 SMART SUBDOMAIN REDIRECT STARTING", {
-        url,
-        baseUrl,
-        timestamp: new Date().toISOString(),
-      })
-
-      try {
-        // Get JWT token to access user data
-        console.log("[AUTH-REDIRECT] 🔑 Attempting to get JWT token...")
-        const token = await getToken({
-          req: {
-            headers: {
-              cookie: (await cookies()).toString(),
-            },
-          } as any,
-          secret: process.env.AUTH_SECRET,
-        })
-
-        console.log("[AUTH-REDIRECT] 🔑 Token retrieved:", {
-          hasToken: !!token,
-          schoolId: token?.schoolId,
-          role: token?.role,
-          email: token?.email,
-          tokenKeys: token ? Object.keys(token) : [],
-        })
-
-        log("🔑 Token data:", {
-          hasToken: !!token,
-          schoolId: token?.schoolId,
-          role: token?.role,
-          email: token?.email,
-        })
-
-        if (token) {
-          const userSchoolId = token.schoolId as string | null | undefined
-          const userRole = token.role as string | undefined
-
-          console.log("[AUTH-REDIRECT] 👤 User data extracted:", {
-            userSchoolId,
-            userRole,
-            hasSchoolId: !!userSchoolId,
-            isDeveloper: userRole === "DEVELOPER",
-          })
-
-          // Platform admin (DEVELOPER role or no schoolId) → main domain
-          if (!userSchoolId || userRole === "DEVELOPER") {
-            const mainDashboard = `${baseUrl}/dashboard`
-            console.log(
-              "[AUTH-REDIRECT] 👑 Platform admin detected - redirecting to main domain:",
-              {
-                reason: "No schoolId or DEVELOPER role",
-                role: userRole,
-                schoolId: userSchoolId,
-                finalUrl: mainDashboard,
-              }
-            )
-            log("👑 Platform admin detected - redirecting to main domain:", {
-              reason: "No schoolId or DEVELOPER role",
-              role: userRole,
-              schoolId: userSchoolId,
-              finalUrl: mainDashboard,
-            })
-            log("=====================================")
-            log("🔄 REDIRECT CALLBACK END")
-            log("=====================================\n")
-            return mainDashboard
-          }
-
-          // Regular user → lookup school domain and redirect to subdomain
-          console.log(
-            "[AUTH-REDIRECT] 👤 Regular user detected - looking up school domain for schoolId:",
-            userSchoolId
-          )
-          log("👤 Regular user detected - looking up school domain...")
-          const schoolDomain = await getSchoolDomain(userSchoolId)
-
-          console.log("[AUTH-REDIRECT] 🏫 School domain lookup result:", {
-            userSchoolId,
-            schoolDomain,
-            foundSchool: !!schoolDomain,
-          })
-
-          if (schoolDomain) {
-            // Extract locale from URL or default to Arabic
-            const locale = extractLocaleFromUrl(url)
-            const schoolUrl = constructSchoolUrl(
-              schoolDomain,
-              `/${locale}/dashboard`
-            )
-
-            console.log(
-              "[AUTH-REDIRECT] ✅ School subdomain redirect SUCCESS:",
-              {
-                schoolId: userSchoolId,
-                schoolDomain,
-                locale,
-                finalUrl: schoolUrl,
-                urlBreakdown: {
-                  subdomain: schoolDomain,
-                  path: `/${locale}/dashboard`,
-                  fullUrl: schoolUrl,
-                },
-              }
-            )
-
-            log("🏫 School subdomain redirect:", {
-              schoolId: userSchoolId,
-              schoolDomain,
-              locale,
-              finalUrl: schoolUrl,
-            })
-            log("=====================================")
-            log("🔄 REDIRECT CALLBACK END")
-            log("=====================================\n")
-            return schoolUrl
-          } else {
-            console.error(
-              "[AUTH-REDIRECT] ⚠️ School domain NOT FOUND for schoolId:",
-              userSchoolId
-            )
-            log("⚠️ School domain not found for schoolId:", userSchoolId)
-            log("Falling back to main domain")
-          }
-        } else {
-          console.error(
-            "[AUTH-REDIRECT] ⚠️ No token found - user might not be authenticated yet"
-          )
-          log("⚠️ No token found - user might not be authenticated yet")
-        }
-      } catch (error) {
-        console.error("[AUTH-REDIRECT] ❌ ERROR in smart subdomain redirect:", {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-          errorType: error?.constructor?.name,
-        })
-        log("❌ Error in smart subdomain redirect:", error)
-        log("Falling back to default behavior")
-      }
-
-      // Fallback: Default behavior - redirect to lab on current domain
-      if (url.startsWith("/")) {
-        const finalUrl = `${baseUrl}/dashboard`
-        log("📍 Fallback - Relative URL, defaulting to lab:", {
-          reason: "URL starts with /",
-          originalUrl: url,
-          finalUrl,
-        })
-        log("=====================================")
-        log("🔄 REDIRECT CALLBACK END")
-        log("=====================================\n")
-        return finalUrl
-      } else if (new URL(url).origin === baseUrl) {
-        const dashboardUrl = `${baseUrl}/dashboard`
-        log("📍 Fallback - Same origin, defaulting to lab:", {
-          reason: "Same origin as baseUrl",
-          originalUrl: url,
-          finalUrl: dashboardUrl,
-        })
-        log("=====================================")
-        log("🔄 REDIRECT CALLBACK END")
-        log("=====================================\n")
-        return dashboardUrl
-      }
-
-      const externalDashboard = `${baseUrl}/dashboard`
-      log("📍 Fallback - External URL, defaulting to lab:", {
-        reason: "External URL",
-        originalUrl: url,
-        finalUrl: externalDashboard,
-      })
-      log("=====================================")
-      log("🔄 REDIRECT CALLBACK END")
-      log("=====================================\n")
-      return externalDashboard
+      return `${baseUrl}/dashboard`
     },
   },
   ...authConfig,
 })
-
-// Debug logging for NextAuth initialization
-if (process.env.NODE_ENV === "development") {
-  console.log("NextAuth initialization - Environment check:", {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    AUTH_SECRET: !!process.env.AUTH_SECRET,
-    GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
-    FACEBOOK_CLIENT_ID: !!process.env.FACEBOOK_CLIENT_ID,
-    FACEBOOK_CLIENT_SECRET: !!process.env.FACEBOOK_CLIENT_SECRET,
-    NODE_ENV: process.env.NODE_ENV,
-  })
-}
-
-// Debug cookie configuration
-const cookieDomain =
-  process.env.NODE_ENV === "production" ? ".databayt.org" : undefined
-const isProduction = process.env.NODE_ENV === "production"
-if (process.env.NODE_ENV === "development") {
-  console.log("🍪 Cookie configuration:", {
-    environment: process.env.NODE_ENV,
-    cookieDomain,
-    pkceCodeVerifier: {
-      name: "authjs.pkce.code_verifier",
-      options: {
-        sameSite: "lax",
-        secure: isProduction,
-        httpOnly: true,
-        maxAge: 900,
-        domain: cookieDomain,
-      },
-    },
-    sessionToken: {
-      name: "authjs.session-token",
-      options: {
-        sameSite: "lax",
-        secure: isProduction,
-        httpOnly: true,
-        domain: cookieDomain,
-      },
-    },
-    callbackUrl: {
-      name: "authjs.callback-url",
-      options: { sameSite: "lax", secure: isProduction, domain: cookieDomain },
-    },
-    csrfToken: {
-      name: "authjs.csrf-token",
-      options: {
-        sameSite: "lax",
-        secure: isProduction,
-        httpOnly: true,
-        domain: cookieDomain,
-      },
-    },
-  })
-}

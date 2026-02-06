@@ -1,34 +1,19 @@
 "use server"
 
-import { guardianSchema, type GuardianSchemaType } from "./validation"
+import type { ActionResponse } from "@/lib/action-response"
 
-export interface SaveGuardianResult {
-  success: boolean
-  data?: GuardianSchemaType
-  error?: string
-}
+import { guardianSchema, type GuardianSchemaType } from "./validation"
 
 export async function saveGuardianStep(
   data: GuardianSchemaType
-): Promise<SaveGuardianResult> {
+): Promise<ActionResponse<GuardianSchemaType>> {
   try {
-    // Validate data
     const validatedData = guardianSchema.parse(data)
-
-    return {
-      success: true,
-      data: validatedData,
-    }
+    return { success: true, data: validatedData }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        error: error.message,
-      }
-    }
     return {
       success: false,
-      error: "Validation failed",
+      error: error instanceof Error ? error.message : "Validation failed",
     }
   }
 }

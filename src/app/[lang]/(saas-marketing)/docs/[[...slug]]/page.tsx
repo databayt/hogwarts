@@ -196,7 +196,7 @@ export default async function DocsPage(props: {
           )}
         </div>
       </div>
-      <div className="sticky top-[calc(var(--header-height)+2rem)] z-30 ml-auto hidden h-[calc(100vh-var(--header-height)-4rem)] w-72 flex-col gap-4 overflow-hidden pb-8 xl:flex">
+      <div className="sticky top-[calc(var(--header-height)+2rem)] z-30 ms-auto hidden h-[calc(100vh-var(--header-height)-4rem)] w-72 flex-col gap-4 overflow-hidden pb-8 xl:flex">
         <div className="h-(--top-spacing) shrink-0" />
         {doc.toc?.length ? (
           <div className="no-scrollbar overflow-y-auto px-8">

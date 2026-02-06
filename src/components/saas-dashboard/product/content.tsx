@@ -30,7 +30,7 @@ export function ProductContent(props: Props) {
             href="/dashboard/product/new"
             className={cn(buttonVariants(), "text-xs md:text-sm")}
           >
-            <IconPlus className="mr-2 h-4 w-4" /> Add New
+            <IconPlus className="me-2 h-4 w-4" /> Add New
           </Link>
         </div>
         <Separator />

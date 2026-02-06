@@ -18,15 +18,15 @@ export default async function Tenants({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
-  // Define tenants page navigation
+  const n = d?.nav
   const tenantsPages: PageNavItem[] = [
-    { name: "Overview", href: `/${lang}/tenants` },
-    { name: "Domains", href: `/${lang}/domains` },
+    { name: n?.overview || "Overview", href: `/${lang}/tenants` },
+    { name: n?.domains || "Domains", href: `/${lang}/domains` },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter title="Tenants" />
+      <PageHeadingSetter title={d?.tenants?.title || "Tenants"} />
       <PageNav pages={tenantsPages} />
       <TenantsContent dictionary={dictionary} lang={lang} />
     </div>

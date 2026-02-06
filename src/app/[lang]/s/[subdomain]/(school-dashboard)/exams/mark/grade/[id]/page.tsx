@@ -79,17 +79,17 @@ export default async function GradingPage({
         <div className="flex items-center justify-between">
           <Button variant="ghost" asChild>
             <Link href={`/${lang}/exams/mark`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="me-2 h-4 w-4" />
               {dict.buttons.back}
             </Link>
           </Button>
           <div className="flex gap-2">
             <Button variant="outline">
-              <Zap className="mr-2 h-4 w-4" />
+              <Zap className="me-2 h-4 w-4" />
               {dict.buttons.autoGrade}
             </Button>
             <Button variant="outline">
-              <Brain className="mr-2 h-4 w-4" />
+              <Brain className="me-2 h-4 w-4" />
               {dict.buttons.aiGrade}
             </Button>
           </div>
@@ -186,7 +186,7 @@ export default async function GradingPage({
                 <h3 className="mb-4 font-semibold">{dict.rubric.title}</h3>
                 <div className="space-y-3">
                   {question.rubrics[0].criteria.map((criterion) => (
-                    <div key={criterion.id} className="border-l-2 pl-4">
+                    <div key={criterion.id} className="border-s-2 ps-4">
                       <div className="mb-1 flex items-center justify-between">
                         <h4 className="font-medium">{criterion.criterion}</h4>
                         <Badge variant="outline">
@@ -322,7 +322,7 @@ export default async function GradingPage({
                 </div>
 
                 <Button type="submit" className="w-full">
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="me-2 h-4 w-4" />
                   {dict.buttons.saveGrade}
                 </Button>
               </form>

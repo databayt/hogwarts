@@ -48,7 +48,6 @@ export async function GET(
       },
       select: {
         name: true,
-        nameAr: true,
       },
     })
 
@@ -56,8 +55,7 @@ export async function GET(
       return NextResponse.json({ error: "Class not found" }, { status: 404 })
     }
 
-    // Prefer Arabic name if available, otherwise use English
-    const name = classData.nameAr || classData.name
+    const name = classData.name
 
     return NextResponse.json({ name })
   } catch (error) {

@@ -61,6 +61,7 @@ import { revalidatePath } from "next/cache"
 
 import { db } from "@/lib/db"
 
+import { dnsService } from "./dns-service"
 import { isValidSubdomain, normalizeSubdomain } from "./subdomain"
 
 /**
@@ -79,6 +80,20 @@ export async function checkSubdomainAvailability(subdomain: string): Promise<{
       return {
         available: false,
         error: "Invalid subdomain format",
+      }
+    }
+
+    // Check reserved words (www, api, admin, mail, etc.)
+    const availability = await dnsService.checkAvailability(normalized)
+    if (
+      !availability.available &&
+      availability.reason === "This subdomain is reserved"
+    ) {
+      return {
+        available: false,
+        error: availability.suggestions
+          ? `This subdomain is reserved. Try: ${availability.suggestions.slice(0, 3).join(", ")}`
+          : "This subdomain is reserved",
       }
     }
 

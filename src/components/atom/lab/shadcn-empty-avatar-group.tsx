@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button"
 export function ShadcnEmptyAvatarGroup() {
   return (
     <div className="border-border flex flex-col items-center justify-center space-y-6 rounded-lg border p-12 text-center">
-      <div className="flex -space-x-2">
+      <div className="flex -space-x-2 rtl:space-x-reverse">
         <Avatar className="ring-background size-12 ring-2 grayscale">
           <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
           <AvatarFallback>CN</AvatarFallback>
@@ -47,7 +47,7 @@ export function ShadcnEmptyAvatarGroup() {
       </div>
 
       <Button size="sm">
-        <Plus className="mr-2 size-4" />
+        <Plus className="me-2 size-4" />
         Invite Members
       </Button>
     </div>

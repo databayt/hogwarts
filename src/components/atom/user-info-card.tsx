@@ -29,7 +29,7 @@ export function UserInfoCard({
   return (
     <div
       data-slot="user-info-card"
-      className={cn("flex items-center space-x-4", className)}
+      className={cn("flex items-center gap-4", className)}
       {...props}
     >
       <Avatar className="size-8">

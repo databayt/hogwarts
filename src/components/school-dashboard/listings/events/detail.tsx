@@ -113,7 +113,7 @@ export function EventDetailContent({
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="me-2 h-4 w-4" />
           {t.back}
         </Button>
         <Alert variant="destructive">
@@ -152,12 +152,12 @@ export function EventDetailContent({
           <Badge variant={data.isPublic ? "secondary" : "outline"}>
             {data.isPublic ? (
               <>
-                <Globe className="mr-1 h-3 w-3" />
+                <Globe className="me-1 h-3 w-3" />
                 {t.public}
               </>
             ) : (
               <>
-                <Lock className="mr-1 h-3 w-3" />
+                <Lock className="me-1 h-3 w-3" />
                 {t.private}
               </>
             )}

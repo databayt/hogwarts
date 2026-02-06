@@ -122,7 +122,7 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
                   window.location.href = `/receipts/${receipt.id}`
                 }}
               >
-                <Eye className="mr-2 h-4 w-4" />
+                <Eye className="me-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
               {receipt.status === "error" && (
@@ -132,7 +132,7 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
                     console.log("Retry extraction for:", receipt.id)
                   }}
                 >
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <RefreshCw className="me-2 h-4 w-4" />
                   Retry Extraction
                 </DropdownMenuItem>
               )}
@@ -144,7 +144,7 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
                   console.log("Delete receipt:", receipt.id)
                 }}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="me-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

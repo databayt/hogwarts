@@ -319,15 +319,15 @@ export function IDCardGenerator({
       <Tabs defaultValue="students" className="space-y-4">
         <TabsList className="grid w-[400px] grid-cols-3">
           <TabsTrigger value="students">
-            <Users className="mr-2 h-4 w-4" />
+            <Users className="me-2 h-4 w-4" />
             Students
           </TabsTrigger>
           <TabsTrigger value="template">
-            <Palette className="mr-2 h-4 w-4" />
+            <Palette className="me-2 h-4 w-4" />
             Template
           </TabsTrigger>
           <TabsTrigger value="preview" disabled={selectedStudents.size === 0}>
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="me-2 h-4 w-4" />
             Preview
           </TabsTrigger>
         </TabsList>
@@ -350,7 +350,7 @@ export function IDCardGenerator({
                     placeholder="Search by name or GR number..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
+                    className="ps-9"
                   />
                 </div>
                 <Select value={filterClass} onValueChange={setFilterClass}>
@@ -408,7 +408,7 @@ export function IDCardGenerator({
                     return (
                       <div
                         key={student.id}
-                        className={`hover:bg-muted/50 flex cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-colors ${
+                        className={`hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
                           isSelected ? "border-blue-200 bg-blue-50" : ""
                         }`}
                         onClick={() => toggleStudentSelection(student.id)}
@@ -474,10 +474,7 @@ export function IDCardGenerator({
               >
                 <div className="grid grid-cols-2 gap-4">
                   {idCardTemplates.map((template) => (
-                    <div
-                      key={template.id}
-                      className="flex items-start space-x-3"
-                    >
+                    <div key={template.id} className="flex items-start gap-3">
                       <RadioGroupItem value={template.id} id={template.id} />
                       <Label
                         htmlFor={template.id}
@@ -591,11 +588,11 @@ export function IDCardGenerator({
                   onClick={() => generatePDF()}
                   disabled={isGenerating}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Download All
                 </Button>
                 <Button onClick={handlePrint} disabled={isGenerating}>
-                  <Printer className="mr-2 h-4 w-4" />
+                  <Printer className="me-2 h-4 w-4" />
                   Print All
                 </Button>
               </div>

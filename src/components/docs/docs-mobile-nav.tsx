@@ -24,7 +24,7 @@ export function DocsMobileNav({ neighbours, lang }: DocsMobileNavProps) {
   }
 
   return (
-    <div className="bg-background fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between border-t p-4 md:hidden">
+    <div className="bg-background fixed start-0 end-0 bottom-0 z-50 flex items-center justify-between border-t p-4 md:hidden">
       {neighbours.previous ? (
         <Link
           href={`/${lang}${neighbours.previous.url}`}

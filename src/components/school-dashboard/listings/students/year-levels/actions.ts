@@ -76,7 +76,7 @@ export async function createYearLevel(
 
     const data = {
       levelName: formData.get("levelName") as string,
-      levelNameAr: (formData.get("levelNameAr") as string) || undefined,
+      lang: (formData.get("lang") as string) || "ar",
       levelOrder: parseInt(formData.get("levelOrder") as string, 10),
     }
 
@@ -110,7 +110,7 @@ export async function createYearLevel(
       data: {
         schoolId,
         levelName: validated.levelName,
-        levelNameAr: validated.levelNameAr,
+        lang: validated.lang || "ar",
         levelOrder: validated.levelOrder,
       },
     })
@@ -153,7 +153,7 @@ export async function updateYearLevel(
     const data = {
       id: formData.get("id") as string,
       levelName: (formData.get("levelName") as string) || undefined,
-      levelNameAr: formData.get("levelNameAr") as string | null,
+      lang: (formData.get("lang") as string) || undefined,
       levelOrder: levelOrderValue
         ? parseInt(levelOrderValue as string, 10)
         : undefined,
@@ -211,8 +211,8 @@ export async function updateYearLevel(
       where: { id: validated.id },
       data: {
         ...(validated.levelName && { levelName: validated.levelName }),
-        ...(validated.levelNameAr !== undefined && {
-          levelNameAr: validated.levelNameAr || null,
+        ...(validated.lang !== undefined && {
+          lang: validated.lang,
         }),
         ...(validated.levelOrder !== undefined && {
           levelOrder: validated.levelOrder,

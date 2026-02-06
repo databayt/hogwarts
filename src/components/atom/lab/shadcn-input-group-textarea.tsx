@@ -48,7 +48,7 @@ export function ShadcnInputGroupTextarea() {
             Line 1, Column 1
           </span>
           <Button size="sm">
-            Run <CornerDownLeft className="ml-1 size-4" />
+            Run <CornerDownLeft className="ms-1 size-4" />
           </Button>
         </div>
       </div>

@@ -214,11 +214,11 @@ export function StreamCourseCreateForm({
                 {pending ? (
                   <>
                     {t.creating}
-                    <Icons.loader2 className="ml-1 size-4 animate-spin" />
+                    <Icons.loader2 className="ms-1 size-4 animate-spin" />
                   </>
                 ) : (
                   <>
-                    {t.createButton} <Icons.plus className="ml-1 size-4" />
+                    {t.createButton} <Icons.plus className="ms-1 size-4" />
                   </>
                 )}
               </Button>

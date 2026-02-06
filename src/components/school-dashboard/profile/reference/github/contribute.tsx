@@ -526,7 +526,7 @@ export default function Contribute() {
           <div className="mt-3 grid grid-cols-2 gap-4 md:grid-cols-4">
             <button
               onClick={() => openDocument("resume")}
-              className="hover:bg-muted/5 flex cursor-pointer flex-col items-start rounded-lg border border-neutral-300 p-4 text-left transition-colors"
+              className="hover:bg-muted/5 flex cursor-pointer flex-col items-start rounded-lg border border-neutral-300 p-4 text-start transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -547,7 +547,7 @@ export default function Contribute() {
 
             <button
               onClick={() => openDocument("docs")}
-              className="hover:bg-muted/5 flex cursor-pointer flex-col items-start rounded-lg border border-neutral-300 p-4 text-left transition-colors"
+              className="hover:bg-muted/5 flex cursor-pointer flex-col items-start rounded-lg border border-neutral-300 p-4 text-start transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -568,7 +568,7 @@ export default function Contribute() {
 
             <button
               onClick={() => openDocument("certificates")}
-              className="hover:bg-muted/5 flex cursor-pointer flex-col items-start rounded-lg border border-neutral-300 p-4 text-left transition-colors"
+              className="hover:bg-muted/5 flex cursor-pointer flex-col items-start rounded-lg border border-neutral-300 p-4 text-start transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -589,7 +589,7 @@ export default function Contribute() {
 
             <button
               onClick={() => openDocument("projects")}
-              className="hover:bg-muted/5 flex cursor-pointer flex-col items-start rounded-lg border border-neutral-300 p-4 text-left transition-colors"
+              className="hover:bg-muted/5 flex cursor-pointer flex-col items-start rounded-lg border border-neutral-300 p-4 text-start transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

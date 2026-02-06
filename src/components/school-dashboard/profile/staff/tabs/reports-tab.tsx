@@ -406,7 +406,7 @@ export function ReportsTab({
                 <CardTitle>Report History</CardTitle>
                 {isOwner && (
                   <Button>
-                    <FileText className="mr-2 h-4 w-4" />
+                    <FileText className="me-2 h-4 w-4" />
                     Generate Report
                   </Button>
                 )}
@@ -421,7 +421,7 @@ export function ReportsTab({
                     placeholder="Search reports..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="ps-10"
                   />
                 </div>
                 <Select value={filterType} onValueChange={setFilterType}>
@@ -492,7 +492,7 @@ export function ReportsTab({
                               className={cn(getStatusColor(report.status))}
                             >
                               {getStatusIcon(report.status)}
-                              <span className="ml-1">{report.status}</span>
+                              <span className="ms-1">{report.status}</span>
                             </Badge>
                           </div>
                         </div>
@@ -575,7 +575,7 @@ export function ReportsTab({
                 <CardTitle>Report Templates</CardTitle>
                 {isOwner && (
                   <Button>
-                    <FileText className="mr-2 h-4 w-4" />
+                    <FileText className="me-2 h-4 w-4" />
                     Create Template
                   </Button>
                 )}

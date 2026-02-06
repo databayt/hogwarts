@@ -99,7 +99,7 @@ export function SubjectSelector({
           </div>
 
           <div className="grid gap-2">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="useCustomSubject"

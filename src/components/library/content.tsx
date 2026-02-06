@@ -1,7 +1,6 @@
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import BookOverview from "./book-list/book-overview"
 import BookList from "./book-list/content"
 import { CollaborateSection } from "./collaborate-section"
 import { LibraryHero } from "./hero"
@@ -18,12 +17,19 @@ export default async function LibraryContent({
   lang,
 }: Props) {
   const { schoolId } = await getTenantContext()
+  const lib = (dictionary as Record<string, Record<string, unknown>>)?.school
+    ?.library as Record<string, string> | undefined
 
   if (!schoolId) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2 className="mb-4">School context not found</h2>
-        <p className="muted">Unable to load library. Please contact support.</p>
+        <h2 className="mb-4">
+          {lib?.schoolContextNotFound || "School context not found"}
+        </h2>
+        <p className="muted">
+          {lib?.unableToLoadLibrary ||
+            "Unable to load library. Please contact support."}
+        </p>
       </div>
     )
   }
@@ -111,10 +117,12 @@ export default async function LibraryContent({
             />
           </svg>
         </div>
-        <h2 className="mb-2 text-xl font-semibold">No books available</h2>
+        <h2 className="mb-2 text-xl font-semibold">
+          {lib?.noBooks || "No books available"}
+        </h2>
         <p className="text-muted-foreground max-w-md text-center">
-          The library is empty. Check back later or contact your library
-          administrator to add books.
+          {lib?.emptyLibrary ||
+            "The library is empty. Check back later or contact your library administrator to add books."}
         </p>
       </div>
     )
@@ -131,7 +139,7 @@ export default async function LibraryContent({
       {/* Row 1: Latest Books */}
       {latestBooks.length > 0 && (
         <BookList
-          title="Latest Books"
+          title={lib?.latestBooks || "Latest Books"}
           books={latestBooks}
           containerClassName=""
         />
@@ -140,7 +148,7 @@ export default async function LibraryContent({
       {/* Row 2: Featured Books */}
       {featuredBooks.length > 0 && (
         <BookList
-          title="Featured Books"
+          title={lib?.featuredBooks || "Featured Books"}
           books={featuredBooks}
           containerClassName=""
         />
@@ -149,7 +157,7 @@ export default async function LibraryContent({
       {/* Row 3: Literature Books */}
       {literatureBooks.length > 0 && (
         <BookList
-          title="Literature Books"
+          title={lib?.literatureBooks || "Literature Books"}
           books={literatureBooks}
           containerClassName=""
         />
@@ -158,7 +166,7 @@ export default async function LibraryContent({
       {/* Row 4: Science Books */}
       {scienceBooks.length > 0 && (
         <BookList
-          title="Science Books"
+          title={lib?.scienceBooks || "Science Books"}
           books={scienceBooks}
           containerClassName=""
         />

@@ -206,13 +206,13 @@ export function StudentCards({
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={exportCards}>
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="me-2 h-4 w-4" />
                 Export
               </Button>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm">
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="me-2 h-4 w-4" />
                     Add Card
                   </Button>
                 </DialogTrigger>
@@ -354,7 +354,7 @@ export function StudentCards({
                     <TableHead>Status</TableHead>
                     <TableHead>Issued</TableHead>
                     <TableHead>Expires</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-end">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -381,17 +381,17 @@ export function StudentCards({
                         <TableCell>
                           {isExpired ? (
                             <Badge variant="destructive">
-                              <CircleX className="mr-1 h-3 w-3" />
+                              <CircleX className="me-1 h-3 w-3" />
                               Expired
                             </Badge>
                           ) : card.isActive ? (
                             <Badge variant="default">
-                              <CircleCheck className="mr-1 h-3 w-3" />
+                              <CircleCheck className="me-1 h-3 w-3" />
                               Active
                             </Badge>
                           ) : (
                             <Badge variant="secondary">
-                              <CircleAlert className="mr-1 h-3 w-3" />
+                              <CircleAlert className="me-1 h-3 w-3" />
                               Inactive
                             </Badge>
                           )}
@@ -404,7 +404,7 @@ export function StudentCards({
                             ? new Date(card.expiresAt).toLocaleDateString()
                             : "Never"}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-end">
                           <div className="flex justify-end gap-1">
                             <Button
                               size="sm"
@@ -455,7 +455,7 @@ export function StudentCards({
                 Drop your CSV file here or click to browse
               </p>
               <Button variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="me-2 h-4 w-4" />
                 Select File
               </Button>
               <p className="text-muted-foreground mt-3 text-xs">

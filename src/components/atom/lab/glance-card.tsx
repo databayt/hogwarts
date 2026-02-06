@@ -132,7 +132,7 @@ export function GlanceCard({
               <p className="muted truncate text-xs">{label}</p>
               <h4 className="text-foreground truncate font-semibold">
                 {typeof value === "number" ? value.toLocaleString() : value}
-                {unit && <span className="muted ml-1">{unit}</span>}
+                {unit && <span className="muted ms-1">{unit}</span>}
               </h4>
             </div>
           </div>

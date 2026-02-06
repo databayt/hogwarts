@@ -103,7 +103,7 @@ export function MetricCard({
                   {change}%
                 </span>
                 {description && (
-                  <span className="text-muted-foreground ml-1">
+                  <span className="text-muted-foreground ms-1">
                     {description}
                   </span>
                 )}

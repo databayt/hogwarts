@@ -157,7 +157,7 @@ export function SubdomainForm({
                         <Input
                           placeholder="your-school-name"
                           {...field}
-                          className="rounded-r-none"
+                          className="rounded-e-none"
                           onChange={(e) => {
                             const value = e.target.value
                               .toLowerCase()
@@ -165,7 +165,7 @@ export function SubdomainForm({
                             field.onChange(value)
                           }}
                         />
-                        <div className="bg-muted text-muted-foreground rounded-r-md border border-l-0 px-3 py-2 font-mono text-sm">
+                        <div className="bg-muted text-muted-foreground rounded-e-md border border-s-0 px-3 py-2 font-mono text-sm">
                           {SUBDOMAIN_CONSTANTS.DOMAIN_SUFFIX}
                         </div>
                       </div>

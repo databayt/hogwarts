@@ -265,7 +265,7 @@ export function StaffDirectoryContent({
               placeholder="Search by name, email, designation, or employee ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
 
@@ -405,7 +405,7 @@ export function StaffDirectoryContent({
                   <Link href={`/profile/staff/${staff.id}`}>
                     <Button size="sm" variant="ghost">
                       View
-                      <ChevronRight className="ml-1 h-4 w-4" />
+                      <ChevronRight className="ms-1 h-4 w-4" />
                     </Button>
                   </Link>
                 </div>
@@ -419,13 +419,15 @@ export function StaffDirectoryContent({
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="p-4 text-left">Staff Member</th>
-                  <th className="hidden p-4 text-left md:table-cell">
+                  <th className="p-4 text-start">Staff Member</th>
+                  <th className="hidden p-4 text-start md:table-cell">
                     Department
                   </th>
-                  <th className="hidden p-4 text-left lg:table-cell">Role</th>
-                  <th className="hidden p-4 text-left lg:table-cell">Status</th>
-                  <th className="p-4 text-left">Actions</th>
+                  <th className="hidden p-4 text-start lg:table-cell">Role</th>
+                  <th className="hidden p-4 text-start lg:table-cell">
+                    Status
+                  </th>
+                  <th className="p-4 text-start">Actions</th>
                 </tr>
               </thead>
               <tbody>

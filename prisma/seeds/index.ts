@@ -35,17 +35,22 @@ import { PrismaClient } from "@prisma/client"
 import { seedAcademicStructure } from "./academic"
 import { seedAdmission } from "./admission"
 import { seedAnnouncements } from "./announcements"
-import { seedAssignments } from "./assignments"
+import { seedAssignments, seedAssignmentSubmissions } from "./assignments"
 import { seedAttendance } from "./attendance"
+import {
+  seedAttendanceExcuses,
+  seedAttendanceInterventions,
+} from "./attendance-extras"
 import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { seedBanking } from "./banking"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
 import { seedEvents } from "./events"
-import { seedExamResults, seedExams } from "./exams"
+import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
 import { seedFees } from "./fees"
 import { seedFinanceComplete } from "./finance"
+import { seedGamification } from "./gamification"
 import { seedGrades } from "./grades"
 import { seedWellness } from "./health"
 import { seedInvoices } from "./invoices"
@@ -53,10 +58,12 @@ import { seedLessons } from "./lessons"
 import { seedLibrary } from "./library"
 import { seedMessaging } from "./messages"
 import { seedNotifications } from "./notifications"
-import { seedAllPeople } from "./people"
+import { seedPayroll } from "./payroll"
+import { seedAllPeople, seedStudentDocuments } from "./people"
 import { seedQBank } from "./qbank"
 import { seedSchoolWithBranding } from "./school"
-import { seedStreamCourses } from "./stream"
+import { seedStaffMembers } from "./staff-members"
+import { seedStreamCourses, seedStreamEnrollments } from "./stream"
 import { seedSubjects } from "./subjects"
 import { seedTimetable } from "./timetable"
 import type { SeedContext } from "./types"
@@ -146,6 +153,16 @@ async function main() {
     context.students = students
     context.guardians = guardians
 
+    // Student Documents
+    await measureDuration("Student Documents", () =>
+      seedStudentDocuments(prisma, school.id, students, adminUsers)
+    )
+
+    // Staff Members (non-teaching staff)
+    await measureDuration("Staff Members", () =>
+      seedStaffMembers(prisma, school.id, departments, adminUsers)
+    )
+
     // ========================================================================
     // PHASE 6: CLASSES & ENROLLMENTS
     // ========================================================================
@@ -175,6 +192,10 @@ async function main() {
       seedStreamCourses(prisma, school.id, subjects, adminUsers)
     )
 
+    await measureDuration("Stream Enrollments", () =>
+      seedStreamEnrollments(prisma, school.id, students)
+    )
+
     await measureDuration("Lessons", () =>
       seedLessons(prisma, school.id, classes)
     )
@@ -195,6 +216,10 @@ async function main() {
         term.startDate,
         term.endDate
       )
+    )
+
+    await measureDuration("Submissions", () =>
+      seedAssignmentSubmissions(prisma, school.id, students, classes, teachers)
     )
 
     // ========================================================================
@@ -221,6 +246,10 @@ async function main() {
       seedQBank(prisma, school.id, subjects, adminUsers)
     )
 
+    await measureDuration("Grading Config", () =>
+      seedGradingConfig(prisma, school.id)
+    )
+
     await measureDuration("Grades", () =>
       seedGrades(prisma, school.id, students, yearLevels, term)
     )
@@ -240,6 +269,11 @@ async function main() {
       seedInvoices(prisma, school.id, students, adminUsers)
     )
 
+    // Payroll (salary structures, runs, slips)
+    await measureDuration("Payroll", () =>
+      seedPayroll(prisma, school.id, teachers, adminUsers)
+    )
+
     // ========================================================================
     // PHASE 12: BANKING
     // ========================================================================
@@ -251,7 +285,22 @@ async function main() {
     // PHASE 13: OPERATIONS
     // ========================================================================
     await measureDuration("Attendance", () =>
-      seedAttendance(prisma, school.id, students, classes, teachers)
+      seedAttendance(prisma, school.id, students, classes, teachers, periods)
+    )
+
+    // Attendance excuses and interventions (depends on attendance records)
+    await measureDuration("Attendance Excuses", () =>
+      seedAttendanceExcuses(prisma, school.id, students, adminUsers)
+    )
+
+    await measureDuration("Attendance Interventions", () =>
+      seedAttendanceInterventions(
+        prisma,
+        school.id,
+        students,
+        teachers,
+        adminUsers
+      )
     )
 
     await measureDuration("Timetable", () =>
@@ -264,6 +313,11 @@ async function main() {
         periods,
         term
       )
+    )
+
+    // Gamification (badges, streaks, competitions)
+    await measureDuration("Gamification", () =>
+      seedGamification(prisma, school.id, students, classes)
     )
 
     // ========================================================================

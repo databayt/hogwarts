@@ -23,10 +23,9 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 interface AnnouncementDetailResult {
   id: string
   schoolId: string
-  titleEn: string | null
-  titleAr: string | null
-  bodyEn: string | null
-  bodyAr: string | null
+  title: string | null
+  body: string | null
+  lang: string
   scope: string
   priority: string
   classId: string | null
@@ -84,7 +83,7 @@ export function AnnouncementDetailContent({
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="me-2 h-4 w-4" />
           {t.back}
         </Button>
         <Alert variant="destructive">
@@ -96,14 +95,9 @@ export function AnnouncementDetailContent({
     )
   }
 
-  // Get localized title and body
-  const title = isRTL
-    ? data.titleAr || data.titleEn || ""
-    : data.titleEn || data.titleAr || ""
-
-  const body = isRTL
-    ? data.bodyAr || data.bodyEn || ""
-    : data.bodyEn || data.bodyAr || ""
+  // Get title and body
+  const title = data.title || ""
+  const body = data.body || ""
 
   // Get scope label
   const getScopeLabel = (scope: string) => {

@@ -28,11 +28,11 @@ export interface ColumnCallbacks {
   onTogglePublish?: (announcement: AnnouncementRow) => void
 }
 
-// Bilingual row type - both language versions
+// Single-language row type
 export type AnnouncementRow = {
   id: string
-  titleEn: string | null
-  titleAr: string | null
+  title: string | null
+  lang: string
   scope: string
   published: boolean
   createdAt: string
@@ -43,14 +43,10 @@ export type AnnouncementRow = {
 }
 
 /**
- * Get localized title with fallback
- * If preferred locale is missing, falls back to the other language
+ * Get announcement title
  */
-function getLocalizedTitle(row: AnnouncementRow, locale: Locale): string {
-  if (locale === "ar") {
-    return row.titleAr || row.titleEn || ""
-  }
-  return row.titleEn || row.titleAr || ""
+function getTitle(row: AnnouncementRow): string {
+  return row.title || ""
 }
 
 export const getAnnouncementColumns = (
@@ -71,20 +67,19 @@ export const getAnnouncementColumns = (
 
   return [
     {
-      // Use a custom accessor that returns localized title
-      accessorFn: (row) => getLocalizedTitle(row, locale),
+      // Use a custom accessor that returns the title
+      accessorFn: (row) => getTitle(row),
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={columns.title} />
       ),
       meta: { label: columns.title, variant: "text" },
       id: "title",
       enableColumnFilter: true,
-      // Custom filter that searches both languages
+      // Filter on title field
       filterFn: (row, id, filterValue: string) => {
-        const titleEn = row.original.titleEn?.toLowerCase() || ""
-        const titleAr = row.original.titleAr || ""
+        const title = row.original.title?.toLowerCase() || ""
         const search = filterValue.toLowerCase()
-        return titleEn.includes(search) || titleAr.includes(search)
+        return title.includes(search)
       },
     },
     {

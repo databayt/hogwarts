@@ -11,11 +11,13 @@ import { MRRByPlan } from "./mrr-by-plan"
 import { MRRChart } from "./mrr-chart"
 
 interface Props {
-  dictionary: any
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
 }
 
 export async function AnalyticsContent({ dictionary, lang }: Props) {
+  const t = dictionary?.operator?.analytics
+
   const [mrrData, mrrHistory, revenueTrends] = await Promise.all([
     calculateMRR(),
     getMRRHistory(),
@@ -26,10 +28,9 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
         <div>
-          <h2>{dictionary?.title || "Revenue Analytics"}</h2>
+          <h2>{t?.revenueAnalytics || "Revenue Analytics"}</h2>
           <p className="muted">
-            {dictionary?.description ||
-              "Track MRR, revenue trends, and financial health"}
+            {t?.trackMRR || "Track MRR, revenue trends, and financial health"}
           </p>
         </div>
 
@@ -37,7 +38,9 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current MRR</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t?.currentMRR || "Current MRR"}
+              </CardTitle>
               <DollarSign className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
@@ -63,7 +66,10 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                     </span>
                   </>
                 )}
-                <span>vs last month</span>
+                <span>
+                  {dictionary?.operator?.dashboard?.vsLastMonth ||
+                    "vs last month"}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -71,7 +77,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Last Month MRR
+                {t?.lastMonthMRR || "Last Month MRR"}
               </CardTitle>
               <DollarSign className="text-muted-foreground h-4 w-4" />
             </CardHeader>
@@ -82,21 +88,8 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                   maximumFractionDigits: 0,
                 })}
               </div>
-              <p className="text-muted-foreground text-xs">Previous period</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Paying Schools
-              </CardTitle>
-              <Users className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mrrData.totalSchools}</div>
               <p className="text-muted-foreground text-xs">
-                Active subscriptions
+                {t?.previousPeriod || "Previous period"}
               </p>
             </CardContent>
           </Card>
@@ -104,7 +97,22 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Avg per School
+                {t?.payingSchools || "Paying Schools"}
+              </CardTitle>
+              <Users className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{mrrData.totalSchools}</div>
+              <p className="text-muted-foreground text-xs">
+                {t?.activeSubscriptions || "Active subscriptions"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t?.avgPerSchool || "Avg per School"}
               </CardTitle>
               <DollarSign className="text-muted-foreground h-4 w-4" />
             </CardHeader>
@@ -119,7 +127,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                 )}
               </div>
               <p className="text-muted-foreground text-xs">
-                Average revenue per school
+                {t?.avgRevenuePerSchool || "Average revenue per school"}
               </p>
             </CardContent>
           </Card>
@@ -134,9 +142,10 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
         {/* Revenue Trends */}
         <Card>
           <CardHeader>
-            <CardTitle>Revenue Trends</CardTitle>
+            <CardTitle>{t?.revenueTrends || "Revenue Trends"}</CardTitle>
             <p className="text-muted-foreground text-sm">
-              Actual revenue from paid invoices over the last 6 months
+              {t?.actualRevenue ||
+                "Actual revenue from paid invoices over the last 6 months"}
             </p>
           </CardHeader>
           <CardContent>
@@ -190,16 +199,16 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
         {/* Projected Annual Revenue */}
         <Card>
           <CardHeader>
-            <CardTitle>Projections</CardTitle>
+            <CardTitle>{t?.projections || "Projections"}</CardTitle>
             <p className="text-muted-foreground text-sm">
-              Based on current MRR and growth rate
+              {t?.basedOnGrowth || "Based on current MRR and growth rate"}
             </p>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <p className="text-muted-foreground text-sm">
-                  Annual Run Rate (ARR)
+                  {t?.annualRunRate || "Annual Run Rate (ARR)"}
                 </p>
                 <p className="text-2xl font-bold">
                   {formatCurrency(mrrData.currentMRR * 12, lang, {
@@ -210,7 +219,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">
-                  Projected Next Month
+                  {t?.projectedNextMonth || "Projected Next Month"}
                 </p>
                 <p className="text-2xl font-bold">
                   {formatCurrency(
@@ -222,7 +231,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">
-                  Projected 12 Months
+                  {t?.projected12Months || "Projected 12 Months"}
                 </p>
                 <p className="text-2xl font-bold">
                   {formatCurrency(

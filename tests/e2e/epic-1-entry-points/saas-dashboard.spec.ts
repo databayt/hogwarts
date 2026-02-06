@@ -92,7 +92,8 @@ test.describe("Story 1.2: DEVELOPER Access @rbac", () => {
 
     // Skip if protocol mismatch (known dev issue)
     if (page.url().includes("chrome-error://")) {
-      test.skip()
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
     }
   })
 

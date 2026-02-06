@@ -116,7 +116,7 @@ export function PriceForm() {
               className="grid grid-cols-2 gap-4 sm:grid-cols-3"
             >
               {["USD", "EUR", "GBP", "CAD", "AUD"].map((currency) => (
-                <div key={currency} className="flex items-center space-x-2">
+                <div key={currency} className="flex items-center gap-2">
                   <RadioGroupItem
                     value={currency}
                     id={`currency-${currency}`}
@@ -174,7 +174,7 @@ export function PriceForm() {
                     "Annual",
                 },
               ].map(({ value, label }) => (
-                <div key={value} className="flex items-center space-x-2">
+                <div key={value} className="flex items-center gap-2">
                   <RadioGroupItem value={value} id={`schedule-${value}`} />
                   <Label htmlFor={`schedule-${value}`}>{label}</Label>
                 </div>

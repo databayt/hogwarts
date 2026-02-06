@@ -8,7 +8,7 @@ export default function GitHubProfile() {
       {/* Header */}
       <header className="border-b border-[#30363d] bg-[#161b22] px-4 py-3">
         <div className="mx-auto flex max-w-screen-2xl items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-4">
             <Link href="/public">
               <svg
                 height="32"
@@ -28,13 +28,13 @@ export default function GitHubProfile() {
                   placeholder="Search or jump to..."
                   className="w-64 bg-transparent px-3 py-1 text-sm text-[#c9d1d9] outline-none"
                 />
-                <div className="mr-2 flex h-5 w-5 items-center justify-center rounded border border-[#30363d] text-[#8b949e]">
+                <div className="me-2 flex h-5 w-5 items-center justify-center rounded border border-[#30363d] text-[#8b949e]">
                   <span className="text-xs">/</span>
                 </div>
               </div>
             </div>
             <nav className="hidden md:flex">
-              <ul className="flex space-x-4 text-sm font-semibold">
+              <ul className="flex gap-4 text-sm font-semibold">
                 <li>
                   <Link
                     href="#"
@@ -78,7 +78,7 @@ export default function GitHubProfile() {
               </ul>
             </nav>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-4">
             <button className="text-[#c9d1d9]">
               <Bell className="h-5 w-5" />
             </button>
@@ -146,7 +146,7 @@ export default function GitHubProfile() {
               Edit profile
             </button>
 
-            <div className="flex items-center space-x-2 text-sm">
+            <div className="flex items-center gap-2 text-sm">
               <Link
                 href="#"
                 className="flex items-center text-[#8b949e] hover:text-[#58a6ff]"
@@ -157,7 +157,7 @@ export default function GitHubProfile() {
                   viewBox="0 0 16 16"
                   version="1.1"
                   width="16"
-                  className="mr-1 fill-current"
+                  className="me-1 fill-current"
                 >
                   <path d="M2 5.5a3.5 3.5 0 1 1 5.898 2.549 5.508 5.508 0 0 1 3.034 4.084.75.75 0 1 1-1.482.235 4 4 0 0 0-7.9 0 .75.75 0 0 1-1.482-.236A5.507 5.507 0 0 1 3.102 8.05 3.493 3.493 0 0 1 2 5.5ZM11 4a3.001 3.001 0 0 1 2.22 5.018 5.01 5.01 0 0 1 2.56 3.012.749.749 0 0 1-.885.954.752.752 0 0 1-.549-.514 3.507 3.507 0 0 0-2.522-2.372.75.75 0 0 1-.574-.73v-.352a.75.75 0 0 1 .416-.672A1.5 1.5 0 0 0 11 5.5.75.75 0 0 1 11 4Zm-5.5-.5a2 2 0 1 0-.001 3.999A2 2 0 0 0 5.5 3.5Z"></path>
                 </svg>
@@ -174,13 +174,13 @@ export default function GitHubProfile() {
 
             <div className="space-y-2 text-sm">
               <div className="flex items-center text-[#8b949e]">
-                <svg className="mr-2 h-4 w-4 fill-current" viewBox="0 0 16 16">
+                <svg className="me-2 h-4 w-4 fill-current" viewBox="0 0 16 16">
                   <path d="M11.536 3.464a5 5 0 0 1 0 7.072L8 14.07l-3.536-3.535a5 5 0 1 1 7.072-7.072v.001zm1.06 8.132a6.5 6.5 0 1 0-9.192 0l3.535 3.536a1.5 1.5 0 0 0 2.122 0l3.535-3.536zM8 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"></path>
                 </svg>
                 Delhi
               </div>
               <div className="flex items-center text-[#8b949e]">
-                <svg className="mr-2 h-4 w-4 fill-current" viewBox="0 0 16 16">
+                <svg className="me-2 h-4 w-4 fill-current" viewBox="0 0 16 16">
                   <path d="M7.775 3.275a.75.75 0 0 0 1.06 1.06l1.25-1.25a2 2 0 1 1 2.83 2.83l-2.5 2.5a2 2 0 0 1-2.83 0 .75.75 0 0 0-1.06 1.06 3.5 3.5 0 0 0 4.95 0l2.5-2.5a3.5 3.5 0 0 0-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 0 1 0-2.83l2.5-2.5a2 2 0 0 1 2.83 0 .75.75 0 0 0 1.06-1.06 3.5 3.5 0 0 0-4.95 0l-2.5 2.5a3.5 3.5 0 0 0 4.95 4.95l1.25-1.25a.75.75 0 0 0-1.06-1.06l-1.25 1.25a2 2 0 0 1-2.83 0z"></path>
                 </svg>
                 <a
@@ -228,7 +228,7 @@ export default function GitHubProfile() {
                 <button className="rounded-full bg-[#238636] px-2 py-0.5 text-xs font-medium text-white">
                   Beta
                 </button>
-                <button className="ml-2 text-xs text-[#58a6ff]">
+                <button className="ms-2 text-xs text-[#58a6ff]">
                   Send feedback
                 </button>
               </div>
@@ -300,7 +300,7 @@ export default function GitHubProfile() {
                     viewBox="0 0 16 16"
                     version="1.1"
                     width="16"
-                    className="mr-2 fill-current"
+                    className="me-2 fill-current"
                   >
                     <path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25Z"></path>
                   </svg>
@@ -316,12 +316,12 @@ export default function GitHubProfile() {
                     viewBox="0 0 16 16"
                     version="1.1"
                     width="16"
-                    className="mr-2 fill-current"
+                    className="me-2 fill-current"
                   >
                     <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                   </svg>
                   Repositories
-                  <span className="ml-2 rounded-full bg-[#30363d] px-2 py-0.5 text-xs">
+                  <span className="ms-2 rounded-full bg-[#30363d] px-2 py-0.5 text-xs">
                     27
                   </span>
                 </Link>
@@ -335,7 +335,7 @@ export default function GitHubProfile() {
                     viewBox="0 0 16 16"
                     version="1.1"
                     width="16"
-                    className="mr-2 fill-current"
+                    className="me-2 fill-current"
                   >
                     <path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v12.5A1.75 1.75 0 0 1 14.25 16H1.75A1.75 1.75 0 0 1 0 14.25ZM1.5 1.75v12.5c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0-.25-.25H1.75a.25.25 0 0 0-.25.25ZM11.75 3a.75.75 0 0 1 .75.75v7.5a.75.75 0 0 1-1.5 0v-7.5a.75.75 0 0 1 .75-.75Zm-8.25.75a.75.75 0 0 1 1.5 0v5.5a.75.75 0 0 1-1.5 0ZM8 3a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 3Z"></path>
                   </svg>
@@ -351,7 +351,7 @@ export default function GitHubProfile() {
                     viewBox="0 0 16 16"
                     version="1.1"
                     width="16"
-                    className="mr-2 fill-current"
+                    className="me-2 fill-current"
                   >
                     <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z"></path>
                   </svg>
@@ -367,7 +367,7 @@ export default function GitHubProfile() {
                     viewBox="0 0 16 16"
                     version="1.1"
                     width="16"
-                    className="mr-2 fill-current"
+                    className="me-2 fill-current"
                   >
                     <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41L8 2.694Z"></path>
                   </svg>
@@ -427,7 +427,7 @@ export default function GitHubProfile() {
                         viewBox="0 0 16 16"
                         version="1.1"
                         width="16"
-                        className="mr-2 fill-[#8b949e]"
+                        className="me-2 fill-[#8b949e]"
                       >
                         <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                       </svg>
@@ -439,7 +439,7 @@ export default function GitHubProfile() {
                       </a>
                     </div>
                     <div className="flex items-center text-xs text-[#8b949e]">
-                      <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
+                      <span className="me-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
                       <span>Public</span>
                     </div>
                   </div>
@@ -447,12 +447,12 @@ export default function GitHubProfile() {
                     Deep Learning Python Projects
                   </p>
                   <div className="flex items-center text-xs text-[#8b949e]">
-                    <span className="mr-3 flex items-center">
-                      <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
+                    <span className="me-3 flex items-center">
+                      <span className="me-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
                       Python
                     </span>
                     <span className="flex items-center">
-                      <Star className="mr-1 h-3 w-3" />1
+                      <Star className="me-1 h-3 w-3" />1
                     </span>
                   </div>
                 </div>
@@ -467,7 +467,7 @@ export default function GitHubProfile() {
                         viewBox="0 0 16 16"
                         version="1.1"
                         width="16"
-                        className="mr-2 fill-[#8b949e]"
+                        className="me-2 fill-[#8b949e]"
                       >
                         <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                       </svg>
@@ -479,18 +479,18 @@ export default function GitHubProfile() {
                       </a>
                     </div>
                     <div className="flex items-center text-xs text-[#8b949e]">
-                      <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
+                      <span className="me-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
                       <span>Public</span>
                     </div>
                   </div>
                   <p className="mb-2 text-xs text-[#8b949e]"></p>
                   <div className="flex items-center text-xs text-[#8b949e]">
-                    <span className="mr-3 flex items-center">
-                      <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
+                    <span className="me-3 flex items-center">
+                      <span className="me-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
                       Python
                     </span>
                     <span className="flex items-center">
-                      <Star className="mr-1 h-3 w-3" />2
+                      <Star className="me-1 h-3 w-3" />2
                     </span>
                   </div>
                 </div>
@@ -505,7 +505,7 @@ export default function GitHubProfile() {
                         viewBox="0 0 16 16"
                         version="1.1"
                         width="16"
-                        className="mr-2 fill-[#8b949e]"
+                        className="me-2 fill-[#8b949e]"
                       >
                         <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                       </svg>
@@ -517,7 +517,7 @@ export default function GitHubProfile() {
                       </a>
                     </div>
                     <div className="flex items-center text-xs text-[#8b949e]">
-                      <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
+                      <span className="me-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
                       <span>Public</span>
                     </div>
                   </div>
@@ -525,12 +525,12 @@ export default function GitHubProfile() {
                     Code for various NLP and Speech Tasks
                   </p>
                   <div className="flex items-center text-xs text-[#8b949e]">
-                    <span className="mr-3 flex items-center">
-                      <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
+                    <span className="me-3 flex items-center">
+                      <span className="me-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
                       Python
                     </span>
                     <span className="flex items-center">
-                      <Star className="mr-1 h-3 w-3" />1
+                      <Star className="me-1 h-3 w-3" />1
                     </span>
                   </div>
                 </div>
@@ -545,7 +545,7 @@ export default function GitHubProfile() {
                         viewBox="0 0 16 16"
                         version="1.1"
                         width="16"
-                        className="mr-2 fill-[#8b949e]"
+                        className="me-2 fill-[#8b949e]"
                       >
                         <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                       </svg>
@@ -557,14 +557,14 @@ export default function GitHubProfile() {
                       </a>
                     </div>
                     <div className="flex items-center text-xs text-[#8b949e]">
-                      <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
+                      <span className="me-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
                       <span>Public</span>
                     </div>
                   </div>
                   <p className="mb-2 text-xs text-[#8b949e]"></p>
                   <div className="flex items-center text-xs text-[#8b949e]">
-                    <span className="mr-3 flex items-center">
-                      <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
+                    <span className="me-3 flex items-center">
+                      <span className="me-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
                       Python
                     </span>
                   </div>
@@ -618,15 +618,15 @@ export default function GitHubProfile() {
                 <div className="mt-2 flex items-center justify-between text-xs text-[#8b949e]">
                   <span>Learn how we count contributions</span>
                   <div className="flex items-center">
-                    <span className="mr-1">Less</span>
-                    <div className="flex space-x-1">
+                    <span className="me-1">Less</span>
+                    <div className="flex gap-1">
                       <div className="h-3 w-3 rounded-sm bg-[#161b22]"></div>
                       <div className="h-3 w-3 rounded-sm bg-[#0e4429]"></div>
                       <div className="h-3 w-3 rounded-sm bg-[#006d32]"></div>
                       <div className="h-3 w-3 rounded-sm bg-[#26a641]"></div>
                       <div className="h-3 w-3 rounded-sm bg-[#39d353]"></div>
                     </div>
-                    <span className="ml-1">More</span>
+                    <span className="ms-1">More</span>
                   </div>
                 </div>
               </div>
@@ -635,7 +635,7 @@ export default function GitHubProfile() {
               <div className="space-y-4">
                 <div className="border-b border-[#30363d] pb-4">
                   <h3 className="mb-2 text-sm font-semibold">March 2023</h3>
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-start gap-2">
                     <svg
                       aria-hidden="true"
                       height="16"
@@ -668,7 +668,7 @@ export default function GitHubProfile() {
                         <div className="flex items-center">
                           <a
                             href="#"
-                            className="mr-2 text-sm font-semibold text-[#58a6ff] hover:underline"
+                            className="me-2 text-sm font-semibold text-[#58a6ff] hover:underline"
                           >
                             chiragsingla177/Vector
                           </a>
@@ -679,7 +679,7 @@ export default function GitHubProfile() {
                         <div className="flex items-center">
                           <a
                             href="#"
-                            className="mr-2 text-sm font-semibold text-[#58a6ff] hover:underline"
+                            className="me-2 text-sm font-semibold text-[#58a6ff] hover:underline"
                           >
                             chiragsingla177/MorphoU1
                           </a>
@@ -693,7 +693,7 @@ export default function GitHubProfile() {
                 </div>
 
                 <div className="border-b border-[#30363d] pb-4">
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-start gap-2">
                     <svg
                       aria-hidden="true"
                       height="16"
@@ -720,7 +720,7 @@ export default function GitHubProfile() {
                               viewBox="0 0 16 16"
                               version="1.1"
                               width="16"
-                              className="mr-2 fill-[#8b949e]"
+                              className="me-2 fill-[#8b949e]"
                             >
                               <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                             </svg>
@@ -731,13 +731,13 @@ export default function GitHubProfile() {
                               chiragsingla177/MorphoU1
                             </a>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2">
                             <span className="flex items-center rounded-full bg-[#30363d] px-2 py-0.5 text-xs text-[#8b949e]">
-                              <span className="mr-1 h-2 w-2 rounded-full bg-[#da5b0b]"></span>
+                              <span className="me-1 h-2 w-2 rounded-full bg-[#da5b0b]"></span>
                               Public
                             </span>
                             <span className="flex items-center rounded-full bg-[#30363d] px-2 py-0.5 text-xs text-[#8b949e]">
-                              <span className="mr-1 h-2 w-2 rounded-full bg-[#3572a5]"></span>
+                              <span className="me-1 h-2 w-2 rounded-full bg-[#3572a5]"></span>
                               Python
                             </span>
                           </div>
@@ -748,7 +748,7 @@ export default function GitHubProfile() {
                 </div>
 
                 <div className="border-b border-[#30363d] pb-4">
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-start gap-2">
                     <svg
                       aria-hidden="true"
                       height="16"
@@ -792,7 +792,7 @@ export default function GitHubProfile() {
                         </div>
                         <div className="rounded-md border border-[#30363d] p-2">
                           <div className="flex items-center">
-                            <div className="mr-2 h-5 w-5 rounded-full bg-[#8957e5]">
+                            <div className="me-2 h-5 w-5 rounded-full bg-[#8957e5]">
                               <div className="flex h-full w-full items-center justify-center text-xs text-white">
                                 <GitFork className="h-3 w-3" />
                               </div>
@@ -809,7 +809,7 @@ export default function GitHubProfile() {
                         </div>
                         <div className="rounded-md border border-[#30363d] p-2">
                           <div className="flex items-center">
-                            <div className="mr-2 h-5 w-5 rounded-full bg-[#8957e5]">
+                            <div className="me-2 h-5 w-5 rounded-full bg-[#8957e5]">
                               <div className="flex h-full w-full items-center justify-center text-xs text-white">
                                 <GitFork className="h-3 w-3" />
                               </div>
@@ -830,7 +830,7 @@ export default function GitHubProfile() {
                 </div>
 
                 <div className="pb-4">
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-start gap-2">
                     <svg
                       aria-hidden="true"
                       height="16"
@@ -849,7 +849,7 @@ export default function GitHubProfile() {
                           BuilderIO/figma-html
                         </h4>
                         <div className="flex items-center">
-                          <span className="mr-2 rounded-full bg-[#30363d] px-2 py-0.5 text-xs text-[#8b949e]">
+                          <span className="me-2 rounded-full bg-[#30363d] px-2 py-0.5 text-xs text-[#8b949e]">
                             Public
                           </span>
                           <div className="text-xs text-[#8b949e]">Mar 15</div>
@@ -893,7 +893,7 @@ export default function GitHubProfile() {
       <footer className="border-t border-[#30363d] bg-[#0d1117] py-10 text-xs text-[#8b949e]">
         <div className="mx-auto max-w-screen-2xl px-4">
           <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <svg
                 height="24"
                 aria-hidden="true"

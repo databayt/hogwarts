@@ -1,0 +1,142 @@
+// ============================================
+// FINANCE MODULE - Core Accounting (Double-Entry Bookkeeping)
+// ============================================
+
+enum AccountType {
+  ASSET // Bank accounts, cash, receivables, inventory
+  LIABILITY // Payables, loans, deferred revenue
+  EQUITY // Capital, retained earnings
+  REVENUE // Income from fees, services
+  EXPENSE // Operating costs, salaries, utilities
+}
+
+enum BalanceType {
+  DEBIT
+  CREDIT
+}
+
+// Chart of Accounts - Account hierarchy
+model ChartOfAccount {
+  id            String      @id @default(cuid())
+  schoolId      String
+  code          String // e.g., "1000", "2100"
+  name          String // e.g., "Cash", "Accounts Payable"
+  type          AccountType
+  subtype       String? // e.g., "Current Asset", "Fixed Asset"
+  parentId      String?
+  normalBalance BalanceType // DEBIT or CREDIT
+  isActive      Boolean     @default(true)
+  description   String?     @db.Text
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  school            School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  parent            ChartOfAccount?   @relation("AccountHierarchy", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  children          ChartOfAccount[]  @relation("AccountHierarchy")
+  ledgerEntries     LedgerEntry[]
+  balances          AccountBalance[]
+  expenseCategories ExpenseCategory[]
+
+  @@unique([schoolId, code])
+  @@index([schoolId, type])
+  @@index([schoolId, isActive])
+  @@index([parentId])
+}
+
+// Fiscal Year Configuration
+model FiscalYear {
+  id        String    @id @default(cuid())
+  schoolId  String
+  name      String // "FY 2024-2025"
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean   @default(false)
+  isClosed  Boolean   @default(false)
+  closedAt  DateTime?
+  closedBy  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  school           School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  journalEntries   JournalEntry[]
+  budgets          Budget[]
+  financialReports FinancialReport[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId, isCurrent])
+}
+
+// Journal Entry - Transaction header (immutable once posted)
+model JournalEntry {
+  id              String    @id @default(cuid())
+  schoolId        String
+  entryNumber     String    @unique
+  entryDate       DateTime
+  description     String    @db.Text
+  reference       String? // Invoice #, Payment #, etc.
+  sourceModule    String // "fees", "payroll", "expenses", "invoice", etc.
+  sourceRecordId  String? // ID from source module
+  isPosted        Boolean   @default(false)
+  postedAt        DateTime?
+  postedBy        String?
+  isReversed      Boolean   @default(false)
+  reversedAt      DateTime?
+  reversalEntryId String?
+  fiscalYearId    String
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  fiscalYear    FiscalYear     @relation(fields: [fiscalYearId], references: [id])
+  ledgerEntries LedgerEntry[]
+  reversalEntry JournalEntry?  @relation("JournalReversal", fields: [reversalEntryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  reversedBy    JournalEntry[] @relation("JournalReversal")
+
+  // Relations to source modules
+  userInvoices       UserInvoice[]
+  payments           Payment[]
+  payrollRuns        PayrollRun[]
+  expenses           Expense[]
+  walletTransactions WalletTransaction[]
+
+  @@index([schoolId, entryDate])
+  @@index([schoolId, fiscalYearId])
+  @@index([schoolId, sourceModule, sourceRecordId])
+  @@index([schoolId, isPosted])
+}
+
+// Ledger Entry - Individual debit/credit lines (immutable)
+model LedgerEntry {
+  id             String   @id @default(cuid())
+  schoolId       String
+  journalEntryId String
+  accountId      String
+  debit          Decimal  @default(0) @db.Decimal(12, 2)
+  credit         Decimal  @default(0) @db.Decimal(12, 2)
+  description    String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  journalEntry JournalEntry   @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account      ChartOfAccount @relation(fields: [accountId], references: [id])
+
+  @@index([schoolId, journalEntryId])
+  @@index([schoolId, accountId])
+}
+
+// Account Balance - Real-time balances (updated via triggers/jobs)
+model AccountBalance {
+  id        String   @id @default(cuid())
+  schoolId  String
+  accountId String
+  balance   Decimal  @db.Decimal(12, 2)
+  asOfDate  DateTime
+  createdAt DateTime @default(now())
+
+  school  School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  account ChartOfAccount @relation(fields: [accountId], references: [id])
+
+  @@unique([schoolId, accountId, asOfDate])
+  @@index([schoolId, asOfDate])
+}

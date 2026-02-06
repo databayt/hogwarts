@@ -56,7 +56,7 @@ export function BankingSidebar({
   ]
 
   return (
-    <aside className="bg-card flex h-screen w-64 flex-col border-r">
+    <aside className="bg-card flex h-screen w-64 flex-col border-e">
       <div className="p-6">
         <h2 className="text-lg font-semibold">Banking</h2>
       </div>
@@ -96,7 +96,7 @@ export function BankingSidebar({
         </div>
         <Button variant="ghost" className="w-full justify-start" asChild>
           <Link href={`/${lang}/logout`}>
-            <LogOut className="mr-2 h-4 w-4" />
+            <LogOut className="me-2 h-4 w-4" />
             {dictionary?.signOut || "Sign Out"}
           </Link>
         </Button>

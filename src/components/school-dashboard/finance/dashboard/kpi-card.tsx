@@ -127,7 +127,7 @@ export const KPICard = React.memo(function KPICard({
       <svg
         width={width}
         height={height}
-        className="ml-2 inline-block"
+        className="ms-2 inline-block"
         viewBox={`0 0 ${width} ${height}`}
       >
         <polyline

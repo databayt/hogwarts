@@ -34,7 +34,7 @@ const AccountTabTrigger = memo(function AccountTabTrigger({
     <TabsTrigger
       key={account.id}
       value={account.id}
-      className="flex flex-col items-start gap-1 text-left"
+      className="flex flex-col items-start gap-1 text-start"
     >
       <span className="text-sm font-medium">{account.name}</span>
       <span className="text-muted-foreground text-xs">{formattedBalance}</span>

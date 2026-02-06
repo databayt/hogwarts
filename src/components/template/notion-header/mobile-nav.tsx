@@ -23,7 +23,7 @@ export function MobileNav({ items, children }: MobileNavProps) {
       )}
     >
       <div className="bg-popover text-popover-foreground relative z-20 grid gap-6 rounded-md p-4 shadow-md">
-        <Link href="/" className="flex items-center space-x-2">
+        <Link href="/" className="flex items-center gap-2">
           <Icons.logo />
           <span>{siteConfig.name}</span>
         </Link>

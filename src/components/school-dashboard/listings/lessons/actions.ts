@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
@@ -10,6 +11,8 @@ import {
   lessonCreateSchema,
   lessonUpdateSchema,
 } from "@/components/school-dashboard/listings/lessons/validation"
+
+import { assertLessonPermission, getAuthContext } from "./authorization"
 
 // ============================================================================
 // Types
@@ -61,9 +64,21 @@ export async function createLesson(
   input: z.infer<typeof lessonCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertLessonPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     const parsed = lessonCreateSchema.parse(input)
@@ -109,9 +124,21 @@ export async function updateLesson(
   input: z.infer<typeof lessonUpdateSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertLessonPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update lessons" }
     }
 
     const parsed = lessonUpdateSchema.parse(input)
@@ -171,9 +198,21 @@ export async function deleteLesson(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertLessonPermission(authContext, "delete", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to delete lessons" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -217,9 +256,21 @@ export async function getLesson(input: {
   id: string
 }): Promise<ActionResponse<LessonSelectResult | null>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertLessonPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read lessons" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -268,9 +319,21 @@ export async function getLessons(
   input: Partial<z.infer<typeof getLessonsSchema>>
 ): Promise<ActionResponse<{ rows: LessonListResult[]; total: number }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertLessonPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read lessons" }
     }
 
     const sp = getLessonsSchema.parse(input ?? {})
@@ -360,9 +423,21 @@ export async function getLessonsCSV(
   input?: Partial<z.infer<typeof getLessonsSchema>>
 ): Promise<ActionResponse<string>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertLessonPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to export lessons" }
     }
 
     const sp = getLessonsSchema.parse(input ?? {})
@@ -426,6 +501,55 @@ export async function getLessonsCSV(
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to export lessons",
+    }
+  }
+}
+
+export async function bulkDeleteLessons(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertLessonPermission(authContext, "bulk_action", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized for bulk operations" }
+    }
+
+    const { ids } = z
+      .object({ ids: z.array(z.string().min(1)).min(1) })
+      .parse(input)
+
+    const existing = await db.lesson.findMany({
+      where: { id: { in: ids }, schoolId },
+      select: { id: true },
+    })
+    const validIds = existing.map((l: any) => l.id)
+
+    const result = await db.lesson.deleteMany({
+      where: { id: { in: validIds }, schoolId },
+    })
+
+    revalidatePath(LESSONS_PATH)
+    return { success: true, data: { count: result.count } }
+  } catch (error) {
+    console.error("[bulkDeleteLessons] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk delete lessons",
     }
   }
 }

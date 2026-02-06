@@ -310,7 +310,7 @@ export function ParentDashboard({
               )}
               {selectedChild.grades.trend === "down" && (
                 <Badge variant="outline" className="text-red-600">
-                  <TrendingUp className="mr-1 h-3 w-3 rotate-180" />
+                  <TrendingUp className="me-1 h-3 w-3 rotate-180" />
                   Declining
                 </Badge>
               )}
@@ -465,7 +465,7 @@ export function ParentDashboard({
                           {assignment.subject}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <Badge
                           variant={
                             isPast(assignment.dueDate)
@@ -517,7 +517,7 @@ export function ParentDashboard({
                           {exam.subject}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="text-sm font-medium">
                           {format(exam.date, "MMM dd")}
                         </p>
@@ -549,7 +549,7 @@ export function ParentDashboard({
                           {exam.subject}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <p
                           className={cn(
                             "font-bold",

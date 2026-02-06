@@ -12,7 +12,17 @@ model School {
   email       String?
   website     String?
   timezone    String   @default("Africa/Khartoum")
-  // locale      String  @default("ar") // TODO: Add migration for this field
+  preferredLanguage String @default("ar") // Admin's chosen content language ("ar" or "en")
+
+  // School classification
+  schoolType  String? // private, public, international, technical, special
+  schoolLevel String? // primary, secondary, both
+  description String? @db.Text
+
+  // Location breakdown (address stays as street address)
+  city    String?
+  state   String?
+  country String?
 
   // Subscription/billing info (high-level; detailed state in Subscription)
   planType    String  @default("basic") // basic, premium, enterprise
@@ -20,14 +30,31 @@ model School {
   maxTeachers Int     @default(10)
   isActive    Boolean @default(true)
 
+  // Pricing
+  tuitionFee      Decimal? @db.Decimal(10, 2)
+  registrationFee Decimal? @db.Decimal(10, 2)
+  applicationFee  Decimal? @db.Decimal(10, 2)
+  currency        String   @default("USD")
+  paymentSchedule String   @default("annual") // monthly, quarterly, semester, annual
+
+  // Capacity
+  maxClasses Int @default(20)
+
+  // Video storage quota (Stream LMS)
+  videoStorageUsedBytes  BigInt? @default(0)
+  videoStorageQuotaBytes BigInt? // null = unlimited
+
+  // Join code for users to self-enroll (6-char alphanumeric, regeneratable)
+  joinCode String? @unique
+
   // Owner tracking - immutable, set during school creation
   // Ensures one user can only create one school (prevents duplicates from race conditions)
   createdByUserId String? @unique
 
-  // Onboarding status (uncomment after migration)
-  // onboardingCompletedAt DateTime?
-  // operationalStatus     String? // existing school, new school
-  // safetyFeatures        String[] @default([])
+  // Onboarding lifecycle
+  onboardingStep        String?
+  onboardingCompletedAt DateTime?
+  isPublished           Boolean @default(false)
 
   // School relationships
   users                    User[]
@@ -68,9 +95,11 @@ model School {
   assignments              Assignment[]
   assignmentSubmissions    AssignmentSubmission[]
   attendances              Attendance[]
-  announcements            Announcement[]
-  announcementTemplates    AnnouncementTemplate[]
-  announcementConfig       AnnouncementConfig?
+  announcements              Announcement[]
+  announcementTemplates      AnnouncementTemplate[]
+  announcementConfig         AnnouncementConfig?
+  announcementReads          AnnouncementRead[]
+  announcementNotifications  AnnouncementNotification[]
   domainRequests           DomainRequest[]
   subscriptions            Subscription[]
   invoices                 Invoice[]
@@ -256,6 +285,9 @@ model School {
   uploadQuotas UploadQuota[]
   fileRecords  FileRecord[]
 
+  // Translation cache
+  translationCache TranslationCache[]
+
   // Audit relations
   auditLogs AuditLog[]
 
@@ -408,7 +440,7 @@ model YearLevel {
   id          String  @id @default(cuid())
   schoolId    String
   levelName   String
-  levelNameAr String? // Arabic name for bilingual support
+  lang        String  @default("ar") // Content language
   levelOrder  Int
 
   school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)

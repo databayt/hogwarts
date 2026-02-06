@@ -112,13 +112,13 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               <div className="flex gap-2">
                 <Button asChild>
                   <Link href={`/${lang}/generate/questions`}>
-                    <BookOpen className="mr-2 h-4 w-4" />
+                    <BookOpen className="me-2 h-4 w-4" />
                     {dictionary.generate.actions.viewQuestions}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild>
                   <Link href={`/${lang}/generate/questions/new`}>
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="me-2 h-4 w-4" />
                     {dictionary.generate.actions.addQuestion}
                   </Link>
                 </Button>
@@ -142,7 +142,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               </p>
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/generate/questions/ai-generate`}>
-                  <Sparkles className="mr-2 h-4 w-4" />
+                  <Sparkles className="me-2 h-4 w-4" />
                   {dictionary.generate.actions.generateWithAI}
                 </Link>
               </Button>
@@ -166,13 +166,13 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               <div className="flex gap-2">
                 <Button asChild>
                   <Link href={`/${lang}/generate/templates`}>
-                    <FileText className="mr-2 h-4 w-4" />
+                    <FileText className="me-2 h-4 w-4" />
                     {dictionary.generate.actions.viewTemplates}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild>
                   <Link href={`/${lang}/generate/templates/new`}>
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="me-2 h-4 w-4" />
                     {dictionary.generate.actions.createTemplate}
                   </Link>
                 </Button>
@@ -196,7 +196,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               </p>
               <Button asChild variant="outline">
                 <Link href={`/${lang}/generate/analytics`}>
-                  <BarChart3 className="mr-2 h-4 w-4" />
+                  <BarChart3 className="me-2 h-4 w-4" />
                   {dictionary.generate.actions.viewAnalytics}
                 </Link>
               </Button>

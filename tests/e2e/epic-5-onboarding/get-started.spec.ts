@@ -44,33 +44,51 @@ test.describe("Story 5.1: Get Started Flow @onboarding", () => {
   }) => {
     const homePage = new SaasHomePage(page)
     await homePage.goto()
-    await homePage.clickGetStarted()
-    await page.waitForLoadState("domcontentloaded")
+
+    // Click and wait for navigation to happen
+    await Promise.all([
+      page.waitForURL(/\/(login|onboarding)/, { timeout: TIMEOUTS.navigation }),
+      homePage.clickGetStarted(),
+    ])
 
     // Guest should be redirected to login or onboarding
     const url = page.url()
     expect(url.includes("/login") || url.includes("/onboarding")).toBeTruthy()
   })
 
-  test("OB-003: Login redirects fresh user to onboarding", async ({ page }) => {
+  test("OB-003: Fresh user login stays on marketing (no callbackUrl)", async ({
+    page,
+  }) => {
+    test.setTimeout(60000) // Extend timeout for auth flow
     const loginPage = new LoginPage(page)
     await loginPage.goto()
     await loginPage.login("user@databayt.org", "1234")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
-    // Fresh user (no school) should go to onboarding
+    // USER without school and no callbackUrl stays on SaaS marketing
     const url = page.url()
-    expect(
-      url.includes("/onboarding") ||
-        url.includes("/dashboard") ||
-        url.includes("/en")
-    ).toBeTruthy()
+    expect(url).toMatch(/\/(en|ar)\/?$/)
+    expect(url).not.toContain("/onboarding")
+    expect(url).not.toContain("/dashboard")
   })
 
   test("OB-004: Onboarding page loads", async ({ page }) => {
+    test.setTimeout(60000) // Extend timeout for auth flow
+    // First login to access protected onboarding page
+    const loginPage = new LoginPage(page)
+    await loginPage.goto()
+    await loginPage.login("user@databayt.org", "1234")
+
+    if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
+    }
+
+    // Now navigate to onboarding
     const onboardingPage = new OnboardingPage(page)
     const response = await onboardingPage.goto()
 
@@ -130,11 +148,17 @@ test.describe("Story 5.2: Live Demo Flow @onboarding", () => {
 })
 
 test.describe("Story 5.1: Onboarding Page Content @onboarding", () => {
-  test.beforeEach(async ({ page }) => {
-    await clearAuthState(page)
-  })
-
   test("OB-009: Onboarding page has content", async ({ page }) => {
+    // Login first since onboarding is protected
+    const loginPage = new LoginPage(page)
+    await loginPage.goto()
+    await loginPage.login("user@databayt.org", "1234")
+
+    if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
+    }
+
     const onboardingPage = new OnboardingPage(page)
     await onboardingPage.goto()
 
@@ -145,6 +169,16 @@ test.describe("Story 5.1: Onboarding Page Content @onboarding", () => {
   })
 
   test("OB-010: No SSE on onboarding page", async ({ page }) => {
+    // Login first since onboarding is protected
+    const loginPage = new LoginPage(page)
+    await loginPage.goto()
+    await loginPage.login("user@databayt.org", "1234")
+
+    if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
+    }
+
     const onboardingPage = new OnboardingPage(page)
     await onboardingPage.goto()
 
@@ -152,6 +186,16 @@ test.describe("Story 5.1: Onboarding Page Content @onboarding", () => {
   })
 
   test("OB-011: Arabic onboarding page loads", async ({ page }) => {
+    // Login first since onboarding is protected
+    const loginPage = new LoginPage(page, "ar")
+    await loginPage.goto()
+    await loginPage.login("user@databayt.org", "1234")
+
+    if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
+    }
+
     const onboardingPage = new OnboardingPage(page, "ar")
     const response = await onboardingPage.goto()
 
@@ -168,11 +212,13 @@ test.describe("Story 5.1: Onboarding Flow Navigation @onboarding", () => {
   test("OB-012: Authenticated DEVELOPER can access onboarding", async ({
     page,
   }) => {
+    test.setTimeout(60000) // Extend timeout for auth flow
     const loginPage = new LoginPage(page)
     await loginPage.goto()
     await loginPage.loginAs("developer")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 

@@ -70,7 +70,7 @@ export default async function BatchPDFPage({ params }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Checkbox id="classic" defaultChecked />
                 <Label htmlFor="classic" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -78,14 +78,14 @@ export default async function BatchPDFPage({ params }: Props) {
                   <Badge variant="outline">Default</Badge>
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Checkbox id="modern" />
                 <Label htmlFor="modern" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   {d?.modernTemplate || "Modern Template"}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Checkbox id="minimal" />
                 <Label htmlFor="minimal" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -103,19 +103,19 @@ export default async function BatchPDFPage({ params }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Checkbox id="breakdown" defaultChecked />
                 <Label htmlFor="breakdown">
                   {d?.includeBreakdown || "Include question breakdown"}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Checkbox id="analytics" defaultChecked />
                 <Label htmlFor="analytics">
                   {d?.includeAnalytics || "Include class analytics"}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Checkbox id="watermark" />
                 <Label htmlFor="watermark">
                   {d?.addWatermark || "Add school watermark"}
@@ -145,7 +145,7 @@ export default async function BatchPDFPage({ params }: Props) {
               </Badge>
             </div>
             <Button className="w-full" size="lg">
-              <FileDown className="mr-2 h-5 w-5" />
+              <FileDown className="me-2 h-5 w-5" />
               {d?.generateAll || "Generate All PDFs"}
             </Button>
           </CardContent>

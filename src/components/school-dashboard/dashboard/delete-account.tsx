@@ -26,7 +26,7 @@ export function DeleteAccountSection() {
               <span className="text-[15px] font-medium">Are you sure ?</span>
 
               {userPaidPlan ? (
-                <div className="flex items-center gap-1 rounded-md bg-red-600/10 p-1 pr-2 text-xs font-medium text-red-600 dark:bg-red-500/10 dark:text-red-500">
+                <div className="flex items-center gap-1 rounded-md bg-red-600/10 p-1 pe-2 text-xs font-medium text-red-600 dark:bg-red-500/10 dark:text-red-500">
                   <div className="m-0.5 rounded-full bg-red-600 p-[3px]">
                     <Icons.close size={10} className="text-background" />
                   </div>
@@ -46,7 +46,7 @@ export function DeleteAccountSection() {
               variant="destructive"
               onClick={() => setShowDeleteAccountModal(true)}
             >
-              <Icons.trash className="mr-2 size-4" />
+              <Icons.trash className="me-2 size-4" />
               <span>Delete Account</span>
             </Button>
           </div>

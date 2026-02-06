@@ -497,12 +497,12 @@ export function ScheduleSettingsDialog({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-start font-normal",
                           !termStartDate && "text-muted-foreground"
                         )}
                         disabled={disabled}
                       >
-                        <Calendar className="mr-2 h-4 w-4" />
+                        <Calendar className="me-2 h-4 w-4" />
                         {termStartDate
                           ? format(termStartDate, "PPP")
                           : ttDict.pickDate || "Pick a date"}
@@ -527,12 +527,12 @@ export function ScheduleSettingsDialog({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-start font-normal",
                           !termEndDate && "text-muted-foreground"
                         )}
                         disabled={disabled}
                       >
-                        <Calendar className="mr-2 h-4 w-4" />
+                        <Calendar className="me-2 h-4 w-4" />
                         {termEndDate
                           ? format(termEndDate, "PPP")
                           : ttDict.pickDate || "Pick a date"}
@@ -626,7 +626,7 @@ export function ScheduleSettingsDialog({
                 onClick={() => setShowExceptionForm(true)}
                 disabled={disabled}
               >
-                <CalendarPlus className="mr-2 h-4 w-4" />
+                <CalendarPlus className="me-2 h-4 w-4" />
                 {ttDict.addHoliday || "Add Holiday"}
               </Button>
             </div>
@@ -699,11 +699,11 @@ export function ScheduleSettingsDialog({
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal",
+                            "w-full justify-start text-start font-normal",
                             !exceptionForm.startDate && "text-muted-foreground"
                           )}
                         >
-                          <Calendar className="mr-2 h-4 w-4" />
+                          <Calendar className="me-2 h-4 w-4" />
                           {exceptionForm.startDate
                             ? format(exceptionForm.startDate, "PPP")
                             : ttDict.pickDate || "Pick date"}
@@ -728,11 +728,11 @@ export function ScheduleSettingsDialog({
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal",
+                            "w-full justify-start text-start font-normal",
                             !exceptionForm.endDate && "text-muted-foreground"
                           )}
                         >
-                          <Calendar className="mr-2 h-4 w-4" />
+                          <Calendar className="me-2 h-4 w-4" />
                           {exceptionForm.endDate
                             ? format(exceptionForm.endDate, "PPP")
                             : ttDict.pickDate || "Pick date"}
@@ -922,7 +922,7 @@ export function ScheduleSettingsDialog({
                 disabled={!selectedTargetTerm || isPending}
                 className="w-full"
               >
-                <Copy className="mr-2 h-4 w-4" />
+                <Copy className="me-2 h-4 w-4" />
                 {isPending
                   ? ttDict.copying || "Copying..."
                   : ttDict.copySettings || "Copy Settings"}

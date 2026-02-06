@@ -329,6 +329,6 @@ export function getExpectedRedirect(
     return buildSchoolUrl(user.schoolId, "/dashboard", locale, env)
   }
 
-  // Users without school go to onboarding
-  return buildUrl("/onboarding", locale, env)
+  // Users without school stay on SaaS marketing (no callbackUrl)
+  return buildUrl("", locale, env)
 }

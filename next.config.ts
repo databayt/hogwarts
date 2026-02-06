@@ -1,4 +1,5 @@
 import type { NextConfig } from "next"
+import { withSentryConfig } from "@sentry/nextjs"
 import { createMDX } from "fumadocs-mdx/next"
 
 import { securityHeaders } from "./src/lib/security-headers"
@@ -112,5 +113,16 @@ const nextConfig: NextConfig = {
 
 const withMDX = createMDX()
 
-// Wrap MDX and Next.js config with each other
-export default withMDX(nextConfig)
+// Wrap MDX → Sentry → export
+// Sentry only active when DSN is configured (graceful no-op otherwise)
+export default withSentryConfig(withMDX(nextConfig), {
+  // Suppress source map upload warnings when SENTRY_AUTH_TOKEN is not set
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+
+  // Upload source maps for better stack traces in production
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Disable Sentry telemetry
+  telemetry: false,
+})

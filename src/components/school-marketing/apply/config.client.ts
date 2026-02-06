@@ -51,46 +51,32 @@ export const STEP_METADATA: Record<
   ApplyStep,
   {
     label: string
-    labelAr: string
     description: string
-    descriptionAr: string
   }
 > = {
   personal: {
-    label: "Personal Information",
-    labelAr: "المعلومات الشخصية",
-    description: "Student's personal details",
-    descriptionAr: "المعلومات الشخصية للطالب",
+    label: "المعلومات الشخصية",
+    description: "المعلومات الشخصية للطالب",
   },
   contact: {
-    label: "Contact Information",
-    labelAr: "معلومات الاتصال",
-    description: "Contact and address details",
-    descriptionAr: "تفاصيل الاتصال والعنوان",
+    label: "معلومات الاتصال",
+    description: "تفاصيل الاتصال والعنوان",
   },
   guardian: {
-    label: "Guardian Information",
-    labelAr: "معلومات ولي الأمر",
-    description: "Parent or guardian details",
-    descriptionAr: "معلومات الوالدين أو ولي الأمر",
+    label: "معلومات ولي الأمر",
+    description: "معلومات الوالدين أو ولي الأمر",
   },
   academic: {
-    label: "Academic Information",
-    labelAr: "المعلومات الأكاديمية",
-    description: "Previous education and applying class",
-    descriptionAr: "التعليم السابق والصف المتقدم إليه",
+    label: "المعلومات الأكاديمية",
+    description: "التعليم السابق والصف المتقدم إليه",
   },
   documents: {
-    label: "Documents",
-    labelAr: "المستندات",
-    description: "Upload required documents",
-    descriptionAr: "رفع المستندات المطلوبة",
+    label: "المستندات",
+    description: "رفع المستندات المطلوبة",
   },
   review: {
-    label: "Review & Submit",
-    labelAr: "المراجعة والتقديم",
-    description: "Review and submit your application",
-    descriptionAr: "مراجعة وتقديم طلبك",
+    label: "المراجعة والتقديم",
+    description: "مراجعة وتقديم طلبك",
   },
 }
 

@@ -70,7 +70,7 @@ export async function GET(req: Request) {
             style={{
               fontFamily: "Cal Sans",
               fontWeight: "bold",
-              marginLeft: "-3px",
+              marginInlineStart: "-3px",
               fontSize,
             }}
           >
@@ -93,7 +93,7 @@ export async function GET(req: Request) {
               }}
             />
 
-            <div tw="flex flex-col" style={{ marginLeft: "15px" }}>
+            <div tw="flex flex-col" style={{ marginInlineStart: "15px" }}>
               <div tw="text-[22px]" style={{ fontFamily: "Cal Sans" }}>
                 {githubName}
               </div>
@@ -121,7 +121,7 @@ export async function GET(req: Request) {
                 stroke-linejoin="round"
               />
             </svg>
-            <div tw="flex ml-2">
+            <div tw="flex ms-2">
               github.com/mickasmt/next-saas-stripe-starter
             </div>
           </div>

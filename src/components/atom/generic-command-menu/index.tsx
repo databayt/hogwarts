@@ -184,7 +184,7 @@ export function GenericCommandMenu({
         <Button
           variant="outline"
           className={cn(
-            "bg-muted/50 text-muted-foreground relative h-8 w-full justify-start rounded-[0.5rem] text-sm font-normal shadow-none sm:pr-12",
+            "bg-muted/50 text-muted-foreground relative h-8 w-full justify-start rounded-[0.5rem] text-sm font-normal shadow-none sm:pe-12",
             variant === "compact"
               ? "md:w-40 lg:w-48"
               : "md:w-40 lg:w-56 xl:w-64"

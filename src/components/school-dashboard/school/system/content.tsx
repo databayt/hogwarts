@@ -289,7 +289,7 @@ export default async function SystemContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild>
                 <Link href={`/${lang}/admin/system/audit`}>
-                  <FileText className="mr-2 h-4 w-4" />
+                  <FileText className="me-2 h-4 w-4" />
                   View Audit Logs
                 </Link>
               </Button>
@@ -329,7 +329,7 @@ export default async function SystemContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/system/backups`}>
-                  <Archive className="mr-2 h-4 w-4" />
+                  <Archive className="me-2 h-4 w-4" />
                   Manage Backups
                 </Link>
               </Button>
@@ -359,12 +359,12 @@ export default async function SystemContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/system/cache`}>
-                  <Zap className="mr-2 h-4 w-4" />
+                  <Zap className="me-2 h-4 w-4" />
                   Manage Cache
                 </Link>
               </Button>
               <Button variant="outline" size="sm">
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCw className="me-2 h-4 w-4" />
                 Clear Cache
               </Button>
             </div>
@@ -388,7 +388,7 @@ export default async function SystemContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/system/health`}>
-                  <Activity className="mr-2 h-4 w-4" />
+                  <Activity className="me-2 h-4 w-4" />
                   Health Dashboard
                 </Link>
               </Button>
@@ -413,7 +413,7 @@ export default async function SystemContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/system/database`}>
-                  <Database className="mr-2 h-4 w-4" />
+                  <Database className="me-2 h-4 w-4" />
                   Database Tools
                 </Link>
               </Button>
@@ -438,7 +438,7 @@ export default async function SystemContent({ dictionary, lang }: Props) {
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
                 <Link href={`/${lang}/admin/system/logs`}>
-                  <FileText className="mr-2 h-4 w-4" />
+                  <FileText className="me-2 h-4 w-4" />
                   View System Logs
                 </Link>
               </Button>
@@ -458,19 +458,19 @@ export default async function SystemContent({ dictionary, lang }: Props) {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <Button variant="outline" className="justify-start">
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="me-2 h-4 w-4" />
               Restart Services
             </Button>
             <Button variant="outline" className="justify-start">
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               Export Logs
             </Button>
             <Button variant="outline" className="justify-start">
-              <Trash className="mr-2 h-4 w-4" />
+              <Trash className="me-2 h-4 w-4" />
               Clean Temporary Files
             </Button>
             <Button variant="outline" className="justify-start">
-              <Clock className="mr-2 h-4 w-4" />
+              <Clock className="me-2 h-4 w-4" />
               Schedule Maintenance
             </Button>
           </div>

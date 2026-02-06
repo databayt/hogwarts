@@ -291,7 +291,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, transition: { duration: 0.05 } }}
                   onClick={() => setIsDropdownOpen(false)}
-                  className="bg-muted hover:bg-muted/80 absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full transition-colors"
+                  className="bg-muted hover:bg-muted/80 absolute end-4 top-4 z-10 flex size-8 items-center justify-center rounded-full transition-colors"
                 >
                   <X className="size-4" />
                 </motion.button>

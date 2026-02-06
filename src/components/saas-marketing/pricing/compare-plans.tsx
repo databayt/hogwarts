@@ -50,9 +50,9 @@ export function ComparePlans() {
               <tr key={index}>
                 <td
                   data-tip={row.tooltip ? row.tooltip : ""}
-                  className="bg-background sticky left-0 w-40 md:w-1/4 md:bg-transparent"
+                  className="bg-background sticky start-0 w-40 md:w-1/4 md:bg-transparent"
                 >
-                  <div className="flex items-center justify-between space-x-2 py-4">
+                  <div className="flex items-center justify-between gap-2 py-4">
                     <span className="lg:text-base">{row.feature}</span>
                     {row.tooltip && (
                       <Popover>

@@ -383,7 +383,7 @@ export function ExcuseReviewList({
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <XCircle className="mr-2 h-4 w-4" />
+                  <XCircle className="me-2 h-4 w-4" />
                   {isArabic ? "رفض" : "Reject"}
                 </>
               )}
@@ -397,7 +397,7 @@ export function ExcuseReviewList({
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
+                  <CheckCircle className="me-2 h-4 w-4" />
                   {isArabic ? "موافقة" : "Approve"}
                 </>
               )}

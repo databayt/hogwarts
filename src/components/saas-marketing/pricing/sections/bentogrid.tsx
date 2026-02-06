@@ -219,7 +219,7 @@ export default function BentoGrid() {
                   </p>
                 </div>
               </div>
-              <div className="bg-muted/30 relative mt-8 -mb-10 h-fit border pt-6 sm:ms-6 sm:mt-auto ltr:-mr-10 ltr:rounded-tl-xl rtl:-ml-10 rtl:rounded-tr-xl">
+              <div className="bg-muted/30 relative -me-10 mt-8 -mb-10 h-fit border pt-6 sm:ms-6 sm:mt-auto ltr:rounded-tl-xl rtl:rounded-tr-xl">
                 <div className="absolute top-2 flex gap-1 ltr:left-3 rtl:right-3">
                   <span className="border-border block size-2 rounded-full border"></span>
                   <span className="border-border block size-2 rounded-full border"></span>

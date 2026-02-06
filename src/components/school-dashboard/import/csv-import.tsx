@@ -151,7 +151,7 @@ export function CsvImportComponent({
         </CardHeader>
         <CardContent>
           <Button onClick={() => downloadTemplate(type)} variant="outline">
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="me-2 h-4 w-4" />
             Download {title} Template
           </Button>
         </CardContent>

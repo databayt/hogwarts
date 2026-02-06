@@ -6,11 +6,7 @@ export const yearLevelBaseSchema = z.object({
     .string()
     .min(1, "Level name is required")
     .max(50, "Level name is too long"),
-  levelNameAr: z
-    .string()
-    .max(50, "Arabic name is too long")
-    .optional()
-    .nullable(),
+  lang: z.enum(["ar", "en"]).default("ar").optional(),
   levelOrder: z.number().int().min(1, "Level order must be at least 1"),
 })
 

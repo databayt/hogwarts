@@ -165,13 +165,13 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
 
       {/* Permanent Address */}
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <h4>Permanent Address</h4>
           <FormField
             control={form.control}
             name="sameAsPermanent"
             render={({ field }) => (
-              <FormItem className="flex items-center space-x-2">
+              <FormItem className="flex items-center gap-2">
                 <FormControl>
                   <Checkbox
                     checked={field.value}

@@ -244,17 +244,17 @@ export function TeacherDashboard({
             <div className="flex items-center gap-4">
               {currentClass ? (
                 <Badge variant="default" className="px-4 py-2">
-                  <Activity className="mr-2 h-4 w-4 animate-pulse" />
+                  <Activity className="me-2 h-4 w-4 animate-pulse" />
                   In Class: {currentClass.className}
                 </Badge>
               ) : nextClass ? (
                 <Badge variant="outline" className="px-4 py-2">
-                  <Clock className="mr-2 h-4 w-4" />
+                  <Clock className="me-2 h-4 w-4" />
                   Next class in {getTimeUntilNext(nextClass.startTime)}
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="px-4 py-2">
-                  <CircleCheck className="mr-2 h-4 w-4" />
+                  <CircleCheck className="me-2 h-4 w-4" />
                   No more classes today
                 </Badge>
               )}
@@ -285,7 +285,7 @@ export function TeacherDashboard({
             <div className="flex items-center gap-2">
               <School className="text-muted-foreground h-5 w-5" />
               <span className="text-2xl font-bold">{todaySchedule.length}</span>
-              <Badge variant="outline" className="ml-2">
+              <Badge variant="outline" className="ms-2">
                 {todaySchedule.filter((s) => s.status === "completed").length}{" "}
                 done
               </Badge>
@@ -304,7 +304,7 @@ export function TeacherDashboard({
                 {stats.pendingGrading}
               </span>
               {stats.pendingGrading > 10 && (
-                <Badge variant="destructive" className="ml-2">
+                <Badge variant="destructive" className="ms-2">
                   High
                 </Badge>
               )}
@@ -336,7 +336,7 @@ export function TeacherDashboard({
               <CardTitle>Today's Schedule</CardTitle>
               <Button variant="outline" size="sm">
                 View Full Timetable
-                <ChevronRight className="ml-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
@@ -467,7 +467,7 @@ export function TeacherDashboard({
                       {assignment.class}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <div className="flex items-center gap-2">
                       <Progress
                         value={
@@ -502,7 +502,7 @@ export function TeacherDashboard({
           <CardFooter>
             <Button variant="outline" className="w-full">
               View All Assignments
-              <ChevronRight className="ml-2 h-4 w-4" />
+              <ChevronRight className="ms-2 h-4 w-4" />
             </Button>
           </CardFooter>
         </Card>
@@ -533,7 +533,7 @@ export function TeacherDashboard({
                         <span>Room {exam.room}</span>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <Badge variant="outline">
                         {format(exam.date, "MMM dd")}
                       </Badge>

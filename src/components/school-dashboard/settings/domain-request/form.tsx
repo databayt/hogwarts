@@ -94,28 +94,28 @@ export function DomainRequestForm({
       case "pending":
         return (
           <Badge variant="secondary">
-            <Icons.clock className="mr-1 h-3 w-3" />
+            <Icons.clock className="me-1 h-3 w-3" />
             Pending
           </Badge>
         )
       case "approved":
         return (
           <Badge variant="default">
-            <Icons.circleCheck className="mr-1 h-3 w-3" />
+            <Icons.circleCheck className="me-1 h-3 w-3" />
             Approved
           </Badge>
         )
       case "rejected":
         return (
           <Badge variant="destructive">
-            <Icons.circleX className="mr-1 h-3 w-3" />
+            <Icons.circleX className="me-1 h-3 w-3" />
             Rejected
           </Badge>
         )
       case "verified":
         return (
           <Badge className="bg-green-500">
-            <Icons.circleCheck className="mr-1 h-3 w-3" />
+            <Icons.circleCheck className="me-1 h-3 w-3" />
             Verified
           </Badge>
         )

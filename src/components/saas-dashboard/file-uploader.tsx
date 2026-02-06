@@ -296,8 +296,8 @@ interface FileCardProps {
 
 function FileCard({ file, progress, onRemove }: FileCardProps) {
   return (
-    <div className="relative flex items-center space-x-4">
-      <div className="flex flex-1 space-x-4">
+    <div className="relative flex items-center gap-4">
+      <div className="flex flex-1 gap-4">
         {isFileWithPreview(file) ? (
           <Image
             src={file.preview}

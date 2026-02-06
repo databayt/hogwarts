@@ -1,23 +1,16 @@
 "use server"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { submitApplication } from "@/components/school-marketing/admission/actions"
 
 import type { ApplicationFormData } from "../types"
-
-export interface SubmitApplicationResult {
-  success: boolean
-  applicationNumber?: string
-  accessToken?: string
-  error?: string
-}
 
 export async function submitApplicationAction(
   subdomain: string,
   sessionToken: string,
   formData: Partial<ApplicationFormData>
-): Promise<SubmitApplicationResult> {
+): Promise<ActionResponse<{ applicationNumber: string; accessToken: string }>> {
   try {
-    // Flatten form data for submission
     const flattenedData = {
       campaignId: formData.campaignId || "",
       ...formData,
@@ -32,8 +25,10 @@ export async function submitApplicationAction(
     if (result.success && result.data) {
       return {
         success: true,
-        applicationNumber: result.data.applicationNumber,
-        accessToken: result.data.accessToken,
+        data: {
+          applicationNumber: result.data.applicationNumber,
+          accessToken: result.data.accessToken,
+        },
       }
     }
 
@@ -42,9 +37,10 @@ export async function submitApplicationAction(
       error: result.error || "Failed to submit application",
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message }
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to submit application",
     }
-    return { success: false, error: "Failed to submit application" }
   }
 }

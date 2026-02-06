@@ -20,7 +20,7 @@ export default async function UserProfile() {
 
   return (
     <Dialog>
-      <DialogTrigger className="hover:bg-muted-foreground/5 w-full cursor-pointer px-2 py-1 text-left">
+      <DialogTrigger className="hover:bg-muted-foreground/5 w-full cursor-pointer px-2 py-1 text-start">
         Profile
       </DialogTrigger>
       <DialogContent>

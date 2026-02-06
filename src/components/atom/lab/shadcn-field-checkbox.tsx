@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox"
  */
 export function ShadcnFieldCheckbox() {
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center gap-2">
       <Checkbox id="checkbox-demo" defaultChecked />
       <label
         htmlFor="checkbox-demo"

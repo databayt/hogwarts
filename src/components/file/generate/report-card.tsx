@@ -433,7 +433,7 @@ export function ReportCardTemplate({
               style={[styles.tableRow, idx % 2 === 0 ? styles.evenRow : {}]}
             >
               <Text style={[styles.cell, styles.subjectCol]}>
-                {isRTL ? subject.nameAr || subject.name : subject.name}
+                {subject.name}
               </Text>
               <Text style={[styles.cell, styles.gradeCol]}>
                 {subject.grade}

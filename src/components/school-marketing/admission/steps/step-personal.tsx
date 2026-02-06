@@ -28,16 +28,16 @@ interface Props {
 }
 
 const NATIONALITIES = [
-  { value: "Sudanese", labelEn: "Sudanese", labelAr: "سوداني" },
-  { value: "Egyptian", labelEn: "Egyptian", labelAr: "مصري" },
-  { value: "Saudi", labelEn: "Saudi", labelAr: "سعودي" },
-  { value: "Emirati", labelEn: "Emirati", labelAr: "إماراتي" },
-  { value: "Other", labelEn: "Other", labelAr: "أخرى" },
+  { value: "Sudanese", label: "سوداني" },
+  { value: "Egyptian", label: "مصري" },
+  { value: "Saudi", label: "سعودي" },
+  { value: "Emirati", label: "إماراتي" },
+  { value: "Other", label: "أخرى" },
 ]
 
 const GENDERS = [
-  { value: "MALE", labelEn: "Male", labelAr: "ذكر" },
-  { value: "FEMALE", labelEn: "Female", labelAr: "أنثى" },
+  { value: "MALE", label: "ذكر" },
+  { value: "FEMALE", label: "أنثى" },
 ]
 
 export default function StepPersonal({ dictionary, lang }: Props) {
@@ -154,7 +154,7 @@ export default function StepPersonal({ dictionary, lang }: Props) {
                 <SelectContent>
                   {GENDERS.map((gender) => (
                     <SelectItem key={gender.value} value={gender.value}>
-                      {isRTL ? gender.labelAr : gender.labelEn}
+                      {gender.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -189,7 +189,7 @@ export default function StepPersonal({ dictionary, lang }: Props) {
                 <SelectContent>
                   {NATIONALITIES.map((nat) => (
                     <SelectItem key={nat.value} value={nat.value}>
-                      {isRTL ? nat.labelAr : nat.labelEn}
+                      {nat.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

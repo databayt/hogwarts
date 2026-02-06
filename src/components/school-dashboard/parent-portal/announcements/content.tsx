@@ -252,12 +252,12 @@ export function ParentAnnouncementsContent() {
                                       <p>
                                         {announcement.class.subject} -{" "}
                                         {announcement.class.name}
-                                        <span className="text-muted-foreground ml-2">
+                                        <span className="text-muted-foreground ms-2">
                                           by {announcement.class.teacher}
                                         </span>
                                       </p>
                                     )}
-                                    <small className="muted ml-auto">
+                                    <small className="muted ms-auto">
                                       {format(
                                         new Date(announcement.createdAt),
                                         "h:mm a"

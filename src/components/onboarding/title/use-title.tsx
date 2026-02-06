@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react"
 
-// TEMPORARILY: Import from test-action.ts to isolate the issue
-// import { getSchoolTitle, type TitleFormData } from "./actions"
-import { testGetSchoolTitle } from "../test-action"
+import { getSchoolTitle } from "./actions"
 
 export interface TitleFormData {
   title: string
@@ -30,19 +28,15 @@ export function useTitle(schoolId: string): UseTitleReturn {
       setLoading(true)
       setError(null)
 
-      console.log("🔍 [USE TITLE] Fetching school title for:", schoolId)
-      // TEMPORARILY: Use test action from test-action.ts
-      const result = await testGetSchoolTitle(schoolId)
-      console.log("🔍 [USE TITLE] Result:", result)
+      const result = await getSchoolTitle(schoolId)
 
       if (result.success && result.data) {
         setData(result.data)
       } else {
-        setError((result as any).error || "Failed to load title")
+        setError(result.error || "Failed to load title")
       }
     } catch (err) {
       setError("An unexpected error occurred")
-      console.error("Error fetching title:", err)
     } finally {
       setLoading(false)
     }
@@ -52,14 +46,5 @@ export function useTitle(schoolId: string): UseTitleReturn {
     fetchTitle()
   }, [schoolId])
 
-  const refresh = async () => {
-    await fetchTitle()
-  }
-
-  return {
-    data,
-    loading,
-    error,
-    refresh,
-  }
+  return { data, loading, error, refresh: fetchTitle }
 }

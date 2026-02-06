@@ -187,16 +187,16 @@ export function PerformanceDashboard() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-start text-xs font-medium tracking-wider text-gray-500 uppercase">
                   Operation
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-start text-xs font-medium tracking-wider text-gray-500 uppercase">
                   Avg Duration
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-start text-xs font-medium tracking-wider text-gray-500 uppercase">
                   Count
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-start text-xs font-medium tracking-wider text-gray-500 uppercase">
                   Status
                 </th>
               </tr>
@@ -248,16 +248,16 @@ export function PerformanceDashboard() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="sticky top-0 bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-start text-xs font-medium tracking-wider text-gray-500 uppercase">
                   Timestamp
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-start text-xs font-medium tracking-wider text-gray-500 uppercase">
                   Operation
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-start text-xs font-medium tracking-wider text-gray-500 uppercase">
                   Duration
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                <th className="px-6 py-3 text-start text-xs font-medium tracking-wider text-gray-500 uppercase">
                   Context
                 </th>
               </tr>

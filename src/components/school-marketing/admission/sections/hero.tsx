@@ -10,10 +10,15 @@ import { AdmissionHeroIllustration } from "./hero-illustration"
 
 interface AdmissionHeroProps {
   lang: Locale
+  subdomain: string
   dictionary?: Dictionary
 }
 
-export function AdmissionHero({ lang, dictionary }: AdmissionHeroProps) {
+export function AdmissionHero({
+  lang,
+  subdomain,
+  dictionary,
+}: AdmissionHeroProps) {
   // Get translations with fallbacks
   const t = dictionary?.marketing?.site?.admission?.hero
 
@@ -37,13 +42,13 @@ export function AdmissionHero({ lang, dictionary }: AdmissionHeroProps) {
 
           <div className="flex flex-col gap-3 sm:flex-row rtl:sm:flex-row-reverse">
             <Link
-              href={`/${lang}/apply`}
+              href={`/${lang}/s/${subdomain}/apply`}
               className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
             >
               {t?.startApplication || "Start application"}
             </Link>
             <Link
-              href={`/${lang}/admissions`}
+              href={`/${lang}/s/${subdomain}/admissions`}
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
                 "group w-full sm:w-auto"

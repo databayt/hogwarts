@@ -60,7 +60,7 @@ interface CardsStatsProps {
 
 export function CardsStats({ dictionary }: CardsStatsProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2 rtl:space-x-reverse">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
       <Card className="border shadow-none">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-normal">

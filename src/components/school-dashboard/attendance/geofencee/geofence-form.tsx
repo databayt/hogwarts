@@ -408,7 +408,7 @@ export function GeofenceForm({ onSuccess, dictionary }: GeofenceFormProps) {
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && (
-                  <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
                 )}
                 {formDict?.createGeofence || "Create Geofence"}
               </Button>

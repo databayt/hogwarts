@@ -110,11 +110,11 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 <Button
                   variant="outline"
                   className={cn(
-                    "h-10 w-full justify-start text-left font-normal",
+                    "h-10 w-full justify-start text-start font-normal",
                     !watch("invoice_date") && "text-muted-foreground"
                   )}
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <Calendar className="me-2 h-4 w-4" />
                   {watch("invoice_date") ? (
                     format(watch("invoice_date"), "MMM do, yyyy")
                   ) : (
@@ -141,11 +141,11 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 <Button
                   variant="outline"
                   className={cn(
-                    "h-10 w-full justify-start text-left font-normal",
+                    "h-10 w-full justify-start text-start font-normal",
                     !watch("due_date") && "text-muted-foreground"
                   )}
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <Calendar className="me-2 h-4 w-4" />
                   {watch("due_date") ? (
                     format(watch("due_date"), "MMM do, yyyy")
                   ) : (
@@ -244,7 +244,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                   onClick={() => handleRemoveItem(index)}
                   className=""
                 >
-                  <Icons.trash className="icon-destructive ml-2 size-6" />
+                  <Icons.trash className="icon-destructive ms-2 size-6" />
                 </button>
               </div>
             </div>

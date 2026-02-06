@@ -97,7 +97,7 @@ export default function StatusDisplay({ status, lang, onBack }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {isRTL ? "رجوع" : "Back"}
         </Button>
       </div>
@@ -255,7 +255,7 @@ function TimelineItem({ entry, isLast, isRTL }: TimelineItemProps) {
                 : "text-muted-foreground"
           }`}
         >
-          {isRTL ? entry.labelAr : entry.label}
+          {entry.label}
         </p>
         {entry.date && (
           <p className="text-muted-foreground text-sm">
@@ -302,7 +302,7 @@ function ChecklistItemRow({ item, isRTL }: ChecklistItemRowProps) {
               item.completed ? "text-muted-foreground line-through" : ""
             }
           >
-            {isRTL ? item.labelAr : item.label}
+            {item.label}
           </span>
           {item.required && !item.completed && (
             <Badge variant="destructive" className="ms-2 text-xs">

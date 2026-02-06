@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import { saveContactStep } from "./actions"
 import { COUNTRY_OPTIONS } from "./config"
 import type { ContactFormProps, ContactFormRef } from "./types"
@@ -35,7 +35,7 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
     const subdomain = params.subdomain as string
     const { locale: lang } = useLocale()
     const isRTL = lang === "ar"
-    const { session, updateStepData } = useApplication()
+    const { session, updateStepData } = useApplySession()
 
     const form = useForm<ContactSchemaType>({
       resolver: zodResolver(contactSchema),
@@ -264,7 +264,7 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
                     <SelectContent>
                       {COUNTRY_OPTIONS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {isRTL ? option.labelAr : option.label}
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

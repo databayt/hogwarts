@@ -1,0 +1,190 @@
+// ============================================
+// FINANCE MODULE - Wallet, Budget & Expenses
+// ============================================
+
+// Wallet
+
+enum WalletType {
+  SCHOOL
+  PARENT
+  STUDENT
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  TRANSFER
+}
+
+model Wallet {
+  id         String     @id @default(cuid())
+  schoolId   String
+  walletType WalletType
+  ownerId    String // schoolId for SCHOOL, userId for PARENT/STUDENT
+  balance    Decimal    @default(0) @db.Decimal(10, 2)
+  currency   String     @default("USD")
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  school       School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@unique([schoolId, walletType, ownerId])
+  @@index([schoolId, walletType])
+  @@index([schoolId, ownerId])
+}
+
+model WalletTransaction {
+  id             String          @id @default(cuid())
+  schoolId       String
+  walletId       String
+  type           TransactionType
+  amount         Decimal         @db.Decimal(10, 2)
+  balanceAfter   Decimal         @db.Decimal(10, 2)
+  reference      String?
+  description    String          @db.Text
+  sourceModule   String? // "fees", "refund", "advance"
+  sourceRecordId String?
+
+  // Accounting integration
+  journalEntryId String?
+  journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
+
+  createdBy String
+  createdAt DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, walletId])
+  @@index([schoolId, createdAt])
+  @@index([sourceModule, sourceRecordId])
+}
+
+// Budget
+
+enum BudgetStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ACTIVE
+  CLOSED
+}
+
+model Budget {
+  id           String       @id @default(cuid())
+  schoolId     String
+  fiscalYearId String
+  name         String
+  description  String?      @db.Text
+  departmentId String?
+  totalAmount  Decimal      @db.Decimal(12, 2)
+  status       BudgetStatus @default(DRAFT)
+  approvedBy   String?
+  approvedAt   DateTime?
+  createdBy    String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  school      School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  fiscalYear  FiscalYear         @relation(fields: [fiscalYearId], references: [id])
+  allocations BudgetAllocation[]
+
+  @@index([schoolId, fiscalYearId])
+  @@index([schoolId, status])
+  @@index([schoolId, createdBy])
+}
+
+model BudgetAllocation {
+  id         String   @id @default(cuid())
+  schoolId   String
+  budgetId   String
+  categoryId String
+  allocated  Decimal  @db.Decimal(12, 2)
+  spent      Decimal  @default(0) @db.Decimal(12, 2)
+  remaining  Decimal  @db.Decimal(12, 2)
+  notes      String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  school   School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  budget   Budget          @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category ExpenseCategory @relation(fields: [categoryId], references: [id])
+
+  @@unique([budgetId, categoryId])
+  @@index([schoolId, budgetId])
+  @@index([schoolId, categoryId])
+}
+
+// Expenses
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+  CANCELLED
+}
+
+model ExpenseCategory {
+  id               String   @id @default(cuid())
+  schoolId         String
+  name             String
+  description      String?  @db.Text
+  accountId        String? // Link to chart of accounts
+  parentId         String?
+  isActive         Boolean  @default(true)
+  requiresApproval Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  school      School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  account     ChartOfAccount?    @relation(fields: [accountId], references: [id])
+  parent      ExpenseCategory?   @relation("CategoryHierarchy", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  children    ExpenseCategory[]  @relation("CategoryHierarchy")
+  expenses    Expense[]
+  allocations BudgetAllocation[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId, isActive])
+  @@index([schoolId, parentId])
+}
+
+model Expense {
+  id              String        @id @default(cuid())
+  schoolId        String
+  expenseNumber   String        @unique
+  categoryId      String
+  amount          Decimal       @db.Decimal(10, 2)
+  expenseDate     DateTime
+  vendor          String?
+  description     String        @db.Text
+  paymentMethod   String?
+  receiptUrl      String?
+  budgetId        String?
+  status          ExpenseStatus @default(PENDING)
+  submittedBy     String
+  submittedAt     DateTime
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectionReason String?       @db.Text
+  paidAt          DateTime?
+
+  // Accounting integration
+  journalEntryId String?
+  journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school   School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  category ExpenseCategory  @relation(fields: [categoryId], references: [id])
+  receipts ExpenseReceipt[]
+
+  @@index([schoolId, expenseDate])
+  @@index([schoolId, categoryId])
+  @@index([schoolId, status])
+  @@index([schoolId, submittedBy])
+}

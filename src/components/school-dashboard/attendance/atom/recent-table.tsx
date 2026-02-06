@@ -160,7 +160,7 @@ export function RecentTable({
                   {formatDate(record.date)}
                 </span>
                 {record.checkInTime && (
-                  <span className="ml-1 text-xs">
+                  <span className="ms-1 text-xs">
                     {formatTime(record.checkInTime)}
                   </span>
                 )}

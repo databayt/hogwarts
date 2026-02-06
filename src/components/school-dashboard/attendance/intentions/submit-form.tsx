@@ -218,7 +218,7 @@ export function IntentionSubmitForm({
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full pl-3 text-left font-normal",
+                      "w-full ps-3 text-start font-normal",
                       !dateFrom && "text-muted-foreground"
                     )}
                   >
@@ -227,7 +227,7 @@ export function IntentionSubmitForm({
                     ) : (
                       <span>Pick a date</span>
                     )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -253,7 +253,7 @@ export function IntentionSubmitForm({
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full pl-3 text-left font-normal",
+                      "w-full ps-3 text-start font-normal",
                       !dateTo && "text-muted-foreground"
                     )}
                   >
@@ -262,7 +262,7 @@ export function IntentionSubmitForm({
                     ) : (
                       <span>Pick a date</span>
                     )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -349,7 +349,7 @@ export function IntentionSubmitForm({
 
           {/* Submit button */}
           <Button type="submit" className="w-full" disabled={submitting}>
-            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {submitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
             {submitting ? "Submitting..." : "Submit Intention"}
           </Button>
         </form>

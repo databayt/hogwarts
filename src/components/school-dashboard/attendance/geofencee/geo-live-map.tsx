@@ -381,7 +381,7 @@ export function GeoLiveMap({
               {!connectionType && "Connecting..."}
             </Badge>
             <Badge variant="outline">
-              <Users className="mr-1 h-3 w-3" />
+              <Users className="me-1 h-3 w-3" />
               {locations.length}
             </Badge>
           </div>
@@ -402,9 +402,9 @@ export function GeoLiveMap({
             disabled={isLoading}
           >
             {isLoading ? (
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
             ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="me-2 h-4 w-4" />
             )}
             Refresh
           </Button>

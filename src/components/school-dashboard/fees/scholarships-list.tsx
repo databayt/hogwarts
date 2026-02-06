@@ -70,7 +70,7 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
           </CardDescription>
         </div>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="me-2 h-4 w-4" />
           Add Scholarship
         </Button>
       </CardHeader>
@@ -84,7 +84,7 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
               <TableHead>Beneficiaries</TableHead>
               <TableHead>Validity</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-end">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -126,7 +126,7 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
                       {scholarship.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-end">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm">
                         <Users className="h-4 w-4" />

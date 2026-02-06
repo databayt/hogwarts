@@ -273,7 +273,7 @@ export function TopPerformersCard({
                         ? performer.value.toLocaleString()
                         : performer.value}
                       {performer.unit && (
-                        <span className="muted ml-1">{performer.unit}</span>
+                        <span className="muted ms-1">{performer.unit}</span>
                       )}
                     </p>
                     {performer.badge}

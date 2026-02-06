@@ -345,10 +345,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   )}
                 >
                   {Number(examChange) >= 0 && (
-                    <TrendingUp className="mr-0.5 inline h-3 w-3" />
+                    <TrendingUp className="me-0.5 inline h-3 w-3" />
                   )}
                   {Number(examChange) < 0 && (
-                    <TrendingDown className="mr-0.5 inline h-3 w-3" />
+                    <TrendingDown className="me-0.5 inline h-3 w-3" />
                   )}
                   {examChange}%
                 </span>
@@ -406,10 +406,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   )}
                 >
                   {Number(questionChange) >= 0 && (
-                    <TrendingUp className="mr-0.5 inline h-3 w-3" />
+                    <TrendingUp className="me-0.5 inline h-3 w-3" />
                   )}
                   {Number(questionChange) < 0 && (
-                    <TrendingDown className="mr-0.5 inline h-3 w-3" />
+                    <TrendingDown className="me-0.5 inline h-3 w-3" />
                   )}
                   {questionChange}%
                 </span>
@@ -587,7 +587,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Button asChild className="flex-1">
                 <Link href={`/${lang}/exams/qbank`}>
                   {d?.dashboard?.blocks?.qbank?.browse || "Browse"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="outline" asChild size="icon">
@@ -611,7 +611,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                 <Sparkles className="h-5 w-5 text-purple-500" />
               </div>
               <Badge variant="secondary" className="text-xs">
-                <Zap className="mr-1 h-3 w-3" />
+                <Zap className="me-1 h-3 w-3" />
                 {d?.dashboard?.aiPowered || "AI Powered"}
               </Badge>
             </div>
@@ -632,7 +632,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Button asChild variant="secondary" className="flex-1">
                 <Link href={`/${lang}/exams/generate`}>
                   {d?.dashboard?.blocks?.generate?.dashboard || "Generate"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="outline" asChild>
@@ -675,7 +675,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Button asChild variant="secondary" className="flex-1">
                 <Link href={`/${lang}/exams/mark`}>
                   {d?.dashboard?.blocks?.mark?.dashboard || "Mark"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="outline" asChild>
@@ -730,7 +730,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Button asChild className="flex-1">
                 <Link href={`/${lang}/exams/result`}>
                   {d?.dashboard?.blocks?.results?.view || "View Results"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="outline" asChild>
@@ -767,7 +767,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               asChild
             >
               <Link href={`/${lang}/exams/new`}>
-                <Calendar className="text-primary mr-3 h-4 w-4" />
+                <Calendar className="text-primary me-3 h-4 w-4" />
                 {d?.createExam || "Create New Exam"}
               </Link>
             </Button>
@@ -777,7 +777,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               asChild
             >
               <Link href={`/${lang}/exams/qbank/new`}>
-                <BookOpen className="mr-3 h-4 w-4 text-blue-500" />
+                <BookOpen className="me-3 h-4 w-4 text-blue-500" />
                 {d?.qbank?.addQuestion || "Add Question to Bank"}
               </Link>
             </Button>
@@ -787,11 +787,11 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               asChild
             >
               <Link href={`/${lang}/exams/mark/pending`}>
-                <ClipboardCheck className="mr-3 h-4 w-4 text-orange-500" />
+                <ClipboardCheck className="me-3 h-4 w-4 text-orange-500" />
                 {d?.dashboard?.quickActions?.gradePending ||
                   "Grade Pending Exams"}
                 {pendingMarkingCount > 0 && (
-                  <Badge variant="destructive" className="ml-auto text-xs">
+                  <Badge variant="destructive" className="ms-auto text-xs">
                     {pendingMarkingCount}
                   </Badge>
                 )}
@@ -803,7 +803,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               asChild
             >
               <Link href={`/${lang}/exams/generate`}>
-                <Sparkles className="mr-3 h-4 w-4 text-purple-500" />
+                <Sparkles className="me-3 h-4 w-4 text-purple-500" />
                 {d?.dashboard?.quickActions?.generateAI || "Generate with AI"}
               </Link>
             </Button>
@@ -814,7 +814,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               asChild
             >
               <Link href={`/${lang}/exams/result/recent`}>
-                <FileBarChart className="mr-3 h-4 w-4 text-emerald-500" />
+                <FileBarChart className="me-3 h-4 w-4 text-emerald-500" />
                 {d?.dashboard?.quickActions?.recentResults ||
                   "View Recent Results"}
               </Link>

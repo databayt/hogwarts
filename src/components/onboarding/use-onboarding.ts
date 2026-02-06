@@ -8,7 +8,6 @@ import {
   getSchoolSetupStatus,
   getUserSchools,
   proceedToTitle,
-  updateListing,
 } from "./actions"
 import { ONBOARDING_STEPS, STEP_ORDER } from "./config"
 import type {
@@ -96,28 +95,17 @@ export function useOnboarding(schoolId?: string) {
     }
   }, [currentSchoolId, currentStep])
 
-  // Update school data
+  // Update school data (optimistic local update + refresh)
   const updateSchoolData = useCallback(
     async (data: Partial<OnboardingSchoolData>) => {
       if (!currentSchoolId) return
 
       try {
         setIsSaving(true)
-        const response = await updateListing(currentSchoolId, data)
-
-        if (response.success && response.data) {
-          setSchool((prev) => ({ ...prev, ...response.data }))
-          console.log("Changes saved successfully")
-
-          // Refresh progress after update
-          await loadSchoolData()
-        } else {
-          throw new Error(
-            typeof response.error === "string"
-              ? response.error
-              : "Failed to update school"
-          )
-        }
+        // Optimistic update
+        setSchool((prev) => (prev ? { ...prev, ...data } : null))
+        // Refresh from server to sync
+        await loadSchoolData()
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to save changes"

@@ -2,7 +2,7 @@
 export type YearLevelRow = {
   id: string
   levelName: string
-  levelNameAr: string | null
+  lang: string
   levelOrder: number
   createdAt: string
   _count?: {
@@ -15,7 +15,7 @@ export type YearLevelDetail = {
   id: string
   schoolId: string
   levelName: string
-  levelNameAr: string | null
+  lang: string
   levelOrder: number
   createdAt: Date
   updatedAt: Date

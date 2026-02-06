@@ -50,7 +50,7 @@ export default async function QuestionDetailPage({ params }: Props) {
         <div className="flex justify-end">
           <Button asChild>
             <Link href={`/${lang}/exams/qbank/${id}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
+              <Pencil className="me-2 h-4 w-4" />
               {d?.edit || "Edit"}
             </Link>
           </Button>

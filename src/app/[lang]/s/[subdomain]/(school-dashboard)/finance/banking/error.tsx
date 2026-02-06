@@ -29,7 +29,7 @@ export default function BankingError({
     <div className="layout-container flex min-h-[60vh] items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Icons.alertTriangle className="text-destructive h-5 w-5" />
             <CardTitle>Something went wrong!</CardTitle>
           </div>
@@ -55,7 +55,7 @@ export default function BankingError({
             Go to Dashboard
           </Button>
           <Button onClick={reset}>
-            <Icons.refresh className="mr-2 h-4 w-4" />
+            <Icons.refresh className="me-2 h-4 w-4" />
             Try again
           </Button>
         </CardFooter>

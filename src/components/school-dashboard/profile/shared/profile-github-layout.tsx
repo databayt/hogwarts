@@ -136,7 +136,7 @@ export function ProfileGitHubLayout({
     if (isOwner) {
       return (
         <Button variant="outline" size="sm" onClick={onEdit} className="w-full">
-          <PencilLine className="mr-2 h-4 w-4" />
+          <PencilLine className="me-2 h-4 w-4" />
           Edit Profile
         </Button>
       )
@@ -151,7 +151,7 @@ export function ProfileGitHubLayout({
             onClick={onMessage}
             className="w-full"
           >
-            <MessageSquare className="mr-2 h-4 w-4" />
+            <MessageSquare className="me-2 h-4 w-4" />
             Message
           </Button>
         )
@@ -169,7 +169,7 @@ export function ProfileGitHubLayout({
             onClick={onConnect}
             className="w-full"
           >
-            <UserPlus className="mr-2 h-4 w-4" />
+            <UserPlus className="me-2 h-4 w-4" />
             Accept
           </Button>
         )
@@ -181,7 +181,7 @@ export function ProfileGitHubLayout({
             onClick={onConnect}
             className="w-full"
           >
-            <UserPlus className="mr-2 h-4 w-4" />
+            <UserPlus className="me-2 h-4 w-4" />
             Connect
           </Button>
         )
@@ -251,19 +251,19 @@ export function ProfileGitHubLayout({
                 >
                   {connectionStatus === "connected" ? (
                     <>
-                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <MessageSquare className="me-2 h-4 w-4" />
                       Message
                     </>
                   ) : connectionStatus === "pending" ? (
                     "Pending"
                   ) : connectionStatus === "requested" ? (
                     <>
-                      <UserPlus className="mr-2 h-4 w-4" />
+                      <UserPlus className="me-2 h-4 w-4" />
                       Accept
                     </>
                   ) : (
                     <>
-                      <UserPlus className="mr-2 h-4 w-4" />
+                      <UserPlus className="me-2 h-4 w-4" />
                       Follow
                     </>
                   )}
@@ -276,7 +276,7 @@ export function ProfileGitHubLayout({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={onShare}>
-                      <Share2 className="mr-2 h-4 w-4" />
+                      <Share2 className="me-2 h-4 w-4" />
                       Share profile
                     </DropdownMenuItem>
                     <DropdownMenuItem>Copy profile link</DropdownMenuItem>

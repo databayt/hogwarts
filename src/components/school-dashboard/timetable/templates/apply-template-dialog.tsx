@@ -164,7 +164,7 @@ export function ApplyTemplateDialog({
           </div>
 
           {/* Clear Existing Option */}
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             <Checkbox
               id="clearExisting"
               checked={clearExisting}

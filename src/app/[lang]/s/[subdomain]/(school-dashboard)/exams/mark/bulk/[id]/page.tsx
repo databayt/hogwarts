@@ -79,7 +79,7 @@ export default async function BulkMarkingPage({ params }: Props) {
               </ul>
             </div>
             <Button>
-              <Zap className="mr-2 h-4 w-4" />
+              <Zap className="me-2 h-4 w-4" />
               {d?.startBulkMarking || "Start Bulk Marking"}
             </Button>
           </CardContent>

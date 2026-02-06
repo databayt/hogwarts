@@ -43,7 +43,7 @@ export function IDCardPreview({
                 size="sm"
                 onClick={() => setShowBack(!showBack)}
               >
-                <RotateCw className="mr-2 h-4 w-4" />
+                <RotateCw className="me-2 h-4 w-4" />
                 {showBack ? "Show Front" : "Show Back"}
               </Button>
               <Button
@@ -51,7 +51,7 @@ export function IDCardPreview({
                 size="sm"
                 onClick={() => setShowFullscreen(true)}
               >
-                <Maximize2 className="mr-2 h-4 w-4" />
+                <Maximize2 className="me-2 h-4 w-4" />
                 Fullscreen
               </Button>
             </div>
@@ -83,7 +83,7 @@ export function IDCardPreview({
                 className="flex-1"
                 onClick={() => onDownload?.("pdf")}
               >
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="me-2 h-4 w-4" />
                 Download PDF
               </Button>
               <Button
@@ -91,11 +91,11 @@ export function IDCardPreview({
                 className="flex-1"
                 onClick={() => onDownload?.("image")}
               >
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="me-2 h-4 w-4" />
                 Download Image
               </Button>
               <Button variant="default" className="flex-1" onClick={onPrint}>
-                <Printer className="mr-2 h-4 w-4" />
+                <Printer className="me-2 h-4 w-4" />
                 Print Card
               </Button>
             </div>

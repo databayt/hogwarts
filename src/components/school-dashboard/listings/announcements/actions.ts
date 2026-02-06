@@ -112,10 +112,9 @@ export type ActionResponse<T = void> =
 type AnnouncementSelectResult = {
   id: string
   schoolId: string
-  titleEn: string | null
-  titleAr: string | null
-  bodyEn: string | null
-  bodyAr: string | null
+  title: string | null
+  body: string | null
+  lang: string
   scope: string
   priority: string
   classId: string | null
@@ -128,8 +127,8 @@ type AnnouncementSelectResult = {
 
 type AnnouncementListResult = {
   id: string
-  titleEn: string | null
-  titleAr: string | null
+  title: string | null
+  lang: string
   scope: string
   published: boolean
   priority: string
@@ -202,14 +201,13 @@ export async function createAnnouncement(
       }
     }
 
-    // Create announcement with audit trail - bilingual fields
+    // Create announcement with audit trail - single-language fields
     const row = await db.announcement.create({
       data: {
         schoolId,
-        titleEn: parsed.titleEn || null,
-        titleAr: parsed.titleAr || null,
-        bodyEn: parsed.bodyEn || null,
-        bodyAr: parsed.bodyAr || null,
+        title: parsed.title || null,
+        body: parsed.body || null,
+        lang: parsed.lang || "ar",
         scope: parsed.scope,
         classId: parsed.classId || null,
         role: (parsed.role as any) || null,
@@ -318,21 +316,20 @@ export async function createAnnouncementWithTranslation(input: {
       }
     }
 
-    // Auto-translate content
+    // Auto-translate content (optional preview, not stored)
     const translatedData = await withAutoTranslation(
       { title: input.title, body: input.body },
       ["title", "body"],
       input.sourceLanguage
     )
 
-    // Create announcement with bilingual content
+    // Create announcement with single-language content
     const row = await db.announcement.create({
       data: {
         schoolId,
-        titleEn: translatedData.data.titleEn || null,
-        titleAr: translatedData.data.titleAr || null,
-        bodyEn: translatedData.data.bodyEn || null,
-        bodyAr: translatedData.data.bodyAr || null,
+        title: input.title || null,
+        body: input.body || null,
+        lang: input.sourceLanguage,
         scope: input.scope,
         classId: input.classId || null,
         role: (input.role as any) || null,
@@ -433,12 +430,11 @@ export async function updateAnnouncement(
       }
     }
 
-    // Build update data object - bilingual fields
+    // Build update data object - single-language fields
     const data: any = {}
-    if (typeof rest.titleEn !== "undefined") data.titleEn = rest.titleEn
-    if (typeof rest.titleAr !== "undefined") data.titleAr = rest.titleAr
-    if (typeof rest.bodyEn !== "undefined") data.bodyEn = rest.bodyEn
-    if (typeof rest.bodyAr !== "undefined") data.bodyAr = rest.bodyAr
+    if (typeof rest.title !== "undefined") data.title = rest.title
+    if (typeof rest.body !== "undefined") data.body = rest.body
+    if (typeof rest.lang !== "undefined") data.lang = rest.lang
     if (typeof rest.scope !== "undefined") data.scope = rest.scope
     if (typeof rest.classId !== "undefined") {
       // Use Prisma relation API instead of foreign key
@@ -717,16 +713,15 @@ export async function getAnnouncement(input: {
     // Parse and validate input
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    // Fetch announcement with proper select - bilingual fields
+    // Fetch announcement with proper select - single-language fields
     const announcement = await db.announcement.findFirst({
       where: { id, schoolId },
       select: {
         id: true,
         schoolId: true,
-        titleEn: true,
-        titleAr: true,
-        bodyEn: true,
-        bodyAr: true,
+        title: true,
+        body: true,
+        lang: true,
         scope: true,
         priority: true,
         classId: true,
@@ -806,14 +801,11 @@ export async function getAnnouncements(
     const sp = getAnnouncementsSchema.parse(input ?? {})
 
     // Build where clause with proper types
-    // Search in both titleEn and titleAr
+    // Search in title field
     const where: any = {
       schoolId,
       ...(sp.title && {
-        OR: [
-          { titleEn: { contains: sp.title, mode: "insensitive" } },
-          { titleAr: { contains: sp.title, mode: "insensitive" } },
-        ],
+        title: { contains: sp.title, mode: "insensitive" },
       }),
       ...(sp.scope && { scope: sp.scope }),
       ...(sp.published && { published: sp.published === "true" }),
@@ -840,8 +832,8 @@ export async function getAnnouncements(
         take,
         select: {
           id: true,
-          titleEn: true,
-          titleAr: true,
+          title: true,
+          lang: true,
           scope: true,
           published: true,
           priority: true,
@@ -854,11 +846,11 @@ export async function getAnnouncements(
       db.announcement.count({ where }),
     ])
 
-    // Map results with proper types - bilingual fields
+    // Map results with proper types - single-language fields
     const mapped: AnnouncementListResult[] = rows.map((a) => ({
       id: a.id,
-      titleEn: a.titleEn,
-      titleAr: a.titleAr,
+      title: a.title,
+      lang: a.lang,
       scope: a.scope,
       published: a.published,
       priority: a.priority,
@@ -900,10 +892,9 @@ export async function getPreviousAnnouncements(): Promise<
   ActionResponse<
     Array<{
       id: string
-      titleEn: string | null
-      titleAr: string | null
-      bodyEn: string | null
-      bodyAr: string | null
+      title: string | null
+      body: string | null
+      lang: string
     }>
   >
 > {
@@ -928,10 +919,9 @@ export async function getPreviousAnnouncements(): Promise<
       take: 20,
       select: {
         id: true,
-        titleEn: true,
-        titleAr: true,
-        bodyEn: true,
-        bodyAr: true,
+        title: true,
+        body: true,
+        lang: true,
       },
     })
 

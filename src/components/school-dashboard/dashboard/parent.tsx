@@ -506,7 +506,7 @@ export async function ParentDashboard({
                         {grade.subject}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="font-bold">
                         {grade.marksObtained}/{grade.totalMarks}
                       </p>
@@ -579,7 +579,7 @@ export async function ParentDashboard({
                           {assignment.subject} • {assignment.className}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <Badge
                           variant={
                             assignment.status === "NOT_SUBMITTED" || isOverdue

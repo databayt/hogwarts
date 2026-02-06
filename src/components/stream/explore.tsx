@@ -30,7 +30,7 @@ const exploreRoles = [
     href: "/courses?role=digital-saas-marketing",
   },
   { title: "UI / UX Designer", href: "/courses?role=ui-ux" },
-  { title: "Machine Learning Engineer", href: "/courses?role=ml-engineer" },
+  { title: "Machine Learning Engineer", href: "/courses?role=ms-engineer" },
 ]
 
 const exploreCategories = [

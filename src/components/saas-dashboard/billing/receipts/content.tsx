@@ -19,7 +19,7 @@ import { getReceiptColumns, type ReceiptRow } from "./columns"
 import { ReceiptsTable } from "./table"
 
 interface Props {
-  dictionary: any
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
   searchParams?: {
     page?: string
@@ -140,9 +140,11 @@ export async function ReceiptsContent({
       <div className="flex flex-1 flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2>{dictionary?.title || "Payment Receipts"}</h2>
+            <h2>
+              {dictionary?.operator?.billing?.receipts || "Payment Receipts"}
+            </h2>
             <p className="muted">
-              {dictionary?.description ||
+              {dictionary?.operator?.billing?.receiptsDescription ||
                 "Review and approve manual payment receipts"}
             </p>
           </div>

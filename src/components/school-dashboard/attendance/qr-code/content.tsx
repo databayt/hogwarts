@@ -87,7 +87,7 @@ export default function QRCodeAttendanceContent({
           </div>
         </div>
         <Badge variant="outline" className="text-purple-600">
-          <QrCode className="mr-1 h-3 w-3" />
+          <QrCode className="me-1 h-3 w-3" />
           QR Mode Active
         </Badge>
       </div>
@@ -105,15 +105,15 @@ export default function QRCodeAttendanceContent({
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="generate" disabled={!isTeacherMode}>
-            <QrCode className="mr-2 h-4 w-4" />
+            <QrCode className="me-2 h-4 w-4" />
             Generate QR
           </TabsTrigger>
           <TabsTrigger value="scan">
-            <Scan className="mr-2 h-4 w-4" />
+            <Scan className="me-2 h-4 w-4" />
             Scan QR
           </TabsTrigger>
           <TabsTrigger value="manage" disabled={!isTeacherMode}>
-            <Users className="mr-2 h-4 w-4" />
+            <Users className="me-2 h-4 w-4" />
             Manage
           </TabsTrigger>
         </TabsList>
@@ -205,7 +205,7 @@ export default function QRCodeAttendanceContent({
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-end">
                           <Badge
                             variant={
                               record.status === "PRESENT"
@@ -247,7 +247,7 @@ export default function QRCodeAttendanceContent({
                   </p>
                 </div>
                 <Button size="sm" variant="outline">
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <RefreshCw className="me-2 h-4 w-4" />
                   Configure
                 </Button>
               </div>
@@ -259,7 +259,7 @@ export default function QRCodeAttendanceContent({
                   </p>
                 </div>
                 <Button size="sm" variant="outline">
-                  <Settings className="mr-2 h-4 w-4" />
+                  <Settings className="me-2 h-4 w-4" />
                   Setup
                 </Button>
               </div>
@@ -271,7 +271,7 @@ export default function QRCodeAttendanceContent({
                   </p>
                 </div>
                 <Button size="sm" variant="outline">
-                  <CircleAlert className="mr-2 h-4 w-4" />
+                  <CircleAlert className="me-2 h-4 w-4" />
                   Enable
                 </Button>
               </div>

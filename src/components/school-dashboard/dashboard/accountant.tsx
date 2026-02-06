@@ -471,7 +471,7 @@ export async function AccountantDashboard({
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p
                         className={`font-bold ${
                           transaction.amount > 0
@@ -539,7 +539,7 @@ export async function AccountantDashboard({
                           {payment.grade} • Due: {format(dueDate, "MMM d")}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="font-bold">
                           ${payment.amount.toLocaleString()}
                         </p>
@@ -602,7 +602,7 @@ export async function AccountantDashboard({
                         {event.type}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <Badge
                         variant={
                           event.priority === "critical"

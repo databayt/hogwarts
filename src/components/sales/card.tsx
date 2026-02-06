@@ -192,19 +192,19 @@ export function LeadCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setShowEdit(true)}>
-                    <Edit className="mr-2 h-4 w-4" />
+                    <Edit className="me-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {lead.email && (
                     <DropdownMenuItem onClick={copyEmail}>
-                      <Copy className="mr-2 h-4 w-4" />
+                      <Copy className="me-2 h-4 w-4" />
                       Copy Email
                     </DropdownMenuItem>
                   )}
                   {lead.phone && (
                     <DropdownMenuItem onClick={copyPhone}>
-                      <Copy className="mr-2 h-4 w-4" />
+                      <Copy className="me-2 h-4 w-4" />
                       Copy Phone
                     </DropdownMenuItem>
                   )}
@@ -214,7 +214,7 @@ export function LeadCard({
                         window.open(lead.linkedinUrl ?? "", "_blank")
                       }
                     >
-                      <ExternalLink className="mr-2 h-4 w-4" />
+                      <ExternalLink className="me-2 h-4 w-4" />
                       Open LinkedIn
                     </DropdownMenuItem>
                   )}
@@ -224,7 +224,7 @@ export function LeadCard({
                     className="text-destructive"
                     disabled={isDeleting}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash2 className="me-2 h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -282,7 +282,7 @@ export function LeadCard({
             <div className="flex flex-wrap gap-1">
               {lead.tags.map((tag) => (
                 <Badge key={tag} variant="outline" className="text-xs">
-                  <Tag className="mr-1 h-3 w-3" />
+                  <Tag className="me-1 h-3 w-3" />
                   {tag}
                 </Badge>
               ))}

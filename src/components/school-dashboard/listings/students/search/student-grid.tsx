@@ -102,7 +102,7 @@ export function StudentGrid({ students, onStudentSelect }: StudentGridProps) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => onStudentSelect?.(student)}>
-                    <Eye className="mr-2 h-4 w-4" />
+                    <Eye className="me-2 h-4 w-4" />
                     View Profile
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -184,7 +184,7 @@ export function StudentGrid({ students, onStudentSelect }: StudentGridProps) {
                 onStudentSelect?.(student)
               }}
             >
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye className="me-2 h-4 w-4" />
               View Details
             </Button>
           </CardFooter>

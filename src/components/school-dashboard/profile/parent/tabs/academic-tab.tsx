@@ -677,7 +677,7 @@ export function AcademicTab({
                       {card.childName} - {card.term} {card.year} Report Card
                     </span>
                     <Button variant="outline" size="sm">
-                      <Download className="mr-1 h-4 w-4" />
+                      <Download className="me-1 h-4 w-4" />
                       Download PDF
                     </Button>
                   </CardTitle>
@@ -861,7 +861,7 @@ export function AcademicTab({
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <Badge
                           variant={
                             record.status === "present"

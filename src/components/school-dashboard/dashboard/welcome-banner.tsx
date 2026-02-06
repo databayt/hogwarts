@@ -75,7 +75,7 @@ export function WelcomeBanner({
               {subtitle || `Welcome to your ${role || "dashboard"}`}
             </motion.p>
           </div>
-          <div className="hidden text-right sm:block">
+          <div className="hidden text-end sm:block">
             <div className="text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
               <span className="text-foreground text-2xl font-medium">

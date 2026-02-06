@@ -65,6 +65,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
@@ -76,6 +77,8 @@ import {
   teacherCreateSchema,
   teacherUpdateSchema,
 } from "@/components/school-dashboard/listings/teachers/validation"
+
+import { assertTeacherPermission, getAuthContext } from "./authorization"
 
 // ============================================================================
 // Types
@@ -104,10 +107,22 @@ export async function createTeacher(
   input: z.infer<typeof teacherCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertTeacherPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Parse and validate input
@@ -229,10 +244,22 @@ export async function updateTeacher(
   input: z.infer<typeof teacherUpdateSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertTeacherPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update teachers" }
     }
 
     // Parse and validate input
@@ -362,10 +389,22 @@ export async function deleteTeacher(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertTeacherPermission(authContext, "delete", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to delete teachers" }
     }
 
     // Parse and validate input
@@ -413,10 +452,22 @@ export async function getTeacher(input: {
   id: string
 }): Promise<ActionResponse<Record<string, unknown> | null>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertTeacherPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read teachers" }
     }
 
     // Parse and validate input
@@ -471,7 +522,7 @@ export async function getTeacher(input: {
               select: {
                 id: true,
                 subjectName: true,
-                subjectNameAr: true,
+                lang: true,
               },
             },
           },
@@ -485,7 +536,7 @@ export async function getTeacher(input: {
               select: {
                 id: true,
                 departmentName: true,
-                departmentNameAr: true,
+                lang: true,
               },
             },
           },
@@ -494,7 +545,7 @@ export async function getTeacher(input: {
           select: {
             id: true,
             className: true,
-            classNameAr: true,
+            lang: true,
           },
         },
         user: {
@@ -551,9 +602,21 @@ export async function getTeacherWorkload(input: {
   }>
 > {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertTeacherPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read teachers" }
     }
 
     const { teacherId, termId } = input
@@ -644,13 +707,23 @@ export async function getTeachers(
   }>
 > {
   try {
-    // Get tenant context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
     }
 
-    // Parse and validate input
+    try {
+      assertTeacherPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read teachers" }
+    }
+
     const sp = getTeachersSchema.parse(input ?? {})
 
     // Build where clause
@@ -734,13 +807,23 @@ export async function getTeachersCSV(
   input?: Partial<z.infer<typeof getTeachersSchema>>
 ): Promise<ActionResponse<string>> {
   try {
-    // Get tenant context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
     }
 
-    // Parse and validate input
+    try {
+      assertTeacherPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to export teachers" }
+    }
+
     const sp = getTeachersSchema.parse(input ?? {})
 
     // Build where clause with filters
@@ -870,26 +953,36 @@ export async function getSubjectsForExpertise(): Promise<
     subjects: Array<{
       id: string
       name: string
-      nameAr: string | null
+      lang: string
       departmentId: string
       departmentName: string
-      departmentNameAr: string | null
     }>
     byDepartment: Record<
       string,
       Array<{
         id: string
         name: string
-        nameAr: string | null
+        lang: string
       }>
     >
   }>
 > {
   try {
-    // Get tenant context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertTeacherPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read teachers" }
     }
 
     // Fetch all subjects with their departments
@@ -901,7 +994,7 @@ export async function getSubjectsForExpertise(): Promise<
           select: {
             id: true,
             departmentName: true,
-            departmentNameAr: true,
+            lang: true,
           },
         },
       },
@@ -915,16 +1008,15 @@ export async function getSubjectsForExpertise(): Promise<
     const mappedSubjects = subjects.map((s: any) => ({
       id: s.id,
       name: s.subjectName,
-      nameAr: s.subjectNameAr || null,
+      lang: s.lang || "ar",
       departmentId: s.departmentId,
       departmentName: s.department?.departmentName || "Unknown",
-      departmentNameAr: s.department?.departmentNameAr || null,
     }))
 
     // Group subjects by department name
     const byDepartment: Record<
       string,
-      Array<{ id: string; name: string; nameAr: string | null }>
+      Array<{ id: string; name: string; lang: string }>
     > = {}
     for (const subject of mappedSubjects) {
       const deptName = subject.departmentName
@@ -934,7 +1026,7 @@ export async function getSubjectsForExpertise(): Promise<
       byDepartment[deptName].push({
         id: subject.id,
         name: subject.name,
-        nameAr: subject.nameAr,
+        lang: subject.lang,
       })
     }
 
@@ -985,13 +1077,23 @@ export async function getTeachersExportData(
   >
 > {
   try {
-    // Get tenant context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
     }
 
-    // Parse and validate input
+    try {
+      assertTeacherPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to export teachers" }
+    }
+
     const sp = getTeachersSchema.parse(input ?? {})
 
     // Build where clause with filters
@@ -1093,6 +1195,56 @@ export async function getTeachersExportData(
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to fetch export data",
+    }
+  }
+}
+
+export async function bulkDeleteTeachers(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertTeacherPermission(authContext, "bulk_action", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized for bulk operations" }
+    }
+
+    const { ids } = z
+      .object({ ids: z.array(z.string().min(1)).min(1) })
+      .parse(input)
+
+    const teacherModel = getModelOrThrow("teacher")
+    const existing = await teacherModel.findMany({
+      where: { id: { in: ids }, schoolId },
+      select: { id: true },
+    })
+    const validIds = existing.map((t: any) => t.id)
+
+    const result = await teacherModel.deleteMany({
+      where: { id: { in: validIds }, schoolId },
+    })
+
+    revalidatePath("/teachers")
+    return { success: true, data: { count: result.count as number } }
+  } catch (error) {
+    console.error("[bulkDeleteTeachers] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk delete teachers",
     }
   }
 }

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import { saveGuardianStep } from "./actions"
 import { GUARDIAN_RELATION_OPTIONS } from "./config"
 import type { GuardianFormProps, GuardianFormRef } from "./types"
@@ -35,7 +35,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
     const subdomain = params.subdomain as string
     const { locale: lang } = useLocale()
     const isRTL = lang === "ar"
-    const { session, updateStepData } = useApplication()
+    const { session, updateStepData } = useApplySession()
 
     const form = useForm<GuardianSchemaType>({
       resolver: zodResolver(guardianSchema),
@@ -322,7 +322,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                       <SelectContent>
                         {GUARDIAN_RELATION_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
-                            {isRTL ? option.labelAr : option.label}
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>

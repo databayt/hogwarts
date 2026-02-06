@@ -491,7 +491,7 @@ export function AnalyticsDashboard() {
       <div className="flex justify-end">
         <Button variant="outline" onClick={loadData} disabled={isLoading}>
           <RefreshCw
-            className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")}
+            className={cn("me-2 h-4 w-4", isLoading && "animate-spin")}
           />
           Refresh Analytics
         </Button>

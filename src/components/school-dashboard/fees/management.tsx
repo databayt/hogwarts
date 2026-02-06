@@ -449,11 +449,11 @@ export function FeeManagement({
               currentUser.role === "accountant") && (
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleSendReminders}>
-                  <Send className="mr-2 h-4 w-4" />
+                  <Send className="me-2 h-4 w-4" />
                   Send Reminders
                 </Button>
                 <Button variant="outline" onClick={() => onExportReport({})}>
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Export Report
                 </Button>
               </div>
@@ -550,7 +550,7 @@ export function FeeManagement({
           <TabsTrigger value="payments">
             Payments
             {stats.overdueCount > 0 && (
-              <Badge variant="destructive" className="ml-2">
+              <Badge variant="destructive" className="ms-2">
                 {stats.overdueCount}
               </Badge>
             )}
@@ -648,7 +648,7 @@ export function FeeManagement({
                         {fs.description}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-lg font-bold">${fs.amount}</p>
                       <p className="text-muted-foreground text-xs capitalize">
                         {fs.frequency}
@@ -788,7 +788,7 @@ export function FeeManagement({
                                     setPaymentDialogOpen(true)
                                   }}
                                 >
-                                  <DollarSign className="mr-1 h-4 w-4" />
+                                  <DollarSign className="me-1 h-4 w-4" />
                                   Pay
                                 </Button>
                               )}
@@ -859,7 +859,7 @@ export function FeeManagement({
                               onSendReminder([payment.studentId], "email")
                             }
                           >
-                            <Mail className="mr-1 h-4 w-4" />
+                            <Mail className="me-1 h-4 w-4" />
                             Remind
                           </Button>
                           <Button
@@ -896,28 +896,28 @@ export function FeeManagement({
                   variant="outline"
                   onClick={() => onExportReport({ type: "collection" })}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Collection Report
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => onExportReport({ type: "outstanding" })}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Outstanding Report
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => onExportReport({ type: "defaulters" })}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Defaulters Report
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => onExportReport({ type: "category" })}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Category-wise Report
                 </Button>
               </div>

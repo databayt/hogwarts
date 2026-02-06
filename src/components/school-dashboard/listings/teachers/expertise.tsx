@@ -39,7 +39,7 @@ import { TeacherFormStepProps } from "./types"
 type Subject = {
   id: string
   name: string
-  nameAr: string | null
+  lang: string
 }
 
 export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
@@ -50,7 +50,7 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
 
   const [isPending, startTransition] = useTransition()
   const [subjects, setSubjects] = useState<
-    Array<{ id: string; name: string; nameAr: string | null }>
+    Array<{ id: string; name: string; lang: string }>
   >([])
   const [subjectsByDepartment, setSubjectsByDepartment] = useState<
     Record<string, Subject[]>

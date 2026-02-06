@@ -463,7 +463,7 @@ export function GeoTracker({
           <Badge variant={isTracking ? "default" : "secondary"}>
             {isTracking ? (
               <>
-                <LoaderCircle className="mr-1 h-3 w-3 animate-spin" />
+                <LoaderCircle className="me-1 h-3 w-3 animate-spin" />
                 Tracking Active
               </>
             ) : (
@@ -474,12 +474,12 @@ export function GeoTracker({
           <Badge variant={isOnline ? "default" : "destructive"}>
             {isOnline ? (
               <>
-                <Wifi className="mr-1 h-3 w-3" />
+                <Wifi className="me-1 h-3 w-3" />
                 Online
               </>
             ) : (
               <>
-                <WifiOff className="mr-1 h-3 w-3" />
+                <WifiOff className="me-1 h-3 w-3" />
                 Offline
               </>
             )}
@@ -487,7 +487,7 @@ export function GeoTracker({
 
           {batteryLevel !== null && (
             <Badge variant={batteryLevel < 20 ? "destructive" : "secondary"}>
-              <Battery className="mr-1 h-3 w-3" />
+              <Battery className="me-1 h-3 w-3" />
               {batteryLevel}% {isCharging && "⚡"}
             </Badge>
           )}

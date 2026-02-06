@@ -166,7 +166,7 @@ export default function StatsAreaChart() {
                   >
                     {item.value}
                   </span>
-                  <span className="flex items-center space-x-1 text-sm">
+                  <span className="flex items-center gap-1 text-sm">
                     <span className="text-foreground font-medium">
                       {item.change}
                     </span>

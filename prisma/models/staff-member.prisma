@@ -82,6 +82,7 @@ model StaffPhoneNumber {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, staffMemberId, phoneNumber])
+  @@index([staffMemberId])
   @@map("staff_phone_numbers")
 }
 

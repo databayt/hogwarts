@@ -289,3 +289,41 @@ export function getParentInitials(parent: {
 }): string {
   return `${parent.givenName.charAt(0)}${parent.surname.charAt(0)}`.toUpperCase()
 }
+
+/**
+ * Get parent/guardian statistics for a school
+ * @param schoolId - School ID
+ * @returns Promise with statistics
+ */
+export async function getParentStats(schoolId: string) {
+  const [total, guardians] = await Promise.all([
+    db.guardian.count({ where: { schoolId } }),
+    db.guardian.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        _count: {
+          select: { studentGuardians: true },
+        },
+      },
+    }),
+  ])
+
+  const withStudents = guardians.filter(
+    (g) => g._count.studentGuardians > 0
+  ).length
+  const withoutStudents = total - withStudents
+  const totalLinks = guardians.reduce(
+    (sum, g) => sum + g._count.studentGuardians,
+    0
+  )
+  const avgChildrenPerGuardian =
+    withStudents > 0 ? Math.round((totalLinks / withStudents) * 10) / 10 : 0
+
+  return {
+    total,
+    withStudents,
+    withoutStudents,
+    avgChildrenPerGuardian,
+  }
+}

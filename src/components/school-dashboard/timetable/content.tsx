@@ -185,7 +185,7 @@ export function TimetableContent({ dictionary }: Props) {
           <div className="mt-6 print:hidden">
             <div className="flex justify-between items-center mb-4">
               {timetableData?.update_date && !error && (
-                <p className="ml-1 text-sm text-muted-foreground">
+                <p className="ms-1 text-sm text-muted-foreground">
                   Updated: {timetableData.update_date.slice(1, -1)}
                 </p>
               )}

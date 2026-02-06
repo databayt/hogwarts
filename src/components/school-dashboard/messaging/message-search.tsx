@@ -116,7 +116,7 @@ export function MessageSearch({
           placeholder={
             locale === "ar" ? "بحث في الرسائل..." : "Search messages..."
           }
-          className="h-8 pr-4 pl-8 text-sm"
+          className="h-8 ps-8 pe-4 text-sm"
           autoFocus
         />
         {isSearching && (

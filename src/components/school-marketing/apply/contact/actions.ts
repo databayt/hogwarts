@@ -1,34 +1,19 @@
 "use server"
 
-import { contactSchema, type ContactSchemaType } from "./validation"
+import type { ActionResponse } from "@/lib/action-response"
 
-export interface SaveContactResult {
-  success: boolean
-  data?: ContactSchemaType
-  error?: string
-}
+import { contactSchema, type ContactSchemaType } from "./validation"
 
 export async function saveContactStep(
   data: ContactSchemaType
-): Promise<SaveContactResult> {
+): Promise<ActionResponse<ContactSchemaType>> {
   try {
-    // Validate data
     const validatedData = contactSchema.parse(data)
-
-    return {
-      success: true,
-      data: validatedData,
-    }
+    return { success: true, data: validatedData }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        error: error.message,
-      }
-    }
     return {
       success: false,
-      error: "Validation failed",
+      error: error instanceof Error ? error.message : "Validation failed",
     }
   }
 }

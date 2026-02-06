@@ -210,12 +210,12 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                       >
                         {geofence.isActive ? (
                           <>
-                            <PowerOff className="mr-2 h-4 w-4" />
+                            <PowerOff className="me-2 h-4 w-4" />
                             Deactivate
                           </>
                         ) : (
                           <>
-                            <Power className="mr-2 h-4 w-4" />
+                            <Power className="me-2 h-4 w-4" />
                             Activate
                           </>
                         )}
@@ -228,7 +228,7 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                         }}
                         className="text-red-600"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
+                        <Trash2 className="me-2 h-4 w-4" />
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>

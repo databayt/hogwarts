@@ -11,6 +11,9 @@ import {
 } from "@/components/school-marketing/metadata"
 import { getCurrentDomain } from "@/components/school-marketing/utils"
 
+// 1 hour — school marketing pages change infrequently
+export const revalidate = 3600
+
 interface AdmissionProps {
   params: Promise<{ lang: Locale; subdomain: string }>
 }

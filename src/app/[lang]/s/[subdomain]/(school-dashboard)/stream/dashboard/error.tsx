@@ -16,6 +16,7 @@ interface Props {
 export default function StreamDashboardError({ error, reset }: Props) {
   const params = useParams()
   const lang = (params?.lang as string) || "en"
+  const subdomain = params?.subdomain as string
   const isRTL = lang === "ar"
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function StreamDashboardError({ error, reset }: Props) {
                 {isRTL ? "إعادة المحاولة" : "Try Again"}
               </Button>
               <Link
-                href={`/${lang}/stream/courses`}
+                href={`/${lang}/s/${subdomain}/stream/courses`}
                 className={buttonVariants({
                   variant: "outline",
                   className: "w-full",

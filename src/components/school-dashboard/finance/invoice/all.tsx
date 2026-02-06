@@ -93,12 +93,12 @@ export function AllInvoices({
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
-            <Download className="mr-2 size-4" />
+            <Download className="me-2 size-4" />
             Export
           </Button>
           {onCreateNew && (
             <Button size="sm" onClick={onCreateNew}>
-              <Plus className="mr-2 size-4" />
+              <Plus className="me-2 size-4" />
               {d?.cards?.invoicing?.create || "New Invoice"}
             </Button>
           )}
@@ -113,7 +113,7 @@ export function AllInvoices({
             placeholder="Search invoices..."
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="pl-9"
+            className="ps-9"
           />
         </div>
 
@@ -161,7 +161,7 @@ export function AllInvoices({
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-right">
+              <div className="text-end">
                 <div className="font-medium tabular-nums">
                   {formatCurrency(invoice.amount)}
                 </div>

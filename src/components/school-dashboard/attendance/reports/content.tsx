@@ -232,7 +232,7 @@ export function ReportsContent({
             disabled={refreshing}
           >
             <RefreshCw
-              className={cn("mr-2 h-4 w-4", refreshing && "animate-spin")}
+              className={cn("me-2 h-4 w-4", refreshing && "animate-spin")}
             />
             Refresh
           </Button>
@@ -370,7 +370,7 @@ export function ReportsContent({
                 placeholder="Search student or class..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="ps-9"
               />
             </div>
           </div>

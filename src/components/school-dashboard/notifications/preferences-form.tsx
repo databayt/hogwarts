@@ -422,7 +422,7 @@ export function NotificationPreferencesForm({
                                   control={form.control}
                                   name={`preferences.${index}.${channel}`}
                                   render={({ field }) => (
-                                    <FormItem className="flex items-center space-y-0 space-x-2">
+                                    <FormItem className="flex items-center gap-2 space-y-0">
                                       <FormControl>
                                         <Switch
                                           checked={field.value}
@@ -465,7 +465,7 @@ export function NotificationPreferencesForm({
           </Button>
           <Button type="submit" disabled={isLoading}>
             {isLoading && (
-              <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
             )}
             {dictionary.common.save}
           </Button>

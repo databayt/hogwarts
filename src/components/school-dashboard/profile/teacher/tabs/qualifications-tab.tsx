@@ -371,7 +371,7 @@ export function QualificationsTab({
               </span>
               {isOwner && (
                 <Button size="sm" variant="outline">
-                  <Plus className="mr-1 h-3 w-3" />
+                  <Plus className="me-1 h-3 w-3" />
                   Add Degree
                 </Button>
               )}
@@ -473,7 +473,7 @@ export function QualificationsTab({
               </span>
               {isOwner && (
                 <Button size="sm" variant="outline">
-                  <Plus className="mr-1 h-3 w-3" />
+                  <Plus className="me-1 h-3 w-3" />
                   Add Certification
                 </Button>
               )}
@@ -608,7 +608,7 @@ export function QualificationsTab({
 
             <Button variant="outline" size="sm" className="w-full">
               View All Training
-              <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>

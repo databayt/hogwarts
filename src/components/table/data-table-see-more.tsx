@@ -85,7 +85,7 @@ function DataTableSeeMoreInner({
 
         {/* Batch size selector */}
         {onBatchSizeChange && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <p className="muted font-medium whitespace-nowrap">
               Load per batch
             </p>
@@ -120,7 +120,7 @@ function DataTableSeeMoreInner({
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="me-2 h-4 w-4 animate-spin" />
               Loading...
             </>
           ) : (
@@ -180,7 +180,7 @@ function DataTableSeeMoreSimpleInner({
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="me-2 h-4 w-4 animate-spin" />
               Loading...
             </>
           ) : (

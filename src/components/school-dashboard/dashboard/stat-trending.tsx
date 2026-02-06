@@ -36,8 +36,8 @@ export default function StatsTrending() {
           key={stat.name}
           className={cn(
             "rounded-none border-0 py-0 shadow-none",
-            index === 0 && "rounded-l-xl",
-            index === data.length - 1 && "rounded-r-xl"
+            index === 0 && "rounded-s-xl",
+            index === data.length - 1 && "rounded-e-xl"
           )}
         >
           <CardContent className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 p-4 sm:p-6">

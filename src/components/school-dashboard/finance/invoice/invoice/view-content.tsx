@@ -75,10 +75,10 @@ export default function ViewInvoiceModalContent({
       <table className="mb-6 w-full text-sm">
         <thead>
           <tr className="border-b">
-            <th className="py-2 text-left">Item</th>
-            <th className="py-2 text-right">Qty</th>
-            <th className="py-2 text-right">Price</th>
-            <th className="py-2 text-right">Total</th>
+            <th className="py-2 text-start">Item</th>
+            <th className="py-2 text-end">Qty</th>
+            <th className="py-2 text-end">Price</th>
+            <th className="py-2 text-end">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -87,11 +87,11 @@ export default function ViewInvoiceModalContent({
             return (
               <tr key={item.id} className="border-b">
                 <td className="py-2">{item.item_name}</td>
-                <td className="py-2 text-right">{item.quantity}</td>
-                <td className="py-2 text-right">
+                <td className="py-2 text-end">{item.quantity}</td>
+                <td className="py-2 text-end">
                   {formatCurrency(item.price, lang)}
                 </td>
-                <td className="py-2 text-right">
+                <td className="py-2 text-end">
                   {formatCurrency(itemTotal, lang)}
                 </td>
               </tr>

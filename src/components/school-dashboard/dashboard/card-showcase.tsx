@@ -63,7 +63,7 @@ export default function CardsContent({ dictionary, lang }: CardsContentProps) {
           {/* Desktop: Activity Goal + Exercise Minutes */}
           <div className="hidden gap-1 sm:grid-cols-2 md:grid">
             <CardsActivityGoal />
-            <div className="pt-3 sm:pt-0 sm:pl-2 xl:pl-3">
+            <div className="pt-3 sm:ps-2 sm:pt-0 xl:ps-3">
               <CardsMetric />
             </div>
             <div className="pt-3 sm:col-span-2 xl:pt-3">

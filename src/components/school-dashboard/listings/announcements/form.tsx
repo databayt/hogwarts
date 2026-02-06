@@ -24,7 +24,6 @@ import {
 
 import { InformationStep } from "./information"
 import { ScopeStep } from "./scope"
-import { translateAnnouncement } from "./translate"
 
 interface AnnouncementCreateFormProps {
   dictionary: Dictionary["school"]["announcements"]
@@ -43,15 +42,13 @@ export function AnnouncementCreateForm({
   const t = dictionary
   // Two steps only: 1 = Content, 2 = Scope
   const [currentStep, setCurrentStep] = useState(1)
-  const [isTranslating, setIsTranslating] = useState(false)
 
   const form = useForm<AnnouncementFormValues>({
-    resolver: zodResolver(announcementCreateSchema),
+    resolver: zodResolver(announcementCreateSchema) as any,
     defaultValues: {
-      titleEn: "",
-      titleAr: "",
-      bodyEn: "",
-      bodyAr: "",
+      title: "",
+      body: "",
+      lang: lang === "ar" ? "ar" : "en",
       scope: "school",
       classId: "",
       role: "",
@@ -74,10 +71,9 @@ export function AnnouncementCreateForm({
       if (!res.success || !res.data) return
       const a = res.data
       form.reset({
-        titleEn: a.titleEn ?? "",
-        titleAr: a.titleAr ?? "",
-        bodyEn: a.bodyEn ?? "",
-        bodyAr: a.bodyAr ?? "",
+        title: a.title ?? "",
+        body: a.body ?? "",
+        lang: (a.lang as "ar" | "en") ?? "ar",
         scope: (a.scope as "school" | "class" | "role") ?? "school",
         classId: a.classId ?? "",
         role: a.role ?? "",
@@ -91,50 +87,8 @@ export function AnnouncementCreateForm({
   }, [currentId])
 
   async function onSubmit(values: AnnouncementFormValues) {
-    // Determine source language based on app locale
-    const isArabicSource = lang === "ar"
-    const sourceTitle = isArabicSource ? values.titleAr : values.titleEn
-    const sourceBody = isArabicSource ? values.bodyAr : values.bodyEn
-
-    // Only translate if we have source content and missing target
-    const needsTranslation =
-      sourceTitle &&
-      sourceBody &&
-      ((isArabicSource && (!values.titleEn || !values.bodyEn)) ||
-        (!isArabicSource && (!values.titleAr || !values.bodyAr)))
-
-    if (needsTranslation) {
-      setIsTranslating(true)
-      try {
-        const translateResult = await translateAnnouncement({
-          title: sourceTitle!,
-          body: sourceBody!,
-          sourceLanguage: lang,
-        })
-
-        if (translateResult.success && translateResult.data) {
-          if (isArabicSource) {
-            values.titleEn = translateResult.data.translatedTitle
-            values.bodyEn = translateResult.data.translatedBody
-          } else {
-            values.titleAr = translateResult.data.translatedTitle
-            values.bodyAr = translateResult.data.translatedBody
-          }
-        } else {
-          // Translation failed - continue with single language
-          console.warn("Translation failed:", translateResult.error)
-          toast.warning(
-            lang === "ar"
-              ? "فشلت الترجمة، سيتم النشر بلغة واحدة"
-              : "Translation failed, publishing in single language"
-          )
-        }
-      } catch (error) {
-        console.error("Translation error:", error)
-      } finally {
-        setIsTranslating(false)
-      }
-    }
+    // Set language from app locale
+    values.lang = lang === "ar" ? "ar" : "en"
 
     const res = currentId
       ? await updateAnnouncement({ id: currentId, ...values })
@@ -155,11 +109,8 @@ export function AnnouncementCreateForm({
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      // Content step - validate title and body for current language
-      const isArabic = lang === "ar"
-      const contentFields = isArabic
-        ? (["titleAr", "bodyAr"] as const)
-        : (["titleEn", "bodyEn"] as const)
+      // Content step - validate title and body
+      const contentFields = ["title", "body"] as const
       const contentValid = await form.trigger(contentFields)
       if (contentValid) {
         setCurrentStep(2)
@@ -173,10 +124,7 @@ export function AnnouncementCreateForm({
   const handleSaveCurrentStep = async () => {
     if (currentId) {
       // For editing, save current step data
-      const isArabic = lang === "ar"
-      const contentFields: (keyof AnnouncementFormValues)[] = isArabic
-        ? ["titleAr", "bodyAr"]
-        : ["titleEn", "bodyEn"]
+      const contentFields: (keyof AnnouncementFormValues)[] = ["title", "body"]
       const scopeFields: (keyof AnnouncementFormValues)[] = [
         "scope",
         "classId",
@@ -268,28 +216,16 @@ export function AnnouncementCreateForm({
           isView={isView}
           isEdit={!!currentId}
           isDirty={form.formState.isDirty}
-          isSubmitting={isTranslating}
+          isSubmitting={false}
           onBack={handleBack}
           onNext={handleNext}
           onSaveStep={handleSaveCurrentStep}
           labels={{
             cancel: t.cancel,
             back: t.back,
-            next: isTranslating
-              ? lang === "ar"
-                ? "جاري الترجمة..."
-                : "Translating..."
-              : t.next,
-            save: isTranslating
-              ? lang === "ar"
-                ? "جاري الحفظ..."
-                : "Saving..."
-              : t.save,
-            create: isTranslating
-              ? lang === "ar"
-                ? "جاري الإنشاء..."
-                : "Creating..."
-              : t.create,
+            next: t.next,
+            save: t.save,
+            create: t.create,
           }}
         />
       </form>

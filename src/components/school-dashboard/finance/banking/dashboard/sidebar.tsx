@@ -34,7 +34,7 @@ function UserProfileSection({ user }: UserProfileSectionProps) {
 
   return (
     <div className="bg-card rounded-lg border p-6">
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-4">
         <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full">
           <span className="text-primary text-lg font-semibold">{initial}</span>
         </div>
@@ -60,7 +60,7 @@ function RecentActivityItem({ transaction }: RecentActivityItemProps) {
 
   return (
     <div className="flex items-center justify-between py-2">
-      <div className="mr-4 min-w-0 flex-1">
+      <div className="me-4 min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{transaction.name}</p>
         <p className="text-muted-foreground text-xs">
           {new Date(transaction.date).toLocaleDateString()}
@@ -89,7 +89,7 @@ export function DashboardSidebar({
   const recentTransactions = transactions?.slice(0, 3) || []
 
   return (
-    <aside className="bg-muted/10 w-96 border-l p-8">
+    <aside className="bg-muted/10 w-96 border-s p-8">
       <div className="space-y-6">
         {/* User Profile Section */}
         <UserProfileSection user={user} />
@@ -102,7 +102,7 @@ export function DashboardSidebar({
             </h3>
             <Link href={`/${lang}/banking/my-banks`}>
               <Button variant="ghost" size="sm">
-                <Plus className="mr-1 h-4 w-4" />
+                <Plus className="me-1 h-4 w-4" />
                 {dictionary?.addBank || "Add Bank"}
               </Button>
             </Link>

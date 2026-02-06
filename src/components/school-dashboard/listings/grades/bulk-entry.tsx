@@ -315,7 +315,7 @@ export function BulkGradeEntry({
             </div>
 
             <Button variant="outline" size="sm" onClick={exportToCSV}>
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               {dictionary.school.grades.exportCSV}
             </Button>
 
@@ -329,7 +329,7 @@ export function BulkGradeEntry({
               />
               <Button variant="outline" size="sm" asChild>
                 <label htmlFor="import-csv" className="cursor-pointer">
-                  <Upload className="mr-2 h-4 w-4" />
+                  <Upload className="me-2 h-4 w-4" />
                   {dictionary.school.grades.importCSV}
                 </label>
               </Button>
@@ -519,7 +519,7 @@ export function BulkGradeEntry({
 
           <div className="mt-4 flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="me-2 h-4 w-4" />
               {saving
                 ? dictionary.school.grades.saving
                 : dictionary.school.grades.saveGrades}

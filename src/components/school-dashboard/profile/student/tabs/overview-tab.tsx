@@ -193,7 +193,7 @@ export function OverviewTab({
 
             <Button variant="outline" size="sm" className="w-full">
               View All Subjects
-              <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
@@ -248,7 +248,7 @@ export function OverviewTab({
                 <div className="flex flex-wrap gap-2">
                   {skillsAndInterests.languages.map((lang, index) => (
                     <Badge key={index} variant="secondary" className="text-xs">
-                      <Globe className="mr-1 h-3 w-3" />
+                      <Globe className="me-1 h-3 w-3" />
                       {lang.name} ({lang.proficiency})
                     </Badge>
                   ))}
@@ -283,7 +283,7 @@ export function OverviewTab({
             ))}
             <Button variant="outline" size="sm" className="w-full">
               View All
-              <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>

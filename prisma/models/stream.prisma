@@ -101,7 +101,15 @@ model StreamLesson {
   position    Int
   isPublished Boolean @default(false)
   isFree      Boolean @default(false)
-  duration    Int? // Duration in minutes
+  duration    Int? // Duration in minutes (legacy, prefer videoDuration)
+
+  // Video metadata (auto-extracted on upload)
+  thumbnailUrl    String? @db.Text   // Auto-generated thumbnail from video
+  videoDuration   Float?             // Duration in seconds (auto-extracted)
+  videoResolution String?            // "1920x1080" (auto-extracted)
+  videoSize       Int?               // File size in bytes
+  storageProvider String?            // "vercel_blob" | "aws_s3"
+  storageKey      String? @db.Text   // S3 key for cache invalidation
 
   chapterId String
   chapter   StreamChapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)

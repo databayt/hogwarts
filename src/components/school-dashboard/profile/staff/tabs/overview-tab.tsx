@@ -337,7 +337,7 @@ export function OverviewTab({
               </span>
               <Button variant="outline" size="sm">
                 View All
-                <ChevronRight className="ml-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4" />
               </Button>
             </CardTitle>
           </CardHeader>
@@ -376,7 +376,7 @@ export function OverviewTab({
               </span>
               <Button variant="outline" size="sm">
                 View All
-                <ChevronRight className="ml-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4" />
               </Button>
             </CardTitle>
           </CardHeader>

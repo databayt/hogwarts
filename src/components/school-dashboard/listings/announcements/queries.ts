@@ -2,10 +2,9 @@
  * Shared query builders and utilities for announcements
  * Consolidates query logic to eliminate duplication and improve maintainability
  *
- * Bilingual Support:
- * - All announcements have titleEn/titleAr and bodyEn/bodyAr fields
- * - Locale-based display is handled in the content/columns components
- * - Fallback logic: if preferred locale is missing, use the other language
+ * Single-Language Storage:
+ * - Announcements have title, body, and lang fields
+ * - Content stored in one language with a `lang` indicator
  */
 
 import { Prisma } from "@prisma/client"
@@ -17,7 +16,7 @@ import { db } from "@/lib/db"
 // ============================================================================
 
 export type AnnouncementListFilters = {
-  title?: string // Searches both titleEn and titleAr
+  title?: string // Searches title field
   scope?: string
   published?: string
   priority?: string
@@ -44,11 +43,11 @@ export type AnnouncementQueryParams = AnnouncementListFilters &
   PaginationParams &
   AnnouncementSortParams
 
-// Select types for different query contexts - bilingual fields
+// Select types for different query contexts - single-language fields
 export const announcementListSelect = {
   id: true,
-  titleEn: true,
-  titleAr: true,
+  title: true,
+  lang: true,
   scope: true,
   priority: true,
   published: true,
@@ -64,10 +63,9 @@ export const announcementListSelect = {
 export const announcementDetailSelect = {
   id: true,
   schoolId: true,
-  titleEn: true,
-  titleAr: true,
-  bodyEn: true,
-  bodyAr: true,
+  title: true,
+  body: true,
+  lang: true,
   scope: true,
   priority: true,
   classId: true,
@@ -115,22 +113,12 @@ export function buildAnnouncementWhere(
     schoolId,
   }
 
-  // Text search - search in both English and Arabic titles
+  // Text search - search in title field
   if (filters.title) {
-    where.OR = [
-      {
-        titleEn: {
-          contains: filters.title,
-          mode: Prisma.QueryMode.insensitive,
-        },
-      },
-      {
-        titleAr: {
-          contains: filters.title,
-          mode: Prisma.QueryMode.insensitive,
-        },
-      },
-    ]
+    where.title = {
+      contains: filters.title,
+      mode: Prisma.QueryMode.insensitive,
+    }
   }
 
   // Enum filters
@@ -324,8 +312,8 @@ export async function getScheduledAnnouncementsToPublish(schoolId?: string) {
     select: {
       id: true,
       schoolId: true,
-      titleEn: true,
-      titleAr: true,
+      title: true,
+      lang: true,
       scheduledFor: true,
     },
   })
@@ -350,8 +338,8 @@ export async function getExpiredAnnouncements(schoolId?: string) {
     select: {
       id: true,
       schoolId: true,
-      titleEn: true,
-      titleAr: true,
+      title: true,
+      lang: true,
       expiresAt: true,
     },
   })
@@ -459,37 +447,27 @@ export async function getAnnouncementsByIds(
 }
 
 // ============================================================================
-// Locale Helpers
+// Display Helpers
 // ============================================================================
 
 /**
- * Get localized title with fallback
- * @param announcement - Announcement with titleEn and titleAr
- * @param locale - Current locale ('en' or 'ar')
- * @returns Title in preferred language or fallback
+ * Get announcement title
+ * @param announcement - Announcement with title field
+ * @returns Title string
  */
-export function getLocalizedTitle(
-  announcement: { titleEn: string | null; titleAr: string | null },
-  locale: string
-): string {
-  if (locale === "ar") {
-    return announcement.titleAr || announcement.titleEn || ""
-  }
-  return announcement.titleEn || announcement.titleAr || ""
+export function getAnnouncementTitle(announcement: {
+  title: string | null
+}): string {
+  return announcement.title || ""
 }
 
 /**
- * Get localized body with fallback
- * @param announcement - Announcement with bodyEn and bodyAr
- * @param locale - Current locale ('en' or 'ar')
- * @returns Body in preferred language or fallback
+ * Get announcement body
+ * @param announcement - Announcement with body field
+ * @returns Body string
  */
-export function getLocalizedBody(
-  announcement: { bodyEn: string | null; bodyAr: string | null },
-  locale: string
-): string {
-  if (locale === "ar") {
-    return announcement.bodyAr || announcement.bodyEn || ""
-  }
-  return announcement.bodyEn || announcement.bodyAr || ""
+export function getAnnouncementBody(announcement: {
+  body: string | null
+}): string {
+  return announcement.body || ""
 }

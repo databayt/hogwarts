@@ -86,7 +86,7 @@ function StatCard({
           {percentage !== undefined && (
             <div className="mt-2 flex items-center">
               <Progress value={percentage} className="flex-1" />
-              <span className="ml-2 text-sm font-medium">
+              <span className="ms-2 text-sm font-medium">
                 {percentage.toFixed(1)}%
               </span>
             </div>
@@ -94,13 +94,13 @@ function StatCard({
           {trend && (
             <div className="mt-2 flex items-center">
               {trend === "up" && (
-                <TrendingUp className="text-chart-2 mr-1 h-4 w-4" />
+                <TrendingUp className="text-chart-2 me-1 h-4 w-4" />
               )}
               {trend === "down" && (
-                <TrendingDown className="text-destructive mr-1 h-4 w-4" />
+                <TrendingDown className="text-destructive me-1 h-4 w-4" />
               )}
               {trend === "neutral" && (
-                <Activity className="text-muted-foreground mr-1 h-4 w-4" />
+                <Activity className="text-muted-foreground me-1 h-4 w-4" />
               )}
               <span className="text-muted-foreground text-xs">
                 vs last period
@@ -255,7 +255,7 @@ export function AttendanceStats({
                   <span className="text-3xl font-bold">
                     {stats.attendanceRate.toFixed(1)}%
                   </span>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-muted-foreground text-sm">
                       {statsDict?.target?.replace("{percent}", "95") ||
                         "Target: 95%"}

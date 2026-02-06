@@ -129,7 +129,7 @@ function BankAccountRow({
       </div>
 
       <div className="flex items-center gap-6">
-        <div className="text-right">
+        <div className="text-end">
           <p className="text-muted-foreground text-sm">
             {dictionary.currentBalance}
           </p>

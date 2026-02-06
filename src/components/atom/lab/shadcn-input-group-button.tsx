@@ -31,7 +31,7 @@ export function ShadcnInputGroupButton() {
         Input Secure
       </Label>
       <div className="border-border relative flex items-center rounded-full border">
-        <div className="flex items-center pl-2">
+        <div className="flex items-center ps-2">
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -55,12 +55,12 @@ export function ShadcnInputGroupButton() {
             </PopoverContent>
           </Popover>
         </div>
-        <span className="text-muted-foreground pl-2 text-sm">https://</span>
+        <span className="text-muted-foreground ps-2 text-sm">https://</span>
         <Input
           id="input-secure"
           className="flex-1 border-0 bg-transparent focus-visible:ring-0"
         />
-        <div className="flex items-center pr-2">
+        <div className="flex items-center pe-2">
           <Button
             onClick={() => setIsFavorite(!isFavorite)}
             size="icon"

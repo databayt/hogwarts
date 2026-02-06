@@ -61,7 +61,7 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
       {/* Upload Button */}
       <div className="flex justify-end">
         <Button variant="outline" size="sm">
-          <Upload className="mr-2 h-4 w-4" />
+          <Upload className="me-2 h-4 w-4" />
           Upload Document
         </Button>
       </div>
@@ -148,7 +148,7 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
                             variant="outline"
                             className="border-green-600 text-green-600"
                           >
-                            <CircleCheck className="mr-1 h-3 w-3" />
+                            <CircleCheck className="me-1 h-3 w-3" />
                             Verified
                           </Badge>
                         ) : (
@@ -156,7 +156,7 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
                             variant="outline"
                             className="border-yellow-600 text-yellow-600"
                           >
-                            <Clock className="mr-1 h-3 w-3" />
+                            <Clock className="me-1 h-3 w-3" />
                             Pending Verification
                           </Badge>
                         )}
@@ -249,7 +249,7 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
             <FileText className="text-muted-foreground mb-4 h-12 w-12" />
             <p className="text-muted-foreground">No documents uploaded</p>
             <Button variant="outline" className="mt-4">
-              <Upload className="mr-2 h-4 w-4" />
+              <Upload className="me-2 h-4 w-4" />
               Upload First Document
             </Button>
           </CardContent>

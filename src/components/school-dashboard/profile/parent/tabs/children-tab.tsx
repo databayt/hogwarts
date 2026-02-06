@@ -358,7 +358,7 @@ export function ChildrenTab({
                       </div>
                       <Button variant="outline">
                         View Full Profile
-                        <ChevronRight className="ml-1 h-4 w-4" />
+                        <ChevronRight className="ms-1 h-4 w-4" />
                       </Button>
                     </div>
 

@@ -48,7 +48,6 @@ export default async function ClassesContent({
           subject: {
             select: {
               subjectName: true,
-              subjectNameAr: true,
             },
           },
           teacher: {
@@ -74,9 +73,7 @@ export default async function ClassesContent({
     data = rows.map((c: any) => ({
       id: c.id,
       name: c.name,
-      nameAr: c.nameAr || null,
       subjectName: c.subject?.subjectName || "Unknown",
-      subjectNameAr: c.subject?.subjectNameAr || null,
       teacherName: c.teacher
         ? `${c.teacher.givenName} ${c.teacher.surname}`
         : "Unknown",

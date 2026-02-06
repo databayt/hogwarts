@@ -145,11 +145,11 @@ export function Weather({
     }
   }, [entity, forecastType, refreshIntervalMinutes])
   return (
-    <div className="flex w-fit flex-col space-y-4 space-x-4 p-4">
+    <div className="flex w-fit flex-col gap-4 p-4">
       <div className="flex w-full justify-between">
         {forecasts && (
           <div className="flex-col">
-            <div className="flex w-full space-x-2">
+            <div className="flex w-full gap-2">
               <p>
                 {Intl.DateTimeFormat("en-US", { weekday: "long" }).format(
                   new Date(forecasts[0].datetime)

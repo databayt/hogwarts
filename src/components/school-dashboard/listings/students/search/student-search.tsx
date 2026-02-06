@@ -252,7 +252,7 @@ export function StudentSearch({
               placeholder="Search by name, GR number, email, or phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
@@ -261,7 +261,7 @@ export function StudentSearch({
           <Sheet open={showFilters} onOpenChange={setShowFilters}>
             <SheetTrigger asChild>
               <Button variant="outline" className="relative">
-                <ListFilter className="mr-2 h-4 w-4" />
+                <ListFilter className="me-2 h-4 w-4" />
                 Filters
                 {activeFilterCount > 0 && (
                   <Badge
@@ -289,7 +289,7 @@ export function StudentSearch({
                     {statusOptions.map((option) => (
                       <div
                         key={option.value}
-                        className="flex items-center space-x-2"
+                        className="flex items-center gap-2"
                       >
                         <Checkbox
                           checked={filters.status?.includes(
@@ -333,7 +333,7 @@ export function StudentSearch({
                     {typeOptions.map((option) => (
                       <div
                         key={option.value}
-                        className="flex items-center space-x-2"
+                        className="flex items-center gap-2"
                       >
                         <Checkbox
                           checked={filters.type?.includes(option.value as any)}
@@ -373,7 +373,7 @@ export function StudentSearch({
                     {genderOptions.map((option) => (
                       <div
                         key={option.value}
-                        className="flex items-center space-x-2"
+                        className="flex items-center gap-2"
                       >
                         <Checkbox
                           checked={filters.gender?.includes(option.value)}
@@ -412,11 +412,11 @@ export function StudentSearch({
                         <Button
                           variant="outline"
                           className={cn(
-                            "justify-start text-left font-normal",
+                            "justify-start text-start font-normal",
                             !filters.dateFrom && "text-muted-foreground"
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <CalendarIcon className="me-2 h-4 w-4" />
                           {filters.dateFrom
                             ? format(filters.dateFrom, "MMM dd, yyyy")
                             : "From"}
@@ -439,11 +439,11 @@ export function StudentSearch({
                         <Button
                           variant="outline"
                           className={cn(
-                            "justify-start text-left font-normal",
+                            "justify-start text-start font-normal",
                             !filters.dateTo && "text-muted-foreground"
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <CalendarIcon className="me-2 h-4 w-4" />
                           {filters.dateTo
                             ? format(filters.dateTo, "MMM dd, yyyy")
                             : "To"}
@@ -469,7 +469,7 @@ export function StudentSearch({
                 <div className="space-y-3">
                   <Label>Additional Filters</Label>
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <Checkbox
                         checked={filters.hasDocuments === true}
                         onCheckedChange={(checked) => {
@@ -483,7 +483,7 @@ export function StudentSearch({
                         Has uploaded documents
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <Checkbox
                         checked={filters.hasFeesPending === true}
                         onCheckedChange={(checked) => {
@@ -514,17 +514,17 @@ export function StudentSearch({
           </Sheet>
 
           <Button variant="outline" onClick={onAddStudent}>
-            <UserPlus className="mr-2 h-4 w-4" />
+            <UserPlus className="me-2 h-4 w-4" />
             Add Student
           </Button>
 
           <Button variant="outline" onClick={onBulkImport}>
-            <Upload className="mr-2 h-4 w-4" />
+            <Upload className="me-2 h-4 w-4" />
             Import
           </Button>
 
           <Button variant="outline" onClick={onExport}>
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="me-2 h-4 w-4" />
             Export
           </Button>
         </div>

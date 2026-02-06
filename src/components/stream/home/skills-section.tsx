@@ -95,11 +95,11 @@ export function SkillsSection({
             plugins={[plugin.current]}
             className="w-full"
           >
-            <CarouselContent className="-ml-4">
+            <CarouselContent className="-ms-4">
               {skills.map((skill) => (
                 <CarouselItem
                   key={skill.title}
-                  className="basis-full pl-4 sm:basis-1/2 lg:basis-1/3"
+                  className="basis-full ps-4 sm:basis-1/2 lg:basis-1/3"
                 >
                   <Link href={`/${lang}${skill.href}`} className="group block">
                     {/* Card - Hogwarts style */}

@@ -70,7 +70,7 @@ export function AWSHeader({
                 <input
                   type="text"
                   placeholder="Search"
-                  className="h-8 w-64 rounded border border-[#5f6b7a] bg-[#0f1b2a] pr-16 pl-10 text-sm text-white placeholder:text-gray-400 focus:border-[#539fe5] focus:ring-1 focus:ring-[#539fe5] focus:outline-none lg:w-80"
+                  className="h-8 w-64 rounded border border-[#5f6b7a] bg-[#0f1b2a] ps-10 pe-16 text-sm text-white placeholder:text-gray-400 focus:border-[#539fe5] focus:ring-1 focus:ring-[#539fe5] focus:outline-none lg:w-80"
                 />
                 <kbd className="absolute top-1/2 right-2 -translate-y-1/2 rounded border border-[#5f6b7a] bg-[#232f3e] px-1.5 py-0.5 text-xs text-gray-400">
                   [Option+S]
@@ -80,7 +80,7 @@ export function AWSHeader({
           </div>
 
           {/* Right Section */}
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ms-auto flex items-center gap-1">
             {/* Icon Buttons */}
             <button className="hidden rounded p-2 transition-colors hover:bg-[#3c4b5e] sm:block">
               <ExternalLink className="h-4 w-4" />
@@ -117,7 +117,7 @@ export function AWSHeader({
             </div>
 
             {/* Language & Theme Switchers */}
-            <div className="ml-2 flex items-center gap-0.5">
+            <div className="ms-2 flex items-center gap-0.5">
               <LangSwitcher />
               <ModeSwitcher />
             </div>
@@ -130,7 +130,7 @@ export function AWSHeader({
         <nav className="bg-background border-border border-b">
           <div className="flex h-11 items-center px-4">
             {/* Menu Toggle */}
-            <button className="hover:bg-accent mr-4 rounded p-1.5 transition-colors">
+            <button className="hover:bg-accent me-4 rounded p-1.5 transition-colors">
               <Menu className="h-5 w-5" />
             </button>
 

@@ -69,10 +69,10 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
       {/* Connection Status */}
       <Alert
         className={cn(
-          "border-l-4",
+          "border-s-4",
           isConnected
-            ? "border-l-green-500 bg-green-50"
-            : "border-l-red-500 bg-red-50"
+            ? "border-s-green-500 bg-green-50"
+            : "border-s-red-500 bg-red-50"
         )}
       >
         <div className="flex items-center justify-between">
@@ -95,7 +95,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
             )}
           </div>
           <Badge variant="outline" className="text-xs">
-            <Zap className="mr-1 h-3 w-3" />
+            <Zap className="me-1 h-3 w-3" />
             Real-time
           </Badge>
         </div>
@@ -223,7 +223,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
               )}
             </div>
             <Badge variant="secondary">
-              <RefreshCw className="mr-1 h-3 w-3" />
+              <RefreshCw className="me-1 h-3 w-3" />
               Live Feed
             </Badge>
           </div>
@@ -293,7 +293,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
 
       {/* Live Indicators */}
       <div className="grid grid-cols-2 gap-3">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-s-4 border-s-blue-500">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm">Check-in Velocity</CardTitle>
@@ -306,7 +306,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="border-s-4 border-s-purple-500">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm">Active Methods</CardTitle>

@@ -94,8 +94,8 @@ export async function getParentAnnouncements() {
     // Map announcements with additional context
     const mappedAnnouncements = announcements.map((announcement) => ({
       id: announcement.id,
-      title: announcement.titleEn || announcement.titleAr || "",
-      body: announcement.bodyEn || announcement.bodyAr || "",
+      title: announcement.title || "",
+      body: announcement.body || "",
       scope: announcement.scope,
       createdAt: announcement.createdAt,
       updatedAt: announcement.updatedAt,

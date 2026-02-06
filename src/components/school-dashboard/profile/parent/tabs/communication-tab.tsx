@@ -415,7 +415,7 @@ export function CommunicationTab({
           <TabsTrigger value="messages">
             Messages
             {unreadCount > 0 && (
-              <Badge variant="destructive" className="ml-2 text-xs">
+              <Badge variant="destructive" className="ms-2 text-xs">
                 {unreadCount}
               </Badge>
             )}
@@ -424,7 +424,7 @@ export function CommunicationTab({
           <TabsTrigger value="notifications">
             Notifications
             {unreadNotifications > 0 && (
-              <Badge variant="destructive" className="ml-2 text-xs">
+              <Badge variant="destructive" className="ms-2 text-xs">
                 {unreadNotifications}
               </Badge>
             )}
@@ -443,7 +443,7 @@ export function CommunicationTab({
                     placeholder="Search messages..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
+                    className="ps-9"
                   />
                 </div>
                 <select
@@ -459,7 +459,7 @@ export function CommunicationTab({
                   <ListFilter className="h-4 w-4" />
                 </Button>
                 <Button>
-                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <MessageSquare className="me-2 h-4 w-4" />
                   New Message
                 </Button>
               </div>
@@ -610,11 +610,11 @@ export function CommunicationTab({
                         />
                         <div className="flex justify-between">
                           <Button variant="ghost" size="sm">
-                            <Paperclip className="mr-1 h-4 w-4" />
+                            <Paperclip className="me-1 h-4 w-4" />
                             Attach
                           </Button>
                           <Button size="sm">
-                            <Reply className="mr-1 h-4 w-4" />
+                            <Reply className="me-1 h-4 w-4" />
                             Reply
                           </Button>
                         </div>

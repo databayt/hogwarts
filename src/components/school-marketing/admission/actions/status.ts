@@ -31,21 +31,18 @@ const STATUS_ORDER: AdmissionApplicationStatus[] = [
   "ADMITTED",
 ]
 
-const STATUS_LABELS: Record<
-  AdmissionApplicationStatus,
-  { en: string; ar: string }
-> = {
-  DRAFT: { en: "Draft", ar: "مسودة" },
-  SUBMITTED: { en: "Submitted", ar: "تم التقديم" },
-  UNDER_REVIEW: { en: "Under Review", ar: "قيد المراجعة" },
-  SHORTLISTED: { en: "Shortlisted", ar: "في القائمة المختصرة" },
-  ENTRANCE_SCHEDULED: { en: "Entrance Scheduled", ar: "موعد الاختبار" },
-  INTERVIEW_SCHEDULED: { en: "Interview Scheduled", ar: "موعد المقابلة" },
-  SELECTED: { en: "Selected", ar: "تم الاختيار" },
-  WAITLISTED: { en: "Waitlisted", ar: "قائمة الانتظار" },
-  REJECTED: { en: "Rejected", ar: "مرفوض" },
-  ADMITTED: { en: "Admitted", ar: "تم القبول" },
-  WITHDRAWN: { en: "Withdrawn", ar: "منسحب" },
+const STATUS_LABELS: Record<AdmissionApplicationStatus, string> = {
+  DRAFT: "مسودة",
+  SUBMITTED: "تم التقديم",
+  UNDER_REVIEW: "قيد المراجعة",
+  SHORTLISTED: "في القائمة المختصرة",
+  ENTRANCE_SCHEDULED: "موعد الاختبار",
+  INTERVIEW_SCHEDULED: "موعد المقابلة",
+  SELECTED: "تم الاختيار",
+  WAITLISTED: "قائمة الانتظار",
+  REJECTED: "مرفوض",
+  ADMITTED: "تم القبول",
+  WITHDRAWN: "منسحب",
 }
 
 // ============================================
@@ -310,8 +307,7 @@ export async function getApplicationStatus(
     const timeline: StatusTimelineEntry[] = STATUS_ORDER.map(
       (status, index) => ({
         status,
-        label: STATUS_LABELS[status].en,
-        labelAr: STATUS_LABELS[status].ar,
+        label: STATUS_LABELS[status],
         completed: index < currentStatusIndex,
         current: status === application.status,
         date: status === application.status ? application.updatedAt : undefined,
@@ -322,8 +318,7 @@ export async function getApplicationStatus(
     if (["WAITLISTED", "REJECTED", "WITHDRAWN"].includes(application.status)) {
       const specialStatus: StatusTimelineEntry = {
         status: application.status,
-        label: STATUS_LABELS[application.status].en,
-        labelAr: STATUS_LABELS[application.status].ar,
+        label: STATUS_LABELS[application.status],
         completed: false,
         current: true,
         date: application.updatedAt,
@@ -337,8 +332,7 @@ export async function getApplicationStatus(
     // Application submitted
     checklist.push({
       id: "application",
-      label: "Application Submitted",
-      labelAr: "تم تقديم الطلب",
+      label: "تم تقديم الطلب",
       completed: application.submittedAt !== null,
       required: true,
       type: "other",
@@ -351,8 +345,7 @@ export async function getApplicationStatus(
     ) {
       checklist.push({
         id: "payment",
-        label: "Application Fee Paid",
-        labelAr: "دفع رسوم التقديم",
+        label: "دفع رسوم التقديم",
         completed: application.applicationFeePaid,
         required: true,
         type: "payment",
@@ -372,7 +365,6 @@ export async function getApplicationStatus(
         checklist.push({
           id: `doc-${doc.type}`,
           label: doc.name,
-          labelAr: doc.name,
           completed: uploadedDocs.some((d) => d.type === doc.type),
           required: true,
           type: "document",
@@ -385,8 +377,7 @@ export async function getApplicationStatus(
       const latestBooking = application.tourBookings[0]
       checklist.push({
         id: "tour",
-        label: "Campus Tour",
-        labelAr: "جولة الحرم الجامعي",
+        label: "جولة الحرم الجامعي",
         completed: latestBooking.status === "COMPLETED",
         required: false,
         type: "tour",
@@ -401,8 +392,7 @@ export async function getApplicationStatus(
     ) {
       checklist.push({
         id: "interview",
-        label: "Interview",
-        labelAr: "المقابلة",
+        label: "المقابلة",
         completed: ["SELECTED", "ADMITTED"].includes(application.status),
         required: true,
         type: "interview",
@@ -416,7 +406,7 @@ export async function getApplicationStatus(
       currentStep: {
         current: currentStatusIndex + 1,
         total: STATUS_ORDER.length,
-        label: STATUS_LABELS[application.status].en,
+        label: STATUS_LABELS[application.status],
       },
       timeline,
       checklist,

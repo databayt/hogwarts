@@ -28,7 +28,8 @@ test.describe("Story 6.1: Cookie Domain Setup @sso", () => {
     await loginPage.loginAs("developer")
 
     if (page.url().includes("chrome-error://")) {
-      console.log("Protocol mismatch - checking cookies anyway")
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
     }
 
     const cookies = await context.cookies()
@@ -110,6 +111,7 @@ test.describe("Story 6.2: SSO Flow Documentation @sso", () => {
     await loginPage.loginAs("developer")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -174,6 +176,7 @@ test.describe("Story 6.3: SSO Limitations (Development) @sso", () => {
     await loginPage.loginAs("developer")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -197,6 +200,7 @@ test.describe("Story 6.3: SSO Limitations (Development) @sso", () => {
     await loginPage.loginAs("admin")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 

@@ -77,7 +77,7 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
             </div>
             <Button asChild className="w-full">
               <Link href={`/${lang}/admin/integration/oauth`}>
-                <Settings className="mr-2 h-4 w-4" />
+                <Settings className="me-2 h-4 w-4" />
                 Configure OAuth
               </Link>
             </Button>
@@ -108,7 +108,7 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
             </div>
             <Button asChild variant="secondary" className="w-full">
               <Link href={`/${lang}/admin/integration/email`}>
-                <Mail className="mr-2 h-4 w-4" />
+                <Mail className="me-2 h-4 w-4" />
                 Configure Email
               </Link>
             </Button>
@@ -139,7 +139,7 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
             </div>
             <Button asChild variant="secondary" className="w-full">
               <Link href={`/${lang}/admin/integration/payment`}>
-                <CreditCard className="mr-2 h-4 w-4" />
+                <CreditCard className="me-2 h-4 w-4" />
                 Configure Payment
               </Link>
             </Button>
@@ -162,7 +162,7 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
             </p>
             <Button asChild variant="secondary" className="w-full">
               <Link href={`/${lang}/admin/integration/webhooks`}>
-                <Webhook className="mr-2 h-4 w-4" />
+                <Webhook className="me-2 h-4 w-4" />
                 Manage Webhooks
               </Link>
             </Button>

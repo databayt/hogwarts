@@ -235,13 +235,13 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
   return (
     <Card className="max-h-[600px] w-96 overflow-hidden">
       <div className="flex items-center justify-between border-b p-4">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <h3 className="font-semibold">Notifications</h3>
           {unreadCount > 0 && (
             <Badge variant="secondary">{unreadCount} new</Badge>
           )}
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <Button variant="ghost" size="sm" onClick={markAllAsRead}>
               Mark all read
@@ -277,7 +277,7 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
                 )}
                 onClick={() => markAsRead(notification.id)}
               >
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start gap-3">
                   <div className="mt-1">{getIcon(notification.type)}</div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between">
@@ -292,7 +292,7 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="-mt-1 -mr-2 h-6 w-6"
+                        className="-me-2 -mt-1 h-6 w-6"
                         onClick={(e) => {
                           e.stopPropagation()
                           removeNotification(notification.id)
@@ -303,7 +303,7 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
                     </div>
 
                     <div className="mt-2 flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         <span className="text-muted-foreground text-xs">
                           {formatTimestamp(notification.timestamp)}
                         </span>
@@ -373,9 +373,9 @@ export function NotificationToast({
         "animate-in slide-in-from-bottom-2 duration-300"
       )}
     >
-      <Card className="border-l-primary border-l-4 shadow-lg">
+      <Card className="border-s-primary border-s-4 shadow-lg">
         <CardContent className="p-4">
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             {getIcon(notification.type)}
             <div className="flex-1">
               <p className="font-medium">{notification.title}</p>
@@ -398,7 +398,7 @@ export function NotificationToast({
             <Button
               variant="ghost"
               size="icon"
-              className="-mt-1 -mr-2 h-6 w-6"
+              className="-me-2 -mt-1 h-6 w-6"
               onClick={onClose}
             >
               <X className="h-3 w-3" />

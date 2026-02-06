@@ -570,7 +570,7 @@ X-WR-TIMEZONE:UTC
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="include-substitutes"
                     checked={includeSubstitutes}
@@ -582,7 +582,7 @@ X-WR-TIMEZONE:UTC
                     Include substitute teachers
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="include-notes"
                     checked={includeNotes}
@@ -655,7 +655,7 @@ X-WR-TIMEZONE:UTC
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <Checkbox
                       id="overwrite"
                       checked={overwriteExisting}
@@ -667,7 +667,7 @@ X-WR-TIMEZONE:UTC
                       Overwrite existing timetable
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <Checkbox
                       id="validate"
                       checked={validateConflicts}

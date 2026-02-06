@@ -70,10 +70,7 @@ function YearLevelTableInner({
   // Handle delete with optimistic update
   const handleDelete = useCallback(
     async (levelItem: YearLevelRow) => {
-      const displayName =
-        lang === "ar" && levelItem.levelNameAr
-          ? levelItem.levelNameAr
-          : levelItem.levelName
+      const displayName = levelItem.levelName
       try {
         const ok = await confirmDeleteDialog(
           `${t.deleteLevel} "${displayName}"?`

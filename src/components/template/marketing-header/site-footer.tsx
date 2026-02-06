@@ -22,7 +22,7 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="py-4">
-        <p className="text-muted-foreground text-center text-sm leading-loose text-balance md:text-left rtl:md:text-right">
+        <p className="text-muted-foreground text-center text-sm leading-loose text-balance md:text-start rtl:md:text-end">
           Build by{" "}
           <a
             href={siteConfig.links.twitter}

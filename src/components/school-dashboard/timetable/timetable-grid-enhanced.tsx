@@ -171,7 +171,7 @@ const DraggableSlot: React.FC<{
       </div>
 
       {displayInfo.isSubstitute && (
-        <Badge variant="outline" className="absolute top-1 right-1">
+        <Badge variant="outline" className="absolute end-1 top-1">
           <small>Sub</small>
         </Badge>
       )}
@@ -229,7 +229,7 @@ const DroppableCell: React.FC<{
     <td
       ref={ref}
       className={cn(
-        "relative min-h-[60px] border-r border-b p-1 transition-all",
+        "relative min-h-[60px] border-e border-b p-1 transition-all",
         "hover:bg-accent/5",
         isOver && canDrop && "bg-primary/10 border-primary",
         !slot && editable && "cursor-pointer"
@@ -428,7 +428,7 @@ export function TimetableGridEnhanced({
           <thead>
             <tr className="bg-muted">
               <th
-                className="border-r border-b p-3 text-start"
+                className="border-e border-b p-3 text-start"
                 style={{ width: `${GRID_SETTINGS.TIME_COLUMN_WIDTH}px` }}
               >
                 <h6 className="inline-flex items-center">
@@ -437,7 +437,7 @@ export function TimetableGridEnhanced({
                 </h6>
               </th>
               {workingDays.map((day) => (
-                <th key={day} className="border-r border-b p-3 text-center">
+                <th key={day} className="border-e border-b p-3 text-center">
                   <h6>{getDayName(day, isMobile)}</h6>
                 </th>
               ))}
@@ -446,7 +446,7 @@ export function TimetableGridEnhanced({
           <tbody>
             {periods.map((period) => (
               <tr key={period.id}>
-                <td className="bg-muted border-r border-b p-3">
+                <td className="bg-muted border-e border-b p-3">
                   <h6>{period.name}</h6>
                   <p className="muted">
                     <small>

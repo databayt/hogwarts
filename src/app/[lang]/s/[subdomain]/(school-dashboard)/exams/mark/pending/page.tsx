@@ -82,7 +82,7 @@ export default async function PendingPage({ params }: Props) {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">
-                      <Clock className="mr-1 h-3 w-3" />
+                      <Clock className="me-1 h-3 w-3" />
                       {d?.pending || "Pending"}
                     </Badge>
                     <Badge variant="secondary">

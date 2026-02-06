@@ -259,7 +259,7 @@ export function ExamPlayer({
             {options.map((option, idx) => (
               <div
                 key={idx}
-                className="hover:bg-muted/50 flex cursor-pointer items-center space-x-3 rounded-lg border p-3"
+                className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-3"
               >
                 <RadioGroupItem
                   value={option.id || idx.toString()}
@@ -289,7 +289,7 @@ export function ExamPlayer({
           return (
             <div
               key={idx}
-              className="hover:bg-muted/50 flex cursor-pointer items-center space-x-3 rounded-lg border p-3"
+              className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-3"
               onClick={() => {
                 const current = answer?.selectedOptionIds || []
                 const next = isSelected
@@ -320,13 +320,13 @@ export function ExamPlayer({
         }
       >
         <div className="space-y-3">
-          <div className="hover:bg-muted/50 flex cursor-pointer items-center space-x-3 rounded-lg border p-4">
+          <div className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-4">
             <RadioGroupItem value="true" id="true" />
             <Label htmlFor="true" className="flex-1 cursor-pointer text-lg">
               True
             </Label>
           </div>
-          <div className="hover:bg-muted/50 flex cursor-pointer items-center space-x-3 rounded-lg border p-4">
+          <div className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-4">
             <RadioGroupItem value="false" id="false" />
             <Label htmlFor="false" className="flex-1 cursor-pointer text-lg">
               False
@@ -477,7 +477,7 @@ export function ExamPlayer({
               onClick={() => setShowSubmitDialog(true)}
               disabled={isSubmitting}
             >
-              <Send className="mr-2 h-4 w-4" />
+              <Send className="me-2 h-4 w-4" />
               Submit
             </Button>
           </div>
@@ -596,7 +596,7 @@ export function ExamPlayer({
                       onClick={() => goToQuestion(currentQuestionIndex - 1)}
                       disabled={currentQuestionIndex === 0}
                     >
-                      <ChevronLeft className="mr-2 h-4 w-4" />
+                      <ChevronLeft className="me-2 h-4 w-4" />
                       Previous
                     </Button>
 
@@ -605,7 +605,7 @@ export function ExamPlayer({
                       disabled={currentQuestionIndex === totalQuestions - 1}
                     >
                       Next
-                      <ChevronRight className="ml-2 h-4 w-4" />
+                      <ChevronRight className="ms-2 h-4 w-4" />
                     </Button>
                   </div>
                 </CardContent>

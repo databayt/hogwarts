@@ -62,9 +62,8 @@ async function getSubjectsCSV(
     [
       row.id,
       `"${row.subjectName.replace(/"/g, '""')}"`,
-      `"${(row.subjectNameAr || "").replace(/"/g, '""')}"`,
+      row.lang || "ar",
       `"${row.departmentName.replace(/"/g, '""')}"`,
-      `"${(row.departmentNameAr || "").replace(/"/g, '""')}"`,
       row.createdAt,
     ].join(",")
   )
@@ -183,8 +182,6 @@ function SubjectsTableInner({
       },
       columnVisibility: {
         // Default visible: subjectName, departmentName
-        subjectNameAr: false,
-        departmentNameAr: false,
         createdAt: false,
       },
     },
@@ -265,7 +262,6 @@ function SubjectsTableInner({
                   key={subject.id}
                   id={subject.id}
                   name={subject.subjectName}
-                  nameAr={subject.subjectNameAr}
                   lang={lang}
                 />
               ))}

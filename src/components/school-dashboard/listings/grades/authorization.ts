@@ -230,3 +230,12 @@ export function getAllowedActions(role: UserRole): ResultAction[] {
       return []
   }
 }
+
+/**
+ * Check if user can delete results
+ * @param role - User role
+ * @returns true if user can delete results
+ */
+export function canDeleteResult(role: UserRole): boolean {
+  return role === "DEVELOPER" || role === "ADMIN"
+}

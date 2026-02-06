@@ -124,7 +124,7 @@ export function buildStudentWhere(
 ): Prisma.StudentWhereInput {
   const where: Prisma.StudentWhereInput = { schoolId }
 
-  // Search by name
+  // Search by name, email, studentId, or grNumber
   if (filters.search) {
     where.OR = [
       {
@@ -135,6 +135,24 @@ export function buildStudentWhere(
       },
       {
         surname: {
+          contains: filters.search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        email: {
+          contains: filters.search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        studentId: {
+          contains: filters.search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        grNumber: {
           contains: filters.search,
           mode: Prisma.QueryMode.insensitive,
         },
@@ -258,6 +276,54 @@ export async function verifyStudentOwnership(
   })
 
   return students.map((s) => s.id)
+}
+
+/**
+ * Get student statistics for a school
+ * @param schoolId - School ID
+ * @returns Promise with statistics
+ */
+export async function getStudentStats(schoolId: string) {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+  const [total, byStatus, byGender, recentEnrollments] = await Promise.all([
+    db.student.count({ where: { schoolId } }),
+    db.student.groupBy({
+      by: ["status"],
+      where: { schoolId },
+      _count: { status: true },
+    }),
+    db.student.groupBy({
+      by: ["gender"],
+      where: { schoolId },
+      _count: { gender: true },
+    }),
+    db.student.count({
+      where: {
+        schoolId,
+        enrollmentDate: { gte: thirtyDaysAgo },
+      },
+    }),
+  ])
+
+  return {
+    total,
+    byStatus: byStatus.reduce(
+      (acc, item) => {
+        acc[item.status] = item._count.status
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    byGender: byGender.reduce(
+      (acc, item) => {
+        acc[item.gender] = item._count.gender
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    recentEnrollments,
+  }
 }
 
 // ============================================================================

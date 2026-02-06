@@ -62,7 +62,7 @@ function DataTableViewOptionsInner<TData>({
         >
           <Settings2 />
           View
-          <ChevronsUpDown className="ml-auto opacity-50" />
+          <ChevronsUpDown className="ms-auto opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-44 p-0">
@@ -76,7 +76,7 @@ function DataTableViewOptionsInner<TData>({
                 <span className="truncate font-medium">All</span>
                 <Check
                   className={cn(
-                    "ml-auto size-4 shrink-0",
+                    "ms-auto size-4 shrink-0",
                     allVisible ? "opacity-100" : "opacity-0"
                   )}
                 />
@@ -94,7 +94,7 @@ function DataTableViewOptionsInner<TData>({
                   </span>
                   <Check
                     className={cn(
-                      "ml-auto size-4 shrink-0",
+                      "ms-auto size-4 shrink-0",
                       column.getIsVisible() ? "opacity-100" : "opacity-0"
                     )}
                   />

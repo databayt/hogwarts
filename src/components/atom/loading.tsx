@@ -265,7 +265,7 @@ function LineChartSkeleton() {
           <Skeleton key={i} className="h-3 w-8" />
         ))}
       </div>
-      <div className="ml-12 flex h-full flex-col">
+      <div className="ms-12 flex h-full flex-col">
         <div className="relative flex-1">
           <div className="absolute inset-0 flex items-center">
             <Skeleton className="h-1 w-full" />
@@ -631,14 +631,14 @@ export function SkeletonCalendar({
       <div className="min-w-full">
         <div className="bg-muted/50 flex border-b">
           {showTime && (
-            <div className="flex w-[100px] items-center justify-center border-r p-4">
+            <div className="flex w-[100px] items-center justify-center border-e p-4">
               <Skeleton className="h-4 w-16" />
             </div>
           )}
           {Array.from({ length: days }).map((_, i) => (
             <div
               key={i}
-              className="min-w-[120px] flex-1 border-r p-4 last:border-r-0"
+              className="min-w-[120px] flex-1 border-e p-4 last:border-e-0"
             >
               <Skeleton className="mx-auto h-4 w-16" />
             </div>
@@ -648,7 +648,7 @@ export function SkeletonCalendar({
         {Array.from({ length: periods }).map((_, rowIndex) => (
           <div key={rowIndex} className="flex border-b last:border-b-0">
             {showTime && (
-              <div className="flex w-[100px] flex-col items-center justify-center border-r p-4">
+              <div className="flex w-[100px] flex-col items-center justify-center border-e p-4">
                 <Skeleton className="mb-1 h-4 w-12" />
                 <Skeleton className="h-3 w-20" />
               </div>
@@ -656,7 +656,7 @@ export function SkeletonCalendar({
             {Array.from({ length: days }).map((_, colIndex) => (
               <div
                 key={colIndex}
-                className="min-h-[80px] min-w-[120px] flex-1 border-r p-4 last:border-r-0"
+                className="min-h-[80px] min-w-[120px] flex-1 border-e p-4 last:border-e-0"
               >
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-3/4" />
@@ -698,7 +698,7 @@ export function SkeletonMonthCalendar({ className }: { className?: string }) {
 
       <div className="grid grid-cols-7 border-b">
         {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className="border-r p-2 last:border-r-0">
+          <div key={i} className="border-e p-2 last:border-e-0">
             <Skeleton className="mx-auto h-4 w-8" />
           </div>
         ))}
@@ -706,7 +706,7 @@ export function SkeletonMonthCalendar({ className }: { className?: string }) {
 
       <div className="grid grid-cols-7">
         {Array.from({ length: 35 }).map((_, i) => (
-          <div key={i} className="h-20 border-r border-b p-2 last:border-r-0">
+          <div key={i} className="h-20 border-e border-b p-2 last:border-e-0">
             <Skeleton className="h-4 w-6" />
           </div>
         ))}

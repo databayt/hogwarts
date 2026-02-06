@@ -84,7 +84,7 @@ export function MeritTable({
         ...params,
         campaignId: campaignId || undefined,
       })
-      if (result.success) {
+      if (result.success && result.data) {
         return {
           rows: result.data.rows as MeritRow[],
           total: result.data.total,
@@ -214,7 +214,7 @@ export function MeritTable({
         <div className="flex justify-end">
           <Button onClick={handleGenerateMeritList} disabled={isPending}>
             <RefreshCw
-              className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`}
+              className={`me-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`}
             />
             {isPending
               ? t?.meritList?.generating || "Generating..."

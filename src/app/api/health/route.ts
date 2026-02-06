@@ -41,6 +41,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
+import { dbCircuitBreaker } from "@/lib/circuit-breaker"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
 
@@ -54,6 +55,7 @@ interface HealthCheck {
     database: HealthCheckResult
     memory: HealthCheckResult
     dependencies: HealthCheckResult
+    circuitBreaker: HealthCheckResult
   }
 }
 
@@ -125,6 +127,23 @@ function checkMemory(): HealthCheckResult {
   }
 }
 
+function checkCircuitBreaker(): HealthCheckResult {
+  const state = dbCircuitBreaker.getState()
+  return {
+    status:
+      state.state === "closed"
+        ? "pass"
+        : state.state === "half-open"
+          ? "warn"
+          : "fail",
+    details: {
+      state: state.state,
+      consecutiveFailures: state.failures,
+      remainingCooldownMs: state.remainingCooldownMs,
+    },
+  }
+}
+
 function checkDependencies(): HealthCheckResult {
   const requiredEnvVars = ["DATABASE_URL", "AUTH_SECRET", "STRIPE_API_KEY"]
 
@@ -159,6 +178,7 @@ export async function GET(request: NextRequest) {
       database: databaseCheck,
       memory: memoryCheck,
       dependencies: dependenciesCheck,
+      circuitBreaker: checkCircuitBreaker(),
     }
 
     const hasFailures = Object.values(checks).some(
@@ -247,6 +267,7 @@ export async function GET(request: NextRequest) {
         database: { status: "fail", error: "Health check failed" },
         memory: { status: "fail", error: "Health check failed" },
         dependencies: { status: "fail", error: "Health check failed" },
+        circuitBreaker: checkCircuitBreaker(),
       },
     }
 

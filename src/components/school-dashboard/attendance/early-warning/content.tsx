@@ -43,48 +43,40 @@ import {
 // Risk level configuration
 const RISK_LEVELS = {
   SATISFACTORY: {
-    label: "Satisfactory",
-    labelAr: "مرضي",
+    label: "مرضي",
     color: "bg-green-500",
     bgColor: "bg-green-50",
     borderColor: "border-green-200",
     textColor: "text-green-700",
     threshold: "≥95%",
-    description: "On track attendance",
-    descriptionAr: "حضور على المسار الصحيح",
+    description: "حضور على المسار الصحيح",
   },
   AT_RISK: {
-    label: "At Risk",
-    labelAr: "معرض للخطر",
+    label: "معرض للخطر",
     color: "bg-yellow-500",
     bgColor: "bg-yellow-50",
     borderColor: "border-yellow-200",
     textColor: "text-yellow-700",
     threshold: "90-94.9%",
-    description: "Early intervention needed",
-    descriptionAr: "يحتاج تدخل مبكر",
+    description: "يحتاج تدخل مبكر",
   },
   MODERATELY_CHRONIC: {
-    label: "Moderately Chronic",
-    labelAr: "غياب متوسط مزمن",
+    label: "غياب متوسط مزمن",
     color: "bg-orange-500",
     bgColor: "bg-orange-50",
     borderColor: "border-orange-200",
     textColor: "text-orange-700",
     threshold: "80-89.9%",
-    description: "Requires immediate attention",
-    descriptionAr: "يتطلب اهتمام فوري",
+    description: "يتطلب اهتمام فوري",
   },
   SEVERELY_CHRONIC: {
-    label: "Severely Chronic",
-    labelAr: "غياب شديد مزمن",
+    label: "غياب شديد مزمن",
     color: "bg-red-500",
     bgColor: "bg-red-50",
     borderColor: "border-red-200",
     textColor: "text-red-700",
     threshold: "<80%",
-    description: "Critical intervention required",
-    descriptionAr: "يتطلب تدخل عاجل",
+    description: "يتطلب تدخل عاجل",
   },
 } as const
 
@@ -184,7 +176,7 @@ export function EarlyWarningContent({
           "border"
         )}
       >
-        {isArabic ? config.labelAr : config.label}
+        {config.label}
       </Badge>
     )
   }
@@ -219,9 +211,7 @@ export function EarlyWarningContent({
           <CardContent>
             <h2 className="text-green-700">{summary?.satisfactory || 0}</h2>
             <p className="text-muted-foreground mt-1 text-xs">
-              {isArabic
-                ? RISK_LEVELS.SATISFACTORY.descriptionAr
-                : RISK_LEVELS.SATISFACTORY.description}
+              {RISK_LEVELS.SATISFACTORY.description}
             </p>
           </CardContent>
         </Card>
@@ -237,9 +227,7 @@ export function EarlyWarningContent({
           <CardContent>
             <h2 className="text-yellow-700">{summary?.atRisk || 0}</h2>
             <p className="text-muted-foreground mt-1 text-xs">
-              {isArabic
-                ? RISK_LEVELS.AT_RISK.descriptionAr
-                : RISK_LEVELS.AT_RISK.description}
+              {RISK_LEVELS.AT_RISK.description}
             </p>
           </CardContent>
         </Card>
@@ -261,9 +249,7 @@ export function EarlyWarningContent({
               {summary?.moderatelyChronic || 0}
             </h2>
             <p className="text-muted-foreground mt-1 text-xs">
-              {isArabic
-                ? RISK_LEVELS.MODERATELY_CHRONIC.descriptionAr
-                : RISK_LEVELS.MODERATELY_CHRONIC.description}
+              {RISK_LEVELS.MODERATELY_CHRONIC.description}
             </p>
           </CardContent>
         </Card>
@@ -283,9 +269,7 @@ export function EarlyWarningContent({
           <CardContent>
             <h2 className="text-red-700">{summary?.severelyChronic || 0}</h2>
             <p className="text-muted-foreground mt-1 text-xs">
-              {isArabic
-                ? RISK_LEVELS.SEVERELY_CHRONIC.descriptionAr
-                : RISK_LEVELS.SEVERELY_CHRONIC.description}
+              {RISK_LEVELS.SEVERELY_CHRONIC.description}
             </p>
           </CardContent>
         </Card>
@@ -445,12 +429,12 @@ export function EarlyWarningContent({
                 <div className="mb-1 flex items-center gap-2">
                   <div className={cn("h-3 w-3 rounded-full", config.color)} />
                   <span className={cn("text-sm font-medium", config.textColor)}>
-                    {isArabic ? config.labelAr : config.label}
+                    {config.label}
                   </span>
                 </div>
                 <p className="font-mono text-xs">{config.threshold}</p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  {isArabic ? config.descriptionAr : config.description}
+                  {config.description}
                 </p>
               </div>
             ))}

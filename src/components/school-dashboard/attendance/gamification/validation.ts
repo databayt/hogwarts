@@ -131,7 +131,7 @@ export type AwardPointsInput = z.infer<typeof awardPointsSchema>
 
 export const createCompetitionSchema = z.object({
   name: z.string().min(1, "Competition name is required"),
-  nameAr: z.string().optional(),
+  lang: z.string().default("ar"),
   description: z.string().optional(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),

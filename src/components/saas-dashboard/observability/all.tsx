@@ -76,7 +76,7 @@ export function AllLogs({ logs, showFilters = true, onExport }: AllLogsProps) {
           </span>
         </div>
         <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="mr-2 size-4" />
+          <Download className="me-2 size-4" />
           Export
         </Button>
       </div>
@@ -91,7 +91,7 @@ export function AllLogs({ logs, showFilters = true, onExport }: AllLogsProps) {
               onChange={(e) =>
                 setFilters({ ...filters, search: e.target.value })
               }
-              className="pl-9"
+              className="ps-9"
             />
           </div>
 

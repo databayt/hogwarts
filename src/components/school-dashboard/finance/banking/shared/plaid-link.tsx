@@ -200,7 +200,7 @@ export function PlaidLink({
       >
         {isLoading || isPending ? (
           <>
-            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
             {isPending
               ? dictionary?.connecting || "Connecting..."
               : dictionary?.loading || "Loading..."}

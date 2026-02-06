@@ -36,7 +36,7 @@ export default async function ActivityContent() {
                 </CardDescription>
               </div>
               <Button>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 Add Sport
               </Button>
             </CardHeader>
@@ -67,7 +67,7 @@ export default async function ActivityContent() {
                 </CardDescription>
               </div>
               <Button>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 Add Club
               </Button>
             </CardHeader>
@@ -101,7 +101,7 @@ export default async function ActivityContent() {
                 </CardDescription>
               </div>
               <Button>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 Add Event
               </Button>
             </CardHeader>

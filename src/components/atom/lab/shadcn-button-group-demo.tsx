@@ -74,31 +74,31 @@ export function ShadcnButtonGroupDemo() {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <MailCheck className="mr-2 size-4" />
+                <MailCheck className="me-2 size-4" />
                 Mark as Read
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Archive className="mr-2 size-4" />
+                <Archive className="me-2 size-4" />
                 Archive
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <Clock className="mr-2 size-4" />
+                <Clock className="me-2 size-4" />
                 Snooze
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CalendarPlus className="mr-2 size-4" />
+                <CalendarPlus className="me-2 size-4" />
                 Add to Calendar
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <ListPlus className="mr-2 size-4" />
+                <ListPlus className="me-2 size-4" />
                 Add to List
               </DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
-                  <Tag className="mr-2 size-4" />
+                  <Tag className="me-2 size-4" />
                   Label As...
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
@@ -122,7 +122,7 @@ export function ShadcnButtonGroupDemo() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem className="text-destructive">
-                <Trash2 className="mr-2 size-4" />
+                <Trash2 className="me-2 size-4" />
                 Trash
               </DropdownMenuItem>
             </DropdownMenuGroup>

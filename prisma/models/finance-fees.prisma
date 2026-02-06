@@ -1,0 +1,338 @@
+// ============================================
+// FINANCE MODULE - Fee Management
+// ============================================
+
+enum FeeStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CHEQUE
+  BANK_TRANSFER
+  CREDIT_CARD
+  DEBIT_CARD
+  UPI
+  NET_BANKING
+  WALLET
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum LateFeeType {
+  FIXED
+  PERCENTAGE
+  DAILY
+  MONTHLY
+}
+
+enum CoverageType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FULL
+}
+
+enum FineType {
+  LATE_FEE
+  LIBRARY_FINE
+  DISCIPLINE_FINE
+  DAMAGE_FINE
+  OTHER
+}
+
+enum ApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model FeeStructure {
+  id           String  @id @default(cuid())
+  schoolId     String
+  name         String
+  academicYear String
+  classId      String?
+  stream       String?
+  description  String?
+
+  // Fee Components
+  tuitionFee      Decimal  @db.Decimal(10, 2)
+  admissionFee    Decimal? @db.Decimal(10, 2)
+  registrationFee Decimal? @db.Decimal(10, 2)
+  examFee         Decimal? @db.Decimal(10, 2)
+  libraryFee      Decimal? @db.Decimal(10, 2)
+  laboratoryFee   Decimal? @db.Decimal(10, 2)
+  sportsFee       Decimal? @db.Decimal(10, 2)
+  transportFee    Decimal? @db.Decimal(10, 2)
+  hostelFee       Decimal? @db.Decimal(10, 2)
+  otherFees       Json? // Array of {name, amount}
+
+  // Total and Schedule
+  totalAmount     Decimal @db.Decimal(10, 2)
+  installments    Int     @default(1)
+  paymentSchedule Json? // Array of {dueDate, amount, description}
+
+  // Policies
+  lateFeeAmount  Decimal?     @db.Decimal(10, 2)
+  lateFeeType    LateFeeType? @default(FIXED)
+  discountPolicy Json? // Early payment, sibling discount, etc
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school         School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class          Class?          @relation(fields: [classId], references: [id], onDelete: SetNull)
+  feeAssignments FeeAssignment[]
+
+  @@index([schoolId])
+  @@index([classId])
+  @@index([academicYear])
+}
+
+model FeeAssignment {
+  id             String @id @default(cuid())
+  schoolId       String
+  studentId      String
+  feeStructureId String
+  academicYear   String
+
+  // Custom amounts (if different from structure)
+  customAmount Decimal? @db.Decimal(10, 2)
+  finalAmount  Decimal  @db.Decimal(10, 2)
+
+  // Discounts and Scholarships
+  discounts     Json? // Array of {type, amount, reason}
+  scholarshipId String?
+  totalDiscount Decimal @default(0) @db.Decimal(10, 2)
+
+  status    FeeStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feeStructure FeeStructure @relation(fields: [feeStructureId], references: [id], onDelete: Restrict)
+  scholarship  Scholarship? @relation(fields: [scholarshipId], references: [id], onDelete: SetNull)
+  payments     Payment[]
+
+  @@unique([studentId, feeStructureId, academicYear])
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([status])
+}
+
+model Payment {
+  id              String @id @default(cuid())
+  schoolId        String
+  feeAssignmentId String
+  studentId       String
+
+  // Payment Details
+  paymentNumber String        @unique
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentDate   DateTime      @default(now())
+  paymentMethod PaymentMethod
+
+  // Transaction Details
+  transactionId String?
+  bankName      String?
+  chequeNumber  String?
+  cardLastFour  String?
+
+  // Receipt
+  receiptNumber String  @unique
+  receiptUrl    String?
+
+  // Status
+  status     PaymentStatus @default(SUCCESS)
+  verifiedBy String?
+  verifiedAt DateTime?
+  remarks    String?       @db.Text
+
+  // Accounting integration
+  journalEntryId String?
+  journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  feeAssignment FeeAssignment @relation(fields: [feeAssignmentId], references: [id], onDelete: Restrict)
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  refund        Refund?
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([paymentNumber])
+  @@index([receiptNumber])
+  @@index([paymentDate])
+}
+
+model Refund {
+  id        String @id @default(cuid())
+  schoolId  String
+  paymentId String @unique
+  studentId String
+
+  // Refund Details
+  refundNumber String   @unique
+  requestDate  DateTime @default(now())
+  amount       Decimal  @db.Decimal(10, 2)
+  reason       String   @db.Text
+
+  // Processing
+  status              RefundStatus   @default(REQUESTED)
+  processedBy         String?
+  processedDate       DateTime?
+  refundMethod        PaymentMethod?
+  refundTransactionId String?
+
+  // Documentation
+  supportingDocs Json? // Array of document URLs
+  approvalNotes  String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([refundNumber])
+  @@index([status])
+}
+
+model Scholarship {
+  id          String  @id @default(cuid())
+  schoolId    String
+  name        String
+  description String? @db.Text
+
+  // Eligibility
+  eligibilityCriteria Json? // Academic, income, category based
+  minPercentage       Decimal? @db.Decimal(5, 2)
+  maxFamilyIncome     Decimal? @db.Decimal(12, 2)
+  categories          Json? // Applicable categories
+
+  // Benefits
+  coverageType   CoverageType @default(PERCENTAGE)
+  coverageAmount Decimal      @db.Decimal(10, 2)
+  components     Json? // Which fee components are covered
+
+  // Validity
+  academicYear         String
+  startDate            DateTime
+  endDate              DateTime
+  maxBeneficiaries     Int?
+  currentBeneficiaries Int      @default(0)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school         School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  feeAssignments FeeAssignment[]
+  applications   ScholarshipApplication[]
+
+  @@index([schoolId])
+  @@index([academicYear])
+}
+
+model ScholarshipApplication {
+  id            String @id @default(cuid())
+  schoolId      String
+  studentId     String
+  scholarshipId String
+
+  // Application Details
+  applicationNumber String   @unique
+  applicationDate   DateTime @default(now())
+  academicYear      String
+
+  // Supporting Information
+  familyIncome Decimal? @db.Decimal(12, 2)
+  documents    Json? // Income proof, certificates, etc
+  statement    String?  @db.Text
+
+  // Review
+  status      ApplicationStatus @default(PENDING)
+  reviewedBy  String?
+  reviewDate  DateTime?
+  reviewNotes String?           @db.Text
+
+  // Award Details
+  awardedAmount Decimal?  @db.Decimal(10, 2)
+  awardDate     DateTime?
+  validTill     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student     Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  scholarship Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, scholarshipId, academicYear])
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([status])
+}
+
+model Fine {
+  id        String @id @default(cuid())
+  schoolId  String
+  studentId String
+
+  // Fine Details
+  fineType FineType
+  amount   Decimal  @db.Decimal(10, 2)
+  reason   String
+  dueDate  DateTime
+
+  // Payment
+  isPaid     Boolean   @default(false)
+  paidAmount Decimal?  @db.Decimal(10, 2)
+  paidDate   DateTime?
+  paymentId  String?
+
+  // Waiver
+  isWaived     Boolean   @default(false)
+  waivedBy     String?
+  waivedDate   DateTime?
+  waiverReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([isPaid])
+}

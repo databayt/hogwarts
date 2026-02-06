@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth"
 
+import { getVideoUrl } from "@/lib/cloudfront"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -10,7 +11,9 @@ export interface LessonWithProgress {
   title: string
   description: string | null
   videoUrl: string | null
+  thumbnailUrl: string | null
   duration: number | null
+  videoDuration: number | null
   position: number
   isPublished: boolean
   isFree: boolean
@@ -36,7 +39,7 @@ export interface LessonWithProgress {
   } | null
   // Navigation helpers
   previousLesson: { id: string; title: string } | null
-  nextLesson: { id: string; title: string } | null
+  nextLesson: { id: string; title: string; videoUrl?: string | null } | null
 }
 
 export async function getLessonWithProgress(
@@ -122,6 +125,8 @@ export async function getLessonWithProgress(
     select: {
       id: true,
       title: true,
+      videoUrl: true,
+      isFree: true,
       position: true,
       chapter: {
         select: {
@@ -138,12 +143,24 @@ export async function getLessonWithProgress(
   const nextLesson =
     currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null
 
+  // Transform video URL: signed for paid, unsigned for free, passthrough for YouTube/Vimeo
+  const transformedVideoUrl = lesson.videoUrl
+    ? getVideoUrl(lesson.videoUrl, { isFree: lesson.isFree })
+    : null
+
+  // Get next lesson video URL for prefetching (unsigned is fine for prefetch hints)
+  const nextLessonVideoUrl = nextLesson?.videoUrl
+    ? getVideoUrl(nextLesson.videoUrl, { isFree: nextLesson.isFree })
+    : null
+
   return {
     id: lesson.id,
     title: lesson.title,
     description: lesson.description,
-    videoUrl: lesson.videoUrl,
+    videoUrl: transformedVideoUrl,
+    thumbnailUrl: lesson.thumbnailUrl ?? null,
     duration: lesson.duration,
+    videoDuration: lesson.videoDuration ?? null,
     position: lesson.position,
     isPublished: lesson.isPublished,
     isFree: lesson.isFree,
@@ -169,7 +186,11 @@ export async function getLessonWithProgress(
       ? { id: previousLesson.id, title: previousLesson.title }
       : null,
     nextLesson: nextLesson
-      ? { id: nextLesson.id, title: nextLesson.title }
+      ? {
+          id: nextLesson.id,
+          title: nextLesson.title,
+          videoUrl: nextLessonVideoUrl,
+        }
       : null,
   }
 }

@@ -187,7 +187,7 @@ export const PromptInputActionAddAttachments = ({
         attachments.openFileDialog()
       }}
     >
-      <ImageIcon className="mr-2 size-4" /> {label}
+      <ImageIcon className="me-2 size-4" /> {label}
     </DropdownMenuItem>
   )
 }

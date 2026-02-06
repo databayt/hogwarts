@@ -134,6 +134,9 @@ model User {
   assignedLeads         Lead[]         @relation("LeadAssignment")
   leadActivitiesCreated LeadActivity[] @relation("LeadActivityCreator")
 
+  // Admission relations
+  applications Application[] @relation("UserApplications")
+
   // Audit relations
   auditLogs AuditLog[] @relation("AuditPerformer")
 

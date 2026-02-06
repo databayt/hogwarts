@@ -89,7 +89,7 @@ export function AiPromptInput({
             onClick={() => setShowTemplates(!showTemplates)}
             className="text-xs"
           >
-            <Sparkles className="mr-1 h-3 w-3" />
+            <Sparkles className="me-1 h-3 w-3" />
             Templates
           </Button>
         </div>
@@ -102,7 +102,7 @@ export function AiPromptInput({
               <button
                 key={i}
                 onClick={() => handleTemplateClick(template.prompt)}
-                className="hover:bg-muted w-full rounded p-2 text-left text-sm transition-colors"
+                className="hover:bg-muted w-full rounded p-2 text-start text-sm transition-colors"
               >
                 <div className="font-medium">{template.label}</div>
                 <div className="text-muted-foreground truncate text-xs">
@@ -126,7 +126,7 @@ export function AiPromptInput({
           maxLength={maxLength}
           disabled={disabled || loading}
           className={cn(
-            "min-h-[80px] resize-none pr-12",
+            "min-h-[80px] resize-none pe-12",
             "focus:ring-primary/20 focus:ring-2",
             loading && "opacity-50"
           )}

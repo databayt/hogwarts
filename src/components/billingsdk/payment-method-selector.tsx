@@ -455,7 +455,7 @@ export function PaymentMethodSelector({
                   </motion.button>
                 )}
 
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-4">
                   <div
                     className={`rounded-lg border p-2.5 shadow-sm transition-all duration-300 sm:p-3 ${
                       isSelected
@@ -535,7 +535,7 @@ export function PaymentMethodSelector({
                 }}
               >
                 <span>Proceed with Payment</span>
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </Button>
             </motion.div>
           )}

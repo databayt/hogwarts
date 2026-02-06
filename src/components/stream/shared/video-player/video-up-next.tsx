@@ -154,7 +154,7 @@ export function VideoUpNext({
                 <p className="text-muted-foreground mt-0.5 truncate text-sm">
                   {nextLesson.chapterTitle}
                   {nextLesson.duration && (
-                    <span className="ml-2">
+                    <span className="ms-2">
                       &bull; {formatDuration(nextLesson.duration)}
                     </span>
                   )}
@@ -165,7 +165,7 @@ export function VideoUpNext({
             {/* Action buttons */}
             <div className="mt-5 flex gap-3">
               <Button onClick={onPlayNext} className="flex-1" size="lg">
-                <Play className="mr-2 h-4 w-4" />
+                <Play className="me-2 h-4 w-4" />
                 Play Now
               </Button>
               <Button

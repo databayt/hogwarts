@@ -293,7 +293,7 @@ export function ContributionGraph({
           <div className="overflow-x-auto">
             <div className="inline-block">
               {/* Month labels */}
-              <div className="mb-1 ml-[30px] flex gap-[3px]">
+              <div className="ms-[30px] mb-1 flex gap-[3px]">
                 {months.map((month, index) => (
                   <div
                     key={index}
@@ -308,7 +308,7 @@ export function ContributionGraph({
               {/* Days grid */}
               <div className="flex gap-[3px]">
                 {/* Day labels */}
-                <div className="mr-1 flex flex-col gap-[3px]">
+                <div className="me-1 flex flex-col gap-[3px]">
                   <div className="h-[11px]" /> {/* Spacer for first row */}
                   {[1, 3, 5].map((dayIndex) => (
                     <div

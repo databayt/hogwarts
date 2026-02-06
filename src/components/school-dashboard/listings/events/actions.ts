@@ -1,11 +1,16 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { type Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  assertEventPermission,
+  getAuthContext,
+} from "@/components/school-dashboard/listings/events/authorization"
 import {
   eventCreateSchema,
   eventUpdateSchema,
@@ -69,9 +74,24 @@ export async function createEvent(
   input: z.infer<typeof eventCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertEventPermission(authContext, "create", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     const parsed = eventCreateSchema.parse(input)
@@ -120,9 +140,24 @@ export async function updateEvent(
   input: z.infer<typeof eventUpdateSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertEventPermission(authContext, "update", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     const parsed = eventUpdateSchema.parse(input)
@@ -184,9 +219,24 @@ export async function deleteEvent(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertEventPermission(authContext, "delete", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -230,9 +280,24 @@ export async function getEvent(input: {
   id: string
 }): Promise<ActionResponse<EventSelectResult | null>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertEventPermission(authContext, "read", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -284,9 +349,24 @@ export async function getEvents(
   input: Partial<z.infer<typeof getEventsSchema>>
 ): Promise<ActionResponse<{ rows: EventListResult[]; total: number }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertEventPermission(authContext, "read", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     const sp = getEventsSchema.parse(input ?? {})
@@ -368,9 +448,21 @@ export async function getEventsCSV(
   input?: Partial<z.infer<typeof getEventsSchema>>
 ): Promise<ActionResponse<string>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertEventPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     const sp = getEventsSchema.parse(input ?? {})
@@ -432,6 +524,53 @@ export async function getEventsCSV(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to export events",
+    }
+  }
+}
+
+export async function bulkDeleteEvents(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertEventPermission(authContext, "bulk_action", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized for bulk operations" }
+    }
+
+    const { ids } = z
+      .object({ ids: z.array(z.string().min(1)).min(1) })
+      .parse(input)
+
+    const existing = await db.event.findMany({
+      where: { id: { in: ids }, schoolId },
+      select: { id: true },
+    })
+    const validIds = existing.map((e: any) => e.id)
+
+    const result = await db.event.deleteMany({
+      where: { id: { in: validIds }, schoolId },
+    })
+
+    revalidatePath("/events")
+    return { success: true, data: { count: result.count } }
+  } catch (error) {
+    console.error("[bulkDeleteEvents] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to bulk delete events",
     }
   }
 }

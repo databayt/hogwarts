@@ -9,6 +9,9 @@
  * - customer.subscription.deleted: Cancellation
  * - invoice.payment_succeeded: Successful payment
  * - invoice.payment_failed: Failed payment
+ * - charge.refunded: Course enrollment refund
+ * - charge.dispute.created: Payment dispute
+ * - checkout.session.expired: Abandoned checkout cleanup
  *
  * SECURITY:
  * - Signature verification using STRIPE_WEBHOOK_SECRET
@@ -297,6 +300,138 @@ export async function POST(req: Request) {
             },
           })
         }
+      }
+    }
+  }
+
+  // ============================================
+  // COURSE ENROLLMENT: Refund handling
+  // ============================================
+  if ((event as { type: string })?.type === "charge.refunded") {
+    const eventData = event as {
+      data: {
+        object: {
+          metadata?: {
+            courseId?: string
+            enrollmentId?: string
+            schoolId?: string
+          }
+          payment_intent?: string
+        }
+      }
+    }
+    const charge = eventData.data.object
+
+    // Only handle course enrollment refunds (identified by metadata)
+    if (charge.metadata?.enrollmentId && charge.metadata?.schoolId) {
+      try {
+        await db.streamEnrollment.update({
+          where: {
+            id: charge.metadata.enrollmentId,
+            schoolId: charge.metadata.schoolId,
+          },
+          data: {
+            isActive: false,
+            status: "CANCELLED",
+            updatedAt: new Date(),
+          },
+        })
+
+        console.log(
+          `[Webhook] Enrollment deactivated (refund): ${charge.metadata.enrollmentId}`
+        )
+      } catch (error) {
+        console.error(
+          "[Webhook] Failed to deactivate enrollment on refund:",
+          error
+        )
+      }
+    }
+  }
+
+  // ============================================
+  // COURSE ENROLLMENT: Dispute handling
+  // ============================================
+  if ((event as { type: string })?.type === "charge.dispute.created") {
+    const eventData = event as {
+      data: {
+        object: {
+          charge?: string
+          metadata?: {
+            courseId?: string
+            enrollmentId?: string
+            schoolId?: string
+          }
+        }
+      }
+    }
+    const dispute = eventData.data.object
+
+    if (dispute.metadata?.enrollmentId && dispute.metadata?.schoolId) {
+      try {
+        await db.streamEnrollment.update({
+          where: {
+            id: dispute.metadata.enrollmentId,
+            schoolId: dispute.metadata.schoolId,
+          },
+          data: {
+            isActive: false,
+            status: "CANCELLED",
+            updatedAt: new Date(),
+          },
+        })
+
+        console.log(
+          `[Webhook] Enrollment deactivated (dispute): ${dispute.metadata.enrollmentId}`
+        )
+      } catch (error) {
+        console.error(
+          "[Webhook] Failed to deactivate enrollment on dispute:",
+          error
+        )
+      }
+    }
+  }
+
+  // ============================================
+  // COURSE ENROLLMENT: Expired checkout cleanup
+  // ============================================
+  if ((event as { type: string })?.type === "checkout.session.expired") {
+    const eventData = event as {
+      data: {
+        object: {
+          id?: string
+          metadata?: {
+            courseId?: string
+            enrollmentId?: string
+            schoolId?: string
+          }
+        }
+      }
+    }
+    const expiredSession = eventData.data.object
+
+    // Only clean up course enrollment checkouts (not subscription ones)
+    if (
+      expiredSession.metadata?.enrollmentId &&
+      expiredSession.metadata?.schoolId &&
+      expiredSession.metadata?.courseId
+    ) {
+      try {
+        // Delete the pending enrollment that was never paid
+        await db.streamEnrollment.deleteMany({
+          where: {
+            id: expiredSession.metadata.enrollmentId,
+            schoolId: expiredSession.metadata.schoolId,
+            isActive: false, // Only delete if never activated
+          },
+        })
+
+        console.log(
+          `[Webhook] Pending enrollment cleaned up (expired checkout): ${expiredSession.metadata.enrollmentId}`
+        )
+      } catch (error) {
+        console.error("[Webhook] Failed to clean up expired enrollment:", error)
       }
     }
   }

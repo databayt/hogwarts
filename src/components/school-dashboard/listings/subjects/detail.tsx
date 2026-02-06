@@ -16,17 +16,17 @@ interface SubjectDetailResult {
   id: string
   schoolId: string
   subjectName: string
-  subjectNameAr?: string | null
+  lang?: string
   departmentId: string | null
   department?: {
     id: string
     departmentName: string
-    departmentNameAr?: string | null
+    lang?: string
   } | null
   classes?: {
     id: string
     name: string
-    nameAr: string | null
+    lang?: string
     lessons: {
       id: string
       title: string
@@ -78,7 +78,6 @@ export function SubjectDetailContent({
         .map((cls) => ({
           id: cls.id,
           name: cls.name,
-          nameAr: cls.nameAr,
           lessons: cls.lessons,
         })) ?? []
     )
@@ -95,7 +94,6 @@ export function SubjectDetailContent({
       {/* Hero Section */}
       <SubjectHero
         subjectName={data.subjectName}
-        subjectNameAr={data.subjectNameAr}
         topicsCount={totalTopics}
         lang={lang}
       />
@@ -107,7 +105,6 @@ export function SubjectDetailContent({
             <YearSection
               key={cls.id}
               levelName={cls.name}
-              levelNameAr={cls.nameAr}
               lessons={cls.lessons}
               lang={lang}
               subjectName={data.subjectName}

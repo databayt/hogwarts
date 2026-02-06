@@ -269,13 +269,13 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
           <CardContent className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
               <Link href={`/${lang}/finance/payroll/process/current-month`}>
-                <Clock className="mr-2 h-4 w-4" />
+                <Clock className="me-2 h-4 w-4" />
                 Process Current Month
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/${lang}/finance/payroll/slips/generate`}>
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="me-2 h-4 w-4" />
                 Generate Slips
               </Link>
             </Button>

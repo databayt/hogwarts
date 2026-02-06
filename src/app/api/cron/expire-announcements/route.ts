@@ -84,8 +84,8 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         schoolId: true,
-        titleEn: true,
-        titleAr: true,
+        title: true,
+        lang: true,
         expiresAt: true,
       },
     })
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
       `[expire-announcements] Expired ${result.count} announcements:`,
       expiredAnnouncements.map((a) => ({
         id: a.id,
-        title: a.titleEn || a.titleAr,
+        title: a.title,
         expiresAt: a.expiresAt,
       }))
     )
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
       expired: result.count,
       announcements: expiredAnnouncements.map((a) => ({
         id: a.id,
-        title: a.titleEn || a.titleAr,
+        title: a.title,
         expiresAt: a.expiresAt,
       })),
       duration: Date.now() - startTime,

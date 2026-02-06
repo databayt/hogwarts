@@ -67,7 +67,7 @@
 //         <h1 className="text-3xl font-bold">Issues</h1>
 //         {activeTab === "issues" && (
 //           <Button onClick={() => setActiveTab("new")} className="bg-green-600 hover:bg-green-700">
-//             <PlusIcon className="mr-2 h-4 w-4" />
+//             <PlusIcon className="me-2 h-4 w-4" />
 //             New Issue
 //           </Button>
 //         )}
@@ -77,7 +77,7 @@
 //         <TabsList className="mb-6">
 //           <TabsTrigger value="issues" className="flex items-center">
 //             Issues
-//             <span className="ml-2 bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+//             <span className="ms-2 bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
 //               {issues.filter(issue => issue.status === "open").length}
 //             </span>
 //           </TabsTrigger>

@@ -53,7 +53,7 @@ export const ErrorCard = (props: Props) => {
           <div className="text-muted-foreground text-center text-xs">
             <p>Error code: {error}</p>
             {/* DEBUG: Show all URL params to capture full error */}
-            <pre className="bg-muted mt-2 max-w-full overflow-auto rounded p-2 text-left text-[10px]">
+            <pre className="bg-muted mt-2 max-w-full overflow-auto rounded p-2 text-start text-[10px]">
               {JSON.stringify(
                 Object.fromEntries(searchParams.entries()),
                 null,

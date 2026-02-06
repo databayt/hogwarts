@@ -176,7 +176,7 @@ export function Featured({ leads, isLoading, dictionary }: FeaturedProps) {
                       <CardTitle className="flex items-center gap-2">
                         {lead.name}
                         <Badge variant="destructive">
-                          <Trophy className="mr-1 h-3 w-3" />
+                          <Trophy className="me-1 h-3 w-3" />
                           {d?.score || "Score"}: {lead.score}
                         </Badge>
                       </CardTitle>

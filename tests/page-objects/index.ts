@@ -41,3 +41,23 @@ export {
   SchoolStudentsPage,
   SchoolTeachersPage,
 } from "./dashboard.page"
+
+// Onboarding flow page object
+export {
+  OnboardingFlowPage,
+  ONBOARDING_STEPS,
+  type OnboardingStepName,
+} from "./onboarding.page"
+
+// Admission page objects
+export {
+  AdmissionDashboardPage,
+  AdmissionPortalPage,
+  APPLICATION_STEPS,
+  ApplicationFormPage,
+  CampaignSelectorPage,
+  InquiryPage,
+  StatusTrackerPage,
+  TourBookingPage,
+  type ApplicationStepName,
+} from "./admission.page"

@@ -108,7 +108,7 @@ export function ReceiptsContent({
         <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               Upload Receipt
             </Button>
           </DialogTrigger>
@@ -200,7 +200,7 @@ export function ReceiptsContent({
               No receipts uploaded yet
             </p>
             <Button onClick={() => setIsUploadDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               Upload Your First Receipt
             </Button>
           </CardContent>

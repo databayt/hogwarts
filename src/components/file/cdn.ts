@@ -261,26 +261,28 @@ export function getCacheControlHeaders(
 export async function purgeCDNCache(urls: string[]): Promise<void> {
   const config = getCDNConfig()
 
-  if (!config.enabled) {
+  if (!config.enabled && !process.env.CLOUDFRONT_DISTRIBUTION_ID) {
     return
   }
 
-  // Implementation depends on CDN provider
-  // Example for CloudFront:
-  // await cloudfront.createInvalidation({
-  //   DistributionId: process.env.CLOUDFRONT_DISTRIBUTION_ID,
-  //   InvalidationBatch: {
-  //     Paths: { Quantity: urls.length, Items: urls },
-  //     CallerReference: Date.now().toString(),
-  //   },
-  // });
-
-  // Example for Vercel:
-  // await fetch('https://api.vercel.com/v1/purge', {
-  //   method: 'POST',
-  //   headers: { Authorization: `Bearer ${process.env.VERCEL_TOKEN}` },
-  //   body: JSON.stringify({ urls }),
-  // });
+  // CloudFront invalidation (if configured)
+  if (process.env.CLOUDFRONT_DISTRIBUTION_ID) {
+    try {
+      const { invalidateCache } = await import("@/lib/cloudfront")
+      // Extract paths from URLs
+      const paths = urls.map((url) => {
+        try {
+          return new URL(url).pathname
+        } catch {
+          return url.startsWith("/") ? url : `/${url}`
+        }
+      })
+      await invalidateCache(paths)
+      return
+    } catch (error) {
+      console.error("[CDN] CloudFront invalidation failed:", error)
+    }
+  }
 
   console.log(`[CDN] Would purge cache for ${urls.length} URLs`, urls)
 }

@@ -1,10 +1,12 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { assertLibraryPermission, getAuthContext } from "./authorization"
 import { LIBRARY_CONFIG } from "./config"
 import type { ActionResponse, Book } from "./types"
 import {
@@ -12,10 +14,12 @@ import {
   borrowBookSchema,
   deleteBookSchema,
   returnBookSchema,
+  updateBookSchema,
   type BookSchema,
   type BorrowBookSchema,
   type DeleteBookSchema,
   type ReturnBookSchema,
+  type UpdateBookSchema,
 } from "./validation"
 
 // Create a new book
@@ -23,6 +27,12 @@ export async function createBook(
   data: BookSchema & { schoolId: string }
 ): Promise<ActionResponse<Book>> {
   try {
+    const session = await auth()
+    const authCtx = getAuthContext(session)
+    if (!authCtx) return { success: false, message: "Not authenticated" }
+
+    assertLibraryPermission(authCtx, "create")
+
     const { schoolId: contextSchoolId } = await getTenantContext()
 
     if (!contextSchoolId) {
@@ -32,13 +42,9 @@ export async function createBook(
       }
     }
 
-    // Use context schoolId for additional security, ignore client-provided schoolId
     const schoolId = contextSchoolId
-
-    // Validate input
     const validatedData = bookSchema.parse(data)
 
-    // Create book in database
     const book = await db.book.create({
       data: {
         ...validatedData,
@@ -59,17 +65,20 @@ export async function createBook(
     console.error("Create book error:", error)
     return {
       success: false,
-      message: "Failed to create book",
-      error: error instanceof Error ? error.message : "Unknown error",
+      message: error instanceof Error ? error.message : "Failed to create book",
     }
   }
 }
 
-// Borrow a book
-export async function borrowBook(
-  data: Omit<BorrowBookSchema, "dueDate"> & { schoolId: string }
-): Promise<ActionResponse> {
+// Update a book
+export async function updateBook(
+  data: UpdateBookSchema
+): Promise<ActionResponse<Book>> {
   try {
+    const session = await auth()
+    const authCtx = getAuthContext(session)
+    if (!authCtx) return { success: false, message: "Not authenticated" }
+
     const { schoolId: contextSchoolId } = await getTenantContext()
 
     if (!contextSchoolId) {
@@ -79,11 +88,68 @@ export async function borrowBook(
       }
     }
 
-    // Use context schoolId for security
+    const schoolId = contextSchoolId
+    const validatedData = updateBookSchema.parse(data)
+    const { id, schoolId: _clientSchoolId, ...updateFields } = validatedData
+
+    // Verify book belongs to this school
+    const existingBook = await db.book.findFirst({
+      where: { id, schoolId },
+    })
+
+    if (!existingBook) {
+      return { success: false, message: "Book not found" }
+    }
+
+    assertLibraryPermission(authCtx, "update", { id, schoolId })
+
+    const book = await db.book.update({
+      where: { id },
+      data: updateFields,
+    })
+
+    revalidatePath("/library")
+    revalidatePath(`/library/books/${id}`)
+    revalidatePath("/library/admin/books")
+
+    return {
+      success: true,
+      message: "Book updated successfully",
+      data: book as Book,
+    }
+  } catch (error) {
+    console.error("Update book error:", error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Failed to update book",
+    }
+  }
+}
+
+// Borrow a book
+export async function borrowBook(
+  data: Omit<BorrowBookSchema, "dueDate"> & { schoolId: string }
+): Promise<ActionResponse> {
+  try {
+    const session = await auth()
+    const authCtx = getAuthContext(session)
+    if (!authCtx) return { success: false, message: "Not authenticated" }
+
+    assertLibraryPermission(authCtx, "borrow")
+
+    const { schoolId: contextSchoolId } = await getTenantContext()
+
+    if (!contextSchoolId) {
+      return {
+        success: false,
+        message: "School context not found",
+      }
+    }
+
     const schoolId = contextSchoolId
     const { bookId, userId } = data
 
-    // Verify the user exists in the database
+    // Verify the user exists
     const user = await db.user.findUnique({
       where: { id: userId },
       select: { id: true },
@@ -100,22 +166,16 @@ export async function borrowBook(
     const book = await db.book.findFirst({
       where: {
         id: bookId,
-        schoolId, // Ensure book belongs to this school
+        schoolId,
       },
     })
 
     if (!book) {
-      return {
-        success: false,
-        message: "Book not found",
-      }
+      return { success: false, message: "Book not found" }
     }
 
     if (book.availableCopies <= 0) {
-      return {
-        success: false,
-        message: "No copies available",
-      }
+      return { success: false, message: "No copies available" }
     }
 
     // Check if user already borrowed this book
@@ -135,7 +195,7 @@ export async function borrowBook(
       }
     }
 
-    // Calculate due date (14 days from now)
+    // Calculate due date
     const dueDate = new Date()
     dueDate.setDate(dueDate.getDate() + LIBRARY_CONFIG.MAX_BORROW_DAYS)
 
@@ -172,8 +232,7 @@ export async function borrowBook(
     console.error("Borrow book error:", error)
     return {
       success: false,
-      message: "Failed to borrow book",
-      error: error instanceof Error ? error.message : "Unknown error",
+      message: error instanceof Error ? error.message : "Failed to borrow book",
     }
   }
 }
@@ -183,6 +242,12 @@ export async function returnBook(
   data: ReturnBookSchema
 ): Promise<ActionResponse> {
   try {
+    const session = await auth()
+    const authCtx = getAuthContext(session)
+    if (!authCtx) return { success: false, message: "Not authenticated" }
+
+    assertLibraryPermission(authCtx, "return")
+
     const { schoolId: contextSchoolId } = await getTenantContext()
 
     if (!contextSchoolId) {
@@ -205,17 +270,11 @@ export async function returnBook(
     })
 
     if (!borrowRecord) {
-      return {
-        success: false,
-        message: "Borrow record not found",
-      }
+      return { success: false, message: "Borrow record not found" }
     }
 
     if (borrowRecord.status === "RETURNED") {
-      return {
-        success: false,
-        message: "Book already returned",
-      }
+      return { success: false, message: "Book already returned" }
     }
 
     // Update borrow record and increment available copies
@@ -249,8 +308,7 @@ export async function returnBook(
     console.error("Return book error:", error)
     return {
       success: false,
-      message: "Failed to return book",
-      error: error instanceof Error ? error.message : "Unknown error",
+      message: error instanceof Error ? error.message : "Failed to return book",
     }
   }
 }
@@ -260,6 +318,12 @@ export async function deleteBook(
   data: DeleteBookSchema
 ): Promise<ActionResponse> {
   try {
+    const session = await auth()
+    const authCtx = getAuthContext(session)
+    if (!authCtx) return { success: false, message: "Not authenticated" }
+
+    assertLibraryPermission(authCtx, "delete")
+
     const { schoolId: contextSchoolId } = await getTenantContext()
 
     if (!contextSchoolId) {
@@ -274,17 +338,11 @@ export async function deleteBook(
 
     // Verify book belongs to this school
     const book = await db.book.findFirst({
-      where: {
-        id,
-        schoolId,
-      },
+      where: { id, schoolId },
     })
 
     if (!book) {
-      return {
-        success: false,
-        message: "Book not found",
-      }
+      return { success: false, message: "Book not found" }
     }
 
     // Check if book has active borrows
@@ -303,7 +361,6 @@ export async function deleteBook(
       }
     }
 
-    // Delete book (this will cascade delete borrow records)
     await db.book.delete({
       where: { id },
     })
@@ -319,15 +376,20 @@ export async function deleteBook(
     console.error("Delete book error:", error)
     return {
       success: false,
-      message: "Failed to delete book",
-      error: error instanceof Error ? error.message : "Unknown error",
+      message: error instanceof Error ? error.message : "Failed to delete book",
     }
   }
 }
 
-// Mark overdue books
+// Mark overdue books (admin only)
 export async function markOverdueBooks(): Promise<ActionResponse> {
   try {
+    const session = await auth()
+    const authCtx = getAuthContext(session)
+    if (!authCtx) return { success: false, message: "Not authenticated" }
+
+    assertLibraryPermission(authCtx, "admin")
+
     const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
@@ -363,8 +425,8 @@ export async function markOverdueBooks(): Promise<ActionResponse> {
     console.error("Mark overdue books error:", error)
     return {
       success: false,
-      message: "Failed to mark overdue books",
-      error: error instanceof Error ? error.message : "Unknown error",
+      message:
+        error instanceof Error ? error.message : "Failed to mark overdue books",
     }
   }
 }

@@ -17,11 +17,10 @@ model Announcement {
   id       String @id @default(cuid())
   schoolId String
 
-  // Bilingual content - render based on locale with fallback
-  titleEn String? // English title
-  titleAr String? // Arabic title (RTL)
-  bodyEn  String? @db.Text // English body
-  bodyAr  String? @db.Text // Arabic body (RTL)
+  // Content in admin's chosen language
+  title String? // Title
+  body  String? @db.Text // Body
+  lang  String  @default("ar") // Content language
 
   scope    AnnouncementScope    @default(school)
   priority AnnouncementPriority @default(normal)
@@ -69,14 +68,17 @@ model Announcement {
 // Read tracking model (NEW)
 model AnnouncementRead {
   id             String   @id @default(cuid())
+  schoolId       String
   announcementId String
   userId         String
   readAt         DateTime @default(now())
 
+  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
   user         User         @relation("AnnouncementReads", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([announcementId, userId])
+  @@index([schoolId])
   @@index([userId])
   @@index([announcementId, readAt])
   @@map("announcement_reads")
@@ -85,6 +87,7 @@ model AnnouncementRead {
 // Notification tracking model (NEW)
 model AnnouncementNotification {
   id             String    @id @default(cuid())
+  schoolId       String
   announcementId String
   userId         String
   sentAt         DateTime  @default(now())
@@ -93,10 +96,12 @@ model AnnouncementNotification {
   pushSent       Boolean   @default(false)
   pushSentAt     DateTime?
 
+  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
   user         User         @relation("AnnouncementNotifications", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([announcementId, userId])
+  @@index([schoolId])
   @@index([userId, sentAt])
   @@index([announcementId])
   @@map("announcement_notifications")
@@ -122,11 +127,10 @@ model AnnouncementTemplate {
   description String?
   type        AnnouncementTemplateType @default(custom)
 
-  // Content templates (bilingual)
-  titleEn String?
-  titleAr String?
-  bodyEn  String? @db.Text
-  bodyAr  String? @db.Text
+  // Content templates
+  title String?
+  body  String? @db.Text
+  lang  String  @default("ar") // Content language
 
   // Preset configurations
   scope    AnnouncementScope    @default(school)

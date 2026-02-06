@@ -18,15 +18,15 @@ export function ShadcnSpinnerBadge() {
   return (
     <div className="flex items-center gap-2">
       <Badge>
-        <Loader2 className="mr-1 size-3 animate-spin" />
+        <Loader2 className="me-1 size-3 animate-spin" />
         Syncing
       </Badge>
       <Badge variant="secondary">
-        <Loader2 className="mr-1 size-3 animate-spin" />
+        <Loader2 className="me-1 size-3 animate-spin" />
         Updating
       </Badge>
       <Badge variant="outline">
-        <Loader2 className="mr-1 size-3 animate-spin" />
+        <Loader2 className="me-1 size-3 animate-spin" />
         Loading
       </Badge>
     </div>

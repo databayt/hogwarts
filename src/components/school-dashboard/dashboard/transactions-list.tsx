@@ -29,7 +29,7 @@ export default function TransactionsList() {
             Recent transactions from your store.
           </CardDescription>
         </div>
-        <Button size="sm" className="ml-auto shrink-0 gap-1 px-4">
+        <Button size="sm" className="ms-auto shrink-0 gap-1 px-4">
           <Link href="#" className="flex items-center gap-2">
             <span>View All</span>
             <ArrowUpRight className="hidden size-4 sm:block" />
@@ -44,7 +44,7 @@ export default function TransactionsList() {
               <TableHead className="hidden xl:table-column">Type</TableHead>
               <TableHead className="hidden xl:table-column">Status</TableHead>
               <TableHead className="hidden xl:table-column">Date</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-end">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -62,7 +62,7 @@ export default function TransactionsList() {
               <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                 2023-06-23
               </TableCell>
-              <TableCell className="text-right">$250.00</TableCell>
+              <TableCell className="text-end">$250.00</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
@@ -78,7 +78,7 @@ export default function TransactionsList() {
               <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                 2023-06-24
               </TableCell>
-              <TableCell className="text-right">$150.00</TableCell>
+              <TableCell className="text-end">$150.00</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
@@ -96,7 +96,7 @@ export default function TransactionsList() {
               <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                 2023-06-25
               </TableCell>
-              <TableCell className="text-right">$350.00</TableCell>
+              <TableCell className="text-end">$350.00</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
@@ -112,7 +112,7 @@ export default function TransactionsList() {
               <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                 2023-06-26
               </TableCell>
-              <TableCell className="text-right">$450.00</TableCell>
+              <TableCell className="text-end">$450.00</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
@@ -128,7 +128,7 @@ export default function TransactionsList() {
               <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                 2023-06-27
               </TableCell>
-              <TableCell className="text-right">$550.00</TableCell>
+              <TableCell className="text-end">$550.00</TableCell>
             </TableRow>
           </TableBody>
         </Table>

@@ -109,11 +109,11 @@ function MetricCard({
                     className="text-muted-foreground dark:text-foreground/70 flex w-full items-center text-xs leading-none"
                   >
                     <div
-                      className={`mr-[6px] h-2 w-2 rounded-full ${detail.color}`}
+                      className={`me-[6px] h-2 w-2 rounded-full ${detail.color}`}
                     />
-                    <span className="mr-1">{detail.label}</span>
+                    <span className="me-1">{detail.label}</span>
                     <span className="border-border h-[9px] flex-1 border-b-2 border-dotted" />
-                    <span className="ml-1 tabular-nums">{detail.value}</span>
+                    <span className="ms-1 tabular-nums">{detail.value}</span>
                   </div>
                 ))}
               </div>
@@ -142,7 +142,7 @@ function MetricCard({
             onClick={onActionClick}
           >
             {actionIcon}
-            <span className="ml-1 text-xs">{actionLabel}</span>
+            <span className="ms-1 text-xs">{actionLabel}</span>
           </Button>
         </div>
       </CardContent>

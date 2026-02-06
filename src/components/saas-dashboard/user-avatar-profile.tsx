@@ -25,7 +25,7 @@ export function UserAvatarProfile({
       </Avatar>
 
       {showInfo && (
-        <div className="grid flex-1 text-left leading-tight">
+        <div className="grid flex-1 text-start leading-tight">
           <h6 className="truncate">{user?.fullName || ""}</h6>
           <p className="muted truncate">
             {user?.emailAddresses[0].emailAddress || ""}

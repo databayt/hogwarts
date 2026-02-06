@@ -380,7 +380,7 @@ export function ParentProfileContent({
               {tab.icon}
               <span className="hidden sm:inline">{tab.label}</span>
               {tab.badge && (
-                <span className="bg-primary/10 text-primary ml-1 rounded-full px-1.5 py-0.5 text-xs">
+                <span className="bg-primary/10 text-primary ms-1 rounded-full px-1.5 py-0.5 text-xs">
                   {tab.badge}
                 </span>
               )}

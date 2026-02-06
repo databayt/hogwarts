@@ -121,7 +121,7 @@ export function PlatformToolbar<TData>({
               placeholder={searchPlaceholder || t.search}
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="h-9 w-40 pl-8 lg:w-56"
+              className="h-9 w-40 ps-8 lg:w-56"
             />
           </div>
         )}
@@ -158,7 +158,7 @@ export function PlatformToolbar<TData>({
             className="h-9 border-dashed"
             onClick={handleReset}
           >
-            <Icons.x className="mr-1 h-4 w-4" />
+            <Icons.x className="me-1 h-4 w-4" />
             {t.reset}
           </Button>
         )}

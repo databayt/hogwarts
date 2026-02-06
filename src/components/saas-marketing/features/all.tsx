@@ -24,11 +24,11 @@ export default function AllFeatures(props: Props) {
           management with modules that grow with you.
         </p>
         <div className="relative w-full max-w-xs pt-4">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 translate-y-0.5" />
+          <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 translate-y-0.5" />
           <Input
             type="search"
             placeholder="Search features..."
-            className="w-full pl-10"
+            className="w-full ps-10"
           />
         </div>
       </div>

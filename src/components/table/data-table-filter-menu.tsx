@@ -412,7 +412,7 @@ function DataTableFilterItem<TData>({
             <Button
               variant="ghost"
               size="sm"
-              className="dark:bg-input/30 rounded-none rounded-l-md border border-r-0 font-normal"
+              className="dark:bg-input/30 rounded-none rounded-s-md border border-e-0 font-normal"
             >
               {columnMeta?.icon && (
                 <columnMeta.icon className="text-muted-foreground" />
@@ -454,7 +454,7 @@ function DataTableFilterItem<TData>({
                       </span>
                       <Check
                         className={cn(
-                          "ml-auto",
+                          "ms-auto",
                           column.id === filter.id ? "opacity-100" : "opacity-0"
                         )}
                       />
@@ -481,7 +481,7 @@ function DataTableFilterItem<TData>({
         >
           <SelectTrigger
             aria-controls={operatorListboxId}
-            className="h-8 rounded-none border-r-0 px-2.5 lowercase [&_svg]:hidden [&[data-size]]:h-8"
+            className="h-8 rounded-none border-e-0 px-2.5 lowercase [&_svg]:hidden [&[data-size]]:h-8"
           >
             <SelectValue placeholder={filter.operator} />
           </SelectTrigger>
@@ -512,7 +512,7 @@ function DataTableFilterItem<TData>({
           aria-controls={filterItemId}
           variant="ghost"
           size="sm"
-          className="dark:bg-input/30 h-full rounded-none rounded-r-md border border-l-0 px-1.5 font-normal"
+          className="dark:bg-input/30 h-full rounded-none rounded-e-md border border-s-0 px-1.5 font-normal"
           onClick={() => onFilterRemove(filter.filterId)}
         >
           <X className="size-3.5" />
@@ -561,7 +561,7 @@ function FilterValueSelector<TData>({
               {option.icon && <option.icon />}
               <span className="truncate">{option.label}</span>
               {option.count && (
-                <span className="ml-auto font-mono text-xs">
+                <span className="ms-auto font-mono text-xs">
                   {option.count}
                 </span>
               )}
@@ -655,7 +655,7 @@ function onFilterInputRender<TData>({
             column={column}
             inputId={inputId}
             onFilterUpdate={onFilterUpdate}
-            className="size-full max-w-28 gap-0 [&_[data-slot='range-min']]:border-r-0 [&_input]:rounded-none [&_input]:px-1.5"
+            className="size-full max-w-28 gap-0 [&_[data-slot='range-min']]:border-e-0 [&_input]:rounded-none [&_input]:px-1.5"
           />
         )
       }
@@ -785,7 +785,7 @@ function onFilterInputRender<TData>({
                       {filter.variant === "multiSelect" && (
                         <Check
                           className={cn(
-                            "ml-auto",
+                            "ms-auto",
                             selectedValues.includes(option.value)
                               ? "opacity-100"
                               : "opacity-0"

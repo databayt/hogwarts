@@ -60,7 +60,7 @@ export default async function HeroLanding({ lang }: HeroLandingProps) {
         </p>
 
         <div
-          className="flex justify-center space-x-2 md:space-x-4"
+          className="flex justify-center gap-2 md:gap-4"
           style={{ animationDelay: "0.4s", animationFillMode: "forwards" }}
         >
           <Link

@@ -107,7 +107,7 @@ export default function PriceContent(props: Props) {
       <div className="mb-4 flex justify-center">
         <Button
           variant="outline"
-          className="inline-flex items-center space-x-2 rounded-full"
+          className="inline-flex items-center gap-2 rounded-full"
         >
           <DollarSign size={12} />
           <span>{dict.viewSimilarSchools || "View similar schools"}</span>

@@ -76,7 +76,7 @@ export function EnrollmentTable({
         ...params,
         campaignId: campaignId || undefined,
       })
-      if (result.success) {
+      if (result.success && result.data) {
         return {
           rows: result.data.rows as EnrollmentRow[],
           total: result.data.total,

@@ -3,12 +3,7 @@
 import React, { createContext, useCallback, useContext, useState } from "react"
 import { useRouter } from "next/navigation"
 
-import {
-  createListing,
-  getListing,
-  ListingFormData,
-  updateListing,
-} from "./actions"
+import { getListing } from "./actions"
 
 /**
  * useListing Hook - School Listing Management with Context
@@ -71,8 +66,8 @@ interface ListingContextType {
   isLoading: boolean
   error: string | null
   setListing: (listing: Listing | null) => void
-  updateListingData: (data: Partial<ListingFormData>) => Promise<void>
-  createNewListing: (data?: Partial<ListingFormData>) => Promise<string | null>
+  updateListingData: (data: Partial<Listing>) => Promise<void>
+  createNewListing: (data?: Partial<Listing>) => Promise<string | null>
   loadListing: (id: string) => Promise<void>
   clearError: () => void
 }
@@ -98,49 +93,12 @@ export function ListingProvider({
     setError(null)
   }, [])
 
-  const createNewListing = useCallback(
-    async (data: Partial<ListingFormData> = {}) => {
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const result = await createListing({ draft: true, ...data })
-
-        if (result.success && result.data) {
-          const newListing: Listing = {
-            id: result.data.id,
-            name: result.data.name,
-            domain: result.data.domain,
-            logoUrl: result.data.logoUrl,
-            address: result.data.address,
-            phoneNumber: result.data.phoneNumber,
-            email: result.data.email,
-            website: result.data.website,
-            timezone: result.data.timezone,
-            planType: result.data.planType,
-            maxStudents: result.data.maxStudents,
-            maxTeachers: result.data.maxTeachers,
-            isActive: result.data.isActive,
-            createdAt: result.data.createdAt,
-            updatedAt: result.data.updatedAt,
-          }
-
-          setListing(newListing)
-          return newListing.id!
-        }
-
-        throw new Error("Failed to create listing")
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error occurred"
-        setError(errorMessage)
-        return null
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    []
-  )
+  const createNewListing = useCallback(async (_data: Partial<Listing> = {}) => {
+    // School creation is now handled by initializeSchoolSetup in actions.ts
+    // This is kept for backward compatibility
+    setError("Use initializeSchoolSetup() instead")
+    return null
+  }, [])
 
   const loadListing = useCallback(async (id: string, retryCount = 0) => {
     setIsLoading(true)
@@ -285,45 +243,12 @@ export function ListingProvider({
   }, [])
 
   const updateListingData = useCallback(
-    async (data: Partial<ListingFormData>) => {
-      if (!listing?.id) {
-        return
-      }
+    async (data: Partial<Listing>) => {
+      if (!listing?.id) return
 
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const result = await updateListing(listing.id, data)
-
-        if (result.success && result.data) {
-          const updatedListing: Listing = {
-            id: result.data.id,
-            name: result.data.name,
-            domain: result.data.domain,
-            logoUrl: result.data.logoUrl,
-            address: result.data.address,
-            phoneNumber: result.data.phoneNumber,
-            email: result.data.email,
-            website: result.data.website,
-            timezone: result.data.timezone,
-            planType: result.data.planType,
-            maxStudents: result.data.maxStudents,
-            maxTeachers: result.data.maxTeachers,
-            isActive: result.data.isActive,
-            createdAt: result.data.createdAt,
-            updatedAt: result.data.updatedAt,
-          }
-
-          setListing(updatedListing)
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to update listing"
-        setError(errorMessage)
-      } finally {
-        setIsLoading(false)
-      }
+      // Updates are now handled by individual step actions
+      // This just updates the local state optimistically
+      setListing((prev) => (prev ? { ...prev, ...data } : null))
     },
     [listing?.id]
   )

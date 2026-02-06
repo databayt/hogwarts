@@ -5,6 +5,10 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  checkStreamPermission,
+  getAuthContext,
+} from "@/components/stream/authorization"
 
 type ApiResponse = {
   status: "success" | "error"
@@ -16,47 +20,39 @@ export async function deleteCourse(courseId: string): Promise<ApiResponse> {
   const { schoolId } = await getTenantContext()
 
   // Check authentication
-  if (!session?.user) {
-    return {
-      status: "error",
-      message: "Unauthorized",
-    }
+  const authCtx = getAuthContext(session)
+  if (!authCtx) {
+    return { status: "error", message: "Unauthorized" }
   }
+  authCtx.schoolId = schoolId
 
   // Check school context
   if (!schoolId) {
-    return {
-      status: "error",
-      message: "School context required",
-    }
-  }
-
-  // Check admin/teacher access
-  if (
-    session.user.role !== "ADMIN" &&
-    session.user.role !== "TEACHER" &&
-    session.user.role !== "DEVELOPER"
-  ) {
-    return {
-      status: "error",
-      message: "Insufficient permissions",
-    }
+    return { status: "error", message: "School context required" }
   }
 
   try {
-    // Verify course belongs to this school before deleting (CRITICAL for multi-tenant security)
+    // Verify course belongs to this school before deleting
     const course = await db.streamCourse.findFirst({
       where: {
         id: courseId,
-        schoolId, // IMPORTANT: Multi-tenant scope
+        schoolId,
       },
     })
 
     if (!course) {
-      return {
-        status: "error",
-        message: "Course not found or access denied",
-      }
+      return { status: "error", message: "Course not found or access denied" }
+    }
+
+    // Check delete permission with ownership context
+    if (
+      !checkStreamPermission(authCtx, "delete", {
+        id: course.id,
+        userId: course.userId,
+        schoolId: course.schoolId,
+      })
+    ) {
+      return { status: "error", message: "Insufficient permissions" }
     }
 
     await db.streamCourse.delete({

@@ -1,12 +1,5 @@
 import Link from "next/link"
-import {
-  AlertCircle,
-  Building2,
-  DollarSign,
-  Package,
-  TrendingUp,
-  Users,
-} from "lucide-react"
+import { Building2, TrendingUp, Users } from "lucide-react"
 
 import { db } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
@@ -27,7 +20,7 @@ import { tenantColumns, type TenantRow } from "./columns"
 import { TenantsTable } from "./table"
 
 interface Props {
-  dictionary: any // TODO: Add proper saas-dashboard dictionary types
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
   searchParams?: {
     page?: string
@@ -168,6 +161,7 @@ export async function TenantsContent({
   searchParams,
 }: Props) {
   const limit = Number(searchParams?.limit) || 10
+  const t = dictionary?.operator?.tenants
 
   const [tenantData, stats] = await Promise.all([
     getTenants(searchParams),
@@ -178,10 +172,9 @@ export async function TenantsContent({
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
         <div>
-          <h2>{dictionary?.title || "Tenants"}</h2>
+          <h2>{t?.title || "Tenants"}</h2>
           <p className="muted">
-            {dictionary?.description ||
-              "Manage school tenants and subscriptions"}
+            {t?.description || "Manage school tenants and subscriptions"}
           </p>
         </div>
 
@@ -190,27 +183,14 @@ export async function TenantsContent({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Schools
+                {t?.totalSchools || "Total Schools"}
               </CardTitle>
               <Building2 className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalTenants}</div>
               <p className="text-muted-foreground text-xs">
-                {stats.activeTenants} active
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Rate</CardTitle>
-              <TrendingUp className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeRate}%</div>
-              <p className="text-muted-foreground text-xs">
-                {stats.activeTenants} of {stats.totalTenants}
+                {stats.activeTenants} {t?.active || "active"}
               </p>
             </CardContent>
           </Card>
@@ -218,7 +198,22 @@ export async function TenantsContent({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Students
+                {t?.activeRate || "Active Rate"}
+              </CardTitle>
+              <TrendingUp className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeRate}%</div>
+              <p className="text-muted-foreground text-xs">
+                {stats.activeTenants} {t?.of || "of"} {stats.totalTenants}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t?.totalStudents || "Total Students"}
               </CardTitle>
               <Users className="text-muted-foreground h-4 w-4" />
             </CardHeader>
@@ -227,7 +222,7 @@ export async function TenantsContent({
                 {stats.totalStudents.toLocaleString()}
               </div>
               <p className="text-muted-foreground text-xs">
-                Across all schools
+                {t?.acrossAllSchools || "Across all schools"}
               </p>
             </CardContent>
           </Card>
@@ -235,7 +230,7 @@ export async function TenantsContent({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Teachers
+                {t?.totalTeachers || "Total Teachers"}
               </CardTitle>
               <Users className="text-muted-foreground h-4 w-4" />
             </CardHeader>
@@ -244,20 +239,22 @@ export async function TenantsContent({
                 {stats.totalTeachers.toLocaleString()}
               </div>
               <p className="text-muted-foreground text-xs">
-                Across all schools
+                {t?.acrossAllSchools || "Across all schools"}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t?.growthRate || "Growth Rate"}
+              </CardTitle>
               <TrendingUp className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">+{stats.growthRate}%</div>
               <p className="text-muted-foreground text-xs">
-                {stats.recentSignups} new this month
+                {stats.recentSignups} {t?.newThisMonth || "new this month"}
               </p>
             </CardContent>
           </Card>
@@ -267,44 +264,54 @@ export async function TenantsContent({
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Trial</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t?.trial || "Trial"}
+              </CardTitle>
               <Badge variant="secondary">Free</Badge>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.trialTenants}</div>
-              <p className="text-muted-foreground text-xs">Schools on trial</p>
+              <p className="text-muted-foreground text-xs">
+                {t?.schoolsOnTrial || "Schools on trial"}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Basic</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t?.basic || "Basic"}
+              </CardTitle>
               <Badge variant="default">$99/mo</Badge>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.basicTenants}</div>
               <p className="text-muted-foreground text-xs">
-                Basic plan schools
+                {t?.basicPlanSchools || "Basic plan schools"}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Premium</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t?.premium || "Premium"}
+              </CardTitle>
               <Badge variant="default">$299/mo</Badge>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.premiumTenants}</div>
               <p className="text-muted-foreground text-xs">
-                Premium plan schools
+                {t?.premiumPlanSchools || "Premium plan schools"}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Enterprise</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t?.enterprise || "Enterprise"}
+              </CardTitle>
               <Badge variant="default">Custom</Badge>
             </CardHeader>
             <CardContent>
@@ -312,7 +319,7 @@ export async function TenantsContent({
                 {stats.enterpriseTenants}
               </div>
               <p className="text-muted-foreground text-xs">
-                Enterprise schools
+                {t?.enterpriseSchools || "Enterprise schools"}
               </p>
             </CardContent>
           </Card>
@@ -321,12 +328,10 @@ export async function TenantsContent({
         {/* Tenants Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">
-              {dictionary?.table?.title || "Schools"}
-            </h3>
+            <h3 className="text-lg font-medium">{t?.schools || "Schools"}</h3>
             {stats.inactiveTenants > 0 && (
               <Badge variant="outline" className="text-yellow-600">
-                {stats.inactiveTenants} inactive
+                {stats.inactiveTenants} {t?.inactive || "inactive"}
               </Badge>
             )}
           </div>
@@ -340,8 +345,11 @@ export async function TenantsContent({
             />
           ) : (
             <EmptyState
-              title="No schools found"
-              description="Schools will appear here once they complete onboarding."
+              title={t?.noSchoolsFound || "No schools found"}
+              description={
+                t?.schoolsWillAppear ||
+                "Schools will appear here once they complete onboarding."
+              }
             />
           )}
         </div>
@@ -350,25 +358,43 @@ export async function TenantsContent({
         {stats.trialTenants > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Trial Management</CardTitle>
+              <CardTitle className="text-base">
+                {t?.trialManagement || "Trial Management"}
+              </CardTitle>
               <CardDescription>
-                {stats.trialTenants} schools are currently on trial plans
+                {stats.trialTenants}{" "}
+                {t?.trialManagementDescription
+                  ? t.trialManagementDescription.replace(
+                      "{count}",
+                      String(stats.trialTenants)
+                    )
+                  : "schools are currently on trial plans"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
                 <p>
-                  Monitor trial expirations and convert schools to paid plans:
+                  {t?.monitorTrials ||
+                    "Monitor trial expirations and convert schools to paid plans:"}
                 </p>
                 <ul className="text-muted-foreground list-inside list-disc space-y-1">
-                  <li>Schools with expiring trials need follow-up</li>
-                  <li>Offer upgrade incentives before trial ends</li>
-                  <li>Track conversion rates from trial to paid</li>
+                  <li>
+                    {t?.expiringTrials ||
+                      "Schools with expiring trials need follow-up"}
+                  </li>
+                  <li>
+                    {t?.upgradeIncentives ||
+                      "Offer upgrade incentives before trial ends"}
+                  </li>
+                  <li>
+                    {t?.trackConversion ||
+                      "Track conversion rates from trial to paid"}
+                  </li>
                 </ul>
                 <div className="pt-2">
-                  <Link href={`/${lang}/operator/tenants?plan=TRIAL`}>
+                  <Link href={`/${lang}/tenants?plan=TRIAL`}>
                     <Button variant="outline" size="sm">
-                      View Trial Schools
+                      {t?.viewTrialSchools || "View Trial Schools"}
                     </Button>
                   </Link>
                 </div>

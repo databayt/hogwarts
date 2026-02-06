@@ -12,7 +12,7 @@ model Subject {
   schoolId      String
   departmentId  String
   subjectName   String
-  subjectNameAr String? // Arabic name for bilingual support
+  lang          String  @default("ar") // Content language
 
   school           School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   department       Department                @relation(fields: [departmentId], references: [id])
@@ -44,7 +44,7 @@ model Class {
   endPeriodId   String
   classroomId   String
   name          String
-  nameAr        String? // Arabic name for bilingual support
+  lang          String  @default("ar") // Content language
 
   // Course Management Fields
   courseCode     String? // e.g., "CS101", "MATH201"

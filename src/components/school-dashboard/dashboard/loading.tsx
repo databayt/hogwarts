@@ -68,8 +68,8 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
             <Skeleton className="h-4 w-[150px]" />
             <Skeleton className="h-3 w-[100px]" />
           </div>
-          <div className="space-y-2 text-right">
-            <Skeleton className="ml-auto h-6 w-[60px]" />
+          <div className="space-y-2 text-end">
+            <Skeleton className="ms-auto h-6 w-[60px]" />
             <Skeleton className="h-3 w-[80px]" />
           </div>
         </div>

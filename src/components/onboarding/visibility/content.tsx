@@ -65,7 +65,7 @@ const VisibilityContent = (props: Props) => {
                     : "border-border hover:border-foreground/50"
                 }`}
               >
-                <div className="flex items-start space-x-3 sm:space-x-4 rtl:space-x-reverse">
+                <div className="flex items-start gap-3 sm:gap-4">
                   {/* Radio button */}
                   <div className="mt-1 flex-shrink-0">
                     <div
@@ -82,7 +82,7 @@ const VisibilityContent = (props: Props) => {
                   </div>
 
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <div className="flex items-center gap-3">
                       <h5 className="text-sm font-medium sm:text-base">
                         {option.title}
                       </h5>

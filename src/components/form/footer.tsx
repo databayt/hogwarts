@@ -7,7 +7,7 @@ import { Bookmark, Check, HelpCircle, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { formatRelativeTime } from "@/components/file"
+import { formatRelativeTime } from "@/components/file/formatters"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 // =============================================================================
@@ -223,12 +223,15 @@ export function FormFooter({
 
   // Labels
   const dict = (dictionary || {}) as Record<string, string | undefined>
+  const stepTemplate = dict.stepN || "Step {n}"
   const groupLabels =
     config.groupLabels ||
-    Object.keys(config.groups).map((_, i) => `Step ${i + 1}`)
+    Object.keys(config.groups).map((_, i) =>
+      stepTemplate.replace("{n}", String(i + 1))
+    )
   const actualBackLabel = backLabel || dict.back || "Back"
   const actualNextLabel = isLastStep
-    ? finalLabel || dict.next || "Finish"
+    ? finalLabel || dict.finish || "Finish"
     : nextLabel || dict.next || "Next"
 
   // Button states
@@ -370,15 +373,16 @@ export const ONBOARDING_CONFIG: StepConfig = {
     "price",
     "discount",
     "legal",
+    "subdomain",
   ],
   groups: {
     1: ["about-school", "title", "description", "location", "stand-out"],
     2: ["capacity", "branding", "import", "finish-setup"],
-    3: ["join", "visibility", "price", "discount", "legal"],
+    3: ["join", "visibility", "price", "discount", "legal", "subdomain"],
   },
   groupLabels: [
-    "Tell us about your place",
-    "Make it stand out",
+    "Tell us about your school",
+    "Set up your school",
     "Finish up and publish",
   ],
 }

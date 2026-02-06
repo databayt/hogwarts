@@ -383,7 +383,7 @@ export default function GuardianView({
                     : "bg-blue-500"
                 )}
               >
-                <ChevronRight className="h-6 w-6 text-white" />
+                <ChevronRight className="h-6 w-6 text-white rtl:rotate-180" />
               </div>
               <div className="flex-1">
                 <p className="text-muted-foreground text-sm">

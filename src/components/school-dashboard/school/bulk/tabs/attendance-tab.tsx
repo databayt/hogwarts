@@ -63,7 +63,7 @@ export function AttendanceTab({ dictionary, lang }: Props) {
               <Input type="file" accept=".csv" disabled />
             </div>
             <Button disabled>
-              <Upload className="mr-2 h-4 w-4" />
+              <Upload className="me-2 h-4 w-4" />
               Coming Soon
             </Button>
           </div>

@@ -367,7 +367,7 @@ export function ReviewsTab({
                     <div className="flex-1">
                       <Progress value={percentage} className="h-2" />
                     </div>
-                    <span className="text-muted-foreground w-10 text-right text-xs">
+                    <span className="text-muted-foreground w-10 text-end text-xs">
                       {count}
                     </span>
                   </div>
@@ -463,7 +463,7 @@ export function ReviewsTab({
                           <p className="font-medium">{review.studentName}</p>
                           {review.verified && (
                             <Badge variant="secondary" className="text-xs">
-                              <CircleCheck className="mr-1 h-3 w-3" />
+                              <CircleCheck className="me-1 h-3 w-3" />
                               Verified
                             </Badge>
                           )}
@@ -523,7 +523,7 @@ export function ReviewsTab({
 
                   {/* Teacher Response */}
                   {review.response && (
-                    <div className="bg-muted/50 border-primary ml-12 rounded-lg border-l-2 p-3">
+                    <div className="bg-muted/50 border-primary ms-12 rounded-lg border-s-2 p-3">
                       <div className="mb-2 flex items-center gap-2">
                         <Badge variant="secondary" className="text-xs">
                           Instructor Response
@@ -550,7 +550,7 @@ export function ReviewsTab({
                       >
                         <ThumbsUp
                           className={cn(
-                            "mr-1 h-3 w-3",
+                            "me-1 h-3 w-3",
                             helpfulReviews.has(review.id) &&
                               "fill-primary text-primary"
                           )}
@@ -562,7 +562,7 @@ export function ReviewsTab({
                       </Button>
                       {isOwner && !review.response && (
                         <Button variant="ghost" size="sm" className="text-xs">
-                          <MessageSquare className="mr-1 h-3 w-3" />
+                          <MessageSquare className="me-1 h-3 w-3" />
                           Reply
                         </Button>
                       )}
@@ -592,7 +592,7 @@ export function ReviewsTab({
           <div className="text-center">
             <Button variant="outline">
               Load More Reviews
-              <ChevronDown className="ml-1 h-4 w-4" />
+              <ChevronDown className="ms-1 h-4 w-4" />
             </Button>
           </div>
         </TabsContent>
@@ -617,7 +617,7 @@ export function ReviewsTab({
                     <div className="flex flex-1 items-center gap-2">
                       <div className="bg-muted relative h-6 flex-1 rounded-full">
                         <div
-                          className="bg-primary absolute inset-y-0 left-0 flex items-center justify-end rounded-full pr-2"
+                          className="bg-primary absolute inset-y-0 left-0 flex items-center justify-end rounded-full pe-2"
                           style={{ width: `${(item.average / 5) * 100}%` }}
                         >
                           <span className="text-primary-foreground text-xs font-medium">
@@ -686,7 +686,7 @@ export function ReviewsTab({
                     <div className="mb-3 flex items-center gap-2">
                       {renderStars(review.rating)}
                       <Badge variant="secondary" className="text-xs">
-                        <Award className="mr-1 h-3 w-3" />
+                        <Award className="me-1 h-3 w-3" />
                         Top Review
                       </Badge>
                     </div>

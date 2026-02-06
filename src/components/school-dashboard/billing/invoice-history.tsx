@@ -73,7 +73,7 @@ export function InvoiceHistory({
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="font-medium">
                           {formatCurrency(invoice.amountDue)}
                         </p>

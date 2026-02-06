@@ -412,7 +412,7 @@ export function TasksTab({
                 placeholder="Search tasks..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="ps-9"
               />
             </div>
             <select
@@ -442,7 +442,7 @@ export function TasksTab({
             </Button>
             {isOwner && (
               <Button>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 Add Task
               </Button>
             )}
@@ -588,7 +588,7 @@ export function TasksTab({
                             getPriorityColor(task.priority)
                           )}
                         >
-                          <Flag className="mr-1 h-3 w-3" />
+                          <Flag className="me-1 h-3 w-3" />
                           {task.priority}
                         </Badge>
                       </div>

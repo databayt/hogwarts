@@ -42,7 +42,7 @@ export function CardsShare({ dictionary }: CardsShareProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex space-x-2 rtl:space-x-reverse">
+        <div className="flex gap-2">
           <Label htmlFor="link" className="sr-only">
             {dictionary?.cards?.share?.linkLabel || "Link"}
           </Label>
@@ -61,8 +61,8 @@ export function CardsShare({ dictionary }: CardsShareProps) {
             {dictionary?.cards?.share?.peopleWithAccess || "People with access"}
           </div>
           <div className="grid gap-6">
-            <div className="flex items-center justify-between space-x-4">
-              <div className="flex items-center space-x-4 rtl:space-x-reverse">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
                 <Avatar>
                   <AvatarImage src="/avatars/03.png" alt="Image" />
                   <AvatarFallback>OM</AvatarFallback>
@@ -76,7 +76,7 @@ export function CardsShare({ dictionary }: CardsShareProps) {
               </div>
               <Select defaultValue="edit">
                 <SelectTrigger
-                  className="ml-auto w-[110px] rtl:mr-auto rtl:ml-0"
+                  className="ms-auto w-[110px]"
                   aria-label={dictionary?.cards?.share?.editLabel || "Edit"}
                 >
                   <SelectValue
@@ -95,8 +95,8 @@ export function CardsShare({ dictionary }: CardsShareProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center justify-between space-x-4">
-              <div className="flex items-center space-x-4 rtl:space-x-reverse">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
                 <Avatar>
                   <AvatarImage src="/avatars/05.png" alt="Image" />
                   <AvatarFallback>IN</AvatarFallback>
@@ -110,7 +110,7 @@ export function CardsShare({ dictionary }: CardsShareProps) {
               </div>
               <Select defaultValue="view">
                 <SelectTrigger
-                  className="ml-auto w-[110px] rtl:mr-auto rtl:ml-0"
+                  className="ms-auto w-[110px]"
                   aria-label={dictionary?.cards?.share?.editLabel || "Edit"}
                 >
                   <SelectValue
@@ -129,8 +129,8 @@ export function CardsShare({ dictionary }: CardsShareProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center justify-between space-x-4">
-              <div className="flex items-center space-x-4 rtl:space-x-reverse">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
                 <Avatar>
                   <AvatarImage src="/avatars/01.png" alt="Image" />
                   <AvatarFallback>SD</AvatarFallback>
@@ -144,7 +144,7 @@ export function CardsShare({ dictionary }: CardsShareProps) {
               </div>
               <Select defaultValue="view">
                 <SelectTrigger
-                  className="ml-auto w-[110px] rtl:mr-auto rtl:ml-0"
+                  className="ms-auto w-[110px]"
                   aria-label={dictionary?.cards?.share?.editLabel || "Edit"}
                 >
                   <SelectValue

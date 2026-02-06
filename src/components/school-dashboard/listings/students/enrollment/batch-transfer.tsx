@@ -333,7 +333,7 @@ export function BatchTransfer({
         </CardHeader>
         <CardContent>
           <Button onClick={() => setShowTransferDialog(true)}>
-            <TrendingUp className="mr-2 h-4 w-4" />
+            <TrendingUp className="me-2 h-4 w-4" />
             Request Transfer
           </Button>
         </CardContent>
@@ -552,11 +552,11 @@ export function BatchTransfer({
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full justify-start text-left font-normal",
+                              "w-full justify-start text-start font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            <CalendarIcon className="me-2 h-4 w-4" />
                             {field.value
                               ? format(field.value, "PPP")
                               : "Pick a date"}
@@ -591,7 +591,7 @@ export function BatchTransfer({
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting && (
-                    <CircleCheck className="mr-2 h-4 w-4 animate-spin" />
+                    <CircleCheck className="me-2 h-4 w-4 animate-spin" />
                   )}
                   Submit Transfer Request
                 </Button>

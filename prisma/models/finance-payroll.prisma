@@ -1,0 +1,246 @@
+// ============================================
+// FINANCE MODULE - Salary, Payroll & Timesheet
+// ============================================
+
+enum PayFrequency {
+  MONTHLY
+  BI_WEEKLY
+  WEEKLY
+  DAILY
+}
+
+enum DeductionType {
+  TAX
+  INSURANCE
+  LOAN
+  PENSION
+  OTHER
+}
+
+model SalaryStructure {
+  id            String       @id @default(cuid())
+  schoolId      String
+  teacherId     String // Teacher or Staff ID
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  baseSalary    Decimal      @db.Decimal(10, 2)
+  currency      String       @default("USD")
+  payFrequency  PayFrequency
+  isActive      Boolean      @default(true)
+  notes         String?      @db.Text
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  school      School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher     Teacher           @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  allowances  SalaryAllowance[]
+  deductions  SalaryDeduction[]
+  salarySlips SalarySlip[]
+
+  @@index([schoolId, teacherId])
+  @@index([schoolId, isActive])
+  @@index([schoolId, effectiveFrom, effectiveTo])
+}
+
+model SalaryAllowance {
+  id          String   @id @default(cuid())
+  schoolId    String
+  structureId String
+  name        String
+  amount      Decimal  @db.Decimal(10, 2)
+  isTaxable   Boolean  @default(true)
+  isRecurring Boolean  @default(true)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  school    School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  structure SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, structureId])
+}
+
+model SalaryDeduction {
+  id          String        @id @default(cuid())
+  schoolId    String
+  structureId String
+  name        String
+  amount      Decimal       @db.Decimal(10, 2)
+  type        DeductionType
+  isRecurring Boolean       @default(true)
+  description String?       @db.Text
+  createdAt   DateTime      @default(now())
+
+  school    School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  structure SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, structureId])
+}
+
+// Payroll
+
+enum PayrollStatus {
+  DRAFT
+  PROCESSING
+  PENDING_APPROVAL
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+enum SlipStatus {
+  GENERATED
+  REVIEWED
+  PAID
+  CANCELLED
+}
+
+model PayrollRun {
+  id              String        @id @default(cuid())
+  schoolId        String
+  runNumber       String        @unique
+  payPeriodStart  DateTime
+  payPeriodEnd    DateTime
+  payDate         DateTime
+  status          PayrollStatus @default(DRAFT)
+  totalGross      Decimal       @db.Decimal(12, 2)
+  totalDeductions Decimal       @db.Decimal(12, 2)
+  totalNet        Decimal       @db.Decimal(12, 2)
+  processedBy     String?
+  processedAt     DateTime?
+  approvedBy      String?
+  approvedAt      DateTime?
+
+  // Accounting integration
+  journalEntryId String?
+  journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
+
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  salarySlips SalarySlip[]
+
+  @@index([schoolId, payPeriodStart, payPeriodEnd])
+  @@index([schoolId, status])
+  @@index([schoolId, payDate])
+}
+
+model SalarySlip {
+  id             String   @id @default(cuid())
+  schoolId       String
+  payrollRunId   String
+  structureId    String
+  teacherId      String
+  slipNumber     String   @unique
+  payPeriodStart DateTime
+  payPeriodEnd   DateTime
+  payDate        DateTime
+
+  // Earnings
+  baseSalary  Decimal @db.Decimal(10, 2)
+  allowances  Json // Array of {name, amount, isTaxable}
+  overtime    Decimal @default(0) @db.Decimal(10, 2)
+  bonus       Decimal @default(0) @db.Decimal(10, 2)
+  grossSalary Decimal @db.Decimal(10, 2)
+
+  // Deductions
+  taxAmount       Decimal @db.Decimal(10, 2)
+  insurance       Decimal @default(0) @db.Decimal(10, 2)
+  loanDeduction   Decimal @default(0) @db.Decimal(10, 2)
+  otherDeductions Json // Array of {name, amount}
+  totalDeductions Decimal @db.Decimal(10, 2)
+
+  // Net
+  netSalary Decimal @db.Decimal(10, 2)
+
+  // Timesheet data
+  daysWorked    Int
+  daysPresent   Int
+  daysAbsent    Int
+  hoursWorked   Decimal? @db.Decimal(8, 2)
+  overtimeHours Decimal? @db.Decimal(8, 2)
+
+  status    SlipStatus @default(GENERATED)
+  paidAt    DateTime?
+  notes     String?    @db.Text
+  createdAt DateTime   @default(now())
+
+  school     School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  payrollRun PayrollRun      @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  structure  SalaryStructure @relation(fields: [structureId], references: [id])
+  teacher    Teacher         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, payrollRunId])
+  @@index([schoolId, teacherId])
+  @@index([schoolId, payDate])
+  @@index([status])
+}
+
+// Timesheet
+
+enum PeriodStatus {
+  OPEN
+  CLOSED
+  LOCKED
+}
+
+enum EntryStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model TimesheetPeriod {
+  id        String       @id @default(cuid())
+  schoolId  String
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  status    PeriodStatus @default(OPEN)
+  closedBy  String?
+  closedAt  DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  school  School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  entries TimesheetEntry[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId, startDate, endDate])
+  @@index([schoolId, status])
+}
+
+model TimesheetEntry {
+  id              String      @id @default(cuid())
+  schoolId        String
+  periodId        String
+  teacherId       String
+  entryDate       DateTime
+  hoursWorked     Decimal     @db.Decimal(5, 2)
+  overtimeHours   Decimal     @default(0) @db.Decimal(5, 2)
+  leaveHours      Decimal     @default(0) @db.Decimal(5, 2)
+  leaveType       String?
+  notes           String?     @db.Text
+  status          EntryStatus @default(DRAFT)
+  submittedBy     String?
+  submittedAt     DateTime?
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectionReason String?     @db.Text
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  school  School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  period  TimesheetPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  teacher Teacher         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, periodId, teacherId, entryDate])
+  @@index([schoolId, periodId])
+  @@index([schoolId, teacherId])
+  @@index([schoolId, entryDate])
+  @@index([status])
+}

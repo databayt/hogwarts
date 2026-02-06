@@ -14,10 +14,8 @@ import { getSubjectImage } from "./image-map"
 interface SubjectCardProps {
   /** Subject ID for linking */
   id: string
-  /** Subject name (English) */
+  /** Subject name */
   name: string
-  /** Subject name (Arabic) */
-  nameAr?: string | null
   /** Current locale */
   lang: Locale
   /** Optional badge text (e.g., "new content") */
@@ -39,13 +37,11 @@ interface SubjectCardProps {
 function SubjectCardInner({
   id,
   name,
-  nameAr,
   lang,
   badge,
   className,
 }: SubjectCardProps) {
-  const isRTL = lang === "ar"
-  const displayName = isRTL && nameAr ? nameAr : name
+  const displayName = name
   const imageUrl = getSubjectImage(name)
 
   return (

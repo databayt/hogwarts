@@ -322,12 +322,12 @@ export const getTeacherColumns = (
           >
             {hasAccount ? (
               <>
-                <UserCheck className="mr-1 h-3 w-3" />
+                <UserCheck className="me-1 h-3 w-3" />
                 {t.hasAccount}
               </>
             ) : (
               <>
-                <UserX className="mr-1 h-3 w-3" />
+                <UserX className="me-1 h-3 w-3" />
                 {t.noAccount}
               </>
             )}

@@ -178,7 +178,7 @@ export function StudentProfile({
                 <div className="flex items-center gap-2">
                   {isOwner && (
                     <Button variant="outline" size="sm" onClick={onEdit}>
-                      <Pencil className="mr-2 h-4 w-4" />
+                      <Pencil className="me-2 h-4 w-4" />
                       Edit
                     </Button>
                   )}
@@ -192,15 +192,15 @@ export function StudentProfile({
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handlePrint}>
-                        <Printer className="mr-2 h-4 w-4" />
+                        <Printer className="me-2 h-4 w-4" />
                         Print Profile
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={handleDownload}>
-                        <Download className="mr-2 h-4 w-4" />
+                        <Download className="me-2 h-4 w-4" />
                         Download PDF
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={handleShare}>
-                        <Share2 className="mr-2 h-4 w-4" />
+                        <Share2 className="me-2 h-4 w-4" />
                         Share Profile
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -306,56 +306,56 @@ export function StudentProfile({
                 value="personal"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <User className="mr-2 h-4 w-4" />
+                <User className="me-2 h-4 w-4" />
                 Personal
               </TabsTrigger>
               <TabsTrigger
                 value="academic"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <School className="mr-2 h-4 w-4" />
+                <School className="me-2 h-4 w-4" />
                 Academic
               </TabsTrigger>
               <TabsTrigger
                 value="guardian"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <User className="mr-2 h-4 w-4" />
+                <User className="me-2 h-4 w-4" />
                 Guardians
               </TabsTrigger>
               <TabsTrigger
                 value="documents"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="me-2 h-4 w-4" />
                 Documents
               </TabsTrigger>
               <TabsTrigger
                 value="health"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <Heart className="mr-2 h-4 w-4" />
+                <Heart className="me-2 h-4 w-4" />
                 Health
               </TabsTrigger>
               <TabsTrigger
                 value="achievements"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <Award className="mr-2 h-4 w-4" />
+                <Award className="me-2 h-4 w-4" />
                 Achievements
               </TabsTrigger>
               <TabsTrigger
                 value="attendance"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <Calendar className="mr-2 h-4 w-4" />
+                <Calendar className="me-2 h-4 w-4" />
                 Attendance
               </TabsTrigger>
               <TabsTrigger
                 value="fees"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <CreditCard className="mr-2 h-4 w-4" />
+                <CreditCard className="me-2 h-4 w-4" />
                 Fees
               </TabsTrigger>
             </TabsList>

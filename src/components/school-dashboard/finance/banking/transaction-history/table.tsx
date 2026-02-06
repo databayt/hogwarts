@@ -251,7 +251,7 @@ function TransactionsTableImprovedInner({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Eye className="mr-2 h-4 w-4" />
+                  <Eye className="me-2 h-4 w-4" />
                   Columns
                 </Button>
               </DropdownMenuTrigger>
@@ -277,7 +277,7 @@ function TransactionsTableImprovedInner({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="me-2 h-4 w-4" />
                     Export
                   </Button>
                 </DropdownMenuTrigger>
@@ -309,7 +309,7 @@ function TransactionsTableImprovedInner({
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, search: e.target.value }))
               }
-              className="pl-9"
+              className="ps-9"
             />
           </div>
 
@@ -392,7 +392,7 @@ function TransactionsTableImprovedInner({
                       onClick={() => handleSort("date")}
                     >
                       {dictionary?.date || "Date"}
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                      <ArrowUpDown className="ms-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                 )}
@@ -411,14 +411,14 @@ function TransactionsTableImprovedInner({
                   <TableHead>{dictionary?.status || "Status"}</TableHead>
                 )}
                 {visibleColumns.amount && (
-                  <TableHead className="text-right">
+                  <TableHead className="text-end">
                     <Button
                       variant="ghost"
-                      className="hover:text-foreground ml-auto h-auto p-0 font-medium"
+                      className="hover:text-foreground ms-auto h-auto p-0 font-medium"
                       onClick={() => handleSort("amount")}
                     >
                       {dictionary?.amount || "Amount"}
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                      <ArrowUpDown className="ms-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                 )}
@@ -492,7 +492,7 @@ function TransactionsTableImprovedInner({
                       </TableCell>
                     )}
                     {visibleColumns.amount && (
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <span
                           className={cn(
                             "font-semibold tabular-nums",

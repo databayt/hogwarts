@@ -29,15 +29,14 @@ interface Props {
 }
 
 const COUNTRIES = [
-  { value: "Sudan", labelEn: "Sudan", labelAr: "السودان" },
-  { value: "Egypt", labelEn: "Egypt", labelAr: "مصر" },
+  { value: "Sudan", label: "السودان" },
+  { value: "Egypt", label: "مصر" },
   {
     value: "Saudi Arabia",
-    labelEn: "Saudi Arabia",
-    labelAr: "المملكة العربية السعودية",
+    label: "المملكة العربية السعودية",
   },
-  { value: "UAE", labelEn: "UAE", labelAr: "الإمارات العربية المتحدة" },
-  { value: "Other", labelEn: "Other", labelAr: "أخرى" },
+  { value: "UAE", label: "الإمارات العربية المتحدة" },
+  { value: "Other", label: "أخرى" },
 ]
 
 export default function StepContact({ dictionary, lang }: Props) {
@@ -224,7 +223,7 @@ export default function StepContact({ dictionary, lang }: Props) {
                 <SelectContent>
                   {COUNTRIES.map((country) => (
                     <SelectItem key={country.value} value={country.value}>
-                      {isRTL ? country.labelAr : country.labelEn}
+                      {country.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

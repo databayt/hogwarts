@@ -196,9 +196,9 @@ export function AttendanceReportExportButton({
       <DropdownMenuTrigger asChild>
         <Button size="sm" variant="outline" disabled={isLoading}>
           {isLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="me-2 h-4 w-4 animate-spin" />
           ) : (
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="me-2 h-4 w-4" />
           )}
           {isLoading
             ? isArabic
@@ -207,7 +207,7 @@ export function AttendanceReportExportButton({
             : isArabic
               ? "تصدير"
               : "Export"}
-          <ChevronDown className="ml-2 h-4 w-4" />
+          <ChevronDown className="ms-2 h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -219,10 +219,10 @@ export function AttendanceReportExportButton({
           onClick={downloadCSV}
           disabled={downloading === "csv"}
         >
-          <FileText className="mr-2 h-4 w-4" />
+          <FileText className="me-2 h-4 w-4" />
           {downloading === "csv" ? (
             <span className="flex items-center">
-              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              <Loader2 className="me-2 h-3 w-3 animate-spin" />
               {isArabic ? "جاري..." : "Loading..."}
             </span>
           ) : (
@@ -233,10 +233,10 @@ export function AttendanceReportExportButton({
           onClick={downloadExcelReport}
           disabled={downloading === "excel"}
         >
-          <FileSpreadsheet className="mr-2 h-4 w-4" />
+          <FileSpreadsheet className="me-2 h-4 w-4" />
           {downloading === "excel" ? (
             <span className="flex items-center">
-              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              <Loader2 className="me-2 h-3 w-3 animate-spin" />
               {isArabic ? "جاري..." : "Loading..."}
             </span>
           ) : (
@@ -247,10 +247,10 @@ export function AttendanceReportExportButton({
           onClick={downloadPDFReport}
           disabled={downloading === "pdf"}
         >
-          <FileText className="mr-2 h-4 w-4 text-red-500" />
+          <FileText className="me-2 h-4 w-4 text-red-500" />
           {downloading === "pdf" ? (
             <span className="flex items-center">
-              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              <Loader2 className="me-2 h-3 w-3 animate-spin" />
               {isArabic ? "جاري..." : "Loading..."}
             </span>
           ) : (

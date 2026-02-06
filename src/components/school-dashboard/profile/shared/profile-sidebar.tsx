@@ -245,7 +245,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
             {(skillsAndInterests?.skills?.length ?? 0) > 5 && (
               <Button variant="ghost" size="sm" className="w-full">
                 View all {skillsAndInterests?.skills?.length ?? 0} skills
-                <ChevronRight className="ml-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4" />
               </Button>
             )}
           </CardContent>
@@ -324,7 +324,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
             {(skillsAndInterests?.certifications?.length ?? 0) > 3 && (
               <Button variant="ghost" size="sm" className="w-full">
                 View all certifications
-                <ChevronRight className="ml-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4" />
               </Button>
             )}
           </CardContent>
@@ -695,7 +695,7 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
             {(staffInfo?.responsibilities?.length ?? 0) > 5 && (
               <Button variant="ghost" size="sm" className="mt-2 w-full">
                 View all responsibilities
-                <ChevronRight className="ml-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4" />
               </Button>
             )}
           </CardContent>

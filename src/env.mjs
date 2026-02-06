@@ -53,6 +53,12 @@ export const env = createEnv({
     CDN_SIGNED_URL_EXPIRY: z.string().optional(),
     CDN_SIGNED_URL_SECRET: z.string().min(1).optional(),
 
+    // CloudFront CDN (Video Streaming)
+    CLOUDFRONT_DOMAIN: z.string().optional(),
+    CLOUDFRONT_KEY_PAIR_ID: z.string().optional(),
+    CLOUDFRONT_PRIVATE_KEY: z.string().optional(),
+    CLOUDFRONT_DISTRIBUTION_ID: z.string().optional(),
+
     // Storage Tier Configuration
     STORAGE_HOT_MAX_SIZE: z.string().optional(),
     STORAGE_WARM_MAX_SIZE: z.string().optional(),
@@ -117,6 +123,12 @@ export const env = createEnv({
     CDN_SIGNED_URLS: process.env.CDN_SIGNED_URLS,
     CDN_SIGNED_URL_EXPIRY: process.env.CDN_SIGNED_URL_EXPIRY,
     CDN_SIGNED_URL_SECRET: process.env.CDN_SIGNED_URL_SECRET,
+
+    // CloudFront CDN (Video Streaming)
+    CLOUDFRONT_DOMAIN: process.env.CLOUDFRONT_DOMAIN,
+    CLOUDFRONT_KEY_PAIR_ID: process.env.CLOUDFRONT_KEY_PAIR_ID,
+    CLOUDFRONT_PRIVATE_KEY: process.env.CLOUDFRONT_PRIVATE_KEY,
+    CLOUDFRONT_DISTRIBUTION_ID: process.env.CLOUDFRONT_DISTRIBUTION_ID,
 
     // Storage Tier Configuration
     STORAGE_HOT_MAX_SIZE: process.env.STORAGE_HOT_MAX_SIZE,

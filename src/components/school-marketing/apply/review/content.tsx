@@ -7,7 +7,7 @@ import { CheckCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import { useApplyValidation } from "../validation-context"
 import { REVIEW_STEP_CONFIG } from "./config"
 import { ReviewForm } from "./form"
@@ -25,7 +25,7 @@ export default function ReviewContent({ dictionary }: Props) {
   const subdomain = params.subdomain as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
-  const { session } = useApplication()
+  const { session } = useApplySession()
   const reviewFormRef = useRef<ReviewFormRef>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -101,14 +101,10 @@ export default function ReviewContent({ dictionary }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {dict.title ||
-                (isRTL ? REVIEW_STEP_CONFIG.labelAr : REVIEW_STEP_CONFIG.label)}
+              {dict.title || REVIEW_STEP_CONFIG.label}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {dict.description ||
-                (isRTL
-                  ? REVIEW_STEP_CONFIG.descriptionAr
-                  : REVIEW_STEP_CONFIG.description)}
+              {dict.description || REVIEW_STEP_CONFIG.description}
             </p>
           </div>
         </div>

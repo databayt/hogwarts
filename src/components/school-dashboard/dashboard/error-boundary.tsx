@@ -134,14 +134,14 @@ export function DefaultErrorFallback({
 
           <div className="flex gap-2 pt-4">
             <Button onClick={reset} variant="default">
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="me-2 h-4 w-4" />
               Retry
             </Button>
             <Button
               onClick={() => (window.location.href = "/")}
               variant="outline"
             >
-              <House className="mr-2 h-4 w-4" />
+              <House className="me-2 h-4 w-4" />
               Go Home
             </Button>
           </div>
@@ -174,7 +174,7 @@ export function DashboardSectionError({
           </div>
           {onRetry && (
             <Button onClick={onRetry} variant="outline" size="sm">
-              <RefreshCw className="mr-2 h-3 w-3" />
+              <RefreshCw className="me-2 h-3 w-3" />
               Try Again
             </Button>
           )}

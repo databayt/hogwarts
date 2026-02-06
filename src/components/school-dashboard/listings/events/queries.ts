@@ -367,3 +367,58 @@ export function getAttendanceStatus(
   if (!max) return `${current} attending`
   return `${current}/${max}`
 }
+
+/**
+ * Get event statistics for a school
+ * @param schoolId - School ID
+ * @returns Promise with statistics
+ */
+export async function getEventStats(schoolId: string) {
+  const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+  const [total, byStatus, byType, upcoming, totalAttendees] = await Promise.all(
+    [
+      db.event.count({ where: { schoolId } }),
+      db.event.groupBy({
+        by: ["status"],
+        where: { schoolId },
+        _count: { status: true },
+      }),
+      db.event.groupBy({
+        by: ["eventType"],
+        where: { schoolId },
+        _count: { eventType: true },
+      }),
+      db.event.count({
+        where: {
+          schoolId,
+          eventDate: { gte: new Date(), lte: thirtyDaysFromNow },
+        },
+      }),
+      db.event.aggregate({
+        where: { schoolId },
+        _sum: { currentAttendees: true },
+      }),
+    ]
+  )
+
+  return {
+    total,
+    byStatus: byStatus.reduce(
+      (acc, item) => {
+        acc[item.status] = item._count.status
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    byType: byType.reduce(
+      (acc, item) => {
+        acc[item.eventType] = item._count.eventType
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    upcoming,
+    totalAttendees: totalAttendees._sum.currentAttendees ?? 0,
+  }
+}

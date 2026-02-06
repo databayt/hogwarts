@@ -33,7 +33,7 @@ export default function CertificatesError({ error, reset }: ErrorProps) {
         </p>
       )}
       <Button onClick={reset} variant="outline">
-        <Icons.refresh className="mr-2 h-4 w-4" />
+        <Icons.refresh className="me-2 h-4 w-4" />
         Try again
       </Button>
     </div>

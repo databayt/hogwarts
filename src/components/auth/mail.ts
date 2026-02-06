@@ -6,16 +6,59 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const domain = process.env.NEXT_PUBLIC_APP_URL
 const isDev = process.env.NODE_ENV === "development"
 
-export const sendTwoFactorTokenEmail = async (email: string, token: string) => {
+const emailStrings = {
+  en: {
+    twoFactorSubject: "2FA Code",
+    twoFactorBody: (token: string) => `<p>Your 2FA code: ${token}</p>`,
+    twoFactorText: (token: string) => `Your 2FA code: ${token}`,
+    resetSubject: "Reset your password",
+    resetBody: (link: string) =>
+      `<p>Click <a href="${link}">here</a> to reset password.</p>`,
+    resetText: (link: string) =>
+      `Click the following link to reset your password: ${link}`,
+    verifySubject: "Confirm your email",
+    verifyBody: (link: string) =>
+      `<p>Click <a href="${link}">here</a> to confirm email.</p>`,
+    verifyText: (link: string) =>
+      `Click the following link to confirm your email: ${link}`,
+  },
+  ar: {
+    twoFactorSubject: "رمز التحقق",
+    twoFactorBody: (token: string) =>
+      `<p dir="rtl">رمز التحقق الخاص بك: ${token}</p>`,
+    twoFactorText: (token: string) => `رمز التحقق الخاص بك: ${token}`,
+    resetSubject: "إعادة تعيين كلمة المرور",
+    resetBody: (link: string) =>
+      `<p dir="rtl">انقر <a href="${link}">هنا</a> لإعادة تعيين كلمة المرور.</p>`,
+    resetText: (link: string) =>
+      `انقر على الرابط التالي لإعادة تعيين كلمة المرور: ${link}`,
+    verifySubject: "تأكيد بريدك الإلكتروني",
+    verifyBody: (link: string) =>
+      `<p dir="rtl">انقر <a href="${link}">هنا</a> لتأكيد بريدك الإلكتروني.</p>`,
+    verifyText: (link: string) =>
+      `انقر على الرابط التالي لتأكيد بريدك الإلكتروني: ${link}`,
+  },
+} as const
+
+function getStrings(locale: string) {
+  return locale === "ar" ? emailStrings.ar : emailStrings.en
+}
+
+export const sendTwoFactorTokenEmail = async (
+  email: string,
+  token: string,
+  locale = "en"
+) => {
   if (isDev) console.log("Sending 2FA email to:", email)
+  const t = getStrings(locale)
 
   try {
     const response = await resend.emails.send({
       from: "noreply@databayt.org",
       to: email,
-      subject: "2FA Code",
-      html: `<p>Your 2FA code: ${token}</p>`,
-      text: `Your 2FA code: ${token}`,
+      subject: t.twoFactorSubject,
+      html: t.twoFactorBody(token),
+      text: t.twoFactorText(token),
     })
 
     if (isDev) console.log("2FA email sent successfully, response:", response)
@@ -24,9 +67,13 @@ export const sendTwoFactorTokenEmail = async (email: string, token: string) => {
   }
 }
 
-export const sendPasswordResetEmail = async (email: string, token: string) => {
-  // Include locale in the reset link - routes require /[lang]/ prefix
-  const resetLink = `${domain}/en/new-password?token=${token}`
+export const sendPasswordResetEmail = async (
+  email: string,
+  token: string,
+  locale = "en"
+) => {
+  const resetLink = `${domain}/${locale}/new-password?token=${token}`
+  const t = getStrings(locale)
 
   if (isDev) console.log("Password reset link:", resetLink)
 
@@ -34,9 +81,9 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
     const response = await resend.emails.send({
       from: "noreply@databayt.org",
       to: email,
-      subject: "Reset your password",
-      html: `<p>Click <a href="${resetLink}">here</a> to reset password.</p>`,
-      text: `Click the following link to reset your password: ${resetLink}`,
+      subject: t.resetSubject,
+      html: t.resetBody(resetLink),
+      text: t.resetText(resetLink),
     })
 
     if (isDev)
@@ -46,9 +93,13 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
   }
 }
 
-export const sendVerificationEmail = async (email: string, token: string) => {
-  // Include locale in the verification link - routes require /[lang]/ prefix
-  const confirmLink = `${domain}/en/new-verification?token=${token}`
+export const sendVerificationEmail = async (
+  email: string,
+  token: string,
+  locale = "en"
+) => {
+  const confirmLink = `${domain}/${locale}/new-verification?token=${token}`
+  const t = getStrings(locale)
 
   if (isDev) console.log("Email confirmation link:", confirmLink)
 
@@ -56,9 +107,9 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     const response = await resend.emails.send({
       from: "noreply@databayt.org",
       to: email,
-      subject: "Confirm your email",
-      html: `<p>Click <a href="${confirmLink}">here</a> to confirm email.</p>`,
-      text: `Click the following link to confirm your email: ${confirmLink}`,
+      subject: t.verifySubject,
+      html: t.verifyBody(confirmLink),
+      text: t.verifyText(confirmLink),
     })
 
     if (isDev)

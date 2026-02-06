@@ -131,7 +131,7 @@ function TimetableCellComponent({
         className={cn(
           "flex items-center justify-center px-8 py-5 transition-all duration-200",
           "bg-muted/20",
-          !isLastColumn && "border-border border-r",
+          !isLastColumn && "border-border border-e",
           onSubjectChange && "hover:bg-muted/40 cursor-pointer",
           "print:py-4"
         )}
@@ -150,7 +150,7 @@ function TimetableCellComponent({
         className={cn(
           "flex flex-col items-center justify-center px-8 py-5 transition-all duration-200",
           getSubjectColor(subject),
-          !isLastColumn && "border-border border-r",
+          !isLastColumn && "border-border border-e",
           "cursor-pointer hover:shadow-inner",
           "print:py-4"
         )}

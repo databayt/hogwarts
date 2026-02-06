@@ -75,7 +75,7 @@ export default function LogoCloud({ dictionary, lang }: LogoCloudProps) {
     >
       <div className="group relative">
         <div className="flex flex-col items-center md:flex-row">
-          <div className="shrink-0 md:border-r md:pr-6">
+          <div className="shrink-0 md:border-e md:pe-6">
             <p className="text-base font-medium whitespace-pre-line">{text}</p>
           </div>
           <div className="relative flex-1 overflow-hidden py-6">
@@ -94,17 +94,17 @@ export default function LogoCloud({ dictionary, lang }: LogoCloudProps) {
             </InfiniteSlider>
 
             {/* Gradient overlays for color fade - both sides */}
-            <div className="from-background via-background/80 pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r to-transparent" />
-            <div className="from-background via-background/80 pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l to-transparent" />
+            <div className="from-background via-background/80 pointer-events-none absolute inset-y-0 start-0 z-10 w-24 bg-gradient-to-r to-transparent" />
+            <div className="from-background via-background/80 pointer-events-none absolute inset-y-0 end-0 z-10 w-24 bg-gradient-to-l to-transparent" />
 
             {/* Progressive blur for smooth effect */}
             <ProgressiveBlur
-              className="pointer-events-none absolute top-0 left-0 z-20 h-full w-24"
+              className="pointer-events-none absolute start-0 top-0 z-20 h-full w-24"
               direction="left"
               blurIntensity={1}
             />
             <ProgressiveBlur
-              className="pointer-events-none absolute top-0 right-0 z-20 h-full w-24"
+              className="pointer-events-none absolute end-0 top-0 z-20 h-full w-24"
               direction="right"
               blurIntensity={1}
             />

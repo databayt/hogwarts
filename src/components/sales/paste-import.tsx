@@ -342,7 +342,7 @@ Example: John Doe - CEO - john@example.com`
               }
               disabled={isProcessing}
             >
-              <Copy className="mr-2 h-3 w-3" />
+              <Copy className="me-2 h-3 w-3" />
               {d?.useSampleData || "Use Sample Data"}
             </Button>
           </div>
@@ -382,7 +382,7 @@ Example: John Doe - CEO - john@example.com`
                           <span className="text-muted-foreground font-medium">
                             {field.name}:
                           </span>
-                          <span className="ml-2 font-mono">
+                          <span className="ms-2 font-mono">
                             {field.sampleValues.slice(0, 2).join(", ")}
                             {field.sampleValues.length > 2 && "..."}
                           </span>

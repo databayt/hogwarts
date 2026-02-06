@@ -39,6 +39,8 @@ import { auth } from "@/auth"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { put } from "@vercel/blob"
 
+import { isCloudFrontConfigured } from "@/lib/cloudfront"
+import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
 import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -209,7 +211,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 7. Generate unique filename with school context
+    // 7. Check video storage quota
+    if (schoolId && category === "video") {
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { videoStorageUsedBytes: true, videoStorageQuotaBytes: true },
+      })
+
+      if (
+        school?.videoStorageQuotaBytes &&
+        school.videoStorageUsedBytes !== null &&
+        BigInt(school.videoStorageUsedBytes) + BigInt(file.size) >
+          BigInt(school.videoStorageQuotaBytes)
+      ) {
+        return NextResponse.json(
+          { error: "Video storage quota exceeded" },
+          { status: 413 }
+        )
+      }
+    }
+
+    // 8. Generate unique filename with school context
     const timestamp = Date.now()
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
     const key = `stream/${schoolId ?? "platform"}/${category}/${timestamp}_${sanitizedName}`
@@ -246,9 +268,25 @@ export async function POST(request: NextRequest) {
         })
       )
 
-      uploadUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`
+      // Return CloudFront URL if configured, otherwise raw S3 URL
+      const cfDomain = process.env.CLOUDFRONT_DOMAIN
+      uploadUrl = cfDomain
+        ? `https://${cfDomain}/${key}`
+        : `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`
       uploadPath = key
       storageProvider = "aws_s3"
+
+      // Track video storage usage per school
+      if (schoolId && category === "video") {
+        await db.school
+          .update({
+            where: { id: schoolId },
+            data: {
+              videoStorageUsedBytes: { increment: file.size },
+            },
+          })
+          .catch(() => {}) // Non-critical, don't fail upload
+      }
 
       logger.info("S3 upload successful", {
         action: "s3_upload",

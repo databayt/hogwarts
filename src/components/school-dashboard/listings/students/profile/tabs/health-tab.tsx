@@ -69,7 +69,7 @@ export function HealthTab({ student }: HealthTabProps) {
       {/* Quick Actions */}
       <div className="flex justify-end">
         <Button variant="outline" size="sm">
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="me-2 h-4 w-4" />
           Add Health Record
         </Button>
       </div>

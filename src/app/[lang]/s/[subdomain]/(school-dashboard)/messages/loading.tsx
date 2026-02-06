@@ -4,7 +4,7 @@ export default function MessagesLoading() {
   return (
     <div className="bg-background flex h-full">
       {/* Sidebar skeleton - conversation list */}
-      <div className="border-border w-full flex-shrink-0 space-y-4 border-r p-4 sm:w-96 md:w-[430px]">
+      <div className="border-border w-full flex-shrink-0 space-y-4 border-e p-4 sm:w-96 md:w-[430px]">
         {/* Search bar skeleton */}
         <Skeleton className="h-10 w-full rounded-md" />
 

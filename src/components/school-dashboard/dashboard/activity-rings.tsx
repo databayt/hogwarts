@@ -122,7 +122,7 @@ export function ActivityRings({
                   style={{ color: activity.color }}
                 >
                   {activity.current}/{activity.target}
-                  <span className="text-muted-foreground ml-1 text-sm">
+                  <span className="text-muted-foreground ms-1 text-sm">
                     {activity.unit}
                   </span>
                 </span>

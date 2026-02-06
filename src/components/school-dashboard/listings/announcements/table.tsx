@@ -51,13 +51,10 @@ interface AnnouncementsTableProps {
 }
 
 /**
- * Get localized title with fallback
+ * Get announcement title
  */
-function getLocalizedTitle(row: AnnouncementRow, locale: Locale): string {
-  if (locale === "ar") {
-    return row.titleAr || row.titleEn || ""
-  }
-  return row.titleEn || row.titleAr || ""
+function getTitle(row: AnnouncementRow): string {
+  return row.title || ""
 }
 
 // Export CSV function
@@ -76,8 +73,8 @@ function createGetAnnouncementsCSV(lang: Locale) {
     const rows = result.data.rows
     const headers = [
       "ID",
-      "Title (EN)",
-      "Title (AR)",
+      "Title",
+      "Language",
       "Scope",
       "Published",
       "Created At",
@@ -86,8 +83,8 @@ function createGetAnnouncementsCSV(lang: Locale) {
     const csvRows = rows.map((row) =>
       [
         row.id,
-        `"${(row.titleEn || "").replace(/"/g, '""')}"`,
-        `"${(row.titleAr || "").replace(/"/g, '""')}"`,
+        `"${(row.title || "").replace(/"/g, '""')}"`,
+        row.lang || "ar",
         row.scope,
         row.published ? "Yes" : "No",
         row.createdAt,
@@ -159,7 +156,7 @@ function AnnouncementsTableInner({
   // Handle delete with optimistic update
   const handleDelete = useCallback(
     async (announcement: AnnouncementRow) => {
-      const displayTitle = getLocalizedTitle(announcement, lang)
+      const displayTitle = getTitle(announcement)
       try {
         const ok = await confirmDeleteDialog(
           t.confirmDelete.replace("{title}", displayTitle)
@@ -337,7 +334,7 @@ function AnnouncementsTableInner({
           ) : (
             <GridContainer columns={4} className="mt-4">
               {data.map((announcement) => {
-                const displayTitle = getLocalizedTitle(announcement, lang)
+                const displayTitle = getTitle(announcement)
                 const scopeBadge = getScopeBadge(announcement.scope)
                 return (
                   <GridCard

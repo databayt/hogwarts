@@ -1,0 +1,60 @@
+// ============================================
+// FINANCE MODULE - Reports & Permissions
+// ============================================
+
+enum FinancialReportType {
+  PROFIT_LOSS
+  BALANCE_SHEET
+  CASH_FLOW
+  TRIAL_BALANCE
+  GENERAL_LEDGER
+  BUDGET_VARIANCE
+  PAYROLL_SUMMARY
+  FEE_COLLECTION
+  EXPENSE_REPORT
+  CUSTOM
+}
+
+enum FinancialReportStatus {
+  GENERATING
+  COMPLETED
+  FAILED
+}
+
+model FinancialReport {
+  id           String                @id @default(cuid())
+  schoolId     String
+  reportType   FinancialReportType
+  reportName   String
+  fiscalYearId String?
+  startDate    DateTime
+  endDate      DateTime
+  parameters   Json? // Report-specific parameters
+  fileUrl      String?
+  status       FinancialReportStatus @default(GENERATING)
+  generatedBy  String
+  generatedAt  DateTime              @default(now())
+
+  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  fiscalYear FiscalYear? @relation(fields: [fiscalYearId], references: [id])
+
+  @@index([schoolId, reportType])
+  @@index([schoolId, generatedAt])
+  @@index([schoolId, status])
+}
+
+model FinancePermission {
+  id        String   @id @default(cuid())
+  schoolId  String
+  userId    String
+  module    String // "invoice", "payroll", "budget", "expenses", "accounts", etc.
+  action    String // "view", "create", "edit", "delete", "approve", "process"
+  createdAt DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, userId, module, action])
+  @@index([schoolId, userId])
+  @@index([schoolId, module])
+}

@@ -39,8 +39,8 @@ export function ShadcnInputGroupDemo() {
       <div className="grid w-full max-w-sm gap-6">
         {/* Search Input with Results */}
         <div className="relative">
-          <Input placeholder="Search..." className="pr-24" />
-          <div className="absolute inset-y-0 right-0 flex items-center gap-2 pr-3">
+          <Input placeholder="Search..." className="pe-24" />
+          <div className="absolute inset-y-0 right-0 flex items-center gap-2 pe-3">
             <Search className="text-muted-foreground size-4" />
             <span className="text-muted-foreground text-sm">12 results</span>
           </div>
@@ -48,11 +48,11 @@ export function ShadcnInputGroupDemo() {
 
         {/* URL Input with Protocol */}
         <div className="relative">
-          <Input placeholder="example.com" className="pr-10 pl-20" />
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+          <Input placeholder="example.com" className="ps-20 pe-10" />
+          <div className="absolute inset-y-0 left-0 flex items-center ps-3">
             <span className="text-muted-foreground text-sm">https://</span>
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+          <div className="absolute inset-y-0 right-0 flex items-center pe-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -73,7 +73,7 @@ export function ShadcnInputGroupDemo() {
         <div className="relative">
           <Textarea
             placeholder="Ask, Search or Chat..."
-            className="min-h-[100px] pr-3 pb-12"
+            className="min-h-[100px] pe-3 pb-12"
           />
           <div className="border-border bg-background absolute right-0 bottom-0 left-0 flex items-center gap-2 border-t p-2">
             <Button
@@ -96,7 +96,7 @@ export function ShadcnInputGroupDemo() {
                 <DropdownMenuItem>Manual</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <span className="text-muted-foreground ml-auto text-sm">
+            <span className="text-muted-foreground ms-auto text-sm">
               52% used
             </span>
             <Separator orientation="vertical" className="h-4" />
@@ -109,8 +109,8 @@ export function ShadcnInputGroupDemo() {
 
         {/* Verified Input */}
         <div className="relative">
-          <Input placeholder="@shadcn" className="pr-10" />
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+          <Input placeholder="@shadcn" className="pe-10" />
+          <div className="absolute inset-y-0 right-0 flex items-center pe-3">
             <div className="bg-primary flex size-4 items-center justify-center rounded-full">
               <Check className="text-primary-foreground size-3" />
             </div>

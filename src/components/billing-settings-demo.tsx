@@ -202,7 +202,7 @@ export default function BillingSettingsDemo() {
                     }
                   }}
                   placeholder="1234 5678 9012 3456"
-                  className="pr-10"
+                  className="pe-10"
                   maxLength={19}
                 />
                 <CreditCard className="text-muted-foreground absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />

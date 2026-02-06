@@ -33,7 +33,7 @@ export default function StatsLinks() {
       {data.map((item) => (
         <Card key={item.name} className="gap-0 p-0">
           <CardContent className="p-6">
-            <div className="flex items-start justify-between space-x-2">
+            <div className="flex items-start justify-between gap-2">
               <span className="text-muted-foreground truncate text-sm">
                 {item.name}
               </span>

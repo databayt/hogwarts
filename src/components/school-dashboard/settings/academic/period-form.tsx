@@ -214,7 +214,7 @@ export function PeriodForm({
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && (
-                <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
               )}
               {editingPeriod
                 ? dict.saveChanges || "Save Changes"

@@ -30,7 +30,7 @@ export function DocsNav() {
   if (breadcrumbs.length <= 1) return null
 
   return (
-    <div className="text-muted-foreground mb-4 flex items-center space-x-1 text-sm">
+    <div className="text-muted-foreground mb-4 flex items-center gap-1 text-sm">
       <Link
         href="/docs"
         className="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap"

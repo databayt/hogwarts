@@ -82,7 +82,7 @@ export default async function TeachersContent({
                 select: {
                   id: true,
                   departmentName: true,
-                  departmentNameAr: true,
+                  lang: true,
                 },
               },
             },
@@ -107,11 +107,7 @@ export default async function TeachersContent({
     // Transform to enhanced row format
     data = rows.map((t: any) => {
       const primaryDept = t.teacherDepartments?.[0]?.department
-      const departmentName = primaryDept
-        ? (lang === "ar"
-            ? primaryDept.departmentNameAr
-            : primaryDept.departmentName) || primaryDept.departmentName
-        : null
+      const departmentName = primaryDept ? primaryDept.departmentName : null
 
       return {
         id: t.id,

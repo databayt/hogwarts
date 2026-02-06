@@ -12,7 +12,7 @@ interface HeroProps {
   dictionary?: Dictionary
 }
 
-export function Hero({ lang = "en", dictionary }: HeroProps) {
+export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
   // Get translations with fallbacks
   const t = dictionary?.marketing?.site?.hero
 
@@ -59,12 +59,22 @@ export function Hero({ lang = "en", dictionary }: HeroProps) {
                 "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
             </p>
             <div className="flex flex-col gap-4 sm:flex-row rtl:sm:flex-row-reverse">
-              <Link href={`/${lang}/tour`}>
+              <Link
+                href={
+                  subdomain ? `/${lang}/s/${subdomain}/tour` : `/${lang}/tour`
+                }
+              >
                 <AnimatedButton size="lg" className="w-full sm:w-auto">
                   {t?.scheduleVisit || "Schedule a Visit"}
                 </AnimatedButton>
               </Link>
-              <Link href={`/${lang}/admissions`}>
+              <Link
+                href={
+                  subdomain
+                    ? `/${lang}/s/${subdomain}/admissions`
+                    : `/${lang}/admissions`
+                }
+              >
                 <Button
                   variant="outline"
                   size="lg"
@@ -100,12 +110,22 @@ export function Hero({ lang = "en", dictionary }: HeroProps) {
               "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
           </p>
           <div className="flex flex-row gap-4 rtl:flex-row-reverse">
-            <Link href={`/${lang}/tour`}>
+            <Link
+              href={
+                subdomain ? `/${lang}/s/${subdomain}/tour` : `/${lang}/tour`
+              }
+            >
               <AnimatedButton size="lg">
                 {t?.scheduleVisit || "Schedule a Visit"}
               </AnimatedButton>
             </Link>
-            <Link href={`/${lang}/admissions`}>
+            <Link
+              href={
+                subdomain
+                  ? `/${lang}/s/${subdomain}/admissions`
+                  : `/${lang}/admissions`
+              }
+            >
               <Button variant="outline" size="lg">
                 {t?.learnMore || "Learn More"}
               </Button>

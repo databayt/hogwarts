@@ -114,7 +114,7 @@ export function ImportForm({
                         {IMPORT_TYPES.map((type) => (
                           <div
                             key={type.value}
-                            className="flex items-start space-x-3"
+                            className="flex items-start gap-3"
                           >
                             <RadioGroupItem
                               value={type.value}

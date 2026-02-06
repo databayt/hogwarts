@@ -100,7 +100,7 @@ export function ClassDetailContent({
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="me-2 h-4 w-4" />
           {t.back}
         </Button>
         <Alert variant="destructive">
@@ -116,11 +116,7 @@ export function ClassDetailContent({
     ? `${classData.teacher.givenName} ${classData.teacher.surname}`
     : t.unknown
 
-  const subjectName = isRTL
-    ? classData.subject?.subjectNameAr ||
-      classData.subject?.subjectName ||
-      t.unknown
-    : classData.subject?.subjectName || t.unknown
+  const subjectName = classData.subject?.subjectName || t.unknown
 
   return (
     <div className="space-y-6">
@@ -131,9 +127,7 @@ export function ClassDetailContent({
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold">
-              {isRTL && classData.nameAr ? classData.nameAr : classData.name}
-            </h1>
+            <h1 className="text-2xl font-semibold">{classData.name}</h1>
             {classData.courseCode && (
               <p className="text-muted-foreground text-sm">
                 {classData.courseCode}
@@ -143,7 +137,7 @@ export function ClassDetailContent({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">
-            <Users className="mr-1 h-3 w-3" />
+            <Users className="me-1 h-3 w-3" />
             {classData._count.studentClasses}/{classData.maxCapacity || 50}
           </Badge>
           <Badge variant="secondary">{classData.evaluationType}</Badge>
@@ -158,7 +152,7 @@ export function ClassDetailContent({
             {t.students} ({classData._count.studentClasses})
           </TabsTrigger>
           <TabsTrigger value="subject-teachers">
-            <UserCog className="mr-1 h-4 w-4" />
+            <UserCog className="me-1 h-4 w-4" />
             {t.subjectTeachers}
           </TabsTrigger>
         </TabsList>
@@ -377,7 +371,7 @@ export function ClassDetailContent({
                             <Link
                               href={`/${lang}/profile/${enrollment.student.userId}`}
                             >
-                              <User className="mr-1 h-3 w-3" />
+                              <User className="me-1 h-3 w-3" />
                               {t.viewProfile}
                             </Link>
                           </Button>
@@ -386,7 +380,7 @@ export function ClassDetailContent({
                           <Link
                             href={`/${lang}/grades?studentId=${enrollment.student.id}`}
                           >
-                            <GraduationCap className="mr-1 h-3 w-3" />
+                            <GraduationCap className="me-1 h-3 w-3" />
                             {t.viewGrades}
                           </Link>
                         </Button>

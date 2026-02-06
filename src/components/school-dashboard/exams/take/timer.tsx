@@ -133,13 +133,13 @@ export function ExamTimer({
       </span>
 
       {isPaused && (
-        <Badge variant="secondary" className="ml-2">
+        <Badge variant="secondary" className="ms-2">
           Paused
         </Badge>
       )}
 
       {urgency === "critical" && !isPaused && (
-        <Badge variant="destructive" className="ml-2">
+        <Badge variant="destructive" className="ms-2">
           Hurry!
         </Badge>
       )}

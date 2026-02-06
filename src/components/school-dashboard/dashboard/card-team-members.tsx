@@ -98,7 +98,7 @@ export function CardsTeamMembers() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="ml-auto shadow-none"
+                    className="ms-auto shadow-none"
                   >
                     {member.role} <ChevronDown />
                   </Button>

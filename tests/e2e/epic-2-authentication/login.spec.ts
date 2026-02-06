@@ -96,6 +96,7 @@ test.describe("Story 2.2: Credentials Login Flow @auth", () => {
 
     // Skip protocol mismatch check
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -114,6 +115,7 @@ test.describe("Story 2.2: Credentials Login Flow @auth", () => {
     await loginPage.loginAs("admin")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -128,6 +130,7 @@ test.describe("Story 2.2: Credentials Login Flow @auth", () => {
     await loginPage.loginAs("teacher")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -141,6 +144,7 @@ test.describe("Story 2.2: Credentials Login Flow @auth", () => {
     await loginPage.loginAs("student")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -154,6 +158,7 @@ test.describe("Story 2.2: Credentials Login Flow @auth", () => {
     await loginPage.loginAs("guardian")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -167,6 +172,7 @@ test.describe("Story 2.2: Credentials Login Flow @auth", () => {
     await loginPage.loginAs("accountant")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -180,6 +186,7 @@ test.describe("Story 2.2: Credentials Login Flow @auth", () => {
     await loginPage.loginAs("staff")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -233,6 +240,7 @@ test.describe("Story 2.2: School Subdomain Login @auth @multi-tenant", () => {
     await loginPage.loginAs("admin")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -247,6 +255,7 @@ test.describe("Story 2.2: School Subdomain Login @auth @multi-tenant", () => {
     await loginPage.loginAs("teacher")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -281,6 +290,7 @@ test.describe("Story 2.2: Arabic Locale Login @auth @i18n", () => {
     }
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 
@@ -303,6 +313,7 @@ test.describe("Story 2.2: Arabic Locale Login @auth @i18n", () => {
     await loginPage.loginAs("admin")
 
     if (page.url().includes("chrome-error://")) {
+      test.skip(true, "Protocol mismatch in dev environment")
       return
     }
 

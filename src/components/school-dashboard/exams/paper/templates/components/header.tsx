@@ -112,7 +112,7 @@ export function Header({
   const styles = createStyles(locale, fontFamily)
   const isRTL = locale === "ar"
 
-  const schoolName = isRTL && school.nameAr ? school.nameAr : school.name
+  const schoolName = school.name
   const subjectName = exam.subject.subjectName
   const className = exam.class.name
 

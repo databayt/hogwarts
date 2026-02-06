@@ -139,13 +139,13 @@ export function UploadButton({
   const renderIcon = () => {
     switch (status) {
       case "uploading":
-        return <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        return <Loader2 className="me-2 h-4 w-4 animate-spin" />
       case "success":
-        return <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+        return <CheckCircle className="me-2 h-4 w-4 text-green-500" />
       case "error":
-        return <AlertCircle className="text-destructive mr-2 h-4 w-4" />
+        return <AlertCircle className="text-destructive me-2 h-4 w-4" />
       default:
-        return <Upload className="mr-2 h-4 w-4" />
+        return <Upload className="me-2 h-4 w-4" />
     }
   }
 

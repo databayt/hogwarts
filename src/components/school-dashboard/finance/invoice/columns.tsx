@@ -168,16 +168,16 @@ export const getInvoiceColumns = (
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href={`/${lang}/finance/invoice/${invoice.id}`}>
-                <Eye className="mr-2 h-4 w-4" />
+                <Eye className="me-2 h-4 w-4" />
                 View
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>
-              <Pencil className="mr-2 h-4 w-4" />
+              <Pencil className="me-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onDelete} className="text-red-600">
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="me-2 h-4 w-4" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

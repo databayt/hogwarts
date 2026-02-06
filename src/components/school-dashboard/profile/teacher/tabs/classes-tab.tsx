@@ -316,7 +316,7 @@ export function ClassesTab({
                     key={cls.id}
                     onClick={() => setSelectedClass(cls)}
                     className={cn(
-                      "w-full rounded-lg p-3 text-left transition-colors",
+                      "w-full rounded-lg p-3 text-start transition-colors",
                       selectedClass.id === cls.id
                         ? "bg-primary/10"
                         : "hover:bg-muted"
@@ -350,7 +350,7 @@ export function ClassesTab({
                     {selectedClass.code} - {selectedClass.name}
                   </span>
                   <Button variant="outline" size="sm">
-                    <Eye className="mr-2 h-4 w-4" />
+                    <Eye className="me-2 h-4 w-4" />
                     View Details
                   </Button>
                 </CardTitle>
@@ -401,7 +401,7 @@ export function ClassesTab({
                       Class Performance
                     </span>
                     <Button variant="ghost" size="sm">
-                      <BarChart className="mr-2 h-4 w-4" />
+                      <BarChart className="me-2 h-4 w-4" />
                       Analytics
                     </Button>
                   </div>
@@ -443,7 +443,7 @@ export function ClassesTab({
                     <span className="text-sm font-medium">Top Performers</span>
                     <Button variant="ghost" size="sm">
                       View All
-                      <ChevronRight className="ml-1 h-4 w-4" />
+                      <ChevronRight className="ms-1 h-4 w-4" />
                     </Button>
                   </div>
                   <div className="space-y-2">
@@ -472,7 +472,7 @@ export function ClassesTab({
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-end">
                           <p
                             className={cn(
                               "text-sm font-medium",
@@ -499,7 +499,7 @@ export function ClassesTab({
               <CardTitle className="flex items-center justify-between text-base">
                 <span>Student List - {selectedClass.code}</span>
                 <Button variant="outline" size="sm">
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Export
                 </Button>
               </CardTitle>

@@ -268,43 +268,43 @@ export function AttendanceExport({
               onValueChange={(v) => setExportFormat(v as ExportFormat)}
             >
               <div className="grid grid-cols-4 gap-4">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <RadioGroupItem value="CSV" id="csv" />
                   <Label
                     htmlFor="csv"
                     className="flex cursor-pointer items-center"
                   >
-                    <Table2 className="mr-1 h-4 w-4" />
+                    <Table2 className="me-1 h-4 w-4" />
                     CSV
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <RadioGroupItem value="EXCEL" id="excel" />
                   <Label
                     htmlFor="excel"
                     className="flex cursor-pointer items-center"
                   >
-                    <FileText className="mr-1 h-4 w-4" />
+                    <FileText className="me-1 h-4 w-4" />
                     Excel
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <RadioGroupItem value="PDF" id="pdf" />
                   <Label
                     htmlFor="pdf"
                     className="flex cursor-pointer items-center"
                   >
-                    <FileText className="mr-1 h-4 w-4" />
+                    <FileText className="me-1 h-4 w-4" />
                     PDF
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <RadioGroupItem value="JSON" id="json" />
                   <Label
                     htmlFor="json"
                     className="flex cursor-pointer items-center"
                   >
-                    <FileJson className="mr-1 h-4 w-4" />
+                    <FileJson className="me-1 h-4 w-4" />
                     JSON
                   </Label>
                 </div>

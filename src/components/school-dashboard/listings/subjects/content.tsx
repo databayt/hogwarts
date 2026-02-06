@@ -48,7 +48,6 @@ export default async function SubjectsContent({
           department: {
             select: {
               departmentName: true,
-              departmentNameAr: true,
             },
           },
         },
@@ -58,9 +57,8 @@ export default async function SubjectsContent({
     data = rows.map((s: any) => ({
       id: s.id,
       subjectName: s.subjectName,
-      subjectNameAr: s.subjectNameAr || null,
+      lang: (s.lang as string) || "ar",
       departmentName: s.department?.departmentName || "Unknown",
-      departmentNameAr: s.department?.departmentNameAr || null,
       createdAt: (s.createdAt as Date).toISOString(),
     }))
     total = count as number

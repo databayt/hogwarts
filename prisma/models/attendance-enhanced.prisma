@@ -29,6 +29,7 @@ model AttendanceDevice {
   events   AttendanceEvent[]
 
   @@unique([schoolId, deviceId])
+  @@index([schoolId])
   @@index([type])
   @@index([isActive])
   @@index([location])
@@ -71,8 +72,10 @@ model AttendanceSession {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
+  @@index([schoolId])
   @@index([studentId, date])
   @@index([classId])
+  @@index([deviceId])
   @@index([checkIn])
   @@index([method])
   @@map("attendance_sessions")
@@ -99,7 +102,9 @@ model AttendanceEvent {
   processedAt  DateTime?
   processedBy  String? // System or user that processed the event
 
+  @@index([schoolId])
   @@index([studentId])
+  @@index([deviceId])
   @@index([eventType])
   @@index([timestamp])
   @@index([success])
@@ -163,7 +168,7 @@ model AccessCard {
   id            String    @id @default(cuid())
   schoolId      String
   school        School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  cardNumber    String    @unique
+  cardNumber    String
   cardType      CardType
   studentId     String?
   student       Student?  @relation(fields: [studentId], references: [id], onDelete: SetNull)
@@ -183,6 +188,8 @@ model AccessCard {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  @@unique([schoolId, cardNumber])
+  @@index([schoolId, cardNumber])
   @@index([cardType])
   @@index([studentId])
   @@index([teacherId])

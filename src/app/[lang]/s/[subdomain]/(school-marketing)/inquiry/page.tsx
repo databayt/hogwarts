@@ -6,6 +6,9 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import InquiryFormContent from "@/components/school-marketing/admission/inquiry/inquiry-form-content"
 
+// 1 hour — school marketing pages change infrequently
+export const revalidate = 3600
+
 interface InquiryPageProps {
   params: Promise<{ lang: Locale; subdomain: string }>
 }

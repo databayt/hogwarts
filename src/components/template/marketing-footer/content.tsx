@@ -19,8 +19,8 @@ export function MarketingFooter() {
           </div>
 
           {/* Links Section */}
-          <div className="w-full pl-20">
-            <div className="grid grid-cols-2 gap-4 px-0 text-center md:grid-cols-4 md:gap-8 lg:flex lg:items-start lg:gap-20 lg:text-left">
+          <div className="w-full ps-20">
+            <div className="grid grid-cols-2 gap-4 px-0 text-center md:grid-cols-4 md:gap-8 lg:flex lg:items-start lg:gap-20 lg:text-start">
               {footerSections.map((section) => (
                 <div key={section.title} className="w-full lg:flex-1">
                   <h3 className="mb-4 text-sm font-medium">{section.title}</h3>

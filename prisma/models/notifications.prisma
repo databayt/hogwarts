@@ -152,16 +152,13 @@ model NotificationTemplate {
   channel NotificationChannel
 
   // Template content (supports {{variable}} placeholders)
-  titleEn String @db.VarChar(255)
-  titleAr String @db.VarChar(255)
-  bodyEn  String @db.Text
-  bodyAr  String @db.Text
+  title String @db.VarChar(255)
+  body  String @db.Text
+  lang  String @default("ar")
 
   // Email-specific (optional)
-  emailSubjectEn String? @db.VarChar(255)
-  emailSubjectAr String? @db.VarChar(255)
-  emailBodyEn    String? @db.Text
-  emailBodyAr    String? @db.Text
+  emailSubject String? @db.VarChar(255)
+  emailBody    String? @db.Text
 
   // Active status
   active Boolean @default(true)

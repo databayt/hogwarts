@@ -74,7 +74,7 @@ export default async function ResultDetailContent({
             </Link>
           </Button>
           <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="me-2 h-4 w-4" />
             {r?.actions?.exportAllPDFs || "Export All PDFs"}
           </Button>
         </div>
@@ -182,14 +182,14 @@ export default async function ResultDetailContent({
                   </div>
 
                   <div className="flex items-center gap-6">
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-muted-foreground text-sm">Marks</p>
                       <p className="font-semibold">
                         {formatMarks(result.marksObtained, result.totalMarks)}
                       </p>
                     </div>
 
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-muted-foreground text-sm">
                         Percentage
                       </p>
@@ -199,13 +199,13 @@ export default async function ResultDetailContent({
                     </div>
 
                     {result.grade && (
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="text-muted-foreground text-sm">Grade</p>
                         <Badge>{result.grade}</Badge>
                       </div>
                     )}
 
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-muted-foreground text-sm">Status</p>
                       <Badge
                         variant={
@@ -226,7 +226,7 @@ export default async function ResultDetailContent({
                     </div>
 
                     <Button variant="outline" size="sm">
-                      <FileText className="mr-2 h-4 w-4" />
+                      <FileText className="me-2 h-4 w-4" />
                       PDF
                     </Button>
                   </div>

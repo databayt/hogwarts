@@ -37,7 +37,7 @@ export function DocsSidebar({
       {...props}
     >
       <SidebarContent className="overflow-x-hidden overflow-y-auto">
-        <div className="pt-2 pb-4 pl-0">
+        <div className="ps-0 pt-2 pb-4">
           <SidebarGroup className="p-0">
             <SidebarGroupContent>
               <SidebarMenu>

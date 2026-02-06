@@ -141,16 +141,16 @@ export async function QuestionDetail({
         <div className="flex gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link href={`/${locale}/exams/mark/questions/${questionId}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
+              <Pencil className="me-2 h-4 w-4" />
               {dict.buttons.editQuestion}
             </Link>
           </Button>
           <Button variant="outline" size="sm">
-            <Copy className="mr-2 h-4 w-4" />
+            <Copy className="me-2 h-4 w-4" />
             Duplicate
           </Button>
           <Button variant="outline" size="sm" className="text-destructive">
-            <Trash className="mr-2 h-4 w-4" />
+            <Trash className="me-2 h-4 w-4" />
             {dict.buttons.deleteQuestion}
           </Button>
         </div>
@@ -301,7 +301,7 @@ export async function QuestionDetail({
 
                 <div className="space-y-3">
                   {question.rubrics[0].criteria.map((criterion) => (
-                    <div key={criterion.id} className="border-l-2 pl-4">
+                    <div key={criterion.id} className="border-s-2 ps-4">
                       <div className="mb-1 flex items-center justify-between">
                         <h5 className="font-medium">{criterion.criterion}</h5>
                         <Badge variant="outline">

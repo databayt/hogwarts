@@ -41,7 +41,7 @@ export function SearchCommand({ links }: { links: SidebarNavItem[] }) {
       <Button
         variant="outline"
         className={cn(
-          "bg-muted/50 text-muted-foreground relative h-9 w-full justify-start rounded-md text-sm font-normal shadow-none sm:pr-12 md:w-72"
+          "bg-muted/50 text-muted-foreground relative h-9 w-full justify-start rounded-md text-sm font-normal shadow-none sm:pe-12 md:w-72"
         )}
         onClick={() => setOpen(true)}
       >
@@ -69,7 +69,7 @@ export function SearchCommand({ links }: { links: SidebarNavItem[] }) {
                       runCommand(() => router.push(item.href as string))
                     }}
                   >
-                    <Icon className="mr-2 size-5" />
+                    <Icon className="me-2 size-5" />
                     {item.title}
                   </CommandItem>
                 )

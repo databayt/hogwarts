@@ -71,7 +71,7 @@ export function DeleteTasksDialog({
         {showTrigger ? (
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
-              <Trash className="mr-2 size-4" aria-hidden="true" />
+              <Trash className="me-2 size-4" aria-hidden="true" />
               Delete ({tasks.length})
             </Button>
           </DialogTrigger>
@@ -85,7 +85,7 @@ export function DeleteTasksDialog({
               {tasks.length === 1 ? " task" : " tasks"} from our servers.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:space-x-0">
+          <DialogFooter className="gap-2">
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
@@ -97,7 +97,7 @@ export function DeleteTasksDialog({
             >
               {isDeletePending && (
                 <Loader
-                  className="mr-2 size-4 animate-spin"
+                  className="me-2 size-4 animate-spin"
                   aria-hidden="true"
                 />
               )}
@@ -114,7 +114,7 @@ export function DeleteTasksDialog({
       {showTrigger ? (
         <DrawerTrigger asChild>
           <Button variant="outline" size="sm">
-            <Trash className="mr-2 size-4" aria-hidden="true" />
+            <Trash className="me-2 size-4" aria-hidden="true" />
             Delete ({tasks.length})
           </Button>
         </DrawerTrigger>
@@ -128,7 +128,7 @@ export function DeleteTasksDialog({
             {tasks.length === 1 ? " task" : " tasks"} from our servers.
           </DrawerDescription>
         </DrawerHeader>
-        <DrawerFooter className="gap-2 sm:space-x-0">
+        <DrawerFooter className="gap-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
           </DrawerClose>
@@ -139,7 +139,7 @@ export function DeleteTasksDialog({
             disabled={isDeletePending}
           >
             {isDeletePending && (
-              <Loader className="mr-2 size-4 animate-spin" aria-hidden="true" />
+              <Loader className="me-2 size-4 animate-spin" aria-hidden="true" />
             )}
             Delete
           </Button>

@@ -500,7 +500,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
               <div className="space-y-4">
                 <h4>Optimization Preferences</h4>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <Checkbox
                       id="balance"
                       checked={config.preferences?.balanceSubjectDistribution}
@@ -512,7 +512,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                       Balance subject distribution across week
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <Checkbox
                       id="morning"
                       checked={config.preferences?.preferMorningForCore}
@@ -524,7 +524,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                       Schedule core subjects in morning
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <Checkbox
                       id="lab"
                       checked={config.preferences?.avoidLastPeriodForLab}
@@ -536,7 +536,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                       Avoid last period for lab activities
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <Checkbox
                       id="group"
                       checked={config.preferences?.groupSameSubjectDays}

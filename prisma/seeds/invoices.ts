@@ -150,5 +150,125 @@ export async function seedInvoices(
 
   logSuccess("Sample Invoices", invoiceCount, "with items and addresses")
 
+  // Seed expense receipts
+  await seedExpenseReceipts(prisma, schoolId, adminUser.id)
+
   return invoiceCount
+}
+
+// ============================================================================
+// EXPENSE RECEIPTS
+// ============================================================================
+
+const RECEIPT_DATA = [
+  {
+    merchant: "مكتبة النيل الأزرق",
+    summary: "شراء كتب ومراجع دراسية",
+    amount: 5500,
+    category: "educational",
+  },
+  {
+    merchant: "شركة الخرطوم للكهرباء",
+    summary: "فاتورة كهرباء شهر أكتوبر",
+    amount: 12000,
+    category: "utilities",
+  },
+  {
+    merchant: "شركة المياه الوطنية",
+    summary: "فاتورة مياه شهر أكتوبر",
+    amount: 3500,
+    category: "utilities",
+  },
+  {
+    merchant: "مؤسسة التقنية الحديثة",
+    summary: "صيانة أجهزة الحاسوب",
+    amount: 8000,
+    category: "technology",
+  },
+  {
+    merchant: "شركة الصيانة المتكاملة",
+    summary: "صيانة مكيفات الفصول",
+    amount: 15000,
+    category: "maintenance",
+  },
+  {
+    merchant: "مطبعة السودان",
+    summary: "طباعة أوراق امتحانات الفصل الأول",
+    amount: 4000,
+    category: "supplies",
+  },
+  {
+    merchant: "مؤسسة الإمداد التعليمي",
+    summary: "مستلزمات مختبر العلوم",
+    amount: 22000,
+    category: "equipment",
+  },
+  {
+    merchant: "شركة النقل المدرسي",
+    summary: "إيجار حافلات للرحلة الميدانية",
+    amount: 9000,
+    category: "transport",
+  },
+  {
+    merchant: "مطعم الأندلس",
+    summary: "تغذية فعالية يوم المعلم",
+    amount: 6500,
+    category: "events",
+  },
+  {
+    merchant: "شركة الأمان للحراسة",
+    summary: "خدمات أمنية شهر نوفمبر",
+    amount: 7000,
+    category: "security",
+  },
+]
+
+async function seedExpenseReceipts(
+  prisma: PrismaClient,
+  schoolId: string,
+  userId: string
+): Promise<void> {
+  // Clean existing
+  await prisma.expenseReceipt.deleteMany({ where: { schoolId } })
+
+  let count = 0
+
+  for (let i = 0; i < RECEIPT_DATA.length; i++) {
+    const receipt = RECEIPT_DATA[i]
+    const transactionDate = new Date("2025-10-01")
+    transactionDate.setDate(transactionDate.getDate() + i * 7) // Weekly spread
+
+    try {
+      await prisma.expenseReceipt.create({
+        data: {
+          schoolId,
+          userId,
+          fileName: `receipt_${String(i + 1).padStart(3, "0")}.pdf`,
+          fileDisplayName: `إيصال - ${receipt.merchant}`,
+          fileUrl: `/uploads/receipts/receipt_${String(i + 1).padStart(3, "0")}.pdf`,
+          fileSize: randomNumber(50000, 500000),
+          mimeType: "application/pdf",
+          status: i < 7 ? "processed" : "pending",
+          merchantName: receipt.merchant,
+          transactionDate,
+          transactionAmount: receipt.amount,
+          currency: "SDG",
+          receiptSummary: receipt.summary,
+          items: [
+            {
+              name: receipt.summary,
+              quantity: 1,
+              unitPrice: receipt.amount,
+              totalPrice: receipt.amount,
+            },
+          ],
+        },
+      })
+      count++
+    } catch {
+      // Skip
+    }
+  }
+
+  logSuccess("Expense Receipts", count, "with OCR data")
 }

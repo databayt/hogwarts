@@ -294,19 +294,19 @@ export function SettingsTab({
       >
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">
-            <User className="mr-2 h-4 w-4" />
+            <User className="me-2 h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
           </TabsTrigger>
           <TabsTrigger value="notifications">
-            <Bell className="mr-2 h-4 w-4" />
+            <Bell className="me-2 h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
           <TabsTrigger value="privacy">
-            <Eye className="mr-2 h-4 w-4" />
+            <Eye className="me-2 h-4 w-4" />
             <span className="hidden sm:inline">Privacy</span>
           </TabsTrigger>
           <TabsTrigger value="security">
-            <Shield className="mr-2 h-4 w-4" />
+            <Shield className="me-2 h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
         </TabsList>
@@ -537,7 +537,7 @@ export function SettingsTab({
                       />
                     </div>
                     {notif.enabled && (
-                      <div className="ml-6 flex items-center gap-6 text-sm">
+                      <div className="ms-6 flex items-center gap-6 text-sm">
                         <label className="flex cursor-pointer items-center gap-2">
                           <input
                             type="checkbox"
@@ -604,7 +604,7 @@ export function SettingsTab({
                     {setting.icon}
                     <Label>{setting.label}</Label>
                   </div>
-                  <p className="text-muted-foreground ml-6 text-sm">
+                  <p className="text-muted-foreground ms-6 text-sm">
                     {setting.description}
                   </p>
                   <Select
@@ -613,7 +613,7 @@ export function SettingsTab({
                       handlePrivacyChange(setting.id, value)
                     }
                   >
-                    <SelectTrigger className="ml-6">
+                    <SelectTrigger className="ms-6">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -693,11 +693,11 @@ export function SettingsTab({
 
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button variant="outline" className="flex-1">
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Export My Data
                 </Button>
                 <Button variant="destructive" className="flex-1">
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="me-2 h-4 w-4" />
                   Delete Account
                 </Button>
               </div>

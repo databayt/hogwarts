@@ -43,9 +43,9 @@ export function ShadcnButtonGroupInputGroup() {
               voiceEnabled ? "Record and send audio..." : "Send a message..."
             }
             disabled={voiceEnabled}
-            className="border-0 bg-transparent pr-10 focus-visible:ring-0"
+            className="border-0 bg-transparent pe-10 focus-visible:ring-0"
           />
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+          <div className="absolute inset-y-0 right-0 flex items-center pe-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

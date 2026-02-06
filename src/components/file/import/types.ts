@@ -22,9 +22,6 @@ export interface ImportColumn<T = unknown> {
   /** Display label for the column */
   label: string
 
-  /** Arabic label */
-  labelAr?: string
-
   /** Expected column header in file (exact match) */
   header?: string
 

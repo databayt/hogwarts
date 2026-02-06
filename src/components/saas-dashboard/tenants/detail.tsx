@@ -218,10 +218,10 @@ export function TenantDetail({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="px-2 py-1 text-left">Invoice</th>
-                    <th className="px-2 py-1 text-left">Status</th>
-                    <th className="px-2 py-1 text-left">Amount</th>
-                    <th className="px-2 py-1 text-left">Date</th>
+                    <th className="px-2 py-1 text-start">Invoice</th>
+                    <th className="px-2 py-1 text-start">Status</th>
+                    <th className="px-2 py-1 text-start">Amount</th>
+                    <th className="px-2 py-1 text-start">Date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -257,7 +257,7 @@ export function TenantDetail({
             {owners.length === 0 ? (
               <div className="text-muted-foreground">No owners found</div>
             ) : (
-              <ul className="list-disc pl-5">
+              <ul className="list-disc ps-5">
                 {owners.map((o) => (
                   <li key={o.id}>{o.email}</li>
                 ))}

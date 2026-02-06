@@ -42,6 +42,11 @@ model Assignment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([schoolId])
+  @@index([classId])
+  @@index([schoolId, classId])
+  @@index([dueDate])
+  @@index([status])
   @@map("assignments")
 }
 
@@ -76,5 +81,9 @@ model AssignmentSubmission {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, assignmentId, studentId]) // Unique submission per assignment per student per school
+  @@index([schoolId])
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([status])
   @@map("assignment_submissions")
 }

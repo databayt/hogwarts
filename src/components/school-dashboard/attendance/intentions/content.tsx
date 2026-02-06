@@ -312,7 +312,7 @@ export default function IntentionsContent({
                       {formatDate(intention.dateFrom, locale)}
                       {intention.daysCount > 1 &&
                         ` - ${formatDate(intention.dateTo, locale)}`}
-                      <span className="ml-2 text-xs">
+                      <span className="ms-2 text-xs">
                         ({intention.daysCount} day
                         {intention.daysCount > 1 ? "s" : ""})
                       </span>
@@ -336,7 +336,7 @@ export default function IntentionsContent({
                         variant="outline"
                         onClick={() => handleReview(intention, "APPROVED")}
                       >
-                        <Check className="mr-1 h-4 w-4" />
+                        <Check className="me-1 h-4 w-4" />
                         Approve
                       </Button>
                       <Button
@@ -345,7 +345,7 @@ export default function IntentionsContent({
                         className="text-red-600 hover:bg-red-50 hover:text-red-700"
                         onClick={() => handleReview(intention, "REJECTED")}
                       >
-                        <X className="mr-1 h-4 w-4" />
+                        <X className="me-1 h-4 w-4" />
                         Reject
                       </Button>
                     </div>

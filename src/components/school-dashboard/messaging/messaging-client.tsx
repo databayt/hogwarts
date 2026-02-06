@@ -372,7 +372,7 @@ export function MessagingClient({
       <div
         className={cn(
           // Base styles
-          "bg-background border-border flex-shrink-0 border-r",
+          "bg-background border-border flex-shrink-0 border-e",
           // Mobile: full width overlay OR show when no conversation
           "fixed z-50 md:relative md:z-0",
           "h-full w-full sm:w-96 md:w-[430px]",

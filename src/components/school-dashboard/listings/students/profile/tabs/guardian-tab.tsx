@@ -59,10 +59,10 @@ interface GuardianTabProps {
 }
 
 const GUARDIAN_TYPES = [
-  { value: "father", label: "Father", labelAr: "الأب" },
-  { value: "mother", label: "Mother", labelAr: "الأم" },
-  { value: "guardian", label: "Guardian", labelAr: "ولي الأمر" },
-  { value: "other", label: "Other", labelAr: "آخر" },
+  { value: "father", label: "الأب" },
+  { value: "mother", label: "الأم" },
+  { value: "guardian", label: "ولي الأمر" },
+  { value: "other", label: "آخر" },
 ]
 
 export function GuardianTab({ student }: GuardianTabProps) {
@@ -212,7 +212,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
       {/* Add Guardian Button */}
       <div className="flex justify-end">
         <Button variant="outline" size="sm" onClick={() => setIsAddOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="me-2 h-4 w-4" />
           Add Guardian
         </Button>
       </div>
@@ -384,7 +384,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               className="mt-4"
               onClick={() => setIsAddOpen(true)}
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               Add Guardian
             </Button>
           </CardContent>
@@ -499,7 +499,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="isPrimary"
                 checked={formData.isPrimary}
@@ -545,7 +545,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 !formData.guardianType
               }
             >
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               Add Guardian
             </Button>
           </DialogFooter>
@@ -597,7 +597,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="editIsPrimary"
                 checked={formData.isPrimary}
@@ -636,7 +636,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               Cancel
             </Button>
             <Button onClick={handleEditGuardian} disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>
           </DialogFooter>
@@ -666,7 +666,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={isPending}
             >
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>

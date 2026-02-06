@@ -331,7 +331,7 @@ export default function InquiryFormContent({
                         <SelectContent>
                           {DEFAULT_GRADES.map((grade) => (
                             <SelectItem key={grade.grade} value={grade.grade}>
-                              {isRTL ? grade.gradeAr : grade.grade}
+                              {grade.grade}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -387,7 +387,7 @@ export default function InquiryFormContent({
                       <SelectContent>
                         {INQUIRY_SOURCES.map((source) => (
                           <SelectItem key={source.value} value={source.value}>
-                            {isRTL ? source.labelAr : source.label}
+                            {source.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -402,7 +402,7 @@ export default function InquiryFormContent({
                 control={form.control}
                 name="subscribeNewsletter"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-y-0 space-x-3 rtl:space-x-reverse">
+                  <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                     <FormControl>
                       <Checkbox
                         checked={field.value}

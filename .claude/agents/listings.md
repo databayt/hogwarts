@@ -1,3 +1,7 @@
+---
+name: listings
+---
+
 # Listings Agent
 
 Expert in the unified Listings pattern for data tables, grids, and CRUD operations across the Hogwarts platform.

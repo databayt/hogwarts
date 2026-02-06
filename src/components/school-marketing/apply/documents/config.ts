@@ -2,47 +2,39 @@
 
 export const DOCUMENTS_STEP_CONFIG = {
   id: "documents",
-  label: "Documents",
-  labelAr: "المستندات",
-  description: "Upload required documents",
-  descriptionAr: "رفع المستندات المطلوبة",
+  label: "المستندات",
+  description: "رفع المستندات المطلوبة",
 }
 
 export const DOCUMENT_TYPES = [
   {
     value: "birth_certificate",
-    label: "Birth Certificate",
-    labelAr: "شهادة الميلاد",
+    label: "شهادة الميلاد",
     required: true,
   },
   {
     value: "id_card",
-    label: "ID Card / Passport",
-    labelAr: "بطاقة الهوية / جواز السفر",
+    label: "بطاقة الهوية / جواز السفر",
     required: true,
   },
   {
     value: "previous_report",
-    label: "Previous School Report",
-    labelAr: "تقرير المدرسة السابقة",
+    label: "تقرير المدرسة السابقة",
     required: false,
   },
   {
     value: "transfer_certificate",
-    label: "Transfer Certificate",
-    labelAr: "شهادة النقل",
+    label: "شهادة النقل",
     required: false,
   },
   {
     value: "medical_certificate",
-    label: "Medical Certificate",
-    labelAr: "الشهادة الطبية",
+    label: "الشهادة الطبية",
     required: false,
   },
   {
     value: "other",
-    label: "Other Documents",
-    labelAr: "مستندات أخرى",
+    label: "مستندات أخرى",
     required: false,
   },
 ] as const

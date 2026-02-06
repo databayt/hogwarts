@@ -84,7 +84,7 @@ export function ApplicationsTable({
         search: deferredSearch || undefined,
         campaignId: campaignId || undefined,
       })
-      if (result.success) {
+      if (result.success && result.data) {
         return {
           rows: result.data.rows as ApplicationRow[],
           total: result.data.total,

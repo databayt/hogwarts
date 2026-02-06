@@ -4,46 +4,102 @@ import { cookies, headers } from "next/headers"
 import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
 
+import { dbCircuitBreaker } from "@/lib/circuit-breaker"
 import { db } from "@/lib/db"
 
-// In-memory cache for subdomain-to-schoolId lookups
-// Uses Map with TTL for efficient repeated lookups
+// --- Two-tier cache: Redis (shared across instances) → in-memory (per-instance fallback) ---
+
+let redis: import("@upstash/redis").Redis | null = null
+let redisAvailable = true
+
+function getRedis() {
+  if (!redisAvailable) return null
+  if (redis) return redis
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) {
+    redisAvailable = false
+    return null
+  }
+  try {
+    // Dynamic require to avoid import errors when Upstash is not configured
+    const { Redis } =
+      require("@upstash/redis") as typeof import("@upstash/redis")
+    redis = new Redis({ url, token })
+    return redis
+  } catch {
+    redisAvailable = false
+    return null
+  }
+}
+
+// In-memory fallback cache
 const subdomainCache = new Map<
   string,
   { schoolId: string | null; expiresAt: number }
 >()
-const CACHE_TTL_MS = 60 * 1000 // 1 minute cache
+const MEMORY_CACHE_TTL_MS = 60 * 1000 // 1 minute (fallback)
+const REDIS_CACHE_TTL_S = 300 // 5 minutes (shared)
 
 /**
- * Get schoolId from subdomain with caching
- * Uses in-memory cache to avoid repeated DB lookups
+ * Get schoolId from subdomain with two-tier caching
+ * 1. Redis (shared across all serverless instances, 5 min TTL)
+ * 2. In-memory Map (per-instance fallback, 1 min TTL)
+ * 3. Database lookup (last resort)
  */
 async function getSchoolIdFromSubdomain(
   subdomain: string
 ): Promise<string | null> {
   const now = Date.now()
-  const cached = subdomainCache.get(subdomain)
 
-  // Return cached value if not expired
-  if (cached && cached.expiresAt > now) {
-    return cached.schoolId
+  // Tier 1: In-memory cache (fastest, per-instance)
+  const memCached = subdomainCache.get(subdomain)
+  if (memCached && memCached.expiresAt > now) {
+    return memCached.schoolId
   }
 
-  // Lookup in database
+  // Tier 2: Redis cache (shared across instances)
+  const r = getRedis()
+  if (r) {
+    try {
+      const redisCached = await r.get<string>(`tenant:${subdomain}`)
+      if (redisCached !== null) {
+        // Populate in-memory cache from Redis
+        subdomainCache.set(subdomain, {
+          schoolId: redisCached || null,
+          expiresAt: now + MEMORY_CACHE_TTL_MS,
+        })
+        return redisCached || null
+      }
+    } catch {
+      // Redis error — fall through to DB
+    }
+  }
+
+  // Tier 3: Database lookup (wrapped in circuit breaker)
   try {
-    const school = await db.school.findUnique({
-      where: { domain: subdomain },
-      select: { id: true },
-    })
+    const school = await dbCircuitBreaker.execute(() =>
+      db.school.findUnique({
+        where: { domain: subdomain },
+        select: { id: true },
+      })
+    )
     const schoolId = school?.id ?? null
 
-    // Cache the result
+    // Write back to both caches
     subdomainCache.set(subdomain, {
       schoolId,
-      expiresAt: now + CACHE_TTL_MS,
+      expiresAt: now + MEMORY_CACHE_TTL_MS,
     })
 
-    // Cleanup old entries periodically (when cache grows large)
+    if (r) {
+      // Fire-and-forget Redis write
+      r.set(`tenant:${subdomain}`, schoolId ?? "", {
+        ex: REDIS_CACHE_TTL_S,
+      }).catch(() => {})
+    }
+
+    // Cleanup old in-memory entries periodically
     if (subdomainCache.size > 100) {
       for (const [key, value] of subdomainCache) {
         if (value.expiresAt < now) {
@@ -53,8 +109,7 @@ async function getSchoolIdFromSubdomain(
     }
 
     return schoolId
-  } catch (error) {
-    // Don't cache errors - allow retry
+  } catch {
     return null
   }
 }
@@ -119,7 +174,8 @@ export async function getTenantContext(): Promise<TenantContext> {
       impersonatedSchoolId ?? headerSchoolId ?? session?.user?.schoolId ?? null
     const role = (session?.user?.role as UserRole | undefined) ?? null
     const isPlatformAdmin = role === "DEVELOPER"
-    const requestId = null
+    const requestId =
+      hdrs.get("x-vercel-id") ?? hdrs.get("x-request-id") ?? crypto.randomUUID()
     return { schoolId, requestId, role, isPlatformAdmin }
   } catch (error) {
     console.error("[getTenantContext] Error getting tenant context:", error)

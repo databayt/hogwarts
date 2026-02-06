@@ -310,6 +310,54 @@ export async function verifyStaffOwnership(
   return staff.map((s) => s.id)
 }
 
+/**
+ * Get staff statistics for a school
+ * @param schoolId - School ID
+ * @returns Promise with statistics
+ */
+export async function getStaffStats(schoolId: string) {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+  const [total, byStatus, byType, recentHires] = await Promise.all([
+    db.staffMember.count({ where: { schoolId } }),
+    db.staffMember.groupBy({
+      by: ["employmentStatus"],
+      where: { schoolId },
+      _count: { employmentStatus: true },
+    }),
+    db.staffMember.groupBy({
+      by: ["employmentType"],
+      where: { schoolId },
+      _count: { employmentType: true },
+    }),
+    db.staffMember.count({
+      where: {
+        schoolId,
+        createdAt: { gte: thirtyDaysAgo },
+      },
+    }),
+  ])
+
+  return {
+    total,
+    byStatus: byStatus.reduce(
+      (acc, item) => {
+        acc[item.employmentStatus] = item._count.employmentStatus
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    byType: byType.reduce(
+      (acc, item) => {
+        acc[item.employmentType] = item._count.employmentType
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    recentHires,
+  }
+}
+
 // ============================================================================
 // Helpers
 // ============================================================================

@@ -94,10 +94,10 @@ export function KioskScanner({ onScan, onCancel, locale }: KioskScannerProps) {
           {/* Scanning animation */}
           <div className="relative h-48 w-48">
             {/* Corner brackets */}
-            <div className="border-primary absolute top-0 left-0 h-8 w-8 border-t-4 border-l-4" />
-            <div className="border-primary absolute top-0 right-0 h-8 w-8 border-t-4 border-r-4" />
-            <div className="border-primary absolute bottom-0 left-0 h-8 w-8 border-b-4 border-l-4" />
-            <div className="border-primary absolute right-0 bottom-0 h-8 w-8 border-r-4 border-b-4" />
+            <div className="border-primary absolute top-0 left-0 h-8 w-8 border-s-4 border-t-4" />
+            <div className="border-primary absolute top-0 right-0 h-8 w-8 border-e-4 border-t-4" />
+            <div className="border-primary absolute bottom-0 left-0 h-8 w-8 border-s-4 border-b-4" />
+            <div className="border-primary absolute right-0 bottom-0 h-8 w-8 border-e-4 border-b-4" />
 
             {/* Scanning line animation */}
             <div className="bg-primary/50 absolute top-1/2 right-4 left-4 h-0.5 animate-pulse" />

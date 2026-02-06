@@ -42,35 +42,27 @@ interface Props {
 const DEFAULT_REQUIRED_DOCS: RequiredDocument[] = [
   {
     type: "photo",
-    name: "Passport Photo",
-    nameAr: "صورة جواز السفر",
+    name: "صورة جواز السفر",
     required: true,
-    description: "Recent passport-size photograph",
-    descriptionAr: "صورة حديثة بحجم جواز السفر",
+    description: "صورة حديثة بحجم جواز السفر",
   },
   {
     type: "birth_certificate",
-    name: "Birth Certificate",
-    nameAr: "شهادة الميلاد",
+    name: "شهادة الميلاد",
     required: true,
-    description: "Original or certified copy",
-    descriptionAr: "الأصل أو نسخة مصدقة",
+    description: "الأصل أو نسخة مصدقة",
   },
   {
     type: "previous_report",
-    name: "Previous School Report",
-    nameAr: "تقرير المدرسة السابقة",
+    name: "تقرير المدرسة السابقة",
     required: false,
-    description: "Last academic year report card",
-    descriptionAr: "بطاقة تقرير العام الدراسي الأخير",
+    description: "بطاقة تقرير العام الدراسي الأخير",
   },
   {
     type: "transfer_certificate",
-    name: "Transfer Certificate",
-    nameAr: "شهادة النقل",
+    name: "شهادة النقل",
     required: false,
-    description: "If transferring from another school",
-    descriptionAr: "إذا كان النقل من مدرسة أخرى",
+    description: "إذا كان النقل من مدرسة أخرى",
   },
 ]
 
@@ -323,9 +315,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
                     )}
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {isRTL ? doc.nameAr : doc.name}
-                        </span>
+                        <span className="font-medium">{doc.name}</span>
                         {doc.required && (
                           <Badge variant="destructive" className="text-xs">
                             {isRTL ? "مطلوب" : "Required"}
@@ -333,7 +323,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
                         )}
                       </div>
                       <p className="text-muted-foreground text-sm">
-                        {isRTL ? doc.descriptionAr : doc.description}
+                        {doc.description}
                       </p>
                       {uploadedDoc && (
                         <p className="text-muted-foreground mt-1 text-xs">

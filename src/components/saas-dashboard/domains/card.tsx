@@ -101,7 +101,7 @@ export function DomainCard({
                 onClick={() => onReject?.(domain.id)}
                 className="flex-1"
               >
-                <X className="mr-2 size-4" />
+                <X className="me-2 size-4" />
                 Reject
               </Button>
               <Button
@@ -109,7 +109,7 @@ export function DomainCard({
                 onClick={() => onApprove?.(domain.id)}
                 className="flex-1"
               >
-                <Check className="mr-2 size-4" />
+                <Check className="me-2 size-4" />
                 Approve
               </Button>
             </>
@@ -120,7 +120,7 @@ export function DomainCard({
               onClick={() => onVerify?.(domain.id)}
               className="w-full"
             >
-              <Check className="mr-2 size-4" />
+              <Check className="me-2 size-4" />
               Verify Domain
             </Button>
           )}
@@ -280,7 +280,7 @@ export function DomainVerificationCard({
             </div>
             {onVerify && (
               <Button onClick={onVerify} className="w-full">
-                <Check className="mr-2 size-4" />
+                <Check className="me-2 size-4" />
                 Verify Now
               </Button>
             )}

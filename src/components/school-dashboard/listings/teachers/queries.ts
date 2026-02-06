@@ -251,6 +251,54 @@ export async function verifyTeacherOwnership(
   return teachers.map((t) => t.id)
 }
 
+/**
+ * Get teacher statistics for a school
+ * @param schoolId - School ID
+ * @returns Promise with statistics
+ */
+export async function getTeacherStats(schoolId: string) {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+  const [total, byStatus, byType, recentHires] = await Promise.all([
+    db.teacher.count({ where: { schoolId } }),
+    db.teacher.groupBy({
+      by: ["employmentStatus"],
+      where: { schoolId },
+      _count: { employmentStatus: true },
+    }),
+    db.teacher.groupBy({
+      by: ["employmentType"],
+      where: { schoolId },
+      _count: { employmentType: true },
+    }),
+    db.teacher.count({
+      where: {
+        schoolId,
+        createdAt: { gte: thirtyDaysAgo },
+      },
+    }),
+  ])
+
+  return {
+    total,
+    byStatus: byStatus.reduce(
+      (acc, item) => {
+        acc[item.employmentStatus] = item._count.employmentStatus
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    byType: byType.reduce(
+      (acc, item) => {
+        acc[item.employmentType] = item._count.employmentType
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    recentHires,
+  }
+}
+
 // ============================================================================
 // Helpers
 // ============================================================================

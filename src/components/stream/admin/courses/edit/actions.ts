@@ -6,6 +6,10 @@ import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  assertStreamPermission,
+  getAuthContext,
+} from "@/components/stream/authorization"
 
 type ApiResponse = {
   status: "success" | "error"
@@ -36,24 +40,26 @@ const lessonSchema = z.object({
   description: z.string().optional().nullable(),
   videoUrl: z.string().optional().nullable(),
   duration: z.number().optional().nullable(),
+  // Video metadata (auto-extracted on upload)
+  thumbnailUrl: z.string().optional().nullable(),
+  videoDuration: z.number().optional().nullable(),
+  videoResolution: z.string().optional().nullable(),
+  videoSize: z.number().optional().nullable(),
+  storageProvider: z.string().optional().nullable(),
+  storageKey: z.string().optional().nullable(),
 })
 
-// Helper to verify course ownership and school context
-async function verifyCourseAccess(courseId: string) {
+// Helper to verify course ownership and school context with authorization
+async function verifyCourseAccess(
+  courseId: string,
+  action: "update" | "delete" = "update"
+) {
   const session = await auth()
   const { schoolId } = await getTenantContext()
 
-  if (!session?.user) {
-    throw new Error("Unauthorized")
-  }
-
-  if (!["ADMIN", "TEACHER", "DEVELOPER"].includes(session.user.role || "")) {
-    throw new Error("Insufficient permissions")
-  }
-
-  if (!schoolId && session.user.role !== "DEVELOPER") {
-    throw new Error("School context required")
-  }
+  const authCtx = getAuthContext(session)
+  if (!authCtx) throw new Error("Unauthorized")
+  authCtx.schoolId = schoolId
 
   const course = await db.streamCourse.findFirst({
     where: {
@@ -65,6 +71,13 @@ async function verifyCourseAccess(courseId: string) {
   if (!course) {
     throw new Error("Course not found or access denied")
   }
+
+  // Check permission with ownership context
+  assertStreamPermission(authCtx, action, {
+    id: course.id,
+    userId: course.userId,
+    schoolId: course.schoolId,
+  })
 
   return { session, schoolId, course }
 }
@@ -469,6 +482,12 @@ export async function createLesson(
           description: result.data.description,
           videoUrl: result.data.videoUrl,
           duration: result.data.duration,
+          thumbnailUrl: result.data.thumbnailUrl,
+          videoDuration: result.data.videoDuration,
+          videoResolution: result.data.videoResolution,
+          videoSize: result.data.videoSize,
+          storageProvider: result.data.storageProvider,
+          storageKey: result.data.storageKey,
           chapterId: result.data.chapterId,
           position: (maxPos?.position ?? 0) + 1,
         },
@@ -502,6 +521,12 @@ export async function updateLesson(
     duration?: number | null
     isPublished?: boolean
     isFree?: boolean
+    thumbnailUrl?: string | null
+    videoDuration?: number | null
+    videoResolution?: string | null
+    videoSize?: number | null
+    storageProvider?: string | null
+    storageKey?: string | null
   }
 ): Promise<ApiResponse> {
   try {
@@ -554,7 +579,18 @@ export async function deleteLesson({
   courseId: string
 }): Promise<ApiResponse> {
   try {
-    await verifyCourseAccess(courseId)
+    const { schoolId } = await verifyCourseAccess(courseId)
+
+    // Get lesson details for S3 cleanup
+    const lessonDetail = await db.streamLesson.findUnique({
+      where: { id: lessonId },
+      select: {
+        storageKey: true,
+        storageProvider: true,
+        videoSize: true,
+        thumbnailUrl: true,
+      },
+    })
 
     const chapterWithLessons = await db.streamChapter.findUnique({
       where: { id: chapterId },
@@ -592,6 +628,75 @@ export async function deleteLesson({
         where: { id: lessonId },
       }),
     ])
+
+    // Clean up S3 files (non-blocking, don't fail the delete)
+    if (lessonDetail?.storageProvider === "aws_s3" && lessonDetail.storageKey) {
+      try {
+        const { DeleteObjectCommand, S3Client } =
+          await import("@aws-sdk/client-s3")
+
+        if (
+          process.env.AWS_ACCESS_KEY_ID &&
+          process.env.AWS_SECRET_ACCESS_KEY &&
+          process.env.AWS_S3_BUCKET
+        ) {
+          const s3 = new S3Client({
+            region: process.env.AWS_REGION || "us-east-1",
+            credentials: {
+              accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+              secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+            },
+          })
+
+          // Delete video file
+          await s3.send(
+            new DeleteObjectCommand({
+              Bucket: process.env.AWS_S3_BUCKET,
+              Key: lessonDetail.storageKey,
+            })
+          )
+
+          // Delete thumbnail if it's on S3
+          if (
+            lessonDetail.thumbnailUrl?.includes("s3.") ||
+            lessonDetail.thumbnailUrl?.includes("cloudfront")
+          ) {
+            const thumbnailKey = lessonDetail.storageKey.replace(
+              /\/video\//,
+              "/thumbnails/"
+            )
+            await s3
+              .send(
+                new DeleteObjectCommand({
+                  Bucket: process.env.AWS_S3_BUCKET,
+                  Key: thumbnailKey + ".jpg",
+                })
+              )
+              .catch(() => {}) // Thumbnail might not exist
+          }
+
+          // Decrement school storage
+          if (schoolId && lessonDetail.videoSize) {
+            await db.school
+              .update({
+                where: { id: schoolId },
+                data: {
+                  videoStorageUsedBytes: {
+                    decrement: lessonDetail.videoSize,
+                  },
+                },
+              })
+              .catch(() => {})
+          }
+
+          // Invalidate CloudFront cache
+          const { invalidateCache } = await import("@/lib/cloudfront")
+          await invalidateCache([`/${lessonDetail.storageKey}`]).catch(() => {})
+        }
+      } catch (error) {
+        console.error("S3 cleanup failed (non-critical):", error)
+      }
+    }
 
     revalidatePath(
       `/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`

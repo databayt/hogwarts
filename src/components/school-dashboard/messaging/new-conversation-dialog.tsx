@@ -256,7 +256,7 @@ export function NewConversationDialog({
                 <Badge
                   key={user.id}
                   variant="secondary"
-                  className="gap-1 py-1 pr-2 pl-1"
+                  className="gap-1 py-1 ps-1 pe-2"
                 >
                   <Avatar className="h-5 w-5">
                     <AvatarImage src={user.image || undefined} />
@@ -290,7 +290,7 @@ export function NewConversationDialog({
               placeholder={
                 locale === "ar" ? "ابحث عن مستخدم..." : "Search for a user..."
               }
-              className="pl-9"
+              className="ps-9"
               disabled={
                 conversationType === "direct" && selectedUsers.length > 0
               }
@@ -311,7 +311,7 @@ export function NewConversationDialog({
                     className={cn(
                       "flex w-full items-center gap-3 rounded-md p-2",
                       "hover:bg-accent transition-colors",
-                      "text-left"
+                      "text-start"
                     )}
                   >
                     <Avatar className="h-9 w-9">
@@ -379,11 +379,11 @@ export function NewConversationDialog({
             }
           >
             {isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="me-2 h-4 w-4 animate-spin" />
             ) : conversationType === "direct" ? (
-              <MessageSquare className="mr-2 h-4 w-4" />
+              <MessageSquare className="me-2 h-4 w-4" />
             ) : (
-              <Users className="mr-2 h-4 w-4" />
+              <Users className="me-2 h-4 w-4" />
             )}
             {locale === "ar"
               ? conversationType === "direct"

@@ -462,7 +462,7 @@ export function ScheduleTab({
                   )
 
                   return (
-                    <div key={day} className="border-l">
+                    <div key={day} className="border-s">
                       {/* Day Header */}
                       <div
                         className={cn(
@@ -547,7 +547,7 @@ export function ScheduleTab({
           <CardTitle className="flex items-center justify-between text-base">
             <span>Upcoming Events</span>
             <Button variant="outline" size="sm">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               Add Event
             </Button>
           </CardTitle>

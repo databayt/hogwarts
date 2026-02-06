@@ -331,6 +331,61 @@ export async function verifyClassOwnership(
   return classes.map((c) => c.id)
 }
 
+/**
+ * Get class statistics for a school
+ * @param schoolId - School ID
+ * @returns Promise with statistics
+ */
+export async function getClassStats(schoolId: string) {
+  const [total, byTerm, classes] = await Promise.all([
+    db.class.count({ where: { schoolId } }),
+    db.class.groupBy({
+      by: ["termId"],
+      where: { schoolId },
+      _count: { termId: true },
+    }),
+    db.class.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        maxCapacity: true,
+        _count: {
+          select: { studentClasses: true },
+        },
+      },
+    }),
+  ])
+
+  const totalEnrollment = classes.reduce(
+    (sum, c) => sum + c._count.studentClasses,
+    0
+  )
+  const avgUtilization =
+    classes.length > 0
+      ? classes.reduce((sum, c) => {
+          const capacity = c.maxCapacity || 50
+          return sum + (c._count.studentClasses / capacity) * 100
+        }, 0) / classes.length
+      : 0
+  const atCapacity = classes.filter(
+    (c) => c._count.studentClasses >= (c.maxCapacity || 50)
+  ).length
+
+  return {
+    total,
+    totalEnrollment,
+    avgUtilization: Math.round(avgUtilization * 10) / 10,
+    atCapacity,
+    byTerm: byTerm.reduce(
+      (acc, item) => {
+        acc[item.termId] = item._count.termId
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+  }
+}
+
 // ============================================================================
 // Helpers
 // ============================================================================

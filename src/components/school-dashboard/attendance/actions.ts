@@ -42,7 +42,7 @@
  *
  * NOTIFICATION SYSTEM INTEGRATION:
  * - Creates notification records with channels: ['in_app', 'email']
- * - Includes both English and Arabic content (titleAr, bodyAr) for RTL support
+ * - Includes Arabic content in metadata for RTL support
  * - Metadata embedded in notification for flexible templating downstream
  * - actorId tracks who marked the attendance (audit trail)
  *
@@ -158,12 +158,6 @@ async function triggerAbsenceNotification(
     const studentName = `${student.givenName} ${student.surname}`
     const className = classInfo?.name || "Unknown class"
     const schoolName = schoolInfo?.name || "School"
-    const dateStr = date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
     const dateStrAr = date.toLocaleDateString("ar-SA", {
       weekday: "long",
       year: "numeric",
@@ -203,20 +197,16 @@ async function triggerAbsenceNotification(
           userId: guardian.userId,
           type: "attendance_alert",
           priority: "high",
-          title: `Absence Alert: ${studentName}`,
-          body: `${studentName} was marked absent from ${className} on ${dateStr}. If this is unexpected, please contact the school.`,
+          title: `تنبيه غياب: ${studentName}`,
+          body: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`,
           metadata: {
             studentId,
             studentName,
             classId,
             className,
             date: date.toISOString(),
-            dateFormatted: dateStr,
-            dateFormattedAr: dateStrAr,
+            dateFormatted: dateStrAr,
             markedBy,
-            // Arabic message for RTL support
-            titleAr: `تنبيه غياب: ${studentName}`,
-            bodyAr: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`,
           },
           actorId: markedBy,
         },
@@ -2683,13 +2673,6 @@ export async function reviewExcuse(input: {
     // Notify the guardian who submitted the excuse
     const studentName = `${excuse.attendance.student.givenName} ${excuse.attendance.student.surname}`
     const className = excuse.attendance.class.name
-    const dateStr = excuse.attendance.date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-    const statusText = parsed.status === "APPROVED" ? "approved" : "rejected"
     const statusTextAr =
       parsed.status === "APPROVED" ? "تمت الموافقة على" : "تم رفض"
 
@@ -2705,8 +2688,8 @@ export async function reviewExcuse(input: {
           userId: submitter.guardian.userId,
           type: "attendance_alert",
           priority: "normal",
-          title: `Excuse ${parsed.status === "APPROVED" ? "Approved" : "Rejected"}: ${studentName}`,
-          body: `Your excuse for ${studentName}'s absence on ${dateStr} (${className}) has been ${statusText}.${parsed.reviewNotes ? ` Note: ${parsed.reviewNotes}` : ""}`,
+          title: `${statusTextAr} العذر: ${studentName}`,
+          body: `${statusTextAr} عذر غياب ${studentName} في ${excuse.attendance.date.toLocaleDateString("ar-SA")} (${className}).${parsed.reviewNotes ? ` ملاحظة: ${parsed.reviewNotes}` : ""}`,
           metadata: {
             excuseId: excuse.id,
             studentId: excuse.attendance.studentId,
@@ -2715,9 +2698,6 @@ export async function reviewExcuse(input: {
             date: excuse.attendance.date.toISOString(),
             status: parsed.status,
             reviewNotes: parsed.reviewNotes,
-            // Arabic message
-            titleAr: `${statusTextAr} العذر: ${studentName}`,
-            bodyAr: `${statusTextAr} عذر غياب ${studentName} في ${excuse.attendance.date.toLocaleDateString("ar-SA")} (${className}).${parsed.reviewNotes ? ` ملاحظة: ${parsed.reviewNotes}` : ""}`,
           },
           channels: ["in_app", "email"],
           actorId: session.user.id,

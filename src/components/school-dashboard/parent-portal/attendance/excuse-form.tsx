@@ -46,23 +46,21 @@ import { IMAGEKIT_FOLDERS, useImageKitUpload } from "@/components/file"
 import { Icons } from "@/components/icons"
 import { submitExcuse } from "@/components/school-dashboard/attendance/actions"
 
-// Excuse reasons with labels (English and Arabic)
+// Excuse reasons with labels
 const EXCUSE_REASONS = [
-  { value: "MEDICAL", labelEn: "Medical", labelAr: "طبي" },
+  { value: "MEDICAL", label: "طبي" },
   {
     value: "FAMILY_EMERGENCY",
-    labelEn: "Family Emergency",
-    labelAr: "طوارئ عائلية",
+    label: "طوارئ عائلية",
   },
-  { value: "RELIGIOUS", labelEn: "Religious", labelAr: "ديني" },
+  { value: "RELIGIOUS", label: "ديني" },
   {
     value: "SCHOOL_ACTIVITY",
-    labelEn: "School Activity",
-    labelAr: "نشاط مدرسي",
+    label: "نشاط مدرسي",
   },
-  { value: "TRANSPORTATION", labelEn: "Transportation", labelAr: "مواصلات" },
-  { value: "WEATHER", labelEn: "Weather", labelAr: "طقس" },
-  { value: "OTHER", labelEn: "Other", labelAr: "أخرى" },
+  { value: "TRANSPORTATION", label: "مواصلات" },
+  { value: "WEATHER", label: "طقس" },
+  { value: "OTHER", label: "أخرى" },
 ] as const
 
 // Form schema
@@ -378,7 +376,7 @@ export function ExcuseForm({
                       <SelectContent>
                         {EXCUSE_REASONS.map((reason) => (
                           <SelectItem key={reason.value} value={reason.value}>
-                            {isArabic ? reason.labelAr : reason.labelEn}
+                            {reason.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -526,7 +524,7 @@ export function ExcuseForm({
                 <Button type="submit" disabled={isPending}>
                   {isPending ? (
                     <>
-                      <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
                       {isArabic ? "جاري الإرسال..." : "Submitting..."}
                     </>
                   ) : isArabic ? (
@@ -584,7 +582,7 @@ export function UnexcusedAbsenceCard({
         onClick={() => onSubmitExcuse(absence)}
         className="border-red-200 hover:bg-red-50"
       >
-        <Icons.fileText className="mr-2 h-4 w-4" />
+        <Icons.fileText className="me-2 h-4 w-4" />
         {isArabic ? "تقديم عذر" : "Submit Excuse"}
       </Button>
     </div>

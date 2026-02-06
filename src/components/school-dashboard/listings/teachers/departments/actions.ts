@@ -36,7 +36,7 @@ export async function getDepartments(): Promise<ActionResult> {
           select: {
             id: true,
             subjectName: true,
-            subjectNameAr: true,
+            lang: true,
           },
         },
         teacherDepartments: {
@@ -67,13 +67,13 @@ export async function getDepartments(): Promise<ActionResult> {
       id: dept.id,
       schoolId: dept.schoolId,
       departmentName: dept.departmentName,
-      departmentNameAr: dept.departmentNameAr,
+      lang: dept.lang,
       createdAt: dept.createdAt,
       updatedAt: dept.updatedAt,
       subjects: dept.subjects.map((s) => ({
         id: s.id,
         subjectName: s.subjectName,
-        subjectNameAr: s.subjectNameAr,
+        lang: s.lang,
       })),
       teachers: dept.teacherDepartments.map((td) => ({
         id: td.teacher.id,
@@ -120,8 +120,7 @@ export async function createDepartment(
 
     const data = {
       departmentName: formData.get("departmentName") as string,
-      departmentNameAr:
-        (formData.get("departmentNameAr") as string) || undefined,
+      lang: (formData.get("lang") as string) || "ar",
     }
 
     const validated = createDepartmentSchema.parse(data)
@@ -142,7 +141,7 @@ export async function createDepartment(
       data: {
         schoolId,
         departmentName: validated.departmentName,
-        departmentNameAr: validated.departmentNameAr,
+        lang: validated.lang || "ar",
       },
     })
 
@@ -183,7 +182,7 @@ export async function updateDepartment(
     const data = {
       id: formData.get("id") as string,
       departmentName: (formData.get("departmentName") as string) || undefined,
-      departmentNameAr: formData.get("departmentNameAr") as string | null,
+      lang: (formData.get("lang") as string) || undefined,
     }
 
     const validated = updateDepartmentSchema.parse(data)
@@ -223,8 +222,8 @@ export async function updateDepartment(
         ...(validated.departmentName && {
           departmentName: validated.departmentName,
         }),
-        ...(validated.departmentNameAr !== undefined && {
-          departmentNameAr: validated.departmentNameAr || null,
+        ...(validated.lang !== undefined && {
+          lang: validated.lang,
         }),
       },
     })

@@ -283,9 +283,9 @@ export function Uploader({
         >
           <input {...getInputProps()} />
           {isUploading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="me-2 h-4 w-4 animate-spin" />
           ) : (
-            <Upload className="mr-2 h-4 w-4" />
+            <Upload className="me-2 h-4 w-4" />
           )}
           {dictionary?.browse || "Upload"}
         </Button>

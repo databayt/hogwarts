@@ -28,7 +28,7 @@ export const getYearLevelColumns = (
 ): ColumnDef<YearLevelRow>[] => {
   const t = {
     levelName: lang === "ar" ? "اسم المرحلة" : "Level Name",
-    levelNameAr: lang === "ar" ? "الاسم بالعربية" : "Arabic Name",
+    language: lang === "ar" ? "اللغة" : "Language",
     order: lang === "ar" ? "الترتيب" : "Order",
     batches: lang === "ar" ? "الدفعات" : "Batches",
     students: lang === "ar" ? "الطلاب" : "Students",
@@ -63,34 +63,28 @@ export const getYearLevelColumns = (
       meta: { label: t.levelName, variant: "text" },
       id: "levelName",
       cell: ({ row }) => {
-        const name =
-          lang === "ar" && row.original.levelNameAr
-            ? row.original.levelNameAr
-            : row.original.levelName
         return (
           <span className="flex items-center gap-2">
             <GraduationCap className="text-muted-foreground h-4 w-4" />
-            <span className="font-medium">{name}</span>
+            <span className="font-medium">{row.original.levelName}</span>
           </span>
         )
       },
       enableColumnFilter: true,
     },
     {
-      accessorKey: "levelNameAr",
+      accessorKey: "lang",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.levelNameAr} />
+        <DataTableColumnHeader column={column} title={t.language} />
       ),
-      meta: { label: t.levelNameAr, variant: "text" },
-      id: "levelNameAr",
+      meta: { label: t.language, variant: "text" },
+      id: "lang",
       cell: ({ getValue }) => {
-        const value = getValue<string | null>()
-        return value ? (
-          <span className="text-sm" dir="rtl">
-            {value}
+        const value = getValue<string>()
+        return (
+          <span className="text-sm">
+            {value === "ar" ? "Arabic" : "English"}
           </span>
-        ) : (
-          <span className="text-muted-foreground">-</span>
         )
       },
     },

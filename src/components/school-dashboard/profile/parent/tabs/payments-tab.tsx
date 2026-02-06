@@ -526,7 +526,7 @@ export function PaymentsTab({
         </select>
 
         <Button variant="outline" size="sm">
-          <ListFilter className="mr-1 h-4 w-4" />
+          <ListFilter className="me-1 h-4 w-4" />
           More Filters
         </Button>
       </div>
@@ -585,7 +585,7 @@ export function PaymentsTab({
                       )}
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="text-lg font-bold">${fee.amount}</p>
                         <Badge
                           variant={

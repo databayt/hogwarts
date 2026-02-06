@@ -137,9 +137,9 @@ export function DataTableCard({
   }
 
   const alignClasses = {
-    left: "text-left",
+    left: "text-start",
     center: "text-center",
-    right: "text-right",
+    right: "text-end",
   }
 
   const displayedData = data.slice(0, maxRows)

@@ -265,7 +265,7 @@ function StatCard({
   icon: React.ReactNode
 }) {
   return (
-    <div className="bg-muted/50 flex items-center space-x-3 rounded-lg p-4">
+    <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-4">
       <div className="bg-background rounded-md p-2">{icon}</div>
       <div>
         <p className="text-muted-foreground text-sm">{title}</p>

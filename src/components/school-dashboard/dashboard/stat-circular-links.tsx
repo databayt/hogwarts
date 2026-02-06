@@ -53,7 +53,7 @@ export default function StatsCircularLinks() {
       {data.map((item) => (
         <Card key={item.name} className="gap-0 p-0">
           <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-3">
               <div className="relative flex items-center justify-center">
                 <ChartContainer
                   config={chartConfig}

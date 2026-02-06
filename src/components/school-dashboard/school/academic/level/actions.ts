@@ -70,7 +70,7 @@ export async function createYearLevel(
       data: {
         schoolId,
         levelName: parsed.levelName,
-        levelNameAr: parsed.levelNameAr || null,
+        lang: parsed.lang || "ar",
         levelOrder: parsed.levelOrder,
       },
     })
@@ -149,8 +149,7 @@ export async function updateYearLevel(
 
     const data: Record<string, unknown> = {}
     if (typeof rest.levelName !== "undefined") data.levelName = rest.levelName
-    if (typeof rest.levelNameAr !== "undefined")
-      data.levelNameAr = rest.levelNameAr || null
+    if (typeof rest.lang !== "undefined") data.lang = rest.lang
     if (typeof rest.levelOrder !== "undefined")
       data.levelOrder = rest.levelOrder
 
@@ -316,7 +315,7 @@ export async function getYearLevels(
     const mapped: YearLevelRow[] = rows.map((l) => ({
       id: l.id,
       levelName: l.levelName,
-      levelNameAr: l.levelNameAr,
+      lang: l.lang,
       levelOrder: l.levelOrder,
       createdAt: l.createdAt.toISOString(),
       _count: l._count,
@@ -347,7 +346,7 @@ export async function getYearLevelOptions(): Promise<
     Array<{
       id: string
       levelName: string
-      levelNameAr: string | null
+      lang: string
       levelOrder: number
     }>
   >
@@ -364,7 +363,7 @@ export async function getYearLevelOptions(): Promise<
       select: {
         id: true,
         levelName: true,
-        levelNameAr: true,
+        lang: true,
         levelOrder: true,
       },
     })

@@ -40,7 +40,7 @@ export default function DashboardError({
         <CardContent>
           <div className="space-y-3">
             <Button onClick={() => reset()} className="w-full">
-              <Icons.refresh className="mr-2 h-4 w-4" />
+              <Icons.refresh className="me-2 h-4 w-4" />
               Refresh dashboard
             </Button>
             <Button

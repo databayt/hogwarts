@@ -21,7 +21,7 @@ export interface DepartmentTeacher {
 export interface DepartmentSubject {
   id: string
   subjectName: string
-  subjectNameAr?: string | null
+  lang?: string
 }
 
 // ============================================================================
@@ -32,7 +32,7 @@ export interface Department {
   id: string
   schoolId: string
   departmentName: string
-  departmentNameAr?: string | null
+  lang?: string | null
   createdAt: Date
   updatedAt: Date
   // Related data (optional, for display)
@@ -46,13 +46,13 @@ export interface Department {
 
 export interface CreateDepartmentInput {
   departmentName: string
-  departmentNameAr?: string
+  lang?: string
 }
 
 export interface UpdateDepartmentInput {
   id: string
   departmentName?: string
-  departmentNameAr?: string
+  lang?: string
 }
 
 // ============================================================================

@@ -194,19 +194,19 @@ export function CapacitySection({
       <div className="flex flex-wrap gap-2 pt-2">
         <Button variant="outline" size="sm" asChild>
           <Link href={`/${lang}/school/bulk`}>
-            <Plus className="mr-1 h-4 w-4" />
+            <Plus className="me-1 h-4 w-4" />
             Bulk Import
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href={`/${lang}/students/new`}>
-            <GraduationCap className="mr-1 h-4 w-4" />
+            <GraduationCap className="me-1 h-4 w-4" />
             Add Student
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href={`/${lang}/teachers/new`}>
-            <Users className="mr-1 h-4 w-4" />
+            <Users className="me-1 h-4 w-4" />
             Add Teacher
           </Link>
         </Button>

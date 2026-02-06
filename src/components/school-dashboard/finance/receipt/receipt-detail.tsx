@@ -144,7 +144,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                 <LoaderCircle className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <RefreshCw className="me-2 h-4 w-4" />
                   Retry
                 </>
               )}
@@ -178,7 +178,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="me-2 h-4 w-4" />
                     View PDF
                   </a>
                 </Button>
@@ -201,9 +201,9 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                       <MapPin className="h-4 w-4" />
                       Merchant
                     </div>
-                    <p className="ml-6 text-sm">{receipt.merchantName}</p>
+                    <p className="ms-6 text-sm">{receipt.merchantName}</p>
                     {receipt.merchantAddress && (
-                      <p className="text-muted-foreground ml-6 text-xs">
+                      <p className="text-muted-foreground ms-6 text-xs">
                         {receipt.merchantAddress}
                       </p>
                     )}
@@ -216,7 +216,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                       <Phone className="h-4 w-4" />
                       Contact
                     </div>
-                    <p className="ml-6 text-sm">{receipt.merchantContact}</p>
+                    <p className="ms-6 text-sm">{receipt.merchantContact}</p>
                   </div>
                 )}
 
@@ -226,7 +226,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                       <Calendar className="h-4 w-4" />
                       Date
                     </div>
-                    <p className="ml-6 text-sm">
+                    <p className="ms-6 text-sm">
                       {format(new Date(receipt.transactionDate), "PPP")}
                     </p>
                   </div>
@@ -239,7 +239,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                         <DollarSign className="h-4 w-4" />
                         Amount
                       </div>
-                      <p className="ml-6 text-lg font-semibold">
+                      <p className="ms-6 text-lg font-semibold">
                         {receipt.currency || "USD"}{" "}
                         {receipt.transactionAmount.toFixed(2)}
                       </p>
@@ -325,7 +325,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
             <LoaderCircle className="h-4 w-4 animate-spin" />
           ) : (
             <>
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="me-2 h-4 w-4" />
               Delete
             </>
           )}

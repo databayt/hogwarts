@@ -193,7 +193,7 @@ export default async function UpcomingExamsContent({
           <Button asChild variant="ghost" size="sm">
             <Link href={`/${lang}/exams/${exam.id}`}>
               {d?.actions?.viewDetails || "View Details"}
-              <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Link>
           </Button>
         </div>

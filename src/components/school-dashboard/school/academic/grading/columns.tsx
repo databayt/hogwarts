@@ -62,7 +62,7 @@ export const getScoreRangeColumns = (
         const grade = getValue<string>()
         return (
           <Badge variant={getGradeVariant(grade)} className="text-sm font-bold">
-            <Award className="mr-1 h-3 w-3" />
+            <Award className="me-1 h-3 w-3" />
             {grade}
           </Badge>
         )

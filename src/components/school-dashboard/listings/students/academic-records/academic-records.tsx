@@ -240,19 +240,19 @@ export function AcademicRecords({
       <Tabs defaultValue="grades" className="space-y-4">
         <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="grades">
-            <BarChart className="mr-2 h-4 w-4" />
+            <BarChart className="me-2 h-4 w-4" />
             Grades
           </TabsTrigger>
           <TabsTrigger value="subjects">
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="me-2 h-4 w-4" />
             Subjects
           </TabsTrigger>
           <TabsTrigger value="achievements">
-            <Award className="mr-2 h-4 w-4" />
+            <Award className="me-2 h-4 w-4" />
             Achievements
           </TabsTrigger>
           <TabsTrigger value="transcript">
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="me-2 h-4 w-4" />
             Transcript
           </TabsTrigger>
         </TabsList>
@@ -438,7 +438,7 @@ export function AcademicRecords({
                       </p>
                       <p className="text-2xl font-bold">{record.grade}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-muted-foreground text-sm">
                         Total Score
                       </p>
@@ -507,7 +507,7 @@ export function AcademicRecords({
                               )}
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-end">
                             <p className="text-muted-foreground text-sm">
                               {format(
                                 new Date(achievement.achievementDate),
@@ -619,18 +619,18 @@ export function AcademicRecords({
                     variant="outline"
                     onClick={() => onDownloadReport?.("excel")}
                   >
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="me-2 h-4 w-4" />
                     Export Excel
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => onDownloadReport?.("pdf")}
                   >
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="me-2 h-4 w-4" />
                     Download PDF
                   </Button>
                   <Button onClick={onGenerateTranscript}>
-                    <Printer className="mr-2 h-4 w-4" />
+                    <Printer className="me-2 h-4 w-4" />
                     Generate Transcript
                   </Button>
                 </div>

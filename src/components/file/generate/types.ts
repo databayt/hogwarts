@@ -57,7 +57,7 @@ export interface DocumentMetadata {
 
 export interface InvoiceItem {
   description: string
-  descriptionAr?: string
+  lang?: string
   quantity: number
   unitPrice: number
   total: number
@@ -187,14 +187,13 @@ export interface CertificateData extends DocumentMetadata {
 
 export interface ReportCardSubject {
   name: string
-  nameAr?: string
+  lang?: string
   grade: string
   score?: number
   maxScore?: number
   percentage?: number
   teacherName?: string
   comments?: string
-  commentsAr?: string
 }
 
 export interface ReportCardData extends DocumentMetadata {
@@ -284,7 +283,7 @@ export interface IdCardData extends DocumentMetadata {
 export interface TranscriptCourse {
   code: string
   name: string
-  nameAr?: string
+  lang?: string
   credits?: number
   grade: string
   gradePoints?: number

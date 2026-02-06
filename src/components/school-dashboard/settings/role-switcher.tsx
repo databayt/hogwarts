@@ -364,10 +364,7 @@ export function RoleSwitcher({
                         <role.icon className={`h-4 w-4 ${role.color}`} />
                         <span>{role.label}</span>
                         {!isAccessible && role.value !== currentRole && (
-                          <Badge
-                            variant="outline"
-                            className="ml-2 text-xs rtl:mr-2 rtl:ml-0"
-                          >
+                          <Badge variant="outline" className="ms-2 text-xs">
                             {dictionary?.settings?.roleSwitcher?.locked ||
                               "Locked"}
                           </Badge>

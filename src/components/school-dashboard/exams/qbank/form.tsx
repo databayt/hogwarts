@@ -635,7 +635,7 @@ function FillBlankFields({
         control={form.control}
         name="caseSensitive"
         render={({ field }) => (
-          <FormItem className="flex items-center space-x-2">
+          <FormItem className="flex items-center gap-2">
             <FormControl>
               <Checkbox
                 checked={field.value}

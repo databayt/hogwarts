@@ -24,7 +24,7 @@ export function ShadcnFieldChoiceCard() {
         <RadioGroup defaultValue="kubernetes" className="space-y-3">
           <label
             htmlFor="kubernetes"
-            className="border-border hover:bg-accent flex cursor-pointer items-start space-x-3 rounded-lg border p-4"
+            className="border-border hover:bg-accent flex cursor-pointer items-start gap-3 rounded-lg border p-4"
           >
             <RadioGroupItem
               value="kubernetes"
@@ -41,7 +41,7 @@ export function ShadcnFieldChoiceCard() {
 
           <label
             htmlFor="vm"
-            className="border-border hover:bg-accent flex cursor-pointer items-start space-x-3 rounded-lg border p-4"
+            className="border-border hover:bg-accent flex cursor-pointer items-start gap-3 rounded-lg border p-4"
           >
             <RadioGroupItem value="vm" id="vm" className="mt-1" />
             <div className="flex-1">

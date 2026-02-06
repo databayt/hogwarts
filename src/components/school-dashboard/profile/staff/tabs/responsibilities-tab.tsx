@@ -537,7 +537,7 @@ export function ResponsibilitiesTab({
                         </Badge>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-2xl font-bold">{project.progress}%</p>
                       <p className="text-muted-foreground text-xs">Complete</p>
                     </div>
@@ -618,7 +618,7 @@ export function ResponsibilitiesTab({
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-lg font-bold">{process.compliance}%</p>
                       <p className="text-muted-foreground text-xs">
                         Compliance
@@ -652,7 +652,7 @@ export function ResponsibilitiesTab({
                           Documentation
                         </span>
                         <Button variant="ghost" size="sm" className="text-xs">
-                          <FileText className="mr-1 h-3 w-3" />
+                          <FileText className="me-1 h-3 w-3" />
                           {process.documentation}
                         </Button>
                       </div>

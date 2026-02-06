@@ -86,7 +86,7 @@ export default function PlatformHeader({
           <div className="hidden items-center md:flex">
             {breadcrumbItems.length > 0 && (
               <Breadcrumb>
-                <BreadcrumbList className="flex items-center space-x-1 rtl:space-x-reverse">
+                <BreadcrumbList className="flex items-center gap-1">
                   {breadcrumbItems.map((item, index) => {
                     // Translate breadcrumb title
                     const titleKey = item.title.toLowerCase()

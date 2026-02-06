@@ -15,7 +15,7 @@ export default function Loading() {
           <Skeleton key={i} className="h-12 w-12 rounded-full" />
         ))}
       </div>
-      <Skeleton className="ml-auto h-10 w-24 rounded-md" />
+      <Skeleton className="ms-auto h-10 w-24 rounded-md" />
     </div>
   )
 }

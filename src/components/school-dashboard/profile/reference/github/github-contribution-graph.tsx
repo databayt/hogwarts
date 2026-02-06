@@ -93,7 +93,7 @@ export default function GitHubContributionGraph() {
   return (
     <Card className="w-full p-0">
       <CardContent className="p-0">
-        <h6 className="mb-8 text-right text-base font-medium" dir="rtl">
+        <h6 className="mb-8 text-end text-base font-medium" dir="rtl">
           {totalContributions} مساهمة في العام الماضي
         </h6>
         <TooltipProvider>
@@ -130,7 +130,7 @@ export default function GitHubContributionGraph() {
             تعرّف على كيفية حساب المساهمات
           </button>
           <div className="flex items-center" dir="rtl">
-            <span className="ml-2">أقل</span>
+            <span className="ms-2">أقل</span>
             <div className="flex gap-1">
               <div className="h-3 w-3 rounded-sm bg-neutral-100" />
               <div className="h-3 w-3 rounded-sm bg-emerald-200" />
@@ -138,7 +138,7 @@ export default function GitHubContributionGraph() {
               <div className="h-3 w-3 rounded-sm bg-emerald-600" />
               <div className="h-3 w-3 rounded-sm bg-emerald-800" />
             </div>
-            <span className="mr-2">أكثر</span>
+            <span className="me-2">أكثر</span>
           </div>
         </div>
       </CardContent>

@@ -15,7 +15,7 @@ import { Uploader, type UploadResult } from "@/components/file"
 import { Icons } from "@/components/icons"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import { saveDocumentsStep } from "./actions"
 import { DOCUMENT_TYPES } from "./config"
 import type {
@@ -30,7 +30,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
     const subdomain = params.subdomain as string
     const { locale: lang } = useLocale()
     const isRTL = lang === "ar"
-    const { session, updateStepData } = useApplication()
+    const { session, updateStepData } = useApplySession()
 
     const [photoUrl, setPhotoUrl] = useState(initialData?.photoUrl || "")
     const [signatureUrl, setSignatureUrl] = useState(
@@ -264,7 +264,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                       <div className="flex items-center gap-2">
                         <Icons.fileText className="text-muted-foreground h-5 w-5" />
                         <span className="font-medium">
-                          {isRTL ? docType.labelAr : docType.label}
+                          {docType.label}
                           {docType.required && (
                             <span className="text-destructive"> *</span>
                           )}
@@ -297,7 +297,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                         onUploadComplete={(results) =>
                           handleDocumentUpload(
                             docType.value,
-                            isRTL ? docType.labelAr : docType.label,
+                            docType.label,
                             results
                           )
                         }

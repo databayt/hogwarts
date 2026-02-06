@@ -63,7 +63,7 @@ export const CompletionEmail = ({
           <Text className="mb-2 text-sm text-gray-600">
             <strong>What's next?</strong>
           </Text>
-          <ul className="mb-4 pl-5 text-sm text-gray-600">
+          <ul className="mb-4 ps-5 text-sm text-gray-600">
             <li>Share your certificate on social media</li>
             <li>Explore more courses to continue learning</li>
             <li>Apply your new skills in real projects</li>

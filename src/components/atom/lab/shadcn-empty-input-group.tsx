@@ -27,8 +27,8 @@ export function ShadcnEmptyInputGroup() {
 
       <div className="w-full max-w-md space-y-4">
         <div className="relative">
-          <Input placeholder="Try searching for pages..." className="pr-20" />
-          <div className="absolute inset-y-0 right-0 flex items-center gap-2 pr-3">
+          <Input placeholder="Try searching for pages..." className="pe-20" />
+          <div className="absolute inset-y-0 right-0 flex items-center gap-2 pe-3">
             <Search className="text-muted-foreground size-4" />
             <kbd className="border-border bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-xs font-medium select-none">
               /

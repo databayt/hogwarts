@@ -34,6 +34,8 @@ interface ModalFooterProps {
     save?: string
     create?: string
     saving?: string
+    /** Template for step indicator, e.g. "Step {current} of {total}" */
+    stepOf?: string
   }
 }
 
@@ -88,7 +90,12 @@ export function ModalFooter({
       <div className="flex items-center justify-between px-4 pb-4 sm:px-8 md:px-12">
         {/* Step indicator */}
         <div className="text-muted-foreground text-sm font-medium">
-          {stepLabel || `Step ${currentStep} of ${totalSteps}`}
+          {stepLabel ||
+            (t.stepOf
+              ? t.stepOf
+                  .replace("{current}", String(currentStep))
+                  .replace("{total}", String(totalSteps))
+              : `Step ${currentStep} of ${totalSteps}`)}
         </div>
 
         {/* Action buttons */}

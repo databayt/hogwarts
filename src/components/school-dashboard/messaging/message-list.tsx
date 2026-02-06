@@ -389,7 +389,7 @@ export function MessageListSkeleton({
                 <div className="flex flex-col gap-1">
                   {/* Sender name skeleton - only on first message */}
                   {groupIndex % 2 === 1 && msgIndex === 0 && (
-                    <div className="bg-muted mb-1 ml-3 h-3 w-20 animate-pulse rounded" />
+                    <div className="bg-muted ms-3 mb-1 h-3 w-20 animate-pulse rounded" />
                   )}
 
                   {/* Message bubble skeleton */}

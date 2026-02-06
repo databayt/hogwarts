@@ -34,7 +34,7 @@ export function BankDropdown({
           <SelectItem key={account.id} value={account.id}>
             <div className="flex w-full items-center justify-between">
               <span>{account.name}</span>
-              <span className="text-muted-foreground ml-2 text-sm">
+              <span className="text-muted-foreground ms-2 text-sm">
                 {formatAmount(Number(account.currentBalance))}
               </span>
             </div>

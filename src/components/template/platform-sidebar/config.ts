@@ -37,7 +37,7 @@ export const platformNav: PlatformNavItem[] = [
     href: "/school",
     icon: "admin",
     roles: ["ADMIN", "DEVELOPER"],
-    className: "-ml-[1.5px] h-4.5 w-4.5",
+    className: "-ms-[1.5px] h-4.5 w-4.5",
   },
   {
     title: "Sales",
@@ -62,7 +62,7 @@ export const platformNav: PlatformNavItem[] = [
     href: "/grades",
     icon: "grades",
     roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN"],
-    className: "-ml-[1px] h-4.5 w-4.5",
+    className: "-ms-[1px] h-4.5 w-4.5",
   },
   {
     title: "Subjects",
@@ -112,7 +112,7 @@ export const platformNav: PlatformNavItem[] = [
     href: "/exams",
     icon: "exam",
     roles: ["ADMIN", "STAFF", "TEACHER"],
-    className: "-ml-[1px] h-4.5 w-4.5",
+    className: "-ms-[1px] h-4.5 w-4.5",
   },
   {
     title: "Events",

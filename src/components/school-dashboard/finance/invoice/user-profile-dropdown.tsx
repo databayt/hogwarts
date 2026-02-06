@@ -51,7 +51,7 @@ export default async function UserProfileDropDown({
             </div>
           )}
 
-          {isArrowUp && <ChevronDown className="ml-auto transition-all" />}
+          {isArrowUp && <ChevronDown className="ms-auto transition-all" />}
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-full min-w-[250px]">

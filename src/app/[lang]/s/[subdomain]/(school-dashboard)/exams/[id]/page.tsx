@@ -56,7 +56,7 @@ export default async function Page({ params }: Props) {
           />
           <Button asChild>
             <Link href={`/${lang}/exams/${id}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
+              <Pencil className="me-2 h-4 w-4" />
               {d?.edit || "Edit"}
             </Link>
           </Button>

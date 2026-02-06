@@ -255,7 +255,7 @@ export function TermForm({ onSuccess, lang = "en" }: TermFormProps) {
             control={form.control}
             name="isActive"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
+              <FormItem className="flex flex-row items-start space-y-0 gap-x-3 rounded-md border p-4">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -283,7 +283,7 @@ export function TermForm({ onSuccess, lang = "en" }: TermFormProps) {
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
-                  <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
                   {t.saving}
                 </>
               ) : (

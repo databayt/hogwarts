@@ -18,14 +18,14 @@ export default async function Profile({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
-  // Define profile page navigation
+  const n = d?.nav
   const profilePages: PageNavItem[] = [
-    { name: "Profile", href: `/${lang}/profile` },
+    { name: n?.profile || "Profile", href: `/${lang}/profile` },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter title="Profile" />
+      <PageHeadingSetter title={d?.profile?.title || "Profile"} />
       <PageNav pages={profilePages} />
       <ProfileContent dictionary={dictionary} lang={lang} />
     </div>

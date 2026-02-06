@@ -78,7 +78,7 @@ const pullRequests = [
 
 export default function GitHubTimeline() {
   return (
-    <div className="relative ml-5 bg-transparent" dir="rtl">
+    <div className="relative ms-5 bg-transparent" dir="rtl">
       <div className="px-2 pt-2 pb-8">
         <div className="mb-2 flex items-center">
           <span className="mx-1 text-gray-400">2024</span>
@@ -96,9 +96,9 @@ export default function GitHubTimeline() {
               </div>
             </div>
             {/* Content */}
-            <div className="mr-4 flex-1">
+            <div className="me-4 flex-1">
               <div className="flex items-center justify-between">
-                <h6 className="mt-2 text-right text-sm font-medium">
+                <h6 className="mt-2 text-end text-sm font-medium">
                   أنشأ ٧٩ تعديلاً في ٣ مستودعات
                 </h6>
               </div>
@@ -116,7 +116,7 @@ export default function GitHubTimeline() {
                     </Link>
                     <span className="text-gray-500">{repo.commits} تعديل</span>
                     <div className="flex flex-1 justify-end">
-                      <div className="ml-2 hidden h-2 w-32 rounded-full bg-gray-100 md:block">
+                      <div className="ms-2 hidden h-2 w-32 rounded-full bg-gray-100 md:block">
                         <div
                           className={`${repo.color} h-2 rounded-full`}
                           style={{ width: repo.width }}
@@ -135,9 +135,9 @@ export default function GitHubTimeline() {
                 <Repo className="h-4 w-4 text-[#8B949E]" />
               </div>
             </div>
-            <div className="mr-4 flex-1">
+            <div className="me-4 flex-1">
               <div className="flex items-center justify-between">
-                <h6 className="mt-2 text-right text-sm font-medium">
+                <h6 className="mt-2 text-end text-sm font-medium">
                   أنشأ مستودعين
                 </h6>
               </div>
@@ -153,13 +153,13 @@ export default function GitHubTimeline() {
                     >
                       {repo.name}
                     </Link>
-                    <span className={`ml-2 flex items-center gap-1`}>
+                    <span className={`ms-2 flex items-center gap-1`}>
                       <span
                         className={`h-3 w-3 rounded-full ${repo.langColor}`}
                       ></span>
                       <span className="text-gray-500">{repo.lang}</span>
                     </span>
-                    <span className="ml-auto text-xs text-gray-400">
+                    <span className="ms-auto text-xs text-gray-400">
                       {repo.date}
                     </span>
                   </div>
@@ -174,9 +174,9 @@ export default function GitHubTimeline() {
                 <Issue className="h-4 w-4" />
               </div>
             </div>
-            <div className="mr-4 flex-1">
+            <div className="me-4 flex-1">
               <div className="flex items-center justify-between">
-                <h6 className="mt-2 text-right text-sm font-medium">
+                <h6 className="mt-2 text-end text-sm font-medium">
                   فتح مشكلتين في مستودع واحد
                 </h6>
               </div>
@@ -193,7 +193,7 @@ export default function GitHubTimeline() {
                       >
                         {issue.repo}
                       </Link>
-                      <span className="ml-2 rounded-full border border-green-300 bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
+                      <span className="ms-2 rounded-full border border-green-300 bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
                         ٢ مفتوحة
                       </span>
                     </div>
@@ -201,7 +201,7 @@ export default function GitHubTimeline() {
                       <span className="font-medium text-gray-800">
                         {issue.title}
                       </span>
-                      <span className="ml-auto text-xs text-gray-400">
+                      <span className="ms-auto text-xs text-gray-400">
                         {issue.date}
                       </span>
                     </div>
@@ -217,11 +217,9 @@ export default function GitHubTimeline() {
                 <PullRequest />
               </div>
             </div>
-            <div className="mr-4 flex-1">
+            <div className="me-4 flex-1">
               <div className="flex items-center justify-between">
-                <h6 className="mt-2 text-right text-sm font-medium">
-                  طلبات دمج
-                </h6>
+                <h6 className="mt-2 text-end text-sm font-medium">طلبات دمج</h6>
               </div>
               <div className="mt-2 space-y-1">
                 {pullRequests.map((pr, idx) => (
@@ -237,7 +235,7 @@ export default function GitHubTimeline() {
                         {pr.repo}
                       </Link>
                       <span
-                        className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${pr.status === "مفتوح" ? "border border-green-300 bg-green-100 text-green-700" : "border border-gray-300 bg-gray-100 text-gray-500"}`}
+                        className={`ms-2 rounded-full px-2 py-0.5 text-xs font-bold ${pr.status === "مفتوح" ? "border border-green-300 bg-green-100 text-green-700" : "border border-gray-300 bg-gray-100 text-gray-500"}`}
                       >
                         {pr.status}
                       </span>
@@ -246,7 +244,7 @@ export default function GitHubTimeline() {
                       <span className="font-medium text-gray-800">
                         {pr.title}
                       </span>
-                      <span className="ml-auto text-xs text-gray-400">
+                      <span className="ms-auto text-xs text-gray-400">
                         {pr.date}
                       </span>
                     </div>

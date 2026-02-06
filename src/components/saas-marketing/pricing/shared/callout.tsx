@@ -69,7 +69,7 @@ export function Callout({
   return (
     <div
       className={cn(
-        "mt-6 flex items-start space-x-3 rounded-lg border px-4 py-3 dark:border-none",
+        "mt-6 flex items-start gap-3 rounded-lg border px-4 py-3 dark:border-none",
         classes,
         twClass
       )}

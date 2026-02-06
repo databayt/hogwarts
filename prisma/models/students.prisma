@@ -219,6 +219,9 @@ model StudentGuardian {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, studentId, guardianId]) // Unique student-guardian per school
+  @@index([studentId])
+  @@index([guardianId])
+  @@index([guardianTypeId])
   @@map("student_guardians")
 }
 
@@ -237,6 +240,7 @@ model GuardianPhoneNumber {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, guardianId, phoneNumber]) // Unique phone per guardian per school
+  @@index([guardianId])
   @@map("guardian_phone_numbers")
 }
 
@@ -257,6 +261,9 @@ model StudentYearLevel {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, studentId, yearId]) // Unique student-year per school
+  @@index([studentId])
+  @@index([levelId])
+  @@index([yearId])
   @@map("student_year_levels")
 }
 

@@ -21,9 +21,7 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 export type ClassRow = {
   id: string
   name: string
-  nameAr: string | null
   subjectName: string
-  subjectNameAr: string | null
   teacherName: string
   termName: string
   courseCode: string | null
@@ -38,20 +36,14 @@ export type ClassRow = {
  * Get localized class name based on locale
  */
 export function getLocalizedClassName(row: ClassRow, locale: Locale): string {
-  if (locale === "ar") {
-    return row.nameAr || row.name || ""
-  }
-  return row.name || row.nameAr || ""
+  return row.name || ""
 }
 
 /**
  * Get localized subject name based on locale
  */
 export function getLocalizedSubjectName(row: ClassRow, locale: Locale): string {
-  if (locale === "ar") {
-    return row.subjectNameAr || row.subjectName || ""
-  }
-  return row.subjectName || row.subjectNameAr || ""
+  return row.subjectName || ""
 }
 
 export interface ClassColumnCallbacks {
@@ -243,19 +235,19 @@ export const getClassColumns = (
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/students?classId=${classItem.id}`}>
-                  <Users className="mr-2 h-4 w-4" />
+                  <Users className="me-2 h-4 w-4" />
                   {t.viewStudents}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/grades?classId=${classItem.id}`}>
-                  <GraduationCap className="mr-2 h-4 w-4" />
+                  <GraduationCap className="me-2 h-4 w-4" />
                   {t.viewGrades}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/attendance?classId=${classItem.id}`}>
-                  <CalendarCheck className="mr-2 h-4 w-4" />
+                  <CalendarCheck className="me-2 h-4 w-4" />
                   {t.viewAttendance}
                 </Link>
               </DropdownMenuItem>

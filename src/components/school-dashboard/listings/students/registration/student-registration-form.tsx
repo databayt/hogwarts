@@ -248,7 +248,7 @@ export function StudentRegistrationForm({
                     variant="outline"
                     onClick={handlePrevious}
                   >
-                    <Icons.chevronLeft className="mr-1 h-4 w-4" />
+                    <Icons.chevronLeft className="me-1 h-4 w-4" />
                     Previous
                   </Button>
                 )}
@@ -264,14 +264,14 @@ export function StudentRegistrationForm({
                   variant="outline"
                   onClick={handleSaveProgress}
                 >
-                  <Icons.save className="mr-1 h-4 w-4" />
+                  <Icons.save className="me-1 h-4 w-4" />
                   Save Progress
                 </Button>
 
                 {currentStep < totalSteps - 1 ? (
                   <Button type="button" onClick={handleNext}>
                     Next
-                    <Icons.chevronRight className="ml-1 h-4 w-4" />
+                    <Icons.chevronRight className="ms-1 h-4 w-4" />
                   </Button>
                 ) : (
                   <Button type="submit" disabled={isSubmitting}>

@@ -64,14 +64,14 @@ export function UpdateTaskSheet({ task, ...props }: UpdateTaskSheetProps) {
   return (
     <Sheet {...props}>
       <SheetContent className="flex flex-col gap-6 sm:max-w-md">
-        <SheetHeader className="text-left">
+        <SheetHeader className="text-start">
           <SheetTitle>Update task</SheetTitle>
           <SheetDescription>
             Update the task details and save the changes
           </SheetDescription>
         </SheetHeader>
         <TaskForm<UpdateTaskSchema> form={form} onSubmit={onSubmit}>
-          <SheetFooter className="gap-2 pt-2 sm:space-x-0">
+          <SheetFooter className="gap-2 pt-2">
             <SheetClose asChild>
               <Button type="button" variant="outline">
                 Cancel
@@ -80,7 +80,7 @@ export function UpdateTaskSheet({ task, ...props }: UpdateTaskSheetProps) {
             <Button disabled={isPending}>
               {isPending && (
                 <Loader
-                  className="mr-2 size-4 animate-spin"
+                  className="me-2 size-4 animate-spin"
                   aria-hidden="true"
                 />
               )}

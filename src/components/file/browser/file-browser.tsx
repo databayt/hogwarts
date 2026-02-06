@@ -193,7 +193,7 @@ export function FileBrowser({
               placeholder={dictionary?.search || "Search..."}
               value={state.searchQuery}
               onChange={(e) => actions.setSearch(e.target.value)}
-              className="w-48 pl-8"
+              className="w-48 ps-8"
             />
           </div>
 
@@ -227,7 +227,7 @@ export function FileBrowser({
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "h-9 w-9 rounded-none first:rounded-l-md last:rounded-r-md",
+                  "h-9 w-9 rounded-none first:rounded-s-md last:rounded-e-md",
                   state.viewMode === mode && "bg-muted"
                 )}
                 onClick={() => actions.setViewMode(mode)}
@@ -269,7 +269,7 @@ export function FileBrowser({
               size="sm"
               onClick={actions.downloadSelected}
             >
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               {dictionary?.download || "Download"}
             </Button>
             <Button
@@ -278,7 +278,7 @@ export function FileBrowser({
               className="text-destructive hover:text-destructive"
               onClick={() => setShowDeleteDialog(true)}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="me-2 h-4 w-4" />
               {dictionary?.delete || "Delete"}
             </Button>
           </div>
@@ -388,9 +388,9 @@ export function FileBrowser({
               disabled={state.isDeleting}
             >
               {state.isDeleting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
               ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="me-2 h-4 w-4" />
               )}
               {dictionary?.delete || "Delete"}
             </Button>
@@ -540,7 +540,7 @@ function ListView({
         <div className="flex-1">
           <SortHeader field="name" label={dictionary?.name || "Name"} />
         </div>
-        <div className="w-24 text-right">
+        <div className="w-24 text-end">
           <SortHeader field="size" label={dictionary?.size || "Size"} />
         </div>
         <div className="w-32">
@@ -557,14 +557,14 @@ function ListView({
         <button
           key={folder.path}
           onClick={() => onFolderClick(folder)}
-          className="hover:bg-muted flex w-full items-center gap-4 px-4 py-3 text-left transition-colors"
+          className="hover:bg-muted flex w-full items-center gap-4 px-4 py-3 text-start transition-colors"
         >
           <div className="w-8"></div>
           <div className="flex flex-1 items-center gap-3">
             <Folder className="h-5 w-5 text-yellow-500" />
             <span className="font-medium">{folder.name}</span>
           </div>
-          <div className="text-muted-foreground w-24 text-right text-sm">-</div>
+          <div className="text-muted-foreground w-24 text-end text-sm">-</div>
           <div className="text-muted-foreground w-32 text-sm">-</div>
           <div className="text-muted-foreground w-24 text-sm">Folder</div>
           <div className="w-8"></div>
@@ -589,7 +589,7 @@ function ListView({
             {categoryIcons[file.category]}
             <span className="truncate font-medium">{file.originalName}</span>
           </div>
-          <div className="text-muted-foreground w-24 text-right text-sm">
+          <div className="text-muted-foreground w-24 text-end text-sm">
             {formatBytes(file.size)}
           </div>
           <div className="text-muted-foreground w-32 text-sm">
@@ -610,12 +610,12 @@ function ListView({
                   Open
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Download
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-destructive">
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="me-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -646,7 +646,7 @@ function CompactView({
         <button
           key={folder.path}
           onClick={() => onFolderClick(folder)}
-          className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors"
+          className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm transition-colors"
         >
           <Folder className="h-4 w-4 text-yellow-500" />
           <span>{folder.name}</span>

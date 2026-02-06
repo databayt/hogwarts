@@ -85,7 +85,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
             <FormItem>
               <FormLabel>
                 Allergies
-                <TriangleAlert className="ml-2 inline h-4 w-4 text-yellow-500" />
+                <TriangleAlert className="ms-2 inline h-4 w-4 text-yellow-500" />
               </FormLabel>
               <FormControl>
                 <Textarea
@@ -205,7 +205,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full pl-3 text-left font-normal",
+                        "w-full ps-3 text-start font-normal",
                         !field.value && "text-muted-foreground"
                       )}
                     >
@@ -214,7 +214,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                       ) : (
                         <span>Pick a date</span>
                       )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
@@ -246,7 +246,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
               addVaccination({ name: "", date: new Date(), nextDueDate: null })
             }
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             Add Vaccination
           </Button>
         </div>
@@ -293,7 +293,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
+                              "w-full ps-3 text-start font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -302,7 +302,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -333,7 +333,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
+                              "w-full ps-3 text-start font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -342,7 +342,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                             ) : (
                               <span>Optional</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -371,7 +371,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
           control={form.control}
           name="hasSpecialNeeds"
           render={({ field }) => (
-            <FormItem className="flex items-center space-x-2">
+            <FormItem className="flex items-center gap-2">
               <FormControl>
                 <Checkbox
                   checked={field.value}

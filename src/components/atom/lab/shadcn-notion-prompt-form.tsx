@@ -153,7 +153,7 @@ export function ShadcnNotionPromptForm() {
                   {mention.name}
                   <button
                     onClick={() => removeMention(mention.id)}
-                    className="hover:text-foreground ml-1"
+                    className="hover:text-foreground ms-1"
                   >
                     <Icons.x className="size-3" />
                   </button>
@@ -203,7 +203,7 @@ export function ShadcnNotionPromptForm() {
                                 key={page.id}
                                 onSelect={() => addMention(page)}
                               >
-                                <Icon className="mr-2 size-4" />
+                                <Icon className="me-2 size-4" />
                                 {page.name}
                               </CommandItem>
                             )
@@ -219,7 +219,7 @@ export function ShadcnNotionPromptForm() {
                               key={user.id}
                               onSelect={() => addMention(user)}
                             >
-                              <Avatar className="mr-2 size-5">
+                              <Avatar className="me-2 size-5">
                                 <AvatarImage src={user.avatar} />
                                 <AvatarFallback>
                                   {user.name.substring(0, 2)}
@@ -279,7 +279,7 @@ export function ShadcnNotionPromptForm() {
                   <DropdownMenuItem onClick={() => setModel("agent")}>
                     <Badge
                       variant="secondary"
-                      className="mr-2 h-4 px-1 text-xs"
+                      className="me-2 h-4 px-1 text-xs"
                     >
                       Agent
                     </Badge>
@@ -288,7 +288,7 @@ export function ShadcnNotionPromptForm() {
                   <DropdownMenuItem onClick={() => setModel("plan")}>
                     <Badge
                       variant="secondary"
-                      className="mr-2 h-4 px-1 text-xs"
+                      className="me-2 h-4 px-1 text-xs"
                     >
                       Plan
                     </Badge>
@@ -301,7 +301,7 @@ export function ShadcnNotionPromptForm() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm">
-                    <Icons.search className="mr-1 size-4" />
+                    <Icons.search className="me-1 size-4" />
                     Sources
                   </Button>
                 </DropdownMenuTrigger>
@@ -323,7 +323,7 @@ export function ShadcnNotionPromptForm() {
                   <DropdownMenuSeparator />
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
-                      <Sparkles className="mr-2 size-4" />
+                      <Sparkles className="me-2 size-4" />
                       Your Knowledge
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>

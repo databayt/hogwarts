@@ -147,7 +147,7 @@ const CircleProgress = ({ data, index }: CircleProgressProps) => {
 const DetailedActivityInfo = () => {
   return (
     <motion.div
-      className="ml-8 flex flex-col gap-6"
+      className="ms-8 flex flex-col gap-6"
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
@@ -162,7 +162,7 @@ const DetailedActivityInfo = () => {
             style={{ color: activity.color }}
           >
             {activity.current}/{activity.target}
-            <span className="ml-1 text-base text-zinc-600 dark:text-zinc-400">
+            <span className="ms-1 text-base text-zinc-600 dark:text-zinc-400">
               {activity.unit}
             </span>
           </span>

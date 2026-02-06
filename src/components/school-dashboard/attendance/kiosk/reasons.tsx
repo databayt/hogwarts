@@ -81,7 +81,7 @@ export function KioskReasons({
             key={reason}
             onClick={() => setSelectedReason(reason)}
             className={cn(
-              "rounded-xl p-4 text-left transition-colors",
+              "rounded-xl p-4 text-start transition-colors",
               selectedReason === reason
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground hover:bg-secondary/80"

@@ -274,7 +274,7 @@ export function TeacherReview({
             {submission.status.replace("_", " ")}
           </Badge>
           {isLate && (
-            <Badge variant="outline" className="ml-2 text-orange-600">
+            <Badge variant="outline" className="ms-2 text-orange-600">
               Late
             </Badge>
           )}
@@ -375,7 +375,7 @@ export function TeacherReview({
                   size="sm"
                   onClick={() => handleOpenGradeDialog(submission)}
                 >
-                  <Eye className="mr-1 h-4 w-4" />
+                  <Eye className="me-1 h-4 w-4" />
                   Review
                 </Button>
                 <Button
@@ -562,7 +562,7 @@ export function TeacherReview({
                   {selectedSubmission.student.givenName}{" "}
                   {selectedSubmission.student.surname}
                   {selectedSubmission.status === "LATE_SUBMITTED" && (
-                    <Badge variant="outline" className="ml-2 text-orange-600">
+                    <Badge variant="outline" className="ms-2 text-orange-600">
                       Late
                     </Badge>
                   )}
@@ -608,7 +608,7 @@ export function TeacherReview({
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              <Download className="mr-1 h-4 w-4" />
+                              <Download className="me-1 h-4 w-4" />
                               View
                             </a>
                           </Button>

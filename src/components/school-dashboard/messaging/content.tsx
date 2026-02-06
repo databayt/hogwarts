@@ -105,7 +105,7 @@ export function MessagingContentSkeleton({
   return (
     <div className="bg-background flex h-full">
       {/* Sidebar skeleton - responsive */}
-      <div className="border-border w-full flex-shrink-0 space-y-4 border-r p-4 sm:w-96 md:w-[430px]">
+      <div className="border-border w-full flex-shrink-0 space-y-4 border-e p-4 sm:w-96 md:w-[430px]">
         <div className="bg-muted h-10 animate-pulse rounded" />
         <div className="bg-muted h-10 animate-pulse rounded" />
         {Array.from({ length: 8 }).map((_, i) => (

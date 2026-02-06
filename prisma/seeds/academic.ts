@@ -232,30 +232,30 @@ export async function seedDepartments(
       where: {
         schoolId_departmentName: {
           schoolId,
-          departmentName: deptData.nameEn,
+          departmentName: deptData.name,
         },
       },
       update: {
-        departmentNameAr: deptData.nameAr,
+        lang: "ar",
       },
       create: {
         schoolId,
-        departmentName: deptData.nameEn,
-        departmentNameAr: deptData.nameAr,
+        departmentName: deptData.name,
+        lang: "ar",
       },
     })
 
     departments.push({
       id: department.id,
       departmentName: department.departmentName,
-      departmentNameAr: department.departmentNameAr || "",
+      lang: "ar",
     })
   }
 
   logSuccess(
     "Departments",
     departments.length,
-    DEPARTMENTS.map((d) => d.nameEn).join(", ")
+    DEPARTMENTS.map((d) => d.name).join(", ")
   )
 
   return departments
@@ -275,29 +275,38 @@ export async function seedYearLevels(
   const yearLevels: YearLevelRef[] = []
 
   for (const levelData of YEAR_LEVELS) {
-    const yearLevel = await prisma.yearLevel.upsert({
+    // Check by name first, then by order (handles both unique constraints)
+    let yearLevel = await prisma.yearLevel.findFirst({
       where: {
-        schoolId_levelName: {
-          schoolId,
-          levelName: levelData.nameEn,
-        },
-      },
-      update: {
-        levelNameAr: levelData.nameAr,
-        levelOrder: levelData.order,
-      },
-      create: {
         schoolId,
-        levelName: levelData.nameEn,
-        levelNameAr: levelData.nameAr,
-        levelOrder: levelData.order,
+        OR: [{ levelName: levelData.name }, { levelOrder: levelData.order }],
       },
     })
+
+    if (yearLevel) {
+      yearLevel = await prisma.yearLevel.update({
+        where: { id: yearLevel.id },
+        data: {
+          levelName: levelData.name,
+          lang: "ar",
+          levelOrder: levelData.order,
+        },
+      })
+    } else {
+      yearLevel = await prisma.yearLevel.create({
+        data: {
+          schoolId,
+          levelName: levelData.name,
+          lang: "ar",
+          levelOrder: levelData.order,
+        },
+      })
+    }
 
     yearLevels.push({
       id: yearLevel.id,
       levelName: yearLevel.levelName,
-      levelNameAr: yearLevel.levelNameAr || "",
+      lang: "ar",
       levelOrder: yearLevel.levelOrder,
     })
   }

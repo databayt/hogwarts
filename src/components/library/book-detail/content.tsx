@@ -10,13 +10,17 @@ import BorrowBook from "./borrow-book"
 interface Props {
   bookId: string
   userId: string
+  dictionary?: Record<string, unknown>
 }
 
 export default async function LibraryBookDetailContent({
   bookId,
   userId,
+  dictionary,
 }: Props) {
   const { schoolId } = await getTenantContext()
+  const lib = (dictionary as Record<string, Record<string, unknown>>)
+    ?.library as Record<string, string> | undefined
 
   if (!schoolId) {
     notFound()
@@ -67,7 +71,9 @@ export default async function LibraryBookDetailContent({
       {/* Book Info */}
       <div className="space-y-3 text-center">
         <h1 className="text-foreground text-2xl font-bold">{book.title}</h1>
-        <p className="text-muted-foreground">by {book.author}</p>
+        <p className="text-muted-foreground">
+          {lib?.by || "by"} {book.author}
+        </p>
 
         <div className="flex items-center justify-center gap-3">
           <span className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-sm">
@@ -79,7 +85,8 @@ export default async function LibraryBookDetailContent({
         <p
           className={`text-sm ${book.availableCopies > 0 ? "text-green-600" : "text-red-600"}`}
         >
-          {book.availableCopies} of {book.totalCopies} copies available
+          {book.availableCopies} {lib?.of || "of"} {book.totalCopies}{" "}
+          {lib?.copiesAvailable || "copies available"}
         </p>
 
         <div className="pt-2">
@@ -90,13 +97,16 @@ export default async function LibraryBookDetailContent({
             availableCopies={book.availableCopies}
             hasBorrowedBook={!!activeBorrowRecord}
             borrowRecordId={activeBorrowRecord?.id}
+            dictionary={lib}
           />
         </div>
       </div>
 
       {/* Description */}
       <div>
-        <h3 className="text-foreground mb-2 font-semibold">Description</h3>
+        <h3 className="text-foreground mb-2 font-semibold">
+          {lib?.description || "Description"}
+        </h3>
         <p className="text-muted-foreground text-sm leading-relaxed">
           {book.description}
         </p>
@@ -105,21 +115,25 @@ export default async function LibraryBookDetailContent({
       {/* More Info */}
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div className="bg-muted/50 rounded-lg p-4">
-          <p className="text-muted-foreground">Total Copies</p>
+          <p className="text-muted-foreground">
+            {lib?.totalCopies || "Total Copies"}
+          </p>
           <p className="text-foreground font-semibold">{book.totalCopies}</p>
         </div>
         <div className="bg-muted/50 rounded-lg p-4">
-          <p className="text-muted-foreground">Available</p>
+          <p className="text-muted-foreground">
+            {lib?.available || "Available"}
+          </p>
           <p className="text-foreground font-semibold">
             {book.availableCopies}
           </p>
         </div>
         <div className="bg-muted/50 rounded-lg p-4">
-          <p className="text-muted-foreground">Genre</p>
+          <p className="text-muted-foreground">{lib?.genre || "Genre"}</p>
           <p className="text-foreground font-semibold">{book.genre}</p>
         </div>
         <div className="bg-muted/50 rounded-lg p-4">
-          <p className="text-muted-foreground">Rating</p>
+          <p className="text-muted-foreground">{lib?.rating || "Rating"}</p>
           <p className="text-foreground font-semibold">{book.rating}/5</p>
         </div>
       </div>
@@ -127,7 +141,9 @@ export default async function LibraryBookDetailContent({
       {/* Summary */}
       {book.summary && (
         <div>
-          <h3 className="text-foreground mb-2 font-semibold">Summary</h3>
+          <h3 className="text-foreground mb-2 font-semibold">
+            {lib?.summary || "Summary"}
+          </h3>
           <p className="text-muted-foreground text-sm leading-relaxed">
             {book.summary}
           </p>

@@ -316,9 +316,9 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
               variant="outline"
               size="sm"
               onClick={fetchYears}
-              className="ml-4"
+              className="ms-4"
             >
-              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+              <RefreshCw className="me-2 h-4 w-4" aria-hidden="true" />
               {dict.retry || "Retry"}
             </Button>
           </AlertDescription>
@@ -346,7 +346,7 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
                 onClick={handleAddYear}
                 aria-label={dict.addYear || "Add academic year"}
               >
-                <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
+                <Plus className="me-1 h-4 w-4" aria-hidden="true" />
                 {dict.add || "Add"}
               </Button>
             </div>
@@ -387,7 +387,7 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
                 disabled={!selectedYearId}
                 aria-label={dict.addTerm || "Add term"}
               >
-                <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
+                <Plus className="me-1 h-4 w-4" aria-hidden="true" />
                 {dict.add || "Add"}
               </Button>
             </div>
@@ -430,7 +430,7 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
                 disabled={!selectedYearId}
                 aria-label={dict.addPeriod || "Add period"}
               >
-                <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
+                <Plus className="me-1 h-4 w-4" aria-hidden="true" />
                 {dict.add || "Add"}
               </Button>
             </div>

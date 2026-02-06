@@ -324,7 +324,7 @@ export function TeacherDirectoryContent({
               placeholder="Search by name, email, employee ID, or specialization..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
 
@@ -493,7 +493,7 @@ export function TeacherDirectoryContent({
                   <Link href={`/profile/${teacher.id}`}>
                     <Button size="sm" variant="ghost">
                       View
-                      <ChevronRight className="ml-1 h-4 w-4" />
+                      <ChevronRight className="ms-1 h-4 w-4" />
                     </Button>
                   </Link>
                 </div>
@@ -507,18 +507,20 @@ export function TeacherDirectoryContent({
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="p-4 text-left">Teacher</th>
-                  <th className="hidden p-4 text-left md:table-cell">
+                  <th className="p-4 text-start">Teacher</th>
+                  <th className="hidden p-4 text-start md:table-cell">
                     Department
                   </th>
-                  <th className="hidden p-4 text-left lg:table-cell">
+                  <th className="hidden p-4 text-start lg:table-cell">
                     Experience
                   </th>
-                  <th className="hidden p-4 text-left lg:table-cell">
+                  <th className="hidden p-4 text-start lg:table-cell">
                     Students
                   </th>
-                  <th className="hidden p-4 text-left xl:table-cell">Rating</th>
-                  <th className="p-4 text-left">Actions</th>
+                  <th className="hidden p-4 text-start xl:table-cell">
+                    Rating
+                  </th>
+                  <th className="p-4 text-start">Actions</th>
                 </tr>
               </thead>
               <tbody>

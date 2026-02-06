@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import type { AdmissionApplicationStatus } from "@prisma/client"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
 import {
@@ -17,9 +19,7 @@ import {
   type CampaignFormData,
 } from "./validation"
 
-type ActionResult<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string }
+type ActionResult<T = unknown> = ActionResponse<T>
 
 // ============================================================================
 // Campaign Actions
@@ -319,7 +319,7 @@ export async function updateApplicationStatus(params: {
     await db.application.update({
       where: { id: params.id, schoolId },
       data: {
-        status: params.status as any,
+        status: params.status as AdmissionApplicationStatus,
         reviewedAt: new Date(),
         reviewedBy: session.user?.id,
       },

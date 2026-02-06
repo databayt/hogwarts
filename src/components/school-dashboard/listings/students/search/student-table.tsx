@@ -129,7 +129,7 @@ export function StudentTable({
             <TableHead>Class</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Enrollment</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-end">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -225,7 +225,7 @@ export function StudentTable({
                 </div>
               </TableCell>
               <TableCell
-                className="text-right"
+                className="text-end"
                 onClick={(e) => e.stopPropagation()}
               >
                 <DropdownMenu>
@@ -240,24 +240,24 @@ export function StudentTable({
                     <DropdownMenuItem
                       onClick={() => onStudentSelect?.(student)}
                     >
-                      <Eye className="mr-2 h-4 w-4" />
+                      <Eye className="me-2 h-4 w-4" />
                       View Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit?.(student)}>
-                      <Pencil className="mr-2 h-4 w-4" />
+                      <Pencil className="me-2 h-4 w-4" />
                       Edit Student
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>
-                      <FileText className="mr-2 h-4 w-4" />
+                      <FileText className="me-2 h-4 w-4" />
                       Generate Report
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <CreditCard className="mr-2 h-4 w-4" />
+                      <CreditCard className="me-2 h-4 w-4" />
                       View Fees
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Calendar className="mr-2 h-4 w-4" />
+                      <Calendar className="me-2 h-4 w-4" />
                       View Attendance
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -265,7 +265,7 @@ export function StudentTable({
                       className="text-red-600"
                       onClick={() => onDelete?.(student)}
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
+                      <Trash2 className="me-2 h-4 w-4" />
                       Delete Student
                     </DropdownMenuItem>
                   </DropdownMenuContent>

@@ -93,13 +93,13 @@ interface Teacher {
 interface Subject {
   id: string
   subjectName: string
-  subjectNameAr?: string | null
+  lang?: string
 }
 
 interface Department {
   id: string
   departmentName: string
-  departmentNameAr?: string | null
+  lang?: string
   teachers: Teacher[]
   subjects: Subject[]
 }
@@ -134,7 +134,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
     null
   )
   const [newDepartmentName, setNewDepartmentName] = useState("")
-  const [newDepartmentNameAr, setNewDepartmentNameAr] = useState("")
+  const [newDepartmentLang, setNewDepartmentLang] = useState("")
   const [expandedDepartment, setExpandedDepartment] = useState<string | null>(
     null
   )
@@ -186,8 +186,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
     deleteDepartment: lang === "ar" ? "حذف القسم" : "Delete Department",
     department: lang === "ar" ? "القسم" : "Department",
     departmentName: lang === "ar" ? "اسم القسم" : "Department Name",
-    departmentNameAr:
-      lang === "ar" ? "اسم القسم (عربي)" : "Department Name (Arabic)",
+    language: lang === "ar" ? "اللغة" : "Language",
     teachers: lang === "ar" ? "المعلمون" : "Teachers",
     subjects: lang === "ar" ? "المواد" : "Subjects",
     actions: lang === "ar" ? "إجراءات" : "Actions",
@@ -205,10 +204,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
 
   // Filter departments
   const filteredDepartments = departments.filter((dept) => {
-    const name =
-      lang === "ar"
-        ? dept.departmentNameAr || dept.departmentName
-        : dept.departmentName
+    const name = dept.departmentName
     return name.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
@@ -232,15 +228,15 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
     startTransition(async () => {
       const formData = new FormData()
       formData.append("departmentName", newDepartmentName)
-      if (newDepartmentNameAr) {
-        formData.append("departmentNameAr", newDepartmentNameAr)
+      if (newDepartmentLang) {
+        formData.append("lang", newDepartmentLang || "ar")
       }
 
       const result = await createDepartment(formData)
       if (result.success) {
         toast.success(result.message || "Department created successfully")
         setNewDepartmentName("")
-        setNewDepartmentNameAr("")
+        setNewDepartmentLang("")
         setIsCreateDialogOpen(false)
         fetchDepartments()
       } else {
@@ -256,14 +252,14 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
       const formData = new FormData()
       formData.append("id", editingDepartment.id)
       formData.append("departmentName", newDepartmentName)
-      formData.append("departmentNameAr", newDepartmentNameAr || "")
+      formData.append("lang", newDepartmentLang || "ar")
 
       const result = await updateDepartment(formData)
       if (result.success) {
         toast.success(result.message || "Department updated successfully")
         setEditingDepartment(null)
         setNewDepartmentName("")
-        setNewDepartmentNameAr("")
+        setNewDepartmentLang("")
         fetchDepartments()
       } else {
         toast.error(result.message || "Failed to update department")
@@ -290,14 +286,11 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
   const openEditDialog = (dept: Department) => {
     setEditingDepartment(dept)
     setNewDepartmentName(dept.departmentName)
-    setNewDepartmentNameAr(dept.departmentNameAr || "")
+    setNewDepartmentLang(dept.lang || "ar")
   }
 
   const openDeleteDialog = (dept: Department) => {
-    const name =
-      lang === "ar"
-        ? dept.departmentNameAr || dept.departmentName
-        : dept.departmentName
+    const name = dept.departmentName
     setDeleteDialog({ open: true, id: dept.id, name })
   }
 
@@ -411,14 +404,20 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nameAr">{t.departmentNameAr}</Label>
-                <Input
-                  id="nameAr"
-                  value={newDepartmentNameAr}
-                  onChange={(e) => setNewDepartmentNameAr(e.target.value)}
-                  placeholder="مثال: قسم العلوم"
-                  dir="rtl"
-                />
+                <Label htmlFor="lang">{t.language}</Label>
+                <select
+                  id="lang"
+                  value={newDepartmentLang}
+                  onChange={(e) => setNewDepartmentLang(e.target.value)}
+                  className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
+                >
+                  <option value="ar">
+                    {lang === "ar" ? "عربي" : "Arabic"}
+                  </option>
+                  <option value="en">
+                    {lang === "ar" ? "إنجليزي" : "English"}
+                  </option>
+                </select>
               </div>
             </div>
             <DialogFooter>
@@ -517,15 +516,8 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                     </div>
                     <div>
                       <CardTitle className="text-lg">
-                        {lang === "ar"
-                          ? dept.departmentNameAr || dept.departmentName
-                          : dept.departmentName}
+                        {dept.departmentName}
                       </CardTitle>
-                      {dept.departmentNameAr && lang !== "ar" && (
-                        <CardDescription>
-                          {dept.departmentNameAr}
-                        </CardDescription>
-                      )}
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -571,7 +563,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                 {dept.teachers.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">{t.teachers}</p>
-                    <div className="flex -space-x-2">
+                    <div className="flex -space-x-2 rtl:space-x-reverse">
                       {dept.teachers.slice(0, 5).map((teacher) => (
                         <Avatar
                           key={teacher.id}
@@ -606,7 +598,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                           className="text-xs"
                         >
                           {lang === "ar"
-                            ? subject.subjectNameAr || subject.subjectName
+                            ? subject.subjectName
                             : subject.subjectName}
                         </Badge>
                       ))}
@@ -690,7 +682,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                           {dept.subjects.map((subject) => (
                             <Badge key={subject.id} variant="outline">
                               {lang === "ar"
-                                ? subject.subjectNameAr || subject.subjectName
+                                ? subject.subjectName
                                 : subject.subjectName}
                             </Badge>
                           ))}
@@ -742,13 +734,18 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-nameAr">{t.departmentNameAr}</Label>
-              <Input
-                id="edit-nameAr"
-                value={newDepartmentNameAr}
-                onChange={(e) => setNewDepartmentNameAr(e.target.value)}
-                dir="rtl"
-              />
+              <Label htmlFor="edit-lang">{t.language}</Label>
+              <select
+                id="edit-lang"
+                value={newDepartmentLang}
+                onChange={(e) => setNewDepartmentLang(e.target.value)}
+                className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
+              >
+                <option value="ar">{lang === "ar" ? "عربي" : "Arabic"}</option>
+                <option value="en">
+                  {lang === "ar" ? "إنجليزي" : "English"}
+                </option>
+              </select>
             </div>
           </div>
           <DialogFooter>

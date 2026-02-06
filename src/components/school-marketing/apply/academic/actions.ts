@@ -1,34 +1,19 @@
 "use server"
 
-import { academicSchema, type AcademicSchemaType } from "./validation"
+import type { ActionResponse } from "@/lib/action-response"
 
-export interface SaveAcademicResult {
-  success: boolean
-  data?: AcademicSchemaType
-  error?: string
-}
+import { academicSchema, type AcademicSchemaType } from "./validation"
 
 export async function saveAcademicStep(
   data: AcademicSchemaType
-): Promise<SaveAcademicResult> {
+): Promise<ActionResponse<AcademicSchemaType>> {
   try {
-    // Validate data
     const validatedData = academicSchema.parse(data)
-
-    return {
-      success: true,
-      data: validatedData,
-    }
+    return { success: true, data: validatedData }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        error: error.message,
-      }
-    }
     return {
       success: false,
-      error: "Validation failed",
+      error: error instanceof Error ? error.message : "Validation failed",
     }
   }
 }

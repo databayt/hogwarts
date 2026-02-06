@@ -2,22 +2,20 @@
 
 export const ACADEMIC_STEP_CONFIG = {
   id: "academic",
-  label: "Academic Information",
-  labelAr: "المعلومات الأكاديمية",
-  description: "Enter previous education and applying class",
-  descriptionAr: "أدخل معلومات التعليم السابق والصف المتقدم إليه",
+  label: "المعلومات الأكاديمية",
+  description: "أدخل معلومات التعليم السابق والصف المتقدم إليه",
 }
 
 export const STREAM_OPTIONS = [
-  { value: "science", label: "Science", labelAr: "علمي" },
-  { value: "arts", label: "Arts", labelAr: "أدبي" },
-  { value: "commerce", label: "Commerce", labelAr: "تجاري" },
-  { value: "general", label: "General", labelAr: "عام" },
+  { value: "science", label: "علمي" },
+  { value: "arts", label: "أدبي" },
+  { value: "commerce", label: "تجاري" },
+  { value: "general", label: "عام" },
 ] as const
 
 export const LANGUAGE_OPTIONS = [
-  { value: "arabic", label: "Arabic", labelAr: "العربية" },
-  { value: "english", label: "English", labelAr: "الإنجليزية" },
-  { value: "french", label: "French", labelAr: "الفرنسية" },
-  { value: "quran", label: "Quran", labelAr: "القرآن الكريم" },
+  { value: "arabic", label: "العربية" },
+  { value: "english", label: "الإنجليزية" },
+  { value: "french", label: "الفرنسية" },
+  { value: "quran", label: "القرآن الكريم" },
 ] as const

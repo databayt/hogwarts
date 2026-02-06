@@ -1,3 +1,5 @@
+// 1 hour — school marketing pages change infrequently
+
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -10,6 +12,8 @@ import {
   generateSchoolMetadata,
 } from "@/components/school-marketing/metadata"
 import { getCurrentDomain } from "@/components/school-marketing/utils"
+
+export const revalidate = 3600
 
 interface AcademicProps {
   params: Promise<{ lang: Locale; subdomain: string }>

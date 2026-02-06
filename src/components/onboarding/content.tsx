@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 
 import { Skeleton } from "@/components/ui/skeleton"
@@ -31,6 +32,7 @@ interface Props {
 export default function OnboardingContent({ dictionary, locale }: Props) {
   const router = useRouter()
   const user = useCurrentUser()
+  const { update: updateSession } = useSession()
   const { dictionary: d } = useDictionary()
   const [isCreating, setIsCreating] = React.useState(false)
   const [schools, setSchools] = React.useState<SchoolListItem[]>([])
@@ -105,6 +107,12 @@ export default function OnboardingContent({ dictionary, locale }: Props) {
       const response = await initializeSchoolSetup()
       if (response.success && response.data) {
         toast.dismiss(loadingToast)
+        // Refresh session to sync new schoolId into JWT
+        try {
+          await updateSession()
+        } catch {
+          // Session refresh may fail, continue with navigation
+        }
         // Navigate directly to the school's onboarding with schoolId in URL (no sessionStorage)
         router.push(
           `/${locale || "en"}/onboarding/${response.data.id}/about-school`

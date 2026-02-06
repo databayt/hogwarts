@@ -225,10 +225,10 @@ export default async function AdminContent({ dictionary, lang }: Props) {
                       {d?.stats?.activeSessions || "Active Sessions"}
                     </span>
                   </div>
-                  <div className="pl-6 text-2xl font-bold">
+                  <div className="ps-6 text-2xl font-bold">
                     {activeSessions.toLocaleString()}
                   </div>
-                  <p className="text-muted-foreground pl-6 text-xs">
+                  <p className="text-muted-foreground ps-6 text-xs">
                     {d?.stats?.currentlyLoggedIn || "Currently logged in"}
                   </p>
                 </div>
@@ -239,10 +239,10 @@ export default async function AdminContent({ dictionary, lang }: Props) {
                       {d?.stats?.departments || "Departments"}
                     </span>
                   </div>
-                  <div className="pl-6 text-2xl font-bold">
+                  <div className="ps-6 text-2xl font-bold">
                     {totalDepartments}
                   </div>
-                  <p className="text-muted-foreground pl-6 text-xs">
+                  <p className="text-muted-foreground ps-6 text-xs">
                     {d?.stats?.activeDepartments || "Active departments"}
                   </p>
                 </div>
@@ -265,10 +265,10 @@ export default async function AdminContent({ dictionary, lang }: Props) {
                       {d?.stats?.pendingActions || "Pending Actions"}
                     </span>
                   </div>
-                  <div className="pl-6 text-2xl font-bold">
+                  <div className="ps-6 text-2xl font-bold">
                     {pendingApprovals + failedLogins}
                   </div>
-                  <p className="text-muted-foreground pl-6 text-xs">
+                  <p className="text-muted-foreground ps-6 text-xs">
                     {d?.stats?.requiresAttention || "Requires attention"}
                   </p>
                 </div>
@@ -279,10 +279,10 @@ export default async function AdminContent({ dictionary, lang }: Props) {
                       {d?.stats?.classrooms || "Classrooms"}
                     </span>
                   </div>
-                  <div className="pl-6 text-2xl font-bold">
+                  <div className="ps-6 text-2xl font-bold">
                     {totalClassrooms}
                   </div>
-                  <p className="text-muted-foreground pl-6 text-xs">
+                  <p className="text-muted-foreground ps-6 text-xs">
                     {d?.stats?.totalClassrooms || "Total classrooms"}
                   </p>
                 </div>
@@ -296,7 +296,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
       <div className="grid grid-cols-4 gap-3">
         <Button asChild variant="outline" className="h-auto justify-start py-3">
           <Link href={`/${lang}/admin/membership?action=new`}>
-            <UserCog className="mr-2 h-4 w-4" />
+            <UserCog className="me-2 h-4 w-4" />
             <span className="flex flex-col items-start">
               <span className="font-medium">
                 {d?.quickActions?.addUser || "Add User"}
@@ -309,7 +309,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
         </Button>
         <Button asChild variant="outline" className="h-auto justify-start py-3">
           <Link href={`/${lang}/admin/communication?action=new`}>
-            <Bell className="mr-2 h-4 w-4" />
+            <Bell className="me-2 h-4 w-4" />
             <span className="flex flex-col items-start">
               <span className="font-medium">
                 {d?.quickActions?.announce || "Announce"}
@@ -322,7 +322,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
         </Button>
         <Button asChild variant="outline" className="h-auto justify-start py-3">
           <Link href={`/${lang}/admin/system/audit`}>
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="me-2 h-4 w-4" />
             <span className="flex flex-col items-start">
               <span className="font-medium">
                 {d?.quickActions?.viewLogs || "View Logs"}
@@ -335,7 +335,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
         </Button>
         <Button asChild variant="outline" className="h-auto justify-start py-3">
           <Link href={`/${lang}/admin/reports/export`}>
-            <Database className="mr-2 h-4 w-4" />
+            <Database className="me-2 h-4 w-4" />
             <span className="flex flex-col items-start">
               <span className="font-medium">
                 {d?.quickActions?.exportData || "Export Data"}
@@ -447,7 +447,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           <div className="flex flex-col gap-2">
             <Button asChild>
               <Link href={`/${lang}/admin/configuration`}>
-                <Settings className="mr-2 h-4 w-4" />
+                <Settings className="me-2 h-4 w-4" />
                 {d?.cards?.configuration?.viewSettings || "View Settings"}
               </Link>
             </Button>

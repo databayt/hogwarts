@@ -60,7 +60,7 @@ export default async function Page({ params }: Props) {
             </div>
           </div>
           <Button>
-            <Save className="mr-2 h-4 w-4" />
+            <Save className="me-2 h-4 w-4" />
             Save Changes
           </Button>
         </div>

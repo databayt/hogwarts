@@ -39,8 +39,8 @@ interface ExportParams extends Partial<AnnouncementListFilters> {
 
 const ANNOUNCEMENT_EXPORT_COLUMNS = [
   { key: "id", label: "ID" },
-  { key: "titleEn", label: "Title (English)" },
-  { key: "titleAr", label: "Title (Arabic)" },
+  { key: "title", label: "Title" },
+  { key: "lang", label: "Language" },
   { key: "scope", label: "Scope" },
   { key: "priority", label: "Priority" },
   { key: "published", label: "Published" },
@@ -113,8 +113,8 @@ export async function exportAnnouncementsToCSV(
     // Map data to export format
     const exportData = rows.map((row) => ({
       id: row.id,
-      titleEn: row.titleEn || "",
-      titleAr: row.titleAr || "",
+      title: row.title || "",
+      lang: row.lang || "ar",
       scope: row.scope,
       priority: row.priority || "normal",
       published: row.published ? "Yes" : "No",
@@ -229,8 +229,8 @@ export async function exportSelectedAnnouncements(input: {
     // Map data to export format
     const exportData = announcements.map((announcement) => ({
       id: announcement.id,
-      titleEn: announcement.titleEn || "",
-      titleAr: announcement.titleAr || "",
+      title: announcement.title || "",
+      lang: announcement.lang || "ar",
       scope: announcement.scope,
       priority: announcement.priority || "normal",
       published: announcement.published ? "Yes" : "No",

@@ -529,7 +529,7 @@ export function TranscriptTemplate({
                     {course.code}
                   </Text>
                   <Text style={[styles.cellText, styles.colName]}>
-                    {isRTL ? course.nameAr || course.name : course.name}
+                    {course.name}
                   </Text>
                   <Text style={[styles.cellText, styles.colCredits]}>
                     {course.credits || "-"}

@@ -64,7 +64,7 @@ export default async function ConfigsPage({ params }: ConfigsPageProps) {
         </div>
         <Button asChild>
           <Link href={`/${lang}/exams/certificates/configs/new`}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             {isRtl ? "إعداد جديد" : "New Configuration"}
           </Link>
         </Button>

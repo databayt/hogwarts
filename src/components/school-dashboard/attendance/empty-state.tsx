@@ -121,7 +121,7 @@ export function AttendanceEmptyState({
             <Link href={finalActionHref}>
               <Button size="sm">
                 {finalActionLabel}
-                <ChevronRight className="ml-2 h-4 w-4" />
+                <ChevronRight className="ms-2 h-4 w-4" />
               </Button>
             </Link>
           ) : (
@@ -153,7 +153,7 @@ export function NoClassesEmptyState({ dictionary }: { dictionary?: any }) {
         <CardContent className="text-center">
           <Link href="/classes/new">
             <Button>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               {dictionary?.createFirstClass || "Create Your First Class"}
             </Button>
           </Link>
@@ -180,14 +180,14 @@ export function NoStudentsEmptyState({ dictionary }: { dictionary?: any }) {
         <div className="flex gap-3">
           <Link href="/students/enroll">
             <Button variant="outline" size="sm">
-              <UserPlus className="mr-2 h-4 w-4" />
+              <UserPlus className="me-2 h-4 w-4" />
               {dictionary?.enrollStudents || "Enroll Students"}
             </Button>
           </Link>
           <Link href="/students">
             <Button size="sm">
               {dictionary?.manageStudents || "Manage Students"}
-              <ChevronRight className="ml-2 h-4 w-4" />
+              <ChevronRight className="ms-2 h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -216,7 +216,7 @@ export function NoAttendanceDataEmptyState({
         </p>
         <div className="flex gap-3">
           <Button variant="outline" size="sm">
-            <Calendar className="mr-2 h-4 w-4" />
+            <Calendar className="me-2 h-4 w-4" />
             {dictionary?.changDate || "Change Date"}
           </Button>
           <Button size="sm">
@@ -243,7 +243,7 @@ export function QRCodeEmptyState({ dictionary }: { dictionary?: any }) {
             "Generate a QR code to allow students to mark their attendance by scanning."}
         </p>
         <Button>
-          <QrCode className="mr-2 h-4 w-4" />
+          <QrCode className="me-2 h-4 w-4" />
           {dictionary?.generateQR || "Generate QR Code"}
         </Button>
       </CardContent>

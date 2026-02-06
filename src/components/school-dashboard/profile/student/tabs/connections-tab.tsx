@@ -316,7 +316,7 @@ export function ConnectionsTab({
               placeholder="Search connections..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="ps-9"
             />
           </div>
         </CardContent>
@@ -385,20 +385,20 @@ export function ConnectionsTab({
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem>
-                                  <MessageSquare className="mr-2 h-4 w-4" />
+                                  <MessageSquare className="me-2 h-4 w-4" />
                                   Message
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
-                                  <Mail className="mr-2 h-4 w-4" />
+                                  <Mail className="me-2 h-4 w-4" />
                                   Email
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem>
-                                  <Star className="mr-2 h-4 w-4" />
+                                  <Star className="me-2 h-4 w-4" />
                                   Unpin
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="text-destructive">
-                                  <UserMinus className="mr-2 h-4 w-4" />
+                                  <UserMinus className="me-2 h-4 w-4" />
                                   Remove Connection
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -438,7 +438,7 @@ export function ConnectionsTab({
               <CardTitle className="flex items-center justify-between text-base">
                 <span>All Connections</span>
                 <Button variant="outline" size="sm">
-                  <ListFilter className="mr-2 h-4 w-4" />
+                  <ListFilter className="me-2 h-4 w-4" />
                   Filter
                 </Button>
               </CardTitle>
@@ -565,7 +565,7 @@ export function ConnectionsTab({
                       </div>
                       <div className="flex gap-2">
                         <Button size="sm" variant="default">
-                          <UserCheck className="mr-1 h-4 w-4" />
+                          <UserCheck className="me-1 h-4 w-4" />
                           Accept
                         </Button>
                         <Button size="sm" variant="outline">
@@ -691,7 +691,7 @@ export function ConnectionsTab({
                       </div>
                     </div>
                     <Button size="sm" variant="default" className="mt-3 w-full">
-                      <UserPlus className="mr-2 h-4 w-4" />
+                      <UserPlus className="me-2 h-4 w-4" />
                       Connect
                     </Button>
                   </div>

@@ -427,9 +427,7 @@ export function InvoiceTemplate({
           {data.items.map((item, index) => (
             <View key={index} style={styles.tableRow}>
               <Text style={[styles.cellText, styles.colDescription]}>
-                {isRTL
-                  ? item.descriptionAr || item.description
-                  : item.description}
+                {item.description}
               </Text>
               <Text style={[styles.cellText, styles.colQty]}>
                 {item.quantity}

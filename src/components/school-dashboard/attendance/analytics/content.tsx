@@ -409,7 +409,7 @@ export default function AnalyticsContent({
             disabled={refreshing}
           >
             <RefreshCw
-              className={cn("mr-2 h-4 w-4", refreshing && "animate-spin")}
+              className={cn("me-2 h-4 w-4", refreshing && "animate-spin")}
             />
             Refresh
           </Button>
@@ -656,7 +656,7 @@ export default function AnalyticsContent({
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <Badge
                         variant={
                           cls.rate >= 90
@@ -720,7 +720,7 @@ export default function AnalyticsContent({
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <Badge variant="destructive">{student.rate}%</Badge>
                         <p className="text-muted-foreground mt-1 text-xs">
                           {student.absentDays} absences

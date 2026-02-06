@@ -203,7 +203,7 @@ export function QRGenerator({
                 }
                 className="font-mono"
               >
-                <Clock className="mr-1 h-3 w-3" />
+                <Clock className="me-1 h-3 w-3" />
                 {timeLeft}s
               </Badge>
             </div>
@@ -218,7 +218,7 @@ export function QRGenerator({
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/10" />
                 <div className="absolute top-4 right-4">
                   <Badge variant="outline" className="bg-background">
-                    <Shield className="mr-1 h-3 w-3" />
+                    <Shield className="me-1 h-3 w-3" />
                     Protected
                   </Badge>
                 </div>
@@ -243,18 +243,18 @@ export function QRGenerator({
             <div className="mt-4 flex flex-wrap gap-2">
               {config.requireStudentAuth && (
                 <Badge variant="outline">
-                  <CircleCheck className="mr-1 h-3 w-3" />
+                  <CircleCheck className="me-1 h-3 w-3" />
                   Auth Required
                 </Badge>
               )}
               {config.includeLocation && (
                 <Badge variant="outline">
-                  <MapPin className="mr-1 h-3 w-3" />
+                  <MapPin className="me-1 h-3 w-3" />
                   Location Tracked
                 </Badge>
               )}
               <Badge variant="outline">
-                <QrCode className="mr-1 h-3 w-3" />
+                <QrCode className="me-1 h-3 w-3" />
                 Class: {classId}
               </Badge>
             </div>
@@ -267,11 +267,11 @@ export function QRGenerator({
                 onClick={generateNewQR}
                 disabled={isGenerating}
               >
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCw className="me-2 h-4 w-4" />
                 Refresh
               </Button>
               <Button size="sm" variant="outline" onClick={toggleFullscreen}>
-                <Maximize2 className="mr-2 h-4 w-4" />
+                <Maximize2 className="me-2 h-4 w-4" />
                 Fullscreen
               </Button>
             </div>
@@ -400,7 +400,7 @@ export function QRGenerator({
 
             {/* Apply Button */}
             <Button className="w-full" onClick={generateNewQR}>
-              <Settings className="mr-2 h-4 w-4" />
+              <Settings className="me-2 h-4 w-4" />
               Apply Changes & Generate New QR
             </Button>
           </CardContent>
@@ -444,7 +444,7 @@ export function QRGenerator({
                 <div className="space-y-2 text-center">
                   <p className="text-lg">Class: {classId}</p>
                   <Badge variant="secondary" className="px-4 py-2 text-lg">
-                    <Clock className="mr-2 h-4 w-4" />
+                    <Clock className="me-2 h-4 w-4" />
                     Expires in {timeLeft} seconds
                   </Badge>
                 </div>

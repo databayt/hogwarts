@@ -35,7 +35,7 @@ export default function DashboardSidebar({
             <SidebarMenuButton size="lg" asChild>
               {/* <Link href="/lab/overview" className="flex items-center" onClick={handleLinkClick}>
                 <div className="flex flex-col leading-none">
-                  <span className="font-medium text-base text-foreground -ml-1">Hogwarts Admin</span>
+                  <span className="font-medium text-base text-foreground -ms-1">Hogwarts Admin</span>
                 </div>
               </Link> */}
             </SidebarMenuButton>
@@ -55,7 +55,7 @@ export default function DashboardSidebar({
                       className="muted"
                       onClick={handleLinkClick}
                     >
-                      <span className="mr-2 inline-flex size-4 items-center justify-center">
+                      <span className="me-2 inline-flex size-4 items-center justify-center">
                         {(() => {
                           const Icon = Icons[item.icon]
                           return Icon ? <Icon className="h-4 w-4" /> : null

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import { savePersonalStep } from "./actions"
 import {
   CATEGORY_OPTIONS,
@@ -40,7 +40,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
     const subdomain = params.subdomain as string
     const { locale: lang } = useLocale()
     const isRTL = lang === "ar"
-    const { session, updateStepData } = useApplication()
+    const { session, updateStepData } = useApplySession()
 
     const form = useForm<PersonalSchemaType>({
       resolver: zodResolver(personalSchema),
@@ -211,7 +211,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
                     <SelectContent>
                       {GENDER_OPTIONS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {isRTL ? option.labelAr : option.label}
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -246,7 +246,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
                     <SelectContent>
                       {NATIONALITY_OPTIONS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {isRTL ? option.labelAr : option.label}
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -278,7 +278,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
                     <SelectContent>
                       {RELIGION_OPTIONS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {isRTL ? option.labelAr : option.label}
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -312,7 +312,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
                   <SelectContent>
                     {CATEGORY_OPTIONS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
-                        {isRTL ? option.labelAr : option.label}
+                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

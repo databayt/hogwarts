@@ -49,7 +49,7 @@ export default async function Page({ params }: Props) {
               department: {
                 select: {
                   departmentName: true,
-                  departmentNameAr: true,
+                  lang: true,
                 },
               },
             },

@@ -119,10 +119,10 @@ export function NotificationCard({
       <Card
         className={cn(
           "hover:bg-accent/50 relative cursor-pointer transition-all duration-200 hover:shadow-sm",
-          !notification.read && "bg-accent/30 border-l-primary border-l-4",
+          !notification.read && "bg-accent/30 border-s-primary border-s-4",
           notification.priority === "urgent" &&
             !notification.read &&
-            "border-l-destructive",
+            "border-s-destructive",
           compact ? "p-3" : "p-4",
           isDeleting && "pointer-events-none scale-95 opacity-50"
         )}

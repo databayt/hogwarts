@@ -312,7 +312,7 @@ export function ExamCalendar({
         <Card>
           <CardHeader>
             <CardTitle>
-              <CalendarIcon className="mr-2 inline h-4 w-4" />
+              <CalendarIcon className="me-2 inline h-4 w-4" />
               {format(selectedDate, "EEEE, MMMM d, yyyy")}
             </CardTitle>
             <CardDescription>

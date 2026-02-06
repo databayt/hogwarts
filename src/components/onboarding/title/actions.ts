@@ -1,60 +1,62 @@
 "use server"
 
-// ULTRA MINIMAL: No imports at all to isolate 500 error
-// This file should work exactly like test-action.ts
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
-// Inline type definition
-export interface TitleFormData {
-  title: string
-  subdomain?: string
-}
+import {
+  createActionResponse,
+  type ActionResponse,
+} from "@/lib/action-response"
+import { db } from "@/lib/db"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface ActionResponse<T = any> {
-  success: boolean
-  data?: T
-  error?: string
-  code?: string
-  errors?: Record<string, string>
-}
+import { requireSchoolOwnership } from "../auth-helpers"
+import { titleSchema, type TitleFormData } from "./validation"
 
-// ULTRA MINIMAL: getSchoolTitle with zero imports, just hardcoded response
 export async function getSchoolTitle(
   schoolId: string
 ): Promise<ActionResponse> {
-  console.log("🔍 [GET SCHOOL TITLE] ULTRA MINIMAL - schoolId:", schoolId)
+  try {
+    await requireSchoolOwnership(schoolId)
 
-  // Return hardcoded response - no db, no imports
-  return {
-    success: true,
-    data: {
-      title: "Test School Name",
-      subdomain: "test-subdomain",
-    },
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { id: true, name: true, domain: true },
+    })
+
+    if (!school) throw new Error("School not found")
+
+    return createActionResponse({
+      title: school.name,
+      subdomain: school.domain,
+    })
+  } catch (error) {
+    return createActionResponse(undefined, error)
   }
 }
 
-// ULTRA MINIMAL: updateSchoolTitle with zero imports
 export async function updateSchoolTitle(
   schoolId: string,
   data: TitleFormData
 ): Promise<ActionResponse> {
-  console.log("🎯 [UPDATE SCHOOL TITLE] ULTRA MINIMAL", { schoolId, data })
+  try {
+    await requireSchoolOwnership(schoolId)
 
-  // Return hardcoded success - no db, no imports
-  return {
-    success: true,
-    data: {
-      id: schoolId,
-      name: data.title,
-      domain: data.subdomain,
-    },
+    const validated = titleSchema.parse(data)
+
+    const updatedSchool = await db.school.update({
+      where: { id: schoolId },
+      data: { name: validated.title },
+    })
+
+    revalidatePath(`/onboarding/${schoolId}/title`)
+    return createActionResponse(updatedSchool)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createActionResponse(undefined, {
+        message: "Validation failed",
+        name: "ValidationError",
+      })
+    }
+    return createActionResponse(undefined, error)
   }
-}
-
-// ULTRA MINIMAL: proceedToDescription - just log and return
-export async function proceedToDescription(schoolId: string): Promise<void> {
-  console.log("🚀 [PROCEED TO DESCRIPTION] schoolId:", schoolId)
-  // In ultra-minimal mode, we just return without redirecting
-  // The client will handle navigation
 }

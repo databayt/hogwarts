@@ -121,14 +121,14 @@ export function AllTenants({
       {showFilters && (
         <div className="grid gap-4 md:grid-cols-4">
           <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+            <Search className="text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2" />
             <Input
               placeholder="Search tenants..."
               value={filters.search}
               onChange={(e) =>
                 setFilters({ ...filters, search: e.target.value })
               }
-              className="pl-9"
+              className="ps-9"
             />
           </div>
 
@@ -182,7 +182,7 @@ export function AllTenants({
             }}
           >
             <SelectTrigger>
-              <SlidersHorizontal className="mr-2 size-4" />
+              <SlidersHorizontal className="me-2 size-4" />
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>

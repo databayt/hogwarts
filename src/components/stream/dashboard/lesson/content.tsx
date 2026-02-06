@@ -187,6 +187,7 @@ export function StreamLessonContent({
                   title={lesson.title}
                   lessonId={lesson.id}
                   initialPosition={initialPosition}
+                  posterUrl={lesson.thumbnailUrl}
                   nextLesson={nextLessonData}
                   onProgress={handleProgress}
                   onComplete={handleVideoComplete}
@@ -228,11 +229,11 @@ export function StreamLessonContent({
               className="shrink-0"
             >
               {isPending ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
+                <Loader2 className="me-2 size-4 animate-spin" />
               ) : isCompleted ? (
-                <CheckCircle2 className="mr-2 size-4 text-green-500" />
+                <CheckCircle2 className="me-2 size-4 text-green-500" />
               ) : (
-                <Circle className="mr-2 size-4" />
+                <Circle className="me-2 size-4" />
               )}
               {isCompleted ? "Completed" : "Mark as Complete"}
             </Button>
@@ -247,9 +248,12 @@ export function StreamLessonContent({
           )}
 
           {/* Duration */}
-          {lesson.duration && (
+          {(lesson.videoDuration || lesson.duration) && (
             <p className="text-muted-foreground mb-4 text-sm">
-              Duration: {lesson.duration} minutes
+              Duration:{" "}
+              {lesson.videoDuration
+                ? `${Math.floor(lesson.videoDuration / 60)}m ${Math.floor(lesson.videoDuration % 60)}s`
+                : `${lesson.duration} minutes`}
             </p>
           )}
 
@@ -279,12 +283,20 @@ export function StreamLessonContent({
         </CardContent>
       </Card>
 
+      {/* Prefetch next lesson video for faster loading */}
+      {lesson.nextLesson?.videoUrl &&
+        !lesson.nextLesson.videoUrl.includes("youtube.com") &&
+        !lesson.nextLesson.videoUrl.includes("vimeo.com") && (
+          // eslint-disable-next-line @next/next/no-html-link-for-pages
+          <link rel="prefetch" href={lesson.nextLesson.videoUrl} as="video" />
+        )}
+
       {/* Navigation */}
       <div className="flex items-center justify-between">
         {lesson.previousLesson ? (
           <Link href={`${baseUrl}/${lesson.previousLesson.id}`}>
             <Button variant="outline">
-              <ChevronLeft className="mr-2 size-4" />
+              <ChevronLeft className="me-2 size-4" />
               <span className="hidden sm:inline">Previous:</span>{" "}
               <span className="max-w-[150px] truncate">
                 {lesson.previousLesson.title}
@@ -302,14 +314,14 @@ export function StreamLessonContent({
               <span className="max-w-[150px] truncate">
                 {lesson.nextLesson.title}
               </span>
-              <ChevronRight className="ml-2 size-4" />
+              <ChevronRight className="ms-2 size-4" />
             </Button>
           </Link>
         ) : (
           <Link href={baseUrl}>
             <Button>
               Back to Course
-              <ChevronRight className="ml-2 size-4" />
+              <ChevronRight className="ms-2 size-4" />
             </Button>
           </Link>
         )}

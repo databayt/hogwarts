@@ -98,8 +98,8 @@ function TimetableGridComponent({
             gridColsClass
           )}
         >
-          <div className="text-muted-foreground border-border flex items-center justify-center border-r px-8 py-5 print:py-3">
-            <Clock className="mr-2 h-4 w-4 print:h-5 print:w-5" />
+          <div className="text-muted-foreground border-border flex items-center justify-center border-e px-8 py-5 print:py-3">
+            <Clock className="me-2 h-4 w-4 print:h-5 print:w-5" />
             <span className="font-medium">Period</span>
           </div>
           {labels.map((day, index) => (
@@ -107,7 +107,7 @@ function TimetableGridComponent({
               key={day}
               className={cn(
                 "text-foreground px-8 py-5 text-center font-medium",
-                index < labels.length - 1 ? "border-border border-r" : "",
+                index < labels.length - 1 ? "border-border border-e" : "",
                 "print:py-3 print:text-base print:font-semibold"
               )}
             >
@@ -121,7 +121,7 @@ function TimetableGridComponent({
           {periods.map((period) => (
             <div key={period.id} className={cn("grid", gridColsClass)}>
               {/* Period Cell */}
-              <div className="bg-muted/50 border-border flex flex-col items-center justify-center border-r px-8 py-5 print:py-4">
+              <div className="bg-muted/50 border-border flex flex-col items-center justify-center border-e px-8 py-5 print:py-4">
                 <span className="text-foreground font-medium print:text-base print:font-semibold">
                   {period.id === "Lunch" ? "Lunch" : `Period ${period.id}`}
                 </span>

@@ -147,7 +147,7 @@ export function AiStatusIndicator({
 
           {timeElapsed && (
             <Badge variant="secondary" className="text-xs">
-              <Clock className="mr-1 h-3 w-3" />
+              <Clock className="me-1 h-3 w-3" />
               {formatTime(timeElapsed)}
             </Badge>
           )}

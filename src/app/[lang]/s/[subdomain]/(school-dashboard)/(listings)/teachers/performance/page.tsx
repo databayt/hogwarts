@@ -34,7 +34,7 @@ export default async function Page({ params }: Props) {
           subjectExpertise: {
             include: {
               subject: {
-                select: { id: true, subjectName: true, subjectNameAr: true },
+                select: { id: true, subjectName: true, lang: true },
               },
             },
           },
@@ -44,13 +44,13 @@ export default async function Page({ params }: Props) {
                 select: {
                   id: true,
                   departmentName: true,
-                  departmentNameAr: true,
+                  lang: true,
                 },
               },
             },
           },
           classes: {
-            select: { id: true, className: true, classNameAr: true },
+            select: { id: true, className: true, lang: true },
           },
           user: {
             select: { id: true, email: true, image: true },
@@ -165,25 +165,19 @@ export default async function Page({ params }: Props) {
         departments:
           teacher.teacherDepartments?.map((td: any) => ({
             id: td.department?.id,
-            name:
-              lang === "ar"
-                ? td.department?.departmentNameAr
-                : td.department?.departmentName,
+            name: td.department?.departmentName,
             isPrimary: td.isPrimary,
           })) || [],
         subjects:
           teacher.subjectExpertise?.map((se: any) => ({
             id: se.subject?.id,
-            name:
-              lang === "ar"
-                ? se.subject?.subjectNameAr
-                : se.subject?.subjectName,
+            name: se.subject?.subjectName,
             level: se.expertiseLevel,
           })) || [],
         classes:
           teacher.classes?.map((c: any) => ({
             id: c.id,
-            name: lang === "ar" ? c.classNameAr : c.className,
+            name: c.className,
           })) || [],
       }
     })

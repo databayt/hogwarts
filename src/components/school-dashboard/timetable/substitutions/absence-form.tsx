@@ -204,7 +204,7 @@ export function AbsenceFormDialog({
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-start font-normal",
                       !startDate && "text-muted-foreground"
                     )}
                   >
@@ -230,7 +230,7 @@ export function AbsenceFormDialog({
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-start font-normal",
                       !endDate && "text-muted-foreground"
                     )}
                   >

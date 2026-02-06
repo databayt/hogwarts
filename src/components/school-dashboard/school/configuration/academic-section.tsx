@@ -95,7 +95,7 @@ export function AcademicSection({
           </p>
           <Button size="sm" asChild>
             <Link href={`/${lang}/school/bulk`}>
-              <Plus className="mr-1 h-4 w-4" />
+              <Plus className="me-1 h-4 w-4" />
               Create Academic Year
             </Link>
           </Button>
@@ -155,19 +155,19 @@ export function AcademicSection({
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" asChild>
           <Link href={`/${lang}/school/bulk`}>
-            <Settings className="mr-1 h-4 w-4" />
+            <Settings className="me-1 h-4 w-4" />
             Manage Academic Structure
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href={`/${lang}/school/bulk`}>
-            <GraduationCap className="mr-1 h-4 w-4" />
+            <GraduationCap className="me-1 h-4 w-4" />
             Configure Grading
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href={`/${lang}/timetable/settings`}>
-            <Clock className="mr-1 h-4 w-4" />
+            <Clock className="me-1 h-4 w-4" />
             Timetable Settings
           </Link>
         </Button>

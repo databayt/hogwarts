@@ -152,14 +152,14 @@ export function StreamHeader({ lang, user }: Props) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href={`/${lang}/stream/dashboard`}>
-                    <Star className="mr-2 size-4" />
+                    <Star className="me-2 size-4" />
                     {dictionary?.stream?.header?.favorite ?? "Favorite"}
                   </Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link href={`/${lang}/stream/admin`}>
-                      <LayoutDashboard className="mr-2 size-4" />
+                      <LayoutDashboard className="me-2 size-4" />
                       {dictionary?.stream?.header?.dashboard ?? "Dashboard"}
                     </Link>
                   </DropdownMenuItem>
@@ -167,7 +167,7 @@ export function StreamHeader({ lang, user }: Props) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href={`/${lang}/profile`}>
-                    <User className="mr-2 size-4" />
+                    <User className="me-2 size-4" />
                     {dictionary?.stream?.header?.profile ?? "Profile"}
                   </Link>
                 </DropdownMenuItem>

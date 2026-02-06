@@ -227,7 +227,7 @@ export function PeriodForm({ onSuccess, lang = "en" }: PeriodFormProps) {
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
-                  <Icons.loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
                   {t.saving}
                 </>
               ) : (

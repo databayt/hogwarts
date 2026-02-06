@@ -536,7 +536,7 @@ export function AcademicTab({
               Grade Progression
             </span>
             <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               Export Transcript
             </Button>
           </CardTitle>

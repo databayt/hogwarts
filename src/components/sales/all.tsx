@@ -202,7 +202,7 @@ export function All({
                 onChange={(e) =>
                   onFiltersChange({ ...filters, search: e.target.value })
                 }
-                className="h-9 pl-9"
+                className="h-9 ps-9"
               />
             </div>
 
@@ -213,7 +213,7 @@ export function All({
                   className="h-9 min-w-[120px] justify-between px-3"
                 >
                   {filters.status ? LEAD_STATUS[filters.status] : "Status"}
-                  <ChevronDown className="ml-2 h-4 w-4" />
+                  <ChevronDown className="ms-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -247,7 +247,7 @@ export function All({
                   className="h-9 min-w-[120px] justify-between px-3"
                 >
                   {filters.source ? LEAD_SOURCE[filters.source] : "Source"}
-                  <ChevronDown className="ml-2 h-4 w-4" />
+                  <ChevronDown className="ms-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -298,31 +298,31 @@ export function All({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
-                  <input type="checkbox" checked className="mr-2" readOnly />{" "}
+                  <input type="checkbox" checked className="me-2" readOnly />{" "}
                   Name
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <input type="checkbox" checked className="mr-2" readOnly />{" "}
+                  <input type="checkbox" checked className="me-2" readOnly />{" "}
                   Email
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <input type="checkbox" checked className="mr-2" readOnly />{" "}
+                  <input type="checkbox" checked className="me-2" readOnly />{" "}
                   Company
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <input type="checkbox" checked className="mr-2" readOnly />{" "}
+                  <input type="checkbox" checked className="me-2" readOnly />{" "}
                   Score
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <input type="checkbox" checked className="mr-2" readOnly />{" "}
+                  <input type="checkbox" checked className="me-2" readOnly />{" "}
                   Status
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <input type="checkbox" checked className="mr-2" readOnly />{" "}
+                  <input type="checkbox" checked className="me-2" readOnly />{" "}
                   Source
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <input type="checkbox" checked className="mr-2" readOnly />{" "}
+                  <input type="checkbox" checked className="me-2" readOnly />{" "}
                   Created
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -356,7 +356,7 @@ export function All({
           <Table>
             <TableHeader className="bg-foreground">
               <TableRow className="hover:bg-foreground h-14 border-b">
-                <TableHead className="text-background w-12 px-2 py-4 first:pl-4 last:pr-4">
+                <TableHead className="text-background w-12 px-2 py-4 first:ps-4 last:pe-4">
                   <Checkbox
                     checked={
                       selectedLeads.length === leads.length && leads.length > 0
@@ -410,7 +410,7 @@ export function All({
                   {sortField === "createdAt" &&
                     (sortDirection === "asc" ? "↑" : "↓")}
                 </TableHead>
-                <TableHead className="text-background px-2 py-4 text-center last:pr-4">
+                <TableHead className="text-background px-2 py-4 text-center last:pe-4">
                   Actions
                 </TableHead>
               </TableRow>
@@ -418,7 +418,7 @@ export function All({
             <TableBody>
               {sortedLeads.map((lead) => (
                 <TableRow key={lead.id} className="hover:bg-muted/50 border-b">
-                  <TableCell className="px-2 first:pl-4">
+                  <TableCell className="px-2 first:ps-4">
                     <Checkbox
                       checked={selectedLeads.includes(lead.id)}
                       onCheckedChange={() => handleSelectLead(lead.id)}
@@ -463,7 +463,7 @@ export function All({
                   <TableCell className="px-2 text-center">
                     {formatTimeAgo(new Date(lead.createdAt))}
                   </TableCell>
-                  <TableCell className="px-2 last:pr-4">
+                  <TableCell className="px-2 last:pe-4">
                     <div className="flex justify-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -473,14 +473,14 @@ export function All({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => setEditLead(lead)}>
-                            <Edit className="mr-2 h-4 w-4" />
+                            <Edit className="me-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDelete(lead.id)}
                             className="text-destructive"
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash2 className="me-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>

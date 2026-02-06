@@ -216,7 +216,7 @@ export function DocumentUploadStep({
                     variant="outline"
                     onClick={() => setShowProfileUploader(true)}
                   >
-                    <Upload className="mr-2 h-4 w-4" />
+                    <Upload className="me-2 h-4 w-4" />
                     Upload Photo
                   </Button>
                 </div>
@@ -274,7 +274,7 @@ export function DocumentUploadStep({
               })
             }
           >
-            <Upload className="mr-2 h-4 w-4" />
+            <Upload className="me-2 h-4 w-4" />
             Add Document
           </Button>
         </div>
@@ -353,7 +353,7 @@ export function DocumentUploadStep({
                                 }
                                 className="flex-1"
                               >
-                                <Eye className="mr-2 h-4 w-4" />
+                                <Eye className="me-2 h-4 w-4" />
                                 View File
                               </Button>
                               <Button
@@ -362,7 +362,7 @@ export function DocumentUploadStep({
                                 size="sm"
                                 onClick={() => setShowDocumentUploader(index)}
                               >
-                                <Upload className="mr-2 h-4 w-4" />
+                                <Upload className="me-2 h-4 w-4" />
                                 Change
                               </Button>
                             </>
@@ -373,7 +373,7 @@ export function DocumentUploadStep({
                               onClick={() => setShowDocumentUploader(index)}
                               className="w-full"
                             >
-                              <Upload className="mr-2 h-4 w-4" />
+                              <Upload className="me-2 h-4 w-4" />
                               Upload File
                             </Button>
                           )}

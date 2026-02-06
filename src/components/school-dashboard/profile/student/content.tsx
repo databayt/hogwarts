@@ -458,7 +458,7 @@ export function StudentProfileContent({
               {tab.badge && (
                 <Badge
                   variant="secondary"
-                  className="ml-1.5 h-5 px-1.5 py-0 text-xs"
+                  className="ms-1.5 h-5 px-1.5 py-0 text-xs"
                 >
                   {tab.badge}
                 </Badge>

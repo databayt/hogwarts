@@ -264,7 +264,7 @@ export function MarksEntryForm({ examId }: Props) {
             >
               {saving ? (
                 <>
-                  <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
                   Saving...
                 </>
               ) : (

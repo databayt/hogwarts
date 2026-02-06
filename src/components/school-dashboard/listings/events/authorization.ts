@@ -68,10 +68,15 @@ export function checkEventPermission(
       return schoolId === event.schoolId
     }
 
-    // Can update/delete events (would need organizer check for own events only)
+    // Can update/delete only their own events (organizer check)
     if (action === "update" || action === "delete") {
       if (!event?.schoolId) return false
-      return schoolId === event.schoolId
+      if (schoolId !== event.schoolId) return false
+      // If organizer info available, check ownership
+      if (event.organizer) {
+        return event.organizer === auth.userId
+      }
+      return true // Allow if no organizer tracking
     }
 
     // Can export events
@@ -112,6 +117,15 @@ export function checkEventPermission(
       if (!event?.schoolId) return false
       // Only public events
       if (event.isPublic === false) return false
+      return schoolId === event.schoolId
+    }
+    return false
+  }
+
+  // ACCOUNTANT can read events (for budgeting/financial planning)
+  if (role === "ACCOUNTANT") {
+    if (action === "read") {
+      if (!event?.schoolId) return false
       return schoolId === event.schoolId
     }
     return false
@@ -191,6 +205,7 @@ export function getAllowedActions(role: UserRole): EventAction[] {
     case "STUDENT":
       return ["read", "register"]
     case "GUARDIAN":
+    case "ACCOUNTANT":
       return ["read"]
     default:
       return []

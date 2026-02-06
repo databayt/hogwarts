@@ -136,7 +136,7 @@ export function AllQuestions({
         </div>
         <Button asChild>
           <Link href={`/${locale}/exams/mark/questions/create`}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             {dict.buttons.newQuestion}
           </Link>
         </Button>
@@ -152,7 +152,7 @@ export function AllQuestions({
               placeholder={dict.table.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="ps-9"
             />
           </div>
 
@@ -162,10 +162,10 @@ export function AllQuestions({
             onClick={() => setShowFilters(!showFilters)}
             className="relative"
           >
-            <ListFilter className="mr-2 h-4 w-4" />
+            <ListFilter className="me-2 h-4 w-4" />
             Filters
             {activeFiltersCount > 0 && (
-              <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
+              <Badge variant="destructive" className="ms-2 h-5 w-5 p-0 text-xs">
                 {activeFiltersCount}
               </Badge>
             )}
@@ -174,7 +174,7 @@ export function AllQuestions({
           {/* Clear Filters */}
           {activeFiltersCount > 0 && (
             <Button variant="ghost" onClick={clearFilters}>
-              <X className="mr-2 h-4 w-4" />
+              <X className="me-2 h-4 w-4" />
               Clear
             </Button>
           )}
@@ -307,7 +307,7 @@ export function AllQuestions({
           </p>
           <Button variant="outline" className="mt-4" asChild>
             <Link href={`/${locale}/exams/mark/questions/create`}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               {dict.questionBank.createFirst}
             </Link>
           </Button>

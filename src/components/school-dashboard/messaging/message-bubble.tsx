@@ -164,7 +164,7 @@ export function MessageBubble({
           {message.replyTo && (
             <div
               className={cn(
-                "bg-muted/50 border-primary mb-1 rounded-lg border-l-2 px-3 py-1.5 text-xs",
+                "bg-muted/50 border-primary mb-1 rounded-lg border-s-2 px-3 py-1.5 text-xs",
                 "max-w-full"
               )}
             >
@@ -308,29 +308,29 @@ export function MessageBubble({
                   <DropdownMenuItem
                     onClick={() => setShowReactions(!showReactions)}
                   >
-                    <Smile className="mr-2 h-4 w-4" />
+                    <Smile className="me-2 h-4 w-4" />
                     {locale === "ar" ? "تفاعل" : "React"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onReply?.(message)}>
-                    <Reply className="mr-2 h-4 w-4" />
+                    <Reply className="me-2 h-4 w-4" />
                     {locale === "ar" ? "رد" : "Reply"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleCopy}>
-                    <Copy className="mr-2 h-4 w-4" />
+                    <Copy className="me-2 h-4 w-4" />
                     {locale === "ar" ? "نسخ" : "Copy"}
                   </DropdownMenuItem>
                   {isOwnMessage && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => onEdit?.(message)}>
-                        <Pencil className="mr-2 h-4 w-4" />
+                        <Pencil className="me-2 h-4 w-4" />
                         {locale === "ar" ? "تعديل" : "Edit"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onDelete?.(message.id)}
                         className="text-destructive focus:text-destructive"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
+                        <Trash2 className="me-2 h-4 w-4" />
                         {locale === "ar" ? "حذف" : "Delete"}
                       </DropdownMenuItem>
                     </>

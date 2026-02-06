@@ -401,7 +401,7 @@ export function AttachmentUpload({
                   <p className="text-muted-foreground text-xs">
                     {formatBytes(file.file.size)}
                     {file.error && (
-                      <span className="text-destructive ml-2">
+                      <span className="text-destructive ms-2">
                         {file.error}
                       </span>
                     )}

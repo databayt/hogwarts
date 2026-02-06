@@ -6,7 +6,7 @@ import { Users } from "lucide-react"
 
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import type { GuardianStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
 import { GUARDIAN_STEP_CONFIG } from "./config"
@@ -26,7 +26,7 @@ export default function GuardianContent({ dictionary }: Props) {
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
-  const { session, getStepData } = useApplication()
+  const { session, getStepData } = useApplySession()
   const guardianFormRef = useRef<GuardianFormRef>(null)
 
   const initialData = getStepData("guardian")
@@ -75,16 +75,10 @@ export default function GuardianContent({ dictionary }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {dict.title ||
-                (isRTL
-                  ? GUARDIAN_STEP_CONFIG.labelAr
-                  : GUARDIAN_STEP_CONFIG.label)}
+              {dict.title || GUARDIAN_STEP_CONFIG.label}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {dict.description ||
-                (isRTL
-                  ? GUARDIAN_STEP_CONFIG.descriptionAr
-                  : GUARDIAN_STEP_CONFIG.description)}
+              {dict.description || GUARDIAN_STEP_CONFIG.description}
             </p>
           </div>
         </div>

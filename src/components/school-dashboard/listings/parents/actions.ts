@@ -72,11 +72,16 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  assertParentPermission,
+  getAuthContext,
+} from "@/components/school-dashboard/listings/parents/authorization"
 import {
   createGuardianAndLinkSchema,
   getParentsSchema,
@@ -135,10 +140,24 @@ export async function createParent(
   input: z.infer<typeof parentCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    // Auth check
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Permission check
+    try {
+      assertParentPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Parse and validate input
@@ -189,10 +208,24 @@ export async function updateParent(
   input: z.infer<typeof parentUpdateSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    // Auth check
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Permission check
+    try {
+      assertParentPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Parse and validate input
@@ -247,10 +280,24 @@ export async function deleteParent(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
+    // Auth check
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Permission check
+    try {
+      assertParentPermission(authContext, "delete", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Parse and validate input
@@ -299,10 +346,24 @@ export async function getParent(input: {
   id: string
 }): Promise<ActionResponse<ParentSelectResult | null>> {
   try {
+    // Auth check
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Permission check
+    try {
+      assertParentPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Parse and validate input
@@ -355,10 +416,24 @@ export async function getParents(
   input: Partial<z.infer<typeof getParentsSchema>>
 ): Promise<ActionResponse<{ rows: ParentListResult[]; total: number }>> {
   try {
+    // Auth check
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Permission check
+    try {
+      assertParentPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read parents" }
     }
 
     // Parse and validate input
@@ -444,10 +519,24 @@ export async function getParentsCSV(
   input?: Partial<z.infer<typeof getParentsSchema>>
 ): Promise<ActionResponse<string>> {
   try {
+    // Auth check
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Permission check
+    try {
+      assertParentPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to export parents" }
     }
 
     // Parse and validate input
@@ -552,9 +641,23 @@ export async function linkGuardian(
   input: z.infer<typeof linkGuardianSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    // Auth check
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Permission check
+    try {
+      assertParentPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update parents" }
     }
 
     const parsed = linkGuardianSchema.parse(input)
@@ -645,9 +748,23 @@ export async function createGuardianAndLink(
   input: z.infer<typeof createGuardianAndLinkSchema>
 ): Promise<ActionResponse<{ guardianId: string; studentGuardianId: string }>> {
   try {
+    // Auth check
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Permission check
+    try {
+      assertParentPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to create parents" }
     }
 
     const parsed = createGuardianAndLinkSchema.parse(input)
@@ -778,9 +895,21 @@ export async function updateGuardianLink(
   input: z.infer<typeof updateGuardianLinkSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertParentPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update parents" }
     }
 
     const parsed = updateGuardianLinkSchema.parse(input)
@@ -856,9 +985,21 @@ export async function unlinkGuardian(
   input: z.infer<typeof unlinkGuardianSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertParentPermission(authContext, "delete", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to delete parents" }
     }
 
     const parsed = unlinkGuardianSchema.parse(input)
@@ -906,9 +1047,21 @@ export async function getGuardianTypes(): Promise<
   ActionResponse<Array<{ id: string; name: string }>>
 > {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertParentPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read parents" }
     }
 
     const guardianTypeModel = getModelOrThrow("guardianType")
@@ -964,9 +1117,21 @@ export async function searchGuardians(query: string): Promise<
   >
 > {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertParentPermission(authContext, "read", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to read parents" }
     }
 
     if (!query || query.length < 2) {
@@ -1007,6 +1172,56 @@ export async function searchGuardians(query: string): Promise<
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to search guardians",
+    }
+  }
+}
+
+export async function bulkDeleteParents(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertParentPermission(authContext, "bulk_action", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized for bulk operations" }
+    }
+
+    const { ids } = z
+      .object({ ids: z.array(z.string().min(1)).min(1) })
+      .parse(input)
+
+    const guardianModel = getModelOrThrow("guardian")
+    const existing = await guardianModel.findMany({
+      where: { id: { in: ids }, schoolId },
+      select: { id: true },
+    })
+    const validIds = existing.map((g: any) => g.id)
+
+    const result = await guardianModel.deleteMany({
+      where: { id: { in: validIds }, schoolId },
+    })
+
+    revalidatePath("/parents")
+    return { success: true, data: { count: result.count as number } }
+  } catch (error) {
+    console.error("[bulkDeleteParents] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk delete parents",
     }
   }
 }

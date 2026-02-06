@@ -324,12 +324,12 @@ export function MobileGrading({
         </motion.div>
 
         {/* Swipe Indicators */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center ps-2">
           <div className="rounded-full bg-red-500/20 p-2">
             <X className="h-6 w-6 text-red-500" />
           </div>
         </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pe-2">
           <div className="rounded-full bg-green-500/20 p-2">
             <Check className="h-6 w-6 text-green-500" />
           </div>
@@ -387,7 +387,7 @@ export function MobileGrading({
                 "dark:border-red-800 dark:hover:bg-red-900/20"
               )}
             >
-              <X className="mr-1 h-4 w-4" />0
+              <X className="me-1 h-4 w-4" />0
             </Button>
 
             {/* Partial Credit */}
@@ -397,7 +397,7 @@ export function MobileGrading({
               onClick={() => setShowPartialInput(true)}
               disabled={isGrading}
             >
-              <Edit className="mr-1 h-4 w-4" />
+              <Edit className="me-1 h-4 w-4" />
               <Minus className="h-3 w-3" />
             </Button>
 
@@ -412,7 +412,7 @@ export function MobileGrading({
                 "dark:border-green-800 dark:hover:bg-green-900/20"
               )}
             >
-              <Check className="mr-1 h-4 w-4" />
+              <Check className="me-1 h-4 w-4" />
               {currentAnswer.maxPoints}
             </Button>
           </div>
@@ -442,7 +442,7 @@ export function MobileGrading({
                 disabled={currentIndex === answers.length - 1}
               >
                 {d?.skip ?? "Skip"}
-                <ChevronRight className="ml-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4" />
               </Button>
             )}
           </div>

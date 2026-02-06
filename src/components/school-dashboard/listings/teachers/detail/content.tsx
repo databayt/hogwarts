@@ -120,7 +120,7 @@ interface TeacherDetailData {
     subject?: {
       id: string
       subjectName: string
-      subjectNameAr?: string | null
+      lang?: string
     } | null
   }>
   teacherDepartments?: Array<{
@@ -129,13 +129,13 @@ interface TeacherDetailData {
     department: {
       id: string
       departmentName: string
-      departmentNameAr?: string | null
+      lang?: string
     }
   }>
   classes?: Array<{
     id: string
     className: string
-    classNameAr?: string | null
+    lang?: string
   }>
 }
 
@@ -342,12 +342,7 @@ export function TeacherDetailContent({
                         <Building className="h-4 w-4" />
                         <span>
                           {teacher.teacherDepartments
-                            .map((d) =>
-                              lang === "ar"
-                                ? d.department.departmentNameAr ||
-                                  d.department.departmentName
-                                : d.department.departmentName
-                            )
+                            .map((d) => d.department.departmentName)
                             .join(", ")}
                         </span>
                       </div>
@@ -584,10 +579,7 @@ export function TeacherDetailContent({
                           {expertise.expertiseLevel === "CERTIFIED" && (
                             <Award className="h-3 w-3" />
                           )}
-                          {lang === "ar"
-                            ? expertise.subject?.subjectNameAr ||
-                              expertise.subject?.subjectName
-                            : expertise.subject?.subjectName}
+                          {expertise.subject?.subjectName}
                         </Badge>
                       ))}
                     </div>
@@ -741,9 +733,7 @@ export function TeacherDetailContent({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-base">
                         <BookOpen className="h-4 w-4" />
-                        {lang === "ar"
-                          ? cls.classNameAr || cls.className
-                          : cls.className}
+                        {cls.className}
                       </CardTitle>
                     </CardHeader>
                   </Card>

@@ -20,10 +20,9 @@ export async function createAnnouncement(
   await db.announcement.create({
     data: {
       schoolId,
-      titleEn: parsed.titleEn ?? null,
-      titleAr: parsed.titleAr ?? null,
-      bodyEn: parsed.bodyEn ?? null,
-      bodyAr: parsed.bodyAr ?? null,
+      title: parsed.title ?? null,
+      body: parsed.body ?? null,
+      lang: parsed.lang ?? "ar",
       scope: parsed.scope as unknown as Prisma.AnnouncementCreateInput["scope"],
       classId: parsed.classId ?? null,
       role: parsed.role ?? null,

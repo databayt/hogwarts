@@ -521,7 +521,7 @@ export function ScheduleTab({
                 Upcoming Meetings
               </span>
               <Button variant="outline" size="sm">
-                <Plus className="mr-1 h-3 w-3" />
+                <Plus className="me-1 h-3 w-3" />
                 Schedule
               </Button>
             </CardTitle>
@@ -589,7 +589,7 @@ export function ScheduleTab({
                 Leave & Time Off
               </span>
               <Button variant="outline" size="sm">
-                <Plus className="mr-1 h-3 w-3" />
+                <Plus className="me-1 h-3 w-3" />
                 Request
               </Button>
             </CardTitle>

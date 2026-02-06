@@ -90,7 +90,7 @@ export const getStudentColumns = (
       ),
       cell: ({ getValue }) => (
         <Badge variant="secondary" className="tabular-nums">
-          <School className="mr-1 h-3 w-3" />
+          <School className="me-1 h-3 w-3" />
           {getValue<number>()}
         </Badge>
       ),
@@ -104,7 +104,7 @@ export const getStudentColumns = (
       ),
       cell: ({ getValue }) => (
         <Badge variant="outline" className="tabular-nums">
-          <GraduationCap className="mr-1 h-3 w-3" />
+          <GraduationCap className="me-1 h-3 w-3" />
           {getValue<number>()}
         </Badge>
       ),
@@ -192,19 +192,19 @@ export const getStudentColumns = (
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/grades?studentId=${student.id}`}>
-                  <GraduationCap className="mr-2 h-4 w-4" />
+                  <GraduationCap className="me-2 h-4 w-4" />
                   {t.viewGrades}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/attendance?studentId=${student.id}`}>
-                  <CalendarCheck className="mr-2 h-4 w-4" />
+                  <CalendarCheck className="me-2 h-4 w-4" />
                   {t.viewAttendance}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/classes?studentId=${student.id}`}>
-                  <School className="mr-2 h-4 w-4" />
+                  <School className="me-2 h-4 w-4" />
                   {t.viewClasses}
                 </Link>
               </DropdownMenuItem>

@@ -42,7 +42,7 @@ export function ShadcnItemAvatar() {
 
       {/* Team Members Item */}
       <div className="border-border flex items-center gap-4 rounded-lg border p-4">
-        <div className="flex -space-x-2">
+        <div className="flex -space-x-2 rtl:space-x-reverse">
           <Avatar className="ring-background hidden size-10 ring-2 grayscale sm:flex">
             <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
             <AvatarFallback>CN</AvatarFallback>

@@ -106,7 +106,7 @@ export function CardsChat() {
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="ml-auto size-8 rounded-full"
+                  className="ms-auto size-8 rounded-full"
                   onClick={() => setOpen(true)}
                 >
                   <PlusIcon />
@@ -125,7 +125,7 @@ export function CardsChat() {
                 className={cn(
                   "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
                   message.role === "user"
-                    ? "bg-primary text-primary-foreground ml-auto"
+                    ? "bg-primary text-primary-foreground ms-auto"
                     : "bg-muted"
                 )}
               >
@@ -209,7 +209,7 @@ export function CardsChat() {
                       <AvatarImage src={user.avatar} alt="Image" />
                       <AvatarFallback>{user.name[0]}</AvatarFallback>
                     </Avatar>
-                    <div className="ml-2">
+                    <div className="ms-2">
                       <p className="text-sm leading-none font-medium">
                         {user.name}
                       </p>
@@ -218,7 +218,7 @@ export function CardsChat() {
                       </p>
                     </div>
                     {selectedUsers.includes(user) ? (
-                      <CheckIcon className="text-primary ml-auto flex size-4" />
+                      <CheckIcon className="text-primary ms-auto flex size-4" />
                     ) : null}
                   </CommandItem>
                 ))}
@@ -227,7 +227,7 @@ export function CardsChat() {
           </Command>
           <DialogFooter className="flex items-center border-t p-4 sm:justify-between">
             {selectedUsers.length > 0 ? (
-              <div className="flex -space-x-2 overflow-hidden">
+              <div className="flex -space-x-2 overflow-hidden rtl:space-x-reverse">
                 {selectedUsers.map((user) => (
                   <Avatar key={user.email} className="inline-block border">
                     <AvatarImage src={user.avatar} />

@@ -106,6 +106,76 @@ const schoolId = session?.user?.schoolId
 
 ---
 
+## Single-Language Storage (CRITICAL)
+
+**All content is stored in ONE language** with a `lang` field. Translation happens on-demand via Google Translate API with database caching. **Never use bilingual field names** (`titleEn`/`titleAr`, `nameAr`/`nameEn`).
+
+### Rules
+
+1. **Generic field names only** - `title`, `body`, `name`, `description` (never `titleAr`, `nameEn`)
+2. **`lang` field** - Every content model has `lang String @default("ar")` indicating the stored language
+3. **On-demand translation** - Use `getDisplayText()` from `@/lib/content-display` to translate at display time
+4. **TranslationCache** - Translated strings are cached in the database to avoid repeated API calls
+5. **School's preferred language** - `School.preferredLanguage` determines the default storage language
+
+### Pattern
+
+```typescript
+// ✅ CORRECT - generic field + lang
+model Announcement {
+  title String?
+  body  String? @db.Text
+  lang  String  @default("ar")
+}
+
+// ❌ WRONG - bilingual columns
+model Announcement {
+  titleEn String?
+  titleAr String?
+}
+```
+
+### Display
+
+```typescript
+import { getDisplayText } from "@/lib/content-display"
+
+// Stored in Arabic, user viewing in English → translates via API
+const title = await getDisplayText(announcement.title, "ar", "en", schoolId)
+
+// Same language → returns directly, no API call
+const title = await getDisplayText(announcement.title, "ar", "ar", schoolId)
+```
+
+### UI Constants
+
+Static UI labels also use generic names with the primary language value:
+
+```typescript
+// ✅ CORRECT
+const SOURCES = [
+  { value: "website", label: "الموقع الإلكتروني" },
+  { value: "social", label: "وسائل التواصل" },
+]
+
+// ❌ WRONG
+const SOURCES = [
+  { value: "website", label: "Website", labelAr: "الموقع الإلكتروني" },
+]
+```
+
+### Infrastructure
+
+| File                          | Purpose                     |
+| ----------------------------- | --------------------------- |
+| `src/lib/google-translate.ts` | Google Translate API client |
+| `src/lib/translate.ts`        | Translation with caching    |
+| `src/lib/auto-translate.ts`   | Auto-translation utilities  |
+| `src/lib/content-display.ts`  | `getDisplayText()` for UI   |
+| `prisma/models/school.prisma` | `TranslationCache` model    |
+
+---
+
 ## Architecture Patterns
 
 ### Mirror Pattern

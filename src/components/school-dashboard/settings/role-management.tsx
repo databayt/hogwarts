@@ -432,7 +432,7 @@ export function RoleManagement({
             <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
               <DialogTrigger asChild>
                 <Button>
-                  <UserPlus className="mr-2 h-4 w-4" />
+                  <UserPlus className="me-2 h-4 w-4" />
                   {dictionary?.settings?.userManagementLabels?.addUser ||
                     "Add User"}
                 </Button>
@@ -596,7 +596,7 @@ export function RoleManagement({
                     {dictionary?.settings?.userManagementLabels?.twoFactor ||
                       "2FA"}
                   </TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className="text-end">
                     {dictionary?.settings?.userManagementLabels?.actions ||
                       "Actions"}
                   </TableHead>
@@ -691,7 +691,7 @@ export function RoleManagement({
                               ?.disabled || "Disabled"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
@@ -779,7 +779,7 @@ export function RoleManagement({
                     </div>
                   </div>
                   <Button variant="ghost" size="sm">
-                    <Eye className="mr-2 h-4 w-4" />
+                    <Eye className="me-2 h-4 w-4" />
                     {dictionary?.settings?.userManagementLabels?.viewAll ||
                       "View All"}
                   </Button>

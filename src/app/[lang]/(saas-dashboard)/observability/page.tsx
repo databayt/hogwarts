@@ -18,14 +18,14 @@ export default async function Observability({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
-  // Define observability page navigation
+  const n = d?.nav
   const observabilityPages: PageNavItem[] = [
-    { name: "Logs", href: `/${lang}/observability` },
+    { name: n?.logs || "Logs", href: `/${lang}/observability` },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter title="Observability" />
+      <PageHeadingSetter title={d?.observability?.title || "Observability"} />
       <PageNav pages={observabilityPages} />
       <ObservabilityContent dictionary={dictionary} lang={lang} />
     </div>

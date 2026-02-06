@@ -459,7 +459,7 @@ export async function StudentDashboard({
                         {grade.subject}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="font-bold">
                         {grade.marksObtained}/{grade.totalMarks}
                       </p>

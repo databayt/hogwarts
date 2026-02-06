@@ -19,7 +19,7 @@ export default function ManualAttendanceLoading() {
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <Skeleton className="h-8 w-56" />
             <Skeleton className="h-8 w-44" />
-            <div className="ml-auto flex gap-2">
+            <div className="ms-auto flex gap-2">
               <Skeleton className="h-8 w-28" />
               <Skeleton className="h-8 w-28" />
               <Skeleton className="h-8 w-24" />

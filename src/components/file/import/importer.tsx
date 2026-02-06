@@ -557,9 +557,9 @@ export function Importer<T>({
           {step === "map" && (
             <Button onClick={handleNext} disabled={isImporting}>
               {isImporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
               ) : (
-                <ArrowRight className="mr-2 h-4 w-4" />
+                <ArrowRight className="me-2 h-4 w-4" />
               )}
               {dictionary?.next || "Validate & Continue"}
             </Button>
@@ -568,9 +568,9 @@ export function Importer<T>({
           {step === "review" && result && result.validRows > 0 && (
             <Button onClick={handleNext} disabled={isImporting}>
               {isImporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
               ) : (
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="me-2 h-4 w-4" />
               )}
               {dictionary?.import || `Import ${result.validRows} Rows`}
             </Button>

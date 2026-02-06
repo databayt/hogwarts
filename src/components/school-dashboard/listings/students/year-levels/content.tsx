@@ -84,7 +84,7 @@ import {
 interface YearLevel {
   id: string
   levelName: string
-  levelNameAr?: string | null
+  lang?: string | null
   levelOrder: number
   _count?: {
     studentYearLevels: number
@@ -112,7 +112,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingLevel, setEditingLevel] = useState<YearLevel | null>(null)
   const [newLevelName, setNewLevelName] = useState("")
-  const [newLevelNameAr, setNewLevelNameAr] = useState("")
+  const [newLevelLang, setNewLevelLang] = useState("ar")
   const [newLevelOrder, setNewLevelOrder] = useState("")
 
   // Delete confirmation state
@@ -137,7 +137,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
     editLevel: lang === "ar" ? "تعديل المرحلة" : "Edit Year Level",
     deleteLevel: lang === "ar" ? "حذف المرحلة" : "Delete Year Level",
     levelName: lang === "ar" ? "اسم المرحلة" : "Level Name",
-    levelNameAr: lang === "ar" ? "اسم المرحلة (عربي)" : "Level Name (Arabic)",
+    language: lang === "ar" ? "اللغة" : "Language",
     levelOrder: lang === "ar" ? "ترتيب المرحلة" : "Level Order",
     students: lang === "ar" ? "الطلاب" : "Students",
     batches: lang === "ar" ? "الدفعات" : "Batches",
@@ -183,9 +183,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
 
   // Filter year levels
   const filteredLevels = yearLevels.filter((level) => {
-    const name =
-      lang === "ar" ? level.levelNameAr || level.levelName : level.levelName
-    return name.toLowerCase().includes(searchTerm.toLowerCase())
+    return level.levelName.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
   // Calculate aggregated statistics across all year levels
@@ -217,16 +215,14 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
     startTransition(async () => {
       const formData = new FormData()
       formData.append("levelName", newLevelName)
-      if (newLevelNameAr) {
-        formData.append("levelNameAr", newLevelNameAr)
-      }
+      formData.append("lang", newLevelLang || "ar")
       formData.append("levelOrder", newLevelOrder)
 
       const result = await createYearLevel(formData)
       if (result.success) {
         toast.success(result.message || "Year level created successfully")
         setNewLevelName("")
-        setNewLevelNameAr("")
+        setNewLevelLang("ar")
         setNewLevelOrder("")
         setIsCreateDialogOpen(false)
         fetchYearLevels()
@@ -243,7 +239,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
       const formData = new FormData()
       formData.append("id", editingLevel.id)
       formData.append("levelName", newLevelName)
-      formData.append("levelNameAr", newLevelNameAr || "")
+      formData.append("lang", newLevelLang || "ar")
       formData.append("levelOrder", newLevelOrder)
 
       const result = await updateYearLevel(formData)
@@ -251,7 +247,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
         toast.success(result.message || "Year level updated successfully")
         setEditingLevel(null)
         setNewLevelName("")
-        setNewLevelNameAr("")
+        setNewLevelLang("ar")
         setNewLevelOrder("")
         fetchYearLevels()
       } else {
@@ -278,7 +274,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
 
   const openCreateDialog = () => {
     setNewLevelName("")
-    setNewLevelNameAr("")
+    setNewLevelLang("ar")
     setNewLevelOrder(String(getNextOrder()))
     setIsCreateDialogOpen(true)
   }
@@ -286,13 +282,12 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
   const openEditDialog = (level: YearLevel) => {
     setEditingLevel(level)
     setNewLevelName(level.levelName)
-    setNewLevelNameAr(level.levelNameAr || "")
+    setNewLevelLang(level.lang || "ar")
     setNewLevelOrder(String(level.levelOrder))
   }
 
   const openDeleteDialog = (level: YearLevel) => {
-    const name =
-      lang === "ar" ? level.levelNameAr || level.levelName : level.levelName
+    const name = level.levelName
     setDeleteDialog({ open: true, id: level.id, name })
   }
 
@@ -407,14 +402,20 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nameAr">{t.levelNameAr}</Label>
-                <Input
-                  id="nameAr"
-                  value={newLevelNameAr}
-                  onChange={(e) => setNewLevelNameAr(e.target.value)}
-                  placeholder="مثال: الصف الأول"
-                  dir="rtl"
-                />
+                <Label htmlFor="lang">{t.language}</Label>
+                <select
+                  id="lang"
+                  value={newLevelLang}
+                  onChange={(e) => setNewLevelLang(e.target.value)}
+                  className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
+                >
+                  <option value="ar">
+                    {lang === "ar" ? "عربي" : "Arabic"}
+                  </option>
+                  <option value="en">
+                    {lang === "ar" ? "إنجليزي" : "English"}
+                  </option>
+                </select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="order">{t.levelOrder}</Label>
@@ -540,13 +541,8 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
                     </div>
                     <div>
                       <CardTitle className="text-lg">
-                        {lang === "ar"
-                          ? level.levelNameAr || level.levelName
-                          : level.levelName}
+                        {level.levelName}
                       </CardTitle>
-                      {level.levelNameAr && lang !== "ar" && (
-                        <CardDescription>{level.levelNameAr}</CardDescription>
-                      )}
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -631,13 +627,18 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-nameAr">{t.levelNameAr}</Label>
-              <Input
-                id="edit-nameAr"
-                value={newLevelNameAr}
-                onChange={(e) => setNewLevelNameAr(e.target.value)}
-                dir="rtl"
-              />
+              <Label htmlFor="edit-lang">{t.language}</Label>
+              <select
+                id="edit-lang"
+                value={newLevelLang}
+                onChange={(e) => setNewLevelLang(e.target.value)}
+                className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
+              >
+                <option value="ar">{lang === "ar" ? "عربي" : "Arabic"}</option>
+                <option value="en">
+                  {lang === "ar" ? "إنجليزي" : "English"}
+                </option>
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-order">{t.levelOrder}</Label>

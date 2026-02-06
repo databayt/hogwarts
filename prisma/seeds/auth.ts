@@ -59,14 +59,14 @@ export async function seedAdminUsers(
           },
         },
         update: {
-          username: userData.usernameEn,
+          username: userData.username,
           password: passwordHash,
           role: userData.role as UserRole,
           emailVerified: new Date(),
         },
         create: {
           email: userData.email,
-          username: userData.usernameEn,
+          username: userData.username,
           password: passwordHash,
           role: userData.role as UserRole,
           schoolId: userSchoolId,

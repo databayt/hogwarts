@@ -87,14 +87,14 @@ export function RadioGroupField({
               disabled={disabled}
               className={
                 orientation === "horizontal"
-                  ? "flex flex-row space-x-4"
+                  ? "flex flex-row gap-4"
                   : "flex flex-col space-y-2"
               }
             >
               {options.map((option) => (
                 <FormItem
                   key={option.value}
-                  className="flex items-center space-y-0 space-x-3"
+                  className="flex items-center gap-3 space-y-0"
                 >
                   <FormControl>
                     <RadioGroupItem

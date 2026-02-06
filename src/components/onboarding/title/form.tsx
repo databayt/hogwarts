@@ -190,10 +190,10 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                     <Input
                       {...field}
                       placeholder={dict.subdomainPlaceholder || "your-school"}
-                      className="rounded-r-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      className="rounded-e-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       disabled={isPending}
                     />
-                    <span className="bg-muted text-muted-foreground rounded-r-lg border-l px-3 py-2 font-mono text-sm whitespace-nowrap">
+                    <span className="bg-muted text-muted-foreground rounded-e-lg border-s px-3 py-2 font-mono text-sm whitespace-nowrap">
                       .databayt.org
                     </span>
                   </div>

@@ -16,10 +16,8 @@ interface Lesson {
 }
 
 interface YearSectionProps {
-  /** Year level name (English) */
+  /** Year level name */
   levelName: string
-  /** Year level name (Arabic) */
-  levelNameAr?: string | null
   /** Lessons in this year level */
   lessons: Lesson[]
   /** Current locale */
@@ -41,14 +39,12 @@ interface YearSectionProps {
  */
 export function YearSection({
   levelName,
-  levelNameAr,
   lessons,
   lang,
   subjectName,
   className,
 }: YearSectionProps) {
-  const isRTL = lang === "ar"
-  const displayLevel = isRTL && levelNameAr ? levelNameAr : levelName
+  const displayLevel = levelName
 
   if (lessons.length === 0) {
     return null

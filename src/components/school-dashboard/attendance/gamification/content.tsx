@@ -25,7 +25,7 @@ import type { LeaderboardEntry } from "./validation"
 interface Competition {
   id: string
   name: string
-  nameAr: string | null
+  lang: string
   description: string | null
   startDate: Date
   endDate: Date
@@ -34,7 +34,7 @@ interface Competition {
     rank: number
     classId: string
     className: string
-    classNameAr: string | null
+    classLang: string
     attendanceRate: number
     totalStudents: number
     presentDays: number
@@ -285,11 +285,7 @@ function CompetitionsSection({
           <Card key={competition.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>
-                  {isRTL && competition.nameAr
-                    ? competition.nameAr
-                    : competition.name}
-                </span>
+                <span>{competition.name}</span>
                 <Badge variant="secondary">{isRTL ? "نشطة" : "Active"}</Badge>
               </CardTitle>
               {competition.description && (
@@ -329,11 +325,7 @@ function CompetitionsSection({
                         >
                           #{entry.rank}
                         </span>
-                        <span className="font-medium">
-                          {isRTL && entry.classNameAr
-                            ? entry.classNameAr
-                            : entry.className}
-                        </span>
+                        <span className="font-medium">{entry.className}</span>
                       </div>
                       <span className="text-primary text-xl font-bold">
                         {entry.attendanceRate.toFixed(1)}%

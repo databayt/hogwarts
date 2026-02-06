@@ -23,12 +23,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function LibraryBookDetail({ params }: Props) {
-  const { id } = await params
-  const session = await auth()
+  const { id, lang } = await params
+  const [session, dictionary] = await Promise.all([auth(), getDictionary(lang)])
 
   if (!session?.user?.id) {
     notFound()
   }
 
-  return <LibraryBookDetailContent bookId={id} userId={session.user.id} />
+  return (
+    <LibraryBookDetailContent
+      bookId={id}
+      userId={session.user.id}
+      dictionary={dictionary.school}
+    />
+  )
 }

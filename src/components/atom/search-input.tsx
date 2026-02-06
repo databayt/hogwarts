@@ -96,7 +96,7 @@ export function SearchInput({
     <div className={cn("relative", className)}>
       <Search
         className={cn(
-          "text-muted-foreground absolute top-1/2 left-2.5 -translate-y-1/2",
+          "text-muted-foreground absolute start-2.5 top-1/2 -translate-y-1/2",
           iconSizes[size]
         )}
       />
@@ -106,8 +106,8 @@ export function SearchInput({
         value={localValue}
         onChange={handleChange}
         className={cn(
-          "pl-8",
-          showClear && localValue && "pr-8",
+          "ps-8",
+          showClear && localValue && "pe-8",
           sizeClasses[size]
         )}
       />
@@ -117,7 +117,7 @@ export function SearchInput({
           variant="ghost"
           size="icon"
           onClick={handleClear}
-          className="absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2 hover:bg-transparent"
+          className="absolute end-1 top-1/2 h-6 w-6 -translate-y-1/2 hover:bg-transparent"
           aria-label="Clear search"
         >
           <X className="h-3.5 w-3.5" />

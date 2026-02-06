@@ -319,7 +319,7 @@ export default function TeacherPerformanceContent({
           <p className="text-muted-foreground">{t.subtitle}</p>
         </div>
         <Button variant="outline">
-          <Download className="mr-2 h-4 w-4" />
+          <Download className="me-2 h-4 w-4" />
           {t.exportReport}
         </Button>
       </div>
@@ -391,15 +391,15 @@ export default function TeacherPerformanceContent({
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">
-            <BarChart3 className="mr-2 h-4 w-4" />
+            <BarChart3 className="me-2 h-4 w-4" />
             {t.overview}
           </TabsTrigger>
           <TabsTrigger value="ranking">
-            <Trophy className="mr-2 h-4 w-4" />
+            <Trophy className="me-2 h-4 w-4" />
             {t.ranking}
           </TabsTrigger>
           <TabsTrigger value="metrics">
-            <TrendingUp className="mr-2 h-4 w-4" />
+            <TrendingUp className="me-2 h-4 w-4" />
             {t.metrics}
           </TabsTrigger>
         </TabsList>
@@ -437,7 +437,7 @@ export default function TeacherPerformanceContent({
                             {teacher.departments[0]?.name || "-"}
                           </p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-end">
                           <p
                             className={`text-lg font-bold ${getPerformanceColor(teacher.performanceScore)}`}
                           >
@@ -589,7 +589,7 @@ export default function TeacherPerformanceContent({
                     placeholder={t.search}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="ps-10"
                   />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -833,7 +833,7 @@ export default function TeacherPerformanceContent({
                         <Button variant="ghost" size="sm" asChild>
                           <Link href={`/${lang}/teachers/${teacher.id}`}>
                             {t.details}
-                            <ArrowUpRight className="ml-1 h-3 w-3" />
+                            <ArrowUpRight className="ms-1 h-3 w-3" />
                           </Link>
                         </Button>
                       </div>

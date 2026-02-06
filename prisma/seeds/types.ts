@@ -51,20 +51,20 @@ export interface GuardianRef {
 export interface DepartmentRef {
   id: string
   departmentName: string
-  departmentNameAr: string
+  lang: string
 }
 
 export interface SubjectRef {
   id: string
   subjectName: string
-  subjectNameAr: string
+  lang: string
   departmentId: string
 }
 
 export interface YearLevelRef {
   id: string
   levelName: string
-  levelNameAr: string
+  lang: string
   levelOrder: number
 }
 
@@ -77,7 +77,7 @@ export interface ClassroomRef {
 export interface ClassRef {
   id: string
   name: string
-  nameAr: string
+  lang: string
   subjectId: string
   yearLevelId: string
 }
@@ -136,35 +136,12 @@ export type PartialSeedContext = Partial<SeedContext> & {
 }
 
 // ============================================================================
-// Bilingual Data Types
-// ============================================================================
-
-export interface BilingualText {
-  ar: string
-  en: string
-}
-
-export interface BilingualName {
-  givenNameAr: string
-  givenNameEn: string
-  surnameAr: string
-  surnameEn: string
-}
-
-export interface BilingualContent {
-  titleAr: string
-  titleEn: string
-  bodyAr?: string
-  bodyEn?: string
-}
-
-// ============================================================================
 // Seed Data Types
 // ============================================================================
 
 export interface YearLevelData {
-  nameEn: string
-  nameAr: string
+  name: string // Arabic primary (e.g. "الروضة الأولى")
+  lang?: string
   order: number
   section: "KG" | "Primary" | "Intermediate" | "Secondary"
   ageRange: [number, number]
@@ -172,28 +149,24 @@ export interface YearLevelData {
 }
 
 export interface DepartmentData {
-  nameEn: string
-  nameAr: string
-  descriptionEn: string
-  descriptionAr: string
+  name: string // Arabic primary (e.g. "اللغات")
+  description: string // Arabic primary
+  lang?: string
 }
 
 export interface SubjectData {
-  nameEn: string
-  nameAr: string
-  departmentEn: string
+  name: string // Arabic primary (e.g. "اللغة العربية")
+  department: string // Arabic department name (e.g. "اللغات")
   levels: string[]
-  descriptionEn: string
-  descriptionAr: string
+  description: string // Arabic primary
+  lang?: string
 }
 
 export interface TeacherData {
-  givenNameAr: string
-  givenNameEn: string
-  surnameAr: string
-  surnameEn: string
+  givenName: string
+  surname: string
   gender: "M" | "F"
-  departmentEn: string
+  department: string // Arabic department name (e.g. "اللغات")
   specialty?: string
 }
 
@@ -206,29 +179,26 @@ export interface ClassroomData {
 }
 
 export interface BookData {
-  titleEn: string
-  titleAr: string
-  authorEn: string
-  authorAr: string
+  title: string // Arabic primary
+  author: string // Arabic primary
+  lang?: string
   isbn: string
   category: string
   copies: number
 }
 
 export interface AnnouncementData {
-  titleEn: string
-  titleAr: string
-  bodyEn: string
-  bodyAr: string
+  title: string // Arabic primary
+  body: string // Arabic primary
+  lang?: string
   scope: "school" | "class" | "department"
   priority: "low" | "normal" | "high" | "urgent"
 }
 
 export interface EventData {
-  titleEn: string
-  titleAr: string
-  descriptionEn: string
-  descriptionAr: string
+  title: string // Arabic primary
+  description: string // Arabic primary
+  lang?: string
   type: "academic" | "sports" | "cultural" | "religious" | "other"
   startDate: Date
   endDate: Date

@@ -29,6 +29,14 @@ async function resetTestUser() {
     })
 
     if (existingUser) {
+      // Delete any schools created by this user (orphaned from previous test runs)
+      const deletedSchools = await prisma.school.deleteMany({
+        where: { createdByUserId: existingUser.id },
+      })
+      if (deletedSchools.count > 0) {
+        console.log(`   Deleted ${deletedSchools.count} orphaned school(s)`)
+      }
+
       // Reset user to fresh state
       await prisma.user.update({
         where: { id: existingUser.id },

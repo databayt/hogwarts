@@ -1,6 +1,6 @@
 /**
  * Subjects Seed
- * Creates subjects with bilingual names linked to departments
+ * Creates subjects with single-language names linked to departments
  *
  * Phase 2: Academic Structure - Subjects
  */
@@ -25,14 +25,14 @@ export async function seedSubjects(
 ): Promise<SubjectRef[]> {
   const subjects: SubjectRef[] = []
 
-  // Create a lookup map for departments
+  // Create a lookup map for departments by name (Arabic)
   const deptMap = new Map(departments.map((d) => [d.departmentName, d]))
 
   for (const subjectData of SUBJECTS) {
-    const department = deptMap.get(subjectData.departmentEn)
+    const department = deptMap.get(subjectData.department)
     if (!department) {
       console.log(
-        `   ⚠️ Department ${subjectData.departmentEn} not found for ${subjectData.nameEn}`
+        `   Department ${subjectData.department} not found for ${subjectData.name}`
       )
       continue
     }
@@ -42,29 +42,29 @@ export async function seedSubjects(
         schoolId_departmentId_subjectName: {
           schoolId,
           departmentId: department.id,
-          subjectName: subjectData.nameEn,
+          subjectName: subjectData.name,
         },
       },
       update: {
-        subjectNameAr: subjectData.nameAr,
+        lang: "ar",
       },
       create: {
         schoolId,
         departmentId: department.id,
-        subjectName: subjectData.nameEn,
-        subjectNameAr: subjectData.nameAr,
+        subjectName: subjectData.name,
+        lang: "ar",
       },
     })
 
     subjects.push({
       id: subject.id,
       subjectName: subject.subjectName,
-      subjectNameAr: subject.subjectNameAr || "",
+      lang: "ar",
       departmentId: subject.departmentId,
     })
   }
 
-  logSuccess("Subjects", subjects.length, "bilingual AR+EN")
+  logSuccess("Subjects", subjects.length, "Arabic primary")
 
   return subjects
 }

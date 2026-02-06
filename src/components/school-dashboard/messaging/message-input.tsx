@@ -326,8 +326,8 @@ export function MessageInput({
             maxLength={maxLength}
             rows={1}
             className={cn(
-              "max-h-[200px] min-h-[40px] resize-none pr-10",
-              locale === "ar" && "text-right"
+              "max-h-[200px] min-h-[40px] resize-none pe-10",
+              locale === "ar" && "text-end"
             )}
           />
         </div>

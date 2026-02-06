@@ -64,7 +64,7 @@ export function CheckboxField({
               {required && <span className="text-destructive ms-1">*</span>}
             </FormLabel>
           )}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <FormControl>
               <Checkbox
                 checked={field.value}

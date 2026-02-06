@@ -127,7 +127,7 @@ export function QuickLookSection({
                   href={`/${locale}/s/${subdomain}${item.href}`}
                   className="text-primary inline-flex items-center text-xs hover:underline"
                 >
-                  View All <ChevronRight className="ml-1 h-3 w-3" />
+                  View All <ChevronRight className="ms-1 h-3 w-3" />
                 </Link>
               </CardContent>
             </Card>

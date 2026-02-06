@@ -31,10 +31,10 @@ import {
 // ============================================================================
 
 const FEE_STRUCTURES = [
-  // Kindergarten
+  // Kindergarten (levelOrder 1-2)
   {
     name: "Kindergarten Fee Structure",
-    levels: ["KG1", "KG2"],
+    levelOrders: [1, 2],
     tuitionFee: 15000,
     registrationFee: 500,
     libraryFee: 200,
@@ -42,10 +42,10 @@ const FEE_STRUCTURES = [
     transportFee: 2000,
     description: "Fee structure for kindergarten students",
   },
-  // Primary (Grades 1-6)
+  // Primary (levelOrder 3-8)
   {
     name: "Primary Fee Structure",
-    levels: ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"],
+    levelOrders: [3, 4, 5, 6, 7, 8],
     tuitionFee: 18000,
     registrationFee: 600,
     examFee: 300,
@@ -55,10 +55,10 @@ const FEE_STRUCTURES = [
     transportFee: 2500,
     description: "Fee structure for primary school students",
   },
-  // Intermediate (Grades 7-9)
+  // Intermediate (levelOrder 9-11)
   {
     name: "Intermediate Fee Structure",
-    levels: ["Grade 7", "Grade 8", "Grade 9"],
+    levelOrders: [9, 10, 11],
     tuitionFee: 22000,
     registrationFee: 750,
     examFee: 400,
@@ -68,10 +68,10 @@ const FEE_STRUCTURES = [
     transportFee: 3000,
     description: "Fee structure for intermediate school students",
   },
-  // Secondary (Grades 10-12)
+  // Secondary (levelOrder 12-14)
   {
     name: "Secondary Fee Structure",
-    levels: ["Grade 10", "Grade 11", "Grade 12"],
+    levelOrders: [12, 13, 14],
     tuitionFee: 28000,
     registrationFee: 1000,
     examFee: 600,
@@ -83,22 +83,22 @@ const FEE_STRUCTURES = [
   },
 ]
 
-// Fee amounts by level
-const FEE_AMOUNTS: Record<string, number> = {
-  KG1: 15000,
-  KG2: 15000,
-  "Grade 1": 18000,
-  "Grade 2": 18000,
-  "Grade 3": 18000,
-  "Grade 4": 18000,
-  "Grade 5": 18000,
-  "Grade 6": 18000,
-  "Grade 7": 22000,
-  "Grade 8": 22000,
-  "Grade 9": 22000,
-  "Grade 10": 28000,
-  "Grade 11": 28000,
-  "Grade 12": 28000,
+// Fee amounts by levelOrder (1=KG1 through 14=Grade12)
+const FEE_AMOUNTS_BY_ORDER: Record<number, number> = {
+  1: 15000,
+  2: 15000, // KG
+  3: 18000,
+  4: 18000,
+  5: 18000, // Primary
+  6: 18000,
+  7: 18000,
+  8: 18000,
+  9: 22000,
+  10: 22000,
+  11: 22000, // Intermediate
+  12: 28000,
+  13: 28000,
+  14: 28000, // Secondary
 }
 
 // Payment methods distribution
@@ -178,17 +178,17 @@ const SCHOLARSHIPS = [
 export async function seedFeeStructures(
   prisma: PrismaClient,
   schoolId: string
-): Promise<Map<string, Map<string, string>>> {
+): Promise<Map<string, Map<number, string>>> {
   logPhase(10, "FEES & INVOICES", "الرسوم والفواتير")
 
-  // Map: academicYear -> levelName -> feeStructureId
-  const feeStructureMap = new Map<string, Map<string, string>>()
+  // Map: academicYear -> levelOrder -> feeStructureId
+  const feeStructureMap = new Map<string, Map<number, string>>()
   let count = 0
 
   const academicYears = ["2024-2025", "2025-2026"]
 
   for (const academicYear of academicYears) {
-    const yearMap = new Map<string, string>()
+    const yearMap = new Map<number, string>()
 
     for (const structure of FEE_STRUCTURES) {
       try {
@@ -237,9 +237,9 @@ export async function seedFeeStructures(
           count++
         }
 
-        // Map each level to this fee structure
-        for (const levelName of structure.levels) {
-          yearMap.set(levelName, feeStructure.id)
+        // Map each levelOrder to this fee structure
+        for (const levelOrder of structure.levelOrders) {
+          yearMap.set(levelOrder, feeStructure.id)
         }
       } catch {
         // Skip if fee structure already exists
@@ -268,7 +268,7 @@ export async function seedFeeAssignments(
   schoolId: string,
   students: StudentRef[],
   yearLevels: YearLevelRef[],
-  feeStructureMap: Map<string, Map<string, string>>
+  feeStructureMap: Map<string, Map<number, string>>
 ): Promise<{ assignmentIds: string[]; totalCount: number }> {
   const assignmentIds: string[] = []
   let recordCount = 0
@@ -285,10 +285,11 @@ export async function seedFeeAssignments(
       const yearLevel = yearLevels.find((yl) => yl.id === student.yearLevelId)
       if (!yearLevel) return
 
-      const feeStructureId = yearMap.get(yearLevel.levelName)
+      // Use levelOrder for matching (Arabic levelName won't match English keys)
+      const feeStructureId = yearMap.get(yearLevel.levelOrder)
       if (!feeStructureId) return
 
-      const amount = FEE_AMOUNTS[yearLevel.levelName] || 20000
+      const amount = FEE_AMOUNTS_BY_ORDER[yearLevel.levelOrder] || 20000
 
       // Determine status based on year
       let status: "PENDING" | "PARTIAL" | "PAID"

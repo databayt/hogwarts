@@ -95,7 +95,7 @@ export function NotificationCard({
   const Icon = icons[type]
 
   return (
-    <Card className={cn("border-l-4", variants[type], className)}>
+    <Card className={cn("border-s-4", variants[type], className)}>
       <CardContent className="p-4">
         <div className="flex gap-3">
           <div className="mt-0.5 shrink-0">

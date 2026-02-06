@@ -280,7 +280,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/salary/calculator`}>
-                <Calculator className="mr-2 h-4 w-4" />
+                <Calculator className="me-2 h-4 w-4" />
                 Open Calculator
               </Link>
             </Button>

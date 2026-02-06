@@ -22,34 +22,41 @@ import { logPhase, logSuccess, logWarning } from "./utils"
 export async function seedSchool(prisma: PrismaClient): Promise<SchoolRef> {
   logPhase(1, "CORE FOUNDATION", "البنية الأساسية")
 
+  // Shared school data for upsert
+  const schoolData = {
+    name: DEMO_SCHOOL.name,
+    email: DEMO_SCHOOL.email,
+    phoneNumber: DEMO_SCHOOL.phone,
+    address: DEMO_SCHOOL.address,
+    website: DEMO_SCHOOL.website,
+    timezone: DEMO_SCHOOL.timezone,
+    preferredLanguage: DEMO_SCHOOL.preferredLanguage,
+    planType: DEMO_SCHOOL.planType,
+    maxStudents: DEMO_SCHOOL.maxStudents,
+    maxTeachers: DEMO_SCHOOL.maxTeachers,
+    isActive: true,
+    // New onboarding fields
+    schoolType: DEMO_SCHOOL.schoolType,
+    schoolLevel: DEMO_SCHOOL.schoolLevel,
+    description: DEMO_SCHOOL.description,
+    city: DEMO_SCHOOL.city,
+    state: DEMO_SCHOOL.state,
+    country: DEMO_SCHOOL.country,
+    tuitionFee: DEMO_SCHOOL.tuitionFee,
+    registrationFee: DEMO_SCHOOL.registrationFee,
+    applicationFee: DEMO_SCHOOL.applicationFee,
+    currency: DEMO_SCHOOL.currency,
+    paymentSchedule: DEMO_SCHOOL.paymentSchedule,
+    maxClasses: DEMO_SCHOOL.maxClasses,
+    isPublished: true,
+    onboardingCompletedAt: new Date(),
+  }
+
   // Upsert Demo School by domain
   const school = await prisma.school.upsert({
     where: { domain: DEMO_SCHOOL.domain },
-    update: {
-      name: DEMO_SCHOOL.nameEn,
-      email: DEMO_SCHOOL.email,
-      phoneNumber: DEMO_SCHOOL.phoneEn,
-      address: DEMO_SCHOOL.addressEn,
-      website: DEMO_SCHOOL.website,
-      timezone: DEMO_SCHOOL.timezone,
-      planType: DEMO_SCHOOL.planType,
-      maxStudents: DEMO_SCHOOL.maxStudents,
-      maxTeachers: DEMO_SCHOOL.maxTeachers,
-      isActive: true,
-    },
-    create: {
-      domain: DEMO_SCHOOL.domain,
-      name: DEMO_SCHOOL.nameEn,
-      email: DEMO_SCHOOL.email,
-      phoneNumber: DEMO_SCHOOL.phoneEn,
-      address: DEMO_SCHOOL.addressEn,
-      website: DEMO_SCHOOL.website,
-      timezone: DEMO_SCHOOL.timezone,
-      planType: DEMO_SCHOOL.planType,
-      maxStudents: DEMO_SCHOOL.maxStudents,
-      maxTeachers: DEMO_SCHOOL.maxTeachers,
-      isActive: true,
-    },
+    update: schoolData,
+    create: { domain: DEMO_SCHOOL.domain, ...schoolData },
   })
 
   logSuccess("School", 1, DEMO_SCHOOL.domain)

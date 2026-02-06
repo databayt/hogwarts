@@ -1,33 +1,14 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 
+import {
+  createActionResponse,
+  type ActionResponse,
+} from "@/lib/action-response"
 import { db } from "@/lib/db"
 
-// TEMPORARILY: Local ActionResponse to bypass auth-security import chain
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface ActionResponse<T = any> {
-  success: boolean
-  data?: T
-  error?: string
-  code?: string
-}
-
-function createActionResponse<T>(data?: T, error?: unknown): ActionResponse<T> {
-  if (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "An error occurred"
-    return { success: false, error: errorMessage, code: "ERROR" }
-  }
-  return { success: true, data }
-}
-
-// Lazy auth import - only load when needed
-async function requireSchoolOwnershipLazy(schoolId: string) {
-  const { requireSchoolOwnership } = await import("@/lib/auth-security")
-  return requireSchoolOwnership(schoolId)
-}
+import { requireSchoolOwnership } from "../auth-helpers"
 
 export async function completeOnboarding(
   schoolId: string,
@@ -36,100 +17,32 @@ export async function completeOnboarding(
     safetyFeatures: string[]
   }
 ): Promise<ActionResponse> {
-  console.log(
-    "🚀 [COMPLETE ONBOARDING ACTION] Starting onboarding completion",
-    {
-      schoolId,
-      legalData,
-      timestamp: new Date().toISOString(),
-    }
-  )
-
   try {
-    console.log("🔐 [COMPLETE ONBOARDING ACTION] Validating school ownership")
-    // Validate user has ownership/access to this school
-    await requireSchoolOwnershipLazy(schoolId)
-    console.log("✅ [COMPLETE ONBOARDING ACTION] School ownership validated")
-
-    console.log("📝 [COMPLETE ONBOARDING ACTION] Preparing school update data")
-    // Update school with legal data and mark as onboarded
-    // Using any to bypass TypeScript checks until migration is applied
-    const updateData: any = {
-      isActive: true,
-      updatedAt: new Date(),
-    }
-
-    console.log(
-      "🏗️ [COMPLETE ONBOARDING ACTION] Initial update data:",
-      updateData
-    )
-
-    // Skip legal fields until migration is applied
-    console.log(
-      "⚠️ [COMPLETE ONBOARDING ACTION] Skipping legal fields (operationalStatus, safetyFeatures) - not yet in database schema"
-    )
-
-    console.log("💾 [COMPLETE ONBOARDING ACTION] Updating school in database", {
-      where: { id: schoolId },
-      data: updateData,
-    })
+    await requireSchoolOwnership(schoolId)
 
     const school = await db.school.update({
       where: { id: schoolId },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        domain: true,
+      data: {
+        isActive: true,
+        onboardingStep: "legal",
       },
+      select: { id: true, name: true, domain: true },
     })
 
-    console.log(
-      "✅ [COMPLETE ONBOARDING ACTION] School updated successfully:",
-      school
-    )
-
     if (!school.domain) {
-      console.error(
-        "❌ [COMPLETE ONBOARDING ACTION] School subdomain not configured"
-      )
       throw new Error(
         "School subdomain not configured. Please complete the subdomain step."
       )
     }
 
-    console.log(
-      "🌐 [COMPLETE ONBOARDING ACTION] School domain validated:",
-      school.domain
-    )
-
-    console.log("🔄 [COMPLETE ONBOARDING ACTION] Revalidating onboarding path")
-    // Revalidate the onboarding path
     revalidatePath(`/onboarding/${schoolId}`)
 
-    const redirectUrl = `/onboarding/${schoolId}/congratulations`
-    console.log("🎯 [COMPLETE ONBOARDING ACTION] Creating success response", {
-      school,
-      redirectUrl,
-    })
-
-    const response = createActionResponse({
+    return createActionResponse({
       success: true,
       school,
-      redirectUrl,
+      redirectUrl: `/onboarding/${schoolId}/congratulations`,
     })
-
-    console.log(
-      "📤 [COMPLETE ONBOARDING ACTION] Returning success response:",
-      response
-    )
-    return response
   } catch (error) {
-    console.error(
-      "💥 [COMPLETE ONBOARDING ACTION] Failed to complete onboarding:",
-      error
-    )
-    console.log("📤 [COMPLETE ONBOARDING ACTION] Returning error response")
     return createActionResponse(undefined, error)
   }
 }
@@ -138,26 +51,26 @@ export async function getSchoolOnboardingStatus(
   schoolId: string
 ): Promise<ActionResponse> {
   try {
-    await requireSchoolOwnershipLazy(schoolId)
+    await requireSchoolOwnership(schoolId)
 
-    const school = (await db.school.findUnique({
+    const school = await db.school.findUnique({
       where: { id: schoolId },
       select: {
         id: true,
         name: true,
         domain: true,
         isActive: true,
-        // onboardingCompletedAt: true, // Comment out until migrated
+        isPublished: true,
+        onboardingCompletedAt: true,
       },
-    })) as any
+    })
 
-    if (!school) {
-      throw new Error("School not found")
-    }
+    if (!school) throw new Error("School not found")
 
     return createActionResponse({
       isCompleted: !!school.onboardingCompletedAt,
       isActive: school.isActive,
+      isPublished: school.isPublished,
       domain: school.domain,
       name: school.name,
     })

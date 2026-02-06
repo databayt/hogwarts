@@ -26,7 +26,7 @@ export default function OverViewPage() {
           <h2 className="text-2xl font-bold tracking-tight">
             Hi, Welcome back 👋
           </h2>
-          <div className="hidden items-center space-x-2 md:flex">
+          <div className="hidden items-center gap-2 md:flex">
             <Button>Download</Button>
           </div>
         </div>

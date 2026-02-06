@@ -254,7 +254,7 @@ export function ContactStep({ form, isView }: TeacherFormStepProps) {
                           control={form.control}
                           name={`phoneNumbers.${index}.isPrimary`}
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                            <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                               <FormControl>
                                 <Checkbox
                                   checked={field.value}

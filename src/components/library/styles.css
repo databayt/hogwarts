@@ -35,7 +35,7 @@
 }
 
 .book-card-rating {
-  @apply flex items-center space-x-1 text-yellow-500;
+  @apply flex items-center gap-1 text-yellow-500;
 }
 
 .book-card-status {
@@ -212,7 +212,7 @@
 }
 
 .library-profile-book-card {
-  @apply flex space-x-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-700;
+  @apply flex gap-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-700;
 }
 
 .library-profile-book-cover {

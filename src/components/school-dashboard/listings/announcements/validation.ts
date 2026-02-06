@@ -1,13 +1,12 @@
 import { z } from "zod"
 
-// Bilingual announcement schema
-// Both languages are optional but at least one title is required
+// Single-language announcement schema
+// Content stored in one language with a `lang` field
 export const announcementBaseSchema = z
   .object({
-    titleEn: z.string().optional(), // English title
-    titleAr: z.string().optional(), // Arabic title
-    bodyEn: z.string().optional(), // English body
-    bodyAr: z.string().optional(), // Arabic body
+    title: z.string().optional(),
+    body: z.string().optional(),
+    lang: z.enum(["ar", "en"]).default("ar"),
     scope: z.enum(["school", "class", "role"]),
     classId: z.string().optional(),
     role: z.string().optional(),
@@ -19,20 +18,20 @@ export const announcementBaseSchema = z
     featured: z.boolean().optional(),
   })
   .superRefine((val, ctx) => {
-    // At least one title is required
-    if (!val.titleEn && !val.titleAr) {
+    // Title is required
+    if (!val.title) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "At least one title (English or Arabic) is required",
-        path: ["titleEn"],
+        message: "Title is required",
+        path: ["title"],
       })
     }
-    // At least one body is required
-    if (!val.bodyEn && !val.bodyAr) {
+    // Body is required
+    if (!val.body) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "At least one body (English or Arabic) is required",
-        path: ["bodyEn"],
+        message: "Body is required",
+        path: ["body"],
       })
     }
     if (val.scope === "class" && !val.classId) {
@@ -102,7 +101,7 @@ export const sortItemSchema = z.object({
 export const getAnnouncementsSchema = z.object({
   page: z.number().int().positive().default(1),
   perPage: z.number().int().positive().max(200).default(20),
-  title: z.string().optional().default(""), // Searches both titleEn and titleAr
+  title: z.string().optional().default(""), // Searches title field
   scope: z.string().optional().default(""),
   published: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),

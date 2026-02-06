@@ -372,7 +372,7 @@ export function BarcodeScanner({
               onClick={() => setScanMode("camera")}
               className="flex-1"
             >
-              <Camera className="mr-2 h-4 w-4" />
+              <Camera className="me-2 h-4 w-4" />
               Camera Scan
             </Button>
             <Button
@@ -380,7 +380,7 @@ export function BarcodeScanner({
               onClick={() => setScanMode("manual")}
               className="flex-1"
             >
-              <Keyboard className="mr-2 h-4 w-4" />
+              <Keyboard className="me-2 h-4 w-4" />
               Manual Entry
             </Button>
           </div>
@@ -401,7 +401,7 @@ export function BarcodeScanner({
                       Camera is not active
                     </p>
                     <Button onClick={startScanning}>
-                      <Camera className="mr-2 h-4 w-4" />
+                      <Camera className="me-2 h-4 w-4" />
                       Start Scanner
                     </Button>
                   </div>
@@ -444,7 +444,7 @@ export function BarcodeScanner({
               {scanning && (
                 <div className="flex justify-center">
                   <Button variant="destructive" onClick={stopScanning}>
-                    <CameraOff className="mr-2 h-4 w-4" />
+                    <CameraOff className="me-2 h-4 w-4" />
                     Stop Scanner
                   </Button>
                 </div>
@@ -508,7 +508,7 @@ export function BarcodeScanner({
                 <p className="font-mono font-medium">{lastScan}</p>
               </div>
               <Badge variant="outline">
-                <CircleCheck className="mr-1 h-3 w-3" />
+                <CircleCheck className="me-1 h-3 w-3" />
                 Processed
               </Badge>
             </div>

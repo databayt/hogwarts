@@ -1,22 +1,40 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookOpen } from "lucide-react"
+import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { PublicCourseType } from "@/components/stream/data/course/get-all-courses"
 import { SearchBar } from "@/components/stream/search-bar"
 
 import { CourseCard, CourseCardSkeleton } from "./course-card"
+
+interface CourseRow {
+  id: string
+  title: string
+  slug: string
+  description: string | null
+  imageUrl: string | null
+  price: number | null
+  lang: string
+  createdAt: Date
+  updatedAt: Date
+  category: { id: string; name: string } | null
+  _count: { chapters: number; enrollments: number }
+}
 
 interface Props {
   dictionary: any
   lang: string
   schoolId: string | null
-  courses: PublicCourseType[]
-  searchParams?: { category?: string; search?: string }
+  courses: CourseRow[]
+  totalCount: number
+  page: number
+  perPage: number
 }
 
 export function StreamCoursesContent({
@@ -24,35 +42,29 @@ export function StreamCoursesContent({
   lang,
   schoolId,
   courses,
-  searchParams,
+  totalCount,
+  page,
+  perPage,
 }: Props) {
   const isRTL = lang === "ar"
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  // Filter courses based on search params
-  const filteredCourses = courses.filter((course) => {
-    if (
-      searchParams?.category &&
-      course.category?.name !== searchParams.category
-    ) {
-      return false
-    }
-    if (searchParams?.search) {
-      const searchLower = searchParams.search.toLowerCase()
-      return (
-        course.title.toLowerCase().includes(searchLower) ||
-        course.description?.toLowerCase().includes(searchLower)
-      )
-    }
-    return true
-  })
+  const totalPages = Math.ceil(totalCount / perPage)
+
+  const navigateToPage = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("page", String(newPage))
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   return (
     <div className="space-y-10 py-6">
-      {/* Hero Section - Like "Come teach with us" */}
+      {/* Hero Section */}
       <section className="py-8">
         <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-6 md:flex-row rtl:md:flex-row-reverse">
-          {/* Hero Image */}
           <div className="relative flex size-28 shrink-0 items-center justify-center rounded-xl bg-[#D97757] p-4 md:size-32">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -61,8 +73,6 @@ export function StreamCoursesContent({
               className="size-20 md:size-24"
             />
           </div>
-
-          {/* Text Content */}
           <div className="text-center md:text-start">
             <h1 className="text-4xl leading-none font-bold md:text-5xl">
               {dictionary?.courses?.heroTitle || "Explore"}
@@ -73,55 +83,94 @@ export function StreamCoursesContent({
         </div>
       </section>
 
-      {/* Search Bar with Explore */}
+      {/* Search Bar */}
       <section>
         <SearchBar lang={lang} dictionary={dictionary} />
       </section>
 
-      {filteredCourses.length === 0 ? (
+      {courses.length === 0 ? (
         <Card>
           <CardContent className="py-10">
             <div className="text-center">
               <BookOpen className="text-muted-foreground mx-auto mb-4 size-16" />
-              <h3>No Courses Available</h3>
+              <h3>{isRTL ? "لا توجد دورات متاحة" : "No Courses Available"}</h3>
               <p className="muted mb-6">
-                There are currently no courses available. Check back soon!
+                {isRTL
+                  ? "لا توجد دورات متاحة حالياً. تفقد لاحقاً!"
+                  : "There are currently no courses available. Check back soon!"}
               </p>
             </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {filteredCourses.map((course, idx) => (
-            <div
-              key={course.id}
-              className="group relative block h-full w-full p-2"
-              onMouseEnter={() => setHoveredIndex(idx)}
-              onMouseLeave={() => setHoveredIndex(null)}
-            >
-              <AnimatePresence>
-                {hoveredIndex === idx && (
-                  <motion.span
-                    className="bg-muted dark:bg-muted/80 absolute inset-0 block h-full w-full rounded-2xl"
-                    layoutId="courseHoverBackground"
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: 1,
-                      transition: { duration: 0.15 },
-                    }}
-                    exit={{
-                      opacity: 0,
-                      transition: { duration: 0.15, delay: 0.2 },
-                    }}
-                  />
-                )}
-              </AnimatePresence>
-              <div className="relative z-10">
-                <CourseCard course={course} lang={lang} />
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {courses.map((course, idx) => (
+              <div
+                key={course.id}
+                className="group relative block h-full w-full p-2"
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
+              >
+                <AnimatePresence>
+                  {hoveredIndex === idx && (
+                    <motion.span
+                      className="bg-muted dark:bg-muted/80 absolute inset-0 block h-full w-full rounded-2xl"
+                      layoutId="courseHoverBackground"
+                      initial={{ opacity: 0 }}
+                      animate={{
+                        opacity: 1,
+                        transition: { duration: 0.15 },
+                      }}
+                      exit={{
+                        opacity: 0,
+                        transition: { duration: 0.15, delay: 0.2 },
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+                <div className="relative z-10">
+                  <CourseCard course={course} lang={lang} />
+                </div>
               </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={page <= 1}
+                onClick={() => navigateToPage(page - 1)}
+              >
+                {isRTL ? (
+                  <ChevronRight className="size-4" />
+                ) : (
+                  <ChevronLeft className="size-4" />
+                )}
+              </Button>
+              <span className="text-muted-foreground text-sm">
+                {isRTL
+                  ? `${page} من ${totalPages}`
+                  : `Page ${page} of ${totalPages}`}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={page >= totalPages}
+                onClick={() => navigateToPage(page + 1)}
+              >
+                {isRTL ? (
+                  <ChevronLeft className="size-4" />
+                ) : (
+                  <ChevronRight className="size-4" />
+                )}
+              </Button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   )

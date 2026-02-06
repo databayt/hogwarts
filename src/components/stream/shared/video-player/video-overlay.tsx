@@ -71,7 +71,7 @@ export function VideoOverlay({
             {isPlaying ? (
               <Pause className="text-foreground h-12 w-12" />
             ) : (
-              <Play className="text-foreground ml-1 h-12 w-12" />
+              <Play className="text-foreground ms-1 h-12 w-12" />
             )}
           </motion.div>
         </motion.button>

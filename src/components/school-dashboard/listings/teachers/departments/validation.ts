@@ -9,10 +9,7 @@ export const createDepartmentSchema = z.object({
     .string()
     .min(1, "Department name is required")
     .max(100, "Department name must be less than 100 characters"),
-  departmentNameAr: z
-    .string()
-    .max(100, "Arabic name must be less than 100 characters")
-    .optional(),
+  lang: z.enum(["ar", "en"]).default("ar").optional(),
 })
 
 export const updateDepartmentSchema = z.object({
@@ -22,11 +19,7 @@ export const updateDepartmentSchema = z.object({
     .min(1, "Department name is required")
     .max(100, "Department name must be less than 100 characters")
     .optional(),
-  departmentNameAr: z
-    .string()
-    .max(100, "Arabic name must be less than 100 characters")
-    .optional()
-    .nullable(),
+  lang: z.enum(["ar", "en"]).optional(),
 })
 
 export const deleteDepartmentSchema = z.object({

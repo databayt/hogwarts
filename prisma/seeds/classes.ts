@@ -56,14 +56,14 @@ export async function seedClasses(
   // Create classes for each subject-level combination
   for (const subject of subjects) {
     // Find which levels this subject applies to
-    const subjectConfig = SUBJECTS.find((s) => s.nameEn === subject.subjectName)
+    const subjectConfig = SUBJECTS.find((s) => s.name === subject.subjectName)
     if (!subjectConfig) continue
 
     const applicableLevels = yearLevels.filter((level) => {
       if (subjectConfig.levels.includes("all")) return true
 
       const levelOrder =
-        YEAR_LEVELS.find((yl) => yl.nameEn === level.levelName)?.order || 0
+        YEAR_LEVELS.find((yl) => yl.name === level.levelName)?.order || 0
 
       if (subjectConfig.levels.includes("KG-6")) {
         return levelOrder >= 1 && levelOrder <= 8
@@ -96,9 +96,8 @@ export async function seedClasses(
       const classroom = classrooms[classroomIndex % classrooms.length]
       classroomIndex++
 
-      // Create class name
+      // Create class name (Arabic: subject - level)
       const className = `${subject.subjectName} - ${level.levelName}`
-      const classNameAr = `${subject.subjectNameAr} - ${level.levelNameAr}`
 
       try {
         const classRecord = await prisma.class.upsert({
@@ -109,14 +108,14 @@ export async function seedClasses(
             },
           },
           update: {
-            nameAr: classNameAr,
+            lang: "ar",
             teacherId: teacher.id,
             classroomId: classroom.id,
           },
           create: {
             schoolId,
             name: className,
-            nameAr: classNameAr,
+            lang: "ar",
             subjectId: subject.id,
             teacherId: teacher.id,
             termId: term.id,
@@ -129,7 +128,7 @@ export async function seedClasses(
         classes.push({
           id: classRecord.id,
           name: classRecord.name,
-          nameAr: classRecord.nameAr || "",
+          lang: "ar",
           subjectId: subject.id,
           yearLevelId: level.id,
         })

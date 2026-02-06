@@ -54,7 +54,7 @@ export default function OperatorError({
               className="flex-1"
               variant="default"
             >
-              <Icons.refresh className="mr-2 h-4 w-4" />
+              <Icons.refresh className="me-2 h-4 w-4" />
               Try again
             </Button>
             <Button

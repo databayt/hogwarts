@@ -1,0 +1,174 @@
+// ============================================
+// FINANCE MODULE - Invoice Management
+// ============================================
+
+enum InvoiceStatus {
+  PAID
+  UNPAID
+  OVERDUE
+  CANCELLED
+}
+
+model UserInvoice {
+  id             String             @id @default(cuid())
+  invoice_no     String
+  invoice_date   DateTime
+  due_date       DateTime
+  currency       String             @default("USD")
+  from           UserInvoiceAddress @relation("FromAddress", fields: [fromAddressId], references: [id])
+  fromAddressId  String             @unique
+  to             UserInvoiceAddress @relation("ToAddress", fields: [toAddressId], references: [id])
+  toAddressId    String             @unique
+  items          UserInvoiceItem[]
+  sub_total      Float
+  discount       Float?
+  tax_percentage Float?
+  total          Float
+  notes          String?            @db.Text
+  status         InvoiceStatus      @default(UNPAID)
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId       String
+  school         School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  // Accounting integration
+  journalEntryId String?
+  journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, invoice_no])
+  @@index([userId])
+  @@index([schoolId])
+  @@index([status])
+}
+
+model UserInvoiceItem {
+  id        String      @id @default(cuid())
+  item_name String
+  quantity  Int
+  price     Float
+  total     Float
+  invoiceId String
+  invoice   UserInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  schoolId  String
+  school    School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([invoiceId])
+  @@index([schoolId])
+}
+
+model UserInvoiceAddress {
+  id          String       @id @default(cuid())
+  name        String
+  email       String?
+  address1    String
+  address2    String?
+  address3    String?
+  fromInvoice UserInvoice? @relation("FromAddress")
+  toInvoice   UserInvoice? @relation("ToAddress")
+  schoolId    String
+  school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([schoolId])
+}
+
+model UserInvoiceSettings {
+  id          String                @id @default(cuid())
+  invoiceLogo String?
+  signature   UserInvoiceSignature?
+  userId      String                @unique
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId    String
+  school      School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([schoolId])
+}
+
+model UserInvoiceSignature {
+  id         String              @id @default(cuid())
+  name       String?
+  image      String?
+  settingsId String              @unique
+  settings   UserInvoiceSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+  schoolId   String
+  school     School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+}
+
+// Invoice payment receipt model (for billing/subscription module)
+// This is separate from ExpenseReceipt which tracks expense receipts with OCR
+model Receipt {
+  id         String    @id @default(cuid())
+  invoiceId  String
+  fileName   String
+  fileUrl    String
+  amount     Int
+  status     String    @default("pending") // pending, approved, rejected
+  notes      String?   @db.Text
+  reviewedAt DateTime?
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([invoiceId])
+  @@index([status])
+}
+
+// Receipt with OCR for expense tracking
+model ExpenseReceipt {
+  id       String @id @default(cuid())
+  schoolId String
+  userId   String
+
+  // File information
+  fileName        String
+  fileDisplayName String?
+  fileUrl         String
+  fileSize        Int
+  mimeType        String
+
+  // Processing status
+  status String @default("pending") // pending, processing, processed, error
+
+  // Extracted data (OCR results)
+  merchantName      String?
+  merchantAddress   String?
+  merchantContact   String?
+  transactionDate   DateTime?
+  transactionAmount Decimal?  @db.Decimal(10, 2)
+  currency          String?   @default("USD")
+  receiptSummary    String?   @db.Text
+
+  // Line items (stored as JSON)
+  items Json? // Array of {name, quantity, unitPrice, totalPrice}
+
+  // Link to expense
+  expenseId String?
+  expense   Expense? @relation(fields: [expenseId], references: [id])
+
+  // Metadata
+  uploadedAt  DateTime  @default(now())
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([userId])
+  @@index([status])
+  @@index([transactionDate])
+}

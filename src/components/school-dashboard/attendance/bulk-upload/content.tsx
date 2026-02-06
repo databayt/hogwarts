@@ -394,7 +394,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         </CardHeader>
         <CardContent>
           <Button onClick={downloadTemplate} variant="outline">
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            <FileSpreadsheet className="me-2 h-4 w-4" />
             {d?.template?.download || "Download CSV Template"}
           </Button>
         </CardContent>
@@ -468,7 +468,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                     <span>{d?.upload?.fileUploaded || "File uploaded: "}</span>
                     <span className="font-medium">{uploadedFile.fileId}</span>
                     {parsedRecords.length > 0 && (
-                      <span className="ml-2 text-green-600">
+                      <span className="ms-2 text-green-600">
                         ({parsedRecords.length} records parsed)
                       </span>
                     )}
@@ -512,12 +512,12 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
               >
                 {isUploading ? (
                   <>
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
                     {d?.upload?.processing || "Processing..."}
                   </>
                 ) : (
                   <>
-                    <Upload className="mr-2 h-4 w-4" />
+                    <Upload className="me-2 h-4 w-4" />
                     {d?.upload?.processButton || "Process Attendance Data"}
                     {parsedRecords.length > 0 &&
                       ` (${parsedRecords.length} records)`}
@@ -537,7 +537,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 onClick={() => setShowUploader(true)}
                 disabled={isUploading}
               >
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="me-2 h-4 w-4" />
                 {d?.upload?.selectButton || "Select File"}
               </Button>
             </div>
@@ -672,7 +672,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className={`text-sm font-medium ${rateColor}`}>
                         {upload.successful}/{upload.total}
                       </p>

@@ -142,7 +142,7 @@ export function AllInvoices({
       {showFilters && (
         <div className="grid gap-4 md:grid-cols-5">
           <div className="relative md:col-span-2">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+            <Search className="text-muted-foreground top-[^ ]+ absolute start-3 size-4 -translate-y-1/2" />
             <Input
               placeholder="Search invoices..."
               value={filters.search}

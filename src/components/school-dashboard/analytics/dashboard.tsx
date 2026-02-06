@@ -901,7 +901,7 @@ export function AnalyticsDashboard({
                     Current collection rate
                   </p>
                   <Separator className="my-4" />
-                  <div className="space-y-3 text-left">
+                  <div className="space-y-3 text-start">
                     <div className="flex justify-between text-sm">
                       <span>On-time payments</span>
                       <span className="font-medium">78%</span>

@@ -258,7 +258,7 @@ export function NotificationCenter({
           !notification.read && "bg-accent/50",
           notification.priority === "urgent" &&
             !notification.read &&
-            "border-l-destructive border-l-4"
+            "border-s-destructive border-s-4"
         )}
       >
         {bulkActionMode && (

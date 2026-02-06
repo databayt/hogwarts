@@ -242,7 +242,7 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
                                 variant="secondary"
                                 className={`${option.color} shrink-0`}
                               >
-                                <Icon className="mr-1 h-3 w-3" />
+                                <Icon className="me-1 h-3 w-3" />
                                 {option.label}
                               </Badge>
                               <span className="text-muted-foreground text-xs">
@@ -269,7 +269,7 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
                           variant="secondary"
                           className={selectedPriority.color}
                         >
-                          <PriorityIcon className="mr-1 h-3 w-3" />
+                          <PriorityIcon className="me-1 h-3 w-3" />
                           {selectedPriority.label}
                         </Badge>
                       </div>
@@ -283,7 +283,7 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
                       <SelectItem key={option.value} value={option.value}>
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary" className={option.color}>
-                            <Icon className="mr-1 h-3 w-3" />
+                            <Icon className="me-1 h-3 w-3" />
                             {option.label}
                           </Badge>
                           <span className="text-muted-foreground text-xs">

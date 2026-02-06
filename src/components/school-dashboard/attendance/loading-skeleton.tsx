@@ -23,7 +23,7 @@ export function AttendanceTableSkeleton({ rows = 10 }: { rows?: number }) {
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <Skeleton className="h-8 w-56" />
             <Skeleton className="h-8 w-44" />
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ms-auto flex items-center gap-2">
               <Skeleton className="h-8 w-24" />
               <Skeleton className="h-8 w-24" />
               <Skeleton className="h-8 w-20" />
@@ -59,7 +59,7 @@ export function AttendanceTableSkeleton({ rows = 10 }: { rows?: number }) {
                   <Skeleton className="h-4 w-8" />
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <Skeleton className="h-8 w-8 rounded-full" />
                     <Skeleton className="h-4 w-32" />
                   </div>
@@ -148,7 +148,7 @@ export function AttendanceChartSkeleton() {
 // Inline loading state for buttons
 export function ButtonLoadingSkeleton({ className }: { className?: string }) {
   return (
-    <div className={`inline-flex items-center space-x-2 ${className}`}>
+    <div className={`inline-flex items-center gap-2 ${className}`}>
       <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-900"></div>
       <span>Loading...</span>
     </div>

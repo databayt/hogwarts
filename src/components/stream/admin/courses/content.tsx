@@ -4,7 +4,15 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookOpen, Edit, Layers, MoreHorizontal, PlusIcon } from "lucide-react"
+import {
+  BookOpen,
+  Edit,
+  Grid3X3,
+  Layers,
+  List,
+  MoreHorizontal,
+  PlusIcon,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -20,27 +28,11 @@ import {
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { AdminCoursesTable } from "@/components/stream/admin/courses/table"
 
+import type { CourseRow } from "./columns"
 import { DeleteCourseDialog } from "./delete-dialog"
 import { StreamCourseForm } from "./form"
-
-interface Course {
-  id: string
-  title: string
-  slug: string
-  description: string | null
-  imageUrl: string | null
-  price: number | null
-  isPublished: boolean
-  createdAt: Date
-  category?: { name: string } | null
-  chapters: Array<{
-    lessons: Array<{ id: string }>
-  }>
-  _count: {
-    enrollments: number
-  }
-}
 
 interface Category {
   id: string
@@ -50,7 +42,8 @@ interface Category {
 interface Props {
   dictionary: any
   lang: string
-  courses: Course[]
+  initialData: CourseRow[]
+  total: number
   categories?: Category[]
 }
 
@@ -71,7 +64,7 @@ function AdminCourseCard({
   onDelete,
   onEdit,
 }: {
-  course: Course
+  course: CourseRow
   lang: string
   dictionary: any
   onDelete: () => void
@@ -83,7 +76,7 @@ function AdminCourseCard({
 
   return (
     <div className="group relative">
-      {/* Card Image - Same as public */}
+      {/* Card Image */}
       <div className="relative aspect-video overflow-hidden rounded-xl">
         {course.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -107,7 +100,7 @@ function AdminCourseCard({
           </Badge>
         </div>
 
-        {/* Admin Actions - Top Right */}
+        {/* Admin Actions */}
         <div className="absolute top-2 right-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -117,12 +110,12 @@ function AdminCourseCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onEdit}>
-                <Edit className="mr-2 size-4" />
+                <Edit className="me-2 size-4" />
                 {dictionary?.stream?.adminCourses?.editInfo ?? "Edit Info"}
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/stream/admin/courses/${course.id}/edit`}>
-                  <Layers className="mr-2 size-4" />
+                  <Layers className="me-2 size-4" />
                   {dictionary?.stream?.adminCourses?.manageChapters ??
                     "Manage Chapters"}
                 </Link>
@@ -139,9 +132,8 @@ function AdminCourseCard({
         </div>
       </div>
 
-      {/* Content - Same as public */}
-      <div className={cn("space-y-1.5 px-2 pt-3", isRTL && "text-right")}>
-        {/* Category */}
+      {/* Content */}
+      <div className={cn("space-y-1.5 px-2 pt-3", isRTL && "text-end")}>
         <div
           className={cn(
             "flex items-center gap-1.5",
@@ -155,17 +147,14 @@ function AdminCourseCard({
           </span>
         </div>
 
-        {/* Title - Link to edit */}
         <Link href={`/${lang}/stream/admin/courses/${course.id}/edit`}>
           <h3 className="group-hover:text-primary line-clamp-2 text-sm leading-tight font-semibold transition-colors">
             {course.title}
           </h3>
         </Link>
 
-        {/* Type */}
         <p className="text-muted-foreground text-xs">{courseType}</p>
 
-        {/* Stats Row */}
         <div
           className={cn(
             "flex items-center gap-3 text-xs",
@@ -191,7 +180,8 @@ function AdminCourseCard({
 export default function AdminCoursesContent({
   dictionary,
   lang,
-  courses,
+  initialData,
+  total,
   categories = [],
 }: Props) {
   const { dictionary: dict } = useDictionary()
@@ -199,6 +189,7 @@ export default function AdminCoursesContent({
   const { openModal } = useModal()
   const isRTL = lang === "ar"
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [view, setView] = useState<"grid" | "table">("grid")
 
   const handleDelete = () => {
     router.refresh()
@@ -215,76 +206,110 @@ export default function AdminCoursesContent({
         <div>
           <h2>{dict?.stream?.adminCourses?.yourCourses ?? "Your Courses"}</h2>
           <p className="muted">
-            {courses.length}{" "}
+            {total}{" "}
             {dict?.stream?.adminCourses?.coursesInLibrary ??
               "courses in your library"}
           </p>
         </div>
-        <Button onClick={() => openModal()}>
-          <PlusIcon className="size-4" />
-          {dict?.stream?.adminCourses?.createCourse ?? "Create Course"}
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="flex items-center rounded-md border">
+            <Button
+              variant={view === "grid" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-8 w-8 rounded-r-none"
+              onClick={() => setView("grid")}
+            >
+              <Grid3X3 className="size-4" />
+            </Button>
+            <Button
+              variant={view === "table" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-8 w-8 rounded-l-none"
+              onClick={() => setView("table")}
+            >
+              <List className="size-4" />
+            </Button>
+          </div>
+          <Button onClick={() => openModal()}>
+            <PlusIcon className="size-4" />
+            {dict?.stream?.adminCourses?.createCourse ?? "Create Course"}
+          </Button>
+        </div>
       </div>
 
-      {/* Grid with hover effect like public courses */}
-      {courses.length === 0 ? (
-        <Card>
-          <CardContent className="py-10">
-            <div className="text-center">
-              <BookOpen className="text-muted-foreground mx-auto mb-4 size-12" />
-              <h3>
-                {dict?.stream?.adminCourses?.noCoursesYet ?? "No courses yet"}
-              </h3>
-              <p className="muted mb-4">
-                {dict?.stream?.adminCourses?.createFirstCourse ??
-                  "Create your first course to get started with Stream LMS"}
-              </p>
-              <Button onClick={() => openModal()}>
-                <PlusIcon className="size-4" />
-                {dict?.stream?.adminCourses?.createYourFirstCourse ??
-                  "Create Your First Course"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Table View */}
+      {view === "table" ? (
+        <AdminCoursesTable
+          initialData={initialData}
+          total={total}
+          lang={lang}
+          dictionary={dict}
+        />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {courses.map((course, idx) => (
-            <div
-              key={course.id}
-              className="group relative block h-full w-full p-2"
-              onMouseEnter={() => setHoveredIndex(idx)}
-              onMouseLeave={() => setHoveredIndex(null)}
-            >
-              <AnimatePresence>
-                {hoveredIndex === idx && (
-                  <motion.span
-                    className="bg-muted dark:bg-muted/80 absolute inset-0 block h-full w-full rounded-2xl"
-                    layoutId="adminCourseHoverBackground"
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: 1,
-                      transition: { duration: 0.15 },
-                    }}
-                    exit={{
-                      opacity: 0,
-                      transition: { duration: 0.15, delay: 0.2 },
-                    }}
-                  />
-                )}
-              </AnimatePresence>
-              <div className="relative z-10">
-                <AdminCourseCard
-                  course={course}
-                  lang={lang}
-                  dictionary={dict}
-                  onDelete={handleDelete}
-                  onEdit={() => openModal(course.id)}
-                />
-              </div>
+        /* Grid View */
+        <>
+          {initialData.length === 0 ? (
+            <Card>
+              <CardContent className="py-10">
+                <div className="text-center">
+                  <BookOpen className="text-muted-foreground mx-auto mb-4 size-12" />
+                  <h3>
+                    {dict?.stream?.adminCourses?.noCoursesYet ??
+                      "No courses yet"}
+                  </h3>
+                  <p className="muted mb-4">
+                    {dict?.stream?.adminCourses?.createFirstCourse ??
+                      "Create your first course to get started with Stream LMS"}
+                  </p>
+                  <Button onClick={() => openModal()}>
+                    <PlusIcon className="size-4" />
+                    {dict?.stream?.adminCourses?.createYourFirstCourse ??
+                      "Create Your First Course"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {initialData.map((course, idx) => (
+                <div
+                  key={course.id}
+                  className="group relative block h-full w-full p-2"
+                  onMouseEnter={() => setHoveredIndex(idx)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                >
+                  <AnimatePresence>
+                    {hoveredIndex === idx && (
+                      <motion.span
+                        className="bg-muted dark:bg-muted/80 absolute inset-0 block h-full w-full rounded-2xl"
+                        layoutId="adminCourseHoverBackground"
+                        initial={{ opacity: 0 }}
+                        animate={{
+                          opacity: 1,
+                          transition: { duration: 0.15 },
+                        }}
+                        exit={{
+                          opacity: 0,
+                          transition: { duration: 0.15, delay: 0.2 },
+                        }}
+                      />
+                    )}
+                  </AnimatePresence>
+                  <div className="relative z-10">
+                    <AdminCourseCard
+                      course={course}
+                      lang={lang}
+                      dictionary={dict}
+                      onDelete={handleDelete}
+                      onEdit={() => openModal(course.id)}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Course Create/Edit Modal */}

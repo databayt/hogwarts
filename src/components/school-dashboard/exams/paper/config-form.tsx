@@ -207,7 +207,7 @@ export function ConfigForm({
                       {Object.entries(PAPER_TEMPLATES).map(
                         ([key, template]) => (
                           <SelectItem key={key} value={key}>
-                            {isRTL ? template.labelAr : template.label}
+                            {template.label}
                           </SelectItem>
                         )
                       )}
@@ -217,7 +217,7 @@ export function ConfigForm({
                     {
                       PAPER_TEMPLATES[
                         field.value as keyof typeof PAPER_TEMPLATES
-                      ]?.[isRTL ? "descriptionAr" : "description"]
+                      ]?.description
                     }
                   </FormDescription>
                   <FormMessage />
@@ -246,16 +246,15 @@ export function ConfigForm({
                     <SelectContent>
                       {Object.entries(PAPER_LAYOUTS).map(([key, layout]) => (
                         <SelectItem key={key} value={key}>
-                          {isRTL ? layout.labelAr : layout.label}
+                          {layout.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
                     {
-                      PAPER_LAYOUTS[
-                        field.value as keyof typeof PAPER_LAYOUTS
-                      ]?.[isRTL ? "descriptionAr" : "description"]
+                      PAPER_LAYOUTS[field.value as keyof typeof PAPER_LAYOUTS]
+                        ?.description
                     }
                   </FormDescription>
                   <FormMessage />
@@ -286,7 +285,7 @@ export function ConfigForm({
                     <SelectContent>
                       {Object.entries(ANSWER_SHEET_TYPES).map(([key, type]) => (
                         <SelectItem key={key} value={key}>
-                          {isRTL ? type.labelAr : type.label}
+                          {type.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -295,7 +294,7 @@ export function ConfigForm({
                     {
                       ANSWER_SHEET_TYPES[
                         field.value as keyof typeof ANSWER_SHEET_TYPES
-                      ]?.[isRTL ? "descriptionAr" : "description"]
+                      ]?.description
                     }
                   </FormDescription>
                   <FormMessage />

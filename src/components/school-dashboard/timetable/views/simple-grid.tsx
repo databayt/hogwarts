@@ -19,7 +19,7 @@ const SUBJECT_COLORS: Record<string, string> = {
   PE: "bg-orange-100 hover:bg-orange-200 border-orange-300 dark:bg-orange-900/50 dark:hover:bg-orange-900/70 dark:border-orange-800",
   Music:
     "bg-yellow-100 hover:bg-yellow-200 border-yellow-300 dark:bg-yellow-900/50 dark:hover:bg-yellow-900/70 dark:border-yellow-800",
-  Art: "bg-rose-100 hover:bg-rose-200 border-rose-300 dark:bg-rose-900/50 dark:hover:bg-rose-900/70 dark:border-rose-800",
+  Art: "bg-rose-100 hover:bg-rose-200 border-eose-300 dark:bg-rose-900/50 dark:hover:bg-rose-900/70 dark:border-eose-800",
   History:
     "bg-amber-100 hover:bg-amber-200 border-amber-300 dark:bg-amber-900/50 dark:hover:bg-amber-900/70 dark:border-amber-800",
   Geography:
@@ -42,7 +42,7 @@ const SUBJECT_COLORS: Record<string, string> = {
 
 // Fallback colors with hover effects for unknown subjects
 const FALLBACK_COLORS = [
-  "bg-red-100 hover:bg-red-200 border-red-300 dark:bg-red-900/50 dark:hover:bg-red-900/70 dark:border-red-800",
+  "bg-red-100 hover:bg-red-200 border-eed-300 dark:bg-red-900/50 dark:hover:bg-red-900/70 dark:border-eed-800",
   "bg-orange-100 hover:bg-orange-200 border-orange-300 dark:bg-orange-900/50 dark:hover:bg-orange-900/70 dark:border-orange-800",
   "bg-yellow-100 hover:bg-yellow-200 border-yellow-300 dark:bg-yellow-900/50 dark:hover:bg-yellow-900/70 dark:border-yellow-800",
   "bg-green-100 hover:bg-green-200 border-green-300 dark:bg-green-900/50 dark:hover:bg-green-900/70 dark:border-green-800",
@@ -219,7 +219,7 @@ export default function SimpleGrid({
             gridColsClass
           )}
         >
-          <div className="flex flex-col items-center justify-center border-r border-neutral-200 px-2 py-3 text-neutral-500 sm:px-8 sm:py-5 dark:border-neutral-700 dark:text-neutral-400 print:py-3">
+          <div className="flex flex-col items-center justify-center border-e border-neutral-200 px-2 py-3 text-neutral-500 sm:px-8 sm:py-5 dark:border-neutral-700 dark:text-neutral-400 print:py-3">
             <Clock className="h-4 w-4 print:h-5 print:w-5" />
           </div>
           {sortedDays.map((day, index) => (
@@ -228,7 +228,7 @@ export default function SimpleGrid({
               className={cn(
                 "px-4 py-2 text-center text-sm font-medium text-neutral-700 sm:px-8 sm:py-5 sm:text-base dark:text-neutral-300",
                 index < sortedDays.length - 1
-                  ? "border-r border-neutral-200 dark:border-neutral-700"
+                  ? "border-e border-neutral-200 dark:border-neutral-700"
                   : "",
                 "print:py-3 print:text-base print:font-semibold"
               )}
@@ -245,7 +245,7 @@ export default function SimpleGrid({
               {/* Lunch Row (inserted after specified period) */}
               {lunchAfterPeriod && periodIdx + 1 === lunchAfterPeriod && (
                 <div className={cn("grid", gridColsClass)}>
-                  <div className="flex flex-col items-center justify-center border-r border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800">
+                  <div className="flex flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800">
                     <span className="font-medium text-neutral-700 dark:text-neutral-300">
                       Lunch
                     </span>
@@ -269,7 +269,7 @@ export default function SimpleGrid({
               {/* Regular Period Row */}
               <div className={cn("grid", gridColsClass)}>
                 {/* Period Cell */}
-                <div className="flex flex-col items-center justify-center border-r border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800 print:py-3">
+                <div className="flex flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800 print:py-3">
                   <span className="text-sm font-medium text-neutral-700 sm:text-base dark:text-neutral-300 print:text-sm">
                     Period {period.name}
                   </span>
@@ -292,7 +292,7 @@ export default function SimpleGrid({
                           ? getSubjectColor(display.primary)
                           : "bg-neutral-50 dark:bg-neutral-800/30",
                         dayIdx < sortedDays.length - 1
-                          ? "border-r border-neutral-200 dark:border-neutral-700"
+                          ? "border-e border-neutral-200 dark:border-neutral-700"
                           : "",
                         editable && "cursor-pointer hover:shadow-inner",
                         "print:min-h-12 print:py-2"

@@ -66,7 +66,7 @@ function DeleteAccountModal({
             error: (err) => err,
           })
         }}
-        className="bg-accent flex flex-col space-y-6 px-4 py-8 text-left sm:px-16"
+        className="bg-accent flex flex-col space-y-6 px-4 py-8 text-start sm:px-16"
       >
         <div>
           <label htmlFor="verification" className="muted block">

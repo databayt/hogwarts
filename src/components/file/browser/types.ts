@@ -184,7 +184,6 @@ export interface UseBrowserReturn {
 
 export interface ContextMenuItem {
   label: string
-  labelAr?: string
   icon?: string
   action: () => void
   disabled?: boolean

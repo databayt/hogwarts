@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { Icons } from "@/components/icons"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import { submitApplicationAction } from "./actions"
 import type { ReviewFormProps, ReviewFormRef } from "./types"
 
@@ -21,7 +21,7 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
     const campaignId = params.campaignId as string
     const { locale: lang } = useLocale()
     const isRTL = lang === "ar"
-    const { session, campaign } = useApplication()
+    const { session, campaign } = useApplySession()
 
     const dict = ((dictionary as Record<string, Record<string, string>> | null)
       ?.apply?.review ?? {}) as Record<string, string>
@@ -54,7 +54,7 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
         throw new Error(result.error || "Failed to submit application")
       }
 
-      onSuccess?.(result.applicationNumber || "")
+      onSuccess?.(result.data?.applicationNumber || "")
     }
 
     useImperativeHandle(ref, () => ({ submitApplication }))

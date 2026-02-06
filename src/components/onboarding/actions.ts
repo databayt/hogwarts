@@ -3,412 +3,127 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
-// TEMPORARILY: Removed top-level db import to isolate 500 error
-// Using dynamic import inside functions that need db
-// import { db } from "@/lib/db"
+import {
+  createActionResponse,
+  type ActionResponse,
+} from "@/lib/action-response"
+import { db } from "@/lib/db"
 
-// Dynamic db import to avoid module-level initialization issues
-async function getDb() {
-  const { db } = await import("@/lib/db")
-  return db
-}
-
-// Removed logger import to isolate 500 error
-
-// TEMPORARILY: Local ActionResponse to bypass auth-security import chain
-// This isolates the 500 error issue to the auth module
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface ActionResponse<T = any> {
-  success: boolean
-  data?: T
-  error?: string
-  code?: string
-}
-
-function createActionResponse<T>(data?: T, error?: unknown): ActionResponse<T> {
-  if (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "An error occurred"
-    return { success: false, error: errorMessage, code: "ERROR" }
-  }
-  return { success: true, data }
-}
-
-// Lazy auth imports - only load when needed to avoid module-level failures
-async function getAuthContextLazy() {
-  const { getAuthContext } = await import("@/lib/auth-security")
-  return getAuthContext()
-}
-
-async function requireSchoolOwnershipLazy(schoolId: string) {
-  const { requireSchoolOwnership } = await import("@/lib/auth-security")
-  return requireSchoolOwnership(schoolId)
-}
-
-// Test action to verify server actions work in production
-export async function testServerAction(): Promise<ActionResponse> {
-  console.log("🧪 [TEST ACTION] Called at", new Date().toISOString())
-  return {
-    success: true,
-    data: {
-      message: "Server action works!",
-      timestamp: new Date().toISOString(),
-    },
-  }
-}
-
-// Types for listing actions
-export interface ListingFormData {
-  id?: string
-  name?: string
-  description?: string
-  propertyType?: string
-  address?: string
-  logoUrl?: string
-  maxStudents?: number
-  maxTeachers?: number
-  planType?: string
-  website?: string
-  pricePerNight?: number
-  domain?: string
-  // Branding fields
-  primaryColor?: string
-  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "full"
-  shadow?: "none" | "sm" | "md" | "lg" | "xl"
-  // Capacity fields
-  maxClasses?: number
-  maxFacilities?: number
-  // School fields
-  schoolLevel?: "primary" | "secondary" | "both"
-  schoolType?: "private" | "public" | "international" | "technical" | "special"
-  // Pricing fields
-  tuitionFee?: number
-  registrationFee?: number
-  applicationFee?: number
-  currency?: "USD" | "EUR" | "GBP" | "CAD" | "AUD"
-  paymentSchedule?: "monthly" | "quarterly" | "semester" | "annual"
-  // Listing fields
-  title?: string
-  city?: string
-  state?: string
-  guestCount?: number
-  bedrooms?: number
-  bathrooms?: number
-  amenities?: string[]
-  // Status fields
-  draft?: boolean
-  isPublished?: boolean
-}
-
-// Listing CRUD actions
-export async function createListing(
-  data: ListingFormData
-): Promise<ActionResponse> {
-  try {
-    // TEMPORARILY: Bypass auth to isolate 500 error
-    console.log("🧪 [CREATE LISTING] Bypassing auth temporarily...")
-
-    // Sanitize and validate input data
-    const sanitizedData = {
-      ...data,
-      name: data.name?.trim() || "New School",
-      domain: data.domain?.toLowerCase().trim() || `school-${Date.now()}`,
-      updatedAt: new Date(),
-      // Link to the authenticated user (ensure this field exists in your schema)
-      // ownerId: authContext.userId, // Uncomment if you have this field
-    }
-
-    // Validate domain uniqueness
-    const db = await getDb()
-    if (sanitizedData.domain !== `school-${Date.now()}`) {
-      const existingDomain = await db.school.findFirst({
-        where: { domain: sanitizedData.domain },
-        select: { id: true },
-      })
-
-      if (existingDomain) {
-        return createActionResponse(undefined, {
-          message: "Domain already exists",
-          name: "ValidationError",
-        })
-      }
-    }
-
-    const listing = await db.school.create({
-      data: sanitizedData,
-    })
-
-    revalidatePath("/onboarding")
-    return createActionResponse(listing)
-  } catch (error) {
-    console.error("Failed to create school listing", error)
-    return createActionResponse(undefined, error)
-  }
-}
-
-export async function updateListing(
-  id: string,
-  data: Partial<ListingFormData>
-): Promise<ActionResponse> {
-  try {
-    // TEMPORARILY: Bypass auth to isolate 500 error
-    console.log("🧪 [UPDATE LISTING] Bypassing auth temporarily...")
-
-    const db = await getDb()
-    const listing = await db.school.update({
-      where: { id },
-      data: {
-        ...data,
-        updatedAt: new Date(),
-      },
-    })
-
-    revalidatePath("/onboarding")
-    return createActionResponse(listing)
-  } catch (error) {
-    return createActionResponse(undefined, error)
-  }
-}
+import { getAuthContext, requireSchoolOwnership } from "./auth-helpers"
 
 export async function getListing(id: string): Promise<ActionResponse> {
-  console.log("🧪 [GET LISTING] ULTRA MINIMAL TEST", { schoolId: id })
-
-  // STEP 1: Return hardcoded response to test if server action works at all
-  // If this fails, the issue is with the module bundling
-  // If this works, the issue is with Prisma/db
-
   try {
-    // Return hardcoded school data for testing
-    console.log("🧪 [GET LISTING] Returning hardcoded response...")
-
-    // UNCOMMENT BELOW TO TEST WITH DB ONCE HARDCODED WORKS:
-    // const school = await db.school.findUnique({ where: { id } })
-    // if (!school) return createActionResponse(undefined, { message: "School not found" })
-    // return createActionResponse(school)
-
-    return {
-      success: true,
-      data: {
-        id: id,
-        name: "Test School",
-        domain: "test",
-        logoUrl: null,
-        address: null,
-        phoneNumber: null,
-        email: null,
-        website: null,
-        timezone: null,
-        planType: null,
-        maxStudents: null,
-        maxTeachers: null,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
+    await requireSchoolOwnership(id)
+    const school = await db.school.findUnique({ where: { id } })
+    if (!school) {
+      return createActionResponse(undefined, new Error("School not found"))
     }
+    return createActionResponse(school)
   } catch (error) {
-    console.error("🧪 [GET LISTING] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    }
+    return createActionResponse(undefined, error)
   }
 }
 
 export async function getCurrentUserSchool(): Promise<ActionResponse> {
   try {
-    const authContext = await getAuthContextLazy()
-    console.log("Getting current user school", {
-      userId: authContext.userId,
-      hasSessionSchoolId: !!authContext.schoolId,
-    })
+    const authContext = await getAuthContext()
 
-    // If user has a schoolId in session, return it
     if (authContext.schoolId) {
-      console.log("Returning session schoolId", {
-        schoolId: authContext.schoolId,
-      })
       return createActionResponse({ schoolId: authContext.schoolId })
     }
 
-    // Otherwise check database for user's school
-    const db = await getDb()
     const user = await db.user.findUnique({
       where: { id: authContext.userId },
-      select: { id: true, schoolId: true, email: true },
-    })
-
-    console.log("Database user lookup", {
-      userId: authContext.userId,
-      hasSchoolId: !!user?.schoolId,
+      select: { id: true, schoolId: true },
     })
 
     if (user?.schoolId) {
-      console.log("Returning database schoolId", { schoolId: user.schoolId })
       return createActionResponse({ schoolId: user.schoolId })
     }
 
-    console.log("No schoolId found for user", { userId: authContext.userId })
     return createActionResponse(null, {
       message: "No school found for user",
       code: "NO_SCHOOL",
     })
   } catch (error) {
-    console.error("Failed to get current user school", error, {
-      action: "getCurrentUserSchool",
-    })
     return createActionResponse(undefined, error)
   }
 }
 
 export async function getUserSchools(): Promise<ActionResponse> {
-  let authContext: any
   try {
-    authContext = await getAuthContextLazy()
-    const db = await getDb()
+    const authContext = await getAuthContext()
 
-    // Get schools associated with this user
-    const schools = await db.school.findMany({
-      where: {
-        // Filter by user's schoolId if they belong to a specific school
-        // For DEVELOPER role, they might see all schools, but for others filter by schoolId
-        ...(authContext.schoolId && { id: authContext.schoolId }),
-        // If user has no schoolId (like DEVELOPER), we could show schools they have access to
-        // For now, if no schoolId, show schools where they have user record
-        ...(!authContext.schoolId && {
-          users: {
-            some: {
-              id: authContext.userId,
-            },
-          },
-        }),
-      },
-      select: {
-        id: true,
-        name: true,
-        domain: true,
-        createdAt: true,
-        updatedAt: true,
-        maxStudents: true,
-        maxTeachers: true,
-        planType: true, // This contains school level/type info
-        address: true,
-        website: true, // This contains pricing info
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-      take: 2, // Limit to 2 schools
-    })
+    const where = authContext.schoolId
+      ? { id: authContext.schoolId }
+      : { users: { some: { id: authContext.userId } } }
 
-    // Get total count for "more" indicator
-    const totalCount = await db.school.count({
-      where: {
-        // Same filter as above
-        ...(authContext.schoolId && { id: authContext.schoolId }),
-        ...(!authContext.schoolId && {
-          users: {
-            some: {
-              id: authContext.userId,
-            },
-          },
-        }),
-      },
-    })
+    const [schools, totalCount] = await Promise.all([
+      db.school.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          domain: true,
+          createdAt: true,
+          updatedAt: true,
+          maxStudents: true,
+          maxTeachers: true,
+          planType: true,
+          schoolType: true,
+          address: true,
+          isPublished: true,
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 2,
+      }),
+      db.school.count({ where }),
+    ])
 
     return createActionResponse({ schools, totalCount })
   } catch (error) {
-    console.error("Failed to get user schools", error, {
-      userId: authContext?.userId,
-    })
     return createActionResponse(undefined, error)
   }
 }
 
 /**
- * Initialize school setup for onboarding
- *
- * PRODUCTION-READY: Atomic school-user linking with session refresh
- *
- * Flow:
- * 1. Check idempotency (user may already have a school)
- * 2. Create school + link user in atomic transaction
- * 3. Trigger session refresh for immediate schoolId access
- * 4. Return school with redirect hint for client-side navigation
- *
- * Returns:
- * - school: The created or existing school
- * - _redirect: Suggested redirect path to first onboarding step
- * - _sessionRefreshRequired: Hint for client to call updateSession()
+ * Initialize school setup for onboarding.
+ * Atomic school-user linking with session refresh.
  */
 export async function initializeSchoolSetup(): Promise<ActionResponse> {
-  const timestamp = new Date().toISOString()
-  console.log("initializeSchoolSetup started", { timestamp })
-
   try {
-    console.log("Getting auth context")
-    const authContext = await getAuthContextLazy()
-    console.log("Auth context received", {
-      userId: authContext.userId,
-      email: authContext.email,
-      hasSessionSchoolId: !!authContext.schoolId,
-    })
+    const authContext = await getAuthContext()
 
-    // Use the production-ready school access system with atomic transactions
     const { ensureUserSchool } = await import("@/lib/school-access")
     const schoolResult = await ensureUserSchool(authContext.userId)
 
     if (!schoolResult.success) {
-      console.error("Failed to ensure user school:", schoolResult.error)
       return createActionResponse(undefined, {
         message: schoolResult.error || "Failed to initialize school",
         code: "SCHOOL_CREATION_FAILED",
       })
     }
 
-    console.log("School ensured successfully", {
-      schoolId: schoolResult.schoolId,
-      schoolName: schoolResult.school?.name,
-      userId: authContext.userId,
-    })
-
-    // Revalidate the onboarding path for server-side cache
     revalidatePath("/onboarding")
 
-    // Return school with navigation hints for the client
-    // Client should:
-    // 1. Call updateSession() to refresh JWT with new schoolId
-    // 2. Navigate to _redirect path
     return createActionResponse({
       ...schoolResult.school,
       _redirect: `/onboarding/${schoolResult.schoolId}/about-school`,
       _sessionRefreshRequired: true,
     })
   } catch (error) {
-    console.error("initializeSchoolSetup FAILED:", {
-      error: error instanceof Error ? error.message : "Unknown error",
-      errorType: error?.constructor?.name,
-      failureTimestamp: new Date().toISOString(),
-    })
     return createActionResponse(undefined, error)
   }
 }
 
-/**
- * Reserve a subdomain for a school during onboarding
- */
 export async function reserveSubdomainForSchool(
   schoolId: string,
   subdomain: string
 ): Promise<ActionResponse> {
   try {
-    // Validate user has ownership/access to this school
-    await requireSchoolOwnershipLazy(schoolId)
+    await requireSchoolOwnership(schoolId)
 
-    // Import the subdomain actions
     const { reserveSubdomain } = await import("@/lib/subdomain-actions")
-
-    // Reserve the subdomain
     const result = await reserveSubdomain(subdomain, schoolId)
 
     if (result.success) {
@@ -425,9 +140,7 @@ export async function getSchoolSetupStatus(
   schoolId: string
 ): Promise<ActionResponse> {
   try {
-    // Validate user has ownership/access to this school
-    await requireSchoolOwnershipLazy(schoolId)
-    const db = await getDb()
+    await requireSchoolOwnership(schoolId)
 
     const school = await db.school.findUnique({
       where: { id: schoolId },
@@ -435,10 +148,19 @@ export async function getSchoolSetupStatus(
         id: true,
         name: true,
         address: true,
+        schoolType: true,
+        schoolLevel: true,
+        city: true,
+        state: true,
+        country: true,
         maxStudents: true,
         maxTeachers: true,
-        planType: true,
-        website: true,
+        maxClasses: true,
+        tuitionFee: true,
+        domain: true,
+        isPublished: true,
+        onboardingStep: true,
+        onboardingCompletedAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -448,14 +170,13 @@ export async function getSchoolSetupStatus(
       throw new Error("School not found")
     }
 
-    // Calculate setup completion percentage
     const checks = [
       !!school.name && school.name !== "New School",
+      !!school.schoolType,
       !!school.address,
-      !!school.planType?.includes("-"), // Has school description
-      !!school.website?.startsWith("pricing-set-"), // Has pricing
       !!school.maxStudents,
-      !!school.maxTeachers,
+      !!school.tuitionFee,
+      !!school.domain,
     ]
 
     const completionPercentage = Math.round(
@@ -464,6 +185,7 @@ export async function getSchoolSetupStatus(
 
     return createActionResponse({
       ...school,
+      tuitionFee: school.tuitionFee ? Number(school.tuitionFee) : null,
       completionPercentage,
       nextStep: getNextStep(school),
     })
@@ -472,33 +194,27 @@ export async function getSchoolSetupStatus(
   }
 }
 
-function getNextStep(school: any) {
-  if (!school.name || school.name === "New School") {
-    return "title"
-  }
-  if (!school.planType?.includes("-")) {
-    return "description"
-  }
-  if (!school.address) {
-    return "location"
-  }
-  if (!school.maxStudents || !school.maxTeachers) {
-    return "capacity"
-  }
-  if (!school.website?.startsWith("pricing-set-")) {
-    return "price"
-  }
+function getNextStep(school: {
+  name: string
+  schoolType: string | null
+  address: string | null
+  maxStudents: number
+  tuitionFee: unknown
+  domain: string
+}) {
+  if (!school.name || school.name === "New School") return "title"
+  if (!school.schoolType) return "description"
+  if (!school.address) return "location"
+  if (!school.maxStudents) return "capacity"
+  if (!school.tuitionFee) return "price"
   return "finish-setup"
 }
 
 export async function proceedToTitle(schoolId: string) {
   try {
-    // Validate user has ownership/access to this school
-    await requireSchoolOwnershipLazy(schoolId)
-
+    await requireSchoolOwnership(schoolId)
     revalidatePath(`/onboarding/${schoolId}`)
   } catch (error) {
-    console.error("Error proceeding to about-school:", error)
     throw error
   }
 

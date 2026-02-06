@@ -69,13 +69,13 @@ export async function MarkingContent({
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link href={`/${locale}/exams/mark/questions`}>
-              <FileText className="mr-2 h-4 w-4" />
+              <FileText className="me-2 h-4 w-4" />
               {dict.navigation.questionBank}
             </Link>
           </Button>
           <Button asChild>
             <Link href={`/${locale}/exams/mark/questions/create`}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               {dict.buttons.newQuestion}
             </Link>
           </Button>

@@ -72,12 +72,17 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
+import {
+  assertStudentPermission,
+  getAuthContext,
+} from "@/components/school-dashboard/listings/students/authorization"
 import {
   getStudentsSchema,
   studentCreateSchema,
@@ -111,10 +116,27 @@ export async function createStudent(
   input: z.infer<typeof studentCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    // Get authentication context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Check permission
+    try {
+      assertStudentPermission(authContext, "create", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     // Parse and validate input
@@ -200,10 +222,27 @@ export async function updateStudent(
   input: z.infer<typeof studentUpdateSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    // Get authentication context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Check permission
+    try {
+      assertStudentPermission(authContext, "update", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     // Parse and validate input
@@ -288,10 +327,27 @@ export async function deleteStudent(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
+    // Get authentication context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Check permission
+    try {
+      assertStudentPermission(authContext, "delete", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     // Parse and validate input
@@ -339,10 +395,27 @@ export async function getStudent(input: {
   id: string
 }): Promise<ActionResponse<Record<string, unknown> | null>> {
   try {
+    // Get authentication context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Check permission
+    try {
+      assertStudentPermission(authContext, "read", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     // Parse and validate input
@@ -409,10 +482,27 @@ export async function getStudents(
   }>
 > {
   try {
+    // Get authentication context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    // Check permission
+    try {
+      assertStudentPermission(authContext, "read", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized",
+      }
     }
 
     // Parse and validate input
@@ -517,10 +607,21 @@ export async function getStudentsCSV(
   input?: Partial<z.infer<typeof getStudentsSchema>>
 ): Promise<ActionResponse<string>> {
   try {
-    // Get tenant context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertStudentPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Parse and validate input
@@ -672,10 +773,21 @@ export async function getStudentsExportData(
   >
 > {
   try {
-    // Get tenant context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertStudentPermission(authContext, "export", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Parse and validate input
@@ -817,10 +929,21 @@ export async function registerStudent(
   input: any
 ): Promise<ActionResponse<any>> {
   try {
-    // Get tenant context
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertStudentPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Process guardian data first if provided
@@ -1133,6 +1256,73 @@ export async function registerStudent(
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to register student",
+    }
+  }
+}
+
+/**
+ * Bulk delete students
+ * @param input - Array of student IDs
+ * @returns Action response with count of deleted students
+ */
+export async function bulkDeleteStudents(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    try {
+      assertStudentPermission(authContext, "bulk_action", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized for bulk operations" }
+    }
+
+    const { ids } = z
+      .object({ ids: z.array(z.string().min(1)).min(1) })
+      .parse(input)
+
+    const studentModel = getModelOrThrow("student")
+
+    // Verify all students belong to this school
+    const existing = await studentModel.findMany({
+      where: { id: { in: ids }, schoolId },
+      select: { id: true },
+    })
+
+    const validIds = existing.map((s: any) => s.id as string)
+    if (validIds.length === 0) {
+      return { success: false, error: "No valid students found" }
+    }
+
+    const result = await studentModel.deleteMany({
+      where: { id: { in: validIds }, schoolId },
+    })
+
+    revalidatePath("/students")
+    return { success: true, data: { count: result.count as number } }
+  } catch (error) {
+    console.error("[bulkDeleteStudents] Error:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
+    }
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk delete students",
     }
   }
 }

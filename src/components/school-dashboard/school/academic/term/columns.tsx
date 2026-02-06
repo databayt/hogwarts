@@ -174,7 +174,7 @@ export const getTermColumns = (
               <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
               {!termItem.isActive && (
                 <DropdownMenuItem onClick={onSetActive}>
-                  <CheckCircle className="mr-2 h-4 w-4" />
+                  <CheckCircle className="me-2 h-4 w-4" />
                   {t.setActive}
                 </DropdownMenuItem>
               )}

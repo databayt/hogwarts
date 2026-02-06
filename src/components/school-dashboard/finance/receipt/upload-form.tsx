@@ -129,12 +129,12 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
       >
         {isProcessing ? (
           <>
-            <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
             Processing Receipt...
           </>
         ) : (
           <>
-            <Icons.upload className="mr-2 h-4 w-4" />
+            <Icons.upload className="me-2 h-4 w-4" />
             Process Receipt
           </>
         )}

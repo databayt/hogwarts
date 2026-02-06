@@ -54,7 +54,7 @@ export function checkSubjectPermission(
   }
 
   // TEACHER, STUDENT, STAFF can read subjects
-  if (["TEACHER", "STUDENT", "STAFF"].includes(role)) {
+  if (["TEACHER", "STUDENT", "STAFF", "ACCOUNTANT"].includes(role)) {
     if (action === "read") {
       if (!subject?.schoolId) return false
       return schoolId === subject.schoolId
@@ -125,6 +125,7 @@ export function getAllowedActions(role: UserRole): SubjectAction[] {
     case "TEACHER":
     case "STUDENT":
     case "STAFF":
+    case "ACCOUNTANT":
       return ["read"]
     default:
       return []

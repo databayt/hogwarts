@@ -317,7 +317,7 @@ export function QuestionForm({
               onClick={addOption}
               className="w-full"
             >
-              <Icons.plus className="mr-2 h-4 w-4" />
+              <Icons.plus className="me-2 h-4 w-4" />
               {dict.options.addOption}
             </Button>
 
@@ -397,7 +397,7 @@ export function QuestionForm({
               variant="outline"
               onClick={() => setStep(step - 1)}
             >
-              <Icons.arrowLeft className="mr-2 h-4 w-4" />
+              <Icons.arrowLeft className="me-2 h-4 w-4" />
               {dict.buttons.previous}
             </Button>
           )}
@@ -407,12 +407,12 @@ export function QuestionForm({
           {step < (needsOptions ? 3 : 2) && (
             <Button type="button" onClick={() => setStep(step + 1)}>
               {dict.buttons.next}
-              <Icons.arrowRight className="ml-2 h-4 w-4" />
+              <Icons.arrowRight className="ms-2 h-4 w-4" />
             </Button>
           )}
           {step === (needsOptions ? 3 : 2) && (
             <Button type="submit" disabled={loading}>
-              <Icons.save className="mr-2 h-4 w-4" />
+              <Icons.save className="me-2 h-4 w-4" />
               {questionId
                 ? dict.buttons.saveQuestion
                 : dict.buttons.createQuestion}

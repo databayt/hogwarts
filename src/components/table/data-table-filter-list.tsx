@@ -480,7 +480,7 @@ function DataTableFilterItem<TData>({
                       </span>
                       <Check
                         className={cn(
-                          "ml-auto",
+                          "ms-auto",
                           column.id === filter.id ? "opacity-100" : "opacity-0"
                         )}
                       />
@@ -724,7 +724,7 @@ function onFilterInputRender<TData>({
                     {option.icon && <option.icon />}
                     <span>{option.label}</span>
                     {option.count && (
-                      <span className="ml-auto font-mono text-xs">
+                      <span className="ms-auto font-mono text-xs">
                         {option.count}
                       </span>
                     )}
@@ -764,7 +764,7 @@ function onFilterInputRender<TData>({
               variant="outline"
               size="sm"
               className={cn(
-                "w-full justify-start rounded text-left font-normal",
+                "w-full justify-start rounded text-start font-normal",
                 !filter.value && "text-muted-foreground"
               )}
             >

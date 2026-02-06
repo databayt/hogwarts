@@ -79,7 +79,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
       onClick={handleClick}
     >
       <CardContent className="flex items-center px-2 py-0 sm:px-3">
-        <div className="flex flex-1 items-center space-x-2">
+        <div className="flex flex-1 items-center gap-2">
           <div className="bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md sm:h-10 sm:w-10">
             {getStatusIcon()}
           </div>

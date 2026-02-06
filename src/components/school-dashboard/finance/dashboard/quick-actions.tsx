@@ -138,13 +138,13 @@ export function QuickActions({ actions, className }: QuickActionsProps) {
         <div className="mt-6 grid grid-cols-2 gap-4 border-t pt-6">
           <Link href="/finance/reports">
             <Button variant="outline" className="w-full justify-start">
-              <BarChart className="mr-2 h-4 w-4" />
+              <BarChart className="me-2 h-4 w-4" />
               View All Reports
             </Button>
           </Link>
           <Link href="/finance/settings">
             <Button variant="outline" className="w-full justify-start">
-              <Calculator className="mr-2 h-4 w-4" />
+              <Calculator className="me-2 h-4 w-4" />
               Finance Settings
             </Button>
           </Link>
@@ -169,7 +169,7 @@ export function QuickActionsCompact({ actions, className }: QuickActionsProps) {
             <Link key={action.id} href={action.href}>
               <Button variant="outline" size="sm" title={action.description}>
                 {getIcon(action.icon)}
-                <span className="ml-2">{action.label}</span>
+                <span className="ms-2">{action.label}</span>
               </Button>
             </Link>
           )
@@ -184,7 +184,7 @@ export function QuickActionsCompact({ actions, className }: QuickActionsProps) {
             title={action.description}
           >
             {getIcon(action.icon)}
-            <span className="ml-2">{action.label}</span>
+            <span className="ms-2">{action.label}</span>
           </Button>
         )
       })}
@@ -192,7 +192,7 @@ export function QuickActionsCompact({ actions, className }: QuickActionsProps) {
         <Link href="/finance">
           <Button variant="outline" size="sm">
             <Plus className="h-4 w-4" />
-            <span className="ml-2">More</span>
+            <span className="ms-2">More</span>
           </Button>
         </Link>
       )}

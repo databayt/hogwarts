@@ -86,7 +86,7 @@ export default async function FacilityContent({ dictionary }: Props) {
                 </CardDescription>
               </div>
               <Button>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 Add Room
               </Button>
             </CardHeader>
@@ -132,7 +132,7 @@ export default async function FacilityContent({ dictionary }: Props) {
                 </CardDescription>
               </div>
               <Button>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 Add Lab
               </Button>
             </CardHeader>
@@ -228,7 +228,7 @@ export default async function FacilityContent({ dictionary }: Props) {
                 </CardDescription>
               </div>
               <Button>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 Add Vehicle
               </Button>
             </CardHeader>

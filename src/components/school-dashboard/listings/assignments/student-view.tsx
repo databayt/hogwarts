@@ -333,7 +333,7 @@ export function StudentAssignmentView({
               onClick={() => onSubmitClick(assignment.id)}
               variant={isOverdue ? "destructive" : "default"}
             >
-              <Upload className="mr-2 h-4 w-4" />
+              <Upload className="me-2 h-4 w-4" />
               {submission?.status === "DRAFT"
                 ? "Continue Submission"
                 : "Submit Assignment"}
@@ -344,7 +344,7 @@ export function StudentAssignmentView({
               variant="outline"
               onClick={() => onViewClick(assignment.id)}
             >
-              <FileText className="mr-2 h-4 w-4" />
+              <FileText className="me-2 h-4 w-4" />
               View Submission
             </Button>
           )}
@@ -428,7 +428,7 @@ export function StudentAssignmentView({
           <TabsTrigger value="upcoming" className="relative">
             Upcoming
             {categorizedAssignments.upcoming.length > 0 && (
-              <span className="bg-primary/20 ml-2 rounded-full px-1.5 py-0.5 text-xs">
+              <span className="bg-primary/20 ms-2 rounded-full px-1.5 py-0.5 text-xs">
                 {categorizedAssignments.upcoming.length}
               </span>
             )}
@@ -436,7 +436,7 @@ export function StudentAssignmentView({
           <TabsTrigger value="overdue" className="relative">
             Overdue
             {categorizedAssignments.overdue.length > 0 && (
-              <span className="bg-destructive/20 text-destructive ml-2 rounded-full px-1.5 py-0.5 text-xs">
+              <span className="bg-destructive/20 text-destructive ms-2 rounded-full px-1.5 py-0.5 text-xs">
                 {categorizedAssignments.overdue.length}
               </span>
             )}
@@ -444,7 +444,7 @@ export function StudentAssignmentView({
           <TabsTrigger value="completed">
             Completed
             {categorizedAssignments.completed.length > 0 && (
-              <span className="bg-chart-2/20 text-chart-2 ml-2 rounded-full px-1.5 py-0.5 text-xs">
+              <span className="bg-chart-2/20 text-chart-2 ms-2 rounded-full px-1.5 py-0.5 text-xs">
                 {categorizedAssignments.completed.length}
               </span>
             )}

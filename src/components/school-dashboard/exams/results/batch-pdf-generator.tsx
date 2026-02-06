@@ -222,7 +222,7 @@ export function BatchPDFGenerator({
   return (
     <>
       <Button onClick={() => setIsOpen(true)} variant="outline" size="sm">
-        <Download className="mr-2 h-4 w-4" />
+        <Download className="me-2 h-4 w-4" />
         Batch Download
       </Button>
 
@@ -258,7 +258,7 @@ export function BatchPDFGenerator({
               <div className="space-y-3">
                 <Label>Options</Label>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="logo"
                     checked={options.includeSchoolLogo}
@@ -274,7 +274,7 @@ export function BatchPDFGenerator({
                   </Label>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="rank"
                     checked={options.includeClassRank}
@@ -290,7 +290,7 @@ export function BatchPDFGenerator({
                   </Label>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="distribution"
                     checked={options.includeGradeDistribution}
@@ -306,7 +306,7 @@ export function BatchPDFGenerator({
                   </Label>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="breakdown"
                     checked={options.includeQuestionBreakdown}
@@ -322,7 +322,7 @@ export function BatchPDFGenerator({
                   </Label>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="feedback"
                     checked={options.includeFeedback}
@@ -338,7 +338,7 @@ export function BatchPDFGenerator({
                   </Label>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="signatures"
                     checked={options.includeSignatures}
@@ -432,7 +432,7 @@ export function BatchPDFGenerator({
                   Cancel
                 </Button>
                 <Button onClick={handleGenerate}>
-                  <FileDown className="mr-2 h-4 w-4" />
+                  <FileDown className="me-2 h-4 w-4" />
                   Generate PDFs
                 </Button>
               </>
@@ -448,7 +448,7 @@ export function BatchPDFGenerator({
                   Close
                 </Button>
                 <Button onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Download ZIP
                 </Button>
               </>

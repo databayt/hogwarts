@@ -144,7 +144,7 @@ export function VideoControls({
         </div>
 
         {/* Time display */}
-        <div className="text-foreground ml-2 font-mono text-sm tabular-nums">
+        <div className="text-foreground ms-2 font-mono text-sm tabular-nums">
           <span>{formatTime(currentTime)}</span>
           <span className="text-muted-foreground mx-1">/</span>
           <span className="text-muted-foreground">{formatTime(duration)}</span>

@@ -186,7 +186,7 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({ initialData }) => {
           {steps.map((step, index) => (
             <li key={step.name} className="md:flex-1">
               {currentStep > index ? (
-                <div className="group flex w-full flex-col border-l-4 border-sky-600 py-2 pl-4 transition-colors md:border-t-4 md:border-l-0 md:pt-4 md:pb-0 md:pl-0">
+                <div className="group flex w-full flex-col border-s-4 border-sky-600 py-2 ps-4 transition-colors md:border-s-0 md:border-t-4 md:ps-0 md:pt-4 md:pb-0">
                   <span className="text-sm font-medium text-sky-600 transition-colors">
                     {step.id}
                   </span>
@@ -194,7 +194,7 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({ initialData }) => {
                 </div>
               ) : currentStep === index ? (
                 <div
-                  className="flex w-full flex-col border-l-4 border-sky-600 py-2 pl-4 md:border-t-4 md:border-l-0 md:pt-4 md:pb-0 md:pl-0"
+                  className="flex w-full flex-col border-s-4 border-sky-600 py-2 ps-4 md:border-s-0 md:border-t-4 md:ps-0 md:pt-4 md:pb-0"
                   aria-current="step"
                 >
                   <span className="text-sm font-medium text-sky-600">
@@ -203,7 +203,7 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({ initialData }) => {
                   <span className="text-sm font-medium">{step.name}</span>
                 </div>
               ) : (
-                <div className="group flex h-full w-full flex-col border-l-4 border-gray-200 py-2 pl-4 transition-colors md:border-t-4 md:border-l-0 md:pt-4 md:pb-0 md:pl-0">
+                <div className="group flex h-full w-full flex-col border-s-4 border-gray-200 py-2 ps-4 transition-colors md:border-s-0 md:border-t-4 md:ps-0 md:pt-4 md:pb-0">
                   <span className="text-sm font-medium text-gray-500 transition-colors">
                     {step.id}
                   </span>
@@ -574,7 +574,7 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({ initialData }) => {
             )}
           </div>
 
-          {/* <Button disabled={loading} className="ml-auto" type="submit">
+          {/* <Button disabled={loading} className="ms-auto" type="submit">
             {action}
           </Button> */}
         </form>

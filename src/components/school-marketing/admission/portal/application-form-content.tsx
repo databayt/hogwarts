@@ -355,11 +355,7 @@ export default function ApplicationFormContent({
                 {dictionary?.marketing?.site?.admission?.portal?.of || "of"}{" "}
                 {totalSteps}
               </span>
-              <span>
-                {lang === "ar"
-                  ? currentStepInfo?.labelAr
-                  : currentStepInfo?.label}
-              </span>
+              <span>{currentStepInfo?.label}</span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
@@ -389,16 +385,8 @@ export default function ApplicationFormContent({
           {/* Step Content */}
           <Card>
             <CardHeader>
-              <CardTitle>
-                {lang === "ar"
-                  ? currentStepInfo?.labelAr
-                  : currentStepInfo?.label}
-              </CardTitle>
-              <CardDescription>
-                {lang === "ar"
-                  ? currentStepInfo?.descriptionAr
-                  : currentStepInfo?.description}
-              </CardDescription>
+              <CardTitle>{currentStepInfo?.label}</CardTitle>
+              <CardDescription>{currentStepInfo?.description}</CardDescription>
             </CardHeader>
             <CardContent>{renderStepContent()}</CardContent>
           </Card>

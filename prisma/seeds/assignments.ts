@@ -33,92 +33,64 @@ const ASSIGNMENT_TYPES = [
 const ASSIGNMENT_TEMPLATES = {
   HOMEWORK: [
     {
-      titleEn: "Chapter Review Exercise",
-      titleAr: "تمرين مراجعة الفصل",
-      descriptionEn:
-        "Complete the review exercises at the end of the chapter. Show all your work.",
-      descriptionAr:
-        "أكمل تمارين المراجعة في نهاية الفصل. أظهر جميع خطوات الحل.",
+      title: "تمرين مراجعة الفصل", // EN: "Chapter Review Exercise"
+      description: "أكمل تمارين المراجعة في نهاية الفصل. أظهر جميع خطوات الحل.",
       points: 20,
       weight: 5,
     },
     {
-      titleEn: "Practice Problems Set",
-      titleAr: "مجموعة مسائل تدريبية",
-      descriptionEn:
-        "Solve the assigned practice problems. Due by end of week.",
-      descriptionAr:
-        "حل المسائل التدريبية المعينة. موعد التسليم نهاية الأسبوع.",
+      title: "مجموعة مسائل تدريبية", // EN: "Practice Problems Set"
+      description: "حل المسائل التدريبية المعينة. موعد التسليم نهاية الأسبوع.",
       points: 25,
       weight: 5,
     },
     {
-      titleEn: "Weekly Worksheet",
-      titleAr: "ورقة عمل أسبوعية",
-      descriptionEn: "Complete all questions in the worksheet.",
-      descriptionAr: "أكمل جميع الأسئلة في ورقة العمل.",
+      title: "ورقة عمل أسبوعية", // EN: "Weekly Worksheet"
+      description: "أكمل جميع الأسئلة في ورقة العمل.",
       points: 15,
       weight: 3,
     },
   ],
   PROJECT: [
     {
-      titleEn: "Research Project",
-      titleAr: "مشروع بحثي",
-      descriptionEn:
-        "Research the assigned topic and prepare a detailed report with references.",
-      descriptionAr: "ابحث في الموضوع المعين وأعد تقريرًا مفصلاً مع المراجع.",
+      title: "مشروع بحثي", // EN: "Research Project"
+      description: "ابحث في الموضوع المعين وأعد تقريرًا مفصلاً مع المراجع.",
       points: 100,
       weight: 15,
     },
     {
-      titleEn: "Group Project",
-      titleAr: "مشروع جماعي",
-      descriptionEn:
-        "Work with your team to complete the assigned project. Include a presentation.",
-      descriptionAr:
-        "اعمل مع فريقك لإكمال المشروع المعين. يجب تضمين عرض تقديمي.",
+      title: "مشروع جماعي", // EN: "Group Project"
+      description: "اعمل مع فريقك لإكمال المشروع المعين. يجب تضمين عرض تقديمي.",
       points: 80,
       weight: 12,
     },
   ],
   QUIZ: [
     {
-      titleEn: "Quick Quiz",
-      titleAr: "اختبار سريع",
-      descriptionEn: "Short quiz covering recent lessons. Open book allowed.",
-      descriptionAr: "اختبار قصير يغطي الدروس الأخيرة. يسمح بالكتاب المفتوح.",
+      title: "اختبار سريع", // EN: "Quick Quiz"
+      description: "اختبار قصير يغطي الدروس الأخيرة. يسمح بالكتاب المفتوح.",
       points: 20,
       weight: 5,
     },
     {
-      titleEn: "Chapter Quiz",
-      titleAr: "اختبار الفصل",
-      descriptionEn: "Quiz on chapter content. No notes allowed.",
-      descriptionAr: "اختبار على محتوى الفصل. لا يسمح بالملاحظات.",
+      title: "اختبار الفصل", // EN: "Chapter Quiz"
+      description: "اختبار على محتوى الفصل. لا يسمح بالملاحظات.",
       points: 30,
       weight: 7,
     },
   ],
   PRESENTATION: [
     {
-      titleEn: "Class Presentation",
-      titleAr: "عرض تقديمي",
-      descriptionEn:
-        "Prepare and deliver a 10-minute presentation on the assigned topic.",
-      descriptionAr:
-        "أعد وقدم عرضًا تقديميًا لمدة 10 دقائق حول الموضوع المعين.",
+      title: "عرض تقديمي", // EN: "Class Presentation"
+      description: "أعد وقدم عرضًا تقديميًا لمدة 10 دقائق حول الموضوع المعين.",
       points: 50,
       weight: 10,
     },
   ],
   ESSAY: [
     {
-      titleEn: "Essay Assignment",
-      titleAr: "مهمة مقالية",
-      descriptionEn:
-        "Write a 500-word essay on the assigned topic. Include proper citations.",
-      descriptionAr:
+      title: "مهمة مقالية", // EN: "Essay Assignment"
+      description:
         "اكتب مقالًا من 500 كلمة حول الموضوع المعين. يجب تضمين الاستشهادات.",
       points: 40,
       weight: 8,
@@ -126,11 +98,8 @@ const ASSIGNMENT_TEMPLATES = {
   ],
   LAB_REPORT: [
     {
-      titleEn: "Lab Report",
-      titleAr: "تقرير مختبر",
-      descriptionEn:
-        "Document your lab findings following the scientific method format.",
-      descriptionAr: "وثق نتائج المختبر باتباع تنسيق المنهج العلمي.",
+      title: "تقرير مختبر", // EN: "Lab Report"
+      description: "وثق نتائج المختبر باتباع تنسيق المنهج العلمي.",
       points: 35,
       weight: 7,
     },
@@ -139,24 +108,24 @@ const ASSIGNMENT_TEMPLATES = {
 
 const FEEDBACK_TEMPLATES = {
   excellent: [
-    "Excellent work! You demonstrated thorough understanding of the material.",
-    "Outstanding submission. Keep up the great work!",
-    "Very well done. Your attention to detail is impressive.",
+    "عمل ممتاز! أظهرت فهمًا عميقًا للمادة.", // EN: "Excellent work! You demonstrated thorough understanding."
+    "تقديم متميز. واصل العمل الجيد!", // EN: "Outstanding submission. Keep up the great work!"
+    "أحسنت. اهتمامك بالتفاصيل مثير للإعجاب.", // EN: "Very well done. Your attention to detail is impressive."
   ],
   good: [
-    "Good work. Minor improvements needed in a few areas.",
-    "Solid effort. Review the feedback for improvement suggestions.",
-    "Nice job overall. A few areas need more attention.",
+    "عمل جيد. تحتاج بعض التحسينات البسيطة.", // EN: "Good work. Minor improvements needed."
+    "جهد متين. راجع الملاحظات لاقتراحات التحسين.", // EN: "Solid effort. Review feedback for improvements."
+    "عمل جيد بشكل عام. بعض المجالات تحتاج مزيدًا من الاهتمام.", // EN: "Nice job overall. A few areas need more attention."
   ],
   average: [
-    "Satisfactory work. Please review the material and improve.",
-    "Acceptable submission. More effort needed for better grades.",
-    "Average performance. See comments for areas to improve.",
+    "عمل مقبول. يرجى مراجعة المادة والتحسين.", // EN: "Satisfactory work. Please review and improve."
+    "تقديم مقبول. تحتاج مزيدًا من الجهد للحصول على درجات أفضل.", // EN: "Acceptable submission. More effort needed."
+    "أداء متوسط. راجع الملاحظات لمعرفة مجالات التحسين.", // EN: "Average performance. See comments for improvement."
   ],
   poor: [
-    "This submission needs significant improvement. Please see me.",
-    "Below expectations. Additional work required.",
-    "Please revise and resubmit following the guidelines.",
+    "هذا التقديم يحتاج تحسينًا كبيرًا. يرجى مراجعتي.", // EN: "This submission needs significant improvement."
+    "أقل من المتوقع. يلزم عمل إضافي.", // EN: "Below expectations. Additional work required."
+    "يرجى المراجعة وإعادة التقديم وفقًا للإرشادات.", // EN: "Please revise and resubmit following guidelines."
   ],
 }
 
@@ -202,7 +171,7 @@ export async function seedAssignments(
       const publishOffset = randomNumber(7, 14) * 24 * 60 * 60 * 1000
       const publishDate = new Date(dueDate.getTime() - publishOffset)
 
-      const title = `${template.titleEn} - ${classInfo.name}`
+      const title = `${template.title} - ${classInfo.name}`
 
       try {
         // Check if assignment already exists
@@ -220,14 +189,14 @@ export async function seedAssignments(
               schoolId,
               classId: classInfo.id,
               title,
-              description: template.descriptionEn,
+              description: template.description,
               type,
               status: publishDate <= new Date() ? "PUBLISHED" : "DRAFT",
               totalPoints: template.points,
               weight: template.weight,
               dueDate,
               publishDate: publishDate <= new Date() ? publishDate : null,
-              instructions: `${template.descriptionEn}\n\n${template.descriptionAr}`,
+              instructions: template.description,
             },
           })
           assignmentIds.push(assignment.id)
@@ -377,9 +346,7 @@ export async function seedAssignmentSubmissions(
             status,
             submittedAt,
             content:
-              status !== "NOT_SUBMITTED"
-                ? "Student submission content placeholder..."
-                : null,
+              status !== "NOT_SUBMITTED" ? "محتوى تقديم الطالب..." : null,
             score: score !== null ? score : undefined,
             feedback,
             gradedAt,

@@ -113,6 +113,24 @@ export function checkClassPermission(
     return false
   }
 
+  // ACCOUNTANT can read classes (for financial reporting)
+  if (role === "ACCOUNTANT") {
+    if (action === "read") {
+      if (!cls?.schoolId) return false
+      return schoolId === cls.schoolId
+    }
+    return false
+  }
+
+  // GUARDIAN can read classes
+  if (role === "GUARDIAN") {
+    if (action === "read") {
+      if (!cls?.schoolId) return false
+      return schoolId === cls.schoolId
+    }
+    return false
+  }
+
   // Default: deny
   return false
 }
@@ -187,6 +205,8 @@ export function getAllowedActions(role: UserRole): ClassAction[] {
     case "STAFF":
       return ["read", "export"]
     case "STUDENT":
+    case "ACCOUNTANT":
+    case "GUARDIAN":
       return ["read"]
     default:
       return []

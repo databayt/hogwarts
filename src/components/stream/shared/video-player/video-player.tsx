@@ -24,6 +24,7 @@ export function VideoPlayer({
   lessonId,
   userId,
   initialPosition = 0,
+  posterUrl,
   nextLesson,
   onProgress,
   onComplete,
@@ -299,6 +300,8 @@ export function VideoPlayer({
         ref={videoRef}
         src={url}
         className="h-full w-full"
+        preload="metadata"
+        poster={posterUrl || undefined}
         autoPlay={autoPlay}
         playsInline
         onClick={actions.togglePlay}

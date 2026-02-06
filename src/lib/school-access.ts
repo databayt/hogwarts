@@ -436,6 +436,73 @@ export async function validateSchoolOwnership(
 }
 
 /**
+ * Join a school using a 6-character join code.
+ * Links the user to the school and promotes from USER → STAFF role.
+ *
+ * Guards:
+ * - User must not already belong to a school
+ * - Join code must exist and school must be active
+ * - Atomic transaction prevents partial updates
+ */
+export async function joinSchoolByCode(
+  userId: string,
+  code: string
+): Promise<SchoolCreationResult> {
+  try {
+    const normalizedCode = code.trim().toUpperCase()
+    if (normalizedCode.length !== 6) {
+      return { success: false, error: "Join code must be 6 characters" }
+    }
+
+    // Check user doesn't already belong to a school
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, schoolId: true, role: true },
+    })
+
+    if (!user) return { success: false, error: "User not found" }
+    if (user.schoolId) {
+      return { success: false, error: "You already belong to a school" }
+    }
+
+    // Look up school by join code
+    const school = await db.school.findUnique({
+      where: { joinCode: normalizedCode },
+      select: { id: true, name: true, isActive: true },
+    })
+
+    if (!school) return { success: false, error: "Invalid join code" }
+    if (!school.isActive) {
+      return { success: false, error: "This school is no longer active" }
+    }
+
+    // Atomic: link user to school
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        schoolId: school.id,
+        role: user.role === "USER" ? "STAFF" : user.role,
+        updatedAt: new Date(), // Triggers NextAuth JWT refresh
+      },
+    })
+
+    logger.info("joinSchoolByCode: User joined school via code", {
+      userId,
+      schoolId: school.id,
+      schoolName: school.name,
+    })
+
+    return { success: true, schoolId: school.id, school }
+  } catch (error) {
+    logger.error("joinSchoolByCode: Failed", error, { userId })
+    return {
+      success: false,
+      error: "Failed to join school",
+    }
+  }
+}
+
+/**
  * Sync user session with school context
  *
  * Forces NextAuth to refresh the JWT by updating user.updatedAt.

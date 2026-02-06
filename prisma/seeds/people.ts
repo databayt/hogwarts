@@ -58,22 +58,22 @@ async function seedGuardianTypes(
       where: {
         schoolId_name: {
           schoolId,
-          name: type.nameEn,
+          name: type.name,
         },
       },
       update: {},
       create: {
         schoolId,
-        name: type.nameEn,
+        name: type.name,
       },
     })
-    typeMap.set(type.nameEn, guardianType.id)
+    typeMap.set(type.name, guardianType.id)
   }
 
   logSuccess(
     "Guardian Types",
     GUARDIAN_TYPES.length,
-    GUARDIAN_TYPES.map((t) => t.nameEn).join(", ")
+    GUARDIAN_TYPES.map((t) => t.name).join(", ")
   )
 
   return typeMap
@@ -102,7 +102,7 @@ export async function seedTeachers(
   await processBatch(teacherUsers, 20, async (user, index) => {
     // Use predefined teacher data if available, otherwise generate
     const teacherData = TEACHER_DATA[index % TEACHER_DATA.length]
-    const department = deptMap.get(teacherData.departmentEn)
+    const department = deptMap.get(teacherData.department)
 
     try {
       const teacher = await prisma.teacher.upsert({
@@ -113,8 +113,8 @@ export async function seedTeachers(
           },
         },
         update: {
-          givenName: teacherData.givenNameAr,
-          surname: teacherData.surnameAr,
+          givenName: teacherData.givenName,
+          surname: teacherData.surname,
           gender: teacherData.gender,
           userId: user.id,
         },
@@ -123,8 +123,8 @@ export async function seedTeachers(
           userId: user.id,
           emailAddress: user.email,
           employeeId: generateEmployeeId(index),
-          givenName: teacherData.givenNameAr,
-          surname: teacherData.surnameAr,
+          givenName: teacherData.givenName,
+          surname: teacherData.surname,
           gender: teacherData.gender,
           employmentStatus: "ACTIVE",
           employmentType: "FULL_TIME",
@@ -565,7 +565,7 @@ export async function seedStudents(
 
   // Calculate distribution per level based on YEAR_LEVELS config
   const levelDistribution = YEAR_LEVELS.map((level) => ({
-    level: yearLevels.find((yl) => yl.levelName === level.nameEn),
+    level: yearLevels.find((yl) => yl.levelName === level.name),
     count: level.studentsPerLevel,
     order: level.order,
   }))
@@ -589,7 +589,7 @@ export async function seedStudents(
       const gender = globalIndex % 2 === 0 ? "M" : "F"
       const name = getRandomName(gender as "M" | "F", globalIndex)
       const surname = getRandomSurname(globalIndex)
-      const neighborhood = getRandomNeighborhood(globalIndex)
+      const neighborhoodName = getRandomNeighborhood(globalIndex)
       const birthDate = getStudentBirthDate(dist.order)
 
       try {
@@ -615,7 +615,7 @@ export async function seedStudents(
             gender,
             dateOfBirth: birthDate,
             nationality: "Sudan",
-            currentAddress: neighborhood.ar,
+            currentAddress: neighborhoodName,
             city: "الخرطوم",
             country: "Sudan",
             mobileNumber: generatePhone(globalIndex),
@@ -704,8 +704,8 @@ export async function seedGuardians(
   // Each student gets 2 guardians (father + mother)
   await processBatch(students, 10, async (student, studentIndex) => {
     const guardianPairs = [
-      { type: "Father", gender: "M" },
-      { type: "Mother", gender: "F" },
+      { type: "الأب", gender: "M" }, // EN: "Father"
+      { type: "الأم", gender: "F" }, // EN: "Mother"
     ]
 
     for (let i = 0; i < guardianPairs.length; i++) {
@@ -809,6 +809,108 @@ export async function seedGuardians(
   )
 
   return guardians
+}
+
+// ============================================================================
+// STUDENT DOCUMENTS SEEDING
+// ============================================================================
+
+const DOCUMENT_TYPES = [
+  { type: "شهادة ميلاد", name: "شهادة ميلاد الطالب", mime: "application/pdf" },
+  { type: "جواز سفر", name: "صورة جواز السفر", mime: "image/jpeg" },
+  {
+    type: "شهادة نقل",
+    name: "شهادة نقل من المدرسة السابقة",
+    mime: "application/pdf",
+  },
+  {
+    type: "تقرير طبي",
+    name: "تقرير الفحص الطبي السنوي",
+    mime: "application/pdf",
+  },
+  { type: "صورة شخصية", name: "صورة شخصية حديثة", mime: "image/jpeg" },
+  { type: "بطاقة عائلة", name: "صورة بطاقة العائلة", mime: "application/pdf" },
+]
+
+/**
+ * Seed student documents (~200 documents for first 100 students)
+ */
+export async function seedStudentDocuments(
+  prisma: PrismaClient,
+  schoolId: string,
+  students: StudentRef[],
+  adminUsers: UserRef[]
+): Promise<number> {
+  // Clean existing
+  await prisma.studentDocument.deleteMany({ where: { schoolId } })
+
+  const uploadedBy = adminUsers[0]?.id || null
+  const docBatch: Array<{
+    schoolId: string
+    studentId: string
+    documentType: string
+    documentName: string
+    fileUrl: string
+    fileSize: number
+    mimeType: string
+    uploadedBy: string | null
+    isVerified: boolean
+    tags: string[]
+  }> = []
+
+  // First 100 students get 2 documents each
+  const targetStudents = students.slice(0, 100)
+
+  for (let i = 0; i < targetStudents.length; i++) {
+    const student = targetStudents[i]
+    const numDocs = 2
+    for (let d = 0; d < numDocs; d++) {
+      const docType = DOCUMENT_TYPES[(i + d) % DOCUMENT_TYPES.length]
+      const ext = docType.mime === "image/jpeg" ? "jpg" : "pdf"
+      docBatch.push({
+        schoolId,
+        studentId: student.id,
+        documentType: docType.type,
+        documentName: `${docType.name} - ${student.givenName} ${student.surname}`,
+        fileUrl: `/uploads/documents/${student.grNumber}_${docType.type.replace(/\s+/g, "_")}.${ext}`,
+        fileSize: randomNumber(50000, 2000000),
+        mimeType: docType.mime,
+        uploadedBy,
+        isVerified: Math.random() < 0.7, // 70% verified
+        tags: [docType.type],
+      })
+    }
+  }
+
+  // Insert in batches
+  let totalCreated = 0
+  for (let i = 0; i < docBatch.length; i += 50) {
+    const batch = docBatch.slice(i, i + 50)
+    try {
+      const result = await prisma.studentDocument.createMany({
+        data: batch,
+        skipDuplicates: true,
+      })
+      totalCreated += result.count
+    } catch {
+      // Fall back to individual creates
+      for (const doc of batch) {
+        try {
+          await prisma.studentDocument.create({ data: doc })
+          totalCreated++
+        } catch {
+          // Skip
+        }
+      }
+    }
+  }
+
+  logSuccess(
+    "Student Documents",
+    totalCreated,
+    "birth certs, passports, medical"
+  )
+  return totalCreated
 }
 
 // ============================================================================

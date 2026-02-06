@@ -6,6 +6,7 @@ export interface VideoPlayerProps {
   lessonId: string
   userId?: string
   initialPosition?: number
+  posterUrl?: string | null
   nextLesson?: NextLesson | null
   onProgress?: (progress: VideoProgress) => void
   onComplete?: () => void

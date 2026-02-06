@@ -133,7 +133,7 @@ export function BannerCard({
   return (
     <Card
       className={cn(
-        "border-l-4 transition-colors",
+        "border-s-4 transition-colors",
         variantClasses[variant],
         className
       )}
@@ -157,7 +157,7 @@ export function BannerCard({
             <Button
               variant="ghost"
               size="sm"
-              className="-mt-1 -mr-2 h-8 w-8 shrink-0 p-0"
+              className="-me-2 -mt-1 h-8 w-8 shrink-0 p-0"
               onClick={handleDismiss}
               aria-label="Dismiss"
             >

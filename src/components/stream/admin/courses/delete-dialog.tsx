@@ -59,7 +59,7 @@ export function DeleteCourseDialog({
           onSelect={(e) => e.preventDefault()}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 size-4" />
+          <Trash2 className="me-2 size-4" />
           {dictionary?.stream?.deleteDialog?.delete ?? "Delete"}
         </DropdownMenuItem>
       </AlertDialogTrigger>
@@ -87,12 +87,12 @@ export function DeleteCourseDialog({
           >
             {pending ? (
               <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
+                <Loader2 className="me-2 size-4 animate-spin" />
                 {dictionary?.stream?.deleteDialog?.deleting ?? "Deleting..."}
               </>
             ) : (
               <>
-                <Trash2 className="mr-2 size-4" />
+                <Trash2 className="me-2 size-4" />
                 {dictionary?.stream?.deleteDialog?.delete ?? "Delete"}
               </>
             )}

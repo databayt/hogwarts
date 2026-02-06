@@ -25,7 +25,7 @@ export function ShadcnButtonGroupPopover() {
   return (
     <div className="flex gap-1">
       <Button variant="outline">
-        <Bot className="mr-2 size-4" />
+        <Bot className="me-2 size-4" />
         Copilot
       </Button>
       <Popover>

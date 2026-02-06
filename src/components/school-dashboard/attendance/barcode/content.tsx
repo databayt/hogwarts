@@ -82,7 +82,7 @@ export default function BarcodeAttendanceContent({
           </div>
         </div>
         <Badge variant="outline" className="text-orange-600">
-          <Barcode className="mr-1 h-3 w-3" />
+          <Barcode className="me-1 h-3 w-3" />
           Barcode Mode
         </Badge>
       </div>
@@ -100,15 +100,15 @@ export default function BarcodeAttendanceContent({
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="scan">
-            <Scan className="mr-2 h-4 w-4" />
+            <Scan className="me-2 h-4 w-4" />
             Scan Cards
           </TabsTrigger>
           <TabsTrigger value="cards">
-            <CreditCard className="mr-2 h-4 w-4" />
+            <CreditCard className="me-2 h-4 w-4" />
             Card Management
           </TabsTrigger>
           <TabsTrigger value="manage">
-            <Users className="mr-2 h-4 w-4" />
+            <Users className="me-2 h-4 w-4" />
             Recent Scans
           </TabsTrigger>
         </TabsList>
@@ -201,7 +201,7 @@ export default function BarcodeAttendanceContent({
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-end">
                           <Badge
                             variant={
                               record.status === "PRESENT"

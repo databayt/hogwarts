@@ -18,10 +18,10 @@ export default async function Billing({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
-  // Define billing page navigation
+  const n = d?.nav
   const billingPages: PageNavItem[] = [
-    { name: "Overview", href: `/${lang}/billing` },
-    { name: "Receipts", href: `/${lang}/billing/receipts` },
+    { name: n?.overview || "Overview", href: `/${lang}/billing` },
+    { name: n?.receipts || "Receipts", href: `/${lang}/billing/receipts` },
   ]
 
   return (

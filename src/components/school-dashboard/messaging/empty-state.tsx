@@ -231,7 +231,7 @@ function QuickTip({
       <div className="bg-background border-border flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border">
         {icon}
       </div>
-      <span className="flex-1 text-left">{text}</span>
+      <span className="flex-1 text-start">{text}</span>
       <ArrowRight className="h-4 w-4 flex-shrink-0" />
     </div>
   )

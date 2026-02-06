@@ -490,8 +490,7 @@ export async function getRecentActivities(): Promise<ActivityItem[]> {
         take: 5,
         select: {
           id: true,
-          titleEn: true,
-          titleAr: true,
+          title: true,
           createdAt: true,
         },
       }),
@@ -528,7 +527,7 @@ export async function getRecentActivities(): Promise<ActivityItem[]> {
     })),
     ...recentAnnouncements.map((a) => ({
       type: "announcement" as const,
-      action: `New announcement: ${a.titleEn || a.titleAr}`,
+      action: `New announcement: ${a.title}`,
       timestamp: a.createdAt,
       user: "Admin",
     })),
@@ -894,8 +893,8 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     })),
     announcements: announcements.map((announcement) => ({
       id: announcement.id,
-      title: announcement.titleEn || announcement.titleAr || "",
-      body: announcement.bodyEn || announcement.bodyAr || "",
+      title: announcement.title || "",
+      body: announcement.body || "",
       createdAt: announcement.createdAt.toISOString(),
     })),
     attendanceSummary: {
@@ -1052,8 +1051,8 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
     },
     announcements: announcements.map((announcement) => ({
       id: announcement.id,
-      title: announcement.titleEn || announcement.titleAr || "",
-      body: announcement.bodyEn || announcement.bodyAr || "",
+      title: announcement.title || "",
+      body: announcement.body || "",
       createdAt: announcement.createdAt.toISOString(),
     })),
   }
@@ -3052,7 +3051,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
       published: true,
       createdAt: { gte: today },
     },
-    select: { titleEn: true, titleAr: true, createdAt: true },
+    select: { title: true, createdAt: true },
     orderBy: { createdAt: "asc" },
     take: 3,
   })
@@ -3060,7 +3059,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
   return {
     children,
     upcomingEvents: upcomingEvents.map((e) => ({
-      title: e.titleEn || e.titleAr || "Event",
+      title: e.title || "Event",
       date: e.createdAt.toLocaleDateString(),
     })),
   }
@@ -4134,8 +4133,7 @@ async function getAnnouncementsQuickLook(
     },
     select: {
       id: true,
-      titleEn: true,
-      titleAr: true,
+      title: true,
       createdAt: true,
       readReceipts: {
         where: { userId },
@@ -4159,7 +4157,7 @@ async function getAnnouncementsQuickLook(
     type: "announcements",
     count: totalCount,
     newCount: unreadCount > 0 ? unreadCount : newCount,
-    recent: mostRecent?.titleEn || mostRecent?.titleAr || "",
+    recent: mostRecent?.title || "",
   }
 }
 

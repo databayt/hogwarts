@@ -33,7 +33,8 @@ test.describe("Story 4.2: ADMIN Permissions @rbac", () => {
     await loginPage.loginAs("admin")
 
     if (page.url().includes("chrome-error://")) {
-      test.skip()
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
     }
   })
 

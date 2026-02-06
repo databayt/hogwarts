@@ -72,7 +72,7 @@ const AccountSelect = useMemo(() => {
             <SelectItem key={account.id} value={account.id}>
               <div className="flex w-full items-center justify-between">
                 <span>{account.name}</span>
-                <span className="text-muted-foreground ml-2 text-sm">
+                <span className="text-muted-foreground ms-2 text-sm">
                   {formatAmount(Number(account.currentBalance))}
                 </span>
               </div>
@@ -184,7 +184,7 @@ function PaymentTransferForm(props: Props) {
               <SelectItem key={account.id} value={account.id}>
                 <div className="flex w-full items-center justify-between">
                   <span>{account.name}</span>
-                  <span className="text-muted-foreground ml-2 text-sm">
+                  <span className="text-muted-foreground ms-2 text-sm">
                     {formatCurrency(account.currentBalance)}
                   </span>
                 </div>
@@ -219,7 +219,7 @@ function PaymentTransferForm(props: Props) {
                   <SelectItem key={account.id} value={account.id}>
                     <div className="flex w-full items-center justify-between">
                       <span>{account.name}</span>
-                      <span className="text-muted-foreground ml-2 text-sm">
+                      <span className="text-muted-foreground ms-2 text-sm">
                         {formatCurrency(account.currentBalance)}
                       </span>
                     </div>
@@ -263,7 +263,7 @@ function PaymentTransferForm(props: Props) {
             max={availableBalance}
             required
             disabled={isPending}
-            className="pl-8"
+            className="ps-8"
           />
         </div>
         {availableBalance > 0 && (
@@ -298,7 +298,7 @@ function PaymentTransferForm(props: Props) {
       >
         {isPending ? (
           <>
-            <Icons.loaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
             {props.dictionary.processing}
           </>
         ) : (

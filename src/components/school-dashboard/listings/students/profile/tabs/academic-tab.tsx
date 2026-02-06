@@ -213,7 +213,7 @@ export function AcademicTab({ student }: AcademicTabProps) {
                   <TableHead>Subject</TableHead>
                   <TableHead>Teacher</TableHead>
                   <TableHead>Current Grade</TableHead>
-                  <TableHead className="text-right">Score</TableHead>
+                  <TableHead className="text-end">Score</TableHead>
                   <TableHead>Progress</TableHead>
                 </TableRow>
               </TableHeader>
@@ -231,7 +231,7 @@ export function AcademicTab({ student }: AcademicTabProps) {
                         {subject.grade}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       {subject.score > 0 ? `${subject.score}%` : "-"}
                     </TableCell>
                     <TableCell>
@@ -406,7 +406,7 @@ export function AcademicTab({ student }: AcademicTabProps) {
                       {yearLevel.yearLevel?.name || "Grade"}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p
                       className={`font-bold ${yearLevel.score && Number(yearLevel.score) >= 50 ? "text-green-600" : "text-muted-foreground"}`}
                     >

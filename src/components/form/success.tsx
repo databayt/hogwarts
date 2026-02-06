@@ -157,7 +157,7 @@ export function FormSuccess({
                       )}
                     </div>
                     {(step.href || step.onClick) && (
-                      <ArrowRight className="text-muted-foreground h-4 w-4" />
+                      <ArrowRight className="text-muted-foreground h-4 w-4 rtl:rotate-180" />
                     )}
                   </CardContent>
                 </Card>
@@ -176,7 +176,7 @@ export function FormSuccess({
                   <button
                     key={index}
                     onClick={step.onClick}
-                    className="w-full text-left"
+                    className="w-full text-start"
                   >
                     {content}
                   </button>
@@ -198,7 +198,7 @@ export function FormSuccess({
         >
           <Button onClick={onComplete} size="lg" className="mt-4">
             Continue
-            <ArrowRight className="ms-2 h-4 w-4" />
+            <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
           </Button>
         </motion.div>
       )}

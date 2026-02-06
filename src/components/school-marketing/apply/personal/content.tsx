@@ -6,7 +6,7 @@ import { User } from "lucide-react"
 
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { useApplication } from "../application-context"
+import { useApplySession } from "../application-context"
 import type { PersonalStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
 import { PERSONAL_STEP_CONFIG } from "./config"
@@ -26,7 +26,7 @@ export default function PersonalContent({ dictionary }: Props) {
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
-  const { session, getStepData } = useApplication()
+  const { session, getStepData } = useApplySession()
   const personalFormRef = useRef<PersonalFormRef>(null)
 
   const initialData = getStepData("personal")
@@ -82,16 +82,10 @@ export default function PersonalContent({ dictionary }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {dict.title ||
-                (isRTL
-                  ? PERSONAL_STEP_CONFIG.labelAr
-                  : PERSONAL_STEP_CONFIG.label)}
+              {dict.title || PERSONAL_STEP_CONFIG.label}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {dict.description ||
-                (isRTL
-                  ? PERSONAL_STEP_CONFIG.descriptionAr
-                  : PERSONAL_STEP_CONFIG.description)}
+              {dict.description || PERSONAL_STEP_CONFIG.description}
             </p>
           </div>
         </div>

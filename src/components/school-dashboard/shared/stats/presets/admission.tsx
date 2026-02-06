@@ -245,7 +245,7 @@ export function SeatUtilization({
               {seatsFilled} / {totalSeats}
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-end">
             <p className="text-muted-foreground text-sm">
               {labels.seatsAvailable || "Available"}
             </p>

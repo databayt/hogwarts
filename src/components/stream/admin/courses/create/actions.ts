@@ -7,6 +7,10 @@ import slugify from "slugify"
 import { db } from "@/lib/db"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  assertStreamPermission,
+  getAuthContext,
+} from "@/components/stream/authorization"
 
 import type { CreateCourseData } from "../../../types"
 
@@ -17,19 +21,11 @@ export async function createCourseAction(
   const session = await auth()
   const { schoolId } = await getTenantContext()
 
-  // Check authentication
-  if (!session?.user) {
-    throw new Error("Unauthorized")
-  }
-
-  // Check admin/teacher access
-  if (
-    session.user.role !== "ADMIN" &&
-    session.user.role !== "TEACHER" &&
-    session.user.role !== "DEVELOPER"
-  ) {
-    throw new Error("Insufficient permissions")
-  }
+  // Check authentication and authorization
+  const authCtx = getAuthContext(session)
+  if (!authCtx) throw new Error("Unauthorized")
+  authCtx.schoolId = schoolId
+  assertStreamPermission(authCtx, "create")
 
   // Check school context
   if (!schoolId) {
@@ -80,7 +76,7 @@ export async function createCourseAction(
         description: description || undefined,
         metadata: {
           schoolId,
-          userId: session.user.id,
+          userId: authCtx.userId,
         },
         default_price_data: {
           currency: "usd",
@@ -100,7 +96,7 @@ export async function createCourseAction(
         imageUrl,
         categoryId,
         price,
-        userId: session.user.id,
+        userId: authCtx.userId,
         schoolId,
         isPublished: false, // Courses start as draft
       },

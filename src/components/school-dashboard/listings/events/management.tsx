@@ -520,7 +520,7 @@ export function EventManagement({
                     size="sm"
                     onClick={() => handleCancelRegistration(event)}
                   >
-                    <CircleCheck className="mr-1 h-4 w-4" />
+                    <CircleCheck className="me-1 h-4 w-4" />
                     Registered
                   </Button>
                 ) : (
@@ -536,7 +536,7 @@ export function EventManagement({
                       setRegistrationDialogOpen(true)
                     }}
                   >
-                    <Ticket className="mr-1 h-4 w-4" />
+                    <Ticket className="me-1 h-4 w-4" />
                     {isFull ? "Full" : "Register"}
                   </Button>
                 ))}
@@ -561,7 +561,7 @@ export function EventManagement({
             </div>
             {currentUser.permissions.canCreate && (
               <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 Create Event
               </Button>
             )}

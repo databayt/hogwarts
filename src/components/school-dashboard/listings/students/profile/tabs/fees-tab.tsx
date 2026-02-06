@@ -199,7 +199,7 @@ export function FeesTab({ student }: FeesTabProps) {
             {feeRecords.length > 0 && (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Download Statement
                 </Button>
               </div>
@@ -334,7 +334,7 @@ export function FeesTab({ student }: FeesTabProps) {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="font-medium">
                         SAR {Number(fee.paidAmount || 0).toLocaleString()}
                       </p>

@@ -238,7 +238,7 @@ export function GradingConfigForm({
               control={form.control}
               name="showPercentage"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -258,7 +258,7 @@ export function GradingConfigForm({
               control={form.control}
               name="showGPA"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -276,7 +276,7 @@ export function GradingConfigForm({
               control={form.control}
               name="showLetter"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                <FormItem className="flex flex-row items-start space-y-0 gap-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -522,7 +522,7 @@ export function GradingConfigForm({
         <Button type="submit" disabled={isPending} className="w-full">
           {isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="me-2 h-4 w-4 animate-spin" />
               {d?.saving ?? "Saving..."}
             </>
           ) : (

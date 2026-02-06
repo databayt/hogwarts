@@ -380,7 +380,7 @@ export function PublicationsTab({
             </span>
             {isOwner && (
               <Button size="sm" variant="outline">
-                <Plus className="mr-1 h-3 w-3" />
+                <Plus className="me-1 h-3 w-3" />
                 Add Publication
               </Button>
             )}
@@ -395,7 +395,7 @@ export function PublicationsTab({
                 placeholder="Search publications..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="ps-9"
               />
             </div>
             <Button variant="outline" size="icon">
@@ -488,7 +488,7 @@ export function PublicationsTab({
                           )}
                           {pub.isOpenAccess && (
                             <Badge variant="default" className="text-xs">
-                              <LockOpen className="mr-1 h-3 w-3" />
+                              <LockOpen className="me-1 h-3 w-3" />
                               Open Access
                             </Badge>
                           )}
@@ -622,7 +622,7 @@ export function PublicationsTab({
                     </span>
                     <div className="bg-muted relative h-6 flex-1 rounded-full">
                       <div
-                        className="bg-primary absolute inset-y-0 left-0 flex items-center justify-end rounded-full pr-2"
+                        className="bg-primary absolute inset-y-0 left-0 flex items-center justify-end rounded-full pe-2"
                         style={{ width: `${(item.count / 100) * 100}%` }}
                       >
                         <span className="text-primary-foreground text-xs font-medium">

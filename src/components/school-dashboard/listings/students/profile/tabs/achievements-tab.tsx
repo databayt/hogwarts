@@ -84,7 +84,7 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
       {/* Add Achievement Button */}
       <div className="flex justify-end">
         <Button variant="outline" size="sm">
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="me-2 h-4 w-4" />
           Add Achievement
         </Button>
       </div>
@@ -189,7 +189,7 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
                             variant="secondary"
                             className={levelBadge.color}
                           >
-                            <span className="mr-1">{levelBadge.icon}</span>
+                            <span className="me-1">{levelBadge.icon}</span>
                             {achievement.level}
                           </Badge>
                         )}
@@ -228,7 +228,7 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
                   {/* Actions */}
                   {achievement.certificateUrl && (
                     <Button variant="outline" size="sm">
-                      <Award className="mr-1 h-4 w-4" />
+                      <Award className="me-1 h-4 w-4" />
                       View Certificate
                     </Button>
                   )}
@@ -247,7 +247,7 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
               No achievements recorded yet
             </p>
             <Button variant="outline" className="mt-4">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               Add First Achievement
             </Button>
           </CardContent>
@@ -276,7 +276,7 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
                     (a) => new Date(a.achievementDate).getFullYear() === year
                   )
                   return (
-                    <div key={year} className="border-primary border-l-2 pl-4">
+                    <div key={year} className="border-primary border-s-2 ps-4">
                       <h5 className="mb-2 font-medium">{year}</h5>
                       <div className="space-y-1">
                         {yearAchievements.map((a) => (

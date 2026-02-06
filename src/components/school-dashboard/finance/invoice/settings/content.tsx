@@ -181,7 +181,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
                 onClick={() => setShowLogoUploader(true)}
                 disabled={isLoading}
               >
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="me-2 h-4 w-4" />
                 {logo ? "Change Logo" : "Upload Logo"}
               </Button>
               <Button className="w-fit" disabled={isLoading || !logo}>
@@ -246,7 +246,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
                 onClick={() => setShowSignatureUploader(true)}
                 disabled={isLoading}
               >
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="me-2 h-4 w-4" />
                 {signatureData.image ? "Change Signature" : "Upload Signature"}
               </Button>
               <Button

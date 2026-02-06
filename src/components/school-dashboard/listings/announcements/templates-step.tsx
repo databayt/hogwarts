@@ -37,24 +37,21 @@ const QUICK_PRESETS = [
   {
     id: "urgent-school",
     icon: AlertTriangle,
-    labelEn: "Urgent School-wide",
-    labelAr: "عاجل للمدرسة",
+    label: "عاجل للمدرسة",
     scope: "school" as const,
     priority: "urgent" as const,
   },
   {
     id: "class-meeting",
     icon: Users,
-    labelEn: "Class Meeting",
-    labelAr: "اجتماع الفصل",
+    label: "اجتماع الفصل",
     scope: "class" as const,
     priority: "normal" as const,
   },
   {
     id: "staff-notice",
     icon: Bell,
-    labelEn: "Staff Notice",
-    labelAr: "إشعار الموظفين",
+    label: "إشعار الموظفين",
     scope: "role" as const,
     priority: "normal" as const,
     role: "STAFF" as const,
@@ -62,8 +59,7 @@ const QUICK_PRESETS = [
   {
     id: "parent-update",
     icon: UserCheck,
-    labelEn: "Parent Update",
-    labelAr: "تحديث أولياء الأمور",
+    label: "تحديث أولياء الأمور",
     scope: "role" as const,
     priority: "normal" as const,
     role: "GUARDIAN" as const,
@@ -75,52 +71,45 @@ const SYSTEM_TEMPLATES = [
   {
     type: "holiday",
     icon: Calendar,
-    labelEn: "Holiday",
-    labelAr: "عطلة",
+    label: "عطلة",
     color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
   },
   {
     type: "exam",
     icon: GraduationCap,
-    labelEn: "Exam Schedule",
-    labelAr: "جدول الامتحانات",
+    label: "جدول الامتحانات",
     color:
       "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
   },
   {
     type: "event",
     icon: CalendarCheck,
-    labelEn: "Event",
-    labelAr: "فعالية",
+    label: "فعالية",
     color: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
   },
   {
     type: "meeting",
     icon: Users,
-    labelEn: "Meeting",
-    labelAr: "اجتماع",
+    label: "اجتماع",
     color:
       "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
   },
   {
     type: "policy",
     icon: FileCheck,
-    labelEn: "Policy Update",
-    labelAr: "تحديث السياسة",
+    label: "تحديث السياسة",
     color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   },
   {
     type: "emergency",
     icon: AlertTriangle,
-    labelEn: "Emergency",
-    labelAr: "طوارئ",
+    label: "طوارئ",
     color: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   },
   {
     type: "general",
     icon: MessageSquare,
-    labelEn: "General",
-    labelAr: "عام",
+    label: "عام",
     color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
   },
 ]
@@ -165,10 +154,9 @@ export function TemplatesStep({
     if (templateId === "scratch") {
       // Reset form to defaults
       form.reset({
-        titleEn: "",
-        titleAr: "",
-        bodyEn: "",
-        bodyAr: "",
+        title: "",
+        body: "",
+        lang: "ar",
         scope: "school",
         priority: "normal",
         classId: "",
@@ -206,10 +194,9 @@ export function TemplatesStep({
   // Apply user template
   const applyUserTemplate = (template: AnnouncementTemplate) => {
     handleSelect(`user-${template.id}`, {
-      titleEn: template.titleEn || "",
-      titleAr: template.titleAr || "",
-      bodyEn: template.bodyEn || "",
-      bodyAr: template.bodyAr || "",
+      title: template.title || "",
+      body: template.body || "",
+      lang: (template.lang as "ar" | "en") || "ar",
       scope: template.scope,
       priority: template.priority,
       classId: template.classId || "",
@@ -277,7 +264,7 @@ export function TemplatesStep({
                   </div>
                   <div className="min-w-0 flex-1">
                     <h5 className="truncate text-sm font-medium">
-                      {isRTL ? preset.labelAr : preset.labelEn}
+                      {preset.label}
                     </h5>
                   </div>
                 </CardContent>
@@ -308,7 +295,7 @@ export function TemplatesStep({
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {isRTL ? template.labelAr : template.labelEn}
+                {template.label}
               </button>
             )
           })}

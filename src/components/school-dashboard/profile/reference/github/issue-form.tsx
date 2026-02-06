@@ -88,7 +88,7 @@
 //             >
 //               {label.name}
 //               {selectedLabels.includes(label.name) && (
-//                 <X className="ml-1 h-3 w-3" />
+//                 <X className="ms-1 h-3 w-3" />
 //               )}
 //             </Badge>
 //           ))}

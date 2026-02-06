@@ -168,12 +168,30 @@ export function buildAssignmentWhere(
 ): Prisma.AssignmentWhereInput {
   const where: Prisma.AssignmentWhereInput = { schoolId }
 
-  // Search by title
+  // Search by title, description, or class name
   if (filters.search) {
-    where.title = {
-      contains: filters.search,
-      mode: Prisma.QueryMode.insensitive,
-    }
+    where.OR = [
+      {
+        title: {
+          contains: filters.search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        description: {
+          contains: filters.search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        class: {
+          name: {
+            contains: filters.search,
+            mode: Prisma.QueryMode.insensitive,
+          },
+        },
+      },
+    ]
   }
 
   // Class filter
@@ -333,6 +351,55 @@ export async function verifyAssignmentOwnership(
   })
 
   return assignments.map((a) => a.id)
+}
+
+/**
+ * Get assignment statistics for a school
+ * @param schoolId - School ID
+ * @returns Promise with statistics
+ */
+export async function getAssignmentStats(schoolId: string) {
+  const now = new Date()
+
+  const [total, byStatus, byType, overdue] = await Promise.all([
+    db.assignment.count({ where: { schoolId } }),
+    db.assignment.groupBy({
+      by: ["status"],
+      where: { schoolId },
+      _count: { status: true },
+    }),
+    db.assignment.groupBy({
+      by: ["type"],
+      where: { schoolId },
+      _count: { type: true },
+    }),
+    db.assignment.count({
+      where: {
+        schoolId,
+        dueDate: { lt: now },
+        status: { not: "COMPLETED" },
+      },
+    }),
+  ])
+
+  return {
+    total,
+    byStatus: byStatus.reduce(
+      (acc, item) => {
+        acc[item.status] = item._count.status
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    byType: byType.reduce(
+      (acc, item) => {
+        acc[item.type] = item._count.type
+        return acc
+      },
+      {} as Record<string, number>
+    ),
+    overdue,
+  }
 }
 
 // ============================================================================

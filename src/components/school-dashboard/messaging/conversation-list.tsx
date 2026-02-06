@@ -130,7 +130,7 @@ export function ConversationList({
 
   return (
     <div
-      className={cn("border-border flex h-full flex-col border-r", className)}
+      className={cn("border-border flex h-full flex-col border-e", className)}
     >
       {/* Header */}
       <div className="border-border space-y-3 border-b p-4">
@@ -155,7 +155,7 @@ export function ConversationList({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={locale === "ar" ? "بحث..." : "Search..."}
-            className="pl-9"
+            className="ps-9"
           />
         </div>
 
@@ -173,13 +173,13 @@ export function ConversationList({
               <TabsTrigger value="unread">
                 {locale === "ar" ? "غير مقروء" : "Unread"}
                 {unreadCount > 0 && (
-                  <span className="ml-1 text-xs">({unreadCount})</span>
+                  <span className="ms-1 text-xs">({unreadCount})</span>
                 )}
               </TabsTrigger>
               <TabsTrigger value="pinned">
                 {locale === "ar" ? "مثبت" : "Pinned"}
                 {pinnedCount > 0 && (
-                  <span className="ml-1 text-xs">({pinnedCount})</span>
+                  <span className="ms-1 text-xs">({pinnedCount})</span>
                 )}
               </TabsTrigger>
             </TabsList>

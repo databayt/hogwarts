@@ -48,7 +48,6 @@ export async function GET(
       },
       select: {
         subjectName: true,
-        subjectNameAr: true,
       },
     })
 
@@ -56,8 +55,7 @@ export async function GET(
       return NextResponse.json({ error: "Subject not found" }, { status: 404 })
     }
 
-    // Prefer Arabic name if available, otherwise use English
-    const name = subject.subjectNameAr || subject.subjectName
+    const name = subject.subjectName
 
     return NextResponse.json({ name })
   } catch (error) {

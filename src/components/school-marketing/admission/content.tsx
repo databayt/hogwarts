@@ -15,10 +15,19 @@ interface Props {
   subdomain: string
 }
 
-export default function AdmissionContent({ school, dictionary, lang }: Props) {
+export default function AdmissionContent({
+  school,
+  dictionary,
+  lang,
+  subdomain,
+}: Props) {
   return (
     <main className="bg-background flex flex-col">
-      <AdmissionHero lang={lang} dictionary={dictionary} />
+      <AdmissionHero
+        lang={lang}
+        subdomain={subdomain}
+        dictionary={dictionary}
+      />
       <AdmissionValues lang={lang} dictionary={dictionary} />
       <AdmissionProcess lang={lang} dictionary={dictionary} />
       <AdmissionRequirements lang={lang} dictionary={dictionary} />

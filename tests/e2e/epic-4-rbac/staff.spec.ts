@@ -31,7 +31,8 @@ test.describe("Story 4.7: STAFF Permissions @rbac", () => {
     await loginPage.loginAs("staff")
 
     if (page.url().includes("chrome-error://")) {
-      test.skip()
+      test.skip(true, "Protocol mismatch in dev environment")
+      return
     }
   })
 
