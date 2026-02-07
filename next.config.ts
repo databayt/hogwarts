@@ -109,6 +109,12 @@ const nextConfig: NextConfig = {
 
   // Strict mode for better debugging
   reactStrictMode: true,
+
+  // Skip built-in TS check during build (handled by separate tsc --noEmit step)
+  // Prevents OOM on Vercel's 8GB build machines for large codebases
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 }
 
 const withMDX = createMDX()
