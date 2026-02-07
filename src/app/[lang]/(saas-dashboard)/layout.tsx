@@ -37,9 +37,9 @@ export default async function OperatorLayout({
   }
 
   if (session.user?.role !== "DEVELOPER") {
-    // Logged in but not DEVELOPER - redirect to onboarding
-    // This is a security-critical redirect - non-DEVELOPER users cannot access SaaS dashboard
-    redirect(`/${lang}/onboarding`)
+    // Logged in but not DEVELOPER - redirect to access-denied
+    // Onboarding is only reachable via the Get Started button in SaaS marketing
+    redirect(`/${lang}/access-denied`)
   }
 
   // Only DEVELOPER role reaches this point

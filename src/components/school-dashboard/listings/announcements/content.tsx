@@ -1,5 +1,6 @@
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -39,23 +40,30 @@ export default async function AnnouncementsContent({
         sort: sp.sort,
       })
 
-      // Map results to table format with single-language fields
+      // Map results to table format with on-demand translation
       // CRITICAL FIX: Handle null/undefined dates to prevent server-side exceptions
-      data = rows.map((a) => ({
-        id: a.id,
-        title: a.title,
-        lang: a.lang,
-        scope: a.scope,
-        published: a.published,
-        // Safe date serialization - fallback to current time if null/undefined
-        createdAt: a.createdAt
-          ? new Date(a.createdAt).toISOString()
-          : new Date().toISOString(),
-        createdBy: a.createdBy,
-        priority: a.priority,
-        pinned: a.pinned,
-        featured: a.featured,
-      }))
+      data = await Promise.all(
+        rows.map(async (a) => ({
+          id: a.id,
+          title: await getDisplayText(
+            a.title,
+            (a.lang as "ar" | "en") || "ar",
+            lang,
+            schoolId!
+          ),
+          lang: a.lang,
+          scope: a.scope,
+          published: a.published,
+          // Safe date serialization - fallback to current time if null/undefined
+          createdAt: a.createdAt
+            ? new Date(a.createdAt).toISOString()
+            : new Date().toISOString(),
+          createdBy: a.createdBy,
+          priority: a.priority,
+          pinned: a.pinned,
+          featured: a.featured,
+        }))
+      )
 
       total = count
     } catch (error) {

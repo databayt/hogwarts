@@ -135,6 +135,9 @@ model QuestionBank {
   // Quiz game relations
   quizGameQuestions QuizGameQuestion[]
 
+  // Curriculum standards
+  standards QuestionStandard[]
+
   createdBy String // Teacher/System ID
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

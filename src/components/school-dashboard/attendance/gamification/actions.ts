@@ -8,6 +8,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 
 import {
@@ -333,7 +334,8 @@ export async function awardBadge(
  * Get student leaderboard
  */
 export async function getLeaderboard(
-  limit: number = 10
+  limit: number = 10,
+  displayLang?: "ar" | "en"
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
@@ -360,7 +362,13 @@ export async function getLeaderboard(
         studentBadges: {
           include: {
             badge: {
-              select: { code: true, name: true, icon: true, color: true },
+              select: {
+                code: true,
+                name: true,
+                lang: true,
+                icon: true,
+                color: true,
+              },
             },
           },
           orderBy: { awardedAt: "desc" },
@@ -370,7 +378,8 @@ export async function getLeaderboard(
     })
 
     // Calculate total points and sort
-    const leaderboard: LeaderboardEntry[] = students
+    const lang = displayLang || "ar"
+    const leaderboardRaw = students
       .map((student) => ({
         studentId: student.id,
         studentName: `${student.givenName} ${student.surname}`,
@@ -381,6 +390,7 @@ export async function getLeaderboard(
         badges: student.studentBadges.map((sb) => ({
           code: sb.badge.code,
           name: sb.badge.name,
+          lang: sb.badge.lang || "en",
           icon: sb.badge.icon,
           color: sb.badge.color,
         })),
@@ -389,6 +399,26 @@ export async function getLeaderboard(
       .sort((a, b) => b.points - a.points)
       .slice(0, limit)
       .map((entry, index) => ({ ...entry, rank: index + 1 }))
+
+    // Translate badge names
+    const leaderboard: LeaderboardEntry[] = await Promise.all(
+      leaderboardRaw.map(async (entry) => ({
+        ...entry,
+        badges: await Promise.all(
+          entry.badges.map(async (badge) => ({
+            code: badge.code,
+            name: await getDisplayText(
+              badge.name,
+              (badge.lang as "ar" | "en") || "en",
+              lang,
+              schoolId!
+            ),
+            icon: badge.icon,
+            color: badge.color,
+          }))
+        ),
+      }))
+    )
 
     return { success: true, data: leaderboard }
   } catch (error) {
@@ -537,7 +567,9 @@ export async function createCompetition(
 /**
  * Get active competitions
  */
-export async function getActiveCompetitions(): Promise<ActionResult> {
+export async function getActiveCompetitions(
+  displayLang?: "ar" | "en"
+): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
 
@@ -567,27 +599,52 @@ export async function getActiveCompetitions(): Promise<ActionResult> {
       },
     })
 
-    return {
-      success: true,
-      data: competitions.map((c) => ({
+    // Translate competition and class names
+    const lang = displayLang || "ar"
+    const translatedCompetitions = await Promise.all(
+      competitions.map(async (c) => ({
         id: c.id,
-        name: c.name,
+        name: await getDisplayText(
+          c.name,
+          (c.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId!
+        ),
         lang: c.lang,
-        description: c.description,
+        description: c.description
+          ? await getDisplayText(
+              c.description,
+              (c.lang as "ar" | "en") || "ar",
+              lang,
+              schoolId!
+            )
+          : null,
         startDate: c.startDate,
         endDate: c.endDate,
         winnerReward: c.winnerReward,
-        entries: c.entries.map((e, index) => ({
-          rank: index + 1,
-          classId: e.classId,
-          className: e.class.name,
-          classLang: e.class.lang,
-          attendanceRate: e.attendanceRate,
-          totalStudents: e.totalStudents,
-          presentDays: e.presentDays,
-          absentDays: e.absentDays,
-        })),
-      })),
+        entries: await Promise.all(
+          c.entries.map(async (e, index) => ({
+            rank: index + 1,
+            classId: e.classId,
+            className: await getDisplayText(
+              e.class.name,
+              (e.class.lang as "ar" | "en") || "ar",
+              lang,
+              schoolId!
+            ),
+            classLang: e.class.lang,
+            attendanceRate: e.attendanceRate,
+            totalStudents: e.totalStudents,
+            presentDays: e.presentDays,
+            absentDays: e.absentDays,
+          }))
+        ),
+      }))
+    )
+
+    return {
+      success: true,
+      data: translatedCompetitions,
     }
   } catch (error) {
     console.error("Error getting competitions:", error)

@@ -71,7 +71,17 @@ export default async function ConfigsPage({ params }: ConfigsPageProps) {
       </div>
 
       {/* Config List */}
-      <CertificateConfigList configs={configs} locale={lang} />
+      <CertificateConfigList
+        configs={configs.map((c) => ({
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          templateStyle: c.templateStyle,
+          isActive: c.isActive,
+          certificateCount: c._count.certificates,
+          createdAt: c.createdAt,
+        }))}
+      />
     </div>
   )
 }

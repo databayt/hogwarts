@@ -60,8 +60,8 @@ export function GamificationContent({ locale }: GamificationContentProps) {
     await initializeDefaultBadges()
 
     const [leaderboardResult, competitionsResult] = await Promise.all([
-      getLeaderboard(20),
-      getActiveCompetitions(),
+      getLeaderboard(20, locale as "ar" | "en"),
+      getActiveCompetitions(locale as "ar" | "en"),
     ])
 
     if (leaderboardResult.success && leaderboardResult.data) {

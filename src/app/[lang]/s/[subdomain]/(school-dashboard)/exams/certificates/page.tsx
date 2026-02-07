@@ -18,5 +18,5 @@ export default async function CertificatesPage({
 }: CertificatesPageProps) {
   const { lang } = await params
 
-  return <CertificateContent locale={lang} />
+  return <CertificateContent />
 }

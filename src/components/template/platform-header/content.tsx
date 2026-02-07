@@ -37,16 +37,19 @@ import {
 interface PlatformHeaderProps {
   school?: School
   lang?: string
+  serverRole?: string
 }
 
 export default function PlatformHeader({
   school,
   lang,
+  serverRole,
 }: PlatformHeaderProps = {}) {
   const breadcrumbItems = useBreadcrumbs()
   const { dictionary } = useDictionary()
   const { isRTL, locale } = useLocale()
-  const role = useCurrentRole() as Role | undefined
+  const clientRole = useCurrentRole() as Role | undefined
+  const role = clientRole ?? (serverRole as Role | undefined)
   const pathname = usePathname()
   const params = useParams()
 

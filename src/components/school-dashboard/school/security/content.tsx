@@ -1,27 +1,15 @@
-import Link from "next/link"
-import {
-  Activity,
-  CircleCheck,
-  FileWarning,
-  Key,
-  Lock,
-  Shield,
-  TriangleAlert,
-  UserX,
-} from "lucide-react"
+import { Suspense } from "react"
+import { Activity, FileWarning, Key, Shield, UserX } from "lucide-react"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import AccessContent from "./access/content"
+import AuditContent from "./audit/content"
 
 interface Props {
   dictionary: Dictionary
@@ -30,29 +18,47 @@ interface Props {
 
 export default async function SecurityContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
-  const d = dictionary?.admin
 
-  // Get security stats
-  let activeSessions = 0
   let failedLogins = 0
   let twoFactorUsers = 0
-  const blockedIPs = 0
+  let totalUsers = 0
+  let auditEventsToday = 0
 
   if (schoolId) {
+    const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
     try {
-      ;[activeSessions, failedLogins, twoFactorUsers] = await Promise.all([
-        // JWT-based auth, no session table
-        Promise.resolve(0),
-        // No loginAttempts field in User model
-        Promise.resolve(0),
-        db.user
-          .count({ where: { schoolId, isTwoFactorEnabled: true } })
-          .catch(() => 0),
-      ])
+      ;[failedLogins, twoFactorUsers, totalUsers, auditEventsToday] =
+        await Promise.all([
+          db.loginAttempt
+            .count({
+              where: { schoolId, success: false, timestamp: { gte: last24h } },
+            })
+            .catch(() => 0),
+          db.user
+            .count({ where: { schoolId, isTwoFactorEnabled: true } })
+            .catch(() => 0),
+          db.user.count({ where: { schoolId } }).catch(() => 0),
+          db.auditLog
+            .count({ where: { schoolId, createdAt: { gte: today } } })
+            .catch(() => 0),
+        ])
     } catch (error) {
       console.error("Error fetching security data:", error)
     }
   }
+
+  // Calculate security score
+  const twoFactorRate = totalUsers > 0 ? (twoFactorUsers / totalUsers) * 100 : 0
+  const failureRate =
+    failedLogins > 10 ? 0 : Math.max(0, 100 - failedLogins * 10)
+  const securityScore = Math.round(
+    twoFactorRate * 0.4 +
+      failureRate * 0.3 +
+      (auditEventsToday > 0 ? 100 : 50) * 0.3
+  )
 
   return (
     <div className="space-y-6">
@@ -61,15 +67,13 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Sessions
+              Audit Events Today
             </CardTitle>
-            <Activity className="text-muted-foreground h-4 w-4" />
+            <FileWarning className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeSessions}</div>
-            <p className="text-muted-foreground text-xs">
-              Current active users
-            </p>
+            <div className="text-2xl font-bold">{auditEventsToday}</div>
+            <p className="text-muted-foreground text-xs">Logged actions</p>
           </CardContent>
         </Card>
 
@@ -91,7 +95,11 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{twoFactorUsers}</div>
-            <p className="text-muted-foreground text-xs">Protected accounts</p>
+            <p className="text-muted-foreground text-xs">
+              {totalUsers > 0
+                ? `${Math.round(twoFactorRate)}% of users`
+                : "No users"}
+            </p>
           </CardContent>
         </Card>
 
@@ -103,100 +111,49 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
             <Shield className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">85%</div>
-            <p className="text-muted-foreground text-xs">Good protection</p>
+            <div className="text-2xl font-bold">{securityScore}%</div>
+            <p className="text-muted-foreground text-xs">
+              {securityScore >= 80
+                ? "Good protection"
+                : securityScore >= 50
+                  ? "Needs improvement"
+                  : "Action needed"}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Security Management */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Security Logs */}
-        <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileWarning className="text-primary h-5 w-5" />
-              Security Logs
-            </CardTitle>
-            <CardDescription>Security event monitoring</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              Monitor login attempts, permission denials, and suspicious
-              activities.
-            </p>
-            <Button asChild>
-              <Link href={`/${lang}/admin/security/logs`}>
-                View Security Logs
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Tabs */}
+      <Tabs defaultValue="audit">
+        <TabsList>
+          <TabsTrigger value="audit">Audit Log</TabsTrigger>
+          <TabsTrigger value="access">Access Control</TabsTrigger>
+        </TabsList>
 
-        {/* Session Management */}
-        <Card className="border-blue-500/20 transition-colors hover:border-blue-500/40">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-blue-500" />
-              Active Sessions
-            </CardTitle>
-            <CardDescription>User session management</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              View active sessions, terminate suspicious sessions, and manage
-              session policies.
-            </p>
-            <Button asChild variant="secondary">
-              <Link href={`/${lang}/admin/security/sessions`}>
-                Manage Sessions
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <TabsContent value="audit" className="mt-4">
+          <Suspense
+            fallback={
+              <div className="text-muted-foreground py-8 text-center">
+                Loading audit logs...
+              </div>
+            }
+          >
+            <AuditContent lang={lang} />
+          </Suspense>
+        </TabsContent>
 
-        {/* Security Policies */}
-        <Card className="border-green-500/20 transition-colors hover:border-green-500/40">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-green-500" />
-              Security Policies
-            </CardTitle>
-            <CardDescription>Password and access policies</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              Configure password requirements, session timeouts, and access
-              control policies.
-            </p>
-            <Button asChild variant="secondary">
-              <Link href={`/${lang}/admin/security/policies`}>
-                Configure Policies
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Threat Detection */}
-        <Card className="border-red-500/20 transition-colors hover:border-red-500/40">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TriangleAlert className="h-5 w-5 text-red-500" />
-              Threat Detection
-            </CardTitle>
-            <CardDescription>Security threat monitoring</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              Monitor for brute force attacks, suspicious IPs, and unusual
-              activity patterns.
-            </p>
-            <Button asChild variant="secondary">
-              <Link href={`/${lang}/admin/security/threats`}>View Threats</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="access" className="mt-4">
+          <Suspense
+            fallback={
+              <div className="text-muted-foreground py-8 text-center">
+                Loading access control...
+              </div>
+            }
+          >
+            <AccessContent lang={lang} />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

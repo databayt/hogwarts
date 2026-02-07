@@ -2,10 +2,11 @@
 
 import { auth } from "@/auth"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
 
-export async function getParentAnnouncements() {
+export async function getParentAnnouncements(displayLang?: "ar" | "en") {
   try {
     const session = await auth()
 
@@ -91,35 +92,49 @@ export async function getParentAnnouncements() {
       },
     })
 
-    // Map announcements with additional context
-    const mappedAnnouncements = announcements.map((announcement) => ({
-      id: announcement.id,
-      title: announcement.title || "",
-      body: announcement.body || "",
-      scope: announcement.scope,
-      createdAt: announcement.createdAt,
-      updatedAt: announcement.updatedAt,
-      class: announcement.class
-        ? {
-            id: announcement.class.id,
-            name: announcement.class.name,
-            subject: announcement.class.subject.subjectName,
-            teacher: announcement.class.teacher
-              ? `${announcement.class.teacher.givenName} ${announcement.class.teacher.surname}`
-              : "N/A",
-          }
-        : null,
-      // Mark which student this announcement is relevant for
-      relevantStudents: announcement.classId
-        ? guardian.studentGuardians
-            .filter((sg) =>
-              sg.student.studentClasses.some(
-                (sc) => sc.classId === announcement.classId
+    // Map announcements with additional context and on-demand translation
+    const lang = displayLang || "ar"
+    const schoolId = session.user.schoolId
+    const mappedAnnouncements = await Promise.all(
+      announcements.map(async (announcement) => ({
+        id: announcement.id,
+        title: await getDisplayText(
+          announcement.title || "",
+          (announcement.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId
+        ),
+        body: await getDisplayText(
+          announcement.body || "",
+          (announcement.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId
+        ),
+        scope: announcement.scope,
+        createdAt: announcement.createdAt,
+        updatedAt: announcement.updatedAt,
+        class: announcement.class
+          ? {
+              id: announcement.class.id,
+              name: announcement.class.name,
+              subject: announcement.class.subject.subjectName,
+              teacher: announcement.class.teacher
+                ? `${announcement.class.teacher.givenName} ${announcement.class.teacher.surname}`
+                : "N/A",
+            }
+          : null,
+        // Mark which student this announcement is relevant for
+        relevantStudents: announcement.classId
+          ? guardian.studentGuardians
+              .filter((sg) =>
+                sg.student.studentClasses.some(
+                  (sc) => sc.classId === announcement.classId
+                )
               )
-            )
-            .map((sg) => sg.student.id)
-        : guardian.studentGuardians.map((sg) => sg.student.id),
-    }))
+              .map((sg) => sg.student.id)
+          : guardian.studentGuardians.map((sg) => sg.student.id),
+      }))
+    )
 
     logger.info("Parent announcements fetched", {
       action: "parent_announcements_fetch",

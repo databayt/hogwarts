@@ -58,7 +58,7 @@ function YearLevelTableInner({
       total,
       perPage,
       fetcher: async (params) => {
-        const result = await getYearLevels(params)
+        const result = await getYearLevels(params, lang)
         if (!result.success || !result.data) {
           return { rows: [], total: 0 }
         }

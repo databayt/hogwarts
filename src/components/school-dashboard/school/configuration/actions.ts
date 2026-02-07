@@ -18,6 +18,9 @@ const schoolIdentitySchema = z.object({
   address: z.string().optional(),
   website: z.string().url().optional().or(z.literal("")),
   timezone: z.string().optional(),
+  description: z.string().optional(),
+  schoolType: z.string().optional(),
+  schoolLevel: z.string().optional(),
 })
 
 // Schema for branding update
@@ -80,6 +83,9 @@ export async function updateSchoolIdentity(
         address: validatedData.address || null,
         website: validatedData.website || null,
         timezone: validatedData.timezone || "Africa/Khartoum",
+        description: validatedData.description || null,
+        schoolType: validatedData.schoolType || null,
+        schoolLevel: validatedData.schoolLevel || null,
       },
     })
 
@@ -156,11 +162,104 @@ export async function updateSchoolBranding(
   }
 }
 
+// Schema for school location update
+const schoolLocationSchema = z.object({
+  city: z.string().optional(),
+  state: z.string().optional(),
+  country: z.string().optional(),
+})
+
+export async function updateSchoolLocation(
+  schoolId: string,
+  data: z.infer<typeof schoolLocationSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const validatedData = schoolLocationSchema.parse(data)
+
+    const updated = await db.school.update({
+      where: { id: schoolId },
+      data: {
+        city: validatedData.city || null,
+        state: validatedData.state || null,
+        country: validatedData.country || null,
+      },
+    })
+
+    revalidatePath("/school/configuration")
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("Error updating school location:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return { success: false, error: "Failed to update school location" }
+  }
+}
+
+// Schema for school pricing update
+const schoolPricingSchema = z.object({
+  tuitionFee: z.number().min(0).optional().nullable(),
+  registrationFee: z.number().min(0).optional().nullable(),
+  applicationFee: z.number().min(0).optional().nullable(),
+  currency: z.string().default("USD"),
+  paymentSchedule: z.enum(["monthly", "quarterly", "semester", "annual"]),
+})
+
+export async function updateSchoolPricing(
+  schoolId: string,
+  data: z.infer<typeof schoolPricingSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const validatedData = schoolPricingSchema.parse(data)
+
+    const updated = await db.school.update({
+      where: { id: schoolId },
+      data: {
+        tuitionFee: validatedData.tuitionFee ?? null,
+        registrationFee: validatedData.registrationFee ?? null,
+        applicationFee: validatedData.applicationFee ?? null,
+        currency: validatedData.currency,
+        paymentSchedule: validatedData.paymentSchedule,
+      },
+    })
+
+    revalidatePath("/school/configuration")
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("Error updating school pricing:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return { success: false, error: "Failed to update school pricing" }
+  }
+}
+
 // Schema for plan and limits update
 const planLimitsSchema = z.object({
   planType: z.enum(["basic", "premium", "enterprise"]),
   maxStudents: z.number().min(1).max(100000),
   maxTeachers: z.number().min(1).max(10000),
+  maxClasses: z.number().min(1).max(1000),
   isActive: z.boolean(),
 })
 
@@ -186,6 +285,7 @@ export async function updatePlanLimits(
         planType: validatedData.planType,
         maxStudents: validatedData.maxStudents,
         maxTeachers: validatedData.maxTeachers,
+        maxClasses: validatedData.maxClasses,
         isActive: validatedData.isActive,
       },
     })

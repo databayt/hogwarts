@@ -165,7 +165,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
     setIsLoading(true)
     setError(null)
     try {
-      const result = await getYearLevels()
+      const result = await getYearLevels(lang)
       if (result.success && result.data?.yearLevels) {
         setYearLevels(result.data.yearLevels as unknown as YearLevel[])
       } else if (!result.success) {

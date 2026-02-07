@@ -127,6 +127,9 @@ model Student {
   biometricTemplates      BiometricTemplate[]
   accessCards             AccessCard[]
   attendanceInterventions AttendanceIntervention[]
+  policyTriggers          PolicyTrigger[]
+  policyExemptions        PolicyExemption[]
+  masterAttendance        MasterAttendance[]
   absenceIntentions       AbsenceIntention[]
   hallPasses              HallPass[]
   kioskLogs               KioskLog[]
@@ -145,6 +148,11 @@ model Student {
 
   // Exam sessions (proctoring)
   examSessions ExamSession[]
+
+  // Quick Assessment relations
+  quickAssessmentResponses QuickAssessmentResponse[]
+  // Progress Report relations
+  generatedProgressReports GeneratedProgressReport[]
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt

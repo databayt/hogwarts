@@ -1,0 +1,351 @@
+---
+title: "Translation"
+description: "On-demand translation system with single-language storage and Google Translate caching"
+---
+
+## Overview
+
+All user-generated content is stored in **one language** with a `lang` field. Translation happens **on-demand** when the viewer's locale differs from the stored language. This eliminates dual-field schemas (`titleEn`/`titleAr`) and keeps the database simple.
+
+### Core Principles
+
+| Principle               | Description                                                               |
+| ----------------------- | ------------------------------------------------------------------------- |
+| Single-language storage | Each record stores content in one language, indicated by `lang`           |
+| Generic field names     | `title`, `body`, `name` - never `titleEn` or `titleAr`                    |
+| On-demand translation   | Content is translated at display time via `getDisplayText()`              |
+| Database caching        | Translations are cached in `TranslationCache` to avoid repeated API calls |
+| Graceful fallback       | If translation fails, the original text is returned                       |
+
+---
+
+## How It Works
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    Translation Flow                           │
+├──────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Stored Content (lang: "ar")                                  │
+│       │                                                       │
+│       ▼                                                       │
+│  getDisplayText(text, contentLang, displayLang, schoolId)     │
+│       │                                                       │
+│       ├── Same language? ──► Return text directly (zero cost) │
+│       │                                                       │
+│       └── Different language?                                 │
+│               │                                               │
+│               ▼                                               │
+│       Check TranslationCache                                  │
+│               │                                               │
+│               ├── Cache hit ──► Return cached translation     │
+│               │                  (increment hitCount)         │
+│               │                                               │
+│               └── Cache miss                                  │
+│                       │                                       │
+│                       ▼                                       │
+│               Google Translate API                            │
+│                       │                                       │
+│                       ▼                                       │
+│               Store in TranslationCache                       │
+│                       │                                       │
+│                       ▼                                       │
+│               Return translated text                          │
+│                                                               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Core Utilities
+
+### `getDisplayText()`
+
+The primary function for translating a single field. Returns the text directly if languages match, otherwise translates with caching.
+
+**File:** `src/lib/content-display.ts`
+
+```typescript
+import { getDisplayText } from "@/lib/content-display"
+
+// Content stored in Arabic, user viewing in English -> translates
+const title = await getDisplayText("مرحبا", "ar", "en", schoolId)
+// Returns "Hello" (translated and cached)
+
+// Content stored in Arabic, user viewing in Arabic -> returns directly
+const title = await getDisplayText("مرحبا", "ar", "ar", schoolId)
+// Returns "مرحبا" (no translation needed)
+```
+
+**Signature:**
+
+```typescript
+async function getDisplayText(
+  text: string | null | undefined,
+  contentLang: "en" | "ar",
+  displayLang: "en" | "ar",
+  schoolId: string
+): Promise<string>
+```
+
+### `getDisplayFields()`
+
+Batch translate multiple fields of an entity in parallel. More efficient than calling `getDisplayText()` for each field.
+
+**File:** `src/lib/content-display.ts`
+
+```typescript
+import { getDisplayFields } from "@/lib/content-display"
+
+const translated = await getDisplayFields(
+  announcement,
+  ["title", "body"],
+  announcement.lang,
+  "en",
+  schoolId
+)
+// { title: "Hello", body: "Welcome to school" }
+```
+
+### `translateWithCache()`
+
+Low-level function that handles the cache lookup and Google Translate API call. Used internally by `getDisplayText()`.
+
+**File:** `src/lib/translate.ts`
+
+```typescript
+import { translateWithCache } from "@/lib/translate"
+
+const translated = await translateWithCache(text, "ar", "en", schoolId)
+```
+
+### `translateText()` and `translateFields()`
+
+Server actions for explicit translation requests. These authenticate the user and resolve `schoolId` from tenant context automatically.
+
+**File:** `src/lib/translate.ts`
+
+```typescript
+import { translateFields, translateText } from "@/lib/translate"
+
+// Single text
+const result = await translateText({ text: "Hello", sourceLanguage: "en" })
+
+// Multiple fields in a single batch API call
+const result = await translateFields({
+  fields: { title: "Hello", body: "World" },
+  sourceLanguage: "en",
+})
+```
+
+---
+
+## Integration Patterns
+
+### Pattern 1: Server Components (translate in `rows.map()`)
+
+Used when displaying database rows in tables. Translate each row's fields inside `Promise.all()`.
+
+```typescript
+// content.tsx (server component)
+import { getDisplayText } from "@/lib/content-display"
+
+const data = await Promise.all(
+  rows.map(async (row) => ({
+    id: row.id,
+    title: await getDisplayText(
+      row.title,
+      (row.lang as "ar" | "en") || "ar",
+      lang, // viewer's locale
+      schoolId!
+    ),
+    // ... other fields
+  }))
+)
+```
+
+### Pattern 2: Server Actions (add `displayLang` parameter)
+
+Used when actions return data that needs translation. Accept `displayLang` and translate before returning.
+
+```typescript
+// actions.ts
+export async function getDepartments(
+  displayLang?: "ar" | "en"
+): Promise<ActionResult> {
+  const { schoolId } = await getTenantContext()
+  const lang = displayLang || "ar"
+
+  const departments = await db.department.findMany({
+    where: { schoolId },
+  })
+
+  const translated = await Promise.all(
+    departments.map(async (dept) => ({
+      ...dept,
+      departmentName: await getDisplayText(
+        dept.departmentName,
+        (dept.lang as "ar" | "en") || "ar",
+        lang,
+        schoolId!
+      ),
+    }))
+  )
+
+  return { success: true, data: translated }
+}
+```
+
+---
+
+## Integrated Surfaces
+
+Translation is currently integrated in these components:
+
+| Surface                  | File                                     | Fields Translated                  |
+| ------------------------ | ---------------------------------------- | ---------------------------------- |
+| Announcements list       | `listings/announcements/content.tsx`     | `title`                            |
+| Subjects table           | `listings/subjects/content.tsx`          | `subjectName`, `departmentName`    |
+| Departments              | `teachers/departments/actions.ts`        | `departmentName`, `subjectName`    |
+| Announcement detail      | `announcements/actions.ts`               | `title`, `body`                    |
+| Parent announcements     | `parent-portal/announcements/actions.ts` | `title`, `body`                    |
+| Year levels (academic)   | `school/academic/level/actions.ts`       | `levelName`                        |
+| Year levels (students)   | `students/year-levels/actions.ts`        | `levelName`                        |
+| Gamification leaderboard | `gamification/actions.ts`                | badge `name`                       |
+| Competitions             | `gamification/actions.ts`                | `name`, `description`, `className` |
+
+All paths are relative to `src/components/school-dashboard/`.
+
+---
+
+## Schema Rules
+
+### Generic Field Names
+
+```prisma
+// CORRECT - generic field + lang
+model Announcement {
+  title String?
+  body  String? @db.Text
+  lang  String  @default("ar")
+}
+
+// WRONG - bilingual columns
+model Announcement {
+  titleEn String?
+  titleAr String?
+}
+```
+
+### TranslationCache Model
+
+**File:** `prisma/models/translation-cache.prisma`
+
+```prisma
+model TranslationCache {
+  id             String   @id @default(cuid())
+  schoolId       String
+  sourceText     String   @db.Text
+  sourceLanguage String   // "ar" or "en"
+  targetLanguage String   // "ar" or "en"
+  translatedText String   @db.Text
+  provider       String   @default("google")
+  hitCount       Int      @default(0)
+  lastAccessedAt DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, sourceText, sourceLanguage, targetLanguage])
+  @@index([schoolId, sourceLanguage, targetLanguage])
+  @@index([lastAccessedAt])
+  @@map("translation_cache")
+}
+```
+
+The composite unique constraint on `(schoolId, sourceText, sourceLanguage, targetLanguage)` ensures each translation is cached once per school.
+
+---
+
+## Performance
+
+| Scenario                                    | Cost                                          |
+| ------------------------------------------- | --------------------------------------------- |
+| Same language (contentLang === displayLang) | Zero - returns text directly                  |
+| Cache hit                                   | Single DB lookup (~1ms)                       |
+| Cache miss                                  | Google Translate API call + DB write          |
+| Multiple fields                             | `Promise.all()` parallelizes all translations |
+
+### Optimization Tips
+
+- **Parallel translation** - Always use `Promise.all(rows.map(...))` instead of sequential `for` loops
+- **Cache warming** - First request for a text is the slowest; subsequent requests hit the DB cache
+- **Hit tracking** - `hitCount` and `lastAccessedAt` enable future cache eviction strategies
+- **Batch API** - `translateFields()` uses `googleTranslateBatch()` for a single API call with multiple texts
+
+---
+
+## Infrastructure
+
+| File                                     | Purpose                                                                        |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| `src/lib/content-display.ts`             | `getDisplayText()`, `getDisplayFields()` - primary display utilities           |
+| `src/lib/translate.ts`                   | `translateWithCache()`, `translateText()`, `translateFields()` - caching layer |
+| `src/lib/google-translate.ts`            | `googleTranslate()`, `googleTranslateBatch()` - Google Translate API client    |
+| `src/lib/auto-translate.ts`              | `prepareContentData()`, `withAutoTranslation()` - auto-translation utilities   |
+| `prisma/models/translation-cache.prisma` | `TranslationCache` model definition                                            |
+
+### Environment Variable
+
+```
+GOOGLE_TRANSLATE_API_KEY=your-api-key
+```
+
+Google Cloud Translation API v2. Free tier: 500K characters/month.
+
+---
+
+## Adding Translation to New Features
+
+Follow this checklist when adding translation support to a new model or surface:
+
+### 1. Schema
+
+- [ ] Use generic field names (`title`, not `titleEn`)
+- [ ] Add `lang String @default("ar")` to the model
+- [ ] Run `pnpm prisma generate` after schema changes
+
+### 2. Server Component (content.tsx)
+
+- [ ] Import `getDisplayText` from `@/lib/content-display`
+- [ ] Get `lang` from the page props (viewer's locale)
+- [ ] Get `schoolId` from `getTenantContext()`
+- [ ] Wrap `rows.map()` in `Promise.all()` for parallel translation
+- [ ] Call `getDisplayText(field, row.lang, lang, schoolId)` for each translatable field
+
+### 3. Server Action (actions.ts)
+
+- [ ] Add `displayLang?: "ar" | "en"` parameter
+- [ ] Translate fields before returning with `getDisplayText()`
+- [ ] Use `Promise.all()` for multiple rows
+
+### Example
+
+```typescript
+// content.tsx
+import { getDisplayText } from "@/lib/content-display"
+
+const data = await Promise.all(
+  rows.map(async (item) => ({
+    id: item.id,
+    name: await getDisplayText(
+      item.name,
+      (item.lang as "ar" | "en") || "ar",
+      lang,
+      schoolId!
+    ),
+  }))
+)
+```

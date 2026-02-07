@@ -1,6 +1,6 @@
 "use client"
 
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 
 import { logout } from "./logout-action"
 
@@ -23,27 +23,16 @@ interface LogoutButtonProps {
  */
 export const LogoutButton = ({ children, className }: LogoutButtonProps) => {
   const pathname = usePathname()
-  const router = useRouter()
 
   const onClick = async () => {
-    // Determine public return URL based on current location
-    let returnUrl = "/"
-
-    // Extract locale from pathname (e.g., /en/dashboard → en)
-    const localeMatch = pathname.match(/^\/([a-z]{2})\//)
+    // Extract locale from pathname (e.g., /en/dashboard → en, /en → en)
+    const localeMatch = pathname.match(/^\/([a-z]{2})(\/|$)/)
     const locale = localeMatch ? localeMatch[1] : "ar"
 
-    // If on school subdomain school-dashboard, return to school homepage
-    if (pathname.includes("/s/")) {
-      const match = pathname.match(/\/s\/([^/]+)/)
-      if (match) {
-        const subdomain = match[1]
-        returnUrl = `/${locale}/s/${subdomain}/` // School homepage
-      }
-    } else {
-      // For saas-marketing school-marketing and saas-dashboard dashboard, go to homepage with locale
-      returnUrl = `/${locale}`
-    }
+    // For ALL entry points: use /{locale} as the public return URL
+    // - On main domain: browser navigates to /en → SaaS homepage
+    // - On school subdomain: browser navigates to /en → proxy rewrites to /en/s/{subdomain}/
+    const returnUrl = `/${locale}`
 
     // Call logout action (clears session server-side)
     await logout(returnUrl)

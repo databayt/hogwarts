@@ -25,6 +25,9 @@ model Subject {
   // Quiz relations
   quizCategories QuizCategory[]
 
+  // Quick Assessment relations
+  quickAssessments QuickAssessment[]
+
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   QuestionBank QuestionBank[]
@@ -83,6 +86,11 @@ model Class {
 
   // Gamification relations
   competitionEntries ClassCompetitionEntry[]
+
+  // Quick Assessment relations
+  quickAssessments         QuickAssessment[]
+  // Progress Report relations
+  progressReportSchedules  ProgressReportSchedule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

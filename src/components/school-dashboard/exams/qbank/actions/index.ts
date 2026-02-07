@@ -57,6 +57,17 @@ export {
   QUESTION_CSV_HEADERS,
 } from "./csv-utils"
 
+// Curriculum Standards Operations
+export {
+  createCurriculumStandard,
+  getCurriculumStandards,
+  updateCurriculumStandard,
+  deleteCurriculumStandard,
+  linkQuestionToStandards,
+  getQuestionStandards,
+  getStandardQuestions,
+} from "./standards"
+
 // Type Exports
 export type {
   ActionResponse,

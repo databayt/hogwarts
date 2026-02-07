@@ -25,19 +25,22 @@ import { Icons } from "@/components/template/platform-sidebar/icons"
 interface PlatformSidebarProps extends React.ComponentProps<typeof Sidebar> {
   school?: School
   lang?: string
+  serverRole?: string
 }
 
 export default function PlatformSidebar({
   school,
   lang,
+  serverRole,
   ...props
 }: PlatformSidebarProps = {}) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
-  const role = useCurrentRole()
-  const currentRole = (role as unknown as Role | undefined) ?? undefined
+  const clientRole = useCurrentRole()
+  const currentRole =
+    ((clientRole ?? serverRole) as unknown as Role | undefined) ?? undefined
   const { dictionary } = useDictionary()
-  const { isRTL, locale } = useLocale()
+  const { locale } = useLocale()
 
   // Use school name if available, otherwise use a default
   const schoolName = school?.name || "Your School"
@@ -47,12 +50,7 @@ export default function PlatformSidebar({
   }, [setOpenMobile])
 
   return (
-    <Sidebar
-      {...props}
-      className="top-16 w-56 px-2"
-      collapsible="offcanvas"
-      side={isRTL ? "right" : "left"}
-    >
+    <Sidebar {...props} className="top-16 w-56 px-2" collapsible="offcanvas">
       {/* <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

@@ -9,7 +9,15 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 
@@ -26,7 +34,24 @@ const schoolIdentitySchema = z.object({
   address: z.string().optional(),
   website: z.string().url().optional().or(z.literal("")),
   timezone: z.string().optional(),
+  description: z.string().optional(),
+  schoolType: z.string().optional(),
+  schoolLevel: z.string().optional(),
 })
+
+const SCHOOL_TYPES = [
+  { value: "private", label: "Private" },
+  { value: "public", label: "Public" },
+  { value: "international", label: "International" },
+  { value: "technical", label: "Technical" },
+  { value: "special", label: "Special Education" },
+]
+
+const SCHOOL_LEVELS = [
+  { value: "primary", label: "Primary" },
+  { value: "secondary", label: "Secondary" },
+  { value: "both", label: "Both (K-12)" },
+]
 
 type SchoolIdentityFormData = z.infer<typeof schoolIdentitySchema>
 
@@ -165,6 +190,46 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
                 </div>
               </div>
             )}
+
+            <Separator />
+
+            {/* School Classification */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <Label className="text-muted-foreground text-xs">
+                  School Type
+                </Label>
+                <p className="font-medium capitalize">
+                  {initialData.schoolType
+                    ? SCHOOL_TYPES.find(
+                        (t) => t.value === initialData.schoolType
+                      )?.label || initialData.schoolType
+                    : "Not set"}
+                </p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-xs">
+                  School Level
+                </Label>
+                <p className="font-medium capitalize">
+                  {initialData.schoolLevel
+                    ? SCHOOL_LEVELS.find(
+                        (l) => l.value === initialData.schoolLevel
+                      )?.label || initialData.schoolLevel
+                    : "Not set"}
+                </p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <Label className="text-muted-foreground text-xs">
+                Description
+              </Label>
+              <p className="text-muted-foreground text-sm">
+                {initialData.description || "Not set"}
+              </p>
+            </div>
           </div>
 
           <Button
@@ -282,6 +347,62 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
           id="website"
           {...form.register("website")}
           placeholder="https://www.school.edu"
+          disabled={isPending}
+        />
+      </div>
+
+      <Separator />
+
+      {/* School Classification */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="schoolType">School Type</Label>
+          <Select
+            value={form.watch("schoolType") || ""}
+            onValueChange={(value) => form.setValue("schoolType", value)}
+            disabled={isPending}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              {SCHOOL_TYPES.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="schoolLevel">School Level</Label>
+          <Select
+            value={form.watch("schoolLevel") || ""}
+            onValueChange={(value) => form.setValue("schoolLevel", value)}
+            disabled={isPending}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select level" />
+            </SelectTrigger>
+            <SelectContent>
+              {SCHOOL_LEVELS.map((level) => (
+                <SelectItem key={level.value} value={level.value}>
+                  {level.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          {...form.register("description")}
+          placeholder="Brief description of your school..."
+          rows={3}
           disabled={isPending}
         />
       </div>

@@ -47,7 +47,25 @@ export const LoginForm = ({
   const tenant = searchParams.get("tenant")
   // New context params for user flow distinction
   const context = (searchParams.get("context") as LoginContext) || "saas"
-  const subdomain = searchParams.get("subdomain")
+  const subdomainParam = searchParams.get("subdomain")
+
+  // Detect subdomain from hostname as fallback (handles direct navigation to login)
+  const subdomain = useMemo(() => {
+    if (subdomainParam) return subdomainParam
+    if (typeof window === "undefined") return null
+    const host = window.location.hostname
+    if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
+      return host.split(".")[0]
+    }
+    if (host.includes(".localhost") && host !== "localhost") {
+      const sub = host.split(".")[0]
+      if (sub !== "www" && sub !== "localhost") return sub
+    }
+    return null
+  }, [subdomainParam])
+
+  // Override context to "school" when subdomain is detected
+  const effectiveContext = subdomain ? "school" : context
 
   // Get localized error messages
   const oauthError =
@@ -129,7 +147,7 @@ export const LoginForm = ({
     // Build login options with context for user flow distinction
     const loginOptions: LoginOptions = {
       callbackUrl: finalCallbackUrl,
-      context,
+      context: effectiveContext,
       subdomain,
     }
 

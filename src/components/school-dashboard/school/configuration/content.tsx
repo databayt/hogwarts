@@ -4,6 +4,8 @@ import {
   Calendar,
   CheckCircle2,
   Crown,
+  DollarSign,
+  MapPin,
   School,
   Settings,
   Users,
@@ -27,6 +29,8 @@ import { AcademicSection } from "./academic-section"
 import { CapacitySection } from "./capacity-section"
 import { PlanLimitsSection } from "./plan-limits-section"
 import { SchoolIdentityForm } from "./school-identity-form"
+import { SchoolLocationForm } from "./school-location-form"
+import { SchoolPricingForm } from "./school-pricing-form"
 
 interface Props {
   dictionary: Dictionary
@@ -50,10 +54,22 @@ export default async function ConfigurationContent({
     email: string | null
     website: string | null
     timezone: string
+    description: string | null
+    schoolType: string | null
+    schoolLevel: string | null
+    city: string | null
+    state: string | null
+    country: string | null
     planType: string
     maxStudents: number
     maxTeachers: number
+    maxClasses: number
     isActive: boolean
+    tuitionFee: unknown
+    registrationFee: unknown
+    applicationFee: unknown
+    currency: string
+    paymentSchedule: string
   } | null = null
 
   let academicYearsCount = 0
@@ -104,10 +120,22 @@ export default async function ConfigurationContent({
               email: true,
               website: true,
               timezone: true,
+              description: true,
+              schoolType: true,
+              schoolLevel: true,
+              city: true,
+              state: true,
+              country: true,
               planType: true,
               maxStudents: true,
               maxTeachers: true,
+              maxClasses: true,
               isActive: true,
+              tuitionFee: true,
+              registrationFee: true,
+              applicationFee: true,
+              currency: true,
+              paymentSchedule: true,
             },
           })
           .catch(() => null),
@@ -296,6 +324,47 @@ export default async function ConfigurationContent({
               address: schoolInfo?.address || "",
               website: schoolInfo?.website || "",
               timezone: schoolInfo?.timezone || "Africa/Khartoum",
+              description: schoolInfo?.description || "",
+              schoolType: schoolInfo?.schoolType || "",
+              schoolLevel: schoolInfo?.schoolLevel || "",
+            }}
+            lang={lang}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Location Details Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-red-500" />
+              <div>
+                <CardTitle>
+                  {isArabic ? "تفاصيل الموقع" : "Location Details"}
+                </CardTitle>
+                <CardDescription>
+                  {isArabic
+                    ? "المدينة والولاية والدولة"
+                    : "City, state, and country"}
+                </CardDescription>
+              </div>
+            </div>
+            {schoolInfo?.city && (
+              <Badge variant="outline" className="gap-1">
+                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                {isArabic ? "مكتمل" : "Configured"}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <SchoolLocationForm
+            schoolId={schoolId || ""}
+            initialData={{
+              city: schoolInfo?.city || "",
+              state: schoolInfo?.state || "",
+              country: schoolInfo?.country || "",
             }}
             lang={lang}
           />
@@ -336,6 +405,7 @@ export default async function ConfigurationContent({
                 "basic",
               maxStudents: schoolInfo?.maxStudents || 100,
               maxTeachers: schoolInfo?.maxTeachers || 10,
+              maxClasses: schoolInfo?.maxClasses || 20,
               isActive: schoolInfo?.isActive ?? true,
             }}
             currentUsage={{
@@ -378,6 +448,57 @@ export default async function ConfigurationContent({
             limits={{
               maxStudents: schoolInfo?.maxStudents || 100,
               maxTeachers: schoolInfo?.maxTeachers || 10,
+            }}
+            lang={lang}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Fees & Pricing Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-emerald-500" />
+              <div>
+                <CardTitle>
+                  {isArabic ? "الرسوم والتسعير" : "Fees & Pricing"}
+                </CardTitle>
+                <CardDescription>
+                  {isArabic
+                    ? "رسوم التعليم والتسجيل وجدول الدفع"
+                    : "Tuition, registration fees, and payment schedule"}
+                </CardDescription>
+              </div>
+            </div>
+            {schoolInfo?.tuitionFee != null && (
+              <Badge variant="outline" className="gap-1">
+                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                {isArabic ? "مكتمل" : "Configured"}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <SchoolPricingForm
+            schoolId={schoolId || ""}
+            initialData={{
+              tuitionFee: schoolInfo?.tuitionFee
+                ? Number(schoolInfo.tuitionFee)
+                : null,
+              registrationFee: schoolInfo?.registrationFee
+                ? Number(schoolInfo.registrationFee)
+                : null,
+              applicationFee: schoolInfo?.applicationFee
+                ? Number(schoolInfo.applicationFee)
+                : null,
+              currency: schoolInfo?.currency || "USD",
+              paymentSchedule:
+                (schoolInfo?.paymentSchedule as
+                  | "monthly"
+                  | "quarterly"
+                  | "semester"
+                  | "annual") || "annual",
             }}
             lang={lang}
           />

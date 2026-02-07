@@ -47,6 +47,17 @@ export async function createQuestion(
       data.acceptedAnswers = JSON.parse(data.acceptedAnswers)
     }
 
+    // Parse optional standardIds
+    let standardIds: string[] = []
+    if (data.standardIds) {
+      if (typeof data.standardIds === "string") {
+        standardIds = JSON.parse(data.standardIds)
+      } else if (Array.isArray(data.standardIds)) {
+        standardIds = data.standardIds
+      }
+      delete data.standardIds
+    }
+
     const validated = questionBankSchema.parse(data)
 
     // Create question with transaction to ensure analytics record is created
@@ -68,6 +79,17 @@ export async function createQuestion(
           schoolId,
         },
       })
+
+      // Link to standards if provided
+      if (standardIds.length > 0) {
+        await tx.questionStandard.createMany({
+          data: standardIds.map((standardId) => ({
+            questionId: newQuestion.id,
+            standardId,
+            schoolId,
+          })),
+        })
+      }
 
       return newQuestion
     })
@@ -139,21 +161,59 @@ export async function updateQuestion(
       data.acceptedAnswers = JSON.parse(data.acceptedAnswers)
     }
 
+    // Parse optional standardIds
+    let standardIds: string[] | undefined
+    if (data.standardIds) {
+      if (typeof data.standardIds === "string") {
+        standardIds = JSON.parse(data.standardIds)
+      } else if (Array.isArray(data.standardIds)) {
+        standardIds = data.standardIds
+      }
+      delete data.standardIds
+    }
+
     // Remove id from data before validation
     delete data.id
 
     const validated = questionBankSchema.parse(data)
 
-    // Update with schoolId scope
-    const question = await db.questionBank.update({
-      where: {
-        id: questionId,
-        schoolId, // CRITICAL: Multi-tenant scope
-      },
-      data: {
-        ...validated,
-        updatedAt: new Date(),
-      },
+    // Update with schoolId scope and handle standards in transaction
+    const question = await db.$transaction(async (tx) => {
+      // Update question
+      const updated = await tx.questionBank.update({
+        where: {
+          id: questionId,
+          schoolId, // CRITICAL: Multi-tenant scope
+        },
+        data: {
+          ...validated,
+          updatedAt: new Date(),
+        },
+      })
+
+      // Update standards if provided
+      if (standardIds !== undefined) {
+        // Delete existing links
+        await tx.questionStandard.deleteMany({
+          where: {
+            questionId,
+            schoolId,
+          },
+        })
+
+        // Create new links
+        if (standardIds.length > 0) {
+          await tx.questionStandard.createMany({
+            data: standardIds.map((standardId) => ({
+              questionId,
+              standardId,
+              schoolId,
+            })),
+          })
+        }
+      }
+
+      return updated
     })
 
     revalidatePath("/exams/qbank")

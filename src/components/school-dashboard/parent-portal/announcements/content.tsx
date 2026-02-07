@@ -59,7 +59,11 @@ interface Student {
   name: string
 }
 
-export function ParentAnnouncementsContent() {
+export function ParentAnnouncementsContent({
+  lang = "ar",
+}: {
+  lang?: "ar" | "en"
+}) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [students, setStudents] = useState<Student[]>([])
   const [selectedStudent, setSelectedStudent] = useState<string>("all")
@@ -74,7 +78,7 @@ export function ParentAnnouncementsContent() {
   const loadAnnouncements = async () => {
     setIsLoading(true)
     try {
-      const result = await getParentAnnouncements()
+      const result = await getParentAnnouncements(lang)
       if (result.success) {
         setAnnouncements(result.announcements as Announcement[])
         setStudents(result.students || [])

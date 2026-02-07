@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -16,7 +17,9 @@ import {
 // Get Departments
 // ============================================================================
 
-export async function getDepartments(): Promise<ActionResult> {
+export async function getDepartments(
+  displayLang?: "ar" | "en"
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -62,29 +65,44 @@ export async function getDepartments(): Promise<ActionResult> {
       orderBy: { departmentName: "asc" },
     })
 
-    // Transform to match expected interface
-    const transformedDepartments = departments.map((dept) => ({
-      id: dept.id,
-      schoolId: dept.schoolId,
-      departmentName: dept.departmentName,
-      lang: dept.lang,
-      createdAt: dept.createdAt,
-      updatedAt: dept.updatedAt,
-      subjects: dept.subjects.map((s) => ({
-        id: s.id,
-        subjectName: s.subjectName,
-        lang: s.lang,
-      })),
-      teachers: dept.teacherDepartments.map((td) => ({
-        id: td.teacher.id,
-        givenName: td.teacher.givenName,
-        surname: td.teacher.surname,
-        emailAddress: td.teacher.emailAddress,
-        profilePhotoUrl: td.teacher.profilePhotoUrl,
-        isPrimary: td.isPrimary,
-      })),
-      _count: dept._count,
-    }))
+    // Transform to match expected interface with on-demand translation
+    const lang = displayLang || "ar"
+    const transformedDepartments = await Promise.all(
+      departments.map(async (dept) => ({
+        id: dept.id,
+        schoolId: dept.schoolId,
+        departmentName: await getDisplayText(
+          dept.departmentName,
+          (dept.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId!
+        ),
+        lang: dept.lang,
+        createdAt: dept.createdAt,
+        updatedAt: dept.updatedAt,
+        subjects: await Promise.all(
+          dept.subjects.map(async (s) => ({
+            id: s.id,
+            subjectName: await getDisplayText(
+              s.subjectName,
+              (s.lang as "ar" | "en") || "ar",
+              lang,
+              schoolId!
+            ),
+            lang: s.lang,
+          }))
+        ),
+        teachers: dept.teacherDepartments.map((td) => ({
+          id: td.teacher.id,
+          givenName: td.teacher.givenName,
+          surname: td.teacher.surname,
+          emailAddress: td.teacher.emailAddress,
+          profilePhotoUrl: td.teacher.profilePhotoUrl,
+          isPrimary: td.isPrimary,
+        })),
+        _count: dept._count,
+      }))
+    )
 
     return {
       success: true,

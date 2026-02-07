@@ -1,0 +1,68 @@
+// ============================================================================
+// CURRICULUM STANDARDS & ALIGNMENT
+// ============================================================================
+// Links questions to educational standards for coverage tracking.
+// Supports hierarchical standards (e.g., MATH.6 → MATH.6.NS → MATH.6.NS.1)
+// ============================================================================
+
+model CurriculumStandard {
+  id        String @id @default(cuid())
+  schoolId  String
+
+  // Standard identification
+  code        String  // e.g., "MATH.6.NS.1", "SCI.8.PS.2"
+  name        String  // Human-readable name
+  description String? @db.Text
+  lang        String  @default("ar")
+
+  // Classification
+  domain      String? // e.g., "Number System", "Geometry"
+  gradeLevel  String? // e.g., "6", "7-8", "K-2"
+  subjectArea String? // e.g., "Mathematics", "Science"
+  framework   String  @default("custom") // "Common Core", "NGSS", "IB", "custom"
+
+  // Hierarchy (self-referencing)
+  parentId String?
+  parent   CurriculumStandard?  @relation("StandardHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children CurriculumStandard[] @relation("StandardHierarchy")
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Relations
+  school    School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  questions QuestionStandard[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, code])
+  @@index([schoolId])
+  @@index([schoolId, framework])
+  @@index([schoolId, subjectArea])
+  @@index([schoolId, gradeLevel])
+  @@index([schoolId, parentId])
+  @@index([schoolId, isActive])
+  @@map("curriculum_standards")
+}
+
+// Join table linking questions to curriculum standards
+model QuestionStandard {
+  id         String @id @default(cuid())
+  schoolId   String
+  questionId String
+  standardId String
+
+  // Relations
+  school   School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  question QuestionBank       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  standard CurriculumStandard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([questionId, standardId])
+  @@index([schoolId])
+  @@index([schoolId, standardId])
+  @@index([schoolId, questionId])
+  @@map("question_standards")
+}

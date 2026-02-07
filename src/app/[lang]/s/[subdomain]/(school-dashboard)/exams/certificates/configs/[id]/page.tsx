@@ -64,7 +64,30 @@ export default async function EditConfigPage({ params }: EditConfigPageProps) {
       </div>
 
       {/* Form */}
-      <CertificateConfigForm config={config} locale={lang} />
+      <CertificateConfigForm
+        initialData={{
+          id: config.id,
+          name: config.name,
+          type: config.type,
+          description: config.description,
+          templateStyle: config.templateStyle,
+          orientation: config.orientation,
+          titleText: config.titleText,
+          titleTextAr: config.titleTextAr,
+          bodyTemplate: config.bodyTemplate,
+          bodyTemplateAr: config.bodyTemplateAr,
+          minPercentage: config.minPercentage,
+          minGrade: config.minGrade,
+          topPercentile: config.topPercentile,
+          signatures: (config.signatures as any) || [],
+          useSchoolLogo: config.useSchoolLogo,
+          customLogo: config.customLogo,
+          borderStyle: config.borderStyle,
+          expiryMonths: config.expiryMonths,
+          enableVerification: config.enableVerification,
+          verificationPrefix: config.verificationPrefix,
+        }}
+      />
     </div>
   )
 }

@@ -269,6 +269,10 @@ export async function proxy(req: NextRequest) {
     const callbackUrl = url.pathname + url.search
     const loginUrl = new URL(`/${locale}/login`, req.url)
     loginUrl.searchParams.set("callbackUrl", callbackUrl)
+    if (subdomain) {
+      loginUrl.searchParams.set("context", "school")
+      loginUrl.searchParams.set("subdomain", subdomain)
+    }
     return NextResponse.redirect(loginUrl)
   }
 
@@ -283,9 +287,11 @@ export async function proxy(req: NextRequest) {
     if (!subdomain && role && isSaasDashboardRoute(pathForRouteCheck)) {
       if (role !== "DEVELOPER") {
         // Non-DEVELOPER trying to access SaaS dashboard on main domain
-        // Redirect to onboarding (they likely need to join/create a school)
-        const onboardingUrl = `/${locale}/onboarding`
-        const response = NextResponse.redirect(new URL(onboardingUrl, req.url))
+        // Redirect to access-denied (onboarding is only reachable via Get Started button)
+        const accessDeniedUrl = `/${locale}/access-denied`
+        const response = NextResponse.redirect(
+          new URL(accessDeniedUrl, req.url)
+        )
         response.headers.set("x-blocked-role", role)
         response.headers.set("x-blocked-route", pathForRouteCheck)
         response.headers.set(

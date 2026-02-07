@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { auth } from "@/auth"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { SidebarProvider } from "@/components/ui/sidebar"
@@ -26,7 +27,10 @@ export default async function PlatformLayout({
   params,
 }: Readonly<PlatformLayoutProps>) {
   const { subdomain, lang } = await params
-  const result = await getSchoolBySubdomain(subdomain)
+  const [result, session] = await Promise.all([
+    getSchoolBySubdomain(subdomain),
+    auth(),
+  ])
 
   if (!result.success || !result.data) {
     console.error("School not found for subdomain:", subdomain, result)
@@ -34,6 +38,7 @@ export default async function PlatformLayout({
   }
 
   const school = result.data
+  const serverRole = session?.user?.role
   const isRTL = checkIsRTL(lang as Locale)
 
   return (
@@ -46,12 +51,16 @@ export default async function PlatformLayout({
               className="flex min-h-svh w-full flex-col"
               dir={isRTL ? "rtl" : "ltr"}
             >
-              <PlatformHeader school={school} lang={lang} />
+              <PlatformHeader
+                school={school}
+                lang={lang}
+                serverRole={serverRole}
+              />
               <div className="flex pt-6">
                 <PlatformSidebar
                   school={school}
                   lang={lang}
-                  side={isRTL ? "right" : "left"}
+                  serverRole={serverRole}
                 />
                 <div className="dashboard-container overflow-hidden pb-10 transition-[margin] duration-200 ease-in-out">
                   <div className="mb-6">

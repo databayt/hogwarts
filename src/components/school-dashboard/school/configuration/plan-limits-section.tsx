@@ -37,6 +37,7 @@ const planLimitsSchema = z.object({
   planType: z.enum(["basic", "premium", "enterprise"]),
   maxStudents: z.number().min(1).max(100000),
   maxTeachers: z.number().min(1).max(10000),
+  maxClasses: z.number().min(1).max(1000),
   isActive: z.boolean(),
 })
 
@@ -162,7 +163,8 @@ export function PlanLimitsSection({
                 </div>
                 <p className="text-muted-foreground text-sm">
                   {initialData.maxStudents.toLocaleString()} students,{" "}
-                  {initialData.maxTeachers.toLocaleString()} teachers
+                  {initialData.maxTeachers.toLocaleString()} teachers,{" "}
+                  {initialData.maxClasses.toLocaleString()} classes
                 </p>
               </div>
             </div>
@@ -307,7 +309,7 @@ export function PlanLimitsSection({
       </div>
 
       {/* Max Limits */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="maxStudents">Maximum Students</Label>
           <Input
@@ -345,6 +347,22 @@ export function PlanLimitsSection({
           <p className="text-muted-foreground text-xs">
             Current: {currentUsage.teachers.toLocaleString()} teachers
           </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="maxClasses">Maximum Classes</Label>
+          <Input
+            id="maxClasses"
+            type="number"
+            {...form.register("maxClasses", { valueAsNumber: true })}
+            min={1}
+            max={1000}
+            disabled={isPending}
+          />
+          {form.formState.errors.maxClasses && (
+            <p className="text-destructive text-xs">
+              {form.formState.errors.maxClasses.message}
+            </p>
+          )}
         </div>
       </div>
 

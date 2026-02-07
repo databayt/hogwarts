@@ -198,4 +198,18 @@ test.describe("Story 2.3: Callback URL Preservation @auth", () => {
 
     expect(hasCallback).toBeTruthy()
   })
+
+  test("AUTH-038: School subdomain login redirect includes context params", async ({
+    page,
+  }) => {
+    await page.goto(
+      buildSchoolUrl("demo", SCHOOL_DASHBOARD_ROUTES.dashboard, "en", env)
+    )
+    await page.waitForLoadState("networkidle").catch(() => {})
+
+    const url = page.url()
+    // Proxy should inject context=school and subdomain=demo
+    expect(url).toContain("context=school")
+    expect(url).toContain("subdomain=demo")
+  })
 })

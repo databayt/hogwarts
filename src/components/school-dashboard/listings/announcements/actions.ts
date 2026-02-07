@@ -84,6 +84,7 @@ import type { AnnouncementConfig as PrismaAnnouncementConfig } from "@prisma/cli
 import { z } from "zod"
 
 import { withAutoTranslation } from "@/lib/auto-translate"
+import { getDisplayFields } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
@@ -695,6 +696,7 @@ export async function toggleAnnouncementPublish(input: {
  */
 export async function getAnnouncement(input: {
   id: string
+  displayLang?: "ar" | "en"
 }): Promise<ActionResponse<AnnouncementSelectResult | null>> {
   try {
     // Get authentication context
@@ -750,6 +752,25 @@ export async function getAnnouncement(input: {
           error instanceof Error
             ? error.message
             : "Unauthorized to read this announcement",
+      }
+    }
+
+    // On-demand translation if displayLang differs from stored lang
+    if (input.displayLang && schoolId) {
+      const translated = await getDisplayFields(
+        announcement,
+        ["title", "body"],
+        (announcement.lang as "ar" | "en") || "ar",
+        input.displayLang,
+        schoolId
+      )
+      return {
+        success: true,
+        data: {
+          ...announcement,
+          title: translated.title || announcement.title,
+          body: translated.body || announcement.body,
+        },
       }
     }
 

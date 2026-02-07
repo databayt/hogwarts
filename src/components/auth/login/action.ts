@@ -5,6 +5,7 @@ import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 import { AuthError } from "next-auth"
 import * as z from "zod"
 
+import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
 import { db } from "@/lib/db"
 import {
   sendTwoFactorTokenEmail,
@@ -72,9 +73,23 @@ export const login = async (
 
   const { email, password, code } = validatedFields.data
 
+  // Check brute force protection
+  const blocked = await isBruteForceBlocked(email)
+  if (blocked) {
+    return {
+      error: "Too many failed attempts. Please try again in 15 minutes.",
+    }
+  }
+
   const existingUser = await getUserByEmail(email)
 
   if (!existingUser || !existingUser.email || !existingUser.password) {
+    logLoginAttempt({
+      email,
+      success: false,
+      failureReason: "USER_NOT_FOUND",
+      schoolId: null,
+    })
     return { error: "Email does not exist!" }
   }
 
@@ -189,8 +204,14 @@ export const login = async (
         })
 
         if (school?.domain === subdomain) {
-          // User is a member of this school - allow dashboard access
-          finalRedirectUrl = callbackUrl
+          // User is a member of this school - construct absolute URL
+          const useHttps = process.env.NEXTAUTH_URL?.startsWith("https")
+          const protocol = useHttps ? "https" : "http"
+          const schoolBaseUrl =
+            process.env.NODE_ENV === "production"
+              ? `https://${subdomain}.databayt.org`
+              : `${protocol}://${subdomain}.localhost:3000`
+          finalRedirectUrl = `${schoolBaseUrl}${callbackUrl}`
           console.log(
             "[LOGIN-ACTION] 🏫 School member accessing their dashboard:",
             {
@@ -235,39 +256,12 @@ export const login = async (
         console.log("[LOGIN-ACTION] 👑 DEVELOPER accessing SaaS dashboard:", {
           finalRedirectUrl,
         })
-      } else if (existingUser.schoolId) {
-        // User has a school - redirect to THEIR school's dashboard
-        const school = await db.school.findUnique({
-          where: { id: existingUser.schoolId },
-          select: { domain: true },
-        })
-
-        if (school?.domain) {
-          const useHttps = process.env.NEXTAUTH_URL?.startsWith("https")
-          const protocol = useHttps ? "https" : "http"
-          const baseUrl =
-            process.env.NODE_ENV === "production"
-              ? `https://${school.domain}.databayt.org`
-              : `${protocol}://${school.domain}.localhost:3000`
-          finalRedirectUrl = `${baseUrl}/${redirectLocale}/dashboard`
-          console.log(
-            "[LOGIN-ACTION] 🏫 Redirecting to user's school dashboard:",
-            {
-              school: school.domain,
-              finalRedirectUrl,
-            }
-          )
-        } else {
-          finalRedirectUrl = `/${redirectLocale}`
-          console.log(
-            "[LOGIN-ACTION] ⚠️ School domain not found, staying on homepage"
-          )
-        }
       } else {
-        // No school, not DEVELOPER - deny SaaS dashboard access
+        // Non-DEVELOPER - deny SaaS dashboard access
+        // School members should login from their school subdomain, not SaaS
         finalRedirectUrl = `/${redirectLocale}/access-denied`
         console.log(
-          "[LOGIN-ACTION] ⛔ Non-DEVELOPER without school cannot access SaaS dashboard"
+          "[LOGIN-ACTION] ⛔ Non-DEVELOPER cannot access SaaS dashboard"
         )
       }
     }
@@ -322,8 +316,21 @@ export const login = async (
       password,
       redirectTo: finalRedirectUrl,
     })
+
+    // Log successful login (fire-and-forget)
+    logLoginAttempt({
+      email,
+      success: true,
+      schoolId: existingUser.schoolId,
+    })
   } catch (error) {
     if (error instanceof AuthError) {
+      logLoginAttempt({
+        email,
+        success: false,
+        failureReason: error.type,
+        schoolId: existingUser.schoolId,
+      })
       switch (error.type) {
         case "CredentialsSignin":
           return { error: "Invalid credentials!" }

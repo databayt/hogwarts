@@ -221,7 +221,13 @@ User clicks "Live Demo" to explore the demo school without authentication.
 
 ## 4. Login Flow
 
-Complete authentication flow with role-based redirects.
+There are two distinct login contexts with different behaviors:
+
+**SaaS Marketing Login** (`localhost:3000` / `ed.databayt.org`) — This is the SaaS product website. Only DEVELOPER users get redirected to the SaaS dashboard after login. Everyone else (including school members) stays on the SaaS marketing page. School members have no business here — they should login from their own school subdomain. We do NOT auto-redirect school members to their school dashboard.
+
+**School Marketing Login** (`demo.localhost:3000` / `demo.databayt.org`) — This is a school's public website. After login, users stay on the school marketing page. Dashboard access is only available via the "Platform" link in the header, which checks membership and redirects accordingly.
+
+> **Note**: If a school member accidentally logs in on the SaaS main domain and tries to access `/dashboard`, they get `/access-denied` — the SaaS dashboard is DEVELOPER-only. This is intentional. School members should use their school's subdomain.
 
 ```
 ┌─────────────────────────┐
@@ -282,7 +288,9 @@ Complete authentication flow with role-based redirects.
 
 ## 5. Logout Flow
 
-Context-aware logout with appropriate redirects.
+Context-aware logout that preserves locale and stays on the current domain.
+
+**Key principle**: `LogoutButton` always navigates to `/{locale}` (e.g., `/en`). The proxy handles subdomain routing — on a school subdomain, `/en` is automatically rewritten to `/en/s/{subdomain}/`. This avoids double-rewrite bugs from constructing internal URL formats.
 
 ```
 ┌─────────────────────────┐
@@ -290,35 +298,59 @@ Context-aware logout with appropriate redirects.
 └───────────┬─────────────┘
             │
             ▼
-       ┌──────────┐
-      ╱  Current   ╲
-     ╱   Location   ╲
-     ╲              ╱
-      ╲            ╱
-       └─────┬────┘
-             │
-    ┌────────┼────────┐
-    ▼        ▼        ▼
-┌───────┐┌───────┐┌────────┐
-│ SaaS  ││School ││Operator│
-│ Site  ││ Site  ││ Dash   │
-└───┬───┘└───┬───┘└───┬────┘
-    │        │        │
-    ▼        ▼        ▼
-┌───────┐┌───────┐┌───────┐
-│  /en  ││/{sub} ││  /en  │
-│(home) ││(school││(home) │
-│       ││ home) ││       │
-└───────┘└───────┘└───────┘
+┌─────────────────────────┐
+│  Extract locale from    │
+│  usePathname()          │
+│  /^\/([a-z]{2})(\/|$)/  │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│  returnUrl = /{locale}  │
+│  (same for ALL entries) │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│  await logout(returnUrl)│
+│  (clears session)       │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│  window.location.href   │
+│  = /{locale}            │
+└───────────┬─────────────┘
+            │
+    ┌───────┴───────┐
+    ▼               ▼
+┌────────┐    ┌──────────┐
+│  Main  │    │  School  │
+│ Domain │    │ Subdomain│
+└───┬────┘    └────┬─────┘
+    │              │
+    ▼              ▼
+┌────────┐    ┌──────────┐
+│  /en   │    │  /en     │
+│  SaaS  │    │  Proxy → │
+│  Home  │    │  School  │
+│        │    │  Home    │
+└────────┘    └──────────┘
 ```
 
-| Location           | Redirect After Logout                      |
-| ------------------ | ------------------------------------------ |
-| SaaS Marketing     | /\{locale\} (homepage)                     |
-| Operator Dashboard | /\{locale\} (homepage)                     |
-| School Marketing   | /\{locale\}/s/\{subdomain\}/ (school home) |
-| School Dashboard   | /\{locale\}/s/\{subdomain\}/ (school home) |
-| Session Expiry     | /login?callbackUrl=\{current\}             |
+| Entry Point      | User Sees                        | returnUrl | Lands On                                 |
+| ---------------- | -------------------------------- | --------- | ---------------------------------------- |
+| SaaS Marketing   | localhost:3000/en                | /en       | localhost:3000/en (SaaS homepage)        |
+| SaaS Dashboard   | localhost:3000/en/dashboard      | /en       | localhost:3000/en (SaaS homepage)        |
+| School Marketing | demo.localhost:3000/en/about     | /en       | demo.localhost:3000/en (school homepage) |
+| School Dashboard | demo.localhost:3000/en/dashboard | /en       | demo.localhost:3000/en (school homepage) |
+| Session Expiry   | Any page                         | -         | /login?callbackUrl=\{current\}           |
+
+**Rules**:
+
+- Locale NEVER changes during logout
+- `/onboarding` is NEVER a logout redirect target
+- `signOut({ redirect: false })` is used — the auth.ts redirect callback is NOT invoked during logout
 
 > **Test Coverage**: `logout.spec.ts` (AUTH-038 to AUTH-045)
 

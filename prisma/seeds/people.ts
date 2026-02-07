@@ -678,6 +678,40 @@ export async function seedStudents(
     studentIndex += levelStudentCount
   }
 
+  // Move student@databayt.org (index 0) from KG1 to Grade 10
+  // Grade 10 = "الصف العاشر" (order 12, Secondary) — 16 subjects for realistic simulation
+  const primaryStudentUser = studentUsers[0]
+  if (primaryStudentUser) {
+    const grade10Level = yearLevels.find((yl) => yl.levelName === "الصف العاشر")
+    if (grade10Level) {
+      const primaryStudentIdx = students.findIndex(
+        (s) => s.userId === primaryStudentUser.id
+      )
+      if (primaryStudentIdx !== -1) {
+        const primaryStudent = students[primaryStudentIdx]
+        // Update DB: year level assignment
+        await prisma.studentYearLevel.updateMany({
+          where: {
+            schoolId,
+            studentId: primaryStudent.id,
+            yearId: schoolYear.id,
+          },
+          data: { levelId: grade10Level.id },
+        })
+        // Update DB: birth date to match Grade 10 age (15-16 years old)
+        await prisma.student.update({
+          where: { id: primaryStudent.id },
+          data: { dateOfBirth: getStudentBirthDate(12) },
+        })
+        // Update in-memory ref so class enrollments use Grade 10
+        students[primaryStudentIdx] = {
+          ...primaryStudent,
+          yearLevelId: grade10Level.id,
+        }
+      }
+    }
+  }
+
   logSuccess("Students", students.length, "K-12 distribution")
 
   return students

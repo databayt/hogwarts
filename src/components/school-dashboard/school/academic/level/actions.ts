@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -270,7 +271,8 @@ export async function getYearLevel(input: {
 }
 
 export async function getYearLevels(
-  input?: Partial<z.infer<typeof getYearLevelsSchema>>
+  input?: Partial<z.infer<typeof getYearLevelsSchema>>,
+  displayLang?: "ar" | "en"
 ): Promise<ActionResponse<{ rows: YearLevelRow[]; total: number }>> {
   try {
     const { schoolId } = await getTenantContext()
@@ -312,14 +314,22 @@ export async function getYearLevels(
       db.yearLevel.count({ where }),
     ])
 
-    const mapped: YearLevelRow[] = rows.map((l) => ({
-      id: l.id,
-      levelName: l.levelName,
-      lang: l.lang,
-      levelOrder: l.levelOrder,
-      createdAt: l.createdAt.toISOString(),
-      _count: l._count,
-    }))
+    const lang = displayLang || "ar"
+    const mapped: YearLevelRow[] = await Promise.all(
+      rows.map(async (l) => ({
+        id: l.id,
+        levelName: await getDisplayText(
+          l.levelName,
+          (l.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId!
+        ),
+        lang: l.lang,
+        levelOrder: l.levelOrder,
+        createdAt: l.createdAt.toISOString(),
+        _count: l._count,
+      }))
+    )
 
     return { success: true, data: { rows: mapped, total: count } }
   } catch (error) {

@@ -376,6 +376,31 @@ export const secureAnalyticsAction = {
 }
 
 /**
+ * Secure certificate-specific actions
+ */
+export const secureCertificateAction = {
+  create: <T extends (...args: any[]) => Promise<any>>(action: T) =>
+    secureAction("certificate:create", action),
+
+  read: <T extends (...args: any[]) => Promise<any>>(action: T) =>
+    secureAction("certificate:read", action, {
+      additionalCheck: async (context, args) => {
+        const studentId = args[0]?.studentId
+        if (studentId) {
+          return canAccessStudentResult(context, studentId)
+        }
+        return true
+      },
+    }),
+
+  verify: <T extends (...args: any[]) => Promise<any>>(action: T) =>
+    secureAction("certificate:verify", action),
+
+  revoke: <T extends (...args: any[]) => Promise<any>>(action: T) =>
+    secureAction("certificate:revoke", action),
+}
+
+/**
  * Secure template-specific actions
  */
 export const secureTemplateAction = {

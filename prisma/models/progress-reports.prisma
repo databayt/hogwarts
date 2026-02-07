@@ -1,0 +1,84 @@
+// ============================================================================
+// PROGRESS REPORT SCHEDULING
+// ============================================================================
+// Automated progress report generation and parent notification system.
+// Leverages existing NotificationBatch for delivery.
+// ============================================================================
+
+enum ProgressReportFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  TERM_END
+}
+
+model ProgressReportSchedule {
+  id       String @id @default(cuid())
+  schoolId String
+
+  // Scope (null classId = all classes)
+  classId String?
+
+  // Schedule configuration
+  frequency ProgressReportFrequency
+  isActive  Boolean         @default(true)
+
+  // Content toggles
+  includeExamResults Boolean @default(true)
+  includeAttendance  Boolean @default(true)
+  includeAssignments Boolean @default(false)
+  includeBehavior    Boolean @default(false)
+
+  // Recipient configuration
+  recipientTypes String[] // ["GUARDIAN", "STUDENT", "TEACHER"]
+  channels       String[] // ["email", "in_app", "sms"]
+
+  // Execution tracking
+  lastRunAt DateTime?
+  nextRunAt DateTime?
+
+  // Metadata
+  createdBy String // Admin/Teacher user ID
+
+  // Relations
+  school  School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class   Class?                @relation(fields: [classId], references: [id], onDelete: SetNull)
+  reports GeneratedProgressReport[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([schoolId, isActive])
+  @@index([schoolId, classId])
+  @@index([nextRunAt])
+  @@map("progress_report_schedules")
+}
+
+// Individual generated progress reports
+model GeneratedProgressReport {
+  id         String @id @default(cuid())
+  schoolId   String
+  scheduleId String
+  studentId  String
+
+  // Report content (frozen snapshot)
+  reportData Json // { examResults: [...], attendance: {...}, assignments: [...] }
+
+  // Delivery
+  notificationBatchId String? // Links to NotificationBatch for delivery tracking
+  sentAt              DateTime?
+
+  // Relations
+  school   School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schedule ProgressReportSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  student  Student                @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([schoolId, scheduleId])
+  @@index([schoolId, studentId])
+  @@index([sentAt])
+  @@map("generated_progress_reports")
+}

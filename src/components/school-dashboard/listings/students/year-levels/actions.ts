@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -16,7 +17,9 @@ import {
 // Get Year Levels
 // ============================================================================
 
-export async function getYearLevels(): Promise<ActionResult> {
+export async function getYearLevels(
+  displayLang?: "ar" | "en"
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -42,9 +45,23 @@ export async function getYearLevels(): Promise<ActionResult> {
       orderBy: { levelOrder: "asc" },
     })
 
+    // Translate levelName for display
+    const lang = displayLang || "ar"
+    const translatedYearLevels = await Promise.all(
+      yearLevels.map(async (level) => ({
+        ...level,
+        levelName: await getDisplayText(
+          level.levelName,
+          (level.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId!
+        ),
+      }))
+    )
+
     return {
       success: true,
-      data: { yearLevels },
+      data: { yearLevels: translatedYearLevels },
     }
   } catch (error) {
     console.error("Failed to fetch year levels:", error)

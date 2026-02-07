@@ -9,10 +9,16 @@ export default function FAQs() {
 
   return (
     <section className="py-16 md:py-32">
-      <div className="grid gap-y-12 lg:[grid-template-columns:1fr_auto]">
+      <div className="grid gap-y-12 lg:grid-cols-[2fr_3fr]">
         <div className="text-center lg:text-start">
           <h2 className="font-heading mb-4 text-4xl font-extrabold md:text-5xl">
-            {faqs?.title || "Frequently Asked Questions"}
+            {(faqs?.title || "Frequently Asked Questions")
+              .split(" ")
+              .map((word, i) => (
+                <span key={i} className="block">
+                  {word}
+                </span>
+              ))}
           </h2>
           <p>{faqs?.subtitle || "Your guide to joining Hogwarts."}</p>
         </div>

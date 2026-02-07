@@ -41,6 +41,10 @@ export type Permission =
   | "marking:override"
   | "analytics:read"
   | "analytics:export"
+  | "certificate:create"
+  | "certificate:read"
+  | "certificate:verify"
+  | "certificate:revoke"
 
 // Role definitions with permissions
 const ROLE_PERMISSIONS: Record<string, Permission[]> = {
@@ -73,6 +77,10 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "marking:override",
     "analytics:read",
     "analytics:export",
+    "certificate:create",
+    "certificate:read",
+    "certificate:verify",
+    "certificate:revoke",
   ],
   ADMIN: [
     // School administrator - full access within their school
@@ -103,6 +111,10 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "marking:override",
     "analytics:read",
     "analytics:export",
+    "certificate:create",
+    "certificate:read",
+    "certificate:verify",
+    "certificate:revoke",
   ],
   TEACHER: [
     // Teachers - can manage exams for their subjects/classes
@@ -128,6 +140,8 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "marking:read",
     "marking:update",
     "analytics:read",
+    "certificate:create",
+    "certificate:read",
   ],
   ACCOUNTANT: [
     // Accountants - read-only access to results and analytics
@@ -142,11 +156,13 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "exam:read", // Limited to published exams
     "result:read", // Limited to own results
     "question:read", // Limited to practice questions
+    "certificate:read", // Limited to own certificates
   ],
   GUARDIAN: [
     // Parents - can view their children's results
     "exam:read", // Limited to their children's exams
     "result:read", // Limited to their children's results
+    "certificate:read", // Limited to their children's certificates
   ],
   STAFF: [
     // General staff - limited read access

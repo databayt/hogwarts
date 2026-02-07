@@ -32,7 +32,7 @@ export default async function NewConfigPage({ params }: NewConfigPageProps) {
       </div>
 
       {/* Form */}
-      <CertificateConfigForm locale={lang} />
+      <CertificateConfigForm />
     </div>
   )
 }

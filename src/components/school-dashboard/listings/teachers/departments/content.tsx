@@ -158,7 +158,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
     setIsLoading(true)
     setError(null)
     try {
-      const result = await getDepartments()
+      const result = await getDepartments(lang)
       if (result.success && result.data?.departments) {
         setDepartments(result.data.departments as unknown as Department[])
       } else if (!result.success) {

@@ -216,6 +216,9 @@ model School {
   accessCards             AccessCard[]
   bluetoothBeacons        BluetoothBeacon[]
   attendancePolicies      AttendancePolicy[]
+  policyTriggers          PolicyTrigger[]
+  policyExemptions        PolicyExemption[]
+  masterAttendance        MasterAttendance[]
   attendanceReports       AttendanceReport[]
   attendanceInterventions AttendanceIntervention[]
   absenceIntentions       AbsenceIntention[]
@@ -289,7 +292,8 @@ model School {
   translationCache TranslationCache[]
 
   // Audit relations
-  auditLogs AuditLog[]
+  auditLogs     AuditLog[]
+  loginAttempts LoginAttempt[]
 
   // Sales Module relations
   leads          Lead[]
@@ -307,6 +311,18 @@ model School {
   examCertificates       ExamCertificate[]
   examSessions           ExamSession[]
   gradingConfig          SchoolGradingConfig?
+
+  // Curriculum Standards relations
+  curriculumStandards CurriculumStandard[]
+  questionStandards   QuestionStandard[]
+
+  // Quick Assessment relations
+  quickAssessments         QuickAssessment[]
+  quickAssessmentResponses QuickAssessmentResponse[]
+
+  // Progress Report relations
+  progressReportSchedules  ProgressReportSchedule[]
+  generatedProgressReports GeneratedProgressReport[]
 
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt

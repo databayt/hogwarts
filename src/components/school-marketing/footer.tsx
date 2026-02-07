@@ -56,7 +56,9 @@ const Footer = () => {
         <div className="grid grid-cols-2 gap-4 md:flex md:justify-between md:gap-0 lg:flex-[3]">
           {/* Academics */}
           <div>
-            <h3 className="muted mb-3 tracking-wider uppercase">Academics</h3>
+            <h3 className="text-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
+              Academics
+            </h3>
             <ul className="space-y-2">
               <li>
                 <Link
@@ -111,7 +113,9 @@ const Footer = () => {
 
           {/* Campus */}
           <div>
-            <h3 className="muted mb-3 tracking-wider uppercase">Campus</h3>
+            <h3 className="text-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
+              Campus
+            </h3>
             <ul className="space-y-2">
               <li>
                 <Link
@@ -158,7 +162,9 @@ const Footer = () => {
 
           {/* Activities */}
           <div>
-            <h3 className="muted mb-3 tracking-wider uppercase">Activities</h3>
+            <h3 className="text-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
+              Activities
+            </h3>
             <ul className="space-y-2">
               <li>
                 <Link

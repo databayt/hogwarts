@@ -255,6 +255,137 @@ export async function getClassPerformance(input: {
 }
 
 /**
+ * Get standards coverage for an exam
+ * Shows which curriculum standards are covered by the exam's questions
+ */
+export async function getExamStandardsCoverage(examId: string): Promise<
+  ActionResponse<{
+    total: number
+    covered: number
+    standards: Array<{
+      id: string
+      code: string
+      name: string
+      subjectArea: string | null
+      questionCount: number
+      covered: boolean
+    }>
+  }>
+> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return {
+        success: false,
+        error: "Missing school context",
+        code: "NO_SCHOOL_CONTEXT",
+      }
+    }
+
+    // Get the exam's generated exam questions (which link to QBank)
+    const generatedExam = await db.generatedExam.findFirst({
+      where: { examId, schoolId },
+      select: {
+        questions: {
+          select: { questionId: true },
+        },
+      },
+    })
+
+    const questionIds = generatedExam?.questions.map((q) => q.questionId) || []
+
+    // Get the exam's subject to scope standards
+    const exam = await db.exam.findFirst({
+      where: { id: examId, schoolId },
+      select: { subjectId: true },
+    })
+
+    if (!exam) {
+      return { success: false, error: "Exam not found", code: "NOT_FOUND" }
+    }
+
+    // Get all standards for this subject area
+    const subject = await db.subject.findFirst({
+      where: { id: exam.subjectId, schoolId },
+      select: { subjectName: true },
+    })
+
+    const allStandards = await db.curriculumStandard.findMany({
+      where: {
+        schoolId,
+        isActive: true,
+        ...(subject ? { subjectArea: subject.subjectName } : {}),
+      },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        subjectArea: true,
+      },
+      orderBy: { code: "asc" },
+    })
+
+    // Get which standards are covered by the exam's questions
+    const coveredStandardIds =
+      questionIds.length > 0
+        ? await db.questionStandard
+            .findMany({
+              where: {
+                schoolId,
+                questionId: { in: questionIds },
+              },
+              select: { standardId: true },
+              distinct: ["standardId"],
+            })
+            .then((rows) => new Set(rows.map((r) => r.standardId)))
+        : new Set<string>()
+
+    // Count questions per standard
+    const questionCountByStandard =
+      questionIds.length > 0
+        ? await db.questionStandard
+            .groupBy({
+              by: ["standardId"],
+              where: {
+                schoolId,
+                questionId: { in: questionIds },
+              },
+              _count: { questionId: true },
+            })
+            .then(
+              (rows) =>
+                new Map(rows.map((r) => [r.standardId, r._count.questionId]))
+            )
+        : new Map<string, number>()
+
+    const standards = allStandards.map((s) => ({
+      id: s.id,
+      code: s.code,
+      name: s.name,
+      subjectArea: s.subjectArea,
+      questionCount: questionCountByStandard.get(s.id) || 0,
+      covered: coveredStandardIds.has(s.id),
+    }))
+
+    return {
+      success: true,
+      data: {
+        total: allStandards.length,
+        covered: coveredStandardIds.size,
+        standards,
+      },
+    }
+  } catch (error) {
+    console.error("Error getting standards coverage:", error)
+    return {
+      success: false,
+      error: "Failed to get standards coverage",
+      code: "COVERAGE_FAILED",
+    }
+  }
+}
+
+/**
  * Get subject-wise analytics
  */
 export async function getSubjectAnalytics(input: {

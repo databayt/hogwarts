@@ -162,9 +162,10 @@ export function ReportsContent({
         "records" in reportResult
       ) {
         if (reportResult.records) setRecords(reportResult.records as any)
-        if (reportResult.total != null) setTotal(reportResult.total)
-        if (reportResult.totalPages != null)
-          setTotalPages(reportResult.totalPages)
+        if (reportResult.pagination?.total != null)
+          setTotal(reportResult.pagination.total)
+        if (reportResult.pagination?.totalPages != null)
+          setTotalPages(reportResult.pagination.totalPages)
       }
       if (classesResult.success && classesResult.data)
         setClasses(classesResult.data.classes)

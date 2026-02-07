@@ -1,5 +1,6 @@
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -38,30 +39,47 @@ export default async function SubjectsContent({
       sp.sort && Array.isArray(sp.sort) && sp.sort.length
         ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
         : [{ createdAt: "desc" }]
-    const [rows, count] = await Promise.all([
-      subjectModel.findMany({
-        where,
-        orderBy,
-        skip,
-        take,
-        include: {
-          department: {
-            select: {
-              departmentName: true,
+    try {
+      const [rows, count] = await Promise.all([
+        subjectModel.findMany({
+          where,
+          orderBy,
+          skip,
+          take,
+          include: {
+            department: {
+              select: {
+                departmentName: true,
+                lang: true,
+              },
             },
           },
-        },
-      }),
-      subjectModel.count({ where }),
-    ])
-    data = rows.map((s: any) => ({
-      id: s.id,
-      subjectName: s.subjectName,
-      lang: (s.lang as string) || "ar",
-      departmentName: s.department?.departmentName || "Unknown",
-      createdAt: (s.createdAt as Date).toISOString(),
-    }))
-    total = count as number
+        }),
+        subjectModel.count({ where }),
+      ])
+      data = await Promise.all(
+        rows.map(async (s: any) => ({
+          id: s.id,
+          subjectName: await getDisplayText(
+            s.subjectName,
+            ((s.lang as string) || "ar") as "ar" | "en",
+            lang,
+            schoolId!
+          ),
+          lang: (s.lang as string) || "ar",
+          departmentName: await getDisplayText(
+            s.department?.departmentName || "Unknown",
+            ((s.department?.lang as string) || "ar") as "ar" | "en",
+            lang,
+            schoolId!
+          ),
+          createdAt: (s.createdAt as Date).toISOString(),
+        }))
+      )
+      total = count as number
+    } catch (error) {
+      console.error("[SubjectsContent] Failed to load subjects:", error)
+    }
   }
   return (
     <div className="space-y-6">

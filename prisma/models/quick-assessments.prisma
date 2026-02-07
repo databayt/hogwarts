@@ -1,0 +1,86 @@
+// ============================================================================
+// QUICK FORMATIVE ASSESSMENTS
+// ============================================================================
+// Lightweight assessment system for exit tickets, polls, warm-ups, and
+// check-ins. References QBank questions by ID (no duplication).
+// ============================================================================
+
+enum QuickAssessmentType {
+  EXIT_TICKET
+  POLL
+  WARM_UP
+  CHECK_IN
+}
+
+enum QuickAssessmentStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+model QuickAssessment {
+  id       String @id @default(cuid())
+  schoolId String
+
+  // Core fields
+  classId   String
+  subjectId String
+  title     String
+  type      QuickAssessmentType
+  status    QuickAssessmentStatus @default(DRAFT)
+  lang      String                @default("ar")
+
+  // Configuration
+  questionIds String[] // References to QuestionBank IDs
+  duration    Int      @default(5) // Minutes
+  isAnonymous Boolean  @default(false)
+  showResults Boolean  @default(true) // Show results to students after completion
+
+  // Metadata
+  createdBy String // Teacher/Admin user ID
+
+  // Relations
+  school    School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class     Class                     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject   Subject                   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  responses QuickAssessmentResponse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([schoolId, classId])
+  @@index([schoolId, status])
+  @@index([schoolId, createdBy])
+  @@index([schoolId, type])
+  @@map("quick_assessments")
+}
+
+// Student responses to quick assessments
+model QuickAssessmentResponse {
+  id           String @id @default(cuid())
+  schoolId     String
+  assessmentId String
+  studentId    String?  // Null if anonymous
+
+  // Response data (JSON: array of {questionId, answer, isCorrect?})
+  responses Json
+
+  // Timing
+  startedAt   DateTime
+  completedAt DateTime?
+
+  // Relations
+  school     School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  assessment QuickAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  student    Student?        @relation(fields: [studentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@unique([assessmentId, studentId])
+  @@index([schoolId])
+  @@index([schoolId, assessmentId])
+  @@index([schoolId, studentId])
+  @@map("quick_assessment_responses")
+}

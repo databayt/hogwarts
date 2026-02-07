@@ -58,19 +58,30 @@ export function MainNav({ items, school, locale }: MainNavProps) {
       </Link>
       {items?.length ? (
         <nav className="flex items-center gap-6 xl:gap-8">
-          {items?.map((item, index) => (
-            <Link
-              key={index}
-              href={item.disabled ? "#" : `/${locale}${item.href}`}
-              className={cn(
-                "text-muted-foreground hover:text-foreground text-sm transition-colors",
-                item.href.startsWith(`/${segment}`) && "text-foreground",
-                item.disabled && "cursor-not-allowed opacity-80"
-              )}
-            >
-              {item.title}
-            </Link>
-          ))}
+          {items?.map((item, index) => {
+            const href = item.disabled ? "#" : `/${locale}${item.href}`
+            const classes = cn(
+              "text-muted-foreground hover:text-foreground text-sm transition-colors",
+              item.href.startsWith(`/${segment}`) && "text-foreground",
+              item.disabled && "cursor-not-allowed opacity-80"
+            )
+
+            // Links that cross route groups (marketing → dashboard) need
+            // full page navigation so the proxy rewrite runs correctly
+            if (item.href === "/dashboard") {
+              return (
+                <a key={index} href={href} className={classes}>
+                  {item.title}
+                </a>
+              )
+            }
+
+            return (
+              <Link key={index} href={href} className={classes}>
+                {item.title}
+              </Link>
+            )
+          })}
         </nav>
       ) : null}
     </div>

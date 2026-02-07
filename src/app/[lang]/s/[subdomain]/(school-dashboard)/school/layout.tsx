@@ -22,11 +22,27 @@ export default async function SchoolLayout({ children, params }: Props) {
       name: isArabic ? "الإعدادات" : "Configuration",
       href: `/${lang}/school/configuration`,
     },
-    { name: isArabic ? "إدخال جماعي" : "Bulk", href: `/${lang}/school/bulk` },
+    {
+      name: isArabic ? "الأعضاء" : "Membership",
+      href: `/${lang}/school/membership`,
+    },
+    {
+      name: isArabic ? "التواصل" : "Communication",
+      href: `/${lang}/school/communication`,
+    },
+    {
+      name: isArabic ? "الفوترة" : "Billing",
+      href: `/${lang}/school/billing`,
+    },
+    {
+      name: isArabic ? "الأمان" : "Security",
+      href: `/${lang}/school/security`,
+    },
     {
       name: isArabic ? "التقارير" : "Reports",
       href: `/${lang}/school/reports`,
     },
+    { name: isArabic ? "إدخال جماعي" : "Bulk", href: `/${lang}/school/bulk` },
     {
       name: isArabic ? "التحليل" : "Analysis",
       href: `/${lang}/school/analysis`,

@@ -611,3 +611,29 @@ model ClassCompetitionEntry {
   @@index([attendanceRate])
   @@map("class_competition_entries")
 }
+
+// Master attendance - school-wide entry/exit tracking (gate-level)
+model MasterAttendance {
+  id           String           @id @default(cuid())
+  schoolId     String
+  studentId    String
+  date         DateTime         @db.Date
+  status       AttendanceStatus @default(PRESENT)
+  checkInTime  DateTime? // Gate check-in time
+  checkOutTime DateTime? // Gate check-out time
+  method       AttendanceMethod @default(MANUAL)
+  deviceId     String? // Gate device used
+  notes        String?
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, studentId, date])
+  @@index([schoolId, date])
+  @@index([studentId])
+  @@index([status])
+  @@map("master_attendance")
+}

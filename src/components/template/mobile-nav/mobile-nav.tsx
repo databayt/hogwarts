@@ -273,6 +273,20 @@ function MobileLink({
     )
   }
 
+  // Links that cross route groups (marketing → dashboard) need
+  // full page navigation so the proxy rewrite runs correctly
+  if (href.toString() === "/dashboard") {
+    return (
+      <a
+        href={fullHref.toString()}
+        onClick={() => onOpenChange?.(false)}
+        className={cn("text-2xl font-medium", className)}
+      >
+        {children}
+      </a>
+    )
+  }
+
   return (
     <Link
       href={fullHref}

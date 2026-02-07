@@ -1,0 +1,287 @@
+---
+title: Test Accounts
+description: Comprehensive guide to all test accounts, personas, relationships, and simulation scenarios
+---
+
+# Test Accounts
+
+The seed creates **8 named test accounts** and **~3,100 bulk accounts** for the demo school. All accounts use password **`1234`**.
+
+---
+
+## Quick Reference
+
+| Email                     | Password | Role       | Arabic Name   | schoolId          |
+| ------------------------- | -------- | ---------- | ------------- | ----------------- |
+| `dev@databayt.org`        | 1234     | DEVELOPER  | المطور        | None (platform)   |
+| `user@databayt.org`       | 1234     | USER       | مستخدم جديد   | None (onboarding) |
+| `admin@databayt.org`      | 1234     | ADMIN      | المدير        | Demo School       |
+| `teacher@databayt.org`    | 1234     | TEACHER    | فاطمة حسن     | Demo School       |
+| `student@databayt.org`    | 1234     | STUDENT    | محمد حسن      | Demo School       |
+| `parent@databayt.org`     | 1234     | GUARDIAN   | والد محمد حسن | Demo School       |
+| `accountant@databayt.org` | 1234     | ACCOUNTANT | المحاسب       | Demo School       |
+| `staff@databayt.org`      | 1234     | STAFF      | عبدالله حسن   | Demo School       |
+
+---
+
+## Platform Accounts (No schoolId)
+
+These accounts exist at the platform level and are **not tied to any school**.
+
+### dev@databayt.org — DEVELOPER
+
+- **Arabic Name**: المطور
+- **Purpose**: Platform administrator with access to the SaaS dashboard
+- **Access**: `ed.databayt.org/en/dashboard` (production) or `localhost:3000/en/dashboard` (local)
+- **Capabilities**: View all schools, platform analytics, system configuration
+- **Note**: Only the DEVELOPER role can access the SaaS dashboard
+
+### user@databayt.org — USER
+
+- **Arabic Name**: مستخدم جديد
+- **Purpose**: Fresh user for testing the onboarding flow
+- **Access**: Main domain only (no school subdomain)
+- **Flow**: Login → "Get Started" → Onboarding wizard → Create new school
+- **Reset**: `pnpm db:reset-test-user` (restores to fresh state with no schoolId)
+- **Note**: This account should always remain in a "fresh" state for onboarding tests
+
+---
+
+## Demo School Accounts
+
+All accounts below are scoped to **Demo Academy** (subdomain: `demo`).
+
+- **Production**: `demo.databayt.org`
+- **Local**: `demo.localhost:3000`
+
+### admin@databayt.org — ADMIN
+
+- **Arabic Name**: المدير
+- **Purpose**: School administrator with full access to all school features
+- **Capabilities**: Manage teachers, students, classes, exams, finance, settings
+
+### teacher@databayt.org — TEACHER
+
+- **Arabic Name**: فاطمة حسن (Fatima Hassan)
+- **Employee ID**: EMP0001
+- **Department**: اللغات (Languages)
+- **Specialty**: Arabic
+- **Gender**: Female
+- **Data**:
+  - Qualifications and experience records
+  - Phone numbers and contact info
+  - Subject expertise (Arabic language)
+  - Assigned classes across multiple year levels
+
+### student@databayt.org — STUDENT
+
+- **Arabic Name**: محمد حسن (Mohammed Hassan)
+- **GR Number**: GR0001
+- **Grade**: الصف العاشر (Grade 10, Secondary)
+- **Gender**: Male
+- **Age**: 15-16
+- **16 Subjects**: Arabic, English, French, Mathematics, Physics, Chemistry, Biology, Computer Science, History, Geography, Civics, Islamic Studies, Quran, ICT, Art, PE
+- **Guardians**: 2 (parent@databayt.org as father, parent1@databayt.org as mother)
+- **Data**:
+  - Attendance records (~60 days)
+  - Exam results (Midterm + Final + 2 Quizzes per subject)
+  - Class enrollments in all 16 Grade 10 subjects
+  - Fee assignments (grade-appropriate fee structure)
+
+### parent@databayt.org — GUARDIAN (Father)
+
+- **Arabic Name**: والد محمد حسن
+- **Relationship**: الأب (Father) — Primary guardian
+- **Child**: student@databayt.org (محمد حسن)
+- **Capabilities**: View child's grades, attendance, fee status, exam results
+
+### parent1@databayt.org — GUARDIAN (Mother)
+
+- **Arabic Name**: والدة محمد حسن
+- **Relationship**: الأم (Mother) — Secondary guardian
+- **Child**: student@databayt.org (محمد حسن)
+
+### accountant@databayt.org — ACCOUNTANT
+
+- **Arabic Name**: المحاسب
+- **Purpose**: Finance dashboard access
+- **Capabilities**: Fees, payments, invoices, financial reports
+
+### staff@databayt.org — STAFF
+
+- **Arabic Name**: عبدالله حسن (Abdullah Hassan)
+- **Staff ID**: STAFF001
+- **Position**: نائب المدير (Deputy Principal)
+- **Capabilities**: Administrative operations, non-teaching staff functions
+
+---
+
+## Relationship Graph
+
+```
+student@databayt.org (محمد حسن — Grade 10)
+├── Father: parent@databayt.org (primary guardian)
+├── Mother: parent1@databayt.org (secondary guardian)
+├── Classes: 16 subjects
+│   ├── Arabic, English, French
+│   ├── Mathematics, Physics, Chemistry, Biology
+│   ├── Computer Science, ICT
+│   ├── History, Geography, Civics
+│   ├── Islamic Studies, Quran
+│   └── Art, PE
+├── Teacher (Arabic): teacher@databayt.org (فاطمة حسن)
+├── Attendance: ~60 days of records
+├── Exams: Midterm + Final + 2 Quizzes per subject
+└── Fees: Grade-appropriate fee structure
+```
+
+---
+
+## Access Matrix
+
+| Account       | Domain | URL Pattern                     | Expected Behavior                  |
+| ------------- | ------ | ------------------------------- | ---------------------------------- |
+| `dev@`        | Main   | `localhost:3000/en/dashboard`   | SaaS platform dashboard            |
+| `user@`       | Main   | `localhost:3000`                | Onboarding flow ("Get Started")    |
+| `admin@`      | Demo   | `demo.localhost:3000/en/s/demo` | Full school dashboard              |
+| `teacher@`    | Demo   | `demo.localhost:3000/en/s/demo` | Teacher view (classes, students)   |
+| `student@`    | Demo   | `demo.localhost:3000/en/s/demo` | Student view (16 Grade 10 classes) |
+| `parent@`     | Demo   | `demo.localhost:3000/en/s/demo` | Guardian view (child's data)       |
+| `accountant@` | Demo   | `demo.localhost:3000/en/s/demo` | Finance dashboard                  |
+| `staff@`      | Demo   | `demo.localhost:3000/en/s/demo` | Staff operations                   |
+
+---
+
+## Bulk Accounts
+
+### Teachers (100)
+
+- `teacher1@databayt.org` through `teacher99@databayt.org`
+- Distributed across 6 departments: Languages, Sciences, Mathematics, Social Studies, Islamic Studies, Technology
+- Each has qualifications, experience, and subject assignments
+
+### Students (1,000)
+
+- `student1@databayt.org` through `student999@databayt.org`
+- Distributed across K-12 year levels:
+
+| Section      | Levels       | Students per Level | Total |
+| ------------ | ------------ | ------------------ | ----- |
+| Kindergarten | KG1, KG2     | 50                 | 100   |
+| Primary      | Grades 1-6   | 80                 | 480   |
+| Intermediate | Grades 7-9   | 70                 | 210   |
+| Secondary    | Grades 10-12 | 60                 | 180   |
+
+**Note**: student@databayt.org is reassigned to Grade 10 after initial distribution (KG1 has 49, Grade 10 has 61).
+
+### Guardians (2,000)
+
+- `parent1@databayt.org` through `parent1999@databayt.org`
+- 2 guardians per student (father + mother)
+- Linked to corresponding student by index
+
+---
+
+## Simulation Scenarios
+
+### 1. As Student
+
+```
+1. Open demo.localhost:3000
+2. Login: student@databayt.org / 1234
+3. See 16 Grade 10 classes on dashboard
+4. View exam results (midterm, final, quizzes)
+5. Check attendance records
+6. View fee status
+```
+
+### 2. As Parent
+
+```
+1. Open demo.localhost:3000
+2. Login: parent@databayt.org / 1234
+3. See child's profile (محمد حسن, Grade 10)
+4. View grades and exam results
+5. Check attendance summary
+6. Review fee/payment status
+```
+
+### 3. As Teacher
+
+```
+1. Open demo.localhost:3000
+2. Login: teacher@databayt.org / 1234
+3. See assigned Arabic classes across levels
+4. View student roster per class
+5. Enter marks/grades
+6. Check class attendance
+```
+
+### 4. As Admin
+
+```
+1. Open demo.localhost:3000
+2. Login: admin@databayt.org / 1234
+3. Full dashboard access
+4. Manage teachers, students, classes
+5. View finance overview
+6. Configure school settings
+```
+
+### 5. As Accountant
+
+```
+1. Open demo.localhost:3000
+2. Login: accountant@databayt.org / 1234
+3. Finance dashboard
+4. Manage fees, payments, invoices
+5. Generate financial reports
+```
+
+### 6. As Developer (SaaS)
+
+```
+1. Open localhost:3000
+2. Login: dev@databayt.org / 1234
+3. Navigate to /en/dashboard
+4. Platform-wide analytics
+5. View and manage all schools
+```
+
+### 7. As Fresh User (Onboarding)
+
+```
+1. Open localhost:3000
+2. Login: user@databayt.org / 1234
+3. Click "Get Started"
+4. Complete onboarding wizard
+5. Create new school
+6. Reset after: pnpm db:reset-test-user
+```
+
+---
+
+## Known Gaps
+
+- **No second school** for cross-tenant testing (only Demo Academy exists)
+- **No OAuth test accounts** (GitHub, Google) — only credentials-based login
+- **No suspended/inactive users** for testing disabled account flows
+- **No multi-school user** — architecture limitation: User has a single `schoolId`
+- **Name coincidence**: parent@ and student@ share surname "حسن" and father's given name matches student's name "محمد" — this is an index-based coincidence from the random name generator
+
+---
+
+## Reset Procedures
+
+```bash
+# Reset only user@databayt.org to fresh state (no schoolId, USER role)
+pnpm db:reset-test-user
+
+# Full re-seed (all data, additive/idempotent)
+pnpm db:seed
+
+# Nuclear option: drop all data and re-seed
+pnpm prisma migrate reset && pnpm db:seed
+```
+
+**Important**: `pnpm db:seed` is idempotent — running it multiple times will not create duplicates. It uses `upsert` operations throughout.

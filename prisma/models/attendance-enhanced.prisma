@@ -268,6 +268,52 @@ model AttendancePolicy {
   @@map("attendance_policies")
 }
 
+// Policy trigger log - records when a policy fires for a student
+model PolicyTrigger {
+  id         String   @id @default(cuid())
+  schoolId   String
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  policyId   String
+  tier       Int // 1 = warning, 2 = letter, 3 = meeting, 4 = referral
+  absenceCount Int // Number of absences at time of trigger
+  action     String // LETTER, MEETING, REFERRAL, NOTIFICATION
+  status     String   @default("PENDING") // PENDING, COMPLETED, DISMISSED
+  notes      String?
+  resolvedBy String? // User ID who resolved
+  resolvedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([schoolId, studentId, policyId, tier]) // One trigger per tier per student
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([policyId])
+  @@index([status])
+  @@map("policy_triggers")
+}
+
+// Policy exemptions - exempt specific students from policy enforcement
+model PolicyExemption {
+  id        String    @id @default(cuid())
+  schoolId  String
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  policyId  String? // null = exempt from ALL policies
+  reason    String
+  expiresAt DateTime? // null = permanent
+  createdBy String // User ID who created
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([expiresAt])
+  @@map("policy_exemptions")
+}
+
 // Attendance reports configuration
 model AttendanceReport {
   id            String          @id @default(cuid())

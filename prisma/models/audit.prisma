@@ -34,3 +34,21 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+model LoginAttempt {
+  id            String   @id @default(cuid())
+  schoolId      String?
+  email         String
+  ip            String?
+  userAgent     String?
+  success       Boolean
+  failureReason String?
+  timestamp     DateTime @default(now())
+
+  school School? @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, timestamp])
+  @@index([email, timestamp])
+  @@index([ip, timestamp])
+  @@map("login_attempts")
+}
