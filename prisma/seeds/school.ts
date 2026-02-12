@@ -65,6 +65,7 @@ export async function seedSchool(prisma: PrismaClient): Promise<SchoolRef> {
     id: school.id,
     name: school.name,
     domain: school.domain,
+    schoolLevel: school.schoolLevel,
   }
 }
 

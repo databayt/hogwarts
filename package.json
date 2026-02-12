@@ -18,7 +18,7 @@
     "format:cache": "prettier --write --cache .",
     "postinstall": "prisma generate && fumadocs-mdx",
     "db:seed": "tsx prisma/seeds/index.ts",
-    "db:seed:single": "tsx prisma/seeds/run-single.ts",
+    "db:seed:single": "tsx prisma/seeds/single.ts",
     "db:reset-test-user": "tsx prisma/seeds/reset-test-user.ts",
     "test": "vitest",
     "test:e2e": "playwright test --project=chromium",

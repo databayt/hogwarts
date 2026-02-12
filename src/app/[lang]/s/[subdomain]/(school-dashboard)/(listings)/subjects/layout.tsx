@@ -13,12 +13,15 @@ export default async function SubjectsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.subjects
 
-  // Subjects page navigation (4 links)
+  const isAr = lang === "ar"
   const subjectsPages: PageNavItem[] = [
     { name: d?.allSubjects || "All", href: `/${lang}/subjects` },
-    { name: "Curriculum", href: `/${lang}/subjects/curriculum` },
-    { name: "Analytics", href: `/${lang}/subjects/analytics` },
-    { name: "Settings", href: `/${lang}/subjects/settings` },
+    {
+      name: isAr ? "ابتدائي" : "Elementary",
+      href: `/${lang}/subjects/elementary`,
+    },
+    { name: isAr ? "متوسط" : "Middle", href: `/${lang}/subjects/middle` },
+    { name: isAr ? "ثانوي" : "High", href: `/${lang}/subjects/high` },
   ]
 
   return (

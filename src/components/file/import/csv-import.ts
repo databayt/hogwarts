@@ -1,3 +1,5 @@
+"use server"
+
 /**
  * CSV Import Service - Domain-specific bulk import
  *
@@ -13,7 +15,6 @@
  * import { importStudents, importTeachers } from "@/components/file"
  * ```
  */
-
 import { hash } from "bcryptjs"
 import { parse } from "csv-parse/sync"
 import { z, ZodError } from "zod"
@@ -53,7 +54,7 @@ const teacherCsvSchema = z.object({
   qualification: z.string().optional(),
 })
 
-export interface ImportResult {
+interface ImportResult {
   success: boolean
   imported: number
   failed: number
@@ -600,15 +601,19 @@ class CsvImportService {
   }
 }
 
-// Export singleton instance
-export const csvImportService = new CsvImportService()
+// Singleton instance (not exported — "use server" only allows async function exports)
+const csvImportService = new CsvImportService()
 
 // Export convenience functions
-export const importStudents = (csvContent: string, schoolId: string) =>
-  csvImportService.importStudents(csvContent, schoolId)
-export const importTeachers = (csvContent: string, schoolId: string) =>
-  csvImportService.importTeachers(csvContent, schoolId)
-export const generateStudentTemplate = () =>
-  csvImportService.generateStudentTemplate()
-export const generateTeacherTemplate = () =>
-  csvImportService.generateTeacherTemplate()
+export async function importStudents(csvContent: string, schoolId: string) {
+  return csvImportService.importStudents(csvContent, schoolId)
+}
+export async function importTeachers(csvContent: string, schoolId: string) {
+  return csvImportService.importTeachers(csvContent, schoolId)
+}
+export async function generateStudentTemplate() {
+  return csvImportService.generateStudentTemplate()
+}
+export async function generateTeacherTemplate() {
+  return csvImportService.generateTeacherTemplate()
+}

@@ -367,6 +367,66 @@ export const SUBJECTS: SubjectData[] = [
     levels: ["all"],
     description: "التربية البدنية",
   },
+
+  // Additional Sciences (from ClickView, MENA-adapted)
+  {
+    name: "علوم الأرض والفضاء",
+    department: "العلوم",
+    levels: ["7-12"],
+    description: "علوم الأرض والفضاء",
+  },
+  {
+    name: "العلوم والهندسة",
+    department: "العلوم",
+    levels: ["7-12"],
+    description: "ممارسات العلوم والهندسة",
+  },
+
+  // Additional Humanities
+  {
+    name: "الاقتصاد والأعمال",
+    department: "العلوم الإنسانية",
+    levels: ["7-12"],
+    description: "الاقتصاد وإدارة الأعمال",
+  },
+  {
+    name: "المهارات الحياتية",
+    department: "العلوم الإنسانية",
+    levels: ["all"],
+    description: "المهارات الحياتية",
+  },
+  {
+    name: "علم النفس",
+    department: "العلوم الإنسانية",
+    levels: ["high"],
+    description: "علم النفس",
+  },
+  {
+    name: "تاريخ السودان",
+    department: "العلوم الإنسانية",
+    levels: ["7-12"],
+    description: "تاريخ السودان",
+  },
+  {
+    name: "تاريخ العالم",
+    department: "العلوم الإنسانية",
+    levels: ["7-12"],
+    description: "تاريخ العالم",
+  },
+
+  // Additional Arts & PE
+  {
+    name: "الصحة",
+    department: "الفنون والرياضة",
+    levels: ["all"],
+    description: "الصحة والسلامة",
+  },
+  {
+    name: "التعليم المهني",
+    department: "الفنون والرياضة",
+    levels: ["7-12"],
+    description: "التعليم والتدريب المهني",
+  },
 ]
 
 // ============================================================================

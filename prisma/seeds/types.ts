@@ -13,6 +13,7 @@ export interface SchoolRef {
   id: string
   name: string
   domain: string
+  schoolLevel?: string | null
 }
 
 export interface UserRef {
@@ -59,6 +60,12 @@ export interface SubjectRef {
   subjectName: string
   lang: string
   departmentId: string
+}
+
+export interface CatalogSubjectRef {
+  id: string
+  name: string
+  slug: string
 }
 
 export interface YearLevelRef {
@@ -159,6 +166,18 @@ export interface SubjectData {
   department: string // Arabic department name (e.g. "اللغات")
   levels: string[]
   description: string // Arabic primary
+  lang?: string
+}
+
+export interface TopicData {
+  subjectName: string
+  name: string
+  slug: string
+  description?: string
+  sequenceOrder: number
+  parentName?: string
+  imageKey?: string
+  color?: string
   lang?: string
 }
 

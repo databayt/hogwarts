@@ -33,6 +33,7 @@
 import { PrismaClient } from "@prisma/client"
 
 import { seedAcademicStructure } from "./academic"
+import { seedAcademicStructureCatalog } from "./academic-structure-catalog"
 import { seedAdmission } from "./admission"
 import { seedAnnouncements } from "./announcements"
 import { seedAssignments, seedAssignmentSubmissions } from "./assignments"
@@ -44,6 +45,7 @@ import {
 import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { seedBanking } from "./banking"
+import { seedCatalog } from "./catalog"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
 import { seedEvents } from "./events"
@@ -84,6 +86,16 @@ async function main() {
     const context: Partial<SeedContext> = { prisma }
 
     // ========================================================================
+    // PHASE 0: GLOBAL CATALOG
+    // ========================================================================
+    logPhase(0, "GLOBAL CATALOG", "الكتالوج العالمي")
+
+    const catalogSubjects = await measureDuration(
+      "Catalog (Subjects, Chapters, Lessons)",
+      () => seedCatalog(prisma)
+    )
+
+    // ========================================================================
     // PHASE 1: CORE FOUNDATION
     // ========================================================================
     logPhase(1, "CORE FOUNDATION", "الأساس")
@@ -115,6 +127,17 @@ async function main() {
     context.periods = periods
     context.departments = departments
     context.yearLevels = yearLevels
+
+    // Phase 3.5: Academic Structure + Catalog Bridge
+    await measureDuration("Academic Structure + Catalog Bridge", () =>
+      seedAcademicStructureCatalog(
+        prisma,
+        school.id,
+        yearLevels,
+        catalogSubjects,
+        school.schoolLevel
+      )
+    )
 
     // ========================================================================
     // PHASE 4: SUBJECTS & CLASSROOMS
@@ -353,6 +376,7 @@ async function main() {
     // COMPLETION
     // ========================================================================
     logSummary(startTime, {
+      catalogSubjects: catalogSubjects.length,
       users: allUsers.length,
       teachers: teachers.length,
       students: students.length,

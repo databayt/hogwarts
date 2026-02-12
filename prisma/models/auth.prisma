@@ -144,6 +144,15 @@ model User {
   userActivities UserActivity[]
   pinnedItems    PinnedItem[]
 
+  // Catalog Enrollment relations
+  catalogEnrollments     Enrollment[]
+  catalogLessonProgress  LessonProgress[]
+  catalogCertificates    SubjectCertificate[]
+
+  // Lesson Content relations
+  lessonVideos      LessonVideo[]
+  lessonAttachments LessonAttachment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

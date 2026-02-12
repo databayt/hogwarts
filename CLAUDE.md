@@ -10,7 +10,7 @@ This file provides guidance to Claude Code when working with this repository.
 pnpm install && pnpm prisma generate && pnpm db:seed && pnpm dev
 ```
 
-### The 7 Critical Rules
+### The 8 Critical Rules
 
 1. **Always use pnpm** (Vercel requirement)
 2. **Always include schoolId** in database queries (multi-tenant isolation)
@@ -19,6 +19,7 @@ pnpm install && pnpm prisma generate && pnpm db:seed && pnpm dev
 5. **Run `pnpm tsc --noEmit`** before builds (catches silent failures)
 6. **Always use port 3000** for dev server - NEVER switch to another port
 7. **Only use central `.env`** - NEVER create `.env.local`, `.env.development`, or any `.env.x` files
+8. **NEVER run `pnpm db:seed`** - Always use `pnpm db:seed:single <name>`. Full seed is manual-only.
 
 ---
 
@@ -229,9 +230,11 @@ pnpm tsc --noEmit         # TypeScript check (CRITICAL before builds)
 ### Database
 
 ```bash
-pnpm prisma generate      # After schema changes
-pnpm prisma migrate dev   # Create migration
-pnpm db:seed              # Seed test data
+pnpm prisma generate              # After schema changes
+pnpm prisma migrate dev            # Create migration
+pnpm db:seed:single <name>        # Seed one module (ALWAYS use this)
+pnpm db:seed:single --list        # List available seeds
+pnpm db:seed                      # NEVER run this (manual only, 60-120s)
 ```
 
 ### Deploy
@@ -266,6 +269,7 @@ push                      # Full checklist → commit → push → Vercel
 11. **Server-Side Exceptions** - Hooks in server components, missing error.tsx boundaries; run `/diagnose-sse`
 12. **Port 3000 Only** - ALWAYS use port 3000 for dev server; kill existing processes with `lsof -ti:3000 | xargs kill -9` before starting
 13. **Central .env Only** - NEVER create `.env.local`, `.env.development`, or any `.env.x` files; all env vars go in central `.env`
+14. **Seeding** - NEVER run `pnpm db:seed`. Always `pnpm db:seed:single <name>`. Full seed = 60-120s waste.
 
 ---
 

@@ -463,7 +463,6 @@ export {
   // Components
   Importer,
   // Domain-specific CSV Import
-  csvImportService,
   importStudents,
   importTeachers,
   generateStudentTemplate,
@@ -490,7 +489,6 @@ export type {
   ImportOptions,
   UseImportReturn,
   ImporterProps,
-  CsvImportResult,
 } from "./import"
 
 // ============================================================================

@@ -324,6 +324,25 @@ model School {
   progressReportSchedules  ProgressReportSchedule[]
   generatedProgressReports GeneratedProgressReport[]
 
+  // Academic Structure relations
+  academicLevels  AcademicLevel[]
+  academicGrades  AcademicGrade[]
+  academicStreams  AcademicStream[]
+
+  // Catalog Bridge relations
+  schoolSubjectSelections SchoolSubjectSelection[]
+  schoolContentOverrides  SchoolContentOverride[]
+
+  // Enrollment relations (catalog)
+  catalogEnrollments     Enrollment[]
+  catalogCertificates    SubjectCertificate[]
+
+  // Grading Scheme relations
+  gradingSchemes GradingScheme[]
+
+  // Lesson Content relations
+  lessonVideos LessonVideo[]
+
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   QuestionBank          QuestionBank[]
@@ -463,6 +482,7 @@ model YearLevel {
   studentYearLevels StudentYearLevel[]
   reportCards       ReportCard[]
   batches           Batch[]
+  academicGrades    AcademicGrade[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
