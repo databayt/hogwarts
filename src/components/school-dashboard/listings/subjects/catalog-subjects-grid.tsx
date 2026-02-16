@@ -62,7 +62,7 @@ export function CatalogSubjectsGrid({ subjects, lang }: Props) {
                   alt={subject.name}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 640px) 64px, 96px"
+                  sizes="192px"
                   quality={100}
                 />
               ) : (

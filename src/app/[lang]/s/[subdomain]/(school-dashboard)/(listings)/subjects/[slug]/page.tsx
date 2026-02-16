@@ -79,7 +79,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       slug: l.slug,
       description: l.description,
       durationMinutes: l.durationMinutes,
-      imageUrl: getCatalogImageUrl(l.thumbnailKey, l.imageKey, "sm"),
+      imageUrl: getCatalogImageUrl(l.thumbnailKey, l.imageKey, "md"),
     })),
   }))
 

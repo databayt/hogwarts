@@ -63,6 +63,7 @@ function SubjectCardInner({
           alt={displayName}
           fill
           className="object-cover"
+          quality={100}
           sizes="56px"
         />
 

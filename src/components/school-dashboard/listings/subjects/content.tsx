@@ -75,7 +75,7 @@ export default async function SubjectsContent({ lang, level }: Props) {
         department: s.department,
         levels: s.levels,
         color: s.color,
-        imageUrl: getCatalogImageUrl(s.thumbnailKey, s.imageKey, "sm"),
+        imageUrl: getCatalogImageUrl(s.thumbnailKey, s.imageKey, "original"),
         totalChapters: s.totalChapters,
         totalLessons: s.totalLessons,
       }))

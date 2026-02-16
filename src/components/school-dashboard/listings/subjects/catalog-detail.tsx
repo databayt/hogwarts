@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { BookOpen, ChevronLeft, ChevronRight, Grid3X3 } from "lucide-react"
@@ -75,6 +75,9 @@ const LEVEL_LABELS: Record<string, { en: string; ar: string }> = {
 export function CatalogDetailContent({ subject, chapters, lang }: Props) {
   const isRTL = lang === "ar"
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [activeChapter, setActiveChapter] = useState<string | null>(
+    chapters[0]?.slug ?? null
+  )
 
   const t = useMemo(
     () => ({
@@ -85,6 +88,8 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
       noTopics: isRTL ? "لا توجد مواضيع متاحة" : "No topics available",
       subjects: isRTL ? "المواد" : "Subjects",
       min: isRTL ? "د" : "min",
+      videos: isRTL ? "فيديوهات" : "videos",
+      resources: isRTL ? "موارد" : "resources",
     }),
     [isRTL]
   )
@@ -97,6 +102,30 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
       behavior: "smooth",
     })
   }, [])
+
+  // Track active chapter on scroll for sidebar indicator
+  useEffect(() => {
+    if (chapters.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const slug = entry.target.id.replace("chapter-", "")
+            setActiveChapter(slug)
+          }
+        }
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+    )
+
+    for (const ch of chapters) {
+      const el = document.getElementById(`chapter-${ch.slug}`)
+      if (el) observer.observe(el)
+    }
+
+    return () => observer.disconnect()
+  }, [chapters])
 
   // First level label for breadcrumb
   const firstLevel = subject.levels[0]
@@ -122,7 +151,6 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
             sizes="100vw"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-4 text-start sm:p-6">
           <h1 className="text-xl font-bold text-white sm:text-2xl md:text-3xl">
             {subject.name}
@@ -202,35 +230,81 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
           </div>
 
           {/* 5. Horizontal scrollable topic cards */}
-          <div
-            ref={scrollRef}
-            className="scrollbar-none -mx-1 flex gap-4 overflow-x-auto px-1 pb-2"
-          >
-            {/* Explore all topics card */}
-            <ExploreAllCard label={t.exploreAll} color={subject.color} />
+          <div className="relative">
+            <div
+              ref={scrollRef}
+              className="scrollbar-none -mx-1 flex gap-3 overflow-x-auto px-1 pb-2"
+            >
+              {/* Explore all topics card */}
+              <ExploreAllCard label={t.exploreAll} color={subject.color} />
 
-            {chapters.map((ch) => (
-              <TopicCard
-                key={ch.id}
-                chapter={ch}
-                fallbackColor={subject.color}
-              />
-            ))}
+              {chapters.map((ch) => (
+                <TopicCard
+                  key={ch.id}
+                  chapter={ch}
+                  fallbackColor={subject.color}
+                />
+              ))}
+            </div>
+
+            {/* Far-right scroll arrow */}
+            <button
+              onClick={() => scroll("right")}
+              className="bg-background/80 hover:bg-background border-border absolute end-0 top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full border shadow-sm backdrop-blur-sm transition-colors"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="size-4 rtl:rotate-180" />
+            </button>
           </div>
         </>
       )}
 
-      {/* 6. Chapter sections */}
-      <div id="all-chapters" className="scroll-mt-20 space-y-8">
+      {/* 6. Chapter sections with sidebar nav */}
+      <div id="all-chapters" className="scroll-mt-20">
         {chapters.length > 0 ? (
-          chapters.map((chapter) => (
-            <ChapterSection
-              key={chapter.id}
-              chapter={chapter}
-              subjectColor={subject.color}
-              t={t}
-            />
-          ))
+          <div className="flex gap-8">
+            {/* Main content */}
+            <div className="min-w-0 flex-1 space-y-8">
+              {chapters.map((chapter) => (
+                <ChapterSection
+                  key={chapter.id}
+                  chapter={chapter}
+                  subjectColor={subject.color}
+                  t={t}
+                />
+              ))}
+            </div>
+
+            {/* Sidebar nav — lg+ only */}
+            <aside className="hidden w-56 shrink-0 lg:block">
+              <div className="sticky top-24">
+                <p className="mb-3 font-semibold">{subject.name}</p>
+                <nav className="border-border relative border-s">
+                  {chapters.map((ch) => {
+                    const isActive = activeChapter === ch.slug
+                    return (
+                      <a
+                        key={ch.id}
+                        href={`#chapter-${ch.slug}`}
+                        className={`relative -ms-px flex items-center gap-2 border-s-2 px-4 py-2 text-sm transition-colors ${
+                          isActive
+                            ? "border-primary text-foreground font-medium"
+                            : "text-muted-foreground hover:text-foreground border-transparent"
+                        }`}
+                      >
+                        <span
+                          className={`size-2 shrink-0 rounded-full ${
+                            isActive ? "bg-primary" : "bg-muted-foreground/30"
+                          }`}
+                        />
+                        <span className="line-clamp-1">{ch.name}</span>
+                      </a>
+                    )
+                  })}
+                </nav>
+              </div>
+            </aside>
+          </div>
         ) : (
           <Card>
             <CardContent className="py-8 text-center">
@@ -245,7 +319,7 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
 }
 
 // ---------------------------------------------------------------------------
-// ExploreAllCard
+// ExploreAllCard — horizontal pill card
 // ---------------------------------------------------------------------------
 
 function ExploreAllCard({
@@ -258,15 +332,15 @@ function ExploreAllCard({
   return (
     <a
       href="#all-chapters"
-      className="group flex w-40 shrink-0 flex-col items-center gap-3"
+      className="hover:bg-muted/50 flex w-52 shrink-0 items-center gap-3 overflow-hidden rounded-lg border transition-colors"
     >
       <div
-        className="flex size-24 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
+        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-s-lg"
         style={{ backgroundColor: color ?? "#6b7280" }}
       >
-        <Grid3X3 className="size-8 text-white/80" />
+        <Grid3X3 className="size-6 text-white/80" />
       </div>
-      <span className="text-muted-foreground group-hover:text-foreground line-clamp-2 text-center text-sm transition-colors">
+      <span className="text-muted-foreground line-clamp-2 pe-3 text-sm font-medium">
         {label}
       </span>
     </a>
@@ -274,7 +348,7 @@ function ExploreAllCard({
 }
 
 // ---------------------------------------------------------------------------
-// TopicCard (chapter thumbnail card in horizontal row)
+// TopicCard — horizontal pill card (chapter thumbnail in scroll row)
 // ---------------------------------------------------------------------------
 
 function TopicCard({
@@ -287,10 +361,10 @@ function TopicCard({
   return (
     <a
       href={`#chapter-${chapter.slug}`}
-      className="group flex w-40 shrink-0 flex-col items-center gap-3"
+      className="hover:bg-muted/50 flex w-52 shrink-0 items-center gap-3 overflow-hidden rounded-lg border transition-colors"
     >
       <div
-        className="relative size-24 overflow-hidden rounded-xl transition-transform group-hover:scale-105"
+        className="relative h-14 w-14 shrink-0 overflow-hidden rounded-s-lg"
         style={
           !chapter.imageUrl
             ? { backgroundColor: fallbackColor ?? "#6b7280" }
@@ -304,15 +378,15 @@ function TopicCard({
             fill
             className="object-cover"
             quality={100}
-            sizes="96px"
+            sizes="56px"
           />
         ) : (
-          <span className="flex size-full items-center justify-center text-xl font-bold text-white/60">
+          <span className="flex size-full items-center justify-center text-lg font-bold text-white/60">
             {chapter.name.charAt(0)}
           </span>
         )}
       </div>
-      <span className="text-muted-foreground group-hover:text-foreground line-clamp-2 text-center text-sm transition-colors">
+      <span className="line-clamp-2 pe-3 text-sm font-medium">
         {chapter.name}
       </span>
     </a>
@@ -330,13 +404,18 @@ function ChapterSection({
 }: {
   chapter: CatalogChapterItem
   subjectColor: string | null
-  t: { min: string }
+  t: { min: string; videos: string; resources: string }
 }) {
   if (chapter.lessons.length === 0) return null
 
   return (
     <section id={`chapter-${chapter.slug}`} className="scroll-mt-24 space-y-4">
-      <h2 className="text-lg font-semibold">{chapter.name}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">{chapter.name}</h2>
+        <span className="text-muted-foreground text-sm">
+          {chapter.lessons.length} {t.videos}
+        </span>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {chapter.lessons.map((lesson) => (
           <LessonCard
@@ -352,7 +431,7 @@ function ChapterSection({
 }
 
 // ---------------------------------------------------------------------------
-// LessonCard
+// LessonCard — horizontal row: thumbnail + name + stats
 // ---------------------------------------------------------------------------
 
 function LessonCard({
@@ -365,9 +444,10 @@ function LessonCard({
   t: { min: string }
 }) {
   return (
-    <div className="group overflow-hidden rounded-lg border">
+    <div className="hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-2 transition-colors">
+      {/* Thumbnail */}
       <div
-        className="bg-muted relative aspect-video overflow-hidden"
+        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg"
         style={
           !lesson.imageUrl
             ? { backgroundColor: fallbackColor ?? "#6b7280" }
@@ -379,28 +459,29 @@ function LessonCard({
             src={lesson.imageUrl}
             alt={lesson.name}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover"
             quality={100}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="64px"
           />
         ) : (
-          <span className="flex h-full w-full items-center justify-center text-2xl font-bold text-white/60">
+          <span className="flex size-full items-center justify-center text-lg font-bold text-white/60">
             {lesson.name.charAt(0)}
           </span>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 p-3">
-          <h4 className="line-clamp-2 text-sm font-medium text-white">
-            {lesson.name}
-          </h4>
-          {(lesson.description || lesson.durationMinutes) && (
-            <p className="mt-1 line-clamp-1 text-xs text-white/70">
-              {lesson.durationMinutes
-                ? `${lesson.durationMinutes} ${t.min}`
-                : lesson.description}
-            </p>
-          )}
-        </div>
+      </div>
+
+      {/* Text */}
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-2 text-sm leading-snug font-medium">
+          {lesson.name}
+        </p>
+        {(lesson.durationMinutes || lesson.description) && (
+          <p className="text-muted-foreground mt-1 line-clamp-1 text-xs">
+            {lesson.durationMinutes
+              ? `${lesson.durationMinutes} ${t.min}`
+              : lesson.description}
+          </p>
+        )}
       </div>
     </div>
   )
