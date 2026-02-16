@@ -1,0 +1,52 @@
+// Grading Scheme Models (schoolId-scoped)
+
+model GradingScheme {
+  id       String        @id @default(cuid())
+  schoolId String
+  name     String
+  lang     String        @default("ar")
+  system   GradingSystem // References existing enum from exam.prisma
+
+  isDefault        Boolean @default(false)
+  passingThreshold Int     @default(60)
+
+  showPercentage Boolean  @default(true)
+  showGPA        Boolean  @default(false)
+  showLetter     Boolean  @default(true)
+  maxGPA         Decimal? @db.Decimal(3, 1)
+  roundingMethod String   @default("round") // round, floor, ceil
+  decimalPlaces  Int      @default(0)
+
+  // Relations
+  school School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grades GradingSchemeGrade[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@map("grading_schemes")
+}
+
+model GradingSchemeGrade {
+  id       String @id @default(cuid())
+  schemeId String
+
+  grade       String // A+, A, B+, etc.
+  minScore    Int
+  maxScore    Int
+  gpaValue    Decimal? @db.Decimal(3, 1)
+  description String?
+  color       String?
+
+  // Relations
+  scheme GradingScheme @relation(fields: [schemeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schemeId, grade])
+  @@index([schemeId])
+  @@map("grading_scheme_grades")
+}

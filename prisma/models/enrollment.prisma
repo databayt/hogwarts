@@ -1,0 +1,98 @@
+// Enrollment models — replaces StreamEnrollment/Progress/Certificate
+// schoolId is OPTIONAL: individuals can enroll without a school
+
+enum EnrollmentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+model Enrollment {
+  id               String @id @default(cuid())
+  userId           String
+  catalogSubjectId String
+  schoolId         String? // Optional — individuals don't need a school
+
+  // Stripe payment
+  stripeCustomerId        String?
+  stripeCheckoutSessionId String? @unique
+  stripePriceId           String?
+
+  status   EnrollmentStatus @default(PENDING)
+  isActive Boolean          @default(true)
+
+  // Relations
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     CatalogSubject   @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
+  school      School?          @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  progress    LessonProgress[]
+  certificate SubjectCertificate?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, catalogSubjectId])
+  @@index([userId])
+  @@index([catalogSubjectId])
+  @@index([schoolId])
+  @@map("enrollments")
+}
+
+model LessonProgress {
+  id              String  @id @default(cuid())
+  userId          String
+  catalogLessonId String
+  enrollmentId    String
+  lessonVideoId   String? // Which specific video they're watching
+
+  isCompleted   Boolean   @default(false)
+  completedAt   DateTime?
+  watchedSeconds Int       @default(0) // Resume position
+  totalSeconds   Int? // Video duration in seconds (cached)
+  lastWatchedAt  DateTime  @default(now())
+  watchCount     Int       @default(0)
+
+  // Relations
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson     CatalogLesson @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
+  enrollment Enrollment    @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  video      LessonVideo?  @relation(fields: [lessonVideoId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, catalogLessonId])
+  @@index([userId])
+  @@index([catalogLessonId])
+  @@index([lastWatchedAt])
+  @@map("lesson_progress")
+}
+
+model SubjectCertificate {
+  id               String  @id @default(cuid())
+  userId           String
+  catalogSubjectId String
+  enrollmentId     String  @unique
+  schoolId         String?
+
+  certificateNumber String   @unique
+  subjectTitle      String // Snapshot at completion
+  completedAt       DateTime
+  issuedAt          DateTime @default(now())
+
+  // Relations
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject    CatalogSubject @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
+  enrollment Enrollment     @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  school     School?        @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, catalogSubjectId])
+  @@index([userId])
+  @@index([certificateNumber])
+  @@map("subject_certificates")
+}

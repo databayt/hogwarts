@@ -1,0 +1,90 @@
+// User-contributed content models (has userId, optional schoolId)
+
+enum VideoVisibility {
+  PRIVATE
+  SCHOOL
+  PUBLIC
+}
+
+enum ContentApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model LessonVideo {
+  id              String @id @default(cuid())
+  catalogLessonId String
+  userId          String
+  schoolId        String?
+
+  title       String
+  description String? @db.Text
+  lang        String  @default("ar")
+
+  videoUrl     String  @db.Text
+  thumbnailUrl String? @db.Text
+  durationSeconds Int?
+  provider     String // "youtube", "vimeo", "self-hosted"
+  externalId   String? // External video ID (e.g. YouTube video ID)
+
+  // Self-hosted storage
+  storageProvider String?
+  storageKey      String? @db.Text
+
+  // Visibility and pricing
+  visibility VideoVisibility       @default(PRIVATE)
+  price      Float? // null = free
+  currency   String?
+
+  // Approval workflow
+  approvalStatus  ContentApprovalStatus @default(PENDING)
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectionReason String?
+
+  // Engagement metrics (used for ranking)
+  viewCount     Int   @default(0)
+  likeCount     Int   @default(0)
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+
+  isFeatured Boolean  @default(false) // Platform-curated default videos
+  tags       String[] @default([])
+
+  // Relations
+  lesson   CatalogLesson    @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school   School?          @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  progress LessonProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([catalogLessonId, approvalStatus, visibility])
+  @@index([userId])
+  @@index([schoolId])
+  @@index([viewCount])
+  @@map("lesson_videos")
+}
+
+model LessonAttachment {
+  id              String @id @default(cuid())
+  catalogLessonId String
+  userId          String
+
+  name     String
+  url      String @db.Text
+  fileType String?
+  fileSize Int? // bytes
+
+  // Relations
+  lesson CatalogLesson @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([catalogLessonId])
+  @@map("lesson_attachments")
+}

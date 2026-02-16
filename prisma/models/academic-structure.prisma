@@ -1,0 +1,85 @@
+// Academic Structure Models (schoolId-scoped)
+// Defines the academic hierarchy: Level > Grade > Stream
+
+enum StreamType {
+  GENERAL
+  SCIENCE
+  ARTS
+  COMMERCE
+  TECHNICAL
+  RELIGIOUS
+}
+
+model AcademicLevel {
+  id         String      @id @default(cuid())
+  schoolId   String
+  name       String
+  slug       String
+  lang       String      @default("ar")
+  level      SchoolLevel // ELEMENTARY, MIDDLE, HIGH
+  levelOrder Int
+  startGrade Int
+  endGrade   Int
+
+  // Relations
+  school School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grades AcademicGrade[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, slug])
+  @@index([schoolId])
+  @@map("academic_levels")
+}
+
+model AcademicGrade {
+  id          String  @id @default(cuid())
+  schoolId    String
+  levelId     String
+  yearLevelId String? // Links to existing YearLevel
+  name        String
+  slug        String
+  lang        String  @default("ar")
+  gradeNumber Int
+  maxStudents Int     @default(40)
+
+  // Relations
+  school            School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  level             AcademicLevel            @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  yearLevel         YearLevel?               @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
+  streams           AcademicStream[]
+  subjectSelections SchoolSubjectSelection[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, gradeNumber])
+  @@index([schoolId])
+  @@index([levelId])
+  @@map("academic_grades")
+}
+
+model AcademicStream {
+  id         String     @id @default(cuid())
+  schoolId   String
+  gradeId    String
+  name       String
+  slug       String
+  lang       String     @default("ar")
+  streamType StreamType @default(GENERAL)
+  maxStudents Int?
+
+  // Relations
+  school            School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grade             AcademicGrade            @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  subjectSelections SchoolSubjectSelection[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, gradeId, slug])
+  @@index([schoolId])
+  @@index([gradeId])
+  @@map("academic_streams")
+}

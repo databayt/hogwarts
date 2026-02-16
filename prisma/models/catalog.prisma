@@ -1,0 +1,178 @@
+// Global Catalog Models (NO schoolId — platform-wide)
+
+enum ContentStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+  DEPRECATED
+}
+
+enum SchoolLevel {
+  ELEMENTARY
+  MIDDLE
+  HIGH
+}
+
+model CatalogSubject {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  lang        String        @default("ar")
+  description String?       @db.Text
+  department  String // Grouping (e.g. "العلوم")
+  levels      SchoolLevel[]
+  country     String        @default("SD")
+  system      String        @default("national")
+  imageKey      String?
+  thumbnailKey  String? // S3 key prefix for processed WebP variants (sm/md/original)
+  color         String?
+  iconUrl       String?
+  bannerUrl     String?
+  tags          String[]      @default([])
+  status        ContentStatus @default(PUBLISHED)
+  gradeRange    String? // e.g. "1-12", "7-12"
+
+  // Denormalized counts
+  totalChapters Int @default(0)
+  totalLessons  Int @default(0)
+  totalContent  Int @default(0)
+
+  // Engagement metrics
+  usageCount    Int   @default(0)
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+
+  sortOrder Int @default(0)
+
+  // Relations
+  chapters          CatalogChapter[]
+  exams             CatalogExam[]
+  schoolSelections  SchoolSubjectSelection[]
+  enrollments       Enrollment[]
+  certificates      SubjectCertificate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([country, system])
+  @@index([department])
+  @@map("catalog_subjects")
+}
+
+model CatalogChapter {
+  id            String        @id @default(cuid())
+  subjectId     String
+  name          String
+  slug          String
+  lang          String        @default("ar")
+  description   String?       @db.Text
+  sequenceOrder Int
+  imageKey      String?
+  thumbnailKey  String? // S3 key prefix for processed WebP variants
+  color         String?
+  gradeRange    String?
+  levels        SchoolLevel[]
+  status        ContentStatus @default(PUBLISHED)
+
+  // Denormalized counts
+  totalLessons Int @default(0)
+  totalContent Int @default(0)
+
+  // Engagement metrics
+  usageCount    Int   @default(0)
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+
+  // Relations
+  subject   CatalogSubject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  lessons   CatalogLesson[]
+  exams     CatalogExam[]
+  overrides SchoolContentOverride[] @relation("ChapterOverrides")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subjectId, slug])
+  @@index([subjectId, sequenceOrder])
+  @@index([status])
+  @@map("catalog_chapters")
+}
+
+model CatalogLesson {
+  id              String        @id @default(cuid())
+  chapterId       String
+  name            String
+  slug            String
+  lang            String        @default("ar")
+  description     String?       @db.Text
+  sequenceOrder   Int
+  imageKey        String?
+  thumbnailKey    String? // S3 key prefix for processed WebP variants
+  color           String?
+  durationMinutes Int?
+  objectives      String?       @db.Text
+  gradeRange      String?
+  levels          SchoolLevel[]
+  status          ContentStatus @default(PUBLISHED)
+
+  // Engagement metrics
+  usageCount    Int   @default(0)
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+
+  // Relations
+  chapter     CatalogChapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  videos      LessonVideo[]
+  attachments LessonAttachment[]
+  overrides   SchoolContentOverride[] @relation("LessonOverrides")
+  progress    LessonProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([chapterId, slug])
+  @@index([chapterId, sequenceOrder])
+  @@index([status])
+  @@map("catalog_lessons")
+}
+
+model CatalogExam {
+  id          String  @id @default(cuid())
+  subjectId   String
+  chapterId   String? // null = whole subject
+  title       String
+  description String? @db.Text
+  lang        String  @default("ar")
+
+  examType        String // midterm, final, chapter_test, practice
+  durationMinutes Int?
+  totalMarks      Int?
+  passingMarks    Int?
+  questions       Json?
+  totalQuestions  Int?
+  distribution    Json? // e.g. {"MULTIPLE_CHOICE": {"EASY": 5}}
+
+  gradeRange String?
+  levels     SchoolLevel[]
+  status     ContentStatus @default(DRAFT)
+  tags       String[]      @default([])
+
+  // Engagement metrics
+  usageCount   Int   @default(0)
+  averageScore Float @default(0)
+
+  // Relations
+  subject CatalogSubject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  chapter CatalogChapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subjectId])
+  @@index([chapterId])
+  @@index([status])
+  @@map("catalog_exams")
+}
