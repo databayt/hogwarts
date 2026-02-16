@@ -42,42 +42,35 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ["image/webp", "image/avif"],
-    minimumCacheTTL: 60,
+    qualities: [25, 50, 75, 100],
+    minimumCacheTTL: 2592000, // 30 days — catalog images rarely change
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: "https",
         hostname: "avatars.githubusercontent.com",
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "covers.openlibrary.org",
+        pathname: "/**",
       },
-      {
-        protocol: "https",
-        hostname: "s.udemycdn.com",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "images.ctfassets.net",
-      },
+      { protocol: "https", hostname: "s.udemycdn.com", pathname: "/**" },
+      { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
+      { protocol: "https", hostname: "images.ctfassets.net", pathname: "/**" },
       {
         protocol: "https",
         hostname: "images-na.ssl-images-amazon.com",
+        pathname: "/**",
       },
+      { protocol: "https", hostname: "www-cdn.anthropic.com", pathname: "/**" },
+      { protocol: "https", hostname: "ik.imagekit.io", pathname: "/abdout/**" },
       {
         protocol: "https",
-        hostname: "www-cdn.anthropic.com",
-      },
-      {
-        protocol: "https",
-        hostname: "ik.imagekit.io",
-        pathname: "/abdout/**",
+        hostname: "hogwarts-databayt.s3.us-east-1.amazonaws.com",
+        pathname: "/**",
       },
     ],
   },

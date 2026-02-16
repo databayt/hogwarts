@@ -23,6 +23,36 @@ pnpm install && pnpm prisma generate && pnpm db:seed && pnpm dev
 
 ---
 
+## Database Safety (CRITICAL)
+
+**Destructive database operations are FORBIDDEN without explicit user approval.**
+
+### NEVER do these (auto-blocked by hooks):
+
+- `prisma db execute --file <migration.sql>` - Re-running migration files drops/recreates tables and WIPES DATA
+- `prisma db push --accept-data-loss` - Drops tables with data
+- `prisma migrate reset` - Drops entire database
+- `DROP TABLE` / `TRUNCATE` SQL statements
+- Running full migration SQL files for "sync" - they contain `CREATE TABLE` (not `IF NOT EXISTS`)
+
+### Safe alternatives:
+
+- **Missing table?** Write targeted `CREATE TABLE IF NOT EXISTS` for that specific table only
+- **Schema out of sync?** Run `prisma db push` (WITHOUT `--accept-data-loss`) and review warnings
+- **Need to add a column?** Use `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`
+- **Neon safety**: Create a Neon branch BEFORE any risky DB operation (`neon branches create`)
+
+### Neon Branch-Before-Touch Protocol
+
+Before ANY schema change or data operation that could affect existing data:
+
+1. Create a Neon branch: use Neon MCP `create_branch`
+2. Test the operation on the branch
+3. If successful, apply to main
+4. If failed, delete the branch - zero damage
+
+---
+
 ## Multi-Tenant Safety (CRITICAL)
 
 **Every database operation MUST be scoped by `schoolId`** for tenant isolation. Missing `schoolId` = data leak across schools.

@@ -167,6 +167,8 @@ export interface SubjectData {
   levels: string[]
   description: string // Arabic primary
   lang?: string
+  imageKey?: string
+  color?: string
 }
 
 export interface TopicData {

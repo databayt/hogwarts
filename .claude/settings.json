@@ -38,7 +38,12 @@
       "mcp__Ref__ref_search_documentation",
       "mcp__Ref__ref_read_url"
     ],
-    "deny": [],
+    "deny": [
+      "Bash(pnpm db:seed)",
+      "Bash(pnpm run db:seed)",
+      "Bash(prisma migrate reset:*)",
+      "Bash(prisma db push --accept-data-loss:*)"
+    ],
     "ask": []
   },
   "model": "opus",
@@ -61,6 +66,15 @@
   },
   "hooks": {
     "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=\"$CLAUDE_TOOL_INPUT\"; if echo \"$INPUT\" | grep -qE '(migrate reset|db execute.*--file|accept-data-loss|DROP TABLE|TRUNCATE)'; then echo '🚫 BLOCKED: Destructive database command detected'; echo 'This command can wipe production data.'; echo 'If you really need this, ask the user to run it manually.'; exit 1; fi; exit 0"
+          }
+        ]
+      },
       {
         "matcher": "Bash(git:commit)",
         "hooks": [

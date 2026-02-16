@@ -716,7 +716,8 @@ export const {
       const subdomain = detectSubdomainFromHost(host)
 
       if (subdomain) {
-        return constructSchoolUrl(subdomain, "/dashboard")
+        const locale = extractLocaleFromUrl(url)
+        return constructSchoolUrl(subdomain, `/${locale}/dashboard`)
       }
 
       // --- Step 3: Main domain handling ---
@@ -729,7 +730,8 @@ export const {
         // Check for tenant parameter in URL
         const tenant = extractTenantParam(url, baseUrl)
         if (tenant) {
-          return constructSchoolUrl(tenant, "/dashboard")
+          const locale = extractLocaleFromUrl(url)
+          return constructSchoolUrl(tenant, `/${locale}/dashboard`)
         }
 
         // Logout: URL is exactly "/"
@@ -754,7 +756,8 @@ export const {
       // --- Step 4 (non-main domain): Smart redirect ---
       const tenant = extractTenantParam(url, baseUrl)
       if (tenant) {
-        return constructSchoolUrl(tenant, "/dashboard")
+        const locale = extractLocaleFromUrl(url)
+        return constructSchoolUrl(tenant, `/${locale}/dashboard`)
       }
 
       // Logout paths

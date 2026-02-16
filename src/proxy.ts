@@ -246,8 +246,8 @@ export async function proxy(req: NextRequest) {
   if (isAuth && authenticated) {
     let redirectPath: string
     if (subdomain) {
-      // School subdomain: redirect to school dashboard
-      redirectPath = `/${locale}/s/${subdomain}/dashboard`
+      // School subdomain: redirect to school dashboard (clean URL, middleware will rewrite)
+      redirectPath = `/${locale}/dashboard`
     } else {
       // Main domain: check role
       const role = getRoleFromCookie(req)
@@ -306,9 +306,7 @@ export async function proxy(req: NextRequest) {
     // If role is null (JWT decode failed), allow through - auth() in actions will verify
     if (role && !isRouteAllowedForRole(pathForRouteCheck, role)) {
       // Redirect to unauthorized page with context
-      const unauthorizedUrl = subdomain
-        ? `/${locale}/s/${subdomain}/unauthorized`
-        : `/${locale}/unauthorized`
+      const unauthorizedUrl = `/${locale}/unauthorized`
       const response = NextResponse.redirect(new URL(unauthorizedUrl, req.url))
       // Set header for debugging/logging
       response.headers.set("x-blocked-role", role)

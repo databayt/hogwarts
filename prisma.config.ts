@@ -34,6 +34,7 @@ export default defineConfig({
   // The URL here can override the one in schema.prisma if needed
   datasource: {
     url: env("DATABASE_URL"),
+    directUrl: env("DIRECT_URL"),
   },
 
   // Multi-file schema support

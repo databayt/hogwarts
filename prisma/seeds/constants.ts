@@ -246,7 +246,7 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "اللغة العربية", // EN: "Arabic"
     department: "اللغات",
-    levels: ["all"],
+    levels: [],
     description: "القراءة والكتابة والنحو والأدب", // EN: "Arabic Language - Reading, Writing, Grammar, Literature"
   },
   {
@@ -258,7 +258,7 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "اللغة الفرنسية", // EN: "French"
     department: "اللغات",
-    levels: ["7-12"],
+    levels: [],
     description: "اللغة الفرنسية", // EN: "French Language"
   },
 
@@ -272,13 +272,13 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "العلوم", // EN: "Science"
     department: "العلوم",
-    levels: ["KG-6"],
+    levels: [],
     description: "العلوم العامة", // EN: "General Science"
   },
   {
     name: "الفيزياء", // EN: "Physics"
     department: "العلوم",
-    levels: ["7-12"],
+    levels: ["all"],
     description: "الفيزياء",
   },
   {
@@ -290,13 +290,13 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "الأحياء", // EN: "Biology"
     department: "العلوم",
-    levels: ["7-12"],
+    levels: ["all"],
     description: "الأحياء",
   },
   {
     name: "علوم الحاسوب", // EN: "Computer Science"
     department: "العلوم",
-    levels: ["7-12"],
+    levels: [],
     description: "علوم الحاسوب",
   },
 
@@ -304,7 +304,7 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "التاريخ", // EN: "History"
     department: "العلوم الإنسانية",
-    levels: ["4-12"],
+    levels: ["elementary"],
     description: "التاريخ",
   },
   {
@@ -316,13 +316,13 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "الدراسات الاجتماعية", // EN: "Social Studies"
     department: "العلوم الإنسانية",
-    levels: ["1-6"],
+    levels: [],
     description: "الدراسات الاجتماعية",
   },
   {
     name: "التربية الوطنية", // EN: "Civics"
     department: "العلوم الإنسانية",
-    levels: ["7-12"],
+    levels: ["all"],
     description: "التربية الوطنية",
   },
 
@@ -336,7 +336,7 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "القرآن الكريم", // EN: "Quran"
     department: "الدين",
-    levels: ["all"],
+    levels: [],
     description: "حفظ وتلاوة القرآن الكريم", // EN: "Quran Memorization and Recitation"
   },
 
@@ -358,7 +358,7 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "الموسيقى", // EN: "Music"
     department: "الفنون والرياضة",
-    levels: ["KG-9"],
+    levels: [],
     description: "الموسيقى",
   },
   {
@@ -372,7 +372,7 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "علوم الأرض والفضاء",
     department: "العلوم",
-    levels: ["7-12"],
+    levels: ["all"],
     description: "علوم الأرض والفضاء",
   },
   {
@@ -386,7 +386,7 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "الاقتصاد والأعمال",
     department: "العلوم الإنسانية",
-    levels: ["7-12"],
+    levels: ["all"],
     description: "الاقتصاد وإدارة الأعمال",
   },
   {
@@ -404,7 +404,7 @@ export const SUBJECTS: SubjectData[] = [
   {
     name: "تاريخ السودان",
     department: "العلوم الإنسانية",
-    levels: ["7-12"],
+    levels: [],
     description: "تاريخ السودان",
   },
   {
@@ -426,6 +426,38 @@ export const SUBJECTS: SubjectData[] = [
     department: "الفنون والرياضة",
     levels: ["7-12"],
     description: "التعليم والتدريب المهني",
+  },
+
+  // New ClickView US Curriculum Subjects
+  {
+    name: "الاحتفالات والمناسبات",
+    department: "العلوم الإنسانية",
+    levels: ["elementary"],
+    description: "الاحتفالات والمناسبات والأعياد",
+  },
+  {
+    name: "التطوير المهني",
+    department: "العلوم الإنسانية",
+    levels: ["all"],
+    description: "التطوير المهني للمعلمين",
+  },
+  {
+    name: "اللغات العالمية",
+    department: "اللغات",
+    levels: ["all"],
+    description: "اللغات العالمية",
+  },
+  {
+    name: "علم الاجتماع",
+    department: "العلوم الإنسانية",
+    levels: ["high"],
+    description: "علم الاجتماع",
+  },
+  {
+    name: "التاريخ الأمريكي",
+    department: "العلوم الإنسانية",
+    levels: ["7-12"],
+    description: "التاريخ الأمريكي",
   },
 ]
 
