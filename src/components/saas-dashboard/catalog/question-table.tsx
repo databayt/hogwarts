@@ -5,16 +5,16 @@ import { useMemo } from "react"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { catalogColumns, type CatalogSubjectRow } from "./columns"
+import { questionColumns, type CatalogQuestionRow } from "./question-columns"
 
 interface Props {
-  data: CatalogSubjectRow[]
+  data: CatalogQuestionRow[]
 }
 
-export function CatalogTable({ data }: Props) {
-  const columns = useMemo(() => catalogColumns, [])
+export function QuestionTable({ data }: Props) {
+  const columns = useMemo(() => questionColumns, [])
 
-  const { table } = useDataTable<CatalogSubjectRow>({
+  const { table } = useDataTable<CatalogQuestionRow>({
     data,
     columns,
     pageCount: 1,

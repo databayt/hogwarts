@@ -97,7 +97,15 @@ export async function getCatalogLessonWithProgress(
     isEnrolled = !!enrollment
   }
 
+  // Check if subject is paid — return null for non-enrolled paid content
   if (!isEnrolled && !isAdmin) {
+    const subject = await db.catalogSubject.findUnique({
+      where: { id: lesson.chapter.subject.id },
+      select: { price: true },
+    })
+    const isPaid = subject?.price && Number(subject.price) > 0
+
+    // For both free and paid subjects, non-enrolled non-admin users can't access
     return null
   }
 

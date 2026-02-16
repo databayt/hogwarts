@@ -109,6 +109,11 @@ model Exam {
   instructions String?    @db.Text
   status       ExamStatus @default(PLANNED)
 
+  // Optional catalog FK bridges
+  catalogSubjectId String?
+  catalogChapterId String?
+  catalogLessonId  String?
+
   // Proctoring & Security settings
   proctorMode       ProctorMode @default(BASIC)
   shuffleQuestions  Boolean     @default(true)
@@ -130,6 +135,11 @@ model Exam {
   studentAnswers StudentAnswer[] // Auto-marking system
   markingResults MarkingResult[] // Auto-marking system
   examSessions   ExamSession[]   // Proctoring sessions
+
+  // Catalog bridge relations
+  catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id], onDelete: SetNull)
+  catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
+  catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
 
   // Performance indexes
   @@index([schoolId, examDate])

@@ -33,6 +33,14 @@ model CatalogSubject {
   status        ContentStatus @default(PUBLISHED)
   gradeRange    String? // e.g. "1-12", "7-12"
 
+  // ClickView integration
+  clickviewId  String?
+  clickviewUrl String?
+
+  // Pricing
+  price    Decimal? @db.Decimal(10, 2)
+  currency String?
+
   // Denormalized counts
   totalChapters Int @default(0)
   totalLessons  Int @default(0)
@@ -51,6 +59,15 @@ model CatalogSubject {
   schoolSelections  SchoolSubjectSelection[]
   enrollments       Enrollment[]
   certificates      SubjectCertificate[]
+
+  // Content relations
+  catalogQuestions    CatalogQuestion[]
+  catalogMaterials    CatalogMaterial[]
+  catalogAssignments  CatalogAssignment[]
+
+  // School-scoped reverse relations (FK bridges)
+  schoolQuestionBanks QuestionBank[]
+  schoolExams         Exam[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -92,6 +109,15 @@ model CatalogChapter {
   exams     CatalogExam[]
   overrides SchoolContentOverride[] @relation("ChapterOverrides")
 
+  // Content relations
+  catalogQuestions    CatalogQuestion[]
+  catalogMaterials    CatalogMaterial[]
+  catalogAssignments  CatalogAssignment[]
+
+  // School-scoped reverse relations (FK bridges)
+  schoolQuestionBanks QuestionBank[]
+  schoolExams         Exam[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -118,6 +144,11 @@ model CatalogLesson {
   levels          SchoolLevel[]
   status          ContentStatus @default(PUBLISHED)
 
+  // ClickView integration
+  clickviewCoverId String?
+  videoCount       Int @default(0)
+  resourceCount    Int @default(0)
+
   // Engagement metrics
   usageCount    Int   @default(0)
   averageRating Float @default(0)
@@ -129,6 +160,17 @@ model CatalogLesson {
   attachments LessonAttachment[]
   overrides   SchoolContentOverride[] @relation("LessonOverrides")
   progress    LessonProgress[]
+  exams       CatalogExam[]          @relation("LessonExams")
+
+  // Content relations
+  catalogQuestions    CatalogQuestion[]
+  catalogMaterials    CatalogMaterial[]
+  catalogAssignments  CatalogAssignment[]
+
+  // School-scoped reverse relations (FK bridges)
+  schoolQuestionBanks QuestionBank[]
+  schoolExams         Exam[]
+  schoolAssignments   Assignment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -143,6 +185,7 @@ model CatalogExam {
   id          String  @id @default(cuid())
   subjectId   String
   chapterId   String? // null = whole subject
+  lessonId    String? // null = chapter/subject level
   title       String
   description String? @db.Text
   lang        String  @default("ar")
@@ -167,12 +210,14 @@ model CatalogExam {
   // Relations
   subject CatalogSubject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   chapter CatalogChapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  lesson  CatalogLesson?  @relation("LessonExams", fields: [lessonId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([subjectId])
   @@index([chapterId])
+  @@index([lessonId])
   @@index([status])
   @@map("catalog_exams")
 }

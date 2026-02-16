@@ -31,6 +31,8 @@ import { seedCatalog } from "./catalog"
 import { seedCatalogImages } from "./catalog-images"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
+import { seedClickViewCatalog } from "./clickview-catalog"
+import { seedClickViewImages } from "./clickview-images"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
 import { seedFees } from "./fees"
@@ -306,6 +308,19 @@ const SEEDS: Record<string, { description: string; run: SeedRunner }> = {
     description: "Upload ClickView images to S3/CloudFront",
     run: async (prisma) => {
       await seedCatalogImages(prisma)
+    },
+  },
+  "clickview-catalog": {
+    description:
+      "ClickView US catalog (62 subjects, 201 chapters, 986 lessons)",
+    run: async (prisma) => {
+      await seedClickViewCatalog(prisma)
+    },
+  },
+  "clickview-images": {
+    description: "Upload ClickView subject images to S3/CloudFront",
+    run: async (prisma) => {
+      await seedClickViewImages(prisma)
     },
   },
   school: {

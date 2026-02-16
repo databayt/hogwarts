@@ -1,6 +1,5 @@
+import { db } from "@/lib/db"
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
-import type { Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   children: React.ReactNode
@@ -9,11 +8,21 @@ interface Props {
 
 export default async function CatalogLayout({ children, params }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang as Locale)
-  const n = dictionary?.operator?.nav
+  // Get pending approval count for badge
+  const pendingCount = await db.catalogQuestion.count({
+    where: { approvalStatus: "PENDING" },
+  })
 
   const catalogPages: PageNavItem[] = [
-    { name: n?.catalog || "Catalog", href: `/${lang}/catalog` },
+    { name: "Catalog", href: `/${lang}/catalog` },
+    { name: "Questions", href: `/${lang}/catalog/questions` },
+    { name: "Materials", href: `/${lang}/catalog/materials` },
+    { name: "Assignments", href: `/${lang}/catalog/assignments` },
+    {
+      name: pendingCount > 0 ? `Approvals (${pendingCount})` : "Approvals",
+      href: `/${lang}/catalog/approvals`,
+    },
+    { name: "Analytics", href: `/${lang}/catalog/analytics` },
   ]
 
   return (

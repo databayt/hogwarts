@@ -1,0 +1,52 @@
+// Global Catalog Assignment Templates (NO schoolId — platform-wide)
+// Homework templates, project templates that schools can adopt
+
+model CatalogAssignment {
+  id               String  @id @default(cuid())
+  catalogSubjectId String?
+  catalogChapterId String?
+  catalogLessonId  String?
+
+  title        String
+  description  String?  @db.Text
+  lang         String   @default("ar")
+  instructions String?  @db.Text
+  rubric       String?  @db.Text // Grading rubric
+
+  // Assignment metadata
+  totalPoints     Decimal? @db.Decimal(5, 2)
+  estimatedTime   Int?     // minutes
+  assignmentType  String?  // homework, project, lab, essay, presentation
+
+  tags   String[]      @default([])
+  status ContentStatus @default(DRAFT)
+
+  // Community contribution
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  // Engagement metrics
+  usageCount    Int   @default(0)
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+
+  // Relations
+  catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id], onDelete: SetNull)
+  catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
+  catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([catalogSubjectId])
+  @@index([catalogChapterId])
+  @@index([catalogLessonId])
+  @@index([approvalStatus, visibility])
+  @@index([contributedBy])
+  @@map("catalog_assignments")
+}

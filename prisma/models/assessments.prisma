@@ -34,10 +34,14 @@ model Assignment {
   publishDate  DateTime?
   instructions String?          @db.Text
 
-  school      School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class       Class                  @relation(fields: [classId], references: [id], onDelete: Cascade)
-  submissions AssignmentSubmission[]
-  results     Result[]
+  // Optional catalog FK bridge
+  catalogLessonId String?
+
+  school         School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class          Class                  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  catalogLesson  CatalogLesson?         @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
+  submissions    AssignmentSubmission[]
+  results        Result[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

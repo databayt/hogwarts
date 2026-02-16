@@ -77,6 +77,8 @@ export async function POST(req: Request) {
             courseId?: string
             enrollmentId?: string
             schoolId?: string
+            type?: string
+            catalogSubjectId?: string
           }
           subscription?: string
           payment_status?: string
@@ -84,6 +86,38 @@ export async function POST(req: Request) {
       }
     }
     const session = eventData.data.object
+
+    // Handle CATALOG ENROLLMENT payments (one-time, no subscription)
+    if (
+      session.metadata?.type === "catalog_enrollment" &&
+      session.metadata?.catalogSubjectId &&
+      session.metadata?.enrollmentId &&
+      !session.subscription
+    ) {
+      if (session.payment_status === "paid") {
+        try {
+          await db.enrollment.update({
+            where: { id: session.metadata.enrollmentId },
+            data: {
+              isActive: true,
+              status: "ACTIVE",
+              updatedAt: new Date(),
+            },
+          })
+
+          console.log(
+            `[Webhook] Catalog enrollment activated: ${session.metadata.enrollmentId}`
+          )
+        } catch (error) {
+          console.error(
+            "[Webhook] Failed to activate catalog enrollment:",
+            error
+          )
+        }
+      }
+
+      return new Response(null, { status: 200 })
+    }
 
     // Handle COURSE ENROLLMENT payments (one-time, no subscription)
     if (

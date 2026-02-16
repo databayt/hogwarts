@@ -232,7 +232,7 @@ export async function getSchoolCatalogSelections() {
   const selections = await db.schoolSubjectSelection.findMany({
     where: { schoolId },
     include: {
-      catalogSubject: {
+      subject: {
         select: {
           id: true,
           name: true,
@@ -256,7 +256,7 @@ export async function getSchoolCatalogSelections() {
     },
     orderBy: [
       { grade: { gradeNumber: "asc" } },
-      { catalogSubject: { sortOrder: "asc" } },
+      { subject: { sortOrder: "asc" } },
     ],
   })
 

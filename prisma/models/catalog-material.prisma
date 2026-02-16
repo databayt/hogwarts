@@ -1,0 +1,69 @@
+// Global Catalog Material (NO schoolId — platform-wide)
+// Books, syllabi, worksheets, supplementary resources
+
+enum MaterialType {
+  TEXTBOOK
+  SYLLABUS
+  WORKSHEET
+  STUDY_GUIDE
+  REFERENCE
+  VIDEO_GUIDE
+  LAB_MANUAL
+  OTHER
+}
+
+model CatalogMaterial {
+  id               String  @id @default(cuid())
+  catalogSubjectId String?
+  catalogChapterId String?
+  catalogLessonId  String?
+
+  title       String
+  description String?      @db.Text
+  lang        String       @default("ar")
+  type        MaterialType @default(OTHER)
+
+  // File metadata
+  fileUrl   String?
+  fileKey   String? // S3 key
+  fileSize  Int?    // bytes
+  mimeType  String?
+  pageCount Int?
+
+  // External link (for non-uploaded resources)
+  externalUrl String?
+
+  tags   String[]      @default([])
+  status ContentStatus @default(DRAFT)
+
+  // Community contribution
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  // Engagement metrics
+  usageCount    Int   @default(0)
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+  downloadCount Int   @default(0)
+
+  // Relations
+  catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id], onDelete: SetNull)
+  catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
+  catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([catalogSubjectId])
+  @@index([catalogChapterId])
+  @@index([catalogLessonId])
+  @@index([approvalStatus, visibility])
+  @@index([type])
+  @@index([contributedBy])
+  @@map("catalog_materials")
+}

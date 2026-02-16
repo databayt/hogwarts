@@ -1,0 +1,65 @@
+// Global Catalog Question Bank (NO schoolId — platform-wide)
+// Reuses enums from qbank.prisma: QuestionType, DifficultyLevel, BloomLevel
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ContentVisibility {
+  PRIVATE
+  SCHOOL
+  PUBLIC
+}
+
+model CatalogQuestion {
+  id               String  @id @default(cuid())
+  catalogSubjectId String?
+  catalogChapterId String?
+  catalogLessonId  String?
+
+  questionText String       @db.Text
+  questionType QuestionType
+  difficulty   DifficultyLevel
+  bloomLevel   BloomLevel
+  points       Decimal      @default(1) @db.Decimal(5, 2)
+
+  // Question-specific data (JSON)
+  options      Json?
+  sampleAnswer String? @db.Text
+  explanation  String? @db.Text
+  tags         String[] @default([])
+
+  // Community contribution
+  contributedBy       String? // userId
+  contributedSchoolId String? // schoolId of contributor
+  approvalStatus      ApprovalStatus   @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  // Engagement metrics
+  usageCount   Int   @default(0)
+  averageScore Float @default(0)
+  qualityScore Float @default(0)
+
+  status ContentStatus @default(DRAFT)
+
+  // Relations
+  catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id], onDelete: SetNull)
+  catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
+  catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([catalogSubjectId])
+  @@index([catalogChapterId])
+  @@index([catalogLessonId])
+  @@index([approvalStatus, visibility])
+  @@index([questionType, difficulty])
+  @@index([contributedBy])
+  @@map("catalog_questions")
+}

@@ -5,16 +5,19 @@ import { useMemo } from "react"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { catalogColumns, type CatalogSubjectRow } from "./columns"
+import {
+  assignmentColumns,
+  type CatalogAssignmentRow,
+} from "./assignment-columns"
 
 interface Props {
-  data: CatalogSubjectRow[]
+  data: CatalogAssignmentRow[]
 }
 
-export function CatalogTable({ data }: Props) {
-  const columns = useMemo(() => catalogColumns, [])
+export function AssignmentTable({ data }: Props) {
+  const columns = useMemo(() => assignmentColumns, [])
 
-  const { table } = useDataTable<CatalogSubjectRow>({
+  const { table } = useDataTable<CatalogAssignmentRow>({
     data,
     columns,
     pageCount: 1,

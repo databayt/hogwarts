@@ -17,6 +17,7 @@ model School {
   // School classification
   schoolType  String? // private, public, international, technical, special
   schoolLevel String? // primary, secondary, both
+  system      String? // clickview, national, british, ib
   description String? @db.Text
 
   // Location breakdown (address stays as street address)

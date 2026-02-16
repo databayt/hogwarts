@@ -95,6 +95,11 @@ model QuestionBank {
   points       Decimal         @default(1) @db.Decimal(5, 2)
   timeEstimate Int? // Estimated time in minutes
 
+  // Optional catalog FK bridges
+  catalogSubjectId String?
+  catalogChapterId String?
+  catalogLessonId  String?
+
   // Question-specific data (JSON)
   // For MCQ/True-False: [{text: string, isCorrect: boolean, explanation?: string}]
   // For Fill-in-Blank: {acceptedAnswers: string[], caseSensitive: boolean}
@@ -126,6 +131,11 @@ model QuestionBank {
   generatedExamQuestions GeneratedExamQuestion[]
   analytics              QuestionAnalytics?
   review                 QuestionReview? // AI generation review
+
+  // Catalog bridge relations
+  catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id], onDelete: SetNull)
+  catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
+  catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
 
   // Marking system relations
   rubrics        Rubric[]
