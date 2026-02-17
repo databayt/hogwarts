@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "dev:https": "next dev --turbopack --experimental-https --experimental-https-key ./certificates/localhost+2-key.pem --experimental-https-cert ./certificates/localhost+2.pem",
     "dev:next": "next dev --turbopack",
     "dev:ws": "node server.js",
