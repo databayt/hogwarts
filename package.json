@@ -112,7 +112,7 @@
     "@vercel/speed-insights": "^1.2.0",
     "@yudiel/react-qr-scanner": "^2.4.1",
     "ai": "^5.0.80",
-    "axios": "^1.12.2",
+    "axios": "^1.13.5",
     "bcryptjs": "^3.0.2",
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.5.1",
