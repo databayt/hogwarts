@@ -68,3 +68,7 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 .backup/
+
+# ClickView scraped images (served from S3/CloudFront in production)
+public/clickview/
+scripts/clickview-data/

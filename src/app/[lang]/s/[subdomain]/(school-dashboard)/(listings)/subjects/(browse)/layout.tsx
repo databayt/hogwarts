@@ -25,6 +25,14 @@ export default async function SubjectsBrowseLayout({
     },
     { name: isAr ? "متوسط" : "Middle", href: `/${lang}/subjects/middle` },
     { name: isAr ? "ثانوي" : "High", href: `/${lang}/subjects/high` },
+    {
+      name: isAr ? "المساهمة" : "Contribute",
+      href: `/${lang}/subjects/contribute`,
+    },
+    {
+      name: isAr ? "مساهماتي" : "My Contributions",
+      href: `/${lang}/subjects/contributions`,
+    },
   ]
 
   return (

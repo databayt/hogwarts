@@ -35,7 +35,7 @@ export default function PersonalContent({ dictionary }: Props) {
     if (personalFormRef.current) {
       try {
         await personalFormRef.current.saveAndNext()
-        router.push(`/${locale}/s/${subdomain}/apply/${id}/contact`)
+        router.push(`/${locale}/apply/${id}/contact`)
       } catch (error) {
         console.error("Error saving personal step:", error)
       }

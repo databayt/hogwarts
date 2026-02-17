@@ -82,7 +82,8 @@ function parseStats(stats: string): {
   }
 }
 
-function extractClickViewId(url: string): string | null {
+function extractClickViewId(url: string | undefined): string | null {
+  if (!url) return null
   // Extract ID from URL like /us/elementary/topics/GxAzY0z/arts
   const match = url.match(/\/topics\/([^/]+)\//)
   return match ? match[1] : null
@@ -166,6 +167,9 @@ export async function seedClickViewCatalog(
     const clickviewId = extractClickViewId(entry.url)
     const color = DEPARTMENT_COLORS[entry.subjectName] ?? "#6366f1"
 
+    // Grab the first topic's cover image as subject thumbnail
+    const firstTopicImg = entry.groups[0]?.topics[0]?.imgSrc ?? null
+
     // Create/update CatalogSubject
     const subject = await prisma.catalogSubject.upsert({
       where: { slug },
@@ -173,8 +177,9 @@ export async function seedClickViewCatalog(
         name: entry.subjectName,
         levels: [schoolLevel],
         clickviewId,
-        clickviewUrl: `https://clickview.com${entry.url}`,
+        clickviewUrl: entry.url ? `https://clickview.com${entry.url}` : null,
         color,
+        imageKey: firstTopicImg,
         sortOrder: 100 + i, // Offset from Sudanese subjects
       },
       create: {
@@ -186,8 +191,9 @@ export async function seedClickViewCatalog(
         country: "US",
         system: "clickview",
         clickviewId,
-        clickviewUrl: `https://clickview.com${entry.url}`,
+        clickviewUrl: entry.url ? `https://clickview.com${entry.url}` : null,
         color,
+        imageKey: firstTopicImg,
         sortOrder: 100 + i,
         status: "PUBLISHED",
       },

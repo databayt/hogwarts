@@ -363,6 +363,76 @@ export async function getDraftApplications(
 }
 
 /**
+ * Get draft applications by authenticated user ID
+ */
+export async function getDraftApplicationsByUser(
+  subdomain: string,
+  userId: string
+): Promise<
+  ActionResult<
+    Array<{
+      sessionToken: string
+      campaignId: string | null
+      campaignName: string | null
+      currentStep: number
+      totalSteps: number
+      studentName: string | null
+      updatedAt: Date
+      expiresAt: Date
+    }>
+  >
+> {
+  try {
+    const schoolResult = await getSchoolBySubdomain(subdomain)
+    if (!schoolResult.success || !schoolResult.data) {
+      return { success: false, error: "School not found" }
+    }
+
+    const schoolId = schoolResult.data.id
+    const now = new Date()
+
+    const sessions = await db.applicationSession.findMany({
+      where: {
+        schoolId,
+        userId,
+        expiresAt: { gt: now },
+        convertedToApplicationId: null,
+      },
+      include: {
+        campaign: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    })
+
+    const drafts = sessions.map((session) => {
+      const formData = session.formData as Record<string, unknown>
+      const firstName = (formData?.firstName as string) || null
+      const lastName = (formData?.lastName as string) || null
+      const studentName =
+        firstName && lastName ? `${firstName} ${lastName}` : firstName || null
+
+      return {
+        sessionToken: session.sessionToken,
+        campaignId: session.campaign?.id || null,
+        campaignName: session.campaign?.name || null,
+        currentStep: session.currentStep,
+        totalSteps: 6,
+        studentName,
+        updatedAt: session.updatedAt,
+        expiresAt: session.expiresAt,
+      }
+    })
+
+    return { success: true, data: drafts }
+  } catch (error) {
+    console.error("Error fetching draft applications by user:", error)
+    return { success: false, error: "Failed to fetch draft applications" }
+  }
+}
+
+/**
  * Resume application from session token
  */
 export async function resumeApplicationSession(sessionToken: string): Promise<

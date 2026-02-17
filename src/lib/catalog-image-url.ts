@@ -22,6 +22,7 @@ export function getCatalogImageUrl(
   }
 
   if (imageKey) {
+    if (imageKey.startsWith("https://")) return imageKey
     if (imageKey.startsWith("/")) return imageKey
     return `/subjects/${imageKey}.png`
   }

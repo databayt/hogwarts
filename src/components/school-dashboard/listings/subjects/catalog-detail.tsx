@@ -15,6 +15,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Card, CardContent } from "@/components/ui/card"
+import { StarRating } from "@/components/ui/star-rating"
 import type { Locale } from "@/components/internationalization/config"
 
 // ---------------------------------------------------------------------------
@@ -50,6 +51,9 @@ interface CatalogSubjectSummary {
   levels: string[]
   totalChapters: number
   totalLessons: number
+  averageRating: number
+  usageCount: number
+  ratingCount: number
 }
 
 interface Props {
@@ -155,10 +159,21 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
           <h1 className="text-xl font-bold text-white sm:text-2xl md:text-3xl">
             {subject.name}
           </h1>
-          <p className="mt-1 text-sm text-white/80">
-            {subject.totalChapters} {t.topics} &bull; {subject.totalLessons}{" "}
-            {t.lessons}
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-white/80">
+            <span>
+              {subject.totalChapters} {t.topics} &bull; {subject.totalLessons}{" "}
+              {t.lessons}
+            </span>
+            {subject.averageRating > 0 && (
+              <StarRating
+                rating={subject.averageRating}
+                size="sm"
+                showCount
+                count={subject.ratingCount}
+                className="[&_button]:text-yellow-300 [&_span]:text-white/70"
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -365,13 +380,9 @@ function TopicCard({
     >
       <div
         className="relative h-14 w-14 shrink-0 overflow-hidden rounded-s-lg"
-        style={
-          !chapter.imageUrl
-            ? { backgroundColor: fallbackColor ?? "#6b7280" }
-            : undefined
-        }
+        style={{ backgroundColor: fallbackColor ?? "#6b7280" }}
       >
-        {chapter.imageUrl ? (
+        {chapter.imageUrl && (
           <Image
             src={chapter.imageUrl}
             alt={chapter.name}
@@ -380,10 +391,6 @@ function TopicCard({
             quality={100}
             sizes="56px"
           />
-        ) : (
-          <span className="flex size-full items-center justify-center text-lg font-bold text-white/60">
-            {chapter.name.charAt(0)}
-          </span>
         )}
       </div>
       <span className="line-clamp-2 pe-3 text-sm font-medium">
@@ -448,13 +455,9 @@ function LessonCard({
       {/* Thumbnail */}
       <div
         className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg"
-        style={
-          !lesson.imageUrl
-            ? { backgroundColor: fallbackColor ?? "#6b7280" }
-            : undefined
-        }
+        style={{ backgroundColor: fallbackColor ?? "#6b7280" }}
       >
-        {lesson.imageUrl ? (
+        {lesson.imageUrl && (
           <Image
             src={lesson.imageUrl}
             alt={lesson.name}
@@ -463,10 +466,6 @@ function LessonCard({
             quality={100}
             sizes="64px"
           />
-        ) : (
-          <span className="flex size-full items-center justify-center text-lg font-bold text-white/60">
-            {lesson.name.charAt(0)}
-          </span>
         )}
       </div>
 

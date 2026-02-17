@@ -40,11 +40,11 @@ export default function CampaignSelectorContent({
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight
 
   const handleStartNew = (campaignId: string) => {
-    router.push(`/${lang}/s/${subdomain}/apply/overview?id=${campaignId}`)
+    router.push(`/${lang}/apply/overview?id=${campaignId}`)
   }
 
   const handleResumeDraft = (sessionToken: string) => {
-    router.push(`/${lang}/s/${subdomain}/apply/continue?token=${sessionToken}`)
+    router.push(`/${lang}/apply/continue?token=${sessionToken}`)
   }
 
   const activeCampaign =
@@ -110,7 +110,7 @@ export default function CampaignSelectorContent({
             onClick={() =>
               activeCampaign &&
               router.push(
-                `/${lang}/s/${subdomain}/apply/overview?id=${activeCampaign.id}&import=true`
+                `/${lang}/apply/overview?id=${activeCampaign.id}&import=true`
               )
             }
             disabled={!activeCampaign || activeCampaign.availableSeats === 0}

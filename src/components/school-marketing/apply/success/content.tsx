@@ -170,7 +170,7 @@ export default function SuccessContent({
         </Card>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Link href={`/${locale}/s/${subdomain}/apply/status`}>
+          <Link href={`/${locale}/apply/status`}>
             <Card className="hover:border-primary h-full cursor-pointer transition-colors">
               <CardContent className="flex items-center gap-4 pt-6">
                 <FileText className="text-primary h-8 w-8" />
@@ -190,7 +190,7 @@ export default function SuccessContent({
             </Card>
           </Link>
 
-          <Link href={`/${locale}/s/${subdomain}/tour`}>
+          <Link href={`/${locale}/tour`}>
             <Card className="hover:border-primary h-full cursor-pointer transition-colors">
               <CardContent className="flex items-center gap-4 pt-6">
                 <Calendar className="text-primary h-8 w-8" />
@@ -212,7 +212,7 @@ export default function SuccessContent({
         </div>
 
         <div className="mt-8 text-center">
-          <Link href={`/${locale}/s/${subdomain}`}>
+          <Link href={`/${locale}`}>
             <Button variant="outline">
               {successDict.backToHome ||
                 (isRTL ? "العودة إلى الصفحة الرئيسية" : "Back to Home")}

@@ -5,7 +5,7 @@
  * Phase 15: Admission
  *
  * Features:
- * - 1 OPEN campaign for 2025-2026
+ * - 1 OPEN campaign for current academic year
  * - 50 applications across all statuses
  * - 20 inquiries from interested families
  * - 15 tour bookings (upcoming + completed)
@@ -229,13 +229,16 @@ export async function seedAdmissionSettings(
 // ============================================================================
 
 /**
- * Seed an OPEN admission campaign for 2025-2026
+ * Seed an OPEN admission campaign for the current academic year
  */
 export async function seedAdmissionCampaign(
   prisma: PrismaClient,
   schoolId: string
 ): Promise<string | null> {
-  const campaignName = "Admission 2025-2026"
+  const currentYear = new Date().getFullYear()
+  const nextYear = currentYear + 1
+  const academicYear = `${currentYear}-${nextYear}`
+  const campaignName = `Admission ${academicYear}`
 
   try {
     const existing = await prisma.admissionCampaign.findFirst({
@@ -250,12 +253,11 @@ export async function seedAdmissionCampaign(
       data: {
         schoolId,
         name: campaignName,
-        academicYear: "2025-2026",
-        startDate: new Date("2025-01-01"),
-        endDate: new Date("2025-08-31"),
+        academicYear,
+        startDate: new Date(`${currentYear}-01-01`),
+        endDate: new Date(`${currentYear}-08-31`),
         status: "OPEN",
-        description:
-          "Admission open for the 2025-2026 academic year. Apply now for KG through Grade 12.",
+        description: `Admission open for the ${academicYear} academic year. Apply now for KG through Grade 12.`,
         eligibilityCriteria: JSON.stringify({
           minAge: { KG1: 4, KG2: 5, Grade1: 6 },
           requiredDocuments: ["Birth Certificate", "Previous Report Cards"],
@@ -500,7 +502,7 @@ export async function seedApplications(
 
       const applicationNumber = generateApplicationNumber(
         applicationIndex,
-        2025
+        new Date().getFullYear()
       )
       const email = generatePersonalEmail(firstName, lastName, applicationIndex)
       const phone = generatePhone(applicationIndex)
@@ -877,7 +879,8 @@ export async function seedAdmission(
     logSuccess("Admission Campaign", 0, "failed to create")
     return 0
   }
-  logSuccess("Admission Campaign", 1, "2025-2026 OPEN")
+  const currentYear = new Date().getFullYear()
+  logSuccess("Admission Campaign", 1, `${currentYear}-${currentYear + 1} OPEN`)
 
   // 3. Create time slots
   const slotIds = await seedTimeSlots(prisma, schoolId, campaignId)

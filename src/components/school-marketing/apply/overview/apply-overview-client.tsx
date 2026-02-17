@@ -10,7 +10,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-interface Step {
+interface Stage {
   number: number
   title: string
   description: string
@@ -34,65 +34,43 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
   const [isStarting, setIsStarting] = React.useState(false)
   const { isRTL } = useLocale()
 
-  // Access the apply dictionary for overview and steps
   const applyDict = (
     dictionary as unknown as {
       apply?: {
         overview?: Record<string, string>
-        steps?: Record<string, { title?: string; description?: string }>
       }
     }
   )?.apply
   const overviewDict = applyDict?.overview ?? {}
-  const stepsDict = applyDict?.steps ?? {}
 
-  const steps: Step[] = [
+  // 3 stages matching ADMISSION_CONFIG.groupLabels
+  const stages: Stage[] = [
     {
       number: 1,
-      title: stepsDict.personal?.title || dictionary.stepPersonal,
-      description:
-        stepsDict.personal?.description ||
-        (isRTL
-          ? "أدخل بياناتك الشخصية الأساسية"
-          : "Enter your basic personal information"),
+      title: isRTL ? "المعلومات الأساسية" : "Basic Information",
+      description: isRTL
+        ? "أدخل بياناتك الشخصية ومعلومات الاتصال"
+        : "Provide your personal and contact details",
       illustration:
         "https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg",
     },
     {
       number: 2,
-      title: stepsDict.guardian?.title || dictionary.stepGuardian,
-      description:
-        stepsDict.guardian?.description ||
-        (isRTL ? "أضف معلومات ولي الأمر" : "Add guardian/parent information"),
+      title: isRTL ? "العائلة والتعليم" : "Family & Education",
+      description: isRTL
+        ? "أضف معلومات ولي الأمر والخلفية الأكاديمية"
+        : "Add guardian info and academic background",
       illustration:
         "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg",
     },
     {
       number: 3,
-      title: stepsDict.academic?.title || dictionary.stepAcademic,
-      description:
-        stepsDict.academic?.description ||
-        (isRTL ? "أدخل خلفيتك الأكاديمية" : "Enter your academic background"),
+      title: isRTL ? "الإنهاء" : "Finalize",
+      description: isRTL
+        ? "ارفع المستندات وراجع طلبك"
+        : "Upload documents and review your application",
       illustration:
         "https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf93535e93be1310ae1935157bcebdd-1000x1000.svg",
-    },
-    {
-      number: 4,
-      title: stepsDict.documents?.title || dictionary.stepDocuments,
-      description:
-        stepsDict.documents?.description ||
-        (isRTL ? "ارفع المستندات المطلوبة" : "Upload required documents"),
-      illustration:
-        "https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg",
-    },
-    {
-      number: 5,
-      title: stepsDict.review?.title || dictionary.stepReview,
-      description:
-        stepsDict.review?.description ||
-        (isRTL ? "راجع طلبك وقدمه" : "Review and submit your application"),
-      illustration:
-        "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg",
     },
   ]
 
@@ -101,7 +79,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
     setIsStarting(true)
 
     try {
-      router.push(`/${lang}/s/${subdomain}/apply/${id}/personal`)
+      router.push(`/${lang}/apply/${id}/personal`)
     } catch (error) {
       console.error("Navigation error:", error)
     } finally {
@@ -110,13 +88,13 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
   }
 
   const handleBack = () => {
-    router.push(`/${lang}/s/${subdomain}/apply`)
+    router.push(`/${lang}/apply`)
   }
 
   return (
-    <div className="flex h-full flex-col px-20">
+    <div className="mx-auto flex h-full w-full max-w-5xl flex-col pb-24">
       <div className="flex flex-1 items-center">
-        <div className="mx-auto w-full max-w-7xl">
+        <div className="w-full">
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
             {/* Left Side - Title */}
             <div>
@@ -132,29 +110,29 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
               </p>
             </div>
 
-            {/* Right Side - Steps */}
+            {/* Right Side - 3 Stages */}
             <div className="space-y-6">
-              {steps.map((step) => (
+              {stages.map((stage) => (
                 <div
-                  key={step.number}
+                  key={stage.number}
                   className="flex items-start justify-between gap-6 rtl:flex-row-reverse"
                 >
                   <div className="flex flex-1 gap-3 rtl:flex-row-reverse">
                     <div className="flex-shrink-0">
-                      <h4 className="text-foreground">{step.number}.</h4>
+                      <h4 className="text-foreground">{stage.number}.</h4>
                     </div>
                     <div className="text-start">
-                      <h4 className="mb-1 font-semibold">{step.title}</h4>
+                      <h4 className="mb-1 font-semibold">{stage.title}</h4>
                       <p className="text-muted-foreground">
-                        {step.description}
+                        {stage.description}
                       </p>
                     </div>
                   </div>
                   <div className="hidden flex-shrink-0 justify-end md:flex rtl:justify-start">
                     <div className="relative h-14 w-14 overflow-hidden">
                       <Image
-                        src={step.illustration}
-                        alt={step.title}
+                        src={stage.illustration}
+                        alt={stage.title}
                         fill
                         sizes="56px"
                         className="object-contain"
@@ -168,23 +146,21 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
         </div>
       </div>
 
-      {/* Bottom Section with HR and Buttons */}
-      <div className="mx-auto w-full max-w-7xl">
-        <Separator className="w-full" />
-        <div className="flex justify-end py-4 rtl:justify-start">
-          <div className="flex gap-4 rtl:flex-row-reverse">
-            <Button variant="ghost" onClick={handleBack}>
-              {overviewDict.back || (isRTL ? "رجوع" : "Back")}
-            </Button>
-            <Button onClick={handleGetStarted} disabled={isStarting || !id}>
-              {isStarting
-                ? overviewDict.loading ||
-                  (isRTL ? "جاري التحميل..." : "Loading...")
-                : overviewDict.getStarted || (isRTL ? "ابدأ" : "Get Started")}
-            </Button>
-          </div>
+      {/* Fixed footer - matches onboarding pattern */}
+      <footer className="bg-background fixed right-0 bottom-0 left-0 px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20">
+        <Separator className="mx-auto mb-3 w-full max-w-5xl sm:mb-4" />
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between rtl:flex-row-reverse">
+          <Button variant="ghost" onClick={handleBack}>
+            {overviewDict.back || (isRTL ? "رجوع" : "Back")}
+          </Button>
+          <Button onClick={handleGetStarted} disabled={isStarting || !id}>
+            {isStarting
+              ? overviewDict.loading ||
+                (isRTL ? "جاري التحميل..." : "Loading...")
+              : overviewDict.getStarted || (isRTL ? "ابدأ" : "Get Started")}
+          </Button>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }

@@ -67,7 +67,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
         {renderSkeleton()}
         <FormFooter
           config={ADMISSION_CONFIG}
-          basePath={`/${locale}/s/${subdomain}/apply`}
+          basePath={`/${locale}/apply`}
           dictionary={dict as Record<string, unknown>}
           locale={locale}
           useValidation={useApplyValidation}
@@ -97,9 +97,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
                 {dict.tryAgain || (isRTL ? "حاول مرة أخرى" : "Try Again")}
               </button>
               <button
-                onClick={() =>
-                  (window.location.href = `/${locale}/s/${subdomain}/apply`)
-                }
+                onClick={() => (window.location.href = `/${locale}/apply`)}
                 className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-md px-4 py-2 transition-colors"
               >
                 {dict.backToCampaigns ||
@@ -110,7 +108,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
         </div>
         <FormFooter
           config={ADMISSION_CONFIG}
-          basePath={`/${locale}/s/${subdomain}/apply`}
+          basePath={`/${locale}/apply`}
           dictionary={dict as Record<string, unknown>}
           locale={locale}
           useValidation={useApplyValidation}
@@ -125,7 +123,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
       {children}
       <FormFooter
         config={ADMISSION_CONFIG}
-        basePath={`/${locale}/s/${subdomain}/apply`}
+        basePath={`/${locale}/apply`}
         dictionary={dict as Record<string, unknown>}
         locale={locale}
         useValidation={useApplyValidation}
@@ -134,7 +132,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
         isSaving={isSaving}
         onSave={saveSession}
         finalLabel={isRTL ? "تقديم الطلب" : "Submit Application"}
-        finalDestination={`/${locale}/s/${subdomain}/apply/${id}/success`}
+        finalDestination={`/${locale}/apply/${id}/success`}
       />
     </div>
   )

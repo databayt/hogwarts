@@ -32,41 +32,26 @@ export default async function SubjectsContent({ lang, level }: Props) {
           .map((s) => [s.catalogSubjectId, s.customName!])
       )
 
-      // Fetch catalog subjects — selections or fallback to all published
-      const catalogRows =
-        uniqueIds.length > 0
-          ? await db.catalogSubject.findMany({
-              where: { id: { in: uniqueIds }, status: "PUBLISHED" },
-              orderBy: { sortOrder: "asc" },
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                department: true,
-                levels: true,
-                color: true,
-                imageKey: true,
-                thumbnailKey: true,
-                totalChapters: true,
-                totalLessons: true,
-              },
-            })
-          : await db.catalogSubject.findMany({
-              where: { status: "PUBLISHED" },
-              orderBy: { sortOrder: "asc" },
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                department: true,
-                levels: true,
-                color: true,
-                imageKey: true,
-                thumbnailKey: true,
-                totalChapters: true,
-                totalLessons: true,
-              },
-            })
+      // Fetch ALL published catalog subjects (selections provide custom names only)
+      const catalogRows = await db.catalogSubject.findMany({
+        where: { status: "PUBLISHED", system: "clickview" },
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          department: true,
+          levels: true,
+          color: true,
+          imageKey: true,
+          thumbnailKey: true,
+          totalChapters: true,
+          totalLessons: true,
+          averageRating: true,
+          usageCount: true,
+          ratingCount: true,
+        },
+      })
 
       subjects = catalogRows.map((s) => ({
         id: s.id,
@@ -78,6 +63,9 @@ export default async function SubjectsContent({ lang, level }: Props) {
         imageUrl: getCatalogImageUrl(s.thumbnailKey, s.imageKey, "original"),
         totalChapters: s.totalChapters,
         totalLessons: s.totalLessons,
+        averageRating: s.averageRating,
+        usageCount: s.usageCount,
+        ratingCount: s.ratingCount,
       }))
 
       if (level) {

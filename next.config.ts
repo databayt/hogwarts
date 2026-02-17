@@ -67,6 +67,7 @@ const nextConfig: NextConfig = {
       },
       { protocol: "https", hostname: "www-cdn.anthropic.com", pathname: "/**" },
       { protocol: "https", hostname: "ik.imagekit.io", pathname: "/abdout/**" },
+      { protocol: "https", hostname: "img.clickviewapp.com", pathname: "/**" },
       {
         protocol: "https",
         hostname: "hogwarts-databayt.s3.us-east-1.amazonaws.com",

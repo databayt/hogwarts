@@ -27,6 +27,9 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       levels: true,
       totalChapters: true,
       totalLessons: true,
+      averageRating: true,
+      usageCount: true,
+      ratingCount: true,
       chapters: {
         where: { status: "PUBLISHED" },
         orderBy: { sequenceOrder: "asc" },
@@ -97,6 +100,9 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
           levels: subject.levels,
           totalChapters: subject.totalChapters,
           totalLessons: subject.totalLessons,
+          averageRating: subject.averageRating,
+          usageCount: subject.usageCount,
+          ratingCount: subject.ratingCount,
         }}
         chapters={chapters}
         lang={lang}

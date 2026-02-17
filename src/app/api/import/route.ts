@@ -156,10 +156,10 @@ export async function GET(request: NextRequest) {
     let filename: string
 
     if (type === "students") {
-      content = generateStudentTemplate()
+      content = await generateStudentTemplate()
       filename = "student_import_template.csv"
     } else {
-      content = generateTeacherTemplate()
+      content = await generateTeacherTemplate()
       filename = "teacher_import_template.csv"
     }
 

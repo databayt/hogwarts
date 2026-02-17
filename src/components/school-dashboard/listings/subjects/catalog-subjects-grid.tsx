@@ -1,9 +1,10 @@
 "use client"
 
-import { useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 
+import { StarRating } from "@/components/ui/star-rating"
 import type { Locale } from "@/components/internationalization/config"
 
 export interface CatalogSubjectItem {
@@ -16,6 +17,9 @@ export interface CatalogSubjectItem {
   imageUrl: string | null
   totalChapters: number
   totalLessons: number
+  averageRating: number
+  usageCount: number
+  ratingCount: number
 }
 
 interface Props {
@@ -51,34 +55,63 @@ export function CatalogSubjectsGrid({ subjects, lang }: Props) {
             href={`/${lang}/subjects/${subject.slug}`}
             className="hover:bg-muted/50 flex items-center gap-3 overflow-hidden rounded-lg border transition-colors"
           >
-            {/* Thumbnail - flush to card edge, rounded outer, sharp inner */}
-            <div
-              className="relative h-16 w-16 shrink-0 overflow-hidden rounded-s-lg"
-              style={{ backgroundColor: subject.color ?? "#6b7280" }}
-            >
-              {subject.imageUrl ? (
-                <Image
-                  src={subject.imageUrl}
-                  alt={subject.name}
-                  fill
-                  className="object-cover"
-                  sizes="192px"
-                  quality={100}
+            <SubjectThumb
+              imageUrl={subject.imageUrl}
+              name={subject.name}
+              color={subject.color}
+            />
+
+            {/* Name + Rating */}
+            <div className="min-w-0 pe-3">
+              <p className="line-clamp-2 leading-snug font-medium">
+                {subject.name}
+              </p>
+              {subject.averageRating > 0 && (
+                <StarRating
+                  rating={subject.averageRating}
+                  size="sm"
+                  showCount
+                  count={subject.ratingCount}
+                  className="mt-0.5"
                 />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center text-lg font-bold text-white">
-                  {subject.name.charAt(0)}
-                </span>
               )}
             </div>
-
-            {/* Name */}
-            <p className="line-clamp-2 pe-3 leading-snug font-medium">
-              {subject.name}
-            </p>
           </Link>
         )
       })}
+    </div>
+  )
+}
+
+function SubjectThumb({
+  imageUrl,
+  name,
+  color,
+}: {
+  imageUrl: string | null
+  name: string
+  color: string | null
+}) {
+  const [failed, setFailed] = useState(false)
+  const onError = useCallback(() => setFailed(true), [])
+  const showImage = imageUrl && !failed
+
+  return (
+    <div
+      className="relative h-16 w-16 shrink-0 overflow-hidden rounded-s-lg"
+      style={{ backgroundColor: color ?? "#6b7280" }}
+    >
+      {showImage && (
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          className="object-cover"
+          sizes="192px"
+          quality={100}
+          onError={onError}
+        />
+      )}
     </div>
   )
 }

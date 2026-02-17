@@ -2,7 +2,6 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Star } from "lucide-react"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { getSubjectImage } from "@/components/school-dashboard/listings/subjects/image-map"
@@ -79,11 +78,7 @@ export function CourseCard({ course, lang }: CourseCardProps) {
         {/* Type */}
         <p className="text-muted-foreground text-xs">{courseType}</p>
 
-        {/* Rating */}
-        <div className="flex items-center gap-1 rtl:flex-row-reverse">
-          <Star className="text-foreground h-3 w-3 fill-current" />
-          <span className="text-xs font-medium">4.8</span>
-        </div>
+        {/* Rating — hidden until StreamCourse has averageRating */}
       </div>
     </Link>
   )
@@ -101,10 +96,6 @@ export function CourseCardSkeleton() {
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-20" />
-        <div className="flex items-center gap-1">
-          <Skeleton className="h-3 w-3" />
-          <Skeleton className="h-3 w-8" />
-        </div>
       </div>
     </div>
   )

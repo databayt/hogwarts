@@ -97,12 +97,17 @@ async function resolveUsers(
     where: { schoolId },
     select: { id: true, email: true, role: true },
   })
+  const mapped = users.map((u) => ({
+    id: u.id,
+    email: u.email ?? "",
+    role: u.role,
+  }))
   return {
-    allUsers: users,
-    adminUsers: users.filter((u) => u.role === "ADMIN"),
-    teacherUsers: users.filter((u) => u.role === "TEACHER"),
-    studentUsers: users.filter((u) => u.role === "STUDENT"),
-    guardianUsers: users.filter((u) => u.role === "GUARDIAN"),
+    allUsers: mapped,
+    adminUsers: mapped.filter((u) => u.role === "ADMIN"),
+    teacherUsers: mapped.filter((u) => u.role === "TEACHER"),
+    studentUsers: mapped.filter((u) => u.role === "STUDENT"),
+    guardianUsers: mapped.filter((u) => u.role === "GUARDIAN"),
   }
 }
 
@@ -122,7 +127,7 @@ async function resolveTeachers(
   })
   return teachers.map((t) => ({
     id: t.id,
-    userId: t.userId,
+    userId: t.userId ?? "",
     emailAddress: t.emailAddress ?? "",
     givenName: t.givenName,
     surname: t.surname,
@@ -141,16 +146,14 @@ async function resolveStudents(
       grNumber: true,
       givenName: true,
       surname: true,
-      yearLevelId: true,
     },
   })
   return students.map((s) => ({
     id: s.id,
-    userId: s.userId,
-    grNumber: s.grNumber,
+    userId: s.userId ?? "",
+    grNumber: s.grNumber ?? "",
     givenName: s.givenName,
     surname: s.surname,
-    yearLevelId: s.yearLevelId ?? undefined,
   }))
 }
 
@@ -213,11 +216,11 @@ async function resolveClassrooms(
 ): Promise<ClassroomRef[]> {
   const classrooms = await prisma.classroom.findMany({
     where: { schoolId },
-    select: { id: true, name: true, capacity: true },
+    select: { id: true, roomName: true, capacity: true },
   })
   return classrooms.map((c) => ({
     id: c.id,
-    name: c.name,
+    name: c.roomName,
     capacity: c.capacity,
   }))
 }
@@ -233,7 +236,6 @@ async function resolveClasses(
       name: true,
       lang: true,
       subjectId: true,
-      yearLevelId: true,
     },
   })
   return classes.map((c) => ({
@@ -241,7 +243,7 @@ async function resolveClasses(
     name: c.name,
     lang: c.lang ?? "ar",
     subjectId: c.subjectId,
-    yearLevelId: c.yearLevelId ?? "",
+    yearLevelId: "",
   }))
 }
 
@@ -295,17 +297,20 @@ async function resolveSchoolYear(prisma: PrismaClient, schoolId: string) {
 // ============================================================================
 
 type SeedRunner = (prisma: PrismaClient, schoolId: string) => Promise<void>
+type SeedEntry = { description: string; run: SeedRunner; global?: boolean }
 
-const SEEDS: Record<string, { description: string; run: SeedRunner }> = {
-  // Foundation
+const SEEDS: Record<string, SeedEntry> = {
+  // Foundation (global seeds — no school required)
   catalog: {
     description: "Global catalog (subjects, chapters, lessons)",
+    global: true,
     run: async (prisma) => {
       await seedCatalog(prisma)
     },
   },
   "catalog-images": {
     description: "Upload ClickView images to S3/CloudFront",
+    global: true,
     run: async (prisma) => {
       await seedCatalogImages(prisma)
     },
@@ -313,18 +318,21 @@ const SEEDS: Record<string, { description: string; run: SeedRunner }> = {
   "clickview-catalog": {
     description:
       "ClickView US catalog (62 subjects, 201 chapters, 986 lessons)",
+    global: true,
     run: async (prisma) => {
       await seedClickViewCatalog(prisma)
     },
   },
   "clickview-images": {
     description: "Upload ClickView subject images to S3/CloudFront",
+    global: true,
     run: async (prisma) => {
       await seedClickViewImages(prisma)
     },
   },
   school: {
     description: "Demo school + branding",
+    global: true,
     run: async (prisma) => {
       await seedSchoolWithBranding(prisma)
     },
@@ -698,8 +706,17 @@ async function main() {
 
   if (!arg || arg === "--list") {
     console.log("\n Available seeds:\n")
-    for (const [name, { description }] of Object.entries(SEEDS)) {
-      console.log(`  ${name.padEnd(22)} ${description}`)
+    console.log(" Global (no school required):")
+    for (const [name, seed] of Object.entries(SEEDS)) {
+      if (seed.global) {
+        console.log(`  ${name.padEnd(22)} ${seed.description}`)
+      }
+    }
+    console.log("\n School-scoped (requires demo school):")
+    for (const [name, seed] of Object.entries(SEEDS)) {
+      if (!seed.global) {
+        console.log(`  ${name.padEnd(22)} ${seed.description}`)
+      }
     }
     console.log(`\n Usage: pnpm db:seed:single <name>\n`)
     process.exit(0)
@@ -719,12 +736,18 @@ async function main() {
     console.log(` ${seed.description}`)
     console.log("-".repeat(50))
 
-    // Resolve demo school
-    const school = await resolveSchool(prisma)
-    console.log(` School: ${school.name} (${school.id})`)
+    // Resolve demo school only for school-scoped seeds
+    let schoolId = ""
+    if (seed.global) {
+      console.log(" Global seed (no school required)")
+    } else {
+      const school = await resolveSchool(prisma)
+      console.log(` School: ${school.name} (${school.id})`)
+      schoolId = school.id
+    }
 
     // Run the seed
-    await measureDuration(arg, () => seed.run(prisma, school.id))
+    await measureDuration(arg, () => seed.run(prisma, schoolId))
 
     console.log(`\n Done: ${arg}\n`)
   } catch (error) {

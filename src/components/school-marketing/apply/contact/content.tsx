@@ -35,7 +35,7 @@ export default function ContactContent({ dictionary }: Props) {
     if (contactFormRef.current) {
       try {
         await contactFormRef.current.saveAndNext()
-        router.push(`/${locale}/s/${subdomain}/apply/${id}/guardian`)
+        router.push(`/${locale}/apply/${id}/guardian`)
       } catch (error) {
         console.error("Error saving contact step:", error)
       }
