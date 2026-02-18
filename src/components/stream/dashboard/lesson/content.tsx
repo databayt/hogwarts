@@ -19,24 +19,24 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import type { LessonWithProgress } from "@/components/stream/data/course/get-lesson-with-progress"
+import type { CatalogLessonWithProgress } from "@/components/stream/data/catalog/get-lesson-with-progress"
 import {
   VideoPlayer,
   type VideoProgress,
 } from "@/components/stream/shared/video-player"
 
 import {
-  markLessonComplete,
-  markLessonIncomplete,
-  updateLessonProgress,
-} from "./actions"
+  markCatalogLessonComplete as markLessonComplete,
+  markCatalogLessonIncomplete as markLessonIncomplete,
+  updateCatalogLessonProgress as updateLessonProgress,
+} from "./catalog-actions"
 
 interface StreamLessonContentProps {
   dictionary: Record<string, unknown>
   lang: string
   schoolId: string | null
   subdomain: string
-  lesson: LessonWithProgress
+  lesson: CatalogLessonWithProgress
 }
 
 export function StreamLessonContent({
@@ -282,14 +282,6 @@ export function StreamLessonContent({
           )}
         </CardContent>
       </Card>
-
-      {/* Prefetch next lesson video for faster loading */}
-      {lesson.nextLesson?.videoUrl &&
-        !lesson.nextLesson.videoUrl.includes("youtube.com") &&
-        !lesson.nextLesson.videoUrl.includes("vimeo.com") && (
-          // eslint-disable-next-line @next/next/no-html-link-for-pages
-          <link rel="prefetch" href={lesson.nextLesson.videoUrl} as="video" />
-        )}
 
       {/* Navigation */}
       <div className="flex items-center justify-between">

@@ -33,6 +33,7 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
       levels: true,
       color: true,
       imageKey: true,
+      thumbnailKey: true,
       totalChapters: true,
       totalLessons: true,
       usageCount: true,

@@ -47,38 +47,40 @@ export function CatalogSubjectsGrid({ subjects, lang }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {sorted.map((subject) => {
-        return (
-          <Link
-            key={subject.id}
-            href={`/${lang}/subjects/${subject.slug}`}
-            className="hover:bg-muted/50 flex items-center gap-3 overflow-hidden rounded-lg border transition-colors"
-          >
-            <SubjectThumb
-              imageUrl={subject.imageUrl}
-              name={subject.name}
-              color={subject.color}
-            />
+    <div className="@container">
+      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-4">
+        {sorted.map((subject) => {
+          return (
+            <Link
+              key={subject.id}
+              href={`/${lang}/subjects/${subject.slug}`}
+              className="hover:bg-muted/50 flex items-center gap-3 overflow-hidden rounded-lg border transition-colors"
+            >
+              <SubjectThumb
+                imageUrl={subject.imageUrl}
+                name={subject.name}
+                color={subject.color}
+              />
 
-            {/* Name + Rating */}
-            <div className="min-w-0 pe-3">
-              <p className="line-clamp-2 leading-snug font-medium">
-                {subject.name}
-              </p>
-              {subject.averageRating > 0 && (
-                <StarRating
-                  rating={subject.averageRating}
-                  size="sm"
-                  showCount
-                  count={subject.ratingCount}
-                  className="mt-0.5"
-                />
-              )}
-            </div>
-          </Link>
-        )
-      })}
+              {/* Name + Rating */}
+              <div className="min-w-0 pe-3">
+                <p className="line-clamp-2 text-sm leading-snug font-medium">
+                  {subject.name}
+                </p>
+                {subject.averageRating > 0 && (
+                  <StarRating
+                    rating={subject.averageRating}
+                    size="sm"
+                    showCount
+                    count={subject.ratingCount}
+                    className="mt-0.5"
+                  />
+                )}
+              </div>
+            </Link>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -110,6 +112,7 @@ function SubjectThumb({
           sizes="192px"
           quality={100}
           onError={onError}
+          unoptimized={imageUrl.startsWith("https://")}
         />
       )}
     </div>

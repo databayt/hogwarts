@@ -82,6 +82,8 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
   const [activeChapter, setActiveChapter] = useState<string | null>(
     chapters[0]?.slug ?? null
   )
+  const [heroFailed, setHeroFailed] = useState(false)
+  const onHeroError = useCallback(() => setHeroFailed(true), [])
 
   const t = useMemo(
     () => ({
@@ -144,7 +146,7 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
         className="relative h-36 overflow-hidden sm:h-40 md:h-48"
         style={{ backgroundColor: subject.color ?? "#1e40af" }}
       >
-        {subject.heroImageUrl && (
+        {subject.heroImageUrl && !heroFailed && (
           <Image
             src={subject.heroImageUrl}
             alt={subject.name}
@@ -153,6 +155,7 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
             priority
             quality={100}
             sizes="100vw"
+            onError={onHeroError}
           />
         )}
         <div className="absolute inset-x-0 bottom-0 p-4 text-start sm:p-6">
@@ -373,6 +376,9 @@ function TopicCard({
   chapter: CatalogChapterItem
   fallbackColor: string | null
 }) {
+  const [failed, setFailed] = useState(false)
+  const onError = useCallback(() => setFailed(true), [])
+
   return (
     <a
       href={`#chapter-${chapter.slug}`}
@@ -382,7 +388,7 @@ function TopicCard({
         className="relative h-14 w-14 shrink-0 overflow-hidden rounded-s-lg"
         style={{ backgroundColor: fallbackColor ?? "#6b7280" }}
       >
-        {chapter.imageUrl && (
+        {chapter.imageUrl && !failed && (
           <Image
             src={chapter.imageUrl}
             alt={chapter.name}
@@ -390,6 +396,7 @@ function TopicCard({
             className="object-cover"
             quality={100}
             sizes="56px"
+            onError={onError}
           />
         )}
       </div>
@@ -450,6 +457,9 @@ function LessonCard({
   fallbackColor: string | null
   t: { min: string }
 }) {
+  const [failed, setFailed] = useState(false)
+  const onError = useCallback(() => setFailed(true), [])
+
   return (
     <div className="hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-2 transition-colors">
       {/* Thumbnail */}
@@ -457,7 +467,7 @@ function LessonCard({
         className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg"
         style={{ backgroundColor: fallbackColor ?? "#6b7280" }}
       >
-        {lesson.imageUrl && (
+        {lesson.imageUrl && !failed && (
           <Image
             src={lesson.imageUrl}
             alt={lesson.name}
@@ -465,6 +475,7 @@ function LessonCard({
             className="object-cover"
             quality={100}
             sizes="64px"
+            onError={onError}
           />
         )}
       </div>

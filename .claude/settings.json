@@ -43,7 +43,8 @@
       "Bash(pnpm run db:seed)",
       "Bash(prisma migrate reset:*)",
       "Bash(prisma db push --accept-data-loss:*)",
-      "Bash(prisma db execute:*)"
+      "Bash(prisma db execute:*)",
+      "Bash(prisma db push --force-reset-database:*)"
     ],
     "ask": []
   },
@@ -72,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=\"$CLAUDE_TOOL_INPUT\"; if echo \"$INPUT\" | grep -qE '(migrate reset|db execute|accept-data-loss|DROP TABLE|TRUNCATE|DELETE FROM|ALTER TABLE.*DROP)'; then echo '🚫 BLOCKED: Destructive database command detected'; echo 'This command can wipe production data.'; echo 'If you really need this, ask the user to run it manually.'; exit 1; fi; exit 0"
+            "command": "INPUT=\"$CLAUDE_TOOL_INPUT\"; if echo \"$INPUT\" | grep -qE '(migrate reset|db execute|db push|accept-data-loss|DROP TABLE|TRUNCATE|DELETE FROM|ALTER TABLE.*DROP)'; then echo '🚫 BLOCKED: Destructive database command detected'; echo 'This command can wipe production data.'; echo 'If you really need this, ask the user to run it manually.'; exit 1; fi; exit 0"
           }
         ]
       },

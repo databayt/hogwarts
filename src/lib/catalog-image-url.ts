@@ -4,7 +4,7 @@
  * Extracted from catalog-image.ts to avoid pulling sharp/S3 into the client bundle.
  */
 
-import { getCloudFrontUrl } from "@/lib/cloudfront"
+import { getCloudFrontUrl, isCloudFrontConfigured } from "@/lib/cloudfront"
 
 export type CatalogImageSize = "sm" | "md" | "lg" | "original"
 
@@ -17,7 +17,7 @@ export function getCatalogImageUrl(
   imageKey: string | null | undefined,
   size: CatalogImageSize = "original"
 ): string | null {
-  if (thumbnailKey) {
+  if (thumbnailKey && isCloudFrontConfigured()) {
     return getCloudFrontUrl(`${thumbnailKey}-${size}.webp`)
   }
 
@@ -37,7 +37,7 @@ export function getCatalogImageUrl(
 export function getCatalogImageSrcSet(
   thumbnailKey: string | null | undefined
 ): string | undefined {
-  if (!thumbnailKey) return undefined
+  if (!thumbnailKey || !isCloudFrontConfigured()) return undefined
 
   return [
     `${getCloudFrontUrl(`${thumbnailKey}-sm.webp`)} 200w`,

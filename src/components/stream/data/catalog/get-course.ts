@@ -31,6 +31,8 @@ export async function getCatalogCourse(slug: string, schoolId: string | null) {
               sequenceOrder: true,
               durationMinutes: true,
               status: true,
+              imageKey: true,
+              thumbnailKey: true,
             },
           },
         },
@@ -111,6 +113,12 @@ export async function getCatalogCourse(slug: string, schoolId: string | null) {
         position: chapter.sequenceOrder,
         isPublished: true,
         isFree: true,
+        imageUrl: getCatalogImageUrl(
+          chapter.thumbnailKey,
+          chapter.imageKey,
+          "sm"
+        ),
+        color: chapter.color,
         lessons: chapter.lessons
           .filter((l) => !hiddenLessonIds.has(l.id))
           .map((lesson) => ({
@@ -120,6 +128,11 @@ export async function getCatalogCourse(slug: string, schoolId: string | null) {
             position: lesson.sequenceOrder,
             duration: lesson.durationMinutes,
             isFree: true,
+            imageUrl: getCatalogImageUrl(
+              lesson.thumbnailKey,
+              lesson.imageKey,
+              "md"
+            ),
           })),
       })),
     _count: {

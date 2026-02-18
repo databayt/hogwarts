@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
+import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { Check, GraduationCap, Layers, Search } from "lucide-react"
 
@@ -29,6 +29,7 @@ interface CatalogSubject {
   levels: string[]
   color: string | null
   imageKey: string | null
+  thumbnailKey: string | null
   totalChapters: number
   totalLessons: number
   usageCount: number
@@ -209,7 +210,11 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {deptSubjects.map((subject) => {
                 const selected = isSelected(subject.id)
-                const imagePath = getCatalogImageUrl(null, subject.imageKey)
+                const imagePath = getCatalogImageUrl(
+                  subject.thumbnailKey,
+                  subject.imageKey,
+                  "md"
+                )
 
                 return (
                   <Card
@@ -227,16 +232,7 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
                         backgroundColor: subject.color ?? "#6b7280",
                       }}
                     >
-                      {imagePath && (
-                        <Image
-                          src={imagePath}
-                          alt={subject.name}
-                          fill
-                          className="object-cover opacity-80"
-                          quality={100}
-                          sizes="(max-width: 640px) 50vw, 25vw"
-                        />
-                      )}
+                      <PickerThumb imageUrl={imagePath} name={subject.name} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
                       {/* Selected badge */}
@@ -282,4 +278,29 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
       )}
     </div>
   )
+}
+
+function PickerThumb({
+  imageUrl,
+  name,
+}: {
+  imageUrl: string | null
+  name: string
+}) {
+  const [failed, setFailed] = useState(false)
+  const onError = useCallback(() => setFailed(true), [])
+  const showImage = imageUrl && !failed
+
+  return showImage ? (
+    <Image
+      src={imageUrl}
+      alt={name}
+      fill
+      className="object-cover opacity-80"
+      quality={100}
+      sizes="(max-width: 640px) 50vw, 25vw"
+      unoptimized={imageUrl.startsWith("https://")}
+      onError={onError}
+    />
+  ) : null
 }

@@ -9,29 +9,16 @@ import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import type { CatalogCourseType } from "@/components/stream/data/catalog/get-all-courses"
 import { SearchBar } from "@/components/stream/search-bar"
 
 import { CourseCard, CourseCardSkeleton } from "./course-card"
-
-interface CourseRow {
-  id: string
-  title: string
-  slug: string
-  description: string | null
-  imageUrl: string | null
-  price: number | null
-  lang: string
-  createdAt: Date
-  updatedAt: Date
-  category: { id: string; name: string } | null
-  _count: { chapters: number; enrollments: number }
-}
 
 interface Props {
   dictionary: any
   lang: string
   schoolId: string | null
-  courses: CourseRow[]
+  courses: CatalogCourseType[]
   totalCount: number
   page: number
   perPage: number

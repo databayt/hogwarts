@@ -5,6 +5,8 @@
  *   62 CatalogSubjects → 201 CatalogChapters → 986 CatalogLessons
  *
  * Uses upsert with slug for idempotency. Updates denormalized counts.
+ * Subject imageKey uses illustration cover images from complete-subjects.json.
+ * Lesson imageKey uses high-res ?width=2048 URLs.
  *
  * Usage: pnpm db:seed:single clickview-catalog
  */
@@ -95,8 +97,16 @@ function extractCoverId(imgSrc: string): string | null {
   return match ? match[1] : null
 }
 
-// Vibrant colors for departments
-const DEPARTMENT_COLORS: Record<string, string> = {
+/** Convert "rgb(R, G, B)" → "#rrggbb" */
+function rgbToHex(rgb: string): string | null {
+  const match = rgb.match(/rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)/)
+  if (!match) return null
+  const [, r, g, b] = match.map(Number)
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`
+}
+
+// Fallback colors when scraped bgColor is unavailable
+const FALLBACK_COLORS: Record<string, string> = {
   Arts: "#f43f5e",
   "Celebrations, Commemorations and Festivals": "#eab308",
   "Civics and Government": "#ec4899",
@@ -123,7 +133,7 @@ const DEPARTMENT_COLORS: Record<string, string> = {
   Chemistry: "#ef4444",
   "Chemical Science": "#ef4444",
   "Science and Engineering Practices": "#14b8a6",
-  "U.S. History": "#dc2626",
+  "U.S. History": "#e3714c",
   "World History": "#eab308",
   "Religion and Ethics": "#059669",
   Psychology: "#a855f7",
@@ -156,6 +166,34 @@ export async function seedClickViewCatalog(
   const raw = fs.readFileSync(inventoryPath, "utf-8")
   const entries: ClickViewEntry[] = JSON.parse(raw)
 
+  // Load scraped subject data for illustration images and accurate colors
+  const completeSubjectsPath = path.resolve(
+    __dirname,
+    "../../scripts/clickview-data/complete-subjects.json"
+  )
+  let scrapedLookup: Record<string, { coverUrl: string; bgColor: string }> = {}
+  if (fs.existsSync(completeSubjectsPath)) {
+    const scraped = JSON.parse(fs.readFileSync(completeSubjectsPath, "utf-8"))
+    for (const level of ["elementary", "middle", "high"]) {
+      for (const sub of scraped[level] ?? []) {
+        const key = `${level}-${sub.slug}`
+        scrapedLookup[key] = {
+          coverUrl: sub.coverUrl,
+          bgColor: sub.bgColor,
+        }
+
+        // Also index by seed-generated slug (handles "U.S. History" → "us-history" vs "u-s-history")
+        const seedKey = toSubjectSlug(level, sub.name)
+        if (seedKey !== key) {
+          scrapedLookup[seedKey] = {
+            coverUrl: sub.coverUrl,
+            bgColor: sub.bgColor,
+          }
+        }
+      }
+    }
+  }
+
   let subjectCount = 0
   let chapterCount = 0
   let lessonCount = 0
@@ -165,10 +203,24 @@ export async function seedClickViewCatalog(
     const slug = toSubjectSlug(entry.level, entry.subjectName)
     const schoolLevel = levelToSchoolLevel(entry.level)
     const clickviewId = extractClickViewId(entry.url)
-    const color = DEPARTMENT_COLORS[entry.subjectName] ?? "#6366f1"
 
-    // Grab the first topic's cover image as subject thumbnail
-    const firstTopicImg = entry.groups[0]?.topics[0]?.imgSrc ?? null
+    // Use illustration image if available locally, else fall back to cover URL or first topic
+    const illustrationFile = `clickview/illustrations/${slug}.jpg`
+    const illustrationAbsPath = path.join(
+      __dirname,
+      "../../public",
+      illustrationFile
+    )
+    const illustrationExists = fs.existsSync(illustrationAbsPath)
+    const scraped = scrapedLookup[slug]
+
+    // Prefer scraped ClickView RGB color, fall back to hardcoded
+    const scrapedHex = scraped?.bgColor ? rgbToHex(scraped.bgColor) : null
+    const color = scrapedHex ?? FALLBACK_COLORS[entry.subjectName] ?? "#6366f1"
+
+    const imageKey = illustrationExists
+      ? `/${illustrationFile}`
+      : (scraped?.coverUrl ?? entry.groups[0]?.topics[0]?.imgSrc ?? null)
 
     // Create/update CatalogSubject
     const subject = await prisma.catalogSubject.upsert({
@@ -177,9 +229,11 @@ export async function seedClickViewCatalog(
         name: entry.subjectName,
         levels: [schoolLevel],
         clickviewId,
-        clickviewUrl: entry.url ? `https://clickview.com${entry.url}` : null,
+        clickviewUrl: entry.url
+          ? `https://www.clickview.net${entry.url}`
+          : null,
         color,
-        imageKey: firstTopicImg,
+        imageKey,
         sortOrder: 100 + i, // Offset from Sudanese subjects
       },
       create: {
@@ -191,9 +245,11 @@ export async function seedClickViewCatalog(
         country: "US",
         system: "clickview",
         clickviewId,
-        clickviewUrl: entry.url ? `https://clickview.com${entry.url}` : null,
+        clickviewUrl: entry.url
+          ? `https://www.clickview.net${entry.url}`
+          : null,
         color,
-        imageKey: firstTopicImg,
+        imageKey,
         sortOrder: 100 + i,
         status: "PUBLISHED",
       },
@@ -235,6 +291,8 @@ export async function seedClickViewCatalog(
         const topic = group.topics[t]
         const { videoCount, resourceCount } = parseStats(topic.stats)
         const coverId = extractCoverId(topic.imgSrc)
+        // Store high-res cover URL as lesson imageKey
+        const lessonImageKey = topic.imgSrc || null
 
         await prisma.catalogLesson.upsert({
           where: {
@@ -247,6 +305,7 @@ export async function seedClickViewCatalog(
             name: topic.name,
             sequenceOrder: t + 1,
             clickviewCoverId: coverId,
+            imageKey: lessonImageKey,
             videoCount,
             resourceCount,
             color,
@@ -258,6 +317,7 @@ export async function seedClickViewCatalog(
             lang: "en",
             sequenceOrder: t + 1,
             clickviewCoverId: coverId,
+            imageKey: lessonImageKey,
             videoCount,
             resourceCount,
             color,

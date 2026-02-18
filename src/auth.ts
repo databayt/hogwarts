@@ -73,7 +73,7 @@ function constructSchoolUrl(
  * Returns 'ar' as default if not found
  */
 function extractLocaleFromUrl(url: string): string {
-  const match = url.match(/^\/(ar|en)\//)
+  const match = url.match(/\/(ar|en)(\/|$|\?)/)
   return match ? match[1] : "ar" // Default to Arabic
 }
 

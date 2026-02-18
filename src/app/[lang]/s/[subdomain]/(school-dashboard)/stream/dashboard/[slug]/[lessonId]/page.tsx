@@ -6,7 +6,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { StreamLessonContent } from "@/components/stream/dashboard/lesson/content"
-import { getLessonWithProgress } from "@/components/stream/data/course/get-lesson-with-progress"
+import { getCatalogLessonWithProgress } from "@/components/stream/data/catalog/get-lesson-with-progress"
 
 interface Props {
   params: Promise<{
@@ -19,7 +19,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lessonId } = await params
-  const lesson = await getLessonWithProgress(lessonId)
+  const lesson = await getCatalogLessonWithProgress(lessonId)
 
   return {
     title: lesson?.title || "Lesson",
@@ -37,7 +37,7 @@ export default async function StreamLessonPage({ params }: Props) {
     redirect(`/${lang}/s/${subdomain}/auth/login`)
   }
 
-  const lesson = await getLessonWithProgress(lessonId)
+  const lesson = await getCatalogLessonWithProgress(lessonId)
 
   if (!lesson) {
     notFound()

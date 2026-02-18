@@ -1,22 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { Star } from "lucide-react"
 
 import { Skeleton } from "@/components/ui/skeleton"
-import { getSubjectImage } from "@/components/school-dashboard/listings/subjects/image-map"
-import { PublicCourseType } from "@/components/stream/data/course/get-all-courses"
-
-// Default provider logos for categories
-const providerLogos: Record<string, string> = {
-  Technology:
-    "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/cc/61dbdf2c1c475d82d3b8bf8eee1bda/MSFT-stacked-logo_FINAL.png",
-  Business:
-    "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/4a/cb36835ae3421187080898a7ecc11d/Google-G_360x360.png",
-  AI: "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/b4/5cb90bb92f420b99bf323a0356f451/Icon.png",
-  default:
-    "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/4a/cb36835ae3421187080898a7ecc11d/Google-G_360x360.png",
-}
+import type { CatalogCourseType } from "@/components/stream/data/catalog/get-all-courses"
 
 // Course types based on chapter count
 const getCourseType = (chaptersCount: number): string => {
@@ -27,19 +17,16 @@ const getCourseType = (chaptersCount: number): string => {
 }
 
 interface CourseCardProps {
-  course: PublicCourseType
+  course: CatalogCourseType
   lang: string
 }
 
 export function CourseCard({ course, lang }: CourseCardProps) {
+  const [imageError, setImageError] = useState(false)
   const chaptersCount = course._count.chapters
-  const isRTL = lang === "ar"
   const providerName = course.category?.name || "Course"
-  const providerLogo = providerLogos[providerName] || providerLogos.default
   const courseType = getCourseType(chaptersCount)
-  const fallbackImage = getSubjectImage(
-    course.title || course.category?.name || ""
-  )
+  const catalogColor = course._catalog?.color
 
   return (
     <Link
@@ -48,25 +35,33 @@ export function CourseCard({ course, lang }: CourseCardProps) {
     >
       {/* Card Image */}
       <div className="relative aspect-video overflow-hidden rounded-xl">
-        <Image
-          src={course.imageUrl || fallbackImage}
-          alt={course.title}
-          fill
-          className="object-cover"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-        />
+        {course.imageUrl && !imageError ? (
+          <Image
+            src={course.imageUrl}
+            alt={course.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div
+            className="flex h-full w-full items-center justify-center rounded-xl"
+            style={{
+              backgroundColor: catalogColor || "#e5e7eb",
+            }}
+          >
+            <span className="text-2xl font-bold text-white/80">
+              {course.title.charAt(0)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Content */}
       <div className="space-y-1.5 px-2 pt-3 text-start">
-        {/* Provider */}
+        {/* Provider / Department */}
         <div className="flex items-center gap-1.5 rtl:flex-row-reverse">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={providerLogo}
-            alt={providerName}
-            className="h-4 w-4 object-contain"
-          />
           <span className="text-muted-foreground text-xs">{providerName}</span>
         </div>
 
@@ -78,7 +73,19 @@ export function CourseCard({ course, lang }: CourseCardProps) {
         {/* Type */}
         <p className="text-muted-foreground text-xs">{courseType}</p>
 
-        {/* Rating — hidden until StreamCourse has averageRating */}
+        {/* Rating */}
+        {course._catalog?.averageRating != null &&
+          course._catalog.averageRating > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-medium">
+                {course._catalog.averageRating.toFixed(1)}
+              </span>
+              <Star className="size-3 fill-yellow-400 text-yellow-400" />
+              <span className="text-muted-foreground text-xs">
+                ({course._count.enrollments})
+              </span>
+            </div>
+          )}
       </div>
     </Link>
   )

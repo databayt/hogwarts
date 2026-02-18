@@ -69,7 +69,7 @@ async function ensureAdminUser(schoolId: string) {
 
   const existingAdmin = await prisma.user.findFirst({
     where: {
-      email: "admin@demo.databayt.org",
+      email: "admin@databayt.org",
       schoolId,
     },
     select: { id: true, email: true },
@@ -87,13 +87,13 @@ async function ensureAdminUser(schoolId: string) {
   const admin = await prisma.user.upsert({
     where: {
       email_schoolId: {
-        email: "admin@demo.databayt.org",
+        email: "admin@databayt.org",
         schoolId,
       },
     },
     update: {},
     create: {
-      email: "admin@demo.databayt.org",
+      email: "admin@databayt.org",
       password: hashedPassword,
       role: "ADMIN",
       emailVerified: new Date(),
@@ -120,7 +120,7 @@ async function main() {
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     console.log("✅ Demo environment verified")
     console.log(`🌐 URL: https://demo.databayt.org`)
-    console.log(`📧 Admin: admin@demo.databayt.org`)
+    console.log(`📧 Admin: admin@databayt.org`)
     console.log(`🔑 Password: ${DEMO_PASSWORD}`)
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   } catch (error) {

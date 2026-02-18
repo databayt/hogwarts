@@ -1,21 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
 import {
   Award,
   BookOpen,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   PlayCircle,
+  Star,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { EnrollmentButton } from "@/components/stream/courses/enrollment/button"
-import { IndividualCourseType } from "@/components/stream/data/course/get-course"
+import { CatalogEnrollmentButton } from "@/components/stream/courses/enrollment/catalog-enrollment-button"
+import type { CatalogIndividualCourseType } from "@/components/stream/data/catalog/get-course"
 
 // Skilljar color palette
 const colors = {
@@ -62,7 +65,7 @@ interface Props {
   dictionary: any
   lang: string
   schoolId: string | null
-  course: IndividualCourseType
+  course: CatalogIndividualCourseType
   isEnrolled: boolean
 }
 
@@ -75,6 +78,10 @@ export function StreamCourseDetailContent({
 }: Props) {
   const { dictionary: dict } = useDictionary()
   const [expandedChapter, setExpandedChapter] = useState<string | null>(null)
+  const [activeChapter, setActiveChapter] = useState<string | null>(
+    course.chapters[0]?.id ?? null
+  )
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const totalLessons = course.chapters.reduce(
     (total, chapter) => total + chapter.lessons.length,
@@ -96,22 +103,40 @@ export function StreamCourseDetailContent({
   }
 
   const isRTL = lang === "ar"
+  const catalogColor = course._catalog?.color
 
-  // Mock data for learning objectives and prerequisites
-  const learningObjectives = [
-    "Master the fundamentals and core concepts",
-    "Build real-world projects from scratch",
-    "Learn industry best practices and patterns",
-    "Gain practical, hands-on experience",
-    "Understand advanced techniques and methods",
-    "Apply knowledge to solve complex problems",
-  ]
+  // Scroll horizontal topic cards
+  const scroll = useCallback((direction: "left" | "right") => {
+    if (!scrollRef.current) return
+    const amount = 280
+    scrollRef.current.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    })
+  }, [])
 
-  const prerequisites = [
-    "No previous experience required - we start from basics",
-    "Eagerness and motivation to learn",
-    "A computer with internet access",
-  ]
+  // Track active chapter via IntersectionObserver for sidebar
+  useEffect(() => {
+    if (course.chapters.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveChapter(entry.target.id.replace("chapter-", ""))
+          }
+        }
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+    )
+
+    for (const ch of course.chapters) {
+      const el = document.getElementById(`chapter-${ch.id}`)
+      if (el) observer.observe(el)
+    }
+
+    return () => observer.disconnect()
+  }, [course.chapters])
 
   // Share URLs
   const shareUrl =
@@ -127,6 +152,16 @@ export function StreamCourseDetailContent({
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 rtl:lg:grid-flow-dense">
           {/* Left Column: Content */}
           <div className="space-y-6 rtl:lg:col-start-2">
+            {/* Category Badge */}
+            {course.category?.name && (
+              <span
+                className="text-sm font-medium"
+                style={{ color: colors.muted }}
+              >
+                {course.category.name}
+              </span>
+            )}
+
             {/* Title */}
             <h1
               className="text-start text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl"
@@ -145,27 +180,31 @@ export function StreamCourseDetailContent({
               </p>
             )}
 
+            {/* Rating + Enrollment Count */}
+            {(course._catalog?.averageRating ?? 0) > 0 && (
+              <div className="flex items-center gap-2">
+                <Star className="size-4 fill-yellow-400 text-yellow-400" />
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: colors.text }}
+                >
+                  {course._catalog?.averageRating?.toFixed(1)}
+                </span>
+                <span className="text-sm" style={{ color: colors.muted }}>
+                  ({course._count.enrollments} {isRTL ? "مسجل" : "enrolled"})
+                </span>
+              </div>
+            )}
+
             {/* CTA Row */}
             <div className="flex flex-wrap items-center gap-4 rtl:flex-row-reverse">
-              {isEnrolled ? (
-                <Link
-                  href={`/${lang}/stream/dashboard/${course.slug}`}
-                  className="block"
-                >
-                  <Button
-                    className="h-12 px-8 text-base font-medium"
-                    style={{
-                      backgroundColor: colors.text,
-                      color: colors.background,
-                    }}
-                  >
-                    {dict?.stream?.courseDetail?.continueLearning ??
-                      "Continue Learning"}
-                  </Button>
-                </Link>
-              ) : (
-                <EnrollmentButton courseId={course.id} lang={lang} />
-              )}
+              <CatalogEnrollmentButton
+                catalogSubjectId={course.id}
+                isEnrolled={isEnrolled}
+                price={course.price}
+                subjectSlug={course.slug}
+                lang={lang}
+              />
               {(!course.price || course.price === 0) && (
                 <span
                   className="text-sm font-medium"
@@ -221,27 +260,30 @@ export function StreamCourseDetailContent({
             </div>
           </div>
 
-          {/* Right Column: Video + Stats */}
+          {/* Right Column: Image + Stats */}
           <div className="space-y-4 rtl:lg:col-start-1">
-            {/* Video Preview */}
+            {/* Course Image / Hero */}
             <div
               className="group relative aspect-video cursor-pointer overflow-hidden rounded-xl"
-              style={{ backgroundColor: colors.card }}
+              style={{
+                backgroundColor: catalogColor || colors.card,
+              }}
             >
               {course.imageUrl ? (
                 <>
-                  <img
+                  <Image
                     src={course.imageUrl}
                     alt={course.title}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    fill
+                    className="object-cover transition-transform group-hover:scale-105"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    priority
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors group-hover:bg-black/40">
-                    <div className="text-center text-white">
-                      <PlayCircle
-                        className="mx-auto size-16"
-                        strokeWidth={1.5}
-                      />
-                    </div>
+                    <PlayCircle
+                      className="size-16 text-white"
+                      strokeWidth={1.5}
+                    />
                   </div>
                 </>
               ) : (
@@ -308,6 +350,84 @@ export function StreamCourseDetailContent({
         </div>
       </section>
 
+      {/* Horizontal Scrollable Topic Cards */}
+      {course.chapters.length > 3 && (
+        <section className="mx-auto max-w-6xl px-4 pb-8">
+          <div className="mb-4 flex items-center justify-between">
+            <h2
+              className="text-xl font-semibold"
+              style={{ color: colors.text }}
+            >
+              {dict?.stream?.courseDetail?.topics ?? "Topics"}
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => scroll("left")}
+                className="rounded-full p-1 transition-colors hover:bg-gray-100"
+              >
+                <ChevronLeft
+                  className="size-5"
+                  style={{ color: colors.muted }}
+                />
+              </button>
+              <button
+                onClick={() => scroll("right")}
+                className="rounded-full p-1 transition-colors hover:bg-gray-100"
+              >
+                <ChevronRight
+                  className="size-5"
+                  style={{ color: colors.muted }}
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            ref={scrollRef}
+            className="scrollbar-none -mx-1 flex gap-3 overflow-x-auto px-1 pb-2"
+          >
+            {course.chapters.map((chapter) => (
+              <a
+                key={chapter.id}
+                href={`#chapter-${chapter.id}`}
+                className="flex w-60 shrink-0 flex-col overflow-hidden rounded-lg border transition-shadow hover:shadow-md"
+                style={{ borderColor: colors.border }}
+              >
+                <div
+                  className="relative h-28 overflow-hidden"
+                  style={{
+                    backgroundColor: chapter.color || catalogColor || "#e5e7eb",
+                  }}
+                >
+                  {chapter.imageUrl && (
+                    <Image
+                      src={chapter.imageUrl}
+                      alt={chapter.title}
+                      fill
+                      className="object-cover"
+                      sizes="240px"
+                    />
+                  )}
+                </div>
+                <div className="p-3">
+                  <p
+                    className="line-clamp-2 text-sm font-medium"
+                    style={{ color: colors.text }}
+                  >
+                    {chapter.title}
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: colors.muted }}>
+                    {chapter.lessons.length}{" "}
+                    {chapter.lessons.length === 1
+                      ? (dict?.stream?.courseDetail?.lesson ?? "lesson")
+                      : (dict?.stream?.courseDetail?.lessons ?? "lessons")}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* About Section */}
       <section className="mx-auto max-w-6xl px-4 py-12">
         <div
@@ -328,66 +448,10 @@ export function StreamCourseDetailContent({
               (dict?.stream?.courseDetail?.thisCourseDescription ??
                 "This comprehensive course is designed to take you from beginner to advanced level.")}
           </p>
-
-          {/* Learning Objectives */}
-          <h3
-            className="mt-8 text-start text-xl font-semibold"
-            style={{ color: colors.text }}
-          >
-            {dict?.stream?.courseDetail?.learningObjectives ??
-              "Learning objectives"}
-          </h3>
-          <p className="mt-2 text-start" style={{ color: colors.muted }}>
-            {dict?.stream?.courseDetail?.byTheEnd ??
-              "By the end of this course, you'll be able to:"}
-          </p>
-          <ul className="mt-4 space-y-2 text-start">
-            {learningObjectives.map((item, index) => (
-              <li
-                key={index}
-                className="flex items-start gap-2 rtl:flex-row-reverse"
-              >
-                <span style={{ color: colors.muted }}>•</span>
-                <span style={{ color: colors.text }}>{item}</span>
-              </li>
-            ))}
-          </ul>
-
-          {/* Prerequisites */}
-          <h3
-            className="mt-8 text-start text-xl font-semibold"
-            style={{ color: colors.text }}
-          >
-            {dict?.stream?.courseDetail?.prerequisites ?? "Prerequisites"}
-          </h3>
-          <ul className="mt-4 space-y-2 text-start">
-            {prerequisites.map((item, index) => (
-              <li
-                key={index}
-                className="flex items-start gap-2 rtl:flex-row-reverse"
-              >
-                <span style={{ color: colors.muted }}>•</span>
-                <span style={{ color: colors.text }}>{item}</span>
-              </li>
-            ))}
-          </ul>
-
-          {/* Who this course is for */}
-          <h3
-            className="mt-8 text-start text-xl font-semibold"
-            style={{ color: colors.text }}
-          >
-            {dict?.stream?.courseDetail?.whoThisCourseIsFor ??
-              "Who this course is for"}
-          </h3>
-          <p className="mt-2 text-start" style={{ color: colors.text }}>
-            {dict?.stream?.courseDetail?.learnersDescription ??
-              "Learners who want to accelerate their workflow with AI assistance"}
-          </p>
         </div>
       </section>
 
-      {/* Course Sections */}
+      {/* Course Sections with Sidebar */}
       <section className="mx-auto max-w-6xl px-4 py-12">
         <h2
           className="text-start text-2xl font-semibold sm:text-3xl"
@@ -395,175 +459,215 @@ export function StreamCourseDetailContent({
         >
           {dict?.stream?.courseDetail?.courseSections ?? "Course sections"}
         </h2>
-        <div className="mt-6 space-y-4">
-          {course.chapters.map((chapter, index) => {
-            const isExpanded = expandedChapter === chapter.id
-            const chapterDuration = chapter.lessons.reduce(
-              (sum, lesson) => sum + (lesson.duration || 0),
-              0
-            )
-            const accentColor = accentColors[index % accentColors.length]
 
-            return (
-              <div
-                key={chapter.id}
-                className="overflow-hidden rounded-xl bg-white"
-                style={{ borderTop: `3px solid ${accentColor}` }}
-              >
-                {/* Chapter Header */}
-                <button
-                  onClick={() => toggleChapter(chapter.id)}
-                  className="flex w-full items-center justify-between p-6 transition-colors hover:bg-gray-50 rtl:flex-row-reverse"
+        <div className="mt-6 flex gap-8">
+          {/* Main content */}
+          <div className="min-w-0 flex-1 space-y-4">
+            {course.chapters.map((chapter, index) => {
+              const isExpanded = expandedChapter === chapter.id
+              const accentColor =
+                chapter.color || accentColors[index % accentColors.length]
+
+              return (
+                <div
+                  key={chapter.id}
+                  id={`chapter-${chapter.id}`}
+                  className="scroll-mt-20 overflow-hidden rounded-xl bg-white"
+                  style={{ borderTop: `3px solid ${accentColor}` }}
                 >
-                  <div className="flex items-center gap-3 rtl:flex-row-reverse">
-                    {isExpanded ? (
-                      <ChevronDown
-                        className="size-5"
-                        style={{ color: colors.muted }}
-                      />
-                    ) : isRTL ? (
-                      <ChevronRight
-                        className="size-5 rotate-180"
-                        style={{ color: colors.muted }}
-                      />
-                    ) : (
-                      <ChevronRight
-                        className="size-5"
-                        style={{ color: colors.muted }}
-                      />
-                    )}
-                    <div className="text-start">
-                      <h3
-                        className="text-lg font-semibold"
-                        style={{ color: colors.text }}
-                      >
-                        {chapter.title}
-                      </h3>
-                      <p className="text-sm" style={{ color: colors.muted }}>
-                        {chapter.lessons.length}{" "}
-                        {chapter.lessons.length === 1
-                          ? (dict?.stream?.courseDetail?.lesson ?? "lesson")
-                          : (dict?.stream?.courseDetail?.lessons ?? "lessons")}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-
-                {/* Chapter Description */}
-                {chapter.description && !isExpanded && (
-                  <div
-                    className="px-6 pb-6 text-start"
-                    style={{ color: colors.muted }}
+                  {/* Chapter Header with Image */}
+                  <button
+                    onClick={() => toggleChapter(chapter.id)}
+                    className="flex w-full items-center justify-between p-6 transition-colors hover:bg-gray-50 rtl:flex-row-reverse"
                   >
-                    <p className="text-sm">{chapter.description}</p>
-                  </div>
-                )}
-
-                {/* Expanded Lessons */}
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      <div
-                        className="border-t px-6 pb-6"
-                        style={{ borderColor: colors.border }}
-                      >
-                        {chapter.description && (
+                    <div className="flex items-center gap-4 rtl:flex-row-reverse">
+                      {/* Chapter Thumbnail */}
+                      {chapter.imageUrl && (
+                        <div
+                          className="relative size-12 shrink-0 overflow-hidden rounded-lg"
+                          style={{ backgroundColor: accentColor }}
+                        >
+                          <Image
+                            src={chapter.imageUrl}
+                            alt={chapter.title}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 rtl:flex-row-reverse">
+                        {isExpanded ? (
+                          <ChevronDown
+                            className="size-5"
+                            style={{ color: colors.muted }}
+                          />
+                        ) : isRTL ? (
+                          <ChevronRight
+                            className="size-5 rotate-180"
+                            style={{ color: colors.muted }}
+                          />
+                        ) : (
+                          <ChevronRight
+                            className="size-5"
+                            style={{ color: colors.muted }}
+                          />
+                        )}
+                        <div className="text-start">
+                          <h3
+                            className="text-lg font-semibold"
+                            style={{ color: colors.text }}
+                          >
+                            {chapter.title}
+                          </h3>
                           <p
-                            className="py-4 text-start text-sm"
+                            className="text-sm"
                             style={{ color: colors.muted }}
                           >
-                            {chapter.description}
+                            {chapter.lessons.length}{" "}
+                            {chapter.lessons.length === 1
+                              ? (dict?.stream?.courseDetail?.lesson ?? "lesson")
+                              : (dict?.stream?.courseDetail?.lessons ??
+                                "lessons")}
                           </p>
-                        )}
-                        <div className="space-y-2">
-                          {chapter.lessons.map((lesson) => (
-                            <div
-                              key={lesson.id}
-                              className="flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-gray-50 rtl:flex-row-reverse"
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Chapter Description */}
+                  {chapter.description && !isExpanded && (
+                    <div
+                      className="px-6 pb-6 text-start"
+                      style={{ color: colors.muted }}
+                    >
+                      <p className="text-sm">{chapter.description}</p>
+                    </div>
+                  )}
+
+                  {/* Expanded Lessons with Thumbnails */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div
+                          className="border-t px-6 pb-6"
+                          style={{ borderColor: colors.border }}
+                        >
+                          {chapter.description && (
+                            <p
+                              className="py-4 text-start text-sm"
+                              style={{ color: colors.muted }}
                             >
-                              <div className="flex items-center gap-3 rtl:flex-row-reverse">
-                                <PlayCircle
-                                  className="size-4"
-                                  style={{ color: colors.muted }}
-                                />
-                                <span
-                                  className="text-sm"
-                                  style={{ color: colors.text }}
-                                >
-                                  {lesson.title}
-                                </span>
-                                {lesson.isFree && (
+                              {chapter.description}
+                            </p>
+                          )}
+                          <div className="space-y-2">
+                            {chapter.lessons.map((lesson) => (
+                              <div
+                                key={lesson.id}
+                                className="flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-gray-50 rtl:flex-row-reverse"
+                              >
+                                <div className="flex items-center gap-3 rtl:flex-row-reverse">
+                                  {/* Lesson Thumbnail */}
+                                  {lesson.imageUrl ? (
+                                    <div className="relative size-10 shrink-0 overflow-hidden rounded">
+                                      <Image
+                                        src={lesson.imageUrl}
+                                        alt={lesson.title}
+                                        fill
+                                        className="object-cover"
+                                        sizes="40px"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <PlayCircle
+                                      className="size-4 shrink-0"
+                                      style={{ color: colors.muted }}
+                                    />
+                                  )}
                                   <span
-                                    className="text-xs underline"
+                                    className="text-sm"
+                                    style={{ color: colors.text }}
+                                  >
+                                    {lesson.title}
+                                  </span>
+                                  {lesson.isFree && (
+                                    <span
+                                      className="text-xs underline"
+                                      style={{ color: colors.muted }}
+                                    >
+                                      {dict?.stream?.courseDetail?.preview ??
+                                        "Preview"}
+                                    </span>
+                                  )}
+                                </div>
+                                {lesson.duration && (
+                                  <span
+                                    className="text-sm"
                                     style={{ color: colors.muted }}
                                   >
-                                    {dict?.stream?.courseDetail?.preview ??
-                                      "Preview"}
+                                    {Math.floor(lesson.duration / 60) > 0 &&
+                                      `${Math.floor(lesson.duration / 60)}:`}
+                                    {String(lesson.duration % 60).padStart(
+                                      2,
+                                      "0"
+                                    )}
                                   </span>
                                 )}
                               </div>
-                              {lesson.duration && (
-                                <span
-                                  className="text-sm"
-                                  style={{ color: colors.muted }}
-                                >
-                                  {Math.floor(lesson.duration / 60) > 0 &&
-                                    `${Math.floor(lesson.duration / 60)}:`}
-                                  {String(lesson.duration % 60).padStart(
-                                    2,
-                                    "0"
-                                  )}
-                                </span>
-                              )}
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )
-          })}
-        </div>
-      </section>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )
+            })}
+          </div>
 
-      {/* Instructor Section */}
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <h2
-          className="text-start text-2xl font-semibold sm:text-3xl"
-          style={{ color: colors.text }}
-        >
-          {dict?.stream?.courseDetail?.instructor ?? "Instructor"}
-        </h2>
-        <div className="mt-6 flex items-start gap-4 rtl:flex-row-reverse">
-          <div
-            className="size-16 shrink-0 overflow-hidden rounded-full"
-            style={{ backgroundColor: colors.card }}
-          >
-            <div
-              className="flex h-full w-full items-center justify-center text-xl font-semibold"
-              style={{ color: colors.muted }}
-            >
-              CI
+          {/* Sidebar Nav — lg+ only */}
+          <aside className="hidden w-56 shrink-0 lg:block">
+            <div className="sticky top-24">
+              <p className="mb-3 font-semibold" style={{ color: colors.text }}>
+                {course.title}
+              </p>
+              <nav
+                className="relative border-s"
+                style={{ borderColor: colors.border }}
+              >
+                {course.chapters.map((ch) => {
+                  const isActive = activeChapter === ch.id
+                  return (
+                    <a
+                      key={ch.id}
+                      href={`#chapter-${ch.id}`}
+                      className={cn(
+                        "relative -ms-px flex items-center gap-2 border-s-2 px-4 py-2 text-sm transition-colors",
+                        isActive
+                          ? "border-primary text-foreground font-medium"
+                          : "text-muted-foreground hover:text-foreground border-transparent"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "size-2 shrink-0 rounded-full",
+                          isActive ? "bg-primary" : "bg-muted-foreground/30"
+                        )}
+                      />
+                      <span className="line-clamp-1">{ch.title}</span>
+                    </a>
+                  )
+                })}
+              </nav>
             </div>
-          </div>
-          <div className="text-start">
-            <h3 className="font-semibold" style={{ color: colors.text }}>
-              {dict?.stream?.courseDetail?.courseInstructor ??
-                "Course Instructor"}
-            </h3>
-            <p className="mt-1 text-sm" style={{ color: colors.muted }}>
-              {dict?.stream?.courseDetail?.trainingProfessionals ??
-                "Training Professionals of Tomorrow"}
-            </p>
-          </div>
+          </aside>
         </div>
       </section>
 
@@ -583,27 +687,15 @@ export function StreamCourseDetailContent({
               </span>
             )}
           </div>
-          {isEnrolled ? (
-            <Link
-              href={`/${lang}/stream/dashboard/${course.slug}`}
-              className="flex-1"
-            >
-              <Button
-                className="h-12 w-full text-base font-medium"
-                style={{
-                  backgroundColor: colors.text,
-                  color: colors.background,
-                }}
-              >
-                {dict?.stream?.courseDetail?.continueLearning ??
-                  "Continue Learning"}
-              </Button>
-            </Link>
-          ) : (
-            <div className="flex-1">
-              <EnrollmentButton courseId={course.id} lang={lang} />
-            </div>
-          )}
+          <div className="flex-1">
+            <CatalogEnrollmentButton
+              catalogSubjectId={course.id}
+              isEnrolled={isEnrolled}
+              price={course.price}
+              subjectSlug={course.slug}
+              lang={lang}
+            />
+          </div>
         </div>
       </section>
     </div>

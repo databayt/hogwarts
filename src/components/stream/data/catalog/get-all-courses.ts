@@ -1,21 +1,33 @@
 "use server"
 
+import { Prisma } from "@prisma/client"
+
 import { getCatalogImageUrl } from "@/lib/catalog-image"
 import { db } from "@/lib/db"
 
 /**
- * Fetches all published catalog subjects available at a school (via SchoolSubjectSelection).
- * Returns data shaped like PublicCourseType for backward compatibility with existing UI.
+ * Fetches published catalog subjects available at a school with pagination.
+ * Returns { rows, count } shaped like getCoursesList for backward compatibility.
  *
- * Migration: Replaces get-all-courses.ts which queries StreamCourse.
+ * Migration: Replaces getCoursesList from queries.ts which queries StreamCourse.
  */
 export async function getAllCatalogCourses(
   schoolId: string | null,
-  lang: string = "en"
+  params: {
+    page?: number
+    perPage?: number
+    title?: string
+    category?: string
+    lang?: string
+  } = {}
 ) {
   if (!schoolId) {
-    return []
+    return { rows: [] as CatalogCourseType[], count: 0 }
   }
+
+  const page = params.page ?? 1
+  const perPage = params.perPage ?? 12
+  const skip = (page - 1) * perPage
 
   // Get catalog subjects that this school has selected
   const selections = await db.schoolSubjectSelection.findMany({
@@ -29,70 +41,67 @@ export async function getAllCatalogCourses(
     },
   })
 
-  if (selections.length === 0) {
-    // Fall back to all published catalog subjects (for schools that haven't selected yet)
-    const subjects = await db.catalogSubject.findMany({
-      where: {
-        status: "PUBLISHED",
-        lang,
-      },
-      orderBy: { sortOrder: "asc" },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        imageKey: true,
-        thumbnailKey: true,
-        color: true,
-        lang: true,
-        department: true,
-        totalChapters: true,
-        totalLessons: true,
-        usageCount: true,
-        averageRating: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    })
+  const hasSelections = selections.length > 0
+  const subjectIds = hasSelections
+    ? [...new Set(selections.map((s) => s.catalogSubjectId))]
+    : undefined
+  const customNames = hasSelections
+    ? new Map(
+        selections
+          .filter((s) => s.customName)
+          .map((s) => [s.catalogSubjectId, s.customName!])
+      )
+    : new Map<string, string>()
 
-    return subjects.map((s) => toCourseShape(s))
+  // Build where clause
+  const where: Prisma.CatalogSubjectWhereInput = {
+    status: "PUBLISHED",
+    ...(subjectIds ? { id: { in: subjectIds } } : {}),
+    ...(params.lang && !subjectIds ? { lang: params.lang } : {}),
+    ...(params.title
+      ? {
+          name: {
+            contains: params.title,
+            mode: Prisma.QueryMode.insensitive,
+          },
+        }
+      : {}),
+    ...(params.category ? { department: params.category } : {}),
   }
 
-  const subjectIds = [...new Set(selections.map((s) => s.catalogSubjectId))]
-  const customNames = new Map(
-    selections
-      .filter((s) => s.customName)
-      .map((s) => [s.catalogSubjectId, s.customName!])
-  )
+  const [subjects, count] = await Promise.all([
+    db.catalogSubject.findMany({
+      where,
+      orderBy: { sortOrder: "asc" },
+      skip,
+      take: perPage,
+      select: subjectSelect,
+    }),
+    db.catalogSubject.count({ where }),
+  ])
 
-  const subjects = await db.catalogSubject.findMany({
-    where: {
-      id: { in: subjectIds },
-      status: "PUBLISHED",
-    },
-    orderBy: { sortOrder: "asc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      imageKey: true,
-      thumbnailKey: true,
-      color: true,
-      lang: true,
-      department: true,
-      totalChapters: true,
-      totalLessons: true,
-      usageCount: true,
-      averageRating: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  })
+  const rows = subjects.map((s) => toCourseShape(s, customNames.get(s.id)))
 
-  return subjects.map((s) => toCourseShape(s, customNames.get(s.id)))
+  return { rows, count }
 }
+
+const subjectSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  imageKey: true,
+  thumbnailKey: true,
+  color: true,
+  lang: true,
+  department: true,
+  totalChapters: true,
+  totalLessons: true,
+  usageCount: true,
+  averageRating: true,
+  createdAt: true,
+  updatedAt: true,
+} as const
 
 /** Map CatalogSubject → PublicCourseType-compatible shape */
 function toCourseShape(
@@ -136,7 +145,6 @@ function toCourseShape(
       chapters: subject.totalChapters,
       enrollments: subject.usageCount,
     },
-    // Extra catalog fields
     _catalog: {
       color: subject.color,
       imageKey: subject.imageKey,
@@ -147,6 +155,4 @@ function toCourseShape(
   }
 }
 
-export type CatalogCourseType = Awaited<
-  ReturnType<typeof getAllCatalogCourses>
->[0]
+export type CatalogCourseType = ReturnType<typeof toCourseShape>

@@ -20,7 +20,7 @@ import {
 } from "@aws-sdk/client-s3"
 import sharp from "sharp"
 
-import { getCloudFrontUrl } from "@/lib/cloudfront"
+import { getCloudFrontUrl, isCloudFrontConfigured } from "@/lib/cloudfront"
 
 // --- Variant Definitions ---
 
@@ -131,11 +131,12 @@ export function getCatalogImageUrl(
   imageKey: string | null | undefined,
   size: CatalogImageSize = "original"
 ): string | null {
-  if (thumbnailKey) {
+  if (thumbnailKey && isCloudFrontConfigured()) {
     return getCloudFrontUrl(`${thumbnailKey}-${size}.webp`)
   }
 
   if (imageKey) {
+    if (imageKey.startsWith("https://")) return imageKey
     if (imageKey.startsWith("/")) return imageKey
     return `/subjects/${imageKey}.png`
   }
@@ -150,7 +151,7 @@ export function getCatalogImageUrl(
 export function getCatalogImageSrcSet(
   thumbnailKey: string | null | undefined
 ): string | undefined {
-  if (!thumbnailKey) return undefined
+  if (!thumbnailKey || !isCloudFrontConfigured()) return undefined
 
   return [
     `${getCloudFrontUrl(`${thumbnailKey}-sm.webp`)} 200w`,

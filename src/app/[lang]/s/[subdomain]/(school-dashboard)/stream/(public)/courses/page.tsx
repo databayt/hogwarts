@@ -8,8 +8,8 @@ import {
   StreamCoursesContent,
   StreamCoursesLoadingSkeleton,
 } from "@/components/stream/courses/content"
+import { getAllCatalogCourses } from "@/components/stream/data/catalog/get-all-courses"
 import { streamCoursesSearchParams } from "@/components/stream/list-params"
-import { getCoursesList } from "@/components/stream/queries"
 
 export const dynamic = "force-dynamic"
 
@@ -83,14 +83,12 @@ async function CoursesRenderer({
     )
   }
 
-  const { rows, count } = await getCoursesList(schoolId, {
+  const { rows, count } = await getAllCatalogCourses(schoolId, {
     page: search.page,
     perPage: search.perPage,
     title: search.title || undefined,
     category: search.category || undefined,
-    level: search.level || undefined,
     lang,
-    sort: search.sort.length > 0 ? search.sort : undefined,
   })
 
   return (
