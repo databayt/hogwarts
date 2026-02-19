@@ -43,18 +43,15 @@ export function CourseCard({ course, lang }: CourseCardProps) {
             className="object-cover"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             onError={() => setImageError(true)}
+            unoptimized
           />
         ) : (
           <div
-            className="flex h-full w-full items-center justify-center rounded-xl"
+            className="h-full w-full rounded-xl"
             style={{
               backgroundColor: catalogColor || "#e5e7eb",
             }}
-          >
-            <span className="text-2xl font-bold text-white/80">
-              {course.title.charAt(0)}
-            </span>
-          </div>
+          />
         )}
       </div>
 

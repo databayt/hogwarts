@@ -128,6 +128,7 @@ export function StreamDashboardContent({
                       alt={course.title}
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="flex size-full items-center justify-center">
@@ -221,6 +222,7 @@ export function StreamDashboardContent({
                       alt={course.title}
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="flex size-full items-center justify-center">
