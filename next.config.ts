@@ -22,6 +22,25 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  // Exclude heavy packages from serverless function tracing
+  // Prevents 1GB+ function bundles on Vercel (limit: 300mb)
+  outputFileTracingExcludes: {
+    "*": [
+      "./node_modules/@swc/core-linux-x64-gnu",
+      "./node_modules/@swc/core-linux-x64-musl",
+      "./node_modules/@esbuild",
+      "./node_modules/esbuild",
+      "./node_modules/tsx",
+      "./node_modules/sharp",
+      "./public/anthropic/**",
+      "./public/site/**",
+      "./content/**",
+    ],
+  },
+
+  // Keep Prisma binary engine out of edge/serverless bundles
+  serverExternalPackages: ["@prisma/client", "prisma"],
+
   // Security headers
   async headers() {
     return [
