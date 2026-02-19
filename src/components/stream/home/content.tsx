@@ -168,7 +168,7 @@ export function StreamHomeContent({
   // Get features from dictionary or use defaults
   const features: Feature[] = dictionary?.home?.features || [
     {
-      title: "Comprehensive Courses",
+      title: "Curated Courses",
       description:
         "Access a wide range of carefully curated courses designed by industry experts.",
       icon: "📚",
@@ -176,19 +176,19 @@ export function StreamHomeContent({
     {
       title: "Interactive Learning",
       description:
-        "Engage with interactive content, quizzes, and assignments to enhance your learning experience.",
+        "Engage with interactive content, quizzes, and hands-on assignments.",
       icon: <InteractiveLearningIcon />,
     },
     {
       title: "Progress Tracking",
       description:
-        "Monitor your progress and achievements with detailed analytics and personalized dashboards.",
+        "Monitor your progress and achievements with detailed analytics.",
       icon: "📊",
     },
     {
       title: "Community Support",
       description:
-        "Join a vibrant community of learners and instructors to collaborate and share knowledge.",
+        "Join a vibrant community of learners and instructors to collaborate.",
       icon: "👥",
     },
   ]
@@ -259,7 +259,7 @@ export function StreamHomeContent({
           >
             <CardHeader>
               <div className="mb-4 text-start text-4xl">
-                {feature.title === "Comprehensive Courses" ? (
+                {feature.title === "Curated Courses" ? (
                   <ComprehensiveCoursesIcon />
                 ) : feature.title === "Interactive Learning" ? (
                   <InteractiveLearningIcon />

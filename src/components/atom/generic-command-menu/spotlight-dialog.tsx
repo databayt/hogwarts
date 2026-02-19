@@ -78,7 +78,7 @@ function SpotlightDialog({
 /* ------------------------------------------------------------------ */
 
 const GLASS =
-  "bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl backdrop-saturate-[180%] border border-white/20 shadow-2xl"
+  "bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl backdrop-saturate-[180%] border border-black/10 dark:border-white/10 shadow-2xl"
 
 function SpotlightBar({
   className,
@@ -210,7 +210,7 @@ function SpotlightCategoryIcons({
               GLASS,
               "shadow-lg",
               "cursor-pointer transition-all duration-200",
-              "hover:scale-105",
+              "hover:scale-100",
               "animate-in fade-in slide-in-from-left-2",
               isActive && "bg-accent border-accent shadow-accent/20"
             )}

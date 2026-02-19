@@ -24,7 +24,10 @@ interface CourseCardProps {
 export function CourseCard({ course, lang }: CourseCardProps) {
   const [imageError, setImageError] = useState(false)
   const chaptersCount = course._count.chapters
-  const providerName = course.category?.name || "Course"
+  const levelLabel = course._catalog?.levels?.[0]
+    ? course._catalog.levels[0].charAt(0) +
+      course._catalog.levels[0].slice(1).toLowerCase()
+    : course.category?.name || "Course"
   const courseType = getCourseType(chaptersCount)
   const catalogColor = course._catalog?.color
 
@@ -59,11 +62,11 @@ export function CourseCard({ course, lang }: CourseCardProps) {
       <div className="space-y-1.5 px-2 pt-3 text-start">
         {/* Provider / Department */}
         <div className="flex items-center gap-1.5 rtl:flex-row-reverse">
-          <span className="text-muted-foreground text-xs">{providerName}</span>
+          <span className="text-muted-foreground text-xs">{levelLabel}</span>
         </div>
 
         {/* Title */}
-        <h3 className="group-hover:text-primary line-clamp-2 text-sm leading-tight font-semibold transition-colors">
+        <h3 className="group-hover:text-primary overflow-hidden text-sm leading-tight font-semibold whitespace-nowrap transition-colors">
           {course.title}
         </h3>
 

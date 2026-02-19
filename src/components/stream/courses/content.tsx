@@ -1,15 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useState, useTransition } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react"
+import { BookOpen, Loader2 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { CatalogCourseType } from "@/components/stream/data/catalog/get-all-courses"
+import { getAllCatalogCourses } from "@/components/stream/data/catalog/get-all-courses"
 import { SearchBar } from "@/components/stream/search-bar"
 
 import { CourseCard, CourseCardSkeleton } from "./course-card"
@@ -35,16 +33,23 @@ export function StreamCoursesContent({
 }: Props) {
   const isRTL = lang === "ar"
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const [allCourses, setAllCourses] = useState(courses)
+  const [currentPage, setCurrentPage] = useState(page)
+  const [isPending, startTransition] = useTransition()
 
-  const totalPages = Math.ceil(totalCount / perPage)
+  const hasMore = allCourses.length < totalCount
 
-  const navigateToPage = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.set("page", String(newPage))
-    router.push(`${pathname}?${params.toString()}`)
+  const loadMore = () => {
+    startTransition(async () => {
+      const nextPage = currentPage + 1
+      const { rows } = await getAllCatalogCourses(schoolId, {
+        page: nextPage,
+        perPage,
+        lang,
+      })
+      setAllCourses((prev) => [...prev, ...rows])
+      setCurrentPage(nextPage)
+    })
   }
 
   return (
@@ -92,7 +97,7 @@ export function StreamCoursesContent({
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {courses.map((course, idx) => (
+            {allCourses.map((course, idx) => (
               <div
                 key={course.id}
                 className="group relative block h-full w-full p-2"
@@ -123,37 +128,19 @@ export function StreamCoursesContent({
             ))}
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2">
+          {/* See More */}
+          {hasMore && (
+            <div className="flex justify-center">
               <Button
-                variant="outline"
-                size="icon"
-                disabled={page <= 1}
-                onClick={() => navigateToPage(page - 1)}
+                variant="ghost"
+                className="hover:bg-transparent hover:underline"
+                onClick={loadMore}
+                disabled={isPending}
               >
-                {isRTL ? (
-                  <ChevronRight className="size-4" />
-                ) : (
-                  <ChevronLeft className="size-4" />
-                )}
-              </Button>
-              <span className="text-muted-foreground text-sm">
-                {isRTL
-                  ? `${page} من ${totalPages}`
-                  : `Page ${page} of ${totalPages}`}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={page >= totalPages}
-                onClick={() => navigateToPage(page + 1)}
-              >
-                {isRTL ? (
-                  <ChevronLeft className="size-4" />
-                ) : (
-                  <ChevronRight className="size-4" />
-                )}
+                {isPending ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : null}
+                {isRTL ? "عرض المزيد" : "See More"}
               </Button>
             </div>
           )}
@@ -166,36 +153,28 @@ export function StreamCoursesContent({
 export function StreamCoursesLoadingSkeleton() {
   return (
     <div className="space-y-10 py-6">
-      {/* Hero Section Skeleton */}
+      {/* Hero section */}
       <section className="py-8">
-        <div className="flex flex-col items-center gap-8 md:flex-row">
-          <div className="relative flex size-40 shrink-0 items-center justify-center rounded-xl bg-[#D97757] p-6 md:size-44">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
-              alt="Courses"
-              className="size-32 md:size-36"
-            />
-          </div>
-          <div className="space-y-3">
-            <h1 className="text-4xl leading-tight font-bold md:text-5xl">
-              Explore courses
-            </h1>
-            <p className="text-muted-foreground max-w-lg text-lg">
-              Explore our collection of courses and begin your learning journey
-            </p>
+        <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-6 md:flex-row">
+          <div className="bg-muted size-28 shrink-0 animate-pulse rounded-xl md:size-32" />
+          <div className="space-y-2 text-center md:text-start">
+            <div className="bg-muted mx-auto h-10 w-48 animate-pulse rounded md:mx-0 md:h-12" />
+            <div className="bg-muted mx-auto h-10 w-36 animate-pulse rounded md:mx-0 md:h-12" />
           </div>
         </div>
       </section>
 
-      {/* Search Bar Skeleton */}
+      {/* Search bar */}
       <section>
-        <div className="bg-muted h-11 w-full animate-pulse rounded-full" />
+        <div className="bg-muted mx-auto h-11 w-full max-w-2xl animate-pulse rounded-full" />
       </section>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <CourseCardSkeleton key={index} />
+      {/* Course cards grid */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div key={index} className="p-2">
+            <CourseCardSkeleton />
+          </div>
         ))}
       </div>
     </div>

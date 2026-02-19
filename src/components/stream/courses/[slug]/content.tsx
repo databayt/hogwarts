@@ -137,7 +137,7 @@ export function StreamCourseDetailContent({
 
             {/* Title */}
             <h1
-              className="text-start text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl"
+              className="max-w-xs overflow-hidden text-start text-2xl font-semibold tracking-tight whitespace-nowrap sm:max-w-sm sm:text-3xl lg:text-4xl"
               style={{ color: colors.text }}
             >
               {course.title}
@@ -145,7 +145,7 @@ export function StreamCourseDetailContent({
 
             {/* Description */}
             <p
-              className="text-start text-lg leading-relaxed"
+              className="text-start text-base leading-relaxed"
               style={{ color: colors.muted }}
             >
               {course.description ||
@@ -245,7 +245,10 @@ export function StreamCourseDetailContent({
               ) : (
                 <div
                   className="flex h-full w-full items-center justify-center"
-                  style={{ backgroundColor: accentColor }}
+                  style={{
+                    backgroundColor:
+                      catalogColor || accentColors[0] || colors.card,
+                  }}
                 >
                   <PlayTriangleIcon className="size-16 text-white/80" />
                 </div>
@@ -453,7 +456,7 @@ export function StreamCourseDetailContent({
 
                 {/* Lesson Cards — horizontal scroll */}
                 {chapter.lessons.length > 0 && (
-                  <div className="scrollbar-none -mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2">
+                  <div className="no-scrollbar -mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2">
                     {chapter.lessons.map((lesson) => (
                       <div
                         key={lesson.id}

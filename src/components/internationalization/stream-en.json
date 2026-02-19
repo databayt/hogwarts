@@ -10,23 +10,23 @@
       "signIn": "Enter the Great Hall",
       "features": [
         {
-          "title": "Comprehensive Courses",
+          "title": "Curated Courses",
           "description": "Access a wide range of carefully curated courses designed by industry experts.",
           "icon": "📚"
         },
         {
           "title": "Interactive Learning",
-          "description": "Engage with interactive content, quizzes, and assignments to enhance your learning experience.",
+          "description": "Engage with interactive content, quizzes, and hands-on assignments.",
           "icon": "🎮"
         },
         {
           "title": "Progress Tracking",
-          "description": "Monitor your progress and achievements with detailed analytics and personalized dashboards.",
+          "description": "Monitor your progress and achievements with detailed analytics.",
           "icon": "📊"
         },
         {
           "title": "Community Support",
-          "description": "Join a vibrant community of learners and instructors to collaborate and share knowledge.",
+          "description": "Join a vibrant community of learners and instructors to collaborate.",
           "icon": "👥"
         }
       ]
@@ -179,7 +179,8 @@
       "instructor": "Instructor",
       "courseInstructor": "Course Instructor",
       "trainingProfessionals": "Training Professionals of Tomorrow",
-      "topics": "Topics"
+      "topics": "Topics",
+      "quiz": "quiz"
     },
     "adminCourses": {
       "yourCourses": "Your Courses",

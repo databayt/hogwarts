@@ -17,7 +17,6 @@ import {
   SpotlightDialog,
   SpotlightDropdown,
   SpotlightEmpty,
-  SpotlightFooter,
   SpotlightGroup,
   SpotlightInput,
   SpotlightItem,
@@ -46,6 +45,7 @@ export function GenericCommandMenu({
   const [activeCategory, setActiveCategory] =
     React.useState<SpotlightCategoryId | null>(null)
   const [showIcons, setShowIcons] = React.useState(false)
+  const [dropdownReady, setDropdownReady] = React.useState(false)
   const { setTheme } = useTheme()
   const { recentSearchItems, addRecentItem } = useRecentItems()
   const { dictionary } = useDictionary()
@@ -65,6 +65,7 @@ export function GenericCommandMenu({
       setQuery("")
       setActiveCategory(null)
       setShowIcons(false)
+      setDropdownReady(false)
     }
   }, [open])
 
@@ -145,6 +146,16 @@ export function GenericCommandMenu({
 
   // Whether dropdown should be visible
   const showDropdown = query.length > 0 || activeCategory !== null
+
+  // Sequence: bar expands first (300ms), then dropdown appears
+  React.useEffect(() => {
+    if (showDropdown) {
+      const timer = setTimeout(() => setDropdownReady(true), 700)
+      return () => clearTimeout(timer)
+    } else {
+      setDropdownReady(false)
+    }
+  }, [showDropdown])
 
   // Command execution handler
   const runCommand = React.useCallback((command: () => unknown) => {
@@ -260,7 +271,9 @@ export function GenericCommandMenu({
             <SpotlightBar
               className={cn(
                 showDropdown
-                  ? "w-full rounded-t-2xl rounded-b-none border-b-0 shadow-none"
+                  ? dropdownReady
+                    ? "w-full rounded-t-3xl rounded-b-none border-b-0 shadow-none"
+                    : "w-full"
                   : showIcons
                     ? "w-[calc(100%-14rem)]"
                     : "w-full"
@@ -273,16 +286,20 @@ export function GenericCommandMenu({
               />
             </SpotlightBar>
 
-            {showIcons && !showDropdown && (
+            {showIcons && !dropdownReady && (
               <SpotlightCategoryIcons
                 activeCategory={activeCategory}
                 onSelect={handleCategorySelect}
+                className={cn(
+                  "transition-all duration-200",
+                  showDropdown && "pointer-events-none opacity-0"
+                )}
               />
             )}
           </div>
 
-          {showDropdown && (
-            <SpotlightDropdown className="mt-0 rounded-t-none">
+          {dropdownReady && (
+            <SpotlightDropdown className="mt-0 rounded-t-none rounded-b-3xl border-t-0">
               <SpotlightCategories
                 activeCategory={activeCategory}
                 onSelect={handleCategorySelect}
@@ -360,7 +377,6 @@ export function GenericCommandMenu({
                   </SpotlightGroup>
                 )}
               </SpotlightList>
-              <SpotlightFooter />
             </SpotlightDropdown>
           )}
         </div>

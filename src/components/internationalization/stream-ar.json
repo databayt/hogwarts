@@ -179,7 +179,8 @@
       "instructor": "المدرب",
       "courseInstructor": "مدرب الدورة",
       "trainingProfessionals": "تدريب المحترفين للغد",
-      "topics": "المواضيع"
+      "topics": "المواضيع",
+      "quiz": "اختبار"
     },
     "adminCourses": {
       "yourCourses": "دوراتك",

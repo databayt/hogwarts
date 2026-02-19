@@ -1,8 +1,195 @@
 ---
 title: "Card"
-description: "Documentation for Card"
+description: "Canonical patterns for writing card.tsx display components in feature directories"
 ---
 
+## Current Progress (Audit)
+
+92 total card files audited across the codebase (27 card.tsx + 65 \*-card.tsx, ~3,755 lines in card.tsx):
+
+| Area                                         | Status | Detail                                                                        |
+| -------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
+| Card/CardHeader/CardContent/CardFooter usage | PASS   | 100% use shadcn Card primitives consistently                                  |
+| `showActions` prop for conditional footers   | PASS   | Standard pattern across entity cards                                          |
+| Formatters imported from util.ts             | PASS   | 80%+ import formatting from co-located util.ts                                |
+| Multiple card exports per file               | PASS   | Multi-variant pattern (EntityCard, CompactCard, StatsCard) used in 6+ files   |
+| Typed entity props                           | PASS   | Entity types imported from types.ts                                           |
+| JSDoc on card components                     | PASS   | Best examples: billing/card.tsx, domains/card.tsx                             |
+| No consistent naming for multi-card exports  | FAIL   | Mix of EntityCard, CompactCard, HealthCard, SummaryCard, StatsCard naming     |
+| Onboarding cards mix form logic              | FAIL   | 12 onboarding card files include form state management alongside card display |
+
+## 4 Categories of card.tsx
+
+### Category 1: Entity Display Cards (~10 files)
+
+Data display for domain entities (invoices, domains, tenants). Multiple card variants per file: EntityCard (full), CompactCard (minimal), HealthCard (status), StatsCard (metrics).
+
+Reference: `saas-dashboard/billing/card.tsx` (392 lines), `saas-dashboard/domains/card.tsx` (399 lines)
+
+### Category 2: KPI/Stats Cards (~5 files)
+
+Dashboard metric displays. Single value with label, trend indicator, and icon.
+
+Reference: `school-dashboard/dashboard/card.tsx`, `saas-dashboard/billing/card.tsx` (StatsCard export)
+
+### Category 3: Onboarding Step Cards (~12 files)
+
+Visual cards for onboarding wizard steps. Each card represents a configuration option (school level, curriculum, theme).
+
+Reference: `onboarding/branding/card.tsx`, `onboarding/curriculum/card.tsx`
+
+### Category 4: Atom Lab Cards (~30 files)
+
+Component showcase cards in `atom/lab/`. Demonstrate card variations for the design system.
+
+Reference: `atom/lab/card/` (30+ variants)
+
+## The 5 Rules
+
+### 1. Always use shadcn Card primitives
+
+Every card component must compose from `Card`, `CardHeader`, `CardContent`, `CardFooter` from shadcn/ui.
+
+```typescript
+// GOOD: shadcn Card composition
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
+export function InvoiceCard({ invoice }: InvoiceCardProps) {
+  return (
+    <Card className="transition-shadow hover:shadow-md">
+      <CardHeader>
+        <CardTitle>{invoice.id}</CardTitle>
+        <CardDescription>{invoice.school.name}</CardDescription>
+      </CardHeader>
+      <CardContent>{/* ... */}</CardContent>
+      <CardFooter>{/* ... */}</CardFooter>
+    </Card>
+  )
+}
+
+// BAD: Custom div structure
+export function InvoiceCard({ invoice }: InvoiceCardProps) {
+  return (
+    <div className="rounded-lg border p-4">
+      <div className="font-bold">{invoice.id}</div>
+      {/* ... */}
+    </div>
+  )
+}
+```
+
+### 2. Use `showActions` prop for conditional footers
+
+Cards with action buttons should accept a `showActions` prop. This allows the same card to be used in read-only and interactive contexts.
+
+```typescript
+// GOOD: showActions controls footer
+interface DomainCardProps {
+  domain: DomainRequestWithSchool
+  showActions?: boolean
+  onApprove?: (domainId: string) => void
+  onReject?: (domainId: string) => void
+}
+
+export function DomainCard({
+  domain,
+  showActions = false,
+  onApprove,
+  onReject,
+}: DomainCardProps) {
+  return (
+    <Card>
+      <CardHeader>{/* ... */}</CardHeader>
+      <CardContent>{/* ... */}</CardContent>
+      {showActions && (
+        <CardFooter className="gap-2">
+          <Button onClick={() => onApprove?.(domain.id)}>Approve</Button>
+          <Button variant="outline" onClick={() => onReject?.(domain.id)}>
+            Reject
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
+  )
+}
+```
+
+### 3. Import formatters from util.ts
+
+Never format currency, dates, or status labels inline in cards. Import from the co-located util.ts.
+
+```typescript
+// GOOD: Formatters from util.ts
+import {
+  formatCurrency,
+  formatBillingPeriod,
+  getInvoiceStatusLabel,
+  isInvoiceOverdue,
+} from "./util"
+
+<CardContent>
+  <div>{formatCurrency(invoice.amountDue, invoice.currency)}</div>
+  <div>{formatBillingPeriod(invoice.periodStart, invoice.periodEnd)}</div>
+</CardContent>
+
+// BAD: Inline formatting
+<CardContent>
+  <div>${(invoice.amountDue / 100).toFixed(2)}</div>
+  <div>{new Date(invoice.periodStart).toLocaleDateString()}</div>
+</CardContent>
+```
+
+### 4. Multiple exports per file with consistent naming
+
+When a file exports multiple card variants, use the pattern: `<Entity>Card` (full), `<Entity>CompactCard` (minimal), `<Entity>HealthCard` (status), `<Entity>StatsCard` (metrics).
+
+```typescript
+// GOOD: Consistent multi-variant exports
+export function InvoiceCard({ ... }) { ... }           // Full card
+export function InvoiceCompactCard({ ... }) { ... }    // Minimal/list item
+export function InvoiceHealthCard({ ... }) { ... }     // Status-focused
+export function InvoiceStatsCard({ ... }) { ... }      // Metrics/KPI
+export function BillingSummaryCard({ ... }) { ... }    // Aggregate
+```
+
+### 5. Import types and config, never hardcode
+
+Status variants, labels, and entity types come from config.ts and types.ts.
+
+```typescript
+// GOOD: Config-driven status badges
+import { INVOICE_STATUS_VARIANTS } from "./config"
+import type { InvoiceStatus, InvoiceWithSchool } from "./types"
+
+<Badge variant={INVOICE_STATUS_VARIANTS[invoice.status as InvoiceStatus]}>
+  {getInvoiceStatusLabel(invoice.status as InvoiceStatus)}
+</Badge>
+
+// BAD: Hardcoded status logic
+<Badge variant={invoice.status === "paid" ? "default" : "destructive"}>
+  {invoice.status}
+</Badge>
+```
+
+## 2 Canonical Templates
+
+### Template A: Entity Display Card
+
+Full entity card with status badge, key metrics, and conditional actions. Reference: `saas-dashboard/domains/card.tsx` (399 lines).
+
+```typescript
+"use client"
+
+import { Globe } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -13,132 +200,117 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-# Card
+import { DOMAIN_STATUS_VARIANTS } from "./config"
+import type { DomainRequestWithSchool, DomainStatus } from "./types"
+import {
+  formatTimeSince,
+  getDomainHealth,
+  getDomainStatusLabel,
+  normalizeDomain,
+} from "./util"
 
-Displays a card with header, content, and footer.
+interface DomainCardProps {
+  domain: DomainRequestWithSchool
+  showActions?: boolean
+  onApprove?: (domainId: string) => void
+  onReject?: (domainId: string) => void
+  onVerify?: (domainId: string) => void
+  onViewDetails?: (domainId: string) => void
+}
 
-## Preview
+export function DomainCard({
+  domain,
+  showActions = false,
+  onApprove,
+  onReject,
+  onVerify,
+  onViewDetails,
+}: DomainCardProps) {
+  const normalized = normalizeDomain(domain.domain)
+  const health = getDomainHealth(domain.status as DomainStatus)
 
-<Card className="w-[350px]">
-  <CardHeader>
-    <CardTitle>Create project</CardTitle>
-    <CardDescription>Deploy your new project in one-click.</CardDescription>
-  </CardHeader>
-  <CardContent>
-    <form>
-      <div className="grid w-full items-center gap-4">
-        <div className="flex flex-col space-y-1.5">
-          <label htmlFor="name">Name</label>
-          <input id="name" placeholder="Name of your project" />
+  return (
+    <Card className="transition-shadow hover:shadow-md">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="size-4" />
+              {normalized}
+            </CardTitle>
+            <CardDescription>{domain.school.name}</CardDescription>
+          </div>
+          <Badge
+            variant={DOMAIN_STATUS_VARIANTS[domain.status as DomainStatus]}
+          >
+            {getDomainStatusLabel(domain.status as DomainStatus)}
+          </Badge>
         </div>
-        <div className="flex flex-col space-y-1.5">
-          <label htmlFor="framework">Framework</label>
-          <select id="framework">
-            <option value="">Select</option>
-            <option value="next">Next.js</option>
-            <option value="sveltekit">SvelteKit</option>
-            <option value="astro">Astro</option>
-            <option value="nuxt">Nuxt.js</option>
-          </select>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between">
+          <small className="muted">Requested</small>
+          <div className="font-medium">{formatTimeSince(domain.createdAt)}</div>
         </div>
-      </div>
-    </form>
-  </CardContent>
-  <CardFooter className="flex justify-between">
-    <Button variant="outline">Cancel</Button>
-    <Button>Deploy</Button>
-  </CardFooter>
-</Card>
+        {domain.notes && (
+          <div>
+            <small className="muted">Notes</small>
+            <p className="muted line-clamp-2">{domain.notes}</p>
+          </div>
+        )}
+      </CardContent>
 
-## Installation
-
-### Copy and paste the following code into your project.
-
-```tsx
-import * as React from "react"
-
-import { cn } from "@/lib/utils"
-
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "bg-card text-card-foreground rounded-lg border shadow-sm",
-      className
-    )}
-    {...props}
-  />
-))
-Card.displayName = "Card"
-
-const CardHeader = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
-    {...props}
-  />
-))
-CardHeader.displayName = "CardHeader"
-
-const CardTitle = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h3
-    ref={ref}
-    className={cn(
-      "text-2xl leading-none font-semibold tracking-tight",
-      className
-    )}
-    {...props}
-  />
-))
-CardTitle.displayName = "CardTitle"
-
-const CardDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn("text-muted-foreground text-sm", className)}
-    {...props}
-  />
-))
-CardDescription.displayName = "CardDescription"
-
-const CardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-))
-CardContent.displayName = "CardContent"
-
-const CardFooter = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
-    {...props}
-  />
-))
-CardFooter.displayName = "CardFooter"
-
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+      {showActions && (
+        <CardFooter className="gap-2">
+          {domain.status === "pending" && (
+            <>
+              <Button size="sm" onClick={() => onApprove?.(domain.id)}>
+                Approve
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onReject?.(domain.id)}
+              >
+                Reject
+              </Button>
+            </>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewDetails?.(domain.id)}
+          >
+            Details
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
+  )
+}
 ```
 
-## Usage
+Key points:
 
-```tsx
+- `showActions` controls footer visibility
+- Action callbacks (`onApprove`, `onReject`, `onViewDetails`) as optional props
+- Status badge driven by config variants
+- Formatters from util.ts (`normalizeDomain`, `formatTimeSince`, `getDomainStatusLabel`)
+- Conditional sections based on data presence (`domain.notes`)
+- `hover:shadow-md` transition for interactive feel
+
+### Template B: Multi-Variant Card File
+
+Multiple card exports in one file for different display contexts. Reference: `saas-dashboard/billing/card.tsx` (392 lines).
+
+```typescript
+"use client"
+
+import { DollarSign, FileText } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -147,102 +319,246 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+
+import { INVOICE_STATUS_VARIANTS } from "./config"
+import type { InvoiceStatus, InvoiceWithSchool } from "./types"
+import {
+  formatBillingPeriod,
+  formatCurrency,
+  getInvoiceHealth,
+  getInvoiceStatusLabel,
+} from "./util"
+
+// ============================================================================
+// Full Invoice Card
+// ============================================================================
+
+interface InvoiceCardProps {
+  invoice: InvoiceWithSchool
+  showActions?: boolean
+  onViewDetails?: (invoiceId: string) => void
+  onMarkPaid?: (invoiceId: string) => void
+}
+
+export function InvoiceCard({
+  invoice,
+  showActions = false,
+  onViewDetails,
+  onMarkPaid,
+}: InvoiceCardProps) {
+  return (
+    <Card className="transition-shadow hover:shadow-md">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="size-4" />
+              Invoice {invoice.stripeInvoiceId}
+            </CardTitle>
+            <CardDescription>{invoice.school.name}</CardDescription>
+          </div>
+          <Badge
+            variant={INVOICE_STATUS_VARIANTS[invoice.status as InvoiceStatus]}
+          >
+            {getInvoiceStatusLabel(invoice.status as InvoiceStatus)}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between">
+          <small className="muted">Period</small>
+          <div className="font-medium">
+            {formatBillingPeriod(invoice.periodStart, invoice.periodEnd)}
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <small className="muted">Amount</small>
+          <div className="font-medium tabular-nums">
+            {formatCurrency(invoice.amountDue, invoice.currency)}
+          </div>
+        </div>
+      </CardContent>
+      {showActions && (
+        <CardFooter className="gap-2">
+          <Button size="sm" onClick={() => onViewDetails?.(invoice.id)}>
+            View Details
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
+  )
+}
+
+// ============================================================================
+// Stats Card (KPI)
+// ============================================================================
+
+interface InvoiceStatsCardProps {
+  label: string
+  value: string
+  description?: string
+  icon?: React.ReactNode
+  trend?: { value: number; direction: "up" | "down" }
+}
+
+export function InvoiceStatsCard({
+  label,
+  value,
+  description,
+  icon,
+  trend,
+}: InvoiceStatsCardProps) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{label}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold tabular-nums">{value}</div>
+        {description && (
+          <p className="text-muted-foreground text-xs">{description}</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ============================================================================
+// Health Card (Status Overview)
+// ============================================================================
+
+export function InvoiceHealthCard({
+  invoices,
+}: {
+  invoices: InvoiceWithSchool[]
+}) {
+  const health = getInvoiceHealth(invoices)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Billing Health</CardTitle>
+        <CardDescription>Overview of invoice statuses</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {Object.entries(health).map(([status, count]) => (
+          <div key={status} className="flex items-center justify-between">
+            <small>{status}</small>
+            <Badge variant="outline">{count}</Badge>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
 ```
 
-```tsx
-<Card>
-  <CardHeader>
-    <CardTitle>Card Title</CardTitle>
-    <CardDescription>Card Description</CardDescription>
-  </CardHeader>
-  <CardContent>
-    <p>Card Content</p>
-  </CardContent>
-  <CardFooter>
-    <p>Card Footer</p>
-  </CardFooter>
-</Card>
+Key points:
+
+- Section separators (`// ====`) group related card variants
+- Each variant has its own Props interface
+- Full card: entity display with actions
+- Stats card: KPI metric with label and trend
+- Health card: aggregate status overview
+- All formatters from util.ts
+
+## Anti-Patterns
+
+### 1. No consistent naming convention for multi-card exports
+
+Different files use different naming patterns for the same concept.
+
+```typescript
+// BAD: Inconsistent naming across files
+// billing/card.tsx
+export function BillingSummaryCard() { ... }
+export function InvoiceHealthCard() { ... }
+
+// domains/card.tsx
+export function DomainCompactCard() { ... }
+export function DomainHealthCard() { ... }
+
+// tenants/card.tsx
+export function TenantOverviewCard() { ... }  // "Overview" vs "Summary"
+export function TenantStatusCard() { ... }    // "Status" vs "Health"
+
+// FIX: Standardize on <Entity>Card, <Entity>CompactCard, <Entity>HealthCard, <Entity>StatsCard
 ```
 
-## Examples
+### 2. Onboarding cards mix form logic with display
 
-### Cookie Settings
+12 onboarding card files include form state management, validation, and submission alongside the card display.
 
-<Card className="w-[350px]">
-  <CardHeader>
-    <CardTitle>Cookie Settings</CardTitle>
-    <CardDescription>Manage your cookie settings here.</CardDescription>
-  </CardHeader>
-  <CardContent className="grid gap-6">
-    <div className="flex items-center justify-between space-x-2">
-      <label
-        htmlFor="necessary"
-        className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-      >
-        Strictly Necessary
-      </label>
-      <input id="necessary" type="checkbox" defaultChecked />
-    </div>
-    <div className="flex items-center justify-between space-x-2">
-      <label
-        htmlFor="functional"
-        className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-      >
-        Functional Cookies
-      </label>
-      <input id="functional" type="checkbox" />
-    </div>
-    <div className="flex items-center justify-between space-x-2">
-      <label
-        htmlFor="performance"
-        className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-      >
-        Performance Cookies
-      </label>
-      <input id="performance" type="checkbox" />
-    </div>
-  </CardContent>
-  <CardFooter>
-    <Button className="w-full">Save preferences</Button>
-  </CardFooter>
-</Card>
+```typescript
+// BAD: Form logic in card.tsx
+export function BrandingCard() {
+  const [logo, setLogo] = useState(null)
+  const handleUpload = async (file: File) => { ... }
+  const handleSave = async () => { ... }
+  // ... 200 lines of form logic + card display
+}
 
-### Payment Method
+// GOOD: Card is display-only, form logic in form.tsx
+export function BrandingCard({ data, onSelect }: BrandingCardProps) {
+  return (
+    <Card onClick={() => onSelect(data.id)}>
+      <CardContent>{/* display only */}</CardContent>
+    </Card>
+  )
+}
+```
 
-<Card className="w-[350px]">
-  <CardHeader>
-    <CardTitle>Payment Method</CardTitle>
-    <CardDescription>Add a new payment method to your account.</CardDescription>
-  </CardHeader>
-  <CardContent className="grid gap-6">
-    <div className="grid gap-2">
-      <label htmlFor="name">Name</label>
-      <input id="name" placeholder="First Last" />
-    </div>
-    <div className="grid gap-2">
-      <label htmlFor="number">Card number</label>
-      <input id="number" placeholder="" />
-    </div>
-    <div className="grid grid-cols-3 gap-4">
-      <div className="grid gap-2">
-        <label htmlFor="month">Expires</label>
-        <select id="month">
-          <option>Month</option>
-        </select>
-      </div>
-      <div className="grid gap-2">
-        <label htmlFor="year">Year</label>
-        <select id="year">
-          <option>Year</option>
-        </select>
-      </div>
-      <div className="grid gap-2">
-        <label htmlFor="cvc">CVC</label>
-        <input id="cvc" placeholder="CVC" />
-      </div>
-    </div>
-  </CardContent>
-  <CardFooter>
-    <Button className="w-full">Continue</Button>
-  </CardFooter>
-</Card>
+### 3. Inline formatting instead of util.ts
+
+Currency, dates, and status labels formatted directly in card components.
+
+```typescript
+// BAD: Inline formatting
+<div>${(amount / 100).toFixed(2)}</div>
+<div>{new Date(date).toLocaleDateString()}</div>
+
+// GOOD: Formatters from util.ts
+<div>{formatCurrency(amount, currency)}</div>
+<div>{formatTimeSince(date)}</div>
+```
+
+## Quick Reference
+
+### Card Variant Naming
+
+| Variant               | Purpose             | Example              |
+| --------------------- | ------------------- | -------------------- |
+| `<Entity>Card`        | Full entity display | `InvoiceCard`        |
+| `<Entity>CompactCard` | Minimal/list item   | `DomainCompactCard`  |
+| `<Entity>HealthCard`  | Status overview     | `InvoiceHealthCard`  |
+| `<Entity>StatsCard`   | KPI metric          | `InvoiceStatsCard`   |
+| `<Entity>SummaryCard` | Aggregate summary   | `BillingSummaryCard` |
+
+### Import Direction
+
+```
+config.ts     (status variants, labels)
+types.ts      (entity types)
+util.ts       (formatters)
+    |
+card.tsx      (imports all three, exports card variants)
+    |
++---+---+
+|       |
+all   featured
+.tsx    .tsx
+```
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  config.ts         # Status variants, labels
+  types.ts          # Entity types (InvoiceWithSchool, DomainStatus)
+  util.ts           # Formatters (formatCurrency, formatTimeSince)
+  card.tsx          # Card variants (this file)
+  all.tsx           # Grid/list view (imports card.tsx)
+  featured.tsx      # Featured/recent views (imports card.tsx)
+  content.tsx       # Server component
+```

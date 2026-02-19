@@ -95,6 +95,7 @@ const subjectSelect = {
   color: true,
   lang: true,
   department: true,
+  levels: true,
   totalChapters: true,
   totalLessons: true,
   usageCount: true,
@@ -116,6 +117,7 @@ function toCourseShape(
     color: string | null
     lang: string
     department: string
+    levels: string[]
     totalChapters: number
     totalLessons: number
     usageCount: number
@@ -149,6 +151,7 @@ function toCourseShape(
       thumbnailKey: subject.thumbnailKey,
       totalLessons: subject.totalLessons,
       averageRating: subject.averageRating,
+      levels: subject.levels,
     },
   }
 }
