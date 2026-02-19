@@ -157,6 +157,7 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
             quality={100}
             sizes="100vw"
             onError={onHeroError}
+            unoptimized
           />
         ) : (
           <div className="aspect-[5.4/1]" />
@@ -400,6 +401,7 @@ function TopicCard({
             quality={100}
             sizes="56px"
             onError={onError}
+            unoptimized
           />
         )}
       </div>
@@ -479,6 +481,7 @@ function LessonCard({
             quality={100}
             sizes="64px"
             onError={onError}
+            unoptimized
           />
         )}
       </div>

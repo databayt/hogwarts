@@ -236,6 +236,7 @@ export function StreamCourseDetailContent({
                     className="object-cover"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     priority
+                    unoptimized
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors group-hover:bg-black/40">
                     <PlayTriangleIcon className="size-16 text-white/80 transition-colors group-hover:text-white" />
@@ -418,6 +419,7 @@ export function StreamCourseDetailContent({
                         fill
                         className="object-cover"
                         sizes="40px"
+                        unoptimized
                       />
                     </div>
                   ) : (
@@ -473,6 +475,7 @@ export function StreamCourseDetailContent({
                               fill
                               className="object-cover"
                               sizes="224px"
+                              unoptimized
                             />
                           ) : (
                             <PlayTriangleIcon className="size-8 text-white/60" />

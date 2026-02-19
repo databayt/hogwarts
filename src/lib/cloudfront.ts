@@ -42,10 +42,12 @@ function getCloudFrontClient(): CloudFrontClient | null {
 }
 
 /**
- * Check if CloudFront is configured
+ * Check if CDN/S3 image serving is configured.
+ * Returns true when CloudFront domain OR S3 bucket is available,
+ * since getCloudFrontUrl() falls back to direct S3 URLs.
  */
 export function isCloudFrontConfigured(): boolean {
-  return !!process.env.CLOUDFRONT_DOMAIN
+  return !!(process.env.CLOUDFRONT_DOMAIN || process.env.AWS_S3_BUCKET)
 }
 
 /**
