@@ -158,48 +158,6 @@ const SUBJECT_COLORS: Record<string, string> = {
   "teacher-development": "#6366f1", // indigo
 }
 
-// Subject slug → ClickView banner image path
-const BANNER_MAP: Record<string, string> = {
-  arabic: "/clickview/banners/elementary-english-language-arts.jpg",
-  english: "/clickview/banners/high-english-language-arts.jpg",
-  french: "/clickview/banners/high-languages.jpg",
-  mathematics: "/clickview/banners/elementary-math.jpg",
-  science: "/clickview/banners/elementary-science.jpg",
-  physics: "/clickview/banners/high-physics.jpg",
-  chemistry: "/clickview/banners/high-chemistry.jpg",
-  biology: "/clickview/banners/high-life-science.jpg",
-  "earth-space-sciences": "/clickview/banners/high-earth-and-space-science.jpg",
-  "computer-science":
-    "/clickview/banners/high-computer-science-and-technology.jpg",
-  "science-engineering":
-    "/clickview/banners/high-science-and-engineering-practices.jpg",
-  history: "/clickview/banners/high-history.jpg",
-  "sudan-history": "/clickview/banners/high-history.jpg",
-  "world-history": "/clickview/banners/high-history.jpg",
-  geography: "/clickview/banners/high-geography.jpg",
-  "social-studies": "/clickview/banners/high-civics-and-government.jpg",
-  "civics-citizenship": "/clickview/banners/high-civics-and-government.jpg",
-  "business-economics": "/clickview/banners/high-business-and-economics.jpg",
-  psychology: "/clickview/banners/high-health.jpg",
-  "islamic-education": "/clickview/banners/high-religion.jpg",
-  quran: "/clickview/banners/high-religion.jpg",
-  ict: "/clickview/banners/high-computer-science-and-technology.jpg",
-  "the-arts": "/clickview/banners/elementary-arts.jpg",
-  music: "/clickview/banners/high-arts.jpg",
-  "physical-education": "/clickview/banners/high-physical-education.jpg",
-  health: "/clickview/banners/high-health.jpg",
-  "life-skills": "/clickview/banners/high-career-and-technical-education.jpg",
-  "career-education":
-    "/clickview/banners/high-career-and-technical-education.jpg",
-  celebrations:
-    "/clickview/banners/high-celebrations-commemorations-and-festivals.jpg",
-  "teacher-development":
-    "/clickview/banners/high-teacher-professional-development.jpg",
-  "world-languages": "/clickview/banners/high-languages.jpg",
-  sociology: "/clickview/banners/high-health.jpg",
-  "us-history": "/clickview/banners/high-history.jpg",
-}
-
 // ============================================================================
 // Main seed function
 // ============================================================================
@@ -218,8 +176,6 @@ export async function seedCatalog(
     const slug = toSlug(s.name)
     const levels = toLevels(s.levels)
 
-    const bannerImage = BANNER_MAP[slug] ?? null
-
     const subject = await prisma.catalogSubject.upsert({
       where: { slug },
       update: {
@@ -227,7 +183,7 @@ export async function seedCatalog(
         department: s.department,
         levels,
         description: s.description,
-        imageKey: bannerImage ?? s.imageKey ?? null,
+        imageKey: s.imageKey ?? null,
         color: SUBJECT_COLORS[slug] ?? s.color ?? null,
         sortOrder: i,
         status: "PUBLISHED",
@@ -241,7 +197,7 @@ export async function seedCatalog(
         description: s.description,
         country: "SD",
         system: "national",
-        imageKey: bannerImage ?? s.imageKey ?? null,
+        imageKey: s.imageKey ?? null,
         color: SUBJECT_COLORS[slug] ?? s.color ?? null,
         sortOrder: i,
         status: "PUBLISHED",
@@ -256,14 +212,6 @@ export async function seedCatalog(
   }
 
   logSuccess("CatalogSubjects", catalogSubjects.length, "global catalog")
-
-  // Update banners for any pre-existing subjects not in SUBJECTS constant
-  for (const [slug, bannerPath] of Object.entries(BANNER_MAP)) {
-    await prisma.catalogSubject.updateMany({
-      where: { slug, imageKey: { not: bannerPath } },
-      data: { imageKey: bannerPath },
-    })
-  }
 
   // ======================================================================
   // Step 2: Create CatalogChapters + CatalogLessons from ALL_TOPICS

@@ -103,13 +103,14 @@ export class AdmissionPortalPage extends SchoolBasePage {
 }
 
 // =============================================================================
-// CAMPAIGN SELECTOR PAGE (Public - /apply)
+// APPLY DASHBOARD PAGE (Public - /apply)
 // =============================================================================
 
 /**
- * Campaign selection page before starting an application
+ * Application dashboard page (replaces old campaign selector).
+ * Shows welcome header, draft applications, and new application options.
  */
-export class CampaignSelectorPage extends SchoolBasePage {
+export class ApplyDashboardPage extends SchoolBasePage {
   constructor(page: Page, subdomain: string = "demo", locale: Locale = "en") {
     super(page, subdomain, locale)
   }
@@ -127,36 +128,46 @@ export class CampaignSelectorPage extends SchoolBasePage {
   }
 
   /**
-   * Check if campaigns are displayed
+   * Check if dashboard content is displayed (Welcome heading or application options)
    */
-  async hasCampaigns(): Promise<boolean> {
-    // Look for campaign cards or list items
+  async hasDashboardContent(): Promise<boolean> {
     return this.isVisible(
-      '[data-testid="campaign-card"], .campaign-card, [role="listitem"], button'
+      'text=/Welcome|مرحب/, text=/Start a new application|ابدأ طلب/, a:has-text("Start from scratch")'
     )
   }
 
   /**
-   * Get count of visible campaigns
+   * Check if draft application cards are visible
    */
-  async getCampaignCount(): Promise<number> {
-    const campaigns = this.page.locator(
-      '[data-testid="campaign-card"], .campaign-card'
-    )
-    return campaigns.count()
+  async hasDraftApplications(): Promise<boolean> {
+    return this.isVisible("text=/Complete your application|أكمل طلبك/")
   }
 
   /**
-   * Select the first available campaign
+   * Click "Start from scratch" link to begin a new application
    */
-  async selectFirstCampaign(): Promise<void> {
-    const campaign = this.page.locator(
-      '[data-testid="campaign-card"] button, .campaign-card button, button:has-text("Apply"), button:has-text("تقدم")'
+  async clickStartFromScratch(): Promise<void> {
+    const link = this.page.locator(
+      'a:has-text("Start from scratch"), a:has-text("ابدأ من الصفر")'
     )
-    await campaign.first().click()
+    await link.first().click()
+    await this.waitForLoad()
+  }
+
+  /**
+   * Click "Import from profile" link
+   */
+  async clickImportFromProfile(): Promise<void> {
+    const link = this.page.locator(
+      'a:has-text("Import from profile"), a:has-text("استيراد من الملف")'
+    )
+    await link.first().click()
     await this.waitForLoad()
   }
 }
+
+/** @deprecated Use ApplyDashboardPage instead */
+export const CampaignSelectorPage = ApplyDashboardPage
 
 // =============================================================================
 // APPLICATION FORM PAGE (Public - /apply/[id]/[step])
@@ -256,6 +267,49 @@ export class ApplicationFormPage extends SchoolBasePage {
   }
 
   // ---------------------------------------------------------------------------
+  // Shadcn Select helper
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Select a shadcn Select option by finding the FormItem containing the label,
+   * clicking its trigger, waiting for the listbox, and clicking the option.
+   */
+  async selectShadcnByLabel(
+    labelText: string,
+    optionText: string
+  ): Promise<void> {
+    // Find the FormItem that contains the label text
+    const formItem = this.page
+      .locator(`label:has-text("${labelText}")`)
+      .locator("..")
+    const trigger = formItem.locator('button[role="combobox"]')
+
+    if (
+      !(await trigger
+        .first()
+        .isVisible({ timeout: TIMEOUTS.short })
+        .catch(() => false))
+    ) {
+      return // Field not present, skip
+    }
+
+    await trigger.first().click()
+
+    // Wait for the listbox popover
+    const listbox = this.page.locator("[role='listbox']")
+    await listbox.waitFor({ state: "visible", timeout: TIMEOUTS.short })
+
+    // Click the option
+    const option = listbox.locator(`[role="option"]:has-text("${optionText}")`)
+    await option.click()
+
+    // Wait for listbox to close
+    await listbox
+      .waitFor({ state: "hidden", timeout: TIMEOUTS.short })
+      .catch(() => {})
+  }
+
+  // ---------------------------------------------------------------------------
   // Step-specific form fillers
   // ---------------------------------------------------------------------------
 
@@ -274,15 +328,15 @@ export class ApplicationFormPage extends SchoolBasePage {
       lastName: "Student",
       dateOfBirth: "2010-01-15",
       gender: "Male",
-      nationality: "Saudi",
+      nationality: "Sudanese",
       ...data,
     }
 
     await this.fillIfExists('input[name="firstName"]', d.firstName)
     await this.fillIfExists('input[name="lastName"]', d.lastName)
     await this.fillIfExists('input[name="dateOfBirth"]', d.dateOfBirth)
-    await this.selectIfExists('select[name="gender"]', d.gender)
-    await this.fillIfExists('input[name="nationality"]', d.nationality)
+    await this.selectShadcnByLabel("Gender", d.gender)
+    await this.selectShadcnByLabel("Nationality", d.nationality)
   }
 
   /**
@@ -293,12 +347,18 @@ export class ApplicationFormPage extends SchoolBasePage {
     phone?: string
     address?: string
     city?: string
+    state?: string
+    postalCode?: string
+    country?: string
   }): Promise<void> {
     const d = {
       email: "test-applicant@example.com",
       phone: "+966501234567",
       address: "123 Test Street",
       city: "Riyadh",
+      state: "Riyadh",
+      postalCode: "11111",
+      country: "Sudan",
       ...data,
     }
 
@@ -306,6 +366,9 @@ export class ApplicationFormPage extends SchoolBasePage {
     await this.fillIfExists('input[name="phone"]', d.phone)
     await this.fillIfExists('input[name="address"]', d.address)
     await this.fillIfExists('input[name="city"]', d.city)
+    await this.fillIfExists('input[name="state"]', d.state)
+    await this.fillIfExists('input[name="postalCode"]', d.postalCode)
+    await this.selectShadcnByLabel("Country", d.country)
   }
 
   /**
@@ -334,22 +397,18 @@ export class ApplicationFormPage extends SchoolBasePage {
   async fillAcademicStep(data?: {
     applyingForClass?: string
     previousSchool?: string
+    preferredStream?: string
   }): Promise<void> {
     const d = {
       applyingForClass: "Grade 10",
       previousSchool: "Previous School Name",
+      preferredStream: "Science",
       ...data,
     }
 
-    await this.fillIfExists(
-      'input[name="applyingForClass"]',
-      d.applyingForClass
-    )
-    await this.selectIfExists(
-      'select[name="applyingForClass"]',
-      d.applyingForClass
-    )
     await this.fillIfExists('input[name="previousSchool"]', d.previousSchool)
+    await this.selectShadcnByLabel("Applying for Class", d.applyingForClass)
+    await this.selectShadcnByLabel("Preferred Stream", d.preferredStream)
   }
 
   /**

@@ -70,7 +70,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
         ? "ارفع المستندات وراجع طلبك"
         : "Upload documents and review your application",
       illustration:
-        "https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf93535e93be1310ae1935157bcebdd-1000x1000.svg",
+        "https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf53535e93be1310ae1935157bcebdd-1000x1000.svg",
     },
   ]
 

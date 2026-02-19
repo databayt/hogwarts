@@ -58,6 +58,15 @@ export const ONBOARDING_STEPS: Record<OnboardingStep, StepConfig> = {
     order: 5,
     dependencies: ["location"],
   },
+  schedule: {
+    step: "schedule",
+    title: "School Schedule",
+    description: "Choose your timetable structure based on your curriculum.",
+    group: "setup",
+    isRequired: false,
+    order: 5.5,
+    dependencies: ["location"],
+  },
   branding: {
     step: "branding",
     title: "School Branding",
@@ -196,6 +205,26 @@ export const SCHOOL_CATEGORIES = [
     value: "special",
     label: "Special Needs School",
     description: "Specialized education",
+  },
+  {
+    value: "national",
+    label: "National Curriculum",
+    description: "Government ministry standard",
+  },
+  {
+    value: "british",
+    label: "British Curriculum",
+    description: "IGCSE / A-Levels",
+  },
+  {
+    value: "ib",
+    label: "International Baccalaureate",
+    description: "IB Diploma Programme",
+  },
+  {
+    value: "american",
+    label: "American Curriculum",
+    description: "US educational standards",
   },
 ] as const
 

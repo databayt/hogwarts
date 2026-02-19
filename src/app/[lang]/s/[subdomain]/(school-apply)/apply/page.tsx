@@ -9,8 +9,8 @@ import {
   getActiveCampaigns,
   getDraftApplicationsByUser,
 } from "@/components/school-marketing/admission/actions"
-import CampaignSelectorContent from "@/components/school-marketing/admission/portal/campaign-selector-content"
 import { EnrollmentClosed } from "@/components/school-marketing/admission/portal/enrollment-closed"
+import ApplyDashboardClient from "@/components/school-marketing/apply/overview/apply-dashboard-client"
 
 interface ApplyPageProps {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -48,26 +48,20 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
 
   const campaigns = campaignsResult.success ? campaignsResult.data || [] : []
 
-  // K-12 auto-skip: single active campaign → go straight to overview
-  if (campaigns.length === 1) {
-    redirect(`/${lang}/apply/overview?id=${campaigns[0].id}`)
-  }
-
   // No active campaigns → show enrollment closed
   if (campaigns.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="mx-auto w-full max-w-xl px-3 sm:px-4">
-          <EnrollmentClosed
-            school={schoolResult.data}
-            dictionary={dictionary}
-            lang={lang}
-            subdomain={subdomain}
-          />
-        </div>
-      </div>
+      <EnrollmentClosed
+        school={schoolResult.data}
+        dictionary={dictionary}
+        lang={lang}
+        subdomain={subdomain}
+      />
     )
   }
+
+  // Pick campaign (K-12: single, multi: first active)
+  const campaignId = campaigns[0].id
 
   // Fetch draft applications for authenticated users
   let draftApplications: Awaited<
@@ -83,19 +77,14 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     }
   }
 
-  // 2+ campaigns → show selector (rare for K-12)
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="mx-auto w-full max-w-xl px-3 sm:px-4">
-        <CampaignSelectorContent
-          school={schoolResult.data}
-          campaigns={campaigns}
-          dictionary={dictionary}
-          lang={lang}
-          subdomain={subdomain}
-          draftApplications={draftApplications || []}
-        />
-      </div>
-    </div>
+    <ApplyDashboardClient
+      userName={session?.user?.name || undefined}
+      draftApplications={draftApplications || []}
+      campaignId={campaignId}
+      dictionary={dictionary}
+      lang={lang}
+      subdomain={subdomain}
+    />
   )
 }

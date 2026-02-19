@@ -209,7 +209,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {GENDER_OPTIONS.map((option) => (
+                      {GENDER_OPTIONS(isRTL).map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -244,7 +244,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {NATIONALITY_OPTIONS.map((option) => (
+                      {NATIONALITY_OPTIONS(isRTL).map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -276,7 +276,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {RELIGION_OPTIONS.map((option) => (
+                      {RELIGION_OPTIONS(isRTL).map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -310,7 +310,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {CATEGORY_OPTIONS.map((option) => (
+                    {CATEGORY_OPTIONS(isRTL).map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>

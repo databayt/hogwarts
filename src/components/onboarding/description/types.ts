@@ -6,7 +6,16 @@ export interface SchoolLevel {
 }
 
 export interface SchoolType {
-  id: "private" | "public" | "international" | "technical" | "special"
+  id:
+    | "private"
+    | "public"
+    | "international"
+    | "technical"
+    | "special"
+    | "national"
+    | "british"
+    | "ib"
+    | "american"
   title: string
   description: string
   icon?: string

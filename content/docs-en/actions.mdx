@@ -1,0 +1,880 @@
+---
+title: "Actions"
+description: "Canonical patterns for writing actions.ts server actions in feature directories"
+---
+
+## Current Progress (Audit)
+
+~220 actions.ts files audited across the codebase (~90,000 total lines):
+
+| Area                                            | Status | Detail                                                                                             |
+| ----------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------- |
+| `"use server"` directive                        | PASS   | All server action files include the directive                                                      |
+| Named exports only                              | PASS   | 100% use `export async function`, zero default exports                                             |
+| Co-located with feature directories             | PASS   | 94% live in `src/components/`, rest in root/lib                                                    |
+| `auth()` or `getTenantContext()` for auth       | PASS   | ~93% of files with DB access authenticate properly                                                 |
+| `schoolId` in queries (multi-tenant safety)     | PASS   | 76% properly scope; remaining are legitimately platform-level or pre-auth                          |
+| `revalidatePath` after mutations                | PASS   | 65% of mutation files call cache invalidation                                                      |
+| Section separator comments (`// ====`)          | PASS   | Large files consistently use separators                                                            |
+| `ActionResponse<T>` duplication                 | FAIL   | 27+ files define own ActionResponse/ActionResult instead of importing from `@/lib/action-response` |
+| Duplicate function names across files           | FAIL   | 40+ names (`createPeriod`, `getInvoices`, `setActiveTerm`) defined in 2-4 files each               |
+| `any` type usage                                | FAIL   | 150+ occurrences; worst: classes (15), teachers (14), timetable (13)                               |
+| Inline type definitions                         | FAIL   | 30+ files define types inline; dashboard/actions.ts defines 20+ types                              |
+| Missing Zod validation                          | FAIL   | ~55% of files accept raw/unvalidated input                                                         |
+| Raw `FormData.get()` without Zod                | FAIL   | 12+ files use `formData.get() as string` with no schema                                            |
+| Mixed read + write concerns                     | FAIL   | Nearly all files mix query functions with mutations                                                |
+| Bloated files (>500 lines)                      | FAIL   | 57 files; worst: timetable (5,692), dashboard (5,499), classes (1,823)                             |
+| `console.log` statements                        | FAIL   | 31 occurrences; login/action.ts logs user data (11), verification logs tokens (10)                 |
+| Inconsistent return type shapes                 | FAIL   | 8 different patterns: ActionResponse, ActionResult, BillingActionResult, `{ error }`, etc.         |
+| Naming convention (`action.ts` vs `actions.ts`) | INFO   | 11 files use singular (auth/onboarding), rest use plural                                           |
+
+## Six Categories of actions.ts
+
+### Category 1: CRUD Actions (~40 files)
+
+Full lifecycle for a Prisma model -- create, read, update, delete. Typically 200-1,300 lines. Follows the 5-step flow (auth, tenant, permission, validate, execute).
+
+Reference: `listings/grades/actions.ts` (661 lines), `listings/subjects/actions.ts`
+
+### Category 2: Form Step Actions (~16 files)
+
+Validate a step in a multi-step form, no DB writes. Typically 15-50 lines. Returns validated data or validation errors.
+
+Reference: `school-marketing/apply/personal/actions.ts` (20 lines)
+
+### Category 3: Integration Actions (~10 files)
+
+External API calls (Stripe, AI, email). Typically 200-1,000 lines. Wraps third-party SDKs with auth + tenant scoping.
+
+Reference: `billing/actions.ts` (1,056 lines)
+
+### Category 4: SaaS/Platform Admin Actions (~10 files)
+
+Tenant management, impersonation, operator operations. Uses `requireOperator()` instead of `auth()`. Includes audit logging.
+
+Reference: `saas-dashboard/tenants/actions.ts` (308 lines)
+
+### Category 5: Auth Actions (~6 files, singular `action.ts`)
+
+Login, register, reset, verification, 2FA. The only files that use singular `action.ts` naming. Operate before tenant context is available.
+
+Reference: `auth/login/action.ts` (356 lines)
+
+### Category 6: File/Upload Actions (~5 files)
+
+Upload, delete, quota management. Handle multipart data and external storage (R2/S3).
+
+Reference: `file/upload/actions.ts` (454 lines)
+
+## The 8 Rules
+
+### 1. Always `"use server"` at the top
+
+Every actions.ts file must start with the `"use server"` directive. This marks all exported functions as server actions callable from client components.
+
+```typescript
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+// ...
+```
+
+### 2. The 5-step flow: auth, tenant, permission, validate, execute+revalidate
+
+Every mutation follows the same 5-step structure. Reference: `grades/actions.ts`.
+
+```typescript
+export async function createResult(
+  input: z.infer<typeof resultCreateSchema>
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    // 1. Authenticate
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    // 2. Get tenant context
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    // 3. Check permission
+    if (!canCreateResult(authContext.role)) {
+      return { success: false, error: "Unauthorized to create results" }
+    }
+
+    // 4. Validate input
+    const parsed = resultCreateSchema.parse(input)
+
+    // 5. Execute + revalidate
+    const row = await db.result.create({
+      data: {
+        schoolId,
+        studentId: parsed.studentId,
+        score: parsed.score,
+        maxScore: parsed.maxScore,
+        grade: parsed.grade,
+      },
+    })
+
+    revalidatePath("/grades")
+    return { success: true, data: { id: row.id } }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create result",
+    }
+  }
+}
+```
+
+### 3. Import `ActionResponse` from `@/lib/action-response`
+
+Never define locally. The canonical type lives at `src/lib/action-response.ts` (41 lines):
+
+```typescript
+// src/lib/action-response.ts
+export interface ActionResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  code?: string
+  errors?: Record<string, string>
+}
+```
+
+```typescript
+// GOOD: Import from canonical location
+import type { ActionResponse } from "@/lib/action-response"
+
+// BAD: Redefined locally (27+ files do this)
+export type ActionResponse<T = void> =
+  | { success: true; data: T }
+  | { success: false; error: string }
+```
+
+### 4. Always validate with Zod
+
+Import schemas from validation.ts. Never accept raw FormData or untyped objects.
+
+```typescript
+// GOOD: Zod schema from validation.ts
+import { resultCreateSchema } from "./validation"
+
+export async function createResult(
+  input: z.infer<typeof resultCreateSchema>
+): Promise<ActionResponse<{ id: string }>> {
+  const parsed = resultCreateSchema.parse(input)
+  // ...
+}
+
+// BAD: Raw FormData without validation (12+ files)
+export async function createResult(formData: FormData) {
+  const name = formData.get("name") as string
+  const score = Number(formData.get("score"))
+  // No validation, no type safety
+}
+```
+
+### 5. Mutations only in actions.ts, reads in queries.ts
+
+Actions.ts should only contain functions that write data. Read-only queries belong in queries.ts.
+
+```typescript
+// actions.ts -- mutations only
+export async function createGrade(input: ...) { ... }
+export async function updateGrade(input: ...) { ... }
+export async function deleteGrade(id: string) { ... }
+
+// queries.ts -- reads only
+export async function getGrades(schoolId: string) { ... }
+export async function getGradeById(id: string) { ... }
+export async function getGradeStats(schoolId: string) { ... }
+
+// BAD: Read functions mixed into actions.ts (nearly all files do this)
+// actions.ts
+export async function getGrades(schoolId: string) { ... }  // should be in queries.ts
+export async function createGrade(input: ...) { ... }
+```
+
+### 6. Always `try/catch` with structured error returns
+
+Never throw from server actions. Always return `ActionResponse` with `success: false`.
+
+```typescript
+// GOOD: Structured error return
+export async function createItem(
+  input: z.infer<typeof schema>
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    // ... execute
+    return { success: true, data: { id: row.id } }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create item",
+    }
+  }
+}
+
+// BAD: Throwing from server action
+export async function createItem(input: unknown) {
+  const session = await auth()
+  if (!session) throw new Error("Unauthorized") // crashes client
+}
+```
+
+### 7. Always include `schoolId` in every query
+
+Multi-tenant isolation. Every database operation must be scoped by `schoolId`.
+
+```typescript
+// GOOD: schoolId in both create and find
+const row = await db.result.create({
+  data: { schoolId, ...parsed },
+})
+
+const existing = await db.result.findFirst({
+  where: { id, schoolId }, // scoped to tenant
+})
+
+// BAD: Missing schoolId (breaks tenant isolation)
+const existing = await db.result.findFirst({
+  where: { id }, // could return another school's data
+})
+```
+
+### 8. Max ~300 lines -- split into `actions/` subdirectory
+
+When a file exceeds ~300 lines, split by concern into an `actions/` subdirectory. Reference: `attendance/actions/` (14 files).
+
+```
+# BAD: Single 5,692-line timetable/actions.ts
+
+# GOOD: attendance/actions/ split by concern
+src/components/school-dashboard/attendance/actions/
+  core.ts           # Mark attendance, update records
+  bulk.ts           # Bulk operations
+  analytics.ts      # Attendance statistics
+  compliance.ts     # Policy enforcement
+  dashboard.ts      # Dashboard aggregations
+  excuses.ts        # Absence excuses
+  periods.ts        # Period management
+  policy.ts         # Attendance policies
+  qr.ts             # QR code attendance
+  master.ts         # Master attendance records
+  interventions.ts  # Student interventions
+  identifiers.ts    # Student ID lookups
+  README.md         # Directory documentation
+```
+
+## 4 Canonical Templates
+
+### Template A: CRUD Action
+
+Full 5-step flow for create/update/delete. Reference: `listings/grades/actions.ts`.
+
+```typescript
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import type { ActionResponse } from "@/lib/action-response"
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import { canCreateItem, getAuthContext } from "./authorization"
+import { itemCreateSchema, itemUpdateSchema } from "./validation"
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const ITEMS_PATH = "/items"
+
+// ============================================================================
+// Mutations
+// ============================================================================
+
+export async function createItem(
+  input: z.infer<typeof itemCreateSchema>
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    // 1. Auth
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    // 2. Tenant
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    // 3. Permission
+    if (!canCreateItem(authContext.role)) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // 4. Validate
+    const parsed = itemCreateSchema.parse(input)
+
+    // 5. Execute + revalidate
+    const row = await db.item.create({
+      data: { schoolId, ...parsed },
+    })
+
+    revalidatePath(ITEMS_PATH)
+    return { success: true, data: { id: row.id } }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create item",
+    }
+  }
+}
+
+export async function updateItem(
+  input: z.infer<typeof itemUpdateSchema>
+): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    const parsed = itemUpdateSchema.parse(input)
+    const { id, ...data } = parsed
+
+    const existing = await db.item.findFirst({
+      where: { id, schoolId },
+    })
+    if (!existing) {
+      return { success: false, error: "Item not found" }
+    }
+
+    await db.item.update({
+      where: { id },
+      data,
+    })
+
+    revalidatePath(ITEMS_PATH)
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update item",
+    }
+  }
+}
+
+export async function deleteItem(id: string): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    const existing = await db.item.findFirst({
+      where: { id, schoolId },
+    })
+    if (!existing) {
+      return { success: false, error: "Item not found" }
+    }
+
+    await db.item.delete({ where: { id } })
+
+    revalidatePath(ITEMS_PATH)
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete item",
+    }
+  }
+}
+```
+
+Key points:
+
+- Every function follows the 5-step flow
+- `ActionResponse` imported from `@/lib/action-response`
+- Zod schemas imported from `./validation`
+- `schoolId` in every query (create, find, update, delete)
+- `revalidatePath` after every mutation
+- Section separators (`// ====`) for navigation
+
+### Template B: Form Step Action
+
+Validate a step in a multi-step form. No DB writes, no auth needed. Reference: `apply/personal/actions.ts` (20 lines).
+
+```typescript
+"use server"
+
+import type { ActionResponse } from "@/lib/action-response"
+
+import { personalSchema, type PersonalSchemaType } from "./validation"
+
+export async function savePersonalStep(
+  data: PersonalSchemaType
+): Promise<ActionResponse<PersonalSchemaType>> {
+  try {
+    const validatedData = personalSchema.parse(data)
+    return { success: true, data: validatedData }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Validation failed",
+    }
+  }
+}
+```
+
+Key points:
+
+- Minimal -- 20 lines, single responsibility
+- No `auth()`, no `getTenantContext()` -- form steps don't write to DB
+- Returns validated data for the client to store in form state
+- Schema imported from `./validation`
+
+### Template C: SaaS Admin Action
+
+Platform operator actions with `requireOperator()` and audit logging. Reference: `saas-dashboard/tenants/actions.ts` (308 lines).
+
+```typescript
+"use server"
+
+import { revalidatePath } from "next/cache"
+import type { School } from "@prisma/client"
+import { z } from "zod"
+
+import type { ActionResponse } from "@/lib/action-response"
+import { db } from "@/lib/db"
+import {
+  logOperatorAudit,
+  requireNotImpersonating,
+  requireOperator,
+} from "@/components/saas-dashboard/lib/operator-auth"
+
+// ============= Validation Schemas =============
+
+const toggleActiveSchema = z.object({
+  tenantId: z.string().min(1),
+  reason: z.string().optional(),
+})
+
+// ============= Tenant Actions =============
+
+export async function tenantToggleActive(input: {
+  tenantId: string
+  reason?: string
+}): Promise<ActionResponse<School>> {
+  try {
+    // 1. Operator auth (not school auth)
+    const operator = await requireOperator()
+    await requireNotImpersonating()
+
+    // 2. Validate
+    const validated = toggleActiveSchema.parse(input)
+
+    // 3. Execute
+    const school = await db.school.findUnique({
+      where: { id: validated.tenantId },
+    })
+    if (!school) {
+      return { success: false, error: "School not found" }
+    }
+
+    const updatedSchool = await db.school.update({
+      where: { id: validated.tenantId },
+      data: { isActive: !school.isActive, updatedAt: new Date() },
+    })
+
+    // 4. Audit log
+    await logOperatorAudit({
+      userId: operator.userId,
+      schoolId: validated.tenantId,
+      action: updatedSchool.isActive
+        ? "TENANT_ACTIVATED"
+        : "TENANT_DEACTIVATED",
+      reason: validated.reason,
+    })
+
+    // 5. Revalidate
+    revalidatePath("/saas-dashboard/tenants")
+
+    return { success: true, data: updatedSchool }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to toggle tenant status",
+    }
+  }
+}
+```
+
+Key points:
+
+- `requireOperator()` instead of `auth()` -- SaaS admin, not school user
+- `requireNotImpersonating()` guards destructive actions
+- `logOperatorAudit()` after every mutation for compliance
+- No `schoolId` from session -- operator acts on any tenant via `tenantId` param
+- Validation schemas can be inline for small files (move to validation.ts when growing)
+
+### Template D: Integration Action
+
+External API calls (Stripe, AI, email) wrapped with auth + tenant scoping. Reference: `billing/actions.ts` (1,056 lines).
+
+```typescript
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import type { ActionResponse } from "@/lib/action-response"
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
+
+import type { SubscriptionWithTier } from "./types"
+import { subscriptionUpdateSchema } from "./validation"
+
+export async function updateSubscription(
+  input: z.infer<typeof subscriptionUpdateSchema>
+): Promise<ActionResponse<SubscriptionWithTier>> {
+  try {
+    // 1. Auth + tenant
+    const session = await auth()
+    const { schoolId } = await getTenantContext()
+    if (!session?.user || !schoolId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // 2. Validate
+    const parsed = subscriptionUpdateSchema.parse(input)
+
+    // 3. External API call
+    const stripeSubscription = await stripe.subscriptions.update(
+      parsed.stripeSubscriptionId,
+      { items: [{ price: parsed.newPriceId }] }
+    )
+
+    // 4. Sync to database
+    const subscription = await db.subscription.update({
+      where: { id: parsed.subscriptionId, schoolId },
+      data: {
+        stripePriceId: parsed.newPriceId,
+        status: stripeSubscription.status,
+        updatedAt: new Date(),
+      },
+      include: { subscriptionTier: true },
+    })
+
+    // 5. Revalidate
+    revalidatePath("/billing")
+
+    return { success: true, data: subscription }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update subscription",
+    }
+  }
+}
+```
+
+Key points:
+
+- External API call (Stripe) wrapped in try/catch
+- Database synced after external call succeeds
+- Types imported from `./types` for complex return shapes
+- `schoolId` scopes the database update (not the Stripe call)
+
+## Anti-Patterns
+
+### 1. ActionResponse defined 27+ times locally
+
+The canonical version at `src/lib/action-response.ts` is ignored. Each file defines its own variant.
+
+```typescript
+// GOOD: One import
+import type { ActionResponse } from "@/lib/action-response"
+
+// grades/actions.ts -- discriminated union variant
+export type ActionResponse<T = void> =
+  | { success: true; data: T }
+  | { success: false; error: string }
+
+// tenants/actions.ts -- Error object variant
+type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: Error }
+
+// billing/actions.ts -- yet another name
+type BillingActionResult<T> = { success: boolean; data?: T; error?: string }
+```
+
+### 2. 5,692-line timetable monolith
+
+`timetable/actions.ts` is the longest file in the codebase. Contains 100+ functions mixing reads, writes, scheduling algorithms, and conflict detection.
+
+```
+# BAD: timetable/actions.ts (5,692 lines)
+
+# GOOD: Split like attendance/actions/
+timetable/actions/
+  schedule.ts       # Create/update schedules
+  conflicts.ts      # Conflict detection
+  periods.ts        # Period management
+  assignments.ts    # Teacher assignments
+  generation.ts     # Auto-generation algorithm
+  queries.ts        # Read operations (not in actions/)
+```
+
+### 3. 40+ duplicate function names
+
+Same function name defined in multiple files. Causes confusion and potential import collisions.
+
+```typescript
+// periods/actions.ts
+export async function createPeriod(...) { ... }
+
+// timetable/actions.ts
+export async function createPeriod(...) { ... }
+
+// attendance/actions/periods.ts
+export async function createPeriod(...) { ... }
+```
+
+Fix: Prefix with domain -- `createAttendancePeriod`, `createTimetablePeriod`.
+
+### 4. console.log logging sensitive auth data
+
+31 console.log statements across action files. Worst offenders log user sessions and verification tokens.
+
+```typescript
+// BAD: login/action.ts (11 console.log calls)
+console.log("User data:", user) // logs email, role, schoolId
+console.log("Session:", session) // logs full session object
+
+// BAD: verification/action.ts (10 console.log calls)
+console.log("Token:", token) // logs verification token
+
+// GOOD: Remove or use structured logging that redacts PII
+```
+
+### 5. Raw FormData without Zod
+
+12+ files use `formData.get() as string` with no schema validation.
+
+```typescript
+// BAD: Direct FormData access
+export async function updateProfile(formData: FormData) {
+  const name = formData.get("name") as string
+  const email = formData.get("email") as string
+  // No validation, no type safety, injection risk
+}
+
+// GOOD: Parse through Zod schema
+export async function updateProfile(
+  input: z.infer<typeof profileUpdateSchema>
+): Promise<ActionResponse<void>> {
+  const parsed = profileUpdateSchema.parse(input)
+  // ...
+}
+```
+
+### 6. 150+ `any` types
+
+Type erasure across action files. Worst files: classes (15), teachers (14), timetable (13).
+
+```typescript
+// BAD: any parameters
+export async function updateSchedule(data: any) { ... }
+
+// BAD: any return
+export async function getStats(): Promise<any> { ... }
+
+// GOOD: Typed parameters and returns
+export async function updateSchedule(
+  data: z.infer<typeof scheduleSchema>
+): Promise<ActionResponse<void>> { ... }
+```
+
+### 7. Read functions in actions.ts
+
+Nearly all action files mix reads and writes. Reads belong in `queries.ts`.
+
+```typescript
+// BAD: Read function in actions.ts
+export async function getInvoices(schoolId: string) {
+  return db.invoice.findMany({ where: { schoolId } })
+}
+
+// GOOD: Move to queries.ts
+// queries.ts
+export async function getInvoices(schoolId: string) {
+  return db.invoice.findMany({ where: { schoolId } })
+}
+```
+
+### 8. Eight different return type patterns
+
+No consistent return shape across the codebase.
+
+```typescript
+// Pattern 1: ActionResponse (canonical)
+{ success: boolean; data?: T; error?: string }
+
+// Pattern 2: ActionResult (tenants)
+{ success: true; data: T } | { success: false; error: Error }
+
+// Pattern 3: BillingActionResult
+{ success: boolean; data?: T; error?: string }
+
+// Pattern 4: Raw object
+{ error: string } | { data: T }
+
+// Pattern 5: void return (throws on error)
+export async function doThing(): Promise<void> { throw ... }
+
+// Pattern 6: boolean
+export async function doThing(): Promise<boolean> { ... }
+
+// Pattern 7: data | null
+export async function getData(): Promise<Item | null> { ... }
+
+// Pattern 8: redirect (no return)
+export async function doThing() { redirect("/somewhere") }
+```
+
+Fix: Use `ActionResponse<T>` from `@/lib/action-response` for all mutations. Reads in queries.ts can return data directly.
+
+## Quick Reference
+
+### The 5-Step Flow
+
+| Step | Code                                     | Purpose                    |
+| ---- | ---------------------------------------- | -------------------------- |
+| 1    | `await auth()`                           | Authenticate the user      |
+| 2    | `await getTenantContext()`               | Get schoolId               |
+| 3    | `canDoThing(role)`                       | Check RBAC permission      |
+| 4    | `schema.parse(input)`                    | Validate with Zod          |
+| 5    | `db.model.create()` + `revalidatePath()` | Execute + invalidate cache |
+
+### Function Naming Conventions
+
+| Prefix    | Purpose                | Example                    |
+| --------- | ---------------------- | -------------------------- |
+| `create`  | Insert new record      | `createResult`             |
+| `update`  | Modify existing record | `updateResult`             |
+| `delete`  | Remove record          | `deleteResult`             |
+| `toggle`  | Flip boolean state     | `tenantToggleActive`       |
+| `save`    | Form step validation   | `savePersonalStep`         |
+| `process` | Complex multi-step     | `processPayment`           |
+| `start`   | Begin workflow         | `tenantStartImpersonation` |
+| `end`     | Complete workflow      | `tenantEndTrial`           |
+
+### Return Type
+
+Always `ActionResponse<T>` from `@/lib/action-response`:
+
+```typescript
+import type { ActionResponse } from "@/lib/action-response"
+
+// Mutation with data return
+Promise<ActionResponse<{ id: string }>>
+
+// Mutation without data return
+Promise<ActionResponse<void>>
+
+// Complex data return
+Promise<ActionResponse<SubscriptionWithTier>>
+```
+
+### Input Patterns
+
+| Pattern                  | When to Use                |
+| ------------------------ | -------------------------- |
+| `z.infer<typeof schema>` | Standard -- always prefer  |
+| `FormData`               | Never -- parse through Zod |
+| `{ field: type }`        | Only in SaaS admin (small) |
+
+### Import Direction
+
+```
+validation.ts     (Zod schemas)
+    |
+actions.ts        (imports schemas, imports ActionResponse)
+    |
++---+---+
+|       |
+form  content
+.tsx   .tsx
+```
+
+Actions import FROM validation.ts. Client components call actions via `useTransition` or form action.
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  actions.ts        # Server actions -- mutations only (this file)
+  queries.ts        # Read-only database queries
+  validation.ts     # Zod schemas (actions.ts imports from here)
+  authorization.ts  # Permission checks (actions.ts imports from here)
+  types.ts          # Shared types
+  config.ts         # Static constants
+  content.tsx       # Server component (calls queries.ts)
+  form.tsx          # Client component (calls actions.ts)
+  table.tsx         # Client component
+  columns.tsx       # Column definitions
+```
+
+### When to Use `actions/` Subdirectory
+
+| File Size   | Action                                                |
+| ----------- | ----------------------------------------------------- |
+| < 300 lines | Single `actions.ts` file                              |
+| 300-600     | Consider splitting, mandatory if 3+ distinct concerns |
+| 600+        | Must split into `actions/` subdirectory               |

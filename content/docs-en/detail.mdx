@@ -1,0 +1,500 @@
+---
+title: "Detail"
+description: "Canonical patterns for writing detail.tsx view components in feature directories"
+---
+
+## Current Progress (Audit)
+
+12 detail.tsx files audited across the codebase (~4,217 total lines):
+
+| Area                                         | Status | Detail                                                              |
+| -------------------------------------------- | ------ | ------------------------------------------------------------------- |
+| Standard props `{ data, error, dict, lang }` | PASS   | 10/12 files follow the standard prop pattern                        |
+| `<Alert variant="destructive">` for errors   | PASS   | Consistent error state handling with shadcn Alert                   |
+| Back navigation with `<ArrowLeft>`           | PASS   | All files include back button in header                             |
+| `<Tabs>` for sub-sections                    | PASS   | 8/12 files use Tabs for organizing detail content                   |
+| Loading skeleton export                      | PASS   | 9/12 files export a `Loading` skeleton component                    |
+| `"use client"` directive                     | PASS   | 11/12 files are client components                                   |
+| 963-line catalog/detail.tsx monolith         | FAIL   | Mixes detail view, enrollment flow, review system, and video player |
+| product/detail.tsx is a 31-line stub         | FAIL   | Incomplete implementation with placeholder content                  |
+
+## 3 Categories of detail.tsx
+
+### Category 1: School-Dashboard Full-Page Detail (~8 files)
+
+Full-page detail view for a school entity (student, teacher, class, announcement). Standard layout: error state, header with back button, info card grid, tabs for sub-sections.
+
+Reference: `listings/announcements/detail.tsx` (268 lines), `listings/classes/detail.tsx` (427 lines)
+
+### Category 2: SaaS-Dashboard Sheet/Sidebar Detail (~3 files)
+
+Detail view rendered in a sheet or sidebar panel. Compact layout for admin overview with quick actions.
+
+Reference: `saas-dashboard/tenants/detail.tsx`, `saas-dashboard/billing/detail.tsx`
+
+### Category 3: Server Component Detail (~1 file)
+
+Detail view as a server component (no `"use client"`). Data fetched directly in the component.
+
+Reference: `exams/results/detail.tsx` (241 lines)
+
+## The 5 Rules
+
+### 1. Standard props: `{ data, error, dictionary, lang }`
+
+Every detail component accepts the same four props. Data comes from the server component (content.tsx), not fetched inside the detail.
+
+```typescript
+// GOOD: Standard detail props
+interface AnnouncementDetailContentProps {
+  data: AnnouncementDetailResult | null
+  error?: string | null
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export function AnnouncementDetailContent({
+  data,
+  error,
+  dictionary,
+  lang,
+}: AnnouncementDetailContentProps) {
+  // ...
+}
+```
+
+### 2. Always handle error state first
+
+Error and not-found states render before any content. Use `<Alert variant="destructive">` from shadcn/ui.
+
+```typescript
+// GOOD: Error state at the top of the render
+if (error || !data) {
+  return (
+    <div className="space-y-4">
+      <Button variant="ghost" onClick={() => router.back()}>
+        <ArrowLeft className="me-2 h-4 w-4" />
+        {t.back}
+      </Button>
+      <Alert variant="destructive">
+        <CircleAlert className="h-4 w-4" />
+        <AlertTitle>{t.errorTitle}</AlertTitle>
+        <AlertDescription>{error || t.notFound}</AlertDescription>
+      </Alert>
+    </div>
+  )
+}
+
+// BAD: Error handling mixed into main content
+return (
+  <div>
+    {error ? <p>Error: {error}</p> : <div>{/* content */}</div>}
+  </div>
+)
+```
+
+### 3. Always export a `Loading` skeleton
+
+Every detail file should export a `Loading` component for Suspense fallbacks. Use shadcn `<Skeleton>` components matching the detail layout.
+
+```typescript
+// GOOD: Co-located loading skeleton
+export function Loading() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-8 w-48" />
+      <div className="grid gap-4 md:grid-cols-2">
+        <Skeleton className="h-32" />
+        <Skeleton className="h-32" />
+      </div>
+      <Skeleton className="h-64" />
+    </div>
+  )
+}
+
+// Used in page.tsx with Suspense
+import { Suspense } from "react"
+import { Loading } from "@/components/feature/detail"
+
+<Suspense fallback={<Loading />}>
+  <DetailContent data={data} />
+</Suspense>
+```
+
+### 4. Use `<Tabs>` for sub-sections
+
+Organize detail content into tabs when there are 3+ distinct information groups. Keeps the page scannable.
+
+```typescript
+// GOOD: Tabs for sub-sections
+<Tabs defaultValue="overview">
+  <TabsList>
+    <TabsTrigger value="overview">{t.overview}</TabsTrigger>
+    <TabsTrigger value="schedule">{t.schedule}</TabsTrigger>
+    <TabsTrigger value="history">{t.history}</TabsTrigger>
+  </TabsList>
+  <TabsContent value="overview">
+    <OverviewCards data={data} />
+  </TabsContent>
+  <TabsContent value="schedule">
+    <ScheduleTable data={data.schedule} />
+  </TabsContent>
+  <TabsContent value="history">
+    <HistoryList data={data.history} />
+  </TabsContent>
+</Tabs>
+```
+
+### 5. Max ~300 lines
+
+Detail files over 300 lines should extract tab content into separate components.
+
+```
+# BAD: catalog/detail.tsx (963 lines)
+
+# GOOD: Split tab content
+catalog/
+  detail.tsx          # Shell with tabs (~200 lines)
+  detail-overview.tsx # Overview tab content
+  detail-reviews.tsx  # Reviews tab content
+  detail-enrollment.tsx # Enrollment tab content
+```
+
+## 2 Canonical Templates
+
+### Template A: School-Dashboard Detail
+
+Full-page detail with error state, header, info cards, and tabs. Reference: `listings/announcements/detail.tsx` (268 lines).
+
+```typescript
+"use client"
+
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, CircleAlert, Megaphone } from "lucide-react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+interface AnnouncementDetailResult {
+  id: string
+  schoolId: string
+  title: string | null
+  body: string | null
+  scope: string
+  priority: string
+  published: boolean
+  createdAt: Date
+}
+
+interface AnnouncementDetailContentProps {
+  data: AnnouncementDetailResult | null
+  error?: string | null
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export function AnnouncementDetailContent({
+  data,
+  error,
+  dictionary,
+  lang,
+}: AnnouncementDetailContentProps) {
+  const router = useRouter()
+  const isRTL = lang === "ar"
+  const d = dictionary?.school?.announcements
+
+  const t = {
+    back: d?.back || "Back",
+    details: d?.details || "Announcement Details",
+    title: d?.announcementTitle || "Title",
+    scope: d?.scope || "Scope",
+    priority: d?.priority || "Priority",
+    status: d?.status || "Status",
+    published: d?.published || "Published",
+    draft: d?.draft || "Draft",
+    errorTitle: d?.error || "Error",
+    notFound: d?.notFound || "Announcement not found",
+  }
+
+  // 1. Error state
+  if (error || !data) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ArrowLeft className="me-2 h-4 w-4" />
+          {t.back}
+        </Button>
+        <Alert variant="destructive">
+          <CircleAlert className="h-4 w-4" />
+          <AlertTitle>{t.errorTitle}</AlertTitle>
+          <AlertDescription>{error || t.notFound}</AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  // 2. Header with back button
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ArrowLeft className="me-2 h-4 w-4" />
+          {t.back}
+        </Button>
+        <div>
+          <h2>{data.title}</h2>
+          <Badge variant={data.published ? "default" : "secondary"}>
+            {data.published ? t.published : t.draft}
+          </Badge>
+        </div>
+      </div>
+
+      {/* 3. Info card grid */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.scope}</CardTitle>
+          </CardHeader>
+          <CardContent>{data.scope}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.priority}</CardTitle>
+          </CardHeader>
+          <CardContent>{data.priority}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.status}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data.published ? t.published : t.draft}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 4. Content body */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="prose max-w-none">{data.body}</div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// 5. Loading skeleton
+export function Loading() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-10 w-20" />
+        <Skeleton className="h-8 w-64" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Skeleton className="h-32" />
+        <Skeleton className="h-32" />
+        <Skeleton className="h-32" />
+      </div>
+      <Skeleton className="h-64" />
+    </div>
+  )
+}
+```
+
+Key points:
+
+- Standard 4-prop interface: `data`, `error`, `dictionary`, `lang`
+- Error state renders first with back button + Alert
+- Info cards in a responsive grid
+- i18n via dictionary with fallback strings
+- Co-located `Loading` skeleton matching the layout
+
+### Template B: Server Component Detail
+
+Server component that fetches data directly. No `"use client"` directive. Reference: `exams/results/detail.tsx` (241 lines).
+
+```typescript
+import { ArrowLeft, CircleAlert } from "lucide-react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { ResultDetail } from "./types"
+
+interface ResultDetailProps {
+  data: ResultDetail | null
+  error?: string | null
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export function ResultDetailContent({
+  data,
+  error,
+  dictionary,
+  lang,
+}: ResultDetailProps) {
+  const t = dictionary?.school?.exams
+
+  if (error || !data) {
+    return (
+      <Alert variant="destructive">
+        <CircleAlert className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error || "Result not found"}</AlertDescription>
+      </Alert>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2>{data.studentName} - {data.examTitle}</h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>Score</CardTitle></CardHeader>
+          <CardContent>{data.score} / {data.maxScore}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Grade</CardTitle></CardHeader>
+          <CardContent>
+            <Badge>{data.grade}</Badge>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+export function Loading() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-8 w-64" />
+      <div className="grid gap-4 md:grid-cols-2">
+        <Skeleton className="h-32" />
+        <Skeleton className="h-32" />
+      </div>
+    </div>
+  )
+}
+```
+
+Key points:
+
+- No `"use client"` -- can be rendered on the server
+- No `useRouter` -- back navigation handled by parent or Link component
+- Same standard props pattern
+- Same Loading skeleton export
+
+## Anti-Patterns
+
+### 1. 963-line catalog/detail.tsx monolith
+
+Mixes detail view, enrollment flow, review system, and video player in a single file.
+
+```
+# BAD: catalog/detail.tsx (963 lines)
+
+# GOOD: Split by tab/section
+catalog/
+  detail.tsx              # Shell with header + tabs (~200 lines)
+  detail-overview.tsx     # Course overview
+  detail-curriculum.tsx   # Curriculum/lessons
+  detail-reviews.tsx      # Student reviews
+  detail-enrollment.tsx   # Enrollment CTA
+```
+
+### 2. Missing Loading skeleton
+
+Detail files without a co-located Loading skeleton force consumers to create ad-hoc skeletons.
+
+```typescript
+// BAD: No loading export
+export function DetailContent({ data }: Props) { ... }
+// Consumer has to make up a skeleton: <Skeleton className="h-96" />
+
+// GOOD: Always export Loading
+export function DetailContent({ data }: Props) { ... }
+export function Loading() { ... } // Matches detail layout
+```
+
+### 3. Data fetching inside detail component
+
+Detail components should receive data via props, not fetch it themselves.
+
+```typescript
+// BAD: Fetching inside detail
+export function DetailContent({ id }: { id: string }) {
+  const [data, setData] = useState(null)
+  useEffect(() => {
+    fetchItem(id).then(setData)
+  }, [id])
+  // ...
+}
+
+// GOOD: Data via props (fetched in content.tsx or page.tsx)
+export function DetailContent({ data, error }: DetailProps) {
+  // ...
+}
+```
+
+## Quick Reference
+
+### Standard Detail Layout
+
+```
+1. Error state → Alert with back button
+2. Header → Back button + title + status badge
+3. Info cards → Grid of key metrics
+4. Tabs → Sub-sections (overview, history, etc.)
+5. Loading → Skeleton matching layout
+```
+
+### Import Direction
+
+```
+types.ts          (DetailResult type)
+    |
+detail.tsx        (imports types, renders view)
+    |
+content.tsx       (fetches data, passes to detail)
+    |
+page.tsx          (renders content with Suspense)
+```
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  types.ts              # DetailResult type
+  detail.tsx            # Detail view component (this file)
+  detail-overview.tsx   # Tab content (if needed)
+  detail-history.tsx    # Tab content (if needed)
+  content.tsx           # Server component (passes data)
+  actions.ts            # Server actions for mutations
+```
+
+### What Belongs Where
+
+| Content                  | Belongs in    | Not in      |
+| ------------------------ | ------------- | ----------- |
+| Detail view rendering    | `detail.tsx`  | content.tsx |
+| Data fetching            | `content.tsx` | detail.tsx  |
+| Loading skeleton         | `detail.tsx`  | page.tsx    |
+| Tab content (>100 lines) | Separate file | detail.tsx  |
+| Detail result type       | `types.ts`    | detail.tsx  |
+| Error Alert              | `detail.tsx`  | content.tsx |

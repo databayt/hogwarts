@@ -72,7 +72,7 @@ export async function getCatalogCourseSidebarData(
       slug: subject.slug,
       description: subject.description,
       imageUrl: getCatalogImageUrl(
-        subject.thumbnailKey,
+        subject.bannerUrl ?? subject.thumbnailKey,
         subject.imageKey,
         "original"
       ),

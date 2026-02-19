@@ -39,16 +39,19 @@ async function goToSchoolPage(
 }
 
 /**
- * Helper to select a shadcn Select option.
- * shadcn Select uses Radix: click trigger → wait for [role=listbox] → click option.
+ * Helper to select a shadcn Select option by finding the FormItem via label text.
+ * shadcn Select uses Radix: find label → click trigger in same FormItem → wait for listbox → click option.
  */
-async function selectShadcnOption(
+async function selectShadcnByLabel(
   page: import("@playwright/test").Page,
-  triggerSelector: string,
+  labelText: string,
   optionText: string
 ): Promise<void> {
-  const trigger = page.locator(triggerSelector)
-  await trigger.click()
+  // Find the FormItem containing the label, then click the trigger within it
+  const formItem = page.locator(`label:has-text("${labelText}")`).locator("..")
+  const trigger = formItem.locator('button[role="combobox"]')
+  await trigger.first().click()
+
   // Wait for the popover/listbox to appear
   const listbox = page.locator("[role='listbox']")
   await listbox.waitFor({ state: "visible", timeout: TIMEOUTS.short })
@@ -167,29 +170,27 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
     expect(page.url()).toContain("/apply")
     await assertNoSSE(page)
 
-    // Step 4: Handle campaign selector or auto-skip
-    // If single campaign (K-12 default), we land directly on /overview
-    // If multiple campaigns, we need to click "Start from scratch"
-    const isOnOverview = page.url().includes("/overview")
-    if (!isOnOverview) {
-      const startFromScratch = page.locator(
-        'button:has-text("Start from scratch"), button:has-text("ابدأ من الصفر")'
-      )
-      await startFromScratch.waitFor({
-        state: "visible",
-        timeout: TIMEOUTS.medium,
-      })
-      await startFromScratch.click()
-      await page.waitForLoadState("domcontentloaded")
-      await page.waitForURL(/\/overview/, { timeout: TIMEOUTS.navigation })
-    }
+    // Step 4: Application dashboard — click "Start from scratch" link
+    // The dashboard always shows (no auto-redirect for single campaign anymore)
+    const startFromScratch = page.locator(
+      'a:has-text("Start from scratch"), a:has-text("ابدأ من الصفر")'
+    )
+    await startFromScratch.waitFor({
+      state: "visible",
+      timeout: TIMEOUTS.medium,
+    })
+    await startFromScratch.click()
+    await page.waitForLoadState("domcontentloaded")
+    await page.waitForURL(/\/overview/, { timeout: TIMEOUTS.navigation })
 
     // Step 5: Overview page - click "Get Started"
     const getStarted = page.locator(
-      'button:has-text("Get Started"), button:has-text("ابدأ")'
+      'button:has-text("Get Started"), button:has-text("ابدأ"), a:has-text("Get Started"), a:has-text("ابدأ")'
     )
-    await getStarted.waitFor({ state: "visible", timeout: TIMEOUTS.medium })
-    await getStarted.click()
+    await getStarted
+      .first()
+      .waitFor({ state: "visible", timeout: TIMEOUTS.medium })
+    await getStarted.first().click()
     await page.waitForLoadState("domcontentloaded")
 
     // Step 6: Should be on personal step
@@ -201,19 +202,11 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
     await page.locator('input[name="lastName"]').fill("Applicant")
     await page.locator('input[name="dateOfBirth"]').fill("2010-03-15")
 
-    // Select gender (shadcn Select)
-    await selectShadcnOption(
-      page,
-      'button[role="combobox"]:near(:text("Gender")), button[role="combobox"]:near(:text("الجنس"))',
-      "ذكر"
-    )
+    // Select gender (shadcn Select — English labels on /en/ route)
+    await selectShadcnByLabel(page, "Gender", "Male")
 
     // Select nationality
-    await selectShadcnOption(
-      page,
-      'button[role="combobox"]:near(:text("Nationality")), button[role="combobox"]:near(:text("الجنسية"))',
-      "سوداني"
-    )
+    await selectShadcnByLabel(page, "Nationality", "Sudanese")
 
     await clickFooterNext(page)
 
@@ -230,12 +223,8 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
     await page.locator('input[name="state"]').fill("Khartoum")
     await page.locator('input[name="postalCode"]').fill("11111")
 
-    // Select country
-    await selectShadcnOption(
-      page,
-      'button[role="combobox"]:near(:text("Country")), button[role="combobox"]:near(:text("البلد"))',
-      "السودان"
-    )
+    // Select country (now bilingual — English labels on /en/ route)
+    await selectShadcnByLabel(page, "Country", "Sudan")
 
     await clickFooterNext(page)
 
@@ -252,7 +241,8 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
     await page.waitForURL(/\/academic/, { timeout: TIMEOUTS.navigation })
     await assertNoSSE(page)
 
-    await page.locator('input[name="applyingForClass"]').fill("Grade 10")
+    // applyingForClass is a shadcn Select (not text input)
+    await selectShadcnByLabel(page, "Applying for Class", "Grade 10")
 
     await clickFooterNext(page)
 

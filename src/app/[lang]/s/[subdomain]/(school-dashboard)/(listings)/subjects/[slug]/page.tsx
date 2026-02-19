@@ -24,6 +24,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       color: true,
       imageKey: true,
       thumbnailKey: true,
+      bannerUrl: true,
       levels: true,
       totalChapters: true,
       totalLessons: true,
@@ -63,11 +64,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
     notFound()
   }
 
-  const heroImageUrl = getCatalogImageUrl(
-    subject.thumbnailKey,
-    subject.imageKey,
-    "lg"
-  )
+  const heroImageUrl = getCatalogImageUrl(subject.bannerUrl, null, "original")
 
   const chapters = subject.chapters.map((ch) => ({
     id: ch.id,

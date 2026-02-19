@@ -55,6 +55,7 @@ export {
   AdmissionPortalPage,
   APPLICATION_STEPS,
   ApplicationFormPage,
+  ApplyDashboardPage,
   CampaignSelectorPage,
   InquiryPage,
   StatusTrackerPage,

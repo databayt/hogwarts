@@ -1,0 +1,674 @@
+---
+title: "Validation"
+description: "Canonical patterns for writing validation.ts Zod schemas in feature directories"
+---
+
+## Current Progress (Audit)
+
+105 validation.ts files audited across the codebase (~12,848 total lines):
+
+| Area                                           | Status | Detail                                                                                     |
+| ---------------------------------------------- | ------ | ------------------------------------------------------------------------------------------ |
+| Co-located with feature directories            | PASS   | 100% live in `src/components/`                                                             |
+| Zod as validation library                      | PASS   | 102/105 use Zod (97%); 3 use nuqs for search params                                        |
+| Named exports only                             | PASS   | Zero default exports across all 105 files                                                  |
+| Schema + type co-export                        | PASS   | 77 files (73%) export both schema and `z.infer` type                                       |
+| `as const` on enum sources                     | PASS   | Config constants used with `z.enum(Object.keys(...))`                                      |
+| Schema composition (`.extend()`, `.partial()`) | PASS   | ~40 `.extend()`, ~20 `.partial()`, ~15 `.pick()` usages                                    |
+| `.refine()` for cross-field validation         | PASS   | 58 occurrences across ~30 files (date ranges, coupled fields)                              |
+| No shared validation primitives                | FAIL   | No `src/lib/validation.ts` -- email/phone/name validated independently in every file       |
+| Duplicate email validation                     | FAIL   | 6+ different email patterns across 7+ files; no shared `emailSchema`                       |
+| Duplicate phone validation                     | FAIL   | 8+ distinct patterns with conflicting regex; 2 exported `phoneSchema` with different rules |
+| Duplicate question bank schemas                | FAIL   | 3 files (exams/qbank, exams/generate, grades/generate) ~96% identical at 304-316 lines     |
+| Schemas inline in actions.ts                   | FAIL   | 14 actions.ts files define 30+ schemas instead of importing from validation.ts             |
+| Missing validation.ts files                    | FAIL   | ~25 feature directories have actions.ts but no validation.ts                               |
+| `z.any()` / `z.unknown()` usage                | FAIL   | 20 occurrences in 11 files                                                                 |
+| Bare `.min(1)` without error message           | FAIL   | 149 occurrences (23.5%) vs 486 with messages                                               |
+| Bloated files (>300 lines)                     | FAIL   | 7 files; worst: onboarding (659), letters (546), profile (533)                             |
+| Inconsistent inferred type naming              | INFO   | 4 conventions: `FormData`, `Input`, `SchemaType`, `Schema` for same concept                |
+| i18n factory functions                         | INFO   | 14 files use `create<Name>Schema(dictionary)` pattern; 91 use hardcoded English            |
+
+## Six Categories of validation.ts
+
+### Category 1: CRUD Entity Schemas (~38 files, 36%)
+
+`createSchema` + `updateSchema` (`.partial().extend({ id })`) + `filterSchema`. Typically 40-260 lines.
+
+Reference: `library/validation.ts` (59 lines), `sales/validation.ts` (256 lines)
+
+### Category 2: Multi-Step Form Schemas (~22 files, 21%)
+
+Per-step schemas for wizard forms. Typically 12-50 lines. Each step validated independently before advancing.
+
+Reference: `onboarding/discount/validation.ts` (12 lines), `apply/personal/validation.ts` (33 lines)
+
+### Category 3: Comprehensive Feature Schemas (~15 files, 14%)
+
+Many related schemas for complex domains with base schemas, query schemas, mutation schemas. Typically 200-430 lines.
+
+Reference: `timetable/validation.ts` (428 lines)
+
+### Category 4: Schema Factory Functions (i18n) (~14 files, 13%)
+
+`export function create<Name>Schema(dictionary)` with `getValidationMessages()` for localized error messages.
+
+Reference: `auth/validation.ts` (209 lines)
+
+### Category 5: Search Params (nuqs) (~4 files, 4%)
+
+`createSearchParamsCache()` for URL state, not Zod.
+
+Reference: `saas-dashboard/billing/validation.ts` (18 lines)
+
+### Category 6: Composed Schemas (~12 files, 11%)
+
+Base + domain-specific schemas using `.extend()`, `.merge()`, `.pick()`.
+
+Reference: `listings/teachers/validation.ts` (184 lines)
+
+## The 7 Rules
+
+### 1. All schemas live in validation.ts
+
+Never define Zod schemas inline in actions.ts, form.tsx, or content.tsx. The validation.ts file is the single source of truth for input shapes.
+
+```typescript
+// actions.ts
+import { bookSchema } from "./validation"
+
+// GOOD: Schema in validation.ts, imported by actions.ts
+// validation.ts
+export const bookSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  author: z.string().min(1, "Author is required"),
+})
+
+export async function createBook(input: z.infer<typeof bookSchema>) {
+  const parsed = bookSchema.parse(input)
+  // ...
+}
+
+// BAD: Schema inline in actions.ts (14 files do this)
+// actions.ts
+const toggleActiveSchema = z.object({
+  tenantId: z.string().min(1),
+  reason: z.string().optional(),
+})
+```
+
+### 2. Always export `z.infer` type alongside schema
+
+Every exported schema must have a co-exported inferred type. This gives consumers type safety without importing Zod.
+
+```typescript
+// GOOD: Schema + type co-exported
+export const bookSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  author: z.string().min(1, "Author is required"),
+})
+
+export type BookInput = z.infer<typeof bookSchema>
+
+// BAD: Schema without type (28 files do this)
+export const bookSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+})
+// Consumer must: z.infer<typeof bookSchema> everywhere
+```
+
+### 3. Use `<Name>Input` suffix for inferred types
+
+Standardize on `Input` suffix for all inferred schema types. Avoid `FormData`, `SchemaType`, `Schema`, or other variants.
+
+```typescript
+// GOOD: Consistent <Name>Input naming
+export type BookInput = z.infer<typeof bookSchema>
+export type LeadInput = z.infer<typeof createLeadSchema>
+export type PersonalInput = z.infer<typeof personalSchema>
+
+// BAD: 4 different conventions across 77 files
+export type BookSchema = z.infer<typeof bookSchema> // "Schema" suffix
+export type PersonalSchemaType = z.infer<typeof personalSchema> // "SchemaType" suffix
+export type DiscountFormData = z.infer<typeof discountSchema> // "FormData" suffix
+export type UpdateBookSchema = z.infer<typeof updateBookSchema> // "Schema" suffix
+```
+
+### 4. Compose schemas with `.partial().extend()` for updates
+
+Never duplicate create schema fields for update schemas. Use Zod composition to derive update from create.
+
+```typescript
+// GOOD: Update derived from create (library/validation.ts)
+export const bookSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  author: z.string().min(1, "Author is required"),
+  genre: z.string().min(1, "Genre is required"),
+  // ... all fields
+})
+
+export const updateBookSchema = bookSchema.partial().extend({
+  id: z.string().cuid("Invalid book ID"),
+  schoolId: z.string().cuid("Invalid school ID"),
+})
+
+// BAD: Duplicate all fields manually
+export const updateBookSchema = z.object({
+  id: z.string().cuid("Invalid book ID"),
+  title: z.string().min(1, "Title is required").optional(),
+  author: z.string().min(1, "Author is required").optional(),
+  genre: z.string().min(1, "Genre is required").optional(),
+  // ... repeating every field
+})
+```
+
+### 5. Always include custom error messages
+
+Never use bare `.min(1)` without explaining what's missing. Custom messages provide immediate user feedback.
+
+```typescript
+// GOOD: Custom error messages
+export const bookSchema = z.object({
+  title: z.string().min(1, "Title is required").max(255, "Title is too long"),
+  rating: z
+    .number()
+    .min(0, "Rating must be at least 0")
+    .max(5, "Rating cannot exceed 5"),
+})
+
+// BAD: Bare validators without messages (149 occurrences)
+export const bookSchema = z.object({
+  title: z.string().min(1), // User sees "String must contain at least 1 character(s)"
+  rating: z.number().min(0), // User sees "Number must be greater than or equal to 0"
+})
+```
+
+### 6. Shared primitives in `src/lib/validation.ts`
+
+Email, phone, CUID, and name patterns should be defined once and imported everywhere. No feature should invent its own email regex.
+
+```typescript
+// feature/validation.ts
+import { cuidSchema, emailSchema, phoneSchema } from "@/lib/validation"
+
+// GOOD: Shared primitives (target state)
+// src/lib/validation.ts
+export const emailSchema = z
+  .string()
+  .email("Invalid email address")
+  .transform((val) => val.toLowerCase())
+
+export const phoneSchema = z
+  .string()
+  .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number")
+
+export const cuidSchema = z
+  .string()
+  .min(1, "ID is required")
+  .regex(/^c[a-z0-9]{24}$/, "Invalid CUID format")
+
+export const nameSchema = z
+  .string()
+  .min(1, "Name is required")
+  .max(100, "Name is too long")
+  .trim()
+
+export const createLeadSchema = z.object({
+  email: emailSchema.optional().or(z.literal("")),
+  phone: phoneSchema.optional().or(z.literal("")),
+  assignedToId: cuidSchema,
+})
+
+// BAD: 6 different email patterns (current state)
+// auth/validation.ts:    z.string().email()
+// sales/validation.ts:   z.string().email("Invalid email address").transform(...)
+// teachers/validation.ts: z.string().email("Valid email is required")
+// apply/contact/validation.ts: z.string().email()
+// students/validation.ts: z.string().email("Invalid email")
+// staff/validation.ts:   z.string().email()
+```
+
+### 7. Max ~200 lines
+
+Split large files into base + domain schemas or by concern. Files over 300 lines indicate missing abstractions or duplicate schemas.
+
+```typescript
+// BAD: onboarding/validation.ts (659 lines) -- everything in one file
+
+// GOOD: Split by concern
+// validation/base.ts       -- shared field schemas (~30 lines)
+// validation/school.ts     -- school setup schemas (~80 lines)
+// validation/branding.ts   -- branding/theme schemas (~60 lines)
+// validation/curriculum.ts -- curriculum config schemas (~80 lines)
+// validation/index.ts      -- re-exports all schemas
+```
+
+## 4 Canonical Templates
+
+### Template A: CRUD Entity
+
+Full lifecycle for a Prisma model -- create, update (partial+extend), delete, plus inferred types. Reference: `library/validation.ts` (59 lines).
+
+```typescript
+import { z } from "zod"
+
+// Create schema -- all required fields for a new record
+export const bookSchema = z.object({
+  title: z.string().min(1, "Title is required").max(255, "Title is too long"),
+  author: z
+    .string()
+    .min(1, "Author is required")
+    .max(255, "Author name is too long"),
+  genre: z.string().min(1, "Genre is required"),
+  rating: z
+    .number()
+    .min(0, "Rating must be at least 0")
+    .max(5, "Rating cannot exceed 5"),
+  coverUrl: z.string().url("Must be a valid URL"),
+  coverColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Must be a valid hex color"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  totalCopies: z.number().min(1, "Must have at least 1 copy"),
+  videoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  summary: z.string().min(10, "Summary must be at least 10 characters"),
+})
+
+export type BookInput = z.infer<typeof bookSchema>
+
+// Update schema -- all fields optional except ID
+export const updateBookSchema = bookSchema.partial().extend({
+  id: z.string().cuid("Invalid book ID"),
+  schoolId: z.string().cuid("Invalid school ID"),
+})
+
+export type UpdateBookInput = z.infer<typeof updateBookSchema>
+
+// Delete schema -- just the IDs
+export const deleteBookSchema = z.object({
+  id: z.string().cuid("Invalid book ID"),
+  schoolId: z.string().cuid("Invalid school ID"),
+})
+
+export type DeleteBookInput = z.infer<typeof deleteBookSchema>
+```
+
+Key points:
+
+- Create schema defines all required fields with custom error messages
+- Update uses `.partial().extend({ id })` -- never duplicates fields
+- Delete is minimal -- just the IDs needed to locate and authorize
+- Every schema has a co-exported `z.infer` type
+
+### Template B: Multi-Step Form
+
+Single step in a wizard form, importing limits from config. Reference: `apply/personal/validation.ts` (33 lines).
+
+```typescript
+import { z } from "zod"
+
+import { FORM_LIMITS } from "../config.client"
+
+export const personalSchema = z.object({
+  firstName: z
+    .string()
+    .min(FORM_LIMITS.NAME_MIN_LENGTH, "First name is too short")
+    .max(FORM_LIMITS.NAME_MAX_LENGTH, "First name is too long")
+    .trim(),
+  middleName: z
+    .string()
+    .max(FORM_LIMITS.NAME_MAX_LENGTH, "Middle name is too long")
+    .trim()
+    .optional()
+    .or(z.literal("")),
+  lastName: z
+    .string()
+    .min(FORM_LIMITS.NAME_MIN_LENGTH, "Last name is too short")
+    .max(FORM_LIMITS.NAME_MAX_LENGTH, "Last name is too long")
+    .trim(),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"], {
+    message: "Gender is required",
+  }),
+  nationality: z.string().min(1, "Nationality is required"),
+  religion: z.string().optional().or(z.literal("")),
+  category: z.string().optional().or(z.literal("")),
+})
+
+export type PersonalInput = z.infer<typeof personalSchema>
+```
+
+Key points:
+
+- Single schema per step -- validated independently before advancing
+- Limits imported from config (not hardcoded magic numbers)
+- Optional fields use `.optional().or(z.literal(""))` for empty string handling
+- `.trim()` on text fields to prevent whitespace-only submissions
+- Minimal file: `onboarding/discount/validation.ts` is only 12 lines
+
+### Template C: Comprehensive Feature
+
+Many related schemas for a complex domain with JSDoc, base schemas, query schemas, and mutation schemas. Reference: `timetable/validation.ts` (428 lines).
+
+```typescript
+import { z } from "zod"
+
+/**
+ * Timetable Validation Schemas
+ *
+ * Comprehensive input validation for timetable operations including:
+ * - Weekly schedule slot management (day, period, class, teacher, room)
+ * - Conflict detection (teacher double-booking, room conflicts)
+ * - School week configuration (working days, lunch periods)
+ */
+
+// ============================================================================
+// Base Schemas
+// ============================================================================
+
+export const dayOfWeekSchema = z
+  .number()
+  .int()
+  .min(0, "Day must be between 0 (Sunday) and 6 (Saturday)")
+  .max(6, "Day must be between 0 (Sunday) and 6 (Saturday)")
+
+export const cuidSchema = z
+  .string()
+  .min(1, "ID is required")
+  .regex(/^c[a-z0-9]{24}$/, "Invalid CUID format")
+
+export const workingDaysSchema = z
+  .array(dayOfWeekSchema)
+  .min(1, "At least one working day is required")
+  .max(7, "Cannot have more than 7 working days")
+  .refine(
+    (days) => new Set(days).size === days.length,
+    "Working days must be unique"
+  )
+
+// ============================================================================
+// Query Schemas
+// ============================================================================
+
+export const getWeeklyTimetableSchema = z.object({
+  termId: cuidSchema,
+  weekOffset: z
+    .union([z.literal(0), z.literal(1)])
+    .default(0)
+    .optional(),
+  view: z
+    .object({
+      classId: cuidSchema.optional(),
+      teacherId: cuidSchema.optional(),
+    })
+    .optional(),
+})
+
+export type GetWeeklyTimetableInput = z.infer<typeof getWeeklyTimetableSchema>
+
+// ============================================================================
+// Mutation Schemas
+// ============================================================================
+
+// ... slot creation, bulk upsert, conflict resolution schemas
+```
+
+Key points:
+
+- JSDoc header explains the domain, key validation rules, and design decisions
+- Base schemas (`dayOfWeekSchema`, `cuidSchema`) reused across query and mutation schemas
+- Section separators (`// ====`) group related schemas
+- `.refine()` for cross-field validation (working days uniqueness)
+- `.describe()` for schema self-documentation
+
+### Template D: i18n Schema Factory
+
+Factory functions that accept a dictionary for localized error messages. Reference: `auth/validation.ts` (209 lines).
+
+```typescript
+import { UserRole } from "@prisma/client"
+import * as z from "zod"
+
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getValidationMessages } from "@/components/internationalization/helpers"
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export function createLoginSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary)
+
+  return z.object({
+    email: z.string().email({
+      message: v.email(),
+    }),
+    password: z.string().min(1, {
+      message: v.get("passwordRequired"),
+    }),
+    code: z.optional(z.string()),
+  })
+}
+
+export function createSettingsSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary)
+
+  return z
+    .object({
+      name: z.optional(z.string()),
+      isTwoFactorEnabled: z.optional(z.boolean()),
+      role: z.enum([UserRole.ADMIN, UserRole.USER]),
+      email: z.optional(z.string().email()),
+      password: z.optional(z.string().min(6)),
+      newPassword: z.optional(z.string().min(6)),
+    })
+    .refine(
+      (data) => {
+        if (data.newPassword && !data.password) {
+          return false
+        }
+        return true
+      },
+      {
+        message: v.get("passwordRequired"),
+        path: ["password"],
+      }
+    )
+}
+```
+
+Key points:
+
+- Factory function `create<Name>Schema(dictionary)` returns a Zod schema with translated messages
+- `getValidationMessages(dictionary)` provides localized validation strings
+- `.refine()` for coupled validation (newPassword requires currentPassword)
+- Enum values imported from `@prisma/client` (not redefined)
+- 14 files use this pattern; 91 files use hardcoded English (migration candidate)
+
+## Anti-Patterns
+
+### 1. No shared validation primitives
+
+Email validated 6 different ways, phone validated 8+ different ways with conflicting regex. No `src/lib/validation.ts` exists.
+
+```typescript
+// 6 different email patterns across the codebase:
+z.string().email()                                          // auth
+z.string().email("Invalid email address").transform(...)    // sales
+z.string().email("Valid email is required")                 // teachers
+z.string().email("Invalid email")                           // students
+z.string().email().optional()                               // staff
+z.string().email({ message: v.email() })                    // i18n factory
+
+// Fix: One emailSchema in src/lib/validation.ts
+export const emailSchema = z
+  .string()
+  .email("Invalid email address")
+  .transform((val) => val.toLowerCase())
+```
+
+### 2. 3 near-identical 300+ line question bank schemas
+
+`exams/qbank/validation.ts` (316 lines), `exams/generate/validation.ts` (304 lines), and `grades/generate/validation.ts` (310 lines) are ~96% identical.
+
+Fix: Extract shared `questionBankSchema` to a common module, with feature-specific extensions.
+
+### 3. 14 actions.ts files with inline schemas
+
+30+ Zod schemas defined directly in actions.ts instead of being imported from validation.ts.
+
+```typescript
+// GOOD: Import from validation.ts
+import { toggleActiveSchema } from "./validation"
+
+// BAD: tenants/actions.ts defines its own schema
+const toggleActiveSchema = z.object({
+  tenantId: z.string().min(1),
+  reason: z.string().optional(),
+})
+```
+
+### 4. ~25 features missing validation.ts entirely
+
+Feature directories have actions.ts with raw input acceptance but no validation.ts file. All actions should validate through Zod schemas.
+
+### 5. 20 `z.any()` / `z.unknown()` escape hatches
+
+11 files use `z.any()` or `z.unknown()`, bypassing type safety. Each should be replaced with a proper schema.
+
+```typescript
+// BAD: Type escape hatch
+export const importSchema = z.object({
+  data: z.any(), // What shape? What constraints?
+  options: z.unknown(), // Completely untyped
+})
+
+// GOOD: Explicit schema
+export const importSchema = z.object({
+  data: z.array(
+    z.object({
+      name: z.string(),
+      email: z.string().email(),
+    })
+  ),
+  options: z.object({
+    skipDuplicates: z.boolean().default(false),
+    dryRun: z.boolean().default(false),
+  }),
+})
+```
+
+### 6. 149 bare `.min(1)` without custom error messages
+
+23.5% of `.min(1)` calls lack a custom message. Users see generic Zod errors like "String must contain at least 1 character(s)" instead of helpful guidance.
+
+```typescript
+// BAD: Generic Zod error message
+name: z.string().min(1),
+
+// GOOD: Descriptive error
+name: z.string().min(1, "Name is required"),
+```
+
+### 7. 4 different inferred type naming conventions
+
+77 files export inferred types with inconsistent suffixes.
+
+```typescript
+// Current inconsistency:
+export type BookSchema = z.infer<typeof bookSchema> // "Schema" (most common)
+export type PersonalSchemaType = z.infer<typeof personalSchema> // "SchemaType"
+export type DiscountFormData = z.infer<typeof discountSchema> // "FormData"
+export type UpdateBookSchema = z.infer<typeof updateBookSchema> // "Schema" (again)
+
+// Fix: Standardize on <Name>Input
+export type BookInput = z.infer<typeof bookSchema>
+export type PersonalInput = z.infer<typeof personalSchema>
+export type DiscountInput = z.infer<typeof discountSchema>
+```
+
+### 8. 659-line onboarding monolith
+
+`onboarding/validation.ts` is 659 lines covering school setup, branding, curriculum, discounts, and more. Should be split by concern into a `validation/` subdirectory.
+
+## Quick Reference
+
+### Schema Naming Conventions
+
+| Schema                 | Purpose                   | Example            |
+| ---------------------- | ------------------------- | ------------------ |
+| `<entity>Schema`       | Create/base schema        | `bookSchema`       |
+| `update<Entity>Schema` | Partial update with ID    | `updateBookSchema` |
+| `delete<Entity>Schema` | Delete by ID              | `deleteBookSchema` |
+| `<entity>FilterSchema` | Query filters             | `leadFilterSchema` |
+| `create<Entity>Schema` | Alternative create naming | `createLeadSchema` |
+| `<step>Schema`         | Form step schema          | `personalSchema`   |
+
+### Type Export Naming
+
+Always `<Name>Input`:
+
+```typescript
+export type BookInput = z.infer<typeof bookSchema>
+export type UpdateBookInput = z.infer<typeof updateBookSchema>
+export type DeleteBookInput = z.infer<typeof deleteBookSchema>
+export type PersonalInput = z.infer<typeof personalSchema>
+export type LeadInput = z.infer<typeof createLeadSchema>
+```
+
+### Composition Patterns
+
+| Method                    | Purpose                       | Example                                           |
+| ------------------------- | ----------------------------- | ------------------------------------------------- |
+| `.partial()`              | Make all fields optional      | `bookSchema.partial()`                            |
+| `.extend({ id })`         | Add fields to existing schema | `bookSchema.partial().extend({ id: z.string() })` |
+| `.pick({ name: true })`   | Select specific fields        | `bookSchema.pick({ title: true, author: true })`  |
+| `.omit({ rating: true })` | Exclude specific fields       | `bookSchema.omit({ rating: true })`               |
+| `.merge(other)`           | Combine two schemas           | `baseSchema.merge(employmentSchema)`              |
+| `.refine(fn)`             | Cross-field validation        | Date range, coupled fields                        |
+
+### Import Direction
+
+```
+config.ts         (limits, option arrays)
+    |
+validation.ts     (imports limits, exports schemas + types)
+    |
++---+---+
+|       |
+actions form
+.ts     .tsx
+```
+
+Validation imports FROM config.ts. Actions and forms import FROM validation.ts.
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  config.ts         # Static constants, limits (validation.ts imports from here)
+  validation.ts     # Zod schemas + inferred types (this file)
+  actions.ts        # Server actions (imports schemas from validation.ts)
+  form.tsx          # Client component (imports types from validation.ts)
+  content.tsx       # Server component
+  types.ts          # Non-Zod types
+```
+
+### What Belongs Where
+
+| Content                           | Belongs in      | Not in               |
+| --------------------------------- | --------------- | -------------------- |
+| Zod schemas                       | `validation.ts` | actions.ts, form.tsx |
+| Inferred types (`z.infer`)        | `validation.ts` | types.ts             |
+| Non-Zod interfaces                | `types.ts`      | validation.ts        |
+| Option arrays, limits             | `config.ts`     | validation.ts        |
+| Schema parsing (`schema.parse()`) | `actions.ts`    | validation.ts        |
+| Form resolver (`zodResolver()`)   | `form.tsx`      | validation.ts        |
+
+### Shared Primitives Candidates
+
+| Primitive            | Current State                    | Target Location                       |
+| -------------------- | -------------------------------- | ------------------------------------- |
+| `emailSchema`        | 6+ different patterns            | `src/lib/validation.ts`               |
+| `phoneSchema`        | 8+ conflicting regex             | `src/lib/validation.ts`               |
+| `cuidSchema`         | 3+ definitions                   | `src/lib/validation.ts`               |
+| `nameSchema`         | Inconsistent min/max/trim        | `src/lib/validation.ts`               |
+| `dateRangeRefine`    | ~15 manual `.refine()` calls     | `src/lib/validation.ts`               |
+| `questionBankSchema` | 3 near-identical 300+ line files | `src/components/shared/validation.ts` |

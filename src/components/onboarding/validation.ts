@@ -43,6 +43,10 @@ export const schoolCategorySchema = z.enum([
   "international",
   "technical",
   "special",
+  "national",
+  "british",
+  "ib",
+  "american",
 ])
 export const currencySchema = z.enum(["USD", "EUR", "GBP", "CAD", "AUD"])
 export const paymentScheduleSchema = z.enum([

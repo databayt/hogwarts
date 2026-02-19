@@ -2,8 +2,8 @@
 
 import React, { useCallback, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { User } from "lucide-react"
 
+import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
@@ -20,8 +20,7 @@ interface Props {
 export default function PersonalContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
-  const { locale } = useLocale()
-  const isRTL = locale === "ar"
+  const { locale, isRTL } = useLocale()
   const subdomain = params.subdomain as string
   const id = params.id as string
 
@@ -73,30 +72,18 @@ export default function PersonalContent({ dictionary }: Props) {
     ?.apply?.personal ?? {}) as Record<string, string>
 
   return (
-    <div className="space-y-8">
-      <div className="mx-auto max-w-4xl">
-        {/* Header */}
-        <div className="mb-8 flex items-start gap-4">
-          <div className="bg-primary/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
-            <User className="text-primary h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">
-              {dict.title || PERSONAL_STEP_CONFIG.label}
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              {dict.description || PERSONAL_STEP_CONFIG.description}
-            </p>
-          </div>
-        </div>
-
-        {/* Form */}
-        <PersonalForm
-          ref={personalFormRef}
-          initialData={initialData as PersonalStepData}
-          dictionary={dictionary}
-        />
-      </div>
-    </div>
+    <FormLayout>
+      <FormHeading
+        title={dict.title || PERSONAL_STEP_CONFIG.label(isRTL)}
+        description={
+          dict.description || PERSONAL_STEP_CONFIG.description(isRTL)
+        }
+      />
+      <PersonalForm
+        ref={personalFormRef}
+        initialData={initialData as PersonalStepData}
+        dictionary={dictionary}
+      />
+    </FormLayout>
   )
 }

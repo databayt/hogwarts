@@ -4524,6 +4524,96 @@ export async function createDefaultPeriods(input: {
   return { createdCount }
 }
 
+/**
+ * Apply a timetable structure from the catalog.
+ * Creates Period records from the structure definition and updates week config.
+ */
+export async function applyTimetableStructure(input: {
+  yearId: string
+  structureSlug: string
+  replaceExisting?: boolean
+}): Promise<{ createdCount: number }> {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Import dynamically to avoid circular dependency with "use server"
+  const { getStructureBySlug, LEGACY_TEMPLATE_MAP } =
+    await import("./structures")
+
+  // Support legacy template names
+  const slug = LEGACY_TEMPLATE_MAP[input.structureSlug] || input.structureSlug
+  const structure = getStructureBySlug(slug)
+  if (!structure) throw new Error("Unknown timetable structure: " + slug)
+
+  // Check existing periods
+  const existing = await db.period.count({
+    where: { schoolId, yearId: input.yearId },
+  })
+
+  if (existing > 0) {
+    if (input.replaceExisting) {
+      await db.period.deleteMany({
+        where: { schoolId, yearId: input.yearId },
+      })
+    } else {
+      throw new Error(
+        "Periods already exist for this year. Set replaceExisting to replace them."
+      )
+    }
+  }
+
+  let createdCount = 0
+  for (const period of structure.periods) {
+    const [startHour, startMin] = period.startTime.split(":").map(Number)
+    const [endHour, endMin] = period.endTime.split(":").map(Number)
+
+    await db.period.create({
+      data: {
+        schoolId,
+        yearId: input.yearId,
+        name: period.name,
+        startTime: new Date(Date.UTC(1970, 0, 1, startHour, startMin)),
+        endTime: new Date(Date.UTC(1970, 0, 1, endHour, endMin)),
+      },
+    })
+    createdCount++
+  }
+
+  // Update week config with structure's working days
+  const schoolWeekConfigModel = getModel("schoolWeekConfig")
+  if (schoolWeekConfigModel) {
+    await schoolWeekConfigModel.upsert({
+      where: {
+        schoolId_termId: { schoolId, termId: null },
+      },
+      update: {
+        workingDays: structure.workingDays,
+        defaultLunchAfterPeriod: structure.lunchAfterPeriod,
+      },
+      create: {
+        schoolId,
+        termId: null,
+        workingDays: structure.workingDays,
+        defaultLunchAfterPeriod: structure.lunchAfterPeriod,
+      },
+    })
+  }
+
+  await logTimetableAction("apply_structure", {
+    entityType: "period",
+    metadata: {
+      yearId: input.yearId,
+      structureSlug: slug,
+      createdCount,
+      replaced: input.replaceExisting ?? false,
+    },
+  })
+
+  return { createdCount }
+}
+
 // ============================================================================
 // TERM SETTINGS & HOLIDAY CALENDAR
 // ============================================================================

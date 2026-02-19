@@ -9,22 +9,16 @@ import { getCloudFrontUrl, isCloudFrontConfigured } from "@/lib/cloudfront"
 export type CatalogImageSize = "sm" | "md" | "lg" | "original"
 
 /**
- * Resolve the best available image URL for a catalog entity.
- * Priority: thumbnailKey CDN → imageKey static PNG → null
+ * Resolve the CDN image URL for a catalog entity.
+ * Returns a CloudFront URL for the given S3 key, or null if unavailable.
  */
 export function getCatalogImageUrl(
   thumbnailKey: string | null | undefined,
-  imageKey: string | null | undefined,
+  _imageKey: string | null | undefined,
   size: CatalogImageSize = "original"
 ): string | null {
   if (thumbnailKey && isCloudFrontConfigured()) {
     return getCloudFrontUrl(`${thumbnailKey}-${size}.webp`)
-  }
-
-  if (imageKey) {
-    if (imageKey.startsWith("https://")) return imageKey
-    if (imageKey.startsWith("/")) return imageKey
-    return `/subjects/${imageKey}.png`
   }
 
   return null

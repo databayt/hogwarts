@@ -122,23 +122,16 @@ export async function processAndUploadCatalogImage(
 // --- URL Resolution ---
 
 /**
- * Get the display URL for a catalog image.
- *
- * Priority: thumbnailKey CDN → imageKey static PNG → null
+ * Get the CDN display URL for a catalog image.
+ * Returns a CloudFront URL for the given S3 key, or null if unavailable.
  */
 export function getCatalogImageUrl(
   thumbnailKey: string | null | undefined,
-  imageKey: string | null | undefined,
+  _imageKey: string | null | undefined,
   size: CatalogImageSize = "original"
 ): string | null {
   if (thumbnailKey && isCloudFrontConfigured()) {
     return getCloudFrontUrl(`${thumbnailKey}-${size}.webp`)
-  }
-
-  if (imageKey) {
-    if (imageKey.startsWith("https://")) return imageKey
-    if (imageKey.startsWith("/")) return imageKey
-    return `/subjects/${imageKey}.png`
   }
 
   return null

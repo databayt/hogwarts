@@ -3,6 +3,7 @@
 import { notFound } from "next/navigation"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 
 /**
@@ -11,7 +12,11 @@ import { db } from "@/lib/db"
  *
  * Migration: Replaces get-course.ts which queries StreamCourse.
  */
-export async function getCatalogCourse(slug: string, schoolId: string | null) {
+export async function getCatalogCourse(
+  slug: string,
+  schoolId: string | null,
+  lang: string = "en"
+) {
   const subject = await db.catalogSubject.findFirst({
     where: {
       slug,
@@ -75,13 +80,29 @@ export async function getCatalogCourse(slug: string, schoolId: string | null) {
     }
   }
 
-  // Get enrollment count for this subject
-  const enrollmentCount = await db.enrollment.count({
-    where: {
-      catalogSubjectId: subject.id,
-      isActive: true,
-    },
-  })
+  // Parallelize enrollment count, quiz count, and school name
+  const [enrollmentCount, quizCount, schoolName] = await Promise.all([
+    db.enrollment.count({
+      where: { catalogSubjectId: subject.id, isActive: true },
+    }),
+    db.catalogExam.count({
+      where: { subjectId: subject.id, status: "PUBLISHED" },
+    }),
+    schoolId
+      ? db.school
+          .findUnique({
+            where: { id: schoolId },
+            select: { name: true, preferredLanguage: true },
+          })
+          .then(async (s) => {
+            if (!s?.name) return null
+            const storedLang = (s.preferredLanguage || "ar") as "ar" | "en"
+            const displayLang = (lang === "ar" ? "ar" : "en") as "ar" | "en"
+            if (storedLang === displayLang) return s.name
+            return getDisplayText(s.name, storedLang, displayLang, schoolId)
+          })
+      : Promise.resolve(null),
+  ])
 
   // Map to Stream-compatible shape
   return {
@@ -89,12 +110,16 @@ export async function getCatalogCourse(slug: string, schoolId: string | null) {
     title: subject.name,
     slug: subject.slug,
     description: subject.description,
+    objectives: subject.objectives,
+    prerequisites: subject.prerequisites,
+    targetAudience: subject.targetAudience,
     imageUrl: getCatalogImageUrl(
-      subject.thumbnailKey,
+      subject.bannerUrl ?? subject.thumbnailKey,
       subject.imageKey,
       "original"
     ),
-    price: null as number | null,
+    price: subject.price ? Number(subject.price) : null,
+    currency: subject.currency || "USD",
     isPublished: true,
     lang: subject.lang,
     level: null,
@@ -138,14 +163,16 @@ export async function getCatalogCourse(slug: string, schoolId: string | null) {
     _count: {
       enrollments: enrollmentCount,
     },
-    // Extra catalog fields
     _catalog: {
       color: subject.color,
+      bannerUrl: subject.bannerUrl,
       imageKey: subject.imageKey,
       thumbnailKey: subject.thumbnailKey,
       totalChapters: subject.totalChapters,
       totalLessons: subject.totalLessons,
       averageRating: subject.averageRating,
+      quizCount,
+      schoolName,
     },
   }
 }

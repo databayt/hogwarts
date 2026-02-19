@@ -23,37 +23,37 @@ import { logSuccess } from "./utils"
 const BANNER_MAP: Record<string, string> = {
   arabic: "elementary-english-language-arts.jpg",
   english: "high-english-language-arts.jpg",
-  french: "high-languages.jpg",
+  french: "high-world-languages.jpg",
   mathematics: "elementary-math.jpg",
-  science: "elementary-science.jpg",
+  science: "elementary-life-science.jpg",
   physics: "high-physics.jpg",
   chemistry: "high-chemistry.jpg",
-  biology: "high-life-science.jpg",
+  biology: "high-life-sciences.jpg",
   "earth-space-sciences": "high-earth-and-space-science.jpg",
   "computer-science": "high-computer-science-and-technology.jpg",
   "science-engineering": "high-science-and-engineering-practices.jpg",
-  history: "high-history.jpg",
-  "sudan-history": "high-history.jpg",
-  "world-history": "high-history.jpg",
+  history: "high-u-s-history.jpg",
+  "sudan-history": "high-world-history.jpg",
+  "world-history": "high-world-history.jpg",
   geography: "high-geography.jpg",
   "social-studies": "high-civics-and-government.jpg",
   "civics-citizenship": "high-civics-and-government.jpg",
   "business-economics": "high-business-and-economics.jpg",
-  psychology: "high-health.jpg",
-  "islamic-education": "high-religion.jpg",
-  quran: "high-religion.jpg",
+  psychology: "high-psychology.jpg",
+  "islamic-education": "high-religion-and-philosophy.jpg",
+  quran: "high-religion-and-philosophy.jpg",
   ict: "high-computer-science-and-technology.jpg",
   "the-arts": "elementary-arts.jpg",
   music: "high-arts.jpg",
   "physical-education": "high-physical-education.jpg",
   health: "high-health.jpg",
-  "life-skills": "high-career-and-technical-education.jpg",
+  "life-skills": "high-life-skills.jpg",
   "career-education": "high-career-and-technical-education.jpg",
-  celebrations: "high-celebrations-commemorations-and-festivals.jpg",
+  celebrations: "elementary-celebrations-commemorations-and-festivals.jpg",
   "teacher-development": "high-teacher-professional-development.jpg",
-  "world-languages": "high-languages.jpg",
-  sociology: "high-health.jpg",
-  "us-history": "high-history.jpg",
+  "world-languages": "high-world-languages.jpg",
+  sociology: "high-sociology.jpg",
+  "us-history": "high-u-s-history.jpg",
 }
 
 const BANNERS_DIR = path.resolve(__dirname, "../../public/clickview/banners")
@@ -300,4 +300,49 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
   }
 
   logSuccess("CatalogImages", uploadCount, "S3/CloudFront")
+
+  // --- Phase 4: Upload banners to S3 for Sudanese subjects ---
+  console.log("  Phase 4: Banner images → S3 for Sudanese subjects")
+
+  let bannerUploadCount = 0
+
+  for (const [slug, filename] of Object.entries(BANNER_MAP)) {
+    const filePath = path.join(BANNERS_DIR, filename)
+    if (!fs.existsSync(filePath)) {
+      console.log(`  Skipping banner ${slug}: file not found (${filename})`)
+      continue
+    }
+
+    const subject = await prisma.catalogSubject.findUnique({
+      where: { slug },
+      select: { id: true, bannerUrl: true },
+    })
+    if (!subject) {
+      console.log(`  Skipping banner ${slug}: not found in database`)
+      continue
+    }
+
+    // Skip if already has an S3 banner key (not a local path)
+    if (subject.bannerUrl && !subject.bannerUrl.startsWith("/")) {
+      console.log(`  Skipping banner ${slug}: already has S3 key`)
+      continue
+    }
+
+    const fileBuffer = fs.readFileSync(filePath)
+    const key = `catalog/subjects/${slug}/banner`
+
+    try {
+      await processAndUploadCatalogImage(fileBuffer, key)
+      await prisma.catalogSubject.update({
+        where: { slug },
+        data: { bannerUrl: key },
+      })
+      bannerUploadCount++
+      console.log(`  Uploaded banner ${slug} (${filename})`)
+    } catch (err) {
+      console.error(`  Failed banner ${slug}:`, err)
+    }
+  }
+
+  logSuccess("CatalogBanners", bannerUploadCount, "S3/CloudFront")
 }

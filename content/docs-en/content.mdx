@@ -1,0 +1,830 @@
+---
+title: "Content"
+description: "Canonical patterns for writing content.tsx in the mirror pattern"
+---
+
+## Current Progress (Audit)
+
+218 content.tsx files audited across all route groups:
+
+| Area                                  | Status | Detail                                                                                      |
+| ------------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
+| Mirror pattern (page imports content) | PASS   | ~95% of pages correctly delegate to content.tsx                                             |
+| `getTenantContext()` for schoolId     | PASS   | All server content components use tenant context                                            |
+| `Promise.all` parallelization         | PASS   | Server content with multiple queries parallelize correctly                                  |
+| `import type` usage                   | PASS   | ~89% use `import type` for type-only imports                                                |
+| Hardcoded English strings             | FAIL   | ~71% of files use hardcoded strings instead of dictionary                                   |
+| `dictionary: any` typing              | FAIL   | 18+ files use `any` for dictionary prop (stream/, banking/, library/, onboarding/)          |
+| Dictionary accepted but ignored       | FAIL   | 8+ files accept dictionary but reference zero keys                                          |
+| Bloated files (>300 lines)            | FAIL   | 23+ files; worst: exams/content.tsx (893), attendance/analytics (739), stream/courses (612) |
+| Inconsistent export style             | FAIL   | 63% `export default function`, 37% named `export function` without default                  |
+| Inconsistent dictionary scoping       | FAIL   | Mix of `Dictionary`, `Dictionary["school"]`, `any`                                          |
+| Inconsistent locale prop naming       | FAIL   | 13+ files use `locale` vs majority using `lang`                                             |
+| `any` types in props                  | FAIL   | students `school?: any`, banking `user: any`, 18+ `dictionary: any`                         |
+| Inline Prisma queries                 | FAIL   | teachers/content.tsx has 50+ lines of inline query logic vs extracted queries.ts            |
+| `db` imports in page.tsx              | FAIL   | 25 page.tsx files import db directly, violating thin-page rule                              |
+| Inline `isArabic` ternaries           | FAIL   | 6+ content files use `isArabic ? "..." : "..."` instead of dictionary                       |
+| Sequential permission checks          | FAIL   | finance/fees, finance/salary await permissions sequentially                                 |
+| `console.log` debug statements        | FAIL   | sales/content.tsx (6 calls), onboarding/description (2 calls)                               |
+| Dead code file                        | FAIL   | saas-marketing/features/content.tsx is 100% commented out                                   |
+| Wrong `"use client"` directive        | FAIL   | school/academic/content.tsx has no client logic but has directive                           |
+| Inline SVGs inflating file size       | FAIL   | stream/home/content.tsx has ~250 lines of SVG path data                                     |
+| Duplicate type definitions            | FAIL   | `School` interface defined in both school-marketing/content.tsx and site-header/content.tsx |
+| Misnamed file                         | INFO   | icons/categories/content.tsx exports icon components, not a content component               |
+| Stub/placeholder pages                | INFO   | activity/content.tsx, facility/content.tsx use hardcoded mock data with no DB               |
+
+## Two Categories of content.tsx
+
+Content components split into two categories based on where data fetching happens:
+
+**Server content components (~60 files):** Async functions that fetch data via `db`/`queries.ts`, pass pre-computed data to client sub-components. No `"use client"` directive.
+
+**Client content components (~100+ files):** `"use client"` directive, use hooks and state, fetch data via server actions from `actions.ts`. Handle user interaction directly.
+
+Decision tree:
+
+- Needs hooks, events, or browser APIs? **Client content**
+- Needs data fetching and composition only? **Server content**
+- Both? Server content that renders client sub-components (table.tsx, form.tsx)
+
+## The 8 Rules
+
+### 1. Always `export default [async] function XxxContent()`
+
+Named function declaration, always default export. Name matches the feature: `GradesContent`, `AttendanceContent`, `HomeContent`.
+
+```tsx
+// BAD: Arrow function
+const GradesContent = async ({ searchParams, dictionary, lang }: Props) => {
+  /* ... */
+}
+export default GradesContent
+
+// BAD: Named export without default
+export function AttendanceContent({ dictionary }: Props) {
+  /* ... */
+}
+
+// GOOD: Server content
+export default async function GradesContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
+  /* ... */
+}
+
+// GOOD: Client content
+export default function AttendanceContent({ dictionary }: Props) {
+  /* ... */
+}
+```
+
+### 2. Always `import type` for type-only imports
+
+```tsx
+// BAD
+import { Locale } from "@/components/internationalization/config"
+import type { Locale } from "@/components/internationalization/config"
+import { Dictionary } from "@/components/internationalization/dictionaries"
+// GOOD
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+```
+
+### 3. Max ~150 lines
+
+Extract queries to `queries.ts`, sub-components to co-located files. Content should orchestrate, not implement.
+
+```tsx
+// BAD: 893 lines with 11 DB queries and 700+ lines of JSX (exams/content.tsx)
+
+// GOOD: 68 lines -- queries extracted, table extracted (grades/content.tsx)
+export default async function GradesContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
+  const sp = await resultsSearchParams.parse(await searchParams)
+  const { schoolId } = await getTenantContext()
+
+  const { rows, count } = await getResultsList(schoolId, {
+    /* filters */
+  })
+  const data = rows.map((r) => formatResultRow(r))
+
+  return (
+    <div className="space-y-6">
+      <ResultsTable
+        initialData={data}
+        total={count}
+        dictionary={dictionary.grades}
+        lang={lang}
+      />
+    </div>
+  )
+}
+```
+
+### 4. Always use typed dictionary props
+
+Never `any`. Scope to the route group's dictionary namespace.
+
+```tsx
+// BAD: Type erasure
+interface Props {
+  dictionary?: any
+}
+
+// BAD: Full dictionary when only school namespace needed
+interface Props {
+  dictionary: Dictionary
+}
+
+// GOOD: Scoped to school dashboard namespace
+interface Props {
+  dictionary: Dictionary["school"]
+}
+
+// GOOD: Full dictionary for marketing (needs multiple namespaces)
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
+}
+```
+
+### 5. Use dictionary for all user-facing text
+
+Never hardcode English. Never use inline `isArabic` ternaries. Always use dictionary keys with English fallbacks.
+
+```tsx
+// BAD: Hardcoded English
+<h2>Attendance</h2>
+<p>No students found</p>
+
+// BAD: Inline isArabic ternary
+const isArabic = lang === "ar"
+<h2>{isArabic ? "الحضور" : "Attendance"}</h2>
+
+// GOOD: Dictionary with fallback
+const d = dictionary?.attendance
+<h2>{d?.title || "Attendance"}</h2>
+<p>{d?.noStudents || "No students found"}</p>
+```
+
+### 6. Consistent locale prop: always `lang: Locale`
+
+Not `locale`, not `string`. Matches the URL param name and the dictionary system.
+
+```tsx
+// BAD: Inconsistent naming
+interface Props {
+  locale: string
+}
+
+// BAD: Weak typing
+interface Props {
+  lang: string
+}
+
+// GOOD: Consistent name and type
+interface Props {
+  lang: Locale
+}
+```
+
+### 7. Server content: extract queries to `queries.ts`, use try/catch
+
+Keep data fetching logic in a co-located `queries.ts` file. Handle errors gracefully.
+
+```tsx
+// GOOD: Extracted to queries.ts (grades/content.tsx pattern)
+import { formatResultRow, getResultsList } from "./queries"
+
+// BAD: 50+ lines of inline Prisma queries (teachers/content.tsx)
+export default async function TeachersContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
+  const where: any = {
+    schoolId,
+    ...(sp.name
+      ? {
+          OR: [
+            /* 10 lines of search logic */
+          ],
+        }
+      : {}),
+  }
+  const [rows, count] = await Promise.all([
+    teacherModel.findMany({
+      where,
+      orderBy,
+      skip,
+      take,
+      include: {
+        /* 30 lines */
+      },
+    }),
+    teacherModel.count({ where }),
+  ])
+  // 25 lines of data transformation...
+}
+
+export default async function GradesContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
+  const sp = await resultsSearchParams.parse(await searchParams)
+  const { schoolId } = await getTenantContext()
+
+  let data: ResultRow[] = []
+  let total = 0
+
+  if (schoolId) {
+    try {
+      const { rows, count } = await getResultsList(schoolId, {
+        /* filters from sp */
+      })
+      data = rows.map((r) => formatResultRow(r))
+      total = count
+    } catch (error) {
+      console.error("[GradesContent] Error fetching results:", error)
+    }
+  }
+
+  return (
+    <ResultsTable
+      initialData={data}
+      total={total}
+      dictionary={dictionary.grades}
+      lang={lang}
+    />
+  )
+}
+```
+
+### 8. Client content: fetch via server actions
+
+Never import `db` in client content. Use server actions from co-located `actions.ts`.
+
+```tsx
+// BAD: Direct db import in client component
+"use client"
+
+import { db } from "@/lib/db" // WRONG
+
+import { getAttendanceList, markAttendance } from "./actions"
+
+// GOOD: Server actions
+
+;("use client")
+
+export default function AttendanceContent({ dictionary }: Props) {
+  const load = useCallback(async () => {
+    const result = await getAttendanceList({ classId, date })
+    if (result.success && result.data) setRows(result.data.rows)
+  }, [classId, date])
+  // ...
+}
+```
+
+## 5 Canonical Templates
+
+### Template A: Server Listing Content (~50 files)
+
+Server component that parses searchParams, fetches data via extracted `queries.ts`, renders a DataTable.
+
+```tsx
+import { SearchParams } from "nuqs/server"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { type ResultRow } from "@/components/school-dashboard/listings/grades/columns"
+import { resultsSearchParams } from "@/components/school-dashboard/listings/grades/list-params"
+import {
+  formatResultRow,
+  getResultsList,
+} from "@/components/school-dashboard/listings/grades/queries"
+import { ResultsTable } from "@/components/school-dashboard/listings/grades/table"
+
+interface Props {
+  searchParams: Promise<SearchParams>
+  dictionary: Dictionary["school"]
+  lang: Locale
+}
+
+export default async function GradesContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
+  const sp = await resultsSearchParams.parse(await searchParams)
+  const { schoolId } = await getTenantContext()
+  const t = dictionary.grades
+
+  let data: ResultRow[] = []
+  let total = 0
+
+  if (schoolId) {
+    try {
+      const { rows, count } = await getResultsList(schoolId, {
+        studentId: sp.studentId || undefined,
+        assignmentId: sp.assignmentId || undefined,
+        classId: sp.classId || undefined,
+        grade: sp.grade || undefined,
+        page: sp.page,
+        perPage: sp.perPage,
+        sort: sp.sort,
+      })
+      data = rows.map((r) => formatResultRow(r))
+      total = count
+    } catch (error) {
+      console.error("[GradesContent] Error fetching results:", error)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <ResultsTable
+        initialData={data}
+        total={total}
+        dictionary={t}
+        lang={lang}
+        perPage={sp.perPage}
+      />
+    </div>
+  )
+}
+```
+
+Key points:
+
+- `searchParams` passed from page, parsed with nuqs `resultsSearchParams`
+- Queries extracted to `queries.ts` -- content orchestrates, doesn't implement
+- `try/catch` with empty data fallback -- page shows "No results" instead of crashing
+- Co-located files: `queries.ts`, `table.tsx`, `columns.tsx`, `list-params.ts`
+- Reference: `grades/content.tsx` (68 lines)
+
+### Template B: Server Dashboard Content (~10 files)
+
+Server component that fetches multiple stats in parallel, renders stat cards and feature blocks.
+
+```tsx
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { FeatureBlocks } from "./feature-blocks"
+import { NextExamCard } from "./next-exam-card"
+import { getExamStats, getQuestionBankStats, getUpcomingExam } from "./queries"
+import { ExamStatsCards } from "./stats-cards"
+
+interface Props {
+  dictionary: Dictionary["school"]
+  lang: Locale
+}
+
+export default async function ExamsContent({ dictionary, lang }: Props) {
+  const { schoolId } = await getTenantContext()
+  const d = dictionary?.exams
+
+  if (!schoolId) return null
+
+  const [stats, upcoming, questionBank] = await Promise.all([
+    getExamStats(schoolId),
+    getUpcomingExam(schoolId),
+    getQuestionBankStats(schoolId),
+  ])
+
+  return (
+    <div className="space-y-6">
+      <ExamStatsCards stats={stats} dictionary={d} />
+      <NextExamCard exam={upcoming} dictionary={d} lang={lang} />
+      <FeatureBlocks stats={questionBank} dictionary={d} lang={lang} />
+    </div>
+  )
+}
+```
+
+Key points:
+
+- `Promise.all` for parallel DB queries (currently 11 in exams -- extract to `queries.ts`)
+- Pass pre-computed data to client sub-components
+- Current anti-pattern: exams/content.tsx is 893 lines with all JSX inline -- should be ~30 lines
+- Reference: exams/content.tsx (893 lines -- shows what NOT to do at scale)
+
+### Template C: Client Interactive Content (~40 files)
+
+Client component with hooks, state, and server actions for user interaction.
+
+```tsx
+"use client"
+
+import { useCallback, useEffect, useState } from "react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import {
+  getAttendanceList,
+  getClassesForSelection,
+  markAttendance,
+} from "./actions"
+import { AttendanceTable, type AttendanceRow } from "./table"
+
+interface Props {
+  dictionary?: Dictionary["school"]
+}
+
+export default function AttendanceContent({ dictionary }: Props) {
+  const [classId, setClassId] = useState("")
+  const [rows, setRows] = useState<AttendanceRow[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const dict = dictionary?.attendance
+
+  const load = useCallback(async () => {
+    if (!classId) return
+    setIsLoading(true)
+    try {
+      const result = await getAttendanceList({ classId, date })
+      if (result.success && result.data) setRows(result.data.rows)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [classId])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  const onSubmit = async () => {
+    await markAttendance({ classId, date, records })
+    SuccessToast(dict?.attendanceSaved || "Attendance saved successfully")
+  }
+
+  return (
+    <div className="grid gap-3">
+      <Select value={classId} onValueChange={setClassId}>
+        <SelectTrigger>
+          <SelectValue placeholder={dict?.selectClass || "Select class"} />
+        </SelectTrigger>
+        <SelectContent>{/* class options */}</SelectContent>
+      </Select>
+      <AttendanceTable data={rows} onChangeStatus={onChangeStatus} />
+      <Button onClick={onSubmit}>
+        {dict?.saveAttendance || "Save Attendance"}
+      </Button>
+    </div>
+  )
+}
+```
+
+Key points:
+
+- `"use client"` at top -- hooks, state, event handlers
+- Data fetching via server actions (`./actions.ts`), never `db` import
+- Dictionary with English fallbacks for all text
+- Reference: `attendance/content.tsx`
+
+### Template D: Server Composition Content (~15 files)
+
+Sync server component that composes section sub-components. No data fetching.
+
+```tsx
+import type { Locale } from "@/components/internationalization/config"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
+
+import Boost from "./boost"
+import FAQs from "./faqs"
+import Hero from "./hero"
+import LetsWorkTogether from "./lets-work-together"
+import LogoCloud from "./logo-cloud"
+import MissionCards from "./mission-cards"
+import OpenSource from "./open-source"
+import StorySection from "./story-section"
+import Testimonial from "./testimonial"
+import Time from "./time"
+
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  lang: Locale
+}
+
+export default function HomeContent({ dictionary, lang }: Props) {
+  return (
+    <main className="bg-background flex min-h-screen flex-col">
+      <Hero dictionary={dictionary} lang={lang} />
+      <StorySection dictionary={dictionary} lang={lang} />
+      <MissionCards dictionary={dictionary} lang={lang} />
+      <Time dictionary={dictionary} lang={lang} />
+      <Testimonial dictionary={dictionary} lang={lang} />
+      <LogoCloud dictionary={dictionary} lang={lang} />
+      <OpenSource dictionary={dictionary} lang={lang} />
+      <FAQs dictionary={dictionary} lang={lang} />
+      <LetsWorkTogether dictionary={dictionary} lang={lang} />
+      <Boost dictionary={dictionary} lang={lang} />
+    </main>
+  )
+}
+```
+
+Key points:
+
+- Sync (no `async`) -- no data fetching, just composition
+- Each section is a separate component file in the same directory
+- Full dictionary passed (marketing pages need multiple namespaces)
+- ~51 lines -- pure orchestration
+- Reference: `saas-marketing/content.tsx` (51 lines)
+
+### Template E: Client Wizard Step Content (~16 files)
+
+Client component that uses context hooks for step validation and navigation.
+
+```tsx
+"use client"
+
+import React from "react"
+import Image from "next/image"
+
+import { useHostValidation } from "@/components/onboarding/host-validation-context"
+import HostStepHeader from "@/components/onboarding/step-header"
+
+interface Props {
+  dictionary?: any // TODO: Replace with Dictionary["onboarding"]
+}
+
+export default function AboutSchoolContent({ dictionary }: Props) {
+  const dict = dictionary?.onboarding || {}
+  const { enableNext } = useHostValidation()
+
+  React.useEffect(() => {
+    enableNext()
+  }, [enableNext])
+
+  return (
+    <HostStepHeader
+      stepNumber={1}
+      title={dict.tellUsAboutYourSchool || "Tell us about your school"}
+      description={
+        dict.aboutSchoolDescription ||
+        "In this step, we'll ask you about your school type, location, and student capacity."
+      }
+      dictionary={dictionary}
+    />
+  )
+}
+```
+
+Key points:
+
+- `"use client"` -- uses context hooks (`useHostValidation`)
+- Context from parent layout (onboarding/[id]/layout.tsx provides `HostValidationProvider`)
+- `enableNext()` for step validation in wizard flow
+- Current anti-pattern: `dictionary?: any` -- should be typed
+- Reference: `onboarding/about-school/content.tsx`
+
+## Anti-Patterns
+
+### 1. 893-line monolith
+
+```tsx
+// BAD: exams/content.tsx -- 11 parallel queries (good), 700+ lines of JSX (bad)
+export default async function ExamsContent({ dictionary, lang }: Props) {
+  const [
+    totalExams,
+    upcomingCount,
+    questionBankSize,
+    enrolledStudents,
+    completionRate,
+    pendingMarking,
+    resultsGenerated,
+    monthOverMonth,
+    nextExam,
+    questionStats,
+    recentActivity,
+  ] = await Promise.all([
+    /* 11 queries */
+  ])
+
+  // 700+ lines of Cards, stats, feature blocks, workflow guide...
+  return (
+    <div className="space-y-6">
+      {/* Stat cards (200 lines) */}
+      {/* Next exam card (150 lines) */}
+      {/* Feature blocks (200 lines) */}
+      {/* Workflow guide (150 lines) */}
+    </div>
+  )
+}
+```
+
+```tsx
+// GOOD: Extract sub-components, keep content to ~30 lines
+import { NextExamCard } from "./next-exam-card"
+import { ExamStatsCards } from "./stats-cards"
+
+export default async function ExamsContent({ dictionary, lang }: Props) {
+  const stats = await getExamDashboardData(schoolId)
+  return (
+    <div className="space-y-6">
+      <ExamStatsCards stats={stats} dictionary={dictionary.exams} />
+      <NextExamCard
+        exam={stats.nextExam}
+        dictionary={dictionary.exams}
+        lang={lang}
+      />
+    </div>
+  )
+}
+```
+
+### 2. `dictionary: any` type erasure
+
+```tsx
+// BAD: 18+ files in stream/, banking/, library/, onboarding/
+interface Props {
+  dictionary?: any
+}
+
+// GOOD: Typed to route group namespace
+interface Props {
+  dictionary: Dictionary["school"]
+}
+```
+
+### 3. Dictionary accepted but ignored
+
+```tsx
+// BAD: 8 files accept dictionary prop but all text is hardcoded English
+interface Props {
+  dictionary?: Dictionary["school"]
+}
+export default function Content({ dictionary }: Props) {
+  // dictionary never referenced below
+  return <h2>Student Overview</h2>
+}
+
+// GOOD: Use the dictionary
+export default function Content({ dictionary }: Props) {
+  const d = dictionary?.students
+  return <h2>{d?.overview || "Student Overview"}</h2>
+}
+```
+
+### 4. Inline Prisma queries
+
+```tsx
+// BAD: teachers/content.tsx -- 50+ lines of inline where/include/transform
+const where: any = {
+  schoolId,
+  ...(sp.name
+    ? {
+        OR: [
+          { givenName: { contains: sp.name, mode: "insensitive" } },
+          { surname: { contains: sp.name, mode: "insensitive" } },
+          { emailAddress: { contains: sp.name, mode: "insensitive" } },
+        ],
+      }
+    : {}),
+}
+const [rows, count] = await Promise.all([
+  teacherModel.findMany({
+    where,
+    orderBy,
+    skip,
+    take,
+    include: {
+      /* 30 lines */
+    },
+  }),
+  teacherModel.count({ where }),
+])
+// 25 lines of data transformation...
+
+// GOOD: Extract to queries.ts (grades pattern)
+// queries.ts
+export async function getTeachersList(
+  schoolId: string,
+  params: TeacherQueryParams
+) {
+  const where = buildTeacherWhere(schoolId, params)
+  const [rows, count] = await Promise.all([
+    /* ... */
+  ])
+  return { rows, count }
+}
+
+// content.tsx
+const { rows, count } = await getTeachersList(schoolId, {
+  name: sp.name /* ... */,
+})
+```
+
+### 5. Inline `isArabic` ternaries
+
+```tsx
+// BAD: 6 files bypass dictionary system
+const isArabic = lang === "ar"
+<h2>{isArabic ? "الحضور" : "Attendance"}</h2>
+<p>{isArabic ? "لا يوجد بيانات" : "No data found"}</p>
+
+// GOOD: Dictionary with fallback
+const d = dictionary?.attendance
+<h2>{d?.title || "Attendance"}</h2>
+<p>{d?.noData || "No data found"}</p>
+```
+
+### 6. `db` imports in page.tsx
+
+```tsx
+// BAD: 25 page.tsx files import db directly (violates thin-page mirror pattern)
+// page.tsx
+import { db } from "@/lib/db"
+
+export default async function Page({ params }: Props) {
+  const teachers = await db.teacher.findMany({ where: { schoolId } })
+  return <Content teachers={teachers} />
+}
+
+// GOOD: Content handles its own data fetching
+// page.tsx
+export default async function Page({ params }: Props) {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return <Content dictionary={dictionary.school} lang={lang} />
+}
+```
+
+### 7. Wrong `"use client"` directive
+
+```tsx
+// BAD: school/academic/content.tsx has "use client" but no client logic
+"use client"
+export default function AcademicContent({ dictionary }: Props) {
+  // No hooks, no state, no event handlers, no browser APIs
+  return <div>{/* static JSX */}</div>
+}
+
+// GOOD: Remove directive -- this is a server component
+export default function AcademicContent({ dictionary }: Props) {
+  return <div>{/* static JSX */}</div>
+}
+```
+
+## Quick Reference
+
+### Server vs Client Decision Tree
+
+| Question                              | Server | Client |
+| ------------------------------------- | ------ | ------ |
+| Needs `useState` or `useEffect`?      |        | Yes    |
+| Needs event handlers (onClick, etc.)? |        | Yes    |
+| Needs browser APIs (window, etc.)?    |        | Yes    |
+| Needs context hooks (useSchool)?      |        | Yes    |
+| Only fetches data and composes UI?    | Yes    |        |
+| Only renders sub-components?          | Yes    |        |
+
+### Standard Prop Shapes (5 patterns)
+
+| Route Group      | Props                                                         | Dictionary Scope                       |
+| ---------------- | ------------------------------------------------------------- | -------------------------------------- |
+| School Dashboard | `searchParams, dictionary: Dictionary["school"], lang`        | `dictionary.school`                    |
+| SaaS Dashboard   | `dictionary: Dictionary, lang`                                | `dictionary` (full, needs `.operator`) |
+| SaaS Marketing   | `dictionary: Awaited<ReturnType<typeof getDictionary>>, lang` | `dictionary` (full)                    |
+| School Marketing | `school, dictionary, lang, subdomain`                         | `dictionary` (full)                    |
+| Onboarding       | `dictionary?: any` (TODO: type properly)                      | `dictionary?.onboarding`               |
+
+### Dictionary Scoping Rules
+
+| Route Group      | Access Pattern                                   | Fallback               |
+| ---------------- | ------------------------------------------------ | ---------------------- |
+| School Dashboard | `dictionary?.teachers`, `dictionary?.attendance` | English string literal |
+| SaaS Dashboard   | `dictionary?.operator?.tenants`                  | English string literal |
+| SaaS Marketing   | `dictionary?.marketing?.pricing`                 | English string literal |
+| School Marketing | `dictionary?.schoolMarketing?.about`             | English string literal |
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  content.tsx       # Server or client content component (this file)
+  queries.ts        # Extracted Prisma queries (server content only)
+  actions.ts        # Server actions (client content)
+  table.tsx         # DataTable client component
+  columns.tsx       # Column definitions (client component with hooks)
+  form.tsx          # Form client component
+  validation.ts     # Zod schemas
+  list-params.ts    # nuqs search param definitions
+  types.ts          # Shared types (if needed)
+```

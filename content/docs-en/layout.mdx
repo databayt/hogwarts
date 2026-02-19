@@ -1,0 +1,599 @@
+---
+title: "Layout"
+description: "Canonical patterns for writing layout.tsx in Next.js 16"
+---
+
+## Current Progress (Audit)
+
+51 layout.tsx files audited across 8+ route groups:
+
+| Area                                 | Status | Detail                                                                                    |
+| ------------------------------------ | ------ | ----------------------------------------------------------------------------------------- |
+| Promise-based params                 | PASS   | All 42 async layouts correctly use `Promise<>`                                            |
+| Provider hierarchy                   | PASS   | Clean nesting: root → [lang] → route group. No duplicates                                 |
+| `export default function` convention | PASS   | 49/51 use function declarations                                                           |
+| Parallel data fetching               | PASS   | School-dashboard uses `Promise.all([getSchool, auth])`                                    |
+| `force-dynamic` on dashboard layouts | PASS   | Both dashboard layouts set it correctly                                                   |
+| Root layout html/body                | PASS   | Only root layout has `<html>` and `<body>`                                                |
+| Arrow function exports               | FAIL   | 2 layouts: (auth), onboarding/[id]                                                        |
+| Function naming consistency          | FAIL   | Mixed: `RootLayout`, `LocaleLayout`, `PlatformLayout`, `SiteLayout` -- no single standard |
+| Interface naming                     | FAIL   | Mixed: `Props` vs `MarketingLayoutProps` vs `OperatorLayoutProps`                         |
+| `Readonly<>` wrapper usage           | FAIL   | Used in 4 layouts, missing in 47                                                          |
+| Missing `import type`                | FAIL   | stream/layout.tsx uses `import { ReactNode }` instead of `import type`                    |
+| DB query in layout                   | FAIL   | catalog/layout.tsx runs `db.catalogQuestion.count()` on every navigation                  |
+| Redundant auth check                 | FAIL   | finance/banking/layout.tsx re-checks `auth()` despite parent already doing it             |
+| Hardcoded translations               | FAIL   | 3 layouts use inline `isArabic ? "..." : "..."` instead of dictionary                     |
+| Bloated client layouts               | FAIL   | onboarding/[id] (113 lines) and apply/[id] (151 lines) with inline skeletons/error UI     |
+| Unused params/imports                | FAIL   | profile/layout.tsx declares params but never uses them                                    |
+| Unnecessary passthrough layouts      | INFO   | 6 layouts just render `<>{children}</>` for route grouping                                |
+
+## The 7 Rules
+
+### 1. Always `export default [async] function Layout()`
+
+Name convention: `<Feature>Layout` or just `Layout`. Never arrow functions.
+
+```tsx
+// BAD: Arrow function with separate export
+const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+  return <div>{children}</div>
+}
+export default AuthLayout
+
+// BAD: Arrow function assigned and exported
+const HostLayout = ({ children }: HostLayoutProps) => {
+  return <>{children}</>
+}
+export default HostLayout
+
+// GOOD: Named function declaration
+export default function AuthLayout({ children }: Props) {
+  return <div>{children}</div>
+}
+
+// GOOD: Async when params/data needed
+export default async function FinanceLayout({ children, params }: Props) {
+  const { lang } = await params
+  // ...
+}
+```
+
+### 2. Always `import type` for type-only imports
+
+```tsx
+// BAD
+import { ReactNode } from "react"
+// GOOD
+import type { ReactNode } from "react"
+
+// OK: Mixed import (value + type in one statement)
+import {
+  isRTL as checkIsRTL,
+  Locale,
+  type Locale,
+} from "@/components/internationalization/config"
+import type { Locale } from "@/components/internationalization/config"
+```
+
+### 3. Layouts are for shared UI and providers only
+
+No business logic, no DB queries for badges/counts, no inline error UI. Move data fetching to the page or a server action.
+
+```tsx
+// BAD: DB query in layout runs on every navigation
+export default async function CatalogLayout({ children, params }: Props) {
+  const pendingCount = await db.catalogQuestion.count({
+    where: { approvalStatus: "PENDING" },
+  })
+  // Shows badge count, but re-runs on every page change
+}
+
+// GOOD: Move count to the page that needs it
+export default async function CatalogLayout({ children, params }: Props) {
+  const { lang } = await params
+  return (
+    <>
+      <PageNav pages={catalogPages} />
+      {children}
+    </>
+  )
+}
+```
+
+### 4. Never duplicate parent layout work
+
+If a parent layout checks auth or fetches school, don't re-do it in a child layout. The school-dashboard layout already calls `auth()` and `getSchoolBySubdomain()`.
+
+```tsx
+// BAD: banking/layout.tsx re-checks auth despite parent already doing it
+export default async function BankingLayout({ children, params }: Props) {
+  const session = await auth()           // Parent already checked!
+  if (!session?.user) redirect(...)       // Parent already redirected!
+  // ...
+}
+
+// GOOD: Trust the parent layout
+export default async function BankingLayout({ children, params }: Props) {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang as Locale)
+  // ... just render PageNav
+}
+```
+
+### 5. Use dictionary for all text
+
+Never hardcode inline `isArabic ? "..." : "..."`. Use the dictionary system.
+
+```tsx
+// BAD: Inline translations in school/layout.tsx
+const isArabic = lang === "ar"
+const schoolPages: PageNavItem[] = [
+  { name: isArabic ? "نظرة عامة" : "Overview", href: `/${lang}/school` },
+  {
+    name: isArabic ? "الإعدادات" : "Configuration",
+    href: `/${lang}/school/configuration`,
+  },
+]
+
+// GOOD: Use dictionary
+const d = dictionary?.school?.settings
+const schoolPages: PageNavItem[] = [
+  { name: d?.overview || "Overview", href: `/${lang}/school` },
+  {
+    name: d?.configuration || "Configuration",
+    href: `/${lang}/school/configuration`,
+  },
+]
+```
+
+### 6. Keep layouts lean
+
+Max ~60 lines for server layouts. Extract inline UI (skeletons, error states) to separate components for client layouts.
+
+```tsx
+// BAD: 151-line client layout with inline skeletons and error UI
+function ApplyLayoutContent({ children }: Props) {
+  // ... 40 lines of hooks and state
+  if (isLoading) {
+    return (
+      // ... 20 lines of skeleton UI
+    )
+  }
+  if (error) {
+    return (
+      // ... 30 lines of error UI with buttons
+    )
+  }
+  return (
+    // ... 15 lines of normal UI
+  )
+}
+
+// GOOD: Extract to separate components
+function ApplyLayoutContent({ children }: Props) {
+  const { session } = useApplySession()
+
+  if (session.isLoading) return <ApplyLayoutSkeleton />
+  if (session.error) return <ApplyLayoutError error={session.error} />
+
+  return (
+    <div className="mx-auto w-full max-w-5xl pb-20">
+      {children}
+      <FormFooter config={ADMISSION_CONFIG} />
+    </div>
+  )
+}
+```
+
+### 7. Use `Promise.all` for parallel async operations
+
+Same rule as pages -- eliminates request waterfalls.
+
+```tsx
+// BAD: Sequential
+const { subdomain, lang } = await params
+const result = await getSchoolBySubdomain(subdomain)
+const session = await auth()
+
+// GOOD: Parallel (as done in school-dashboard layout)
+const { subdomain, lang } = await params
+const [result, session] = await Promise.all([
+  getSchoolBySubdomain(subdomain),
+  auth(),
+])
+```
+
+## Why NOT LayoutProps Type Helper
+
+Next.js 16 provides a global `LayoutProps<'/route'>` type helper. We don't use it because:
+
+- Route literals are extremely long: `'/[lang]/s/[subdomain]/(school-dashboard)/finance/banking'`
+- Project has only 3 param shapes for layouts -- inline interfaces are more readable
+- The helper requires `next typegen` build step
+- Traditional `interface Props` is immediately understood by all contributors
+
+## Layout Nesting Chain
+
+The deepest path (5 levels):
+
+```
+app/layout.tsx (RootLayout)
+  html/body, no providers, inline lang/dir script
+  │
+  └─ [lang]/layout.tsx (LocaleLayout)
+       8 providers: Direction, Session, Nuqs, Theme, UserTheme, Analytics, ServiceWorker, Toaster
+       generateMetadata, generateStaticParams, font setup
+       │
+       └─ s/[subdomain]/(school-dashboard)/layout.tsx (PlatformLayout)
+            4 providers: School, Sidebar, Modal, PageHeading
+            Promise.all([getSchoolBySubdomain, auth]), force-dynamic
+            │
+            └─ finance/layout.tsx (FinanceLayout)
+                 PageHeadingSetter only
+                 │
+                 └─ banking/layout.tsx (BankingLayout)
+                      PageNav + redundant auth (anti-pattern)
+```
+
+Key fact: **Layouts don't re-render on navigation.** Each level renders once and persists. Only the innermost `page.tsx` and `loading.tsx` swap on route changes.
+
+## Provider Hierarchy
+
+| Layout                                                   | Providers                                                                                                                            |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Root (`app/layout.tsx`)                                  | None (html/body only)                                                                                                                |
+| Locale (`[lang]/layout.tsx`)                             | DirectionProvider, SessionProvider, NuqsAdapter, ThemeProvider, UserThemeProvider, AnalyticsProvider, ServiceWorkerProvider, Toaster |
+| School Dashboard (`(school-dashboard)/layout.tsx`)       | SchoolProvider, SidebarProvider, ModalProvider, PageHeadingProvider                                                                  |
+| SaaS Dashboard (`(saas-dashboard)/layout.tsx`)           | SidebarProvider, ModalProvider, PageHeadingProvider                                                                                  |
+| School Marketing (`(school-marketing)/layout.tsx`)       | None (props-based: passes school to header)                                                                                          |
+| SaaS Marketing (`(saas-marketing)/layout.tsx`)           | None (renders header/footer directly)                                                                                                |
+| SaaS Marketing Docs (`(saas-marketing)/docs/layout.tsx`) | SidebarProvider                                                                                                                      |
+| Auth (`(auth)/layout.tsx`)                               | None                                                                                                                                 |
+| Onboarding (`onboarding/[id]/layout.tsx`)                | ListingProvider, HostValidationProvider                                                                                              |
+| Apply (`apply/[id]/layout.tsx`)                          | ApplySessionProvider, ApplyValidationProvider                                                                                        |
+
+Key rule: **Layouts cannot pass data to children directly** -- use providers or let pages re-fetch (React `cache` deduplicates).
+
+## 5 Canonical Templates
+
+### Template A: Root Layout
+
+The only layout with `<html>` and `<body>`. No providers. Inline script to set lang/dir before React hydration to prevent flash.
+
+```tsx
+import type { Metadata } from "next"
+
+import "./globals.css"
+
+export const metadata: Metadata = {
+  title: "Hogwarts",
+  description: "School automation",
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var m=window.location.pathname.match(/^\\/(en|ar)/);var l=m?m[1]:'ar';document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr'})()`,
+          }}
+        />
+      </head>
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+Key points:
+
+- Only layout with `<html>` and `<body>` tags
+- `suppressHydrationWarning` because inline script modifies `lang`/`dir` before hydration
+- No providers (all providers live in locale layout)
+- `Readonly<>` wrapper on inline prop type
+
+### Template B: Locale Layout
+
+The provider hub. Async because it needs params, auth, dictionary, and headers.
+
+```tsx
+import type { Metadata } from "next"
+import { auth } from "@/auth"
+import { SessionProvider } from "next-auth/react"
+import { NuqsAdapter } from "nuqs/adapters/next/app"
+
+import { ThemeProvider } from "@/components/atom/theme-provider"
+import { i18n, type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { DirectionProvider } from "@/components/providers/direction-provider"
+import { UserThemeProvider } from "@/components/theme/theme-provider"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang as Locale)
+  return {
+    title: dictionary.metadata?.title || "Hogwarts",
+    description: dictionary.metadata?.description || "School automation",
+  }
+}
+
+export default async function LocaleLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: Promise<{ lang: string }>
+}) {
+  const { lang } = await params
+  const session = await auth()
+
+  return (
+    <DirectionProvider direction={lang === "ar" ? "rtl" : "ltr"} lang={lang}>
+      <SessionProvider session={session}>
+        <NuqsAdapter>
+          <ThemeProvider>
+            <UserThemeProvider>{children}</UserThemeProvider>
+          </ThemeProvider>
+        </NuqsAdapter>
+      </SessionProvider>
+    </DirectionProvider>
+  )
+}
+
+export function generateStaticParams() {
+  return i18n.locales.map((lang) => ({ lang }))
+}
+```
+
+Key points:
+
+- `generateMetadata` for localized metadata
+- `generateStaticParams` for static locale generation
+- All global providers wrap here (not in root layout)
+- Auth session fetched and passed to SessionProvider
+
+### Template C: Dashboard Layout (~2 layouts)
+
+Async. Auth + school fetch via `Promise.all`. Providers for school context, sidebar, modal, page heading. `force-dynamic`.
+
+```tsx
+import { notFound } from "next/navigation"
+import { auth } from "@/auth"
+
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { ModalProvider } from "@/components/atom/modal/context"
+import type { Locale } from "@/components/internationalization/config"
+import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
+import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
+
+export const dynamic = "force-dynamic"
+
+interface Props {
+  children: React.ReactNode
+  params: Promise<{ subdomain: string; lang: string }>
+}
+
+export default async function PlatformLayout({ children, params }: Props) {
+  const { subdomain, lang } = await params
+  const [result, session] = await Promise.all([
+    getSchoolBySubdomain(subdomain),
+    auth(),
+  ])
+
+  if (!result.success || !result.data) notFound()
+
+  return (
+    <SchoolProvider school={result.data}>
+      <SidebarProvider>
+        <ModalProvider>
+          <PageHeadingProvider>
+            {/* Header, Sidebar, children */}
+          </PageHeadingProvider>
+        </ModalProvider>
+      </SidebarProvider>
+    </SchoolProvider>
+  )
+}
+```
+
+Key points:
+
+- `force-dynamic` -- auth and DB queries on every request
+- `Promise.all` for parallel school + auth fetch
+- 4 providers: SchoolProvider, SidebarProvider, ModalProvider, PageHeadingProvider
+- `notFound()` if school lookup fails
+- Child layouts should NOT re-call `auth()` or `getSchoolBySubdomain()`
+
+### Template D: Feature Nav Layout (~35 layouts)
+
+The most common pattern. Async. Dictionary + PageHeadingSetter + PageNav.
+
+```tsx
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
+
+interface Props {
+  children: React.ReactNode
+  params: Promise<{ lang: string; subdomain: string }>
+}
+
+export default async function AttendanceLayout({ children, params }: Props) {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang as Locale)
+  const d = dictionary?.school?.attendance
+
+  const attendancePages: PageNavItem[] = [
+    { name: d?.manual || "Mark", href: `/${lang}/attendance` },
+    {
+      name: d?.analytics || "Analytics",
+      href: `/${lang}/attendance/analytics`,
+    },
+    { name: d?.reports || "Reports", href: `/${lang}/attendance/reports` },
+    { name: d?.settings || "Settings", href: `/${lang}/attendance/settings` },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <PageHeadingSetter title={d?.title || "Attendance"} />
+      <PageNav pages={attendancePages} />
+      {children}
+    </div>
+  )
+}
+```
+
+Key points:
+
+- Uses dictionary for all text (fallback to English string literals)
+- `PageHeadingSetter` sets the breadcrumb heading from PageHeadingProvider in parent
+- `PageNav` renders sub-navigation tabs
+- No auth checks (parent dashboard layout handles that)
+- ~20-35 lines
+
+### Template E: Passthrough Layout
+
+Sync. Just `<>{children}</>` for route grouping. No providers, no params.
+
+```tsx
+interface Props {
+  children: React.ReactNode
+}
+
+export default function ListingsLayout({ children }: Props) {
+  return <>{children}</>
+}
+```
+
+Key points:
+
+- Used for Next.js route groups that need a `layout.tsx` for structural reasons
+- Sync (no `async`, no `await params`)
+- No providers, no data fetching
+- 6 layouts in codebase follow this pattern: (listings), (school-apply), subjects, etc.
+- If the layout truly does nothing, consider whether the route group itself is needed
+
+## Anti-Patterns (Found in Current Codebase)
+
+### 1. DB queries in layouts
+
+```tsx
+// catalog/(catalog)/layout.tsx -- runs on every navigation
+const pendingCount = await db.catalogQuestion.count({
+  where: { approvalStatus: "PENDING" },
+})
+```
+
+Layouts don't re-render on navigation, but they DO re-execute their server component function on every soft navigation within their subtree. A DB query here means a database round-trip on every page change. Move the count to the specific page that displays it.
+
+### 2. Redundant auth checks
+
+```tsx
+// finance/banking/layout.tsx
+const session = await auth()
+if (!session?.user) redirect(`/${lang}/login`)
+```
+
+The parent `(school-dashboard)/layout.tsx` already calls `auth()` and the SaaS dashboard layout already checks for DEVELOPER role. Child layouts re-checking auth is wasted work and creates maintenance burden.
+
+### 3. Hardcoded inline translations
+
+```tsx
+// school/layout.tsx, subjects/(browse)/layout.tsx
+const isArabic = lang === "ar"
+const pages = [
+  { name: isArabic ? "نظرة عامة" : "Overview", href: ... },
+  { name: isArabic ? "الإعدادات" : "Configuration", href: ... },
+]
+```
+
+This bypasses the dictionary system, makes it impossible to add a third language, and scatters translations across layout files. Use `dictionary?.school?.settings?.overview || "Overview"` instead.
+
+### 4. Bloated client layouts
+
+```tsx
+// onboarding/[id]/layout.tsx (113 lines)
+// apply/[id]/layout.tsx (151 lines)
+```
+
+Both have inline loading skeletons (~20 lines), inline error UI with buttons (~30 lines), and complex hook logic. Extract `<LayoutSkeleton />` and `<LayoutError />` to separate components. The layout wrapper itself should be ~30 lines.
+
+### 5. Arrow function exports
+
+```tsx
+// (auth)/layout.tsx
+const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+  return <div>{children}</div>
+}
+export default AuthLayout
+```
+
+Inconsistent with the 49 other layouts that use `export default function`. Arrow functions lose the function name in stack traces.
+
+### 6. Unused params
+
+```tsx
+// profile/layout.tsx
+export default async function ProfileLayout({ children, params }: Props) {
+  return <>{children}</> // params never used
+}
+```
+
+If params aren't needed, don't declare them. This is a passthrough layout pretending to be async.
+
+## Quick Reference
+
+### Param Shapes (3 for layouts)
+
+| Shape            | Type                                  | Used by                                               |
+| ---------------- | ------------------------------------- | ----------------------------------------------------- |
+| None             | `{ children: React.ReactNode }`       | Root, passthrough, auth, onboarding, (school-apply)   |
+| Lang only        | `{ lang: string }`                    | [lang], saas-dashboard, saas-marketing, docs, catalog |
+| Lang + subdomain | `{ lang: string; subdomain: string }` | school-dashboard, school-marketing, feature navs      |
+
+### When async vs sync
+
+| Layout type                | Async? | Reason                                  |
+| -------------------------- | ------ | --------------------------------------- |
+| Root                       | Sync   | No params or data needed                |
+| Locale                     | Async  | Needs params, auth, dictionary, headers |
+| Dashboard                  | Async  | Needs params, auth, school lookup       |
+| Feature nav                | Async  | Needs params, dictionary                |
+| Client (onboarding, apply) | Sync   | `"use client"` -- uses hooks instead    |
+| Passthrough                | Sync   | No params or data needed                |
+
+### Key Behavioral Facts
+
+| Fact                                           | Implication                                                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| Layouts don't re-render on navigation          | State in layouts persists across page changes                                   |
+| Layouts cannot access `searchParams`           | Only pages receive `searchParams`                                               |
+| Layouts cannot access `pathname`               | Use `usePathname()` in client child if needed                                   |
+| `error.tsx` renders inside its layout          | To catch a layout error, `error.tsx` must be in the **parent** segment          |
+| `loading.tsx` renders inside layout            | `loading.tsx` wraps the page (children), not the layout itself                  |
+| Root layout MUST have `<html>` and `<body>`    | No other layout should have these tags                                          |
+| Root layout must NOT have manual `<head>` tags | Use `metadata` export or `generateMetadata` instead (exception: inline scripts) |
+
+## Next.js 16 Reference (Layout-Specific)
+
+- `params` is a Promise in layouts -- synchronous access is fully removed in v16
+- `LayoutProps<'/route'>` is a globally available type helper (no import needed, generated by `next typegen`)
+- Layouts do NOT re-render on navigation -- they preserve state and remain interactive
+- Layouts cannot access `searchParams` or `pathname`
+- `error.tsx` renders **inside** the layout -- the parent segment's `error.tsx` is needed to catch layout errors
+- `loading.tsx` renders inside the layout as a Suspense boundary around `children`
+- Root layout MUST have `<html>` and `<body>` -- must NOT have manual `<head>` tags (use Metadata API)
+- Use `template.tsx` instead of `layout.tsx` if you need re-mounting on navigation
+- Turbopack is the default bundler
+- React Compiler support is stable (`reactCompiler: true`)

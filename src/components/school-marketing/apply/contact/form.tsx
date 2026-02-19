@@ -262,7 +262,7 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {COUNTRY_OPTIONS.map((option) => (
+                      {COUNTRY_OPTIONS(isRTL).map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>

@@ -32,7 +32,7 @@ import {
   AdmissionPortalPage,
   APPLICATION_STEPS,
   ApplicationFormPage,
-  CampaignSelectorPage,
+  ApplyDashboardPage,
   InquiryPage,
   StatusTrackerPage,
   TourBookingPage,
@@ -122,8 +122,8 @@ test.describe("ADM-001: Public admissions page loads", () => {
   })
 })
 
-test.describe("ADM-002: Active campaigns display", () => {
-  test("apply page shows campaign selector", async ({ page }) => {
+test.describe("ADM-002: Application dashboard display", () => {
+  test("apply page shows application dashboard", async ({ page }) => {
     const ok = await goToSchoolPage(page, "/apply")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -132,9 +132,10 @@ test.describe("ADM-002: Active campaigns display", () => {
 
     await assertNoSSE(page)
 
-    // The page should load without errors
-    const campaignSelector = new CampaignSelectorPage(page, "demo")
-    expect(await campaignSelector.isDisplayed()).toBeTruthy()
+    // The page should show the new ApplicationDashboard
+    const dashboard = new ApplyDashboardPage(page, "demo")
+    expect(await dashboard.isDisplayed()).toBeTruthy()
+    expect(await dashboard.hasDashboardContent()).toBeTruthy()
   })
 
   test("apply page loads with correct metadata", async ({ page }) => {

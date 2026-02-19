@@ -143,20 +143,23 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
     <div className="space-y-5">
       {/* 1. Hero Banner -- full-width, no rounded corners */}
       <div
-        className="relative h-36 overflow-hidden sm:h-40 md:h-48"
+        className="relative overflow-hidden"
         style={{ backgroundColor: subject.color ?? "#1e40af" }}
       >
-        {subject.heroImageUrl && !heroFailed && (
+        {subject.heroImageUrl && !heroFailed ? (
           <Image
             src={subject.heroImageUrl}
             alt={subject.name}
-            fill
-            className="object-cover"
+            width={2048}
+            height={378}
+            className="block h-auto w-full"
             priority
             quality={100}
             sizes="100vw"
             onError={onHeroError}
           />
+        ) : (
+          <div className="aspect-[5.4/1]" />
         )}
         <div className="absolute inset-x-0 bottom-0 p-4 text-start sm:p-6">
           <h1 className="text-xl font-bold text-white sm:text-2xl md:text-3xl">

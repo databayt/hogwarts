@@ -54,8 +54,8 @@ import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
+  applyTimetableStructure,
   copyPeriodsToYear,
-  createDefaultPeriods,
   createPeriod,
   deletePeriod,
   getPeriodsForTerm,
@@ -65,6 +65,7 @@ import {
   updatePeriod,
   upsertSchoolWeekConfig,
 } from "../actions"
+import { formatWorkingDays, TIMETABLE_STRUCTURES } from "../structures"
 
 const DAY_LABELS = [
   { value: 0, label: "Sunday" },
@@ -324,9 +325,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
     }
   }
 
-  const handleCreateTemplate = async (
-    template: "standard_8" | "standard_6" | "half_day"
-  ) => {
+  const handleApplyStructure = async (slug: string) => {
     if (!selectedYearId) {
       toast({
         title: "Select School Year",
@@ -337,13 +336,14 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
     }
 
     try {
-      const result = await createDefaultPeriods({
+      const result = await applyTimetableStructure({
         yearId: selectedYearId,
-        template,
+        structureSlug: slug,
+        replaceExisting: periods.length > 0,
       })
 
       toast({
-        title: "Periods Created",
+        title: "Structure Applied",
         description: `Created ${result.createdCount} periods`,
       })
       setIsTemplateDialogOpen(false)
@@ -351,7 +351,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
     } catch (err) {
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to create",
+        description: err instanceof Error ? err.message : "Failed to apply",
         variant: "destructive",
       })
     }
@@ -580,45 +580,42 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
-                        <Alert>
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertTitle>Warning</AlertTitle>
-                          <AlertDescription>
-                            This will create new periods. Make sure the year has
-                            no existing periods.
-                          </AlertDescription>
-                        </Alert>
+                        {periods.length > 0 && (
+                          <Alert>
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Warning</AlertTitle>
+                            <AlertDescription>
+                              This will replace all existing periods for this
+                              year.
+                            </AlertDescription>
+                          </Alert>
+                        )}
                         <div className="grid gap-3">
-                          <Button
-                            variant="outline"
-                            className="justify-start"
-                            onClick={() => handleCreateTemplate("standard_8")}
-                          >
-                            <strong>Standard 8-Period Day</strong>
-                            <span className="text-muted-foreground ms-2">
-                              7:30 AM - 2:55 PM
-                            </span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="justify-start"
-                            onClick={() => handleCreateTemplate("standard_6")}
-                          >
-                            <strong>Standard 6-Period Day</strong>
-                            <span className="text-muted-foreground ms-2">
-                              8:00 AM - 2:15 PM
-                            </span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="justify-start"
-                            onClick={() => handleCreateTemplate("half_day")}
-                          >
-                            <strong>Half Day (5 Periods)</strong>
-                            <span className="text-muted-foreground ms-2">
-                              8:00 AM - 12:15 PM
-                            </span>
-                          </Button>
+                          {TIMETABLE_STRUCTURES.map((structure) => (
+                            <Button
+                              key={structure.slug}
+                              variant="outline"
+                              className="h-auto justify-start py-3"
+                              onClick={() =>
+                                handleApplyStructure(structure.slug)
+                              }
+                            >
+                              <div className="text-start">
+                                <div className="flex items-center gap-2">
+                                  <strong>{structure.nameEn}</strong>
+                                  {structure.isDefault && (
+                                    <Badge variant="secondary">Default</Badge>
+                                  )}
+                                </div>
+                                <span className="text-muted-foreground text-xs">
+                                  {structure.periodsPerDay} periods &middot;{" "}
+                                  {structure.schoolStart} -{" "}
+                                  {structure.schoolEnd} &middot;{" "}
+                                  {formatWorkingDays(structure.workingDays)}
+                                </span>
+                              </div>
+                            </Button>
+                          ))}
                         </div>
                       </div>
                     </DialogContent>

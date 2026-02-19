@@ -41,16 +41,12 @@ export default async function StatusPage({
   }
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container mx-auto max-w-2xl px-4">
-        <StatusTrackerContent
-          school={schoolResult.data}
-          dictionary={dictionary}
-          lang={lang}
-          subdomain={subdomain}
-          initialToken={token}
-        />
-      </div>
-    </div>
+    <StatusTrackerContent
+      school={schoolResult.data}
+      dictionary={dictionary}
+      lang={lang}
+      subdomain={subdomain}
+      initialToken={token}
+    />
   )
 }

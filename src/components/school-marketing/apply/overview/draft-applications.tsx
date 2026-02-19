@@ -31,10 +31,10 @@ export function DraftApplications({
 
   return (
     <div className="space-y-2 sm:space-y-3">
-      <p className="text-sm font-medium">
+      <h5>
         {dict.completeYourApplication ||
           (isRTL ? "أكمل طلبك" : "Complete your application")}
-      </p>
+      </h5>
       <div className="space-y-2">
         {applications.map((application) => (
           <ApplicationCard

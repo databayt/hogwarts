@@ -41,16 +41,12 @@ export default async function ContinuePage({
   }
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container mx-auto max-w-lg px-4">
-        <ContinueApplicationContent
-          school={schoolResult.data}
-          dictionary={dictionary}
-          lang={lang}
-          subdomain={subdomain}
-          initialToken={token}
-        />
-      </div>
-    </div>
+    <ContinueApplicationContent
+      school={schoolResult.data}
+      dictionary={dictionary}
+      lang={lang}
+      subdomain={subdomain}
+      initialToken={token}
+    />
   )
 }

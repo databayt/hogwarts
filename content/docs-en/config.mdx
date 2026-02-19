@@ -1,0 +1,668 @@
+---
+title: "Config"
+description: "Canonical patterns for writing config.ts in feature directories"
+---
+
+## Current Progress (Audit)
+
+100 config.ts files audited across the codebase (~13,568 total lines):
+
+| Area                                    | Status | Detail                                                                                                                                |
+| --------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Co-located with feature directories     | PASS   | 80+ live in `src/components/`, rest in root/lib                                                                                       |
+| `as const` assertions                   | PASS   | Consistently used for literal type inference                                                                                          |
+| Named exports only                      | PASS   | Zero default exports in src/components/ (only auth.config.ts uses default, required by NextAuth)                                      |
+| No circular dependencies                | PASS   | Zero cross-config imports found                                                                                                       |
+| Section separator comments              | PASS   | Large files consistently use `// ====` separators                                                                                     |
+| JSDoc on exported constants             | PASS   | Best examples: tenants/config.ts, billing/config.ts                                                                                   |
+| `GENDER_OPTIONS` duplication            | FAIL   | 4 files: students, teachers, staff, apply/personal -- with inconsistent values (`male` vs `MALE`) and different languages             |
+| Currency definitions duplication        | FAIL   | 6+ files with different shapes (`value/label/symbol` vs `code/name/symbol/flag` vs `code/symbol/name`)                                |
+| `PAGE_SIZE_OPTIONS` duplication         | FAIL   | 5+ files: `[10,20,50,100]` duplicated 4 times identically; table/config.ts uses `[10,20,30,40,50]`                                    |
+| File size limits duplication            | FAIL   | 7+ files define `MAX_FILE_SIZE` independently; centralized `file/config.ts` already has `SIZE_LIMITS`                                 |
+| `Role` type redefined in config files   | FAIL   | 4 config files define their own Role type instead of importing from `@prisma/client`                                                  |
+| Utility functions in config files       | FAIL   | `formatFileSize()` in messaging/config.ts, `formatBytes()` in file/config.ts, `getEmploymentStatusColor()` in staff/config.ts         |
+| Types defined in config files           | FAIL   | `PlatformNavItem`, `Role` in platform-sidebar/config.ts; 7 interfaces in billingsdk-config.ts                                         |
+| Empty config file                       | FAIL   | school-marketing/about/config.ts is 0 lines                                                                                           |
+| Raw `process.env` access                | FAIL   | file/config.ts accesses `process.env.CLOUDFLARE_R2_ACCOUNT_ID` directly instead of `@/env.mjs`                                        |
+| Bloated files (>300 lines)              | FAIL   | 8 files over 300 lines; worst: docs/icons/config.ts (664), dashboard/config.ts (485), file/config.ts (461), messaging/config.ts (460) |
+| `EMPLOYMENT_STATUS_OPTIONS` duplication | FAIL   | Defined in both teachers/config.ts and staff/config.ts with identical values                                                          |
+| Hardcoded English labels                | INFO   | Most config files use English labels; apply/personal uses Arabic -- follows single-language storage rule                              |
+
+## Five Categories of config.ts
+
+### Category 1: Form Step Definitions (~15 files)
+
+`STEPS`, `STEP_FIELDS`, `TOTAL_FIELDS` for multi-step forms. Typically 6-70 lines.
+
+Reference: `listings/teachers/config.ts` (69 lines), `listings/students/config.ts` (16 lines)
+
+### Category 2: Constants/Enums with Labels & Variants (~25 files)
+
+Status objects, option arrays, badge variants, color maps. Typically 50-200 lines.
+
+Reference: `saas-dashboard/tenants/config.ts` (177 lines), `finance/fees/config.ts` (111 lines)
+
+### Category 3: Navigation/Route Maps (~8 files)
+
+Sidebar items, header links, footer links with RBAC roles. Typically 16-172 lines.
+
+Reference: `template/platform-sidebar/config.ts` (151 lines), `template/saas-sidebar/config.ts` (21 lines)
+
+### Category 4: Feature-Rich Domain Configuration (~10 files)
+
+Comprehensive config for complex features including limits, rules, defaults. Typically 200-485 lines.
+
+Reference: `school-dashboard/dashboard/config.ts` (485 lines), `messaging/config.ts` (460 lines)
+
+### Category 5: Infrastructure Configuration (Root + lib, ~12 files)
+
+Framework configs (next.config.ts), auth providers, AI models, billing plans.
+
+Reference: `next.config.ts` (128 lines), `src/auth.config.ts` (151 lines)
+
+## The 7 Rules
+
+### 1. Config = static, declarative data only
+
+No utility functions, no classes, no business logic. If it computes, transforms, or has side effects, it belongs in a utils file.
+
+```typescript
+// utils.ts
+import { EMPLOYMENT_STATUS_COLORS } from "./config"
+
+// BAD: Utility function in config file (staff/config.ts)
+export function getEmploymentStatusColor(status: string): string {
+  switch (status) {
+    case "ACTIVE":
+      return "green"
+    case "ON_LEAVE":
+      return "yellow"
+    case "TERMINATED":
+      return "red"
+    case "RETIRED":
+      return "gray"
+    default:
+      return "gray"
+  }
+}
+
+// GOOD: Static color map in config, function in utils
+// config.ts
+export const EMPLOYMENT_STATUS_COLORS = {
+  ACTIVE: "green",
+  ON_LEAVE: "yellow",
+  TERMINATED: "red",
+  RETIRED: "gray",
+} as const
+
+export function getEmploymentStatusColor(status: string): string {
+  return (
+    EMPLOYMENT_STATUS_COLORS[status as keyof typeof EMPLOYMENT_STATUS_COLORS] ??
+    "gray"
+  )
+}
+```
+
+### 2. Types belong in types.ts
+
+Never define interfaces or type aliases in config.ts. Config imports types it needs from types.ts.
+
+```typescript
+// GOOD: Types in types.ts, config imports them
+// types.ts
+import type { UserRole } from "@prisma/client"
+
+// config.ts
+import type { PlatformNavItem } from "./types"
+
+// BAD: Types defined inline in config (platform-sidebar/config.ts)
+export type PlatformNavItem = {
+  title: string
+  href: string
+  icon: IconKey
+  roles: Role[]
+  className?: string
+}
+
+export type Role = "DEVELOPER" | "ADMIN" | "TEACHER" | "STUDENT"
+
+export const platformNav: PlatformNavItem[] = [
+  // ...
+]
+
+export type PlatformNavItem = {
+  title: string
+  href: string
+  icon: IconKey
+  roles: UserRole[]
+  className?: string
+}
+
+export const platformNav: PlatformNavItem[] = [
+  // ...
+]
+```
+
+### 3. Always `as const`
+
+Every exported constant uses `as const` for literal type narrowing. This enables TypeScript to infer exact string literal types instead of widening to `string`.
+
+```typescript
+// BAD: No as const -- type widens to { label: string; value: string }[]
+export const GENDER_OPTIONS = [
+  { label: "Male", value: "male" },
+  { label: "Female", value: "female" },
+]
+
+// GOOD: as const -- type narrows to readonly [{ label: "Male"; value: "male" }, ...]
+export const GENDER_OPTIONS = [
+  { label: "Male", value: "male" },
+  { label: "Female", value: "female" },
+] as const
+```
+
+### 4. Import types from types.ts
+
+Config files import the types they need. Config consumers import the constants.
+
+```typescript
+// GOOD: tenants/config.ts imports types from types.ts
+import type { PlanType, TenantStatus } from "./types"
+
+export const PLAN_TYPE_LABELS: Record<PlanType, string> = {
+  basic: "Basic",
+  premium: "Premium",
+  enterprise: "Enterprise",
+} as const
+
+export const TENANT_STATUS_VARIANTS: Record<
+  TenantStatus,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  active: "default",
+  inactive: "secondary",
+  suspended: "destructive",
+  trial: "outline",
+} as const
+```
+
+### 5. Shared constants live in `src/lib/constants/`
+
+Anything used by 3+ features belongs in a shared module. Never duplicate across feature configs.
+
+```typescript
+// feature/config.ts
+import { GENDER_OPTIONS, PAGE_SIZE_OPTIONS } from "@/lib/constants/options"
+
+// BAD: GENDER_OPTIONS defined in 4 files with inconsistent values
+// students/config.ts: { value: "male", label: "Male" }
+// teachers/config.ts: { value: "male", label: "Male" }
+// staff/config.ts:    { value: "male", label: "Male" }
+// apply/personal/config.ts: { value: "MALE", label: "ذكر" }
+
+// BAD: PAGE_SIZE_OPTIONS duplicated 5+ times
+// tenants/config.ts:  [10, 20, 50, 100]
+// teachers/config.ts: [10, 20, 50, 100]
+// students/config.ts: [10, 20, 50, 100]
+// fees/config.ts:     20 (just the default)
+// table/config.ts:    [10, 20, 30, 40, 50]
+
+// GOOD: Shared module
+// src/lib/constants/options.ts
+export const GENDER_OPTIONS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+] as const
+
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const
+export const DEFAULT_PAGE_SIZE = 20
+```
+
+### 6. Max ~200 lines
+
+Split large configs by concern (steps, statuses, navigation, defaults). Files over 300 lines indicate missing abstractions.
+
+```typescript
+// BAD: dashboard/config.ts (485 lines) -- everything in one file
+
+// GOOD: Split by concern
+// config/steps.ts     -- form steps and field mappings (~40 lines)
+// config/statuses.ts  -- status enums, labels, colors (~80 lines)
+// config/navigation.ts -- sidebar routes (~60 lines)
+// config/defaults.ts  -- default values and limits (~30 lines)
+```
+
+### 7. Environment variables through `@/env.mjs`
+
+Never access raw `process.env` in config files. Use validated env imports.
+
+```typescript
+// GOOD: Import from validated env
+import { env } from "@/env.mjs"
+
+// BAD: Raw process.env access (file/config.ts)
+export const R2_CONFIG = {
+  accountId: process.env.CLOUDFLARE_R2_ACCOUNT_ID,
+  accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
+  secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+  bucket: process.env.CLOUDFLARE_R2_BUCKET,
+}
+
+export const R2_CONFIG = {
+  accountId: env.CLOUDFLARE_R2_ACCOUNT_ID,
+  accessKeyId: env.CLOUDFLARE_R2_ACCESS_KEY_ID,
+  secretAccessKey: env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+  bucket: env.CLOUDFLARE_R2_BUCKET,
+}
+```
+
+## 4 Canonical Templates
+
+### Template A: Form Step Config (~15 files)
+
+STEPS + STEP_FIELDS + domain-specific option arrays. Reference: `listings/teachers/config.ts` (69 lines).
+
+```typescript
+export const STEPS = {
+  1: "Basic Information",
+  2: "Contact Details",
+  3: "Employment Details",
+  4: "Qualifications",
+  5: "Experience",
+  6: "Subject Expertise",
+  7: "Review & Submit",
+} as const
+
+export const STEP_FIELDS = {
+  1: ["givenName", "surname", "gender", "birthDate"] as const,
+  2: ["emailAddress"] as const,
+  3: [
+    "employeeId",
+    "joiningDate",
+    "employmentStatus",
+    "employmentType",
+    "contractStartDate",
+    "contractEndDate",
+  ] as const,
+  4: ["qualifications"] as const,
+  5: ["experiences"] as const,
+  6: ["subjectExpertise"] as const,
+  7: [] as const,
+} as const
+
+export const TOTAL_FIELDS = [
+  ...STEP_FIELDS[1],
+  ...STEP_FIELDS[2],
+  ...STEP_FIELDS[3],
+].length
+
+export const EMPLOYMENT_STATUS_OPTIONS = [
+  { label: "Active", value: "ACTIVE" },
+  { label: "On Leave", value: "ON_LEAVE" },
+  { label: "Terminated", value: "TERMINATED" },
+  { label: "Retired", value: "RETIRED" },
+] as const
+
+export const EMPLOYMENT_TYPE_OPTIONS = [
+  { label: "Full-Time", value: "FULL_TIME" },
+  { label: "Part-Time", value: "PART_TIME" },
+  { label: "Contract", value: "CONTRACT" },
+  { label: "Substitute", value: "SUBSTITUTE" },
+] as const
+```
+
+Key points:
+
+- `STEPS` maps step numbers to labels for wizard headers
+- `STEP_FIELDS` maps step numbers to field name arrays for validation
+- `TOTAL_FIELDS` computed from spreads for progress calculation
+- Domain options co-located with the feature that uses them
+- Minimal file: `listings/students/config.ts` is only 16 lines (2 steps, 1 option array)
+
+### Template B: Status/Constants Config (~25 files)
+
+Status enums + labels + badge variants + colors. Imports types from types.ts. Reference: `saas-dashboard/tenants/config.ts` (177 lines).
+
+```typescript
+/**
+ * Constants for Tenants (Schools) feature
+ *
+ * Static configuration data, enums, and lookup tables for tenant management.
+ */
+
+import type { PlanType, TenantStatus } from "./types"
+
+/**
+ * Plan type display labels
+ */
+export const PLAN_TYPE_LABELS: Record<PlanType, string> = {
+  basic: "Basic",
+  premium: "Premium",
+  enterprise: "Enterprise",
+} as const
+
+/**
+ * Plan limits configuration
+ */
+export const PLAN_LIMITS: Record<
+  PlanType,
+  { maxStudents: number; maxTeachers: number }
+> = {
+  basic: { maxStudents: 100, maxTeachers: 10 },
+  premium: { maxStudents: 500, maxTeachers: 50 },
+  enterprise: { maxStudents: Infinity, maxTeachers: Infinity },
+} as const
+
+/**
+ * Status badge variants for UI components
+ */
+export const TENANT_STATUS_VARIANTS: Record<
+  TenantStatus,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  active: "default",
+  inactive: "secondary",
+  suspended: "destructive",
+  trial: "outline",
+} as const
+
+/**
+ * Default values for new tenants
+ */
+export const TENANT_DEFAULTS = {
+  planType: "basic" as PlanType,
+  isActive: true,
+  timezone: "Africa/Khartoum",
+  maxStudents: 100,
+  maxTeachers: 10,
+} as const
+```
+
+Key points:
+
+- JSDoc on every exported constant
+- Types imported from `./types`, not defined inline
+- `Record<UnionType, ...>` ensures exhaustive coverage
+- Logical grouping: labels, limits, variants, defaults
+- Note: this is the best config file in the codebase -- uses JSDoc, imports types, pure data
+
+### Template C: Navigation Config (~8 files)
+
+Route arrays with RBAC roles. Reference: `template/platform-sidebar/config.ts` (151 lines).
+
+```typescript
+import type { UserRole } from "@prisma/client"
+
+import type { PlatformNavItem } from "./types"
+
+const ALL_ROLES: UserRole[] = [
+  "DEVELOPER",
+  "ADMIN",
+  "TEACHER",
+  "STUDENT",
+  "GUARDIAN",
+  "ACCOUNTANT",
+  "STAFF",
+  "USER",
+]
+
+export const platformNav: PlatformNavItem[] = [
+  { title: "Overview", href: "/dashboard", icon: "pieChart", roles: ALL_ROLES },
+  {
+    title: "School",
+    href: "/school",
+    icon: "admin",
+    roles: ["ADMIN", "DEVELOPER"],
+  },
+  {
+    title: "Students",
+    href: "/students",
+    icon: "graduationCap",
+    roles: ["ADMIN", "STAFF", "TEACHER"],
+  },
+  // ...
+]
+```
+
+Key points:
+
+- `ALL_ROLES` helper avoids repeating all 8 roles
+- Each nav item has `roles` array for RBAC filtering
+- Current anti-pattern: the actual file defines `Role` and `PlatformNavItem` inline instead of importing from types.ts / `@prisma/client`
+
+### Template D: Domain Constants Config (~25 files)
+
+Pure constant objects with `as const`, status colors, pagination defaults. Reference: `finance/fees/config.ts` (111 lines).
+
+```typescript
+/**
+ * Fees Sub-Block Configuration
+ *
+ * Static configuration and constants
+ */
+
+export const FEE_STATUS = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+  ARCHIVED: "ARCHIVED",
+} as const
+
+export const PAYMENT_METHOD = {
+  CASH: "CASH",
+  CARD: "CARD",
+  BANK_TRANSFER: "BANK_TRANSFER",
+  MOBILE_MONEY: "MOBILE_MONEY",
+  CHECK: "CHECK",
+  OTHER: "OTHER",
+} as const
+
+export const STATUS_COLORS = {
+  ACTIVE: "bg-green-500/10 text-green-500",
+  INACTIVE: "bg-gray-500/10 text-gray-500",
+  PENDING: "bg-yellow-500/10 text-yellow-500",
+  PAID: "bg-green-500/10 text-green-500",
+  OVERDUE: "bg-red-500/10 text-red-500",
+} as const
+
+export const DEFAULT_PAGE_SIZE = 20
+
+export const FEE_CATEGORIES = [
+  "TUITION",
+  "REGISTRATION",
+  "LIBRARY",
+  "SPORTS",
+  "TRANSPORT",
+  "EXAMINATION",
+  "OTHER",
+] as const
+```
+
+Key points:
+
+- Enum-like objects (`FEE_STATUS`, `PAYMENT_METHOD`) map string keys to string values
+- `STATUS_COLORS` provides Tailwind classes keyed by status
+- No types defined -- pure data constants
+- `DEFAULT_PAGE_SIZE` as a standalone constant, not in an options array
+
+## Anti-Patterns
+
+### 1. GENDER_OPTIONS defined 4 times with inconsistent values
+
+```typescript
+// students/config.ts -- lowercase values
+export const GENDER_OPTIONS = [
+  { label: "Male", value: "male" },
+  { label: "Female", value: "female" },
+] as const
+
+// teachers/config.ts -- same as students (lowercase)
+export const GENDER_OPTIONS = [
+  { label: "Male", value: "male" },
+  { label: "Female", value: "female" },
+] as const
+
+// staff/config.ts -- same as students (lowercase)
+export const GENDER_OPTIONS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+] as const
+
+// apply/personal/config.ts -- UPPERCASE values + Arabic labels + extra option
+export const GENDER_OPTIONS = [
+  { value: "MALE", label: "ذكر" },
+  { value: "FEMALE", label: "أنثى" },
+  { value: "OTHER", label: "أخرى" },
+] as const
+```
+
+Fix: Define once in `src/lib/constants/options.ts` with a single casing convention. Features that need Arabic labels use the single-language storage translation system.
+
+### 2. Currency definitions in 6+ files with different shapes
+
+```typescript
+// billing/config.ts shape
+{ value: "USD", label: "US Dollar", symbol: "$" }
+
+// finance/config.ts shape
+{ code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸" }
+
+// payroll/config.ts shape
+{ code: "USD", symbol: "$", name: "US Dollar" }
+```
+
+Fix: Define one `CURRENCIES` constant in `src/lib/constants/currencies.ts` with a canonical shape. Features select the fields they need.
+
+### 3. PAGE_SIZE_OPTIONS duplicated 5+ times
+
+```typescript
+// tenants/config.ts
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const
+
+// teachers/config.ts (same)
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const
+
+// table/config.ts (different!)
+export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const
+```
+
+Fix: Single `PAGE_SIZE_OPTIONS` in `src/lib/constants/pagination.ts`. Features that need custom sizes import and override.
+
+### 4. File size limits in 7+ files
+
+Centralized `file/config.ts` already has `SIZE_LIMITS` but is ignored by other features that define their own `MAX_FILE_SIZE`.
+
+Fix: Import from `file/config.ts` or move to `src/lib/constants/file-limits.ts`.
+
+### 5. Utility functions in config files
+
+```typescript
+// BAD: staff/config.ts (61 lines) -- functions mixed with constants
+export const EMPLOYMENT_STATUS_OPTIONS = [
+  { value: "ACTIVE", label: "Active" },
+  // ...
+] as const
+
+export function getEmploymentStatusColor(status: string): string {
+  switch (status) {
+    case "ACTIVE":
+      return "green"
+    // ...
+  }
+}
+
+// BAD: messaging/config.ts -- formatFileSize() alongside constants
+// BAD: file/config.ts -- formatBytes() alongside constants
+```
+
+Fix: Move functions to `utils.ts`. Config files contain only static data.
+
+### 6. Types defined in config files
+
+```typescript
+// BAD: platform-sidebar/config.ts -- 2 types defined inline
+export type PlatformNavItem = {
+  title: string
+  href: string
+  icon: IconKey
+  roles: Role[]
+}
+
+export type Role = "DEVELOPER" | "ADMIN" | "TEACHER"
+// ...
+```
+
+Fix: Move types to `types.ts`. Import `UserRole` from `@prisma/client` instead of redefining.
+
+### 7. Role type redefined in 4 config files
+
+```typescript
+// BAD: 4 config files define their own Role type
+// platform-sidebar/config.ts
+export type Role = "DEVELOPER" | "ADMIN" | "TEACHER" | ...
+
+// saas-sidebar/config.ts
+type Role = "DEVELOPER" | "ADMIN"
+
+// school-sidebar/config.ts
+type Role = "ADMIN" | "TEACHER" | "STUDENT" | ...
+
+// GOOD: Import from Prisma
+import type { UserRole } from "@prisma/client"
+```
+
+### 8. Empty config file
+
+`school-marketing/about/config.ts` is 0 lines. Dead code -- should be deleted.
+
+## Quick Reference
+
+### What Belongs Where
+
+| Content                              | Belongs in           | Not in               |
+| ------------------------------------ | -------------------- | -------------------- |
+| Constants, option arrays, defaults   | `config.ts`          | actions.ts, utils.ts |
+| Status enums, badge variants, colors | `config.ts`          | columns.tsx          |
+| Interfaces, type aliases             | `types.ts`           | config.ts            |
+| Functions, transforms, formatters    | `utils.ts`           | config.ts            |
+| Zod schemas                          | `validation.ts`      | config.ts            |
+| Constants used by 3+ features        | `src/lib/constants/` | feature config.ts    |
+
+### Shared Constants Candidates
+
+| Constant            | Current State                            | Target Location                    |
+| ------------------- | ---------------------------------------- | ---------------------------------- |
+| `GENDER_OPTIONS`    | 4 files, inconsistent values             | `src/lib/constants/options.ts`     |
+| `CURRENCIES`        | 6+ files, different shapes               | `src/lib/constants/currencies.ts`  |
+| `PAGE_SIZE_OPTIONS` | 5+ files, mostly `[10,20,50,100]`        | `src/lib/constants/pagination.ts`  |
+| `FILE_SIZE_LIMITS`  | 7+ files, `file/config.ts` has canonical | `src/lib/constants/file-limits.ts` |
+| `EMPLOYMENT_STATUS` | teachers + staff (identical)             | `src/lib/constants/options.ts`     |
+
+### Import Direction
+
+```
+types.ts          (type definitions)
+    |
+config.ts         (imports types, exports constants)
+    |
++---+---+---+
+|   |   |   |
+form content columns table
+.tsx  .tsx   .tsx   .tsx
+```
+
+Types flow DOWN from types.ts through config.ts. Component files import constants from config.ts, never the reverse.
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  config.ts         # Static constants, option arrays, defaults (this file)
+  types.ts          # Interfaces, type aliases
+  validation.ts     # Zod schemas
+  content.tsx       # Server or client content component
+  form.tsx          # Form client component (imports from config.ts)
+  columns.tsx       # Column definitions (imports from config.ts)
+  table.tsx         # DataTable client component
+  actions.ts        # Server actions
+  utils.ts          # Functions, transforms (if needed)
+```

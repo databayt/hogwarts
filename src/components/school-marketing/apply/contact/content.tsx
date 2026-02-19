@@ -80,10 +80,10 @@ export default function ContactContent({ dictionary }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {dict.title || CONTACT_STEP_CONFIG.label}
+              {dict.title || CONTACT_STEP_CONFIG.label(isRTL)}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {dict.description || CONTACT_STEP_CONFIG.description}
+              {dict.description || CONTACT_STEP_CONFIG.description(isRTL)}
             </p>
           </div>
         </div>

@@ -89,7 +89,7 @@ async function processBanners(prisma: PrismaClient): Promise<void> {
   const subjects = await prisma.catalogSubject.findMany({
     where: {
       system: "clickview",
-      bannerUrl: null,
+      OR: [{ bannerUrl: null }, { bannerUrl: { startsWith: "/" } }],
     },
     select: { id: true, slug: true, name: true },
   })

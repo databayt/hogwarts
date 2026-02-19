@@ -3,5 +3,11 @@ interface ApplyLayoutProps {
 }
 
 export default function SchoolApplyLayout({ children }: ApplyLayoutProps) {
-  return <>{children}</>
+  return (
+    <div className="flex min-h-screen flex-col">
+      <main className="flex w-full flex-1 items-center px-4 sm:px-6 md:px-12 lg:px-20">
+        {children}
+      </main>
+    </div>
+  )
 }

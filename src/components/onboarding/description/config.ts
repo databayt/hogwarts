@@ -44,4 +44,24 @@ export const SCHOOL_TYPES: SchoolType[] = [
     title: "Special",
     description: "Special education and support",
   },
+  {
+    id: "national",
+    title: "National Curriculum",
+    description: "Government ministry standard",
+  },
+  {
+    id: "british",
+    title: "British Curriculum",
+    description: "IGCSE / A-Levels",
+  },
+  {
+    id: "ib",
+    title: "International Baccalaureate",
+    description: "IB Diploma Programme",
+  },
+  {
+    id: "american",
+    title: "American Curriculum",
+    description: "US educational standards",
+  },
 ]

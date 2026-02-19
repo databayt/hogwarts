@@ -19,8 +19,11 @@ model CatalogSubject {
   name        String
   slug        String        @unique
   lang        String        @default("ar")
-  description String?       @db.Text
-  department  String // Grouping (e.g. "العلوم")
+  description    String?       @db.Text
+  objectives     String[]      @default([])
+  prerequisites  String?       @db.Text
+  targetAudience String?       @db.Text
+  department     String // Grouping (e.g. "العلوم")
   levels      SchoolLevel[]
   country     String        @default("SD")
   system      String        @default("national")

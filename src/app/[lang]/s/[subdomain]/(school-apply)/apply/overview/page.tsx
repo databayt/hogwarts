@@ -15,14 +15,12 @@ const ApplyOverviewPage = async ({ params, searchParams }: Props) => {
   const dictionary = await getDictionary(lang)
 
   return (
-    <div className="h-screen overflow-hidden">
-      <ApplyOverviewClient
-        dictionary={dictionary.school.admission.form}
-        lang={lang}
-        subdomain={subdomain}
-        id={id}
-      />
-    </div>
+    <ApplyOverviewClient
+      dictionary={dictionary.school.admission.form}
+      lang={lang}
+      subdomain={subdomain}
+      id={id}
+    />
   )
 }
 

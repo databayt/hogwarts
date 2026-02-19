@@ -33,6 +33,7 @@ import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
 import { seedClickViewCatalog } from "./clickview-catalog"
 import { seedClickViewImages } from "./clickview-images"
+import { seedClickViewLessonImages } from "./clickview-lesson-images"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
 import { seedFees } from "./fees"
@@ -328,6 +329,14 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedClickViewImages(prisma)
+    },
+  },
+  "clickview-lesson-images": {
+    description:
+      "Upload ClickView lesson + chapter images to S3/CloudFront (~891 unique)",
+    global: true,
+    run: async (prisma) => {
+      await seedClickViewLessonImages(prisma)
     },
   },
   school: {

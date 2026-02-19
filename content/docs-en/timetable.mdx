@@ -1,41 +1,238 @@
 ---
 title: "Timetable"
-description: "Documentation for Timetable"
+description: "Complete guide to the timetable module - structure catalog, schedule configuration, slot management, conflict detection, and printing"
 ---
 
-## Timetable — Admin Guide
+## Overview
 
-This guide shows Admins/Owners how to configure working days and lunch, manage weekly slots, detect and resolve conflicts, and print clean A4 timetables.
+The Timetable module handles school schedule management end-to-end: choosing a timetable structure, configuring working days and periods, assigning weekly slots, detecting conflicts, and printing A4 timetables. All operations are tenant-scoped by `schoolId`.
+
+### Module Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      STRUCTURE SELECTION                            │
+│  Onboarding: /onboarding/[id]/schedule → auto-recommend by profile │
+│  Settings:   /timetable/settings       → "Use Template" dialog     │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                 TIMETABLE STRUCTURES CATALOG                        │
+│  structures.ts → 5 curated structures (TypeScript constants)        │
+│  getRecommendedStructures(country, schoolType, schoolLevel)         │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│               applyTimetableStructure()                             │
+│  Creates Period records + upserts SchoolWeekConfig                  │
+│  Supports replaceExisting for settings page                         │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    WEEKLY SLOT MANAGEMENT                            │
+│  Assign: Day + Period + Class + Teacher + Room                      │
+│  Conflicts: Teacher / Room double-booking detection                 │
+│  Views: Class view, Teacher view, Room view                         │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ### Permissions
 
-- Mutations (saving schedule, creating/editing slots) require Admin, Owner, or Developer roles.
-- All operations are tenant‑scoped by `schoolId`.
+- Mutations (applying structures, saving schedule, creating/editing slots) require Admin, Owner, or Developer roles.
+- Read access varies by role: teachers see own classes, students see their schedule.
+- All operations are tenant-scoped by `schoolId`.
 
-### Configure Working Days and Lunch
+---
+
+## Structure Catalog
+
+Schools don't invent their timetable structure - the ministry does. If we know the country and school type, the structure is almost deterministic. The catalog provides curated, real-world timetable structures that are auto-recommended during onboarding.
+
+### Design Decisions
+
+- **TypeScript constants** (not a Prisma model) - the catalog is tiny (~5 entries), static, and has no relational data.
+- **No separate `system` field** - the extended `schoolType` covers curriculum identity (`national`, `british`, `ib`, `american`).
+- **Pure functions** - `getRecommendedStructures()` is a pure filter/sort with no database calls.
+
+### Available Structures
+
+| Slug             | Name                     | Days    | Periods   | Times       | Matches                                  |
+| ---------------- | ------------------------ | ------- | --------- | ----------- | ---------------------------------------- |
+| `sd-gov-default` | Sudan Government Default | Sun-Thu | 8 x 45min | 07:30-14:55 | public, national                         |
+| `sd-private`     | Sudan Private            | Sun-Thu | 7 x 50min | 07:15-14:25 | private                                  |
+| `sd-british`     | British Curriculum       | Mon-Fri | 6 x 55min | 08:00-14:45 | british, international                   |
+| `sd-ib`          | IB / American            | Mon-Fri | 6 x 50min | 08:00-14:15 | ib, american                             |
+| `sd-half-day`    | Half Day / KG            | Sun-Thu | 5 x 40min | 08:00-11:55 | public, private, national (primary only) |
+
+The `sd-gov-default` structure maps directly from the existing `standard_8` template and is confirmed accurate for Sudan government schools: 8 periods x 45 minutes, Sunday-Thursday, Friday rest day.
+
+### Legacy Template Mapping
+
+Old template names are mapped to new structure slugs for backward compatibility:
+
+| Legacy Template | Structure Slug   |
+| --------------- | ---------------- |
+| `standard_8`    | `sd-gov-default` |
+| `standard_6`    | `sd-british`     |
+| `half_day`      | `sd-half-day`    |
+
+### Key Files
+
+| File                                                      | Purpose                                            |
+| --------------------------------------------------------- | -------------------------------------------------- |
+| `src/components/school-dashboard/timetable/structures.ts` | Types, catalog data, matcher and utility functions |
+
+### API
+
+```typescript
+import {
+  formatWorkingDays,
+  getRecommendedStructures,
+  getStructureBySlug,
+  getStructuresByCountry,
+  LEGACY_TEMPLATE_MAP,
+  TIMETABLE_STRUCTURES,
+} from "@/components/school-dashboard/timetable/structures"
+
+// Filter by school profile - returns matching structures, default first
+const structures = getRecommendedStructures("SD", "public", "both")
+// → [sd-gov-default, sd-half-day]
+
+// Look up by slug
+const structure = getStructureBySlug("sd-british")
+
+// Display helper
+formatWorkingDays([0, 1, 2, 3, 4]) // → "Sun - Thu"
+formatWorkingDays([1, 2, 3, 4, 5]) // → "Mon - Fri"
+```
+
+---
+
+## Onboarding: Schedule Step
+
+The schedule step is inserted between **Capacity** (order 5) and **Branding** (order 6) in the onboarding flow.
+
+### Behavior
+
+1. Reads the school's `country`, `schoolType`, and `schoolLevel` from saved data.
+2. Calls `getRecommendedStructures()` with those inputs.
+3. Shows recommended structures at top with visual timeline preview, alternatives below.
+4. User picks one (auto-saves to `school.system` field) or skips to customize later.
+5. The step is **optional** - the "Next" button is always enabled.
+
+### Structure Preview Component
+
+Each structure card shows:
+
+- Name and description
+- Period count, time range, working days
+- Color-coded visual timeline bar (blue = class, amber = break, green = lunch)
+- "Recommended" badge on the default structure
+
+### Key Files
+
+| File                                                       | Purpose                                           |
+| ---------------------------------------------------------- | ------------------------------------------------- |
+| `src/app/[lang]/onboarding/[id]/schedule/page.tsx`         | Route page                                        |
+| `src/components/onboarding/schedule/content.tsx`           | Main step UI                                      |
+| `src/components/onboarding/schedule/structure-preview.tsx` | Visual timeline component                         |
+| `src/components/onboarding/schedule/actions.ts`            | `getSchoolScheduleData()`, `saveScheduleChoice()` |
+| `src/components/onboarding/schedule/config.ts`             | Step constants                                    |
+| `src/components/onboarding/schedule/validation.ts`         | Zod schema                                        |
+
+### Navigation Chain
+
+```
+... → capacity → schedule → branding → ...
+```
+
+Configured in `config.client.ts` (STEP_NAVIGATION) and `config.ts` (ONBOARDING_STEPS, order 5.5).
+
+---
+
+## Applying a Structure
+
+The `applyTimetableStructure()` server action creates Period records from a structure definition and updates the school's week configuration.
+
+### What It Does
+
+1. Validates admin access and tenant context.
+2. Looks up the structure by slug (supports legacy template names via `LEGACY_TEMPLATE_MAP`).
+3. Optionally deletes existing periods for the year (`replaceExisting: true`).
+4. Creates `Period` records for each entry in the structure (class, break, and lunch periods).
+5. Upserts `SchoolWeekConfig` with the structure's working days and lunch position.
+6. Logs the action for audit trail.
+
+### Usage
+
+```typescript
+// From timetable settings (replacing existing periods)
+await applyTimetableStructure({
+  yearId: "clx...",
+  structureSlug: "sd-gov-default",
+  replaceExisting: true,
+})
+
+// Legacy template names still work
+await applyTimetableStructure({
+  yearId: "clx...",
+  structureSlug: "standard_8", // mapped to sd-gov-default
+})
+```
+
+### Key File
+
+| File                                                   | Purpose                                   |
+| ------------------------------------------------------ | ----------------------------------------- |
+| `src/components/school-dashboard/timetable/actions.ts` | `applyTimetableStructure()` server action |
+
+---
+
+## Configure Working Days and Lunch
 
 1. Open the Timetable page.
-2. Click “Schedule settings”.
-3. Choose working days (e.g., Sun–Thu or your school’s pattern) and select “Lunch after period” if applicable.
+2. Click "Schedule settings".
+3. Choose working days (e.g., Sun-Thu or your school's pattern) and select "Lunch after period" if applicable.
 4. Save. Changes apply to the selected term and propagate to the timetable grid and printing.
 
 Notes:
 
 - Working days can vary by school and term (e.g., Friday off; Friday+Saturday off; Friday+Sunday off).
 - Lunch row is inserted after your chosen period in the grid and print.
+- Applying a structure automatically sets working days and lunch position.
 
-### Add or Edit Timetable Slots
+---
 
-1. Click “Edit slots”.
-2. Pick Day, Period, Class (A/B/C/D…), Teacher, and Classroom.
+## Use Template (Settings Page)
+
+The timetable settings page includes a "Use Template" dialog that shows all structures from the catalog.
+
+1. Select a school year.
+2. Click "Use Template".
+3. Browse all available structures - each shows period count, time range, and working days.
+4. Click a structure to apply it. If periods already exist, a warning confirms replacement.
+
+This replaces the previous 3-option hardcoded template dialog (`standard_8`, `standard_6`, `half_day`) with the full structure catalog.
+
+---
+
+## Add or Edit Timetable Slots
+
+1. Click "Edit slots".
+2. Pick Day, Period, Class (A/B/C/D...), Teacher, and Classroom.
 3. Save to create/update the weekly slot.
 
 Tips:
 
-- Use grade + section naming (e.g., Grade 1 A/B/C/D) to manage multi‑class grades.
+- Use grade + section naming (e.g., Grade 1 A/B/C/D) to manage multi-class grades.
 - Teacher timetables are supported via the view switch (Class vs Teacher).
 
-### Detect and Resolve Conflicts
+---
+
+## Detect and Resolve Conflicts
 
 Conflict types:
 
@@ -45,37 +242,83 @@ Conflict types:
 Workflow:
 
 1. In the header, check the conflict counter. Click it to open the Conflicts drawer.
-2. Each conflict lists the affected classes. Click “Suggest for teacher” or “Suggest for room” to fetch free slots.
-3. Click “Apply” on a suggestion to pre‑fill the Slot Editor with that day/period.
+2. Each conflict lists the affected classes. Click "Suggest for teacher" or "Suggest for room" to fetch free slots.
+3. Click "Apply" on a suggestion to pre-fill the Slot Editor with that day/period.
 4. Save the slot to resolve the conflict.
 
-### Print (A4)
+---
 
-- The Timetable page supports A4 printing with page‑break helpers and row‑split prevention.
+## Print (A4)
+
+- The Timetable page supports A4 printing with page-break helpers and row-split prevention.
 - Use browser print (Ctrl/Cmd + P). Choose A4 portrait. Dark UI accents are stripped for readability.
 
-### Multi‑Tenant Safety
+---
+
+## Extended School Types
+
+The `SchoolCategory` type was extended to include curriculum-based types alongside the original ownership-based types:
+
+| Type            | Category   | Description                  |
+| --------------- | ---------- | ---------------------------- |
+| `public`        | Ownership  | Government funded            |
+| `private`       | Ownership  | Independently funded         |
+| `international` | Ownership  | International curriculum     |
+| `technical`     | Ownership  | Vocational training          |
+| `special`       | Ownership  | Special education            |
+| `national`      | Curriculum | Government ministry standard |
+| `british`       | Curriculum | IGCSE / A-Levels             |
+| `ib`            | Curriculum | IB Diploma Programme         |
+| `american`      | Curriculum | US educational standards     |
+
+These values are used by `getRecommendedStructures()` to match the right timetable structure to a school.
+
+---
+
+## Multi-Tenant Safety
 
 - Every action/query includes `schoolId` from the tenant context (subdomain/session/impersonation).
 - Data changes affect only the current school and selected term.
+- `applyTimetableStructure()` scopes all Period and SchoolWeekConfig records by `schoolId`.
 
-### Troubleshooting
+---
 
-- No terms listed: ensure academic years/terms exist for the school.
-- Missing periods: define periods under the school year; timetable needs period names and times.
-- Empty suggestions: the teacher/room may be fully occupied for selected days; try another day or adjust schedule settings.
+## Troubleshooting
 
-### Technical Reference
+- **No terms listed**: Ensure academic years/terms exist for the school.
+- **Missing periods**: Apply a structure via settings or define periods manually under the school year.
+- **No recommended structures**: The school's country/schoolType may not match any catalog entries. All structures are still available under "Other options".
+- **Empty suggestions**: The teacher/room may be fully occupied for selected days; try another day or adjust schedule settings.
+- **Legacy templates**: Old `standard_8`/`standard_6`/`half_day` names still work via the legacy mapping.
 
-- Schedule config APIs: `GET /api/schedule?termId=…`, `POST /api/schedule/config`
-- Weekly data API: `GET /api/timetable?termId=…&weekOffset=0|1&classId=…&teacherId=…`
-- Conflicts: `GET /api/timetable/conflicts?termId=…`
-- Suggestions: `GET /api/timetable/suggest?termId=…&teacherId=…&classroomId=…`
+---
+
+## Technical Reference
+
+### Server Actions
+
+| Action                       | Purpose                                         |
+| ---------------------------- | ----------------------------------------------- |
+| `applyTimetableStructure()`  | Create periods from structure catalog           |
+| `createDefaultPeriods()`     | Legacy: create periods from hardcoded templates |
+| `upsertSchoolWeekConfig()`   | Save working days and lunch config              |
+| `getScheduleConfig()`        | Read current config for a term                  |
+| `getPeriodsForTerm()`        | List periods for a term                         |
+| `detectTimetableConflicts()` | Find teacher/room conflicts                     |
+| `suggestFreeSlots()`         | Recommend available slots                       |
+| `upsertTimetableSlot()`      | Create or update a weekly slot                  |
+
+### REST APIs
+
+- Schedule config: `GET /api/schedule?termId=...`, `POST /api/schedule/config`
+- Weekly data: `GET /api/timetable?termId=...&weekOffset=0|1&classId=...&teacherId=...`
+- Conflicts: `GET /api/timetable/conflicts?termId=...`
+- Suggestions: `GET /api/timetable/suggest?termId=...&teacherId=...&classroomId=...`
 - Slot upsert: `POST /api/timetable/slot`
 
 ### Local Testing Without Subdomains
 
-If tenant context (subdomain/session) isn’t available locally, you can pass a school domain to the public fallbacks:
+If tenant context (subdomain/session) isn't available locally, you can pass a school domain to the public fallbacks:
 
 - Terms: `GET /api/terms?domain=khartoum`
 - Timetable: `GET /api/timetable?domain=khartoum&weekOffset=0`

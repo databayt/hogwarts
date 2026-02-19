@@ -63,7 +63,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   // Show loading state while initializing session
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-5xl pb-20">
+      <div className="mx-auto w-full max-w-5xl self-stretch pb-20">
         {renderSkeleton()}
         <FormFooter
           config={ADMISSION_CONFIG}
@@ -80,7 +80,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   // Show error state if initialization failed
   if (error) {
     return (
-      <div className="mx-auto w-full max-w-5xl pb-20">
+      <div className="mx-auto w-full max-w-5xl self-stretch pb-20">
         <div className="flex items-center justify-center py-16">
           <div className="max-w-md text-center">
             <div className="mb-4 text-6xl">⚠️</div>

@@ -40,7 +40,7 @@ export function CatalogEnrollmentButton({
     return (
       <Button
         variant="outline"
-        className="h-12 w-full px-8 text-base font-medium"
+        className="h-12 w-auto px-8 text-base font-medium"
         onClick={() => {
           window.location.href = `/${lang}/stream/dashboard/${subjectSlug}`
         }}
@@ -66,7 +66,7 @@ export function CatalogEnrollmentButton({
     <Button
       onClick={onSubmit}
       disabled={pending}
-      className="h-12 w-full px-8 text-base font-medium"
+      className="h-12 w-auto px-8 text-base font-medium"
     >
       {pending ? (
         <>

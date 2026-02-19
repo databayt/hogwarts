@@ -1,718 +1,671 @@
 ---
-title: "Form Block"
-description: "Generic, reusable form system with atoms, templates, server actions, and React 19 integration"
+title: "Form"
+description: "Canonical patterns for writing form.tsx client components in feature directories"
 ---
 
-## Overview
+## Current Progress (Audit)
 
-The **Form Block** is a centralized, **generic** form system for building consistent forms across the application. It provides atomic field components, composed templates, generic server actions, analytics, and persistence - all integrated with `react-hook-form`, Zod 4, and React 19.
+59 form.tsx files audited across the codebase (~15,703 total lines):
 
-### Design Principles
+| Area                                   | Status | Detail                                                                                   |
+| -------------------------------------- | ------ | ---------------------------------------------------------------------------------------- |
+| `"use client"` directive               | PASS   | All 59 files include the directive                                                       |
+| react-hook-form + zodResolver          | PASS   | 76% use react-hook-form with zodResolver                                                 |
+| Schema imported from validation.ts     | PASS   | 74% import schemas from co-located validation.ts                                         |
+| Named exports only                     | PASS   | 100% use named exports (`export function`)                                               |
+| `useForm<z.infer<typeof schema>>()`    | PASS   | Consistent generic typing across react-hook-form usages                                  |
+| `zodResolver(schema) as any` type cast | FAIL   | 10+ files cast zodResolver to `any`, hiding type mismatches                              |
+| Inline schema definitions              | FAIL   | 15 files define Zod schemas inline instead of importing from validation.ts               |
+| `dictionary: any` type usage           | FAIL   | 28 files type dictionary prop as `any`                                                   |
+| 829-line sales/form.tsx monolith       | FAIL   | Largest form file; mixes CRUD, search, analytics, and export concerns                    |
+| onboarding/form.tsx packs 6 components | FAIL   | 666 lines with 6 sub-components that should be separate files                            |
+| Mixed form + non-form concerns         | FAIL   | Several files include data fetching, table rendering, or utility logic alongside form UI |
 
-- **Generic**: Components work with any data model
-- **Reusable**: Atoms compose into any form flow
-- **Type-safe**: Full TypeScript inference
-- **Server-ready**: Generic action helpers for mutations
-- **Multi-tenant**: Built-in schoolId scoping
+## 6 Categories of form.tsx
 
-### Key Features
+### Category 1: CRUD Modal Forms (~16 files)
 
-- Atomic field components (single-purpose)
-- Composed templates (multi-step, modals)
-- Generic CRUD server actions
-- React 19 integration (useActionState, useFormStatus)
-- Auto-save and persistence
-- Analytics tracking
+Create/edit/view entity via modal dialog. Uses `useModal()` context for mode detection (`modal.id` prefix `"view:"` for read-only). Typically 130-250 lines.
 
----
+Reference: `listings/subjects/form.tsx` (165 lines), `listings/grades/form.tsx` (194 lines)
 
-## Architecture
+### Category 2: Wizard Step Forms (~6 files)
 
-The form system follows an **atomic design pattern** with clear separation of concerns.
+One step in a multi-step wizard. Uses `forwardRef` + `useImperativeHandle` to expose `saveAndNext()` to parent orchestrator. Typically 200-400 lines.
 
-### Directory Structure
+Reference: `apply/personal/form.tsx` (330 lines), `apply/contact/form.tsx`
 
-```
-src/components/form/
-├── index.ts              # Main exports (backward compatible)
-├── types.ts              # Generic TypeScript types
-├── actions.ts            # Generic server action helpers (NEW)
-├── use-form.ts           # Central hooks file (all hooks merged)
-│
-├── atoms/                # Atomic field components (single-purpose)
-│   ├── index.ts          # Atom exports
-│   ├── input.tsx         # Text/email/tel/url input
-│   ├── number.tsx        # Number input with min/max
-│   ├── select.tsx        # Select dropdown
-│   ├── textarea.tsx      # Multi-line text
-│   ├── checkbox.tsx      # Boolean checkbox
-│   ├── date.tsx          # Date picker
-│   ├── switch.tsx        # Toggle switch
-│   ├── radio-group.tsx   # Radio options
-│   └── combobox.tsx      # Searchable select
-│
-└── template/             # Composed form templates (molecules + organisms)
-    ├── index.ts          # Template exports
-    │
-    │ # Composed Fields (molecules)
-    ├── field-array.tsx   # Dynamic field list
-    ├── password-field.tsx # Password with strength meter
-    ├── phone-field.tsx   # Phone with country code
-    │
-    │ # Form Structures (organisms)
-    ├── provider.tsx      # Multi-step form provider
-    ├── modal.tsx         # Modal wrapper
-    ├── container.tsx     # Step container
-    ├── header.tsx        # Step header
-    ├── heading.tsx       # Form heading
-    ├── navigation.tsx    # Step navigation
-    ├── progress.tsx      # Progress indicator
-    ├── success.tsx       # Success celebration
-    └── layout.tsx        # Two-column layout
-```
+### Category 3: Onboarding Step Forms (~11 files)
 
----
+Similar to wizard step forms but specifically for school onboarding. Each file handles one onboarding step (branding, curriculum, pricing, etc.).
 
-## Component Roles & Usage
+Reference: `onboarding/description/form.tsx`, `onboarding/branding/form.tsx`
 
-### Atoms (Single-Purpose Fields)
+### Category 4: Auth Forms (~5 files)
 
-Atomic field components that work with any form. All integrate with `react-hook-form`.
+Login, register, reset password, 2FA. Operate before tenant context is available. Use i18n schema factories.
 
-| Component         | Role                                | Usage Across App                                    |
-| ----------------- | ----------------------------------- | --------------------------------------------------- |
-| `InputField`      | Text/email/password/tel/url input   | Login, registration, profile, search, contact forms |
-| `NumberField`     | Numeric values with min/max         | Age, quantity, prices, scores, capacities           |
-| `SelectField`     | Dropdown selection                  | Roles, statuses, categories, types, subjects        |
-| `TextareaField`   | Multi-line text                     | Descriptions, bios, notes, messages, feedback       |
-| `CheckboxField`   | Boolean toggle                      | Consent, preferences, filters, bulk selection       |
-| `DateField`       | Date picker                         | Birth dates, deadlines, schedules, events           |
-| `SwitchField`     | On/off toggle                       | Settings, notifications, feature flags              |
-| `RadioGroupField` | Single selection from options       | Plan selection, payment methods, priorities         |
-| `ComboboxField`   | Searchable select with autocomplete | Large lists, tags, user search                      |
+Reference: `auth/login/form.tsx`, `auth/register/form.tsx`
 
-### Template Components
+### Category 5: Settings/Config Forms (~9 files)
 
-Composed components that combine atoms into patterns (molecules) or complete structures (organisms).
+Update existing configuration or preferences. Load current values on mount, save on submit. No modal -- inline or page-level forms.
 
-#### Composed Fields (Molecules)
+Reference: `timetable/settings/form.tsx`, `school-dashboard/settings/form.tsx`
 
-| Component       | Role                                             | Usage Across App                              |
-| --------------- | ------------------------------------------------ | --------------------------------------------- |
-| `FieldArray`    | Dynamic list of fields with add/remove           | Email lists, phone numbers, addresses, skills |
-| `PasswordField` | Password with visibility toggle + strength meter | Registration, password reset, settings        |
-| `PhoneField`    | Phone input with country code selector           | Contact forms, profiles, emergency contacts   |
+### Category 6: Exam/Stream Forms (~10 files)
 
-#### Form Structures (Organisms)
+Assessment creation, question editing, enrollment. Often include dynamic field arrays for questions/options.
 
-| Component               | Role                                  | Usage Across App                    |
-| ----------------------- | ------------------------------------- | ----------------------------------- |
-| `MultiStepFormProvider` | Step state management + context       | Onboarding, applications, wizards   |
-| `ModalMultiStepForm`    | Modal wrapper with multi-step support | Quick forms, dialogs, confirmations |
-| `FormStepContainer`     | Step content wrapper                  | Any multi-step flow                 |
-| `FormStepHeader`        | Step title/description                | Guidance in wizards                 |
-| `FormHeading`           | Form heading with icon                | Any form header                     |
-| `FormStepNavigation`    | Back/Next buttons                     | Wizard navigation                   |
-| `FormStepProgress`      | Visual progress indicator             | User orientation                    |
-| `FormSuccess`           | Completion celebration with confetti  | End of successful flows             |
-| `FormLayout`            | Two-column split layout               | Landing pages, detailed forms       |
+Reference: `exams/qbank/form.tsx`, `stream/courses/enrollment/form.tsx`
 
-### Hooks
+## The 6 Rules
 
-Reusable form logic extracted into hooks.
+### 1. Always `"use client"` at the top
 
-| Hook                       | Role                                               | Usage Across App               |
-| -------------------------- | -------------------------------------------------- | ------------------------------ |
-| `useMultiStepForm`         | Access step state and navigation                   | Inside `MultiStepFormProvider` |
-| `useMultiStepFormOptional` | Optional version (returns null outside provider)   | Conditional form contexts      |
-| `useFormAnalytics`         | Track form events (view, complete, error, abandon) | All forms for metrics          |
-| `useFormPersistence`       | Auto-save drafts to localStorage                   | Long forms, prevent data loss  |
-| `useActionStateBridge`     | Bridge React 19 useActionState + react-hook-form   | Server action forms            |
-| `useFormSubmitStatus`      | Loading state from useFormStatus                   | Submit button states           |
-
-### Wizard Validation Context
-
-Unified validation for multi-step forms across onboarding and application flows.
-
-| Export                        | Role                                            | Usage Across App         |
-| ----------------------------- | ----------------------------------------------- | ------------------------ |
-| `WizardValidationProvider`    | Context provider for wizard validation          | Onboarding, applications |
-| `useWizardValidation`         | Access validation state and controls            | Inside provider          |
-| `useWizardValidationOptional` | Optional version (returns undefined if outside) | Conditional contexts     |
-| `HostValidationProvider`      | Alias for backward compatibility                | Legacy onboarding code   |
-| `useHostValidation`           | Alias for backward compatibility                | Legacy onboarding code   |
-| `ApplyValidationProvider`     | Alias for backward compatibility                | Legacy application code  |
-| `useApplyValidation`          | Alias for backward compatibility                | Legacy application code  |
-
-```tsx
-import {
-  useWizardValidation,
-  WizardValidationProvider,
-} from "@/components/form"
-
-// In layout
-
-;<WizardValidationProvider flowType="linear">
-  {children}
-</WizardValidationProvider>
-
-// In step components
-const { enableNext, disableNext, isNextDisabled } = useWizardValidation()
-
-// Enable next when form is valid
-useEffect(() => {
-  if (form.formState.isValid) {
-    enableNext()
-  } else {
-    disableNext()
-  }
-}, [form.formState.isValid])
-```
-
-#### Props
-
-| Prop                    | Type                       | Default    | Description                            |
-| ----------------------- | -------------------------- | ---------- | -------------------------------------- |
-| `flowType`              | `"linear" \| "dependency"` | `"linear"` | Linear (sequential) or dependency flow |
-| `dependencies`          | `Record<string, string[]>` | -          | Step dependencies map                  |
-| `initialCompletedSteps` | `string[]`                 | `[]`       | Initially completed steps              |
-
-### Server Actions
-
-Generic helpers for CRUD operations with multi-tenant safety.
-
-| Helper                | Role                              | Usage Across App              |
-| --------------------- | --------------------------------- | ----------------------------- |
-| `createFormAction`    | Wrap schema + handler into action | Any validated form submission |
-| `createGenericAction` | Generic create with schoolId      | CRUD create operations        |
-| `updateGenericAction` | Generic update with schoolId      | CRUD update operations        |
-| `deleteGenericAction` | Generic delete with schoolId      | CRUD delete operations        |
-| `findGenericAction`   | Generic find with schoolId        | CRUD read operations          |
-| `mapZodErrors`        | Convert Zod errors to form format | Error handling                |
-| `createRevalidator`   | Create path revalidation helper   | Cache invalidation            |
-
----
-
-## React 19 Integration
-
-### useActionState Bridge
-
-Seamlessly integrate React 19's `useActionState` with `react-hook-form`:
-
-```tsx
-import { useActionStateBridge } from "@/components/form"
-
-const { form, state, isPending, handleSubmit } = useActionStateBridge({
-  schema: studentSchema,
-  action: createStudentAction,
-  defaultValues: { name: "", email: "" },
-  onSuccess: (data) => toast.success("Student created!"),
-  onError: (errors) => console.error(errors),
-})
-
-return (
-  <Form {...form}>
-    <form onSubmit={handleSubmit()}>
-      <InputField name="name" label="Name" required />
-      <InputField name="email" label="Email" type="email" required />
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Saving..." : "Save"}
-      </Button>
-    </form>
-  </Form>
-)
-```
-
-### How It Works
-
-1. **Client Validation**: `react-hook-form` + Zod validates before submission
-2. **Server Action**: `useActionState` handles the server action lifecycle
-3. **Error Bridging**: Server errors are mapped back to form fields
-4. **Type Safety**: Full TypeScript inference from schema to form
-
----
-
-## Generic Server Actions
-
-### Creating Form Actions
-
-Use `createFormAction` to wrap any schema + handler:
-
-```tsx
-// actions.ts
-"use server"
-
-import { ActionResponse, createFormAction } from "@/components/form"
-
-import { studentSchema } from "./validation"
-
-export const createStudentAction = createFormAction(
-  studentSchema,
-  async (data, schoolId) => {
-    const student = await db.student.create({
-      data: { ...data, schoolId },
-    })
-    return student
-  }
-)
-```
-
-### Generic CRUD Helpers
-
-```tsx
-import {
-  createGenericAction,
-  deleteGenericAction,
-  updateGenericAction,
-} from "@/components/form"
-
-// Create
-const result = await createGenericAction(
-  db.student,
-  { name: "John", email: "john@school.com" },
-  schoolId,
-  "/students" // revalidate path
-)
-
-// Update
-const result = await updateGenericAction(
-  db.student,
-  studentId,
-  { name: "John Updated" },
-  schoolId,
-  "/students"
-)
-
-// Delete
-const result = await deleteGenericAction(
-  db.student,
-  studentId,
-  schoolId,
-  "/students"
-)
-```
-
-### ActionResponse Type
-
-All actions return a consistent response:
+Every form.tsx is a client component. Forms require browser APIs (event handlers, state, refs).
 
 ```typescript
-interface ActionResponse<T = unknown> {
-  success: boolean
-  data?: T
-  errors?: Record<string, string[]>
-  message?: string
-}
+"use client"
+
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+
+// ...
 ```
 
----
+### 2. Always import schema from validation.ts
 
-## Field Components
+Never define Zod schemas inline in form.tsx. The validation.ts file is the single source of truth.
 
-### Basic Usage
+```typescript
+// GOOD: Schema from validation.ts
+import { subjectCreateSchema } from "./validation"
 
-All fields integrate with `react-hook-form` context:
+const form = useForm<z.infer<typeof subjectCreateSchema>>({
+  resolver: zodResolver(subjectCreateSchema),
+})
 
-```tsx
-import { InputField, SelectField, NumberField, DateField } from "@/components/form"
-
-// Inside a Form provider
-<InputField name="email" label="Email" type="email" required />
-
-<SelectField
-  name="role"
-  label="Role"
-  options={[
-    { value: "teacher", label: "Teacher" },
-    { value: "student", label: "Student" },
-  ]}
-/>
-
-<NumberField name="age" label="Age" min={0} max={120} />
-
-<DateField name="birthDate" label="Birth Date" maxDate={new Date()} />
+// BAD: Inline schema in form.tsx (15 files do this)
+const schema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+})
 ```
 
-### New Field Components
+### 3. Always use zodResolver with proper typing
 
-#### SwitchField
+Use `zodResolver(schema)` with `z.infer<typeof schema>` as the generic. Never cast to `any`.
 
-```tsx
-<SwitchField
-  name="notifications"
-  label="Email Notifications"
-  description="Receive updates via email"
-/>
-```
-
-#### RadioGroupField
-
-```tsx
-<RadioGroupField
-  name="plan"
-  label="Select Plan"
-  options={[
-    { value: "basic", label: "Basic" },
-    { value: "pro", label: "Pro" },
-    { value: "enterprise", label: "Enterprise" },
-  ]}
-  orientation="horizontal"
-/>
-```
-
-#### ComboboxField
-
-```tsx
-<ComboboxField
-  name="country"
-  label="Country"
-  options={countries}
-  searchPlaceholder="Search countries..."
-  emptyMessage="No country found."
-/>
-```
-
-#### PasswordField
-
-```tsx
-<PasswordField
-  name="password"
-  label="Password"
-  showStrengthMeter
-  minLength={8}
-/>
-```
-
-#### PhoneField
-
-```tsx
-<PhoneField
-  name="phone"
-  countryCodeName="phoneCountryCode"
-  label="Phone Number"
-  defaultCountryCode="SA"
-/>
-```
-
-#### FieldArray
-
-```tsx
-<FieldArray
-  name="emails"
-  label="Email Addresses"
-  placeholder="email@example.com"
-  addButtonLabel="Add another email"
-  maxItems={5}
-  minItems={1}
-/>
-```
-
----
-
-## Multi-Step Forms
-
-### Provider Setup
-
-```tsx
-import {
-  FormStepContainer,
-  FormStepHeader,
-  FormStepNavigation,
-  MultiStepFormProvider,
-  useMultiStepForm,
-} from "@/components/form"
-
-const config = {
-  steps: [
-    { id: "info", title: "Personal Info", fields: ["name", "email"] },
-    { id: "details", title: "Details", fields: ["bio"] },
-    { id: "confirm", title: "Confirm", optional: true },
-  ],
-  validation: {
-    info: infoSchema,
-    details: detailsSchema,
+```typescript
+// GOOD: Properly typed
+const form = useForm<z.infer<typeof subjectCreateSchema>>({
+  resolver: zodResolver(subjectCreateSchema),
+  defaultValues: {
+    subjectName: "",
+    departmentId: "",
   },
-}
-
-function MyForm() {
-  return (
-    <MultiStepFormProvider config={config} onSubmit={handleSubmit}>
-      <FormContent />
-    </MultiStepFormProvider>
-  )
-}
-
-function FormContent() {
-  const { currentStep, next, back, isFirstStep, isLastStep } =
-    useMultiStepForm()
-
-  return (
-    <>
-      <FormStepHeader title={steps[currentStep].title} />
-      <FormStepContainer>
-        {currentStep === 0 && <InfoStep />}
-        {currentStep === 1 && <DetailsStep />}
-        {currentStep === 2 && <ConfirmStep />}
-      </FormStepContainer>
-      <FormStepNavigation
-        onBack={back}
-        onNext={next}
-        isFirstStep={isFirstStep}
-        isLastStep={isLastStep}
-      />
-    </>
-  )
-}
-```
-
-### Modal Multi-Step Form
-
-```tsx
-import { FormStepContainer, ModalMultiStepForm } from "@/components/form"
-
-;<ModalMultiStepForm
-  config={formConfig}
-  open={isOpen}
-  onOpenChange={setIsOpen}
-  onComplete={handleComplete}
-  title="Application Form"
-  showCloseConfirmation
->
-  <FormStepContainer>{/* Step content */}</FormStepContainer>
-</ModalMultiStepForm>
-```
-
----
-
-## Analytics & Persistence
-
-### Form Analytics
-
-Track form events for funnel analysis:
-
-```tsx
-import { useFormAnalytics } from "@/components/form"
-
-const analytics = useFormAnalytics()
-
-// Track step view
-useEffect(() => {
-  analytics.trackStepView("onboarding", "personal-info")
-}, [currentStep])
-
-// Track step completion
-const handleNext = async () => {
-  await next()
-  analytics.trackStepComplete("onboarding", "personal-info")
-}
-
-// Track errors
-analytics.trackStepError("onboarding", "personal-info", "validation_failed")
-
-// Track flow completion
-analytics.trackFlowComplete("onboarding", { userId })
-
-// Track abandonment
-analytics.trackFlowAbandonment("onboarding", "personal-info")
-```
-
-### Form Persistence
-
-Auto-save drafts to prevent data loss:
-
-```tsx
-import { useFormPersistence } from "@/components/form"
-
-const persistence = useFormPersistence<FormData>({
-  key: "admission-draft",
-  autoSave: true,
-  autoSaveInterval: 30000, // 30 seconds
 })
 
-// Load draft on mount
-useEffect(() => {
-  const draft = persistence.load()
-  if (draft) form.reset(draft)
-}, [])
-
-// Manual save
-persistence.save(form.getValues())
-
-// Clear draft on successful submission
-persistence.clear()
-
-// Check status
-console.log(persistence.isDirty, persistence.lastSaved)
-```
-
----
-
-## Best Practices
-
-### 1. Validate Twice
-
-Client-side for UX, server-side for security:
-
-```typescript
-// Client: Immediate feedback
+// BAD: Cast to any (10+ files do this)
 const form = useForm({
-  resolver: zodResolver(stepSchema),
+  resolver: zodResolver(schema) as any,
+})
+```
+
+### 4. Use `<Name>Input` type from validation.ts
+
+Import the inferred type for form values rather than re-inferring inline.
+
+```typescript
+// GOOD: Import type from validation.ts
+import { personalSchema, type PersonalInput } from "./validation"
+
+const form = useForm<PersonalInput>({
+  resolver: zodResolver(personalSchema),
 })
 
-// Server: Security validation
-export async function submitForm(data: FormData) {
-  "use server"
-  const validated = stepSchema.safeParse(Object.fromEntries(data))
-  if (!validated.success) {
-    return { success: false, errors: mapZodErrors(validated.error) }
+// ALSO GOOD: Inline infer (acceptable when type not exported)
+const form = useForm<z.infer<typeof personalSchema>>({
+  resolver: zodResolver(personalSchema),
+})
+```
+
+### 5. Max ~200 lines -- extract sub-steps to separate files
+
+Forms over 200 lines indicate mixed concerns. Extract step components, field groups, or helper functions.
+
+```
+# BAD: onboarding/form.tsx (666 lines, 6 components)
+
+# GOOD: Split by step
+onboarding/
+  form.tsx              # Orchestrator (~100 lines)
+  steps/
+    description.tsx     # Step 1 fields
+    branding.tsx        # Step 2 fields
+    curriculum.tsx      # Step 3 fields
+    pricing.tsx         # Step 4 fields
+```
+
+### 6. Call server actions via onSubmit, not inline
+
+Submit handlers call server actions and handle the response. Keep the action call in a dedicated `onSubmit` function.
+
+```typescript
+// GOOD: Dedicated onSubmit handler
+async function onSubmit(values: z.infer<typeof subjectCreateSchema>) {
+  try {
+    const res = currentId
+      ? await updateSubject({ id: currentId, ...values })
+      : await createSubject(values)
+    if (res?.success) {
+      toast.success(currentId ? "Subject updated" : "Subject created")
+      closeModal()
+      onSuccess?.()
+    } else {
+      toast.error(res?.error || "Failed to save")
+    }
+  } catch (error) {
+    console.error("Form submission error:", error)
+    toast.error("An unexpected error occurred")
   }
-  // ... process data
 }
+
+// BAD: Inline action call in JSX
+<form onSubmit={form.handleSubmit(async (v) => {
+  const res = await createSubject(v) // messy inline
+  // ...
+})}>
 ```
 
-### 2. Always Include schoolId
+## 3 Canonical Templates
 
-For multi-tenant safety:
+### Template A: CRUD Modal Form
+
+Full create/edit/view form in a modal. Uses `useModal()` for mode, loads existing data in `useEffect`. Reference: `listings/subjects/form.tsx` (165 lines).
 
 ```typescript
-export async function createItem(data: FormData) {
-  "use server"
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+"use client"
 
-  if (!schoolId) throw new Error("Unauthorized")
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
 
-  await db.item.create({
-    data: { ...validated, schoolId }, // Required!
+import { Form } from "@/components/ui/form"
+import { useModal } from "@/components/atom/modal/context"
+import { ModalFooter } from "@/components/atom/modal/modal-footer"
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+
+import { createSubject, getSubject, updateSubject } from "./actions"
+import { subjectCreateSchema } from "./validation"
+
+import { InformationStep } from "./information"
+
+interface SubjectCreateFormProps {
+  onSuccess?: () => void
+}
+
+export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
+  const { modal, closeModal } = useModal()
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState(1)
+  const form = useForm<z.infer<typeof subjectCreateSchema>>({
+    resolver: zodResolver(subjectCreateSchema),
+    defaultValues: {
+      subjectName: "",
+      departmentId: "",
+    },
   })
+
+  const isView = !!(modal.id && modal.id.startsWith("view:"))
+  const currentId = modal.id
+    ? modal.id.startsWith("view:")
+      ? modal.id.split(":")[1]
+      : modal.id
+    : undefined
+
+  // Load existing data for edit/view
+  useEffect(() => {
+    const load = async () => {
+      if (!currentId) return
+      const res = await getSubject({ id: currentId })
+      if (!res.success || !res.data) return
+      const s = res.data as any
+      form.reset({
+        subjectName: s.subjectName ?? "",
+        departmentId: s.departmentId ?? "",
+      })
+    }
+    void load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentId])
+
+  async function onSubmit(values: z.infer<typeof subjectCreateSchema>) {
+    try {
+      const res = currentId
+        ? await updateSubject({ id: currentId, ...values })
+        : await createSubject(values)
+      if (res?.success) {
+        toast.success(currentId ? "Subject updated" : "Subject created")
+        closeModal()
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.refresh()
+        }
+      } else {
+        toast.error(res?.error || "Failed to save")
+      }
+    } catch (error) {
+      console.error("Form submission error:", error)
+      toast.error("An unexpected error occurred")
+    }
+  }
+
+  const handleNext = async () => {
+    const step1Valid = await form.trigger(["subjectName", "departmentId"])
+    if (step1Valid) {
+      await form.handleSubmit(onSubmit)()
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Subject" : currentId ? "Edit Subject" : "Create Subject"}
+          description={isView ? "View details" : currentId ? "Update details" : "Add new"}
+        >
+          <InformationStep form={form} isView={isView} />
+        </ModalFormLayout>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={1}
+          stepLabel="Subject Details"
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={() => closeModal()}
+          onNext={handleNext}
+          onSaveStep={handleNext}
+        />
+      </form>
+    </Form>
+  )
 }
 ```
 
-### 3. Use Generic Actions
+Key points:
 
-Reduce boilerplate with generic helpers:
+- `useModal()` provides create/edit/view mode via `modal.id` prefix
+- `useEffect` loads existing data for edit/view modes
+- `onSuccess` callback for optimistic UI refresh, fallback to `router.refresh()`
+- `form.trigger()` validates specific fields per step before submitting
+- `ModalFormLayout` + `ModalFooter` for consistent modal structure
+
+### Template B: Wizard Step Form with forwardRef
+
+One step in a multi-step wizard. Parent controls navigation via ref. Reference: `apply/personal/form.tsx` (330 lines).
 
 ```typescript
-// Instead of writing full actions
-export const createStudent = createFormAction(
-  studentSchema,
-  async (data, schoolId) => {
-    return createGenericAction(db.student, data, schoolId, "/students")
+"use client"
+
+import React, { forwardRef, useEffect, useImperativeHandle } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+
+import { useApplySession } from "../application-context"
+import { savePersonalStep } from "./actions"
+import { GENDER_OPTIONS, NATIONALITY_OPTIONS } from "./config"
+import type { PersonalFormProps, PersonalFormRef } from "./types"
+import { personalSchema, type PersonalInput } from "./validation"
+
+export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
+  ({ initialData, onSuccess, dictionary }, ref) => {
+    const { session, updateStepData } = useApplySession()
+
+    const form = useForm<PersonalInput>({
+      resolver: zodResolver(personalSchema),
+      defaultValues: {
+        firstName: initialData?.firstName || "",
+        lastName: initialData?.lastName || "",
+        dateOfBirth: initialData?.dateOfBirth || "",
+        gender: initialData?.gender || undefined,
+        nationality: initialData?.nationality || "",
+      },
+    })
+
+    // Sync form values to shared context
+    useEffect(() => {
+      const subscription = form.watch((value) => {
+        updateStepData("personal", value as PersonalInput)
+      })
+      return () => subscription.unsubscribe()
+    }, [form, updateStepData])
+
+    const saveAndNext = async () => {
+      const isValid = await form.trigger()
+      if (!isValid) throw new Error("Form validation failed")
+
+      const data = form.getValues()
+      const result = await savePersonalStep(data)
+      if (!result.success) throw new Error(result.error || "Failed to save")
+
+      if (result.data) updateStepData("personal", result.data)
+      onSuccess?.()
+    }
+
+    // Expose saveAndNext to parent via ref
+    useImperativeHandle(ref, () => ({ saveAndNext }))
+
+    return (
+      <Form {...form}>
+        <form className="space-y-4">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* ... additional fields */}
+        </form>
+      </Form>
+    )
   }
 )
 ```
 
-### 4. Handle Errors Gracefully
+Key points:
 
-Bridge server errors to form fields:
+- `forwardRef` + `useImperativeHandle` expose `saveAndNext()` to the parent orchestrator
+- `form.watch()` syncs values to shared context (`useApplySession`)
+- Client validation via `form.trigger()`, then server validation via action
+- Props and ref types imported from `./types`
+- Schema imported from `./validation`
 
-```tsx
-const { form, state } = useActionStateBridge({
-  schema,
-  action,
-  onError: (errors) => {
-    // Errors already mapped to form fields
-    toast.error("Please fix the errors")
+### Template C: Multi-Step Modal Form
+
+Two or more steps within a single modal. Per-step field validation via `form.trigger()`. Reference: `listings/grades/form.tsx` (194 lines).
+
+```typescript
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+
+import { Form } from "@/components/ui/form"
+import { useModal } from "@/components/atom/modal/context"
+import { ModalFooter } from "@/components/atom/modal/modal-footer"
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { createResult, getResult, updateResult } from "./actions"
+import { resultCreateSchema } from "./validation"
+
+import { GradingStep } from "./grading"
+import { StudentAssignmentStep } from "./student-assignment"
+
+interface ResultCreateFormProps {
+  dictionary: Dictionary["school"]["grades"]
+  onSuccess?: () => void
+}
+
+export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProps) {
+  const { modal, closeModal } = useModal()
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState(1)
+  const t = dictionary
+  const form = useForm<z.infer<typeof resultCreateSchema>>({
+    resolver: zodResolver(resultCreateSchema),
+    defaultValues: {
+      studentId: "",
+      assignmentId: "",
+      classId: "",
+      score: 0,
+      maxScore: 0,
+      grade: "",
+      feedback: "",
+    },
+  })
+
+  const isView = !!(modal.id && modal.id.startsWith("view:"))
+  const currentId = modal.id
+    ? modal.id.startsWith("view:") ? modal.id.split(":")[1] : modal.id
+    : undefined
+
+  useEffect(() => {
+    const load = async () => {
+      if (!currentId) return
+      const res = await getResult({ id: currentId })
+      if (!res.success || !res.data) return
+      form.reset({ ...res.data })
+    }
+    void load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentId])
+
+  async function onSubmit(values: z.infer<typeof resultCreateSchema>) {
+    const res = currentId
+      ? await updateResult({ id: currentId, ...values })
+      : await createResult(values)
+    if (res?.success) {
+      toast.success(currentId ? t.resultUpdated : t.resultCreated)
+      closeModal()
+      onSuccess ? onSuccess() : router.refresh()
+    } else {
+      toast.error(currentId ? t.failedToUpdate : t.failedToCreate)
+    }
+  }
+
+  const handleNext = async () => {
+    if (currentStep === 1) {
+      // Validate step 1 fields only
+      const step1Valid = await form.trigger(["studentId", "assignmentId", "classId"])
+      if (step1Valid) setCurrentStep(2)
+    } else {
+      await form.handleSubmit(onSubmit)()
+    }
+  }
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <StudentAssignmentStep form={form} isView={isView} />
+      case 2:
+        return <GradingStep form={form} isView={isView} />
+      default:
+        return null
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout title={isView ? "View" : currentId ? "Edit" : "Create"}>
+          {renderCurrentStep()}
+        </ModalFormLayout>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={2}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={() => currentStep > 1 ? setCurrentStep(currentStep - 1) : closeModal()}
+          onNext={handleNext}
+        />
+      </form>
+    </Form>
+  )
+}
+```
+
+Key points:
+
+- `currentStep` state controls which step renders
+- `form.trigger(["field1", "field2"])` validates only the current step's fields
+- Step components (`StudentAssignmentStep`, `GradingStep`) receive `form` and `isView` props
+- Final step calls `form.handleSubmit(onSubmit)()`
+- Dictionary-based i18n for toast messages
+
+## Anti-Patterns
+
+### 1. `zodResolver(schema) as any` (10+ files)
+
+Casting zodResolver to `any` hides type mismatches between the schema and form values.
+
+```typescript
+// BAD: Type cast hides mismatches
+resolver: zodResolver(schema) as any
+
+// GOOD: Fix the type mismatch at the source
+resolver: zodResolver(subjectCreateSchema)
+// If types don't match, fix the schema or defaultValues
+```
+
+### 2. Inline schema definitions (15 files)
+
+Schemas defined directly in form.tsx instead of imported from validation.ts.
+
+```typescript
+// GOOD: Import from validation.ts
+import { itemSchema } from "./validation"
+
+// BAD: Schema in form.tsx
+const schema = z.object({ name: z.string().min(1) })
+const form = useForm({ resolver: zodResolver(schema) })
+
+const form = useForm({ resolver: zodResolver(itemSchema) })
+```
+
+### 3. `dictionary: any` (28 files)
+
+Dictionary prop typed as `any` instead of the proper Dictionary type.
+
+```typescript
+// BAD: any type
+function MyForm({ dictionary }: { dictionary: any }) { ... }
+
+// GOOD: Proper typing
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+function MyForm({ dictionary }: { dictionary: Dictionary["school"]["grades"] }) { ... }
+```
+
+### 4. 829-line sales/form.tsx monolith
+
+Mixes CRUD form, search, analytics views, and export logic in a single file.
+
+```
+# BAD: sales/form.tsx (829 lines, mixed concerns)
+
+# GOOD: Split by concern
+sales/
+  form.tsx         # CRUD form (~200 lines)
+  search.tsx       # Search/filter UI
+  analytics.tsx    # Analytics views
+  export.tsx       # Export functionality
+```
+
+### 5. Mixing form + non-form concerns
+
+Some form files include data fetching, table rendering, or utility functions that belong in other files.
+
+```typescript
+// BAD: Data fetching in form.tsx
+export function MyForm() {
+  const [data, setData] = useState([])
+  useEffect(() => {
+    fetch("/api/items")
+      .then((res) => res.json())
+      .then(setData)
+  }, [])
+  // ... renders both a form AND a data table
+}
+
+// GOOD: Form only -- data comes via props or context
+export function MyForm({ items }: { items: Item[] }) {
+  // ... renders form only
+}
+```
+
+## Quick Reference
+
+### Form Setup Pattern
+
+```typescript
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+
+import { mySchema, type MyInput } from "./validation"
+
+const form = useForm<MyInput>({
+  resolver: zodResolver(mySchema),
+  defaultValues: {
+    /* ... */
   },
 })
 ```
 
-### 5. Enable Auto-Save for Long Forms
+### Import Direction
 
-Prevent data loss:
-
-```typescript
-const config = {
-  autoSave: true,
-  autoSaveInterval: 30000,
-  persistenceKey: "long-form-draft",
-}
+```
+config.ts     (options, limits)
+    |
+validation.ts (schemas, types)
+    |
++---+---+
+|       |
+form  actions
+.tsx    .ts
 ```
 
-### 6. Track Analytics
+Form imports FROM validation.ts (schemas, types) and config.ts (option arrays). Actions.ts also imports from validation.ts.
 
-Monitor conversion and abandonment:
+### Co-located File Structure
 
-```typescript
-// Track every step
-analytics.trackStepView(flowType, stepId)
-analytics.trackStepComplete(flowType, stepId)
-
-// Track on unload
-useEffect(() => {
-  return () => {
-    analytics.trackFlowAbandonment(flowType, currentStepId)
-  }
-}, [])
+```
+src/components/<feature>/
+  config.ts         # Option arrays, limits
+  validation.ts     # Zod schemas + inferred types
+  actions.ts        # Server actions (form.tsx calls these)
+  types.ts          # Props, ref types for form
+  form.tsx          # Client component (this file)
+  information.tsx   # Step sub-component (extracted from form)
+  content.tsx       # Server component (renders form)
 ```
 
----
+### What Belongs Where
 
-## Import Patterns
-
-### Recommended Imports
-
-```tsx
-// All from main export
-import {
-  CheckboxField,
-  ComboboxField,
-  // Actions
-  createFormAction,
-  createGenericAction,
-  DateField,
-  deleteGenericAction,
-  FieldArray,
-  FormLayout,
-  FormStepContainer,
-  FormStepHeader,
-  FormStepNavigation,
-  FormStepProgress,
-  FormSuccess,
-  // Atoms
-  InputField,
-  mapZodErrors,
-  ModalMultiStepForm,
-  // Templates
-  MultiStepFormProvider,
-  NumberField,
-  PasswordField,
-  PhoneField,
-  RadioGroupField,
-  SelectField,
-  SwitchField,
-  TextareaField,
-  updateGenericAction,
-  useActionStateBridge,
-  // Hooks
-  useFormAnalytics,
-  useFormPersistence,
-  useMultiStepForm,
-  // Types
-  type ActionResponse,
-} from "@/components/form"
-```
-
-### Backward Compatibility
-
-Old imports still work:
-
-```tsx
-// Legacy (still works)
-import { TextField } from "@/components/form" // Alias for InputField
-```
-
----
-
-## Related Documentation
-
-- [Onboarding System](/docs/onboarding) - Route-based multi-step flow
-- [Newcomers](/docs/newcomers) - Modal-based onboarding
-- [Server Actions](/docs/server-actions) - Form submission handling
-- [Multi-Tenant Safety](/docs/multi-tenant) - schoolId scoping patterns
-
----
-
-**Last Updated**: December 2024
-**Status**: Production Ready
-**Version**: 2.0.0
+| Content                         | Belongs in      | Not in      |
+| ------------------------------- | --------------- | ----------- |
+| `useForm()` setup               | `form.tsx`      | content.tsx |
+| `zodResolver(schema)`           | `form.tsx`      | actions.ts  |
+| Zod schema definition           | `validation.ts` | form.tsx    |
+| Server action call              | `form.tsx`      | content.tsx |
+| Option arrays for selects       | `config.ts`     | form.tsx    |
+| Form ref/props types            | `types.ts`      | form.tsx    |
+| Step sub-components (>50 lines) | Separate file   | form.tsx    |

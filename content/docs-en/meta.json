@@ -19,6 +19,8 @@
     "content",
     "types",
     "config",
+    "actions",
+    "validation",
     "stack",
     "database",
     "file",

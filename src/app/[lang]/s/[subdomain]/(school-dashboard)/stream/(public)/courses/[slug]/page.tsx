@@ -36,7 +36,7 @@ export default async function StreamCourseDetailPage({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
-  const course = await getCatalogCourse(slug, schoolId)
+  const course = await getCatalogCourse(slug, schoolId, lang)
   const isEnrolled = await checkCatalogEnrollment(course.id, schoolId)
 
   return (

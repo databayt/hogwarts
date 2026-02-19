@@ -30,12 +30,16 @@ export const STEP_NAVIGATION: Record<
     previous: "location",
   },
   capacity: {
-    next: "branding",
+    next: "schedule",
     previous: "stand-out",
+  },
+  schedule: {
+    next: "branding",
+    previous: "capacity",
   },
   branding: {
     next: "import",
-    previous: "capacity",
+    previous: "schedule",
   },
   import: {
     next: "finish-setup",

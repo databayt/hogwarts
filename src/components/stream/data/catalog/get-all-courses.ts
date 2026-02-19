@@ -53,11 +53,10 @@ export async function getAllCatalogCourses(
       )
     : new Map<string, string>()
 
-  // Build where clause
+  // Build where clause — show ALL published ClickView subjects (matching subjects page)
   const where: Prisma.CatalogSubjectWhereInput = {
     status: "PUBLISHED",
-    ...(subjectIds ? { id: { in: subjectIds } } : {}),
-    ...(params.lang && !subjectIds ? { lang: params.lang } : {}),
+    system: "clickview",
     ...(params.title
       ? {
           name: {
@@ -92,6 +91,7 @@ const subjectSelect = {
   description: true,
   imageKey: true,
   thumbnailKey: true,
+  bannerUrl: true,
   color: true,
   lang: true,
   department: true,
@@ -112,6 +112,7 @@ function toCourseShape(
     description: string | null
     imageKey: string | null
     thumbnailKey: string | null
+    bannerUrl: string | null
     color: string | null
     lang: string
     department: string
@@ -129,11 +130,7 @@ function toCourseShape(
     title: customName || subject.name,
     slug: subject.slug,
     description: subject.description,
-    imageUrl: getCatalogImageUrl(
-      subject.thumbnailKey,
-      subject.imageKey,
-      "original"
-    ),
+    imageUrl: getCatalogImageUrl(subject.thumbnailKey, subject.imageKey, "sm"),
     price: null as number | null,
     lang: subject.lang,
     createdAt: subject.createdAt,
@@ -147,6 +144,7 @@ function toCourseShape(
     },
     _catalog: {
       color: subject.color,
+      bannerUrl: subject.bannerUrl,
       imageKey: subject.imageKey,
       thumbnailKey: subject.thumbnailKey,
       totalLessons: subject.totalLessons,

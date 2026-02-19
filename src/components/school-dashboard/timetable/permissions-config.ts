@@ -54,6 +54,7 @@ export type TimetableAction =
   | "assign_substitute"
   | "respond_substitution"
   | "cancel_substitution"
+  | "apply_structure"
 
 export type AccessLevel = "none" | "read" | "write" | "admin"
 

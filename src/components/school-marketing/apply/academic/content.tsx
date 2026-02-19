@@ -75,10 +75,10 @@ export default function AcademicContent({ dictionary }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {dict.title || ACADEMIC_STEP_CONFIG.label}
+              {dict.title || ACADEMIC_STEP_CONFIG.label(isRTL)}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {dict.description || ACADEMIC_STEP_CONFIG.description}
+              {dict.description || ACADEMIC_STEP_CONFIG.description(isRTL)}
             </p>
           </div>
         </div>

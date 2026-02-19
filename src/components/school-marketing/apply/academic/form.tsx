@@ -246,7 +246,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {STREAM_OPTIONS.map((option) => (
+                        {STREAM_OPTIONS(isRTL).map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -287,7 +287,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {LANGUAGE_OPTIONS.map((option) => (
+                        {LANGUAGE_OPTIONS(isRTL).map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -319,7 +319,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {LANGUAGE_OPTIONS.map((option) => (
+                        {LANGUAGE_OPTIONS(isRTL).map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
