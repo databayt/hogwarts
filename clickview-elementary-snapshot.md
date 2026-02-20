@@ -1,0 +1,174 @@
+- region "Drag and drop video anywhere on the page to upload" [ref=e5]:
+  - button "Skip to main content" [ref=e6] [cursor=pointer]
+  - navigation [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - button "Expand left nav" [ref=e10] [cursor=pointer]:
+          - img [ref=e12]
+        - link "ClickView logo" [ref=e14] [cursor=pointer]:
+          - /url: /us/elementary
+          - img [ref=e15]
+      - generic [ref=e26]:
+        - button [ref=e27] [cursor=pointer]:
+          - img [ref=e30]
+        - generic [ref=e32]:
+          - link "Sign in" [ref=e33] [cursor=pointer]:
+            - /url: /challenge?attribution=%7B%22r%22%3A%22eyJpbnRlcm5hbFJlZmVycmVyIjoiaHR0cHM6Ly93d3cuY2xpY2t2aWV3Lm5ldC91cy9lbGVtZW50YXJ5Iiwib3JpZ2luYWxSZWZlcnJlciI6IiJ9%22%7D&redirectUrl=%2Fus&showSignUp=true
+          - button "Sign up" [ref=e34] [cursor=pointer]
+  - main [ref=e35]:
+    - generic [ref=e50]:
+      - navigation [ref=e52]:
+        - list [ref=e53]:
+          - listitem [ref=e54] [cursor=pointer]:
+            - link "For you" [ref=e55]:
+              - /url: /us/elementary
+          - listitem [ref=e56] [cursor=pointer]:
+            - link "New releases" [ref=e57]:
+              - /url: /us/elementary/latest-releases
+          - listitem [ref=e58] [cursor=pointer]:
+            - link "Calendar" [ref=e59]:
+              - /url: /us/elementary/calendar
+      - generic [ref=e62]:
+        - heading "Explore my subjects" [level=2] [ref=e66]
+        - list [ref=e67]:
+          - listitem [ref=e68]:
+            - link "Arts" [ref=e69] [cursor=pointer]:
+              - /url: /us/elementary/topics/GxAzY0z/arts
+              - generic [ref=e70]:
+                - img [ref=e75]
+                - generic "Arts" [ref=e78]
+          - listitem [ref=e79]:
+            - link "Celebrations, Commemorations and Festivals 13 new videos this month" [ref=e80] [cursor=pointer]:
+              - /url: /us/elementary/topics/2jrMZ3e/celebrations-commemorations-and-festivals
+              - generic [ref=e81]:
+                - img [ref=e86]
+                - generic [ref=e88]:
+                  - generic "Celebrations, Commemorations and Festivals" [ref=e89]
+                  - generic [ref=e90]: 13 new videos this month
+          - listitem [ref=e91]:
+            - link "Civics and Government" [ref=e92] [cursor=pointer]:
+              - /url: /us/elementary/topics/Jpy1EP2/civics-and-government
+              - generic [ref=e93]:
+                - img [ref=e98]
+                - generic "Civics and Government" [ref=e101]
+          - listitem [ref=e102]:
+            - link "Computer Science and Technology" [ref=e103] [cursor=pointer]:
+              - /url: /us/elementary/topics/Jpy1Edb/computer-science-and-technology
+              - generic [ref=e104]:
+                - img [ref=e109]
+                - generic "Computer Science and Technology" [ref=e112]
+          - listitem [ref=e113]:
+            - link "Earth and Space Science" [ref=e114] [cursor=pointer]:
+              - /url: /us/elementary/topics/ZAl67rb/earth-and-space-science
+              - generic [ref=e115]:
+                - img [ref=e120]
+                - generic "Earth and Space Science" [ref=e123]
+          - listitem [ref=e124]:
+            - link "Economics" [ref=e125] [cursor=pointer]:
+              - /url: /us/elementary/topics/ze5PRD9/economics
+              - generic [ref=e126]:
+                - img [ref=e131]
+                - generic "Economics" [ref=e134]
+          - listitem [ref=e135]:
+            - link "English Language Arts" [ref=e136] [cursor=pointer]:
+              - /url: /us/elementary/topics/NqgPKaG/english-language-arts
+              - generic [ref=e137]:
+                - img [ref=e142]
+                - generic "English Language Arts" [ref=e145]
+          - listitem [ref=e146]:
+            - link "Geography" [ref=e147] [cursor=pointer]:
+              - /url: /us/elementary/topics/GxAzYW1/geography
+              - generic [ref=e148]:
+                - img [ref=e153]
+                - generic "Geography" [ref=e156]
+          - listitem [ref=e157]:
+            - link "Health" [ref=e158] [cursor=pointer]:
+              - /url: /us/elementary/topics/bbJ74ed/health
+              - generic [ref=e159]:
+                - img [ref=e164]
+                - generic "Health" [ref=e167]
+          - listitem [ref=e168]:
+            - link "History 6 new videos this month" [ref=e169] [cursor=pointer]:
+              - /url: /us/elementary/topics/R0L3j6g/history
+              - generic [ref=e170]:
+                - img [ref=e175]
+                - generic [ref=e177]:
+                  - generic "History" [ref=e178]
+                  - generic [ref=e179]: 6 new videos this month
+          - listitem [ref=e180]:
+            - link "Life Science" [ref=e181] [cursor=pointer]:
+              - /url: /us/elementary/topics/9DPWnaO/life-science
+              - generic [ref=e182]:
+                - img [ref=e187]
+                - generic "Life Science" [ref=e190]
+          - listitem [ref=e191]:
+            - link "Life Skills" [ref=e192] [cursor=pointer]:
+              - /url: /us/elementary/topics/8LnP7p8/life-skills
+              - generic [ref=e193]:
+                - img [ref=e198]
+                - generic "Life Skills" [ref=e201]
+          - listitem [ref=e202]:
+            - link "Math" [ref=e203] [cursor=pointer]:
+              - /url: /us/elementary/topics/Dda6pW3/math
+              - generic [ref=e204]:
+                - img [ref=e209]
+                - generic "Math" [ref=e212]
+          - listitem [ref=e213]:
+            - link "Physical Education" [ref=e214] [cursor=pointer]:
+              - /url: /us/elementary/topics/j0a4Arj/physical-education
+              - generic [ref=e215]:
+                - img [ref=e220]
+                - generic "Physical Education" [ref=e223]
+          - listitem [ref=e224]:
+            - link "Physical Science" [ref=e225] [cursor=pointer]:
+              - /url: /us/elementary/topics/nKzp19Y/physical-science
+              - generic [ref=e226]:
+                - img [ref=e231]
+                - generic "Physical Science" [ref=e234]
+          - listitem [ref=e235]:
+            - link "Religion" [ref=e236] [cursor=pointer]:
+              - /url: /us/elementary/topics/7P7n8AR/religion
+              - generic [ref=e237]:
+                - img [ref=e242]
+                - generic "Religion" [ref=e245]
+          - listitem [ref=e246]:
+            - link "Teacher Professional Development" [ref=e247] [cursor=pointer]:
+              - /url: /us/elementary/topics/eK4WNv1/teacher-professional-development
+              - generic [ref=e248]:
+                - img [ref=e253]
+                - generic "Teacher Professional Development" [ref=e256]
+          - listitem [ref=e257]:
+            - link "World Languages" [ref=e258] [cursor=pointer]:
+              - /url: /us/elementary/topics/4Gl1DaK/world-languages
+              - generic [ref=e259]:
+                - img [ref=e264]
+                - generic "World Languages" [ref=e267]
+          - status [ref=e268]
+          - listitem [ref=e269]:
+            - link "Change to Middle School" [ref=e270] [cursor=pointer]:
+              - /url: /us/middle
+              - generic [ref=e271]:
+                - img [ref=e276]
+                - generic "Change to Middle School" [ref=e279]
+          - listitem [ref=e280]:
+            - link "Change to High School" [ref=e281] [cursor=pointer]:
+              - /url: /us/high
+              - generic [ref=e282]:
+                - img [ref=e287]
+                - generic "Change to High School" [ref=e290]
+    - list [ref=e38]:
+      - listitem [ref=e39]: 2003 - 2026 © ClickView
+      - text: "|"
+      - listitem [ref=e40]:
+        - link "Privacy Policy" [ref=e41] [cursor=pointer]:
+          - /url: https://www.clickvieweducation.com/legal/privacy-policy
+      - text: "|"
+      - listitem [ref=e42]:
+        - link "Terms and Conditions" [ref=e43] [cursor=pointer]:
+          - /url: https://www.clickvieweducation.com/legal/terms-and-conditions
+      - text: "|"
+      - listitem [ref=e44]:
+        - link "Contact Us" [ref=e45] [cursor=pointer]:
+          - /url: https://www.clickvieweducation.com/contact-us
+      - text: "|"
+      - listitem [ref=e46]: "Version: 0.92.10"
