@@ -12,7 +12,6 @@ export function createFloorPlanSchema(dictionary: Dictionary) {
 
   return z.object({
     teachers: z.number().min(1, { message: v.get("atLeastOneTeacher") }),
-    facilities: z.number().min(1, { message: v.get("atLeastOneFacility") }),
     studentCount: z.number().min(1, { message: v.get("atLeastOneStudent") }),
   })
 }
@@ -23,7 +22,6 @@ export function createFloorPlanSchema(dictionary: Dictionary) {
 
 export const floorPlanSchema = z.object({
   teachers: z.number().min(1, "At least 1 teacher is required"),
-  facilities: z.number().min(1, "At least 1 facility is required"),
   studentCount: z.number().min(1, "At least 1 student is required"),
 })
 

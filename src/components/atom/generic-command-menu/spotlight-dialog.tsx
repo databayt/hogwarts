@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
+import { AnimatePresence, motion } from "framer-motion"
 import { Compass, Palette, SearchIcon, Settings, Zap } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
@@ -12,7 +13,7 @@ import { cn } from "@/lib/utils"
 /* ------------------------------------------------------------------ */
 
 export const SPOTLIGHT_CATEGORIES = [
-  { id: "navigation", icon: Compass, label: "Navigation", shortcut: "⌘1" },
+  { id: "navigation", icon: Compass, label: "Pages", shortcut: "⌘1" },
   { id: "actions", icon: Zap, label: "Actions", shortcut: "⌘2" },
   { id: "settings", icon: Settings, label: "Settings", shortcut: "⌘3" },
   { id: "theme", icon: Palette, label: "Theme", shortcut: "⌘4" },
@@ -21,64 +22,85 @@ export const SPOTLIGHT_CATEGORIES = [
 export type SpotlightCategoryId = (typeof SPOTLIGHT_CATEGORIES)[number]["id"]
 
 /* ------------------------------------------------------------------ */
-/*  SpotlightDialog – Radix Dialog root (no background, just layout)   */
+/*  Glass effect                                                       */
+/* ------------------------------------------------------------------ */
+
+export const GLASS =
+  "bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl backdrop-saturate-[180%] border border-black/10 dark:border-white/10 shadow-2xl"
+
+/* ------------------------------------------------------------------ */
+/*  SpotlightDialog – Radix Dialog root with spring animations         */
 /* ------------------------------------------------------------------ */
 
 function SpotlightDialog({
   children,
+  open,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root> & {
   children: React.ReactNode
+  open?: boolean
 }) {
   return (
-    <DialogPrimitive.Root data-slot="spotlight-dialog" {...props}>
-      <DialogPrimitive.Portal>
-        {/* Overlay */}
-        <DialogPrimitive.Overlay
-          className={cn(
-            "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm",
-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+    <DialogPrimitive.Root data-slot="spotlight-dialog" open={open} {...props}>
+      <DialogPrimitive.Portal forceMount>
+        <AnimatePresence>
+          {open && (
+            <DialogPrimitive.Overlay key="spotlight-overlay" forceMount asChild>
+              <motion.div
+                className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              />
+            </DialogPrimitive.Overlay>
           )}
-        />
+          {open && (
+            <DialogPrimitive.Content
+              key="spotlight-content"
+              forceMount
+              className={cn(
+                "fixed start-[50%] top-[15vh] z-50",
+                "w-[calc(100%-2rem)] max-w-[540px]",
+                "translate-x-[-50%] rtl:-translate-x-[50%]",
+                "flex flex-col items-center",
+                "outline-none"
+              )}
+            >
+              <motion.div
+                initial={{ scaleX: 1.05 }}
+                animate={{ scaleX: 1 }}
+                exit={{ scaleX: 1.03, opacity: 0 }}
+                transition={{
+                  scaleX: { type: "spring", duration: 0.45, bounce: 0.2 },
+                }}
+                className="flex w-full flex-col items-center"
+              >
+                <DialogPrimitive.Title className="sr-only">
+                  Search
+                </DialogPrimitive.Title>
+                <DialogPrimitive.Description className="sr-only">
+                  Search for a command or page
+                </DialogPrimitive.Description>
 
-        {/* Content – transparent flex column, children have their own glass */}
-        <DialogPrimitive.Content
-          className={cn(
-            "fixed start-[50%] top-[15vh] z-50",
-            "w-[calc(100%-2rem)] max-w-[540px]",
-            "translate-x-[-50%] rtl:-translate-x-[50%]",
-            "flex flex-col items-center",
-            // Animation on wrapper
-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "duration-200",
-            // No background — each child has its own
-            "outline-none"
+                <CommandPrimitive
+                  className="flex w-full flex-col items-center"
+                  loop
+                >
+                  {children}
+                </CommandPrimitive>
+              </motion.div>
+            </DialogPrimitive.Content>
           )}
-        >
-          <DialogPrimitive.Title className="sr-only">
-            Search
-          </DialogPrimitive.Title>
-          <DialogPrimitive.Description className="sr-only">
-            Search for a command or page
-          </DialogPrimitive.Description>
-
-          <CommandPrimitive className="flex w-full flex-col items-center" loop>
-            {children}
-          </CommandPrimitive>
-        </DialogPrimitive.Content>
+        </AnimatePresence>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
   )
 }
 
 /* ------------------------------------------------------------------ */
-/*  SpotlightBar – pill-shaped search input                            */
+/*  SpotlightBar – search input area (glass provided by container)     */
 /* ------------------------------------------------------------------ */
-
-const GLASS =
-  "bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl backdrop-saturate-[180%] border border-black/10 dark:border-white/10 shadow-2xl"
 
 function SpotlightBar({
   className,
@@ -88,13 +110,7 @@ function SpotlightBar({
   return (
     <div
       data-slot="spotlight-bar"
-      className={cn(
-        "flex h-12 items-center gap-3 px-5",
-        "rounded-full",
-        GLASS,
-        "transition-all duration-300",
-        className
-      )}
+      className={cn("relative flex h-12 items-center gap-3 px-5", className)}
       {...props}
     >
       {children}
@@ -112,12 +128,12 @@ function SpotlightInput({
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div className="flex flex-1 items-center gap-3">
-      <SearchIcon className="text-muted-foreground/70 size-5 shrink-0" />
+      <SearchIcon className="text-muted-foreground size-5 shrink-0" />
       <CommandPrimitive.Input
         data-slot="spotlight-input"
         className={cn(
           "flex h-12 w-full bg-transparent text-base outline-hidden",
-          "placeholder:text-muted-foreground/50",
+          "placeholder:text-muted-foreground/70",
           "disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
@@ -178,16 +194,18 @@ function SpotlightCategories({
 }
 
 /* ------------------------------------------------------------------ */
-/*  SpotlightCategoryIcons – circular glass icons (hover state)        */
+/*  SpotlightCategoryIcons – circular glass icons with spring pop      */
 /* ------------------------------------------------------------------ */
 
 function SpotlightCategoryIcons({
   activeCategory,
   onSelect,
+  onHover,
   className,
 }: {
   activeCategory: SpotlightCategoryId | null
   onSelect: (id: SpotlightCategoryId) => void
+  onHover?: (id: SpotlightCategoryId | null) => void
   className?: string
 }) {
   return (
@@ -199,22 +217,35 @@ function SpotlightCategoryIcons({
         const Icon = cat.icon
         const isActive = activeCategory === cat.id
         return (
-          <button
+          <motion.button
             key={cat.id}
             type="button"
             data-active={isActive}
             title={`${cat.label} (${cat.shortcut})`}
+            initial={{ opacity: 0, x: -20, scale: 0.6 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{
+              opacity: 0,
+              x: -20,
+              scale: 0.6,
+              transition: { duration: 0.15 },
+            }}
+            transition={{
+              type: "spring",
+              duration: 0.4,
+              bounce: 0.2,
+              delay: i * 0.04,
+            }}
             className={cn(
               "flex size-12 items-center justify-center",
               "rounded-full",
               GLASS,
               "shadow-lg",
-              "cursor-pointer transition-all duration-200",
-              "hover:scale-100",
-              "animate-in fade-in slide-in-from-left-2",
+              "cursor-pointer",
               isActive && "bg-accent border-accent shadow-accent/20"
             )}
-            style={{ animationDelay: `${i * 50}ms`, animationFillMode: "both" }}
+            onMouseEnter={() => onHover?.(cat.id)}
+            onMouseLeave={() => onHover?.(null)}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -223,11 +254,11 @@ function SpotlightCategoryIcons({
           >
             <Icon
               className={cn(
-                "size-4",
-                isActive ? "text-accent-foreground" : "text-muted-foreground/70"
+                "size-5",
+                isActive ? "text-accent-foreground" : "text-muted-foreground"
               )}
             />
-          </button>
+          </motion.button>
         )
       })}
     </div>
@@ -235,7 +266,7 @@ function SpotlightCategoryIcons({
 }
 
 /* ------------------------------------------------------------------ */
-/*  SpotlightDropdown – results panel below the bar                    */
+/*  SpotlightDropdown – results panel with scale reveal                */
 /* ------------------------------------------------------------------ */
 
 function SpotlightDropdown({
@@ -246,19 +277,16 @@ function SpotlightDropdown({
   children: React.ReactNode
 }) {
   return (
-    <div
+    <motion.div
       data-slot="spotlight-dropdown"
-      className={cn(
-        "mt-2 w-full max-w-[540px]",
-        "rounded-2xl",
-        GLASS,
-        "overflow-hidden",
-        "animate-in fade-in slide-in-from-top-1 duration-200",
-        className
-      )}
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: "auto", opacity: 1 }}
+      exit={{ height: 0, opacity: 0, transition: { duration: 0.2 } }}
+      transition={{ type: "spring", duration: 0.45, bounce: 0.05 }}
+      className={cn("w-full overflow-hidden", className)}
     >
       {children}
-    </div>
+    </motion.div>
   )
 }
 

@@ -62,7 +62,7 @@ export default async function PlatformLayout({
                   lang={lang}
                   serverRole={serverRole}
                 />
-                <div className="dashboard-container overflow-hidden pb-10 transition-[margin] duration-200 ease-in-out">
+                <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
                   <div className="mb-6">
                     <PageHeadingDisplay />
                   </div>

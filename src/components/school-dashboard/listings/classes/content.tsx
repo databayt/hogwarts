@@ -61,6 +61,11 @@ export default async function ClassesContent({
               termNumber: true,
             },
           },
+          grade: {
+            select: {
+              name: true,
+            },
+          },
           _count: {
             select: {
               studentClasses: true,
@@ -78,6 +83,7 @@ export default async function ClassesContent({
         ? `${c.teacher.givenName} ${c.teacher.surname}`
         : "Unknown",
       termName: c.term?.termNumber ? `Term ${c.term.termNumber}` : "Unknown",
+      gradeName: c.grade?.name || "",
       courseCode: c.courseCode || null,
       credits: c.credits || null,
       evaluationType: c.evaluationType || "NORMAL",

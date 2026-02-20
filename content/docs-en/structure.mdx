@@ -1,352 +1,373 @@
 ---
 title: "Structure"
-description: "Documentation for Structure"
+description: "Project directory structure, routing layout, and file conventions."
 ---
 
-## Directory Structure
-
-### Overview
-
-Databayt follows a **feature-based, modular architecture** designed for scalability, reusability, and maintainability. Our structure supports micro-services and micro-frontend patterns while leveraging Next.js App Router conventions.
-
-### Core Principles
-
-- **URL-driven organization**: Every route URL directly maps to predictable directory structures
-- **Feature-based modularity**: Each feature is self-contained with consistent file patterns
-- **Component layering**: UI components are organized in atomic, template, and feature layers
-- **Reusable patterns**: Standardized file conventions across all features
-- **Open source friendly**: Clear, documented structure for community contributions
-
----
-
-## Project Root Structure
+## Project Root
 
 ```text
-Databayt/
-├── public/                     # Static assets
-├── src/                       # Source code (Next.js src directory pattern)
-│   ├── app/                   # Next.js App Router pages and routing
-│   ├── components/            # Reusable components
-│   ├── lib/                   # Shared utilities and configurations
-│   └── types/                 # Global TypeScript definitions
-├── docs/                      # Documentation
-├── .env.local                 # Environment variables
-├── next.config.js             # Next.js configuration
-├── package.json               # Dependencies
-├── tailwind.config.js         # Tailwind CSS configuration
-└── tsconfig.json              # TypeScript configuration
-```
-
-## Source Directory (`src/`) Structure
-
-### App Directory (`src/app/`)
-
-Following Next.js App Router conventions for routing and page management:
-
-```text
-src/app/
-├── globals.css               # Global styles
-├── layout.tsx                # Root layout
-├── page.tsx                  # Home page
-├── loading.tsx               # Global loading UI
-├── error.tsx                 # Global error UI
-├── not-found.tsx             # 404 page
-├── gallery/                  # Feature route: /gallery
-│   ├── page.tsx              # Gallery main page
-│   ├── layout.tsx            # Gallery layout
-│   ├── loading.tsx           # Gallery loading state
-│   ├── error.tsx             # Gallery error handling
-│   └── [slug]/               # Dynamic gallery routes
-│       ├── page.tsx          # Individual gallery page
-│       └── edit/             # Nested route: /gallery/[slug]/edit
-│           └── page.tsx      # Edit gallery page
-└── dashboard/                # Feature route: /dashboard
-    ├── page.tsx              # Dashboard main page
-    ├── layout.tsx            # Dashboard layout
-    └── analytics/            # Nested route: /dashboard/analytics
-        └── page.tsx          # Analytics page
-```
-
-### Components Directory (`src/components/`)
-
-Three-layer component architecture for maximum reusability:
-
-```text
-src/components/
-├── ui/                       # shadcn/ui components (installed via CLI)
-│   ├── button.tsx
-│   ├── input.tsx
-│   ├── card.tsx
-│   └── ...
-├── atoms/                    # Atomic reusable components (shadcn pattern)
-│   ├── logo.tsx
-│   ├── badge.tsx
-│   ├── avatar.tsx
-│   └── spinner.tsx
-├── templates/                # Layout and template components (shadcn pattern)
-│   ├── header.tsx
-│   ├── footer.tsx
-│   ├── sidebar.tsx
-│   └── navigation.tsx
-└── gallery/                 # Feature-specific components (matches /gallery route)
-    ├── constants.ts          # Gallery constants and configurations
-    ├── types.ts              # Gallery TypeScript type definitions
-    ├── validation.ts         # Gallery form validation schemas
-    ├── actions.ts            # Gallery server actions and API calls
-    ├── use-gallery.tsx       # Gallery custom React hooks
-    ├── form.tsx              # Gallery form components
-    ├── card.tsx              # Gallery card component
-    ├── table.tsx             # Gallery table/list component
-    ├── content.tsx           # Gallery content display component
-    ├── featured.tsx          # Gallery featured items component
-    ├── all.tsx               # Gallery "show all" component
-    └── detail.tsx            # Gallery detail/single item component
+hogwarts/
+├── public/                     # Static assets (images, fonts, icons)
+├── prisma/
+│   ├── schema.prisma           # Base schema (datasource, generator, imports)
+│   ├── models/                 # 57 .prisma files
+│   └── seeds/                  # 46 seed files
+├── src/
+│   ├── app/                    # Next.js App Router (routes)
+│   ├── components/             # 35 component directories
+│   ├── lib/                    # 76 utility modules
+│   ├── types/                  # Global TypeScript definitions
+│   ├── styles/                 # Global styles (typography.css)
+│   └── proxy.ts               # Edge proxy (subdomain detection, URL rewriting)
+├── content/docs-en/            # MDX documentation (98 pages)
+├── scripts/                    # Build and seed scripts
+├── tests/                      # E2E test suites (Playwright)
+├── .env                        # Central environment (NEVER .env.local)
+├── next.config.ts              # Next.js configuration
+├── package.json                # pnpm dependencies
+└── tsconfig.json               # TypeScript config (@/* → ./src/*)
 ```
 
 ---
 
-## Feature Directory Pattern
+## Route Structure (`src/app/`)
 
-**Every URL route has a corresponding feature directory in both `src/app/` and `src/components/`.**
+All routes live under `[lang]/` for locale support (en/ar). The platform has **4 entry points**, implemented as route groups.
 
-For route `/gallery`:
+### Entry Points
 
-- `src/app/gallery/` – Contains Next.js page components and routing logic
-- `src/components/gallery/` – Contains feature-specific UI components and logic
+| Route Group          | URL Pattern                     | Purpose               | Access                     |
+| -------------------- | ------------------------------- | --------------------- | -------------------------- |
+| `(saas-marketing)`   | `ed.databayt.org/`              | Public marketing site | Public                     |
+| `(saas-dashboard)`   | `ed.databayt.org/dashboard`     | Operator dashboard    | DEVELOPER role only        |
+| `(school-marketing)` | `school.databayt.org/`          | Public school site    | Public                     |
+| `(school-dashboard)` | `school.databayt.org/dashboard` | School platform       | Authenticated school roles |
 
-### Standard Feature Files
-
-| File                | Purpose                                 | Example Content                         |
-| ------------------- | --------------------------------------- | --------------------------------------- |
-| `constants.ts`      | Feature constants, configs, static data | API endpoints, default values, enums    |
-| `types.ts`          | TypeScript type definitions             | Interfaces, types, API response schemas |
-| `validation.ts`     | Form validation schemas                 | Zod schemas, validation rules           |
-| `actions.ts`        | Server actions and API calls            | Data fetching, mutations, server logic  |
-| `use-[feature].tsx` | Custom React hooks                      | State management, data fetching hooks   |
-| `form.tsx`          | Form components                         | Create/edit forms, form handling        |
-| `card.tsx`          | Card/item components                    | List items, preview cards               |
-| `table.tsx`         | Table/list components                   | Data tables, lists with pagination      |
-| `content.tsx`       | Content display components              | Rich content, formatted text            |
-| `featured.tsx`      | Featured/highlight components           | Hero sections, featured items           |
-| `all.tsx`           | "Show all" list components              | Complete lists, archive pages           |
-| `detail.tsx`        | Detail/single item components           | Single item views, detail pages         |
-
-### Feature Implementation Example
-
-For a new feature route `/products`:
-
-1. **Create route structure:**
-
-   ```text
-   src/app/products/
-   ├── page.tsx               # Products listing page
-   ├── layout.tsx             # Products layout
-   └── [id]/
-       └── page.tsx           # Individual product page
-   ```
-
-2. **Create component structure:**
-
-   ```text
-   src/components/products/
-   ├── constants.ts           # Product constants
-   ├── types.ts               # Product type definitions
-   ├── validation.ts          # Product validation schemas
-   ├── actions.ts             # Product API actions
-   ├── use-products.tsx       # Product hooks
-   ├── form.tsx               # Product form
-   ├── card.tsx               # Product card
-   ├── table.tsx              # Products table
-   ├── content.tsx            # Product content display
-   ├── featured.tsx           # Featured products
-   ├── all.tsx                # All products list
-   └── detail.tsx             # Product detail view
-   ```
-
----
-
-## Component Layer Definitions
-
-### UI Layer (`src/components/ui/`)
-
-- **Purpose**: Base design system components from shadcn/ui
-- **Usage**: Installed via `npx shadcn-ui@latest add [component]`
-- **Examples**: Button, Input, Card, Dialog, Sheet
-- **Styling**: Fully styled with Tailwind CSS variants
-
-### Atoms Layer (`src/components/atoms/`)
-
-- **Purpose**: Small, reusable components following shadcn patterns
-- **Usage**: Custom atomic components built on top of UI layer
-- **Examples**: Logo, Badge, Avatar, Spinner, Status indicators
-- **Styling**: Consistent with shadcn/ui styling patterns
-
-### Templates Layer (`src/components/templates/`)
-
-- **Purpose**: Layout and structural components following shadcn patterns
-- **Usage**: Page layouts, navigation, common page sections
-- **Examples**: Header, Footer, Sidebar, Navigation, Page wrappers
-- **Styling**: Structural styling with flexible content areas
-
-### Feature Layer (`src/components/[feature]/`)
-
-- **Purpose**: Feature-specific business logic components
-- **Usage**: Components that implement specific business features
-- **Examples**: Gallery components, Dashboard widgets, User management
-- **Styling**: Feature-specific styling while maintaining design consistency
-
----
-
-## Shared Utilities
-
-### Lib Directory (`src/lib/`)
+### Route Tree
 
 ```text
-src/lib/
-├── utils.ts              # General utility functions (shadcn utils)
-├── cn.ts                 # className utility (shadcn)
-├── validations/          # Shared validation schemas
-├── hooks/                # Shared custom hooks
-├── constants/            # Global constants
-├── api/                  # API client configurations
-└── auth/                 # Authentication utilities
-```
-
-### Types Directory (`src/types/`)
-
-```text
-src/types/
-├── global.ts            # Global type definitions
-├── api.ts               # API response types
-├── auth.ts              # Authentication types
-└── database.ts          # Database schema types
+src/app/[lang]/
+├── (saas-marketing)/              # ed.databayt.org public pages
+│   ├── page.tsx                   # Landing page
+│   ├── pricing/                   # Pricing page
+│   ├── features/                  # Features page
+│   ├── blog/                      # Blog
+│   └── docs/                      # Documentation viewer
+│
+├── (saas-dashboard)/              # Operator dashboard (DEVELOPER only)
+│   ├── dashboard/                 # Platform analytics
+│   ├── tenants/                   # School management
+│   ├── billing/                   # Subscription billing
+│   ├── sales/                     # Sales pipeline
+│   ├── product/                   # Product management
+│   ├── domains/                   # Domain management
+│   ├── kanban/                    # Task board
+│   ├── analytics/                 # Platform analytics
+│   ├── observability/             # System monitoring
+│   ├── profile/                   # Developer profile
+│   └── (catalog)/                 # Platform content catalog
+│       └── catalog/
+│
+├── onboarding/                    # School creation wizard
+├── settings/                      # User settings
+├── my-school/                     # School selector
+│
+└── s/[subdomain]/                 # School subdomain routes
+    ├── (school-marketing)/        # Public school pages
+    │   ├── page.tsx               # School homepage
+    │   ├── admissions/            # Admissions info
+    │   ├── academic/              # Academic programs
+    │   ├── about/                 # About the school
+    │   ├── tour/                  # Virtual tour
+    │   └── inquiry/               # Contact/inquiry form
+    │
+    ├── (school-apply)/            # Application portal
+    │   └── apply/                 # Student application form
+    │
+    └── (school-dashboard)/        # Authenticated school platform
+        ├── dashboard/             # School dashboard
+        ├── admission/             # Admission management
+        ├── attendance/            # Attendance tracking
+        ├── timetable/             # Schedule management
+        ├── exams/                 # Exam management
+        ├── stream/                # LMS / streaming
+        ├── library/               # Digital library
+        ├── finance/               # Financial management
+        ├── billing/               # School billing
+        ├── messages/              # Messaging
+        ├── notifications/         # Notifications
+        ├── settings/              # School settings
+        ├── profile/               # User profile
+        ├── school/                # School info
+        ├── sales/                 # School sales
+        ├── stats/                 # Statistics
+        ├── charts/                # Chart views
+        ├── cards/                 # Card views
+        ├── lab/                   # Experimental features
+        │
+        └── (listings)/            # 14 CRUD entities
+            ├── announcements/
+            ├── assignments/
+            ├── classes/
+            ├── classrooms/
+            ├── events/
+            ├── grades/
+            ├── lessons/
+            ├── parents/
+            ├── staff/
+            ├── students/
+            ├── subjects/
+            └── teachers/
 ```
 
 ---
 
-## File Naming Conventions
+## Component Structure (`src/components/`)
 
-### Components
+### 35 Component Directories
 
-- **React components**: `kebab-case.tsx` (e.g., `user-profile.tsx`)
-- **Hooks**: `use-feature-name.tsx` (e.g., `use-gallery.tsx`)
-- **Types**: `kebab-case.ts` (e.g., `gallery-types.ts`)
+| Directory               | Purpose                                                  |
+| ----------------------- | -------------------------------------------------------- |
+| `ui/`                   | shadcn/ui primitives (button, input, card, dialog, etc.) |
+| `atom/`                 | Composed components (2+ primitives combined)             |
+| `template/`             | Full-page layouts (header, sidebar, footer)              |
+| `auth/`                 | Authentication (login, join, reset, OAuth, role gates)   |
+| `onboarding/`           | 20-step school creation wizard                           |
+| `school-dashboard/`     | School platform features (28 subdirectories)             |
+| `saas-dashboard/`       | Operator dashboard features                              |
+| `saas-marketing/`       | Marketing site components                                |
+| `school-marketing/`     | School public site components                            |
+| `stream/`               | LMS / streaming (courses, dashboard, payment)            |
+| `table/`                | DataTable with sorting, filtering, pagination            |
+| `form/`                 | Form utilities and patterns                              |
+| `sidebar/`              | Sidebar navigation                                       |
+| `icons/`                | Icon system and registry                                 |
+| `internationalization/` | i18n components (language switcher, RTL)                 |
+| `theme/`                | Theme provider and toggles                               |
+| `providers/`            | React context providers                                  |
+| `tenant/`               | Multi-tenant components                                  |
+| `school-switcher/`      | School selector component                                |
+| `profile/`              | User profile components                                  |
+| `docs/`                 | Documentation components                                 |
+| `mdx/`                  | MDX rendering components                                 |
+| `file/`                 | File upload and management                               |
+| `export/`               | Data export utilities                                    |
+| `crud-modal/`           | Generic CRUD modal pattern                               |
+| `view-toggle/`          | List/grid view toggle                                    |
+| `rich-text-editor/`     | Rich text editor                                         |
+| `chatbot/`              | AI chatbot interface                                     |
+| `monitoring/`           | System monitoring UI                                     |
+| `offline/`              | Offline mode support                                     |
+| `library/`              | Digital library components                               |
+| `billingsdk/`           | Billing SDK integration                                  |
+| `sales/`                | Sales pipeline components                                |
+| `ha-ui/`                | Home automation UI                                       |
+| `kokonutui/`            | KokonutUI components                                     |
 
-### Pages (App Router)
+### Template Directory (`src/components/template/`)
 
-- **Pages**: `page.tsx`
-- **Layouts**: `layout.tsx`
-- **Loading**: `loading.tsx`
-- **Errors**: `error.tsx`
-- **Not Found**: `not-found.tsx`
+| Component            | Purpose                          |
+| -------------------- | -------------------------------- |
+| `platform-sidebar/`  | Main platform sidebar navigation |
+| `platform-header/`   | Platform header bar              |
+| `platform-footer/`   | Platform footer                  |
+| `dashboard-sidebar/` | Dashboard-specific sidebar       |
+| `dashboard-header/`  | Dashboard header                 |
+| `marketing-header/`  | Marketing site header            |
+| `marketing-footer/`  | Marketing site footer            |
+| `saas-header/`       | SaaS dashboard header            |
+| `saas-sidebar/`      | SaaS dashboard sidebar           |
+| `site-header/`       | School site header               |
+| `site-footer/`       | School site footer               |
+| `docs-sidebar/`      | Documentation sidebar            |
+| `mobile-nav/`        | Mobile navigation                |
+| `notion-header/`     | Notion-style header              |
+| `listing.tsx`        | Generic listing page template    |
 
-### Utilities
+### School Dashboard Features (`src/components/school-dashboard/`)
 
-- **Constants**: `constants.ts` or `config.ts`
-- **Actions**: `actions.ts`
-- **Validation**: `validation.ts`
-- **Utilities**: `utils.ts`
+| Directory           | Files       | Purpose                         |
+| ------------------- | ----------- | ------------------------------- |
+| `listings/`         | 13 entities | CRUD entities (see below)       |
+| `dashboard/`        | -           | Dashboard widgets and layout    |
+| `attendance/`       | 42          | Attendance tracking module      |
+| `timetable/`        | 56          | Schedule generation and display |
+| `admission/`        | -           | Student admission workflow      |
+| `exams/`            | -           | Exam creation and grading       |
+| `finance/`          | -           | Financial management            |
+| `fees/`             | -           | Fee collection                  |
+| `billing/`          | -           | Billing operations              |
+| `library/`          | -           | Digital library                 |
+| `reports/`          | -           | Report generation               |
+| `notifications/`    | -           | Notification system             |
+| `messaging/`        | -           | Internal messaging              |
+| `settings/`         | -           | School settings                 |
+| `profile/`          | -           | User profile                    |
+| `school/`           | -           | School info management          |
+| `parent/`           | -           | Parent portal                   |
+| `parent-portal/`    | -           | Parent-facing views             |
+| `teacher/`          | -           | Teacher-specific views          |
+| `analytics/`        | -           | School analytics                |
+| `qbank-automation/` | -           | Question bank automation        |
+| `activity/`         | -           | Activity tracking               |
+| `facility/`         | -           | Facility management             |
+| `lab/`              | -           | Experimental features           |
+| `import/`           | -           | Data import tools               |
+| `shared/`           | -           | Shared school components        |
+| `context/`          | -           | React contexts                  |
+| `communication/`    | -           | Communication tools             |
+
+### Listing Entities (`src/components/school-dashboard/listings/`)
+
+13 entities, each following the standard feature file pattern:
+
+| Entity           | Key Files                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| `announcements/` | content, actions, validation, form, table, columns                                  |
+| `assignments/`   | content, actions, validation, form, table, columns                                  |
+| `classes/`       | content, actions, validation, form, table, columns                                  |
+| `classrooms/`    | content, actions, validation, form, table, columns                                  |
+| `events/`        | content, actions, validation, form, table, columns                                  |
+| `grades/`        | content, actions, validation, form, table, columns                                  |
+| `lessons/`       | content, actions, validation, form, table, columns                                  |
+| `parents/`       | content, actions, validation, form, table, columns                                  |
+| `staff/`         | content, actions, validation, form, table, columns                                  |
+| `students/`      | content, actions, validation, form, table, columns, enrollment/, profile/, reports/ |
+| `subjects/`      | content, actions, validation, form, table, columns, catalog/                        |
+| `teachers/`      | content, actions, validation, form, table, columns                                  |
 
 ---
 
-## Import Patterns
+## Standard Feature File Pattern
 
-### Absolute Imports
+Every feature directory follows a consistent set of files.
 
-Configure TypeScript paths in `tsconfig.json`:
+| File               | Type             | Purpose                                    |
+| ------------------ | ---------------- | ------------------------------------------ |
+| `content.tsx`      | Server Component | Main UI, data fetching, layout             |
+| `actions.ts`       | Server Actions   | `"use server"` mutations with schoolId     |
+| `validation.ts`    | Shared           | Zod schemas for form and server validation |
+| `form.tsx`         | Client Component | Create/edit forms                          |
+| `table.tsx`        | Client Component | DataTable with sorting, filtering          |
+| `columns.tsx`      | Client Component | Column definitions (must use `useMemo`)    |
+| `types.ts`         | Shared           | TypeScript interfaces                      |
+| `config.ts`        | Shared           | Constants, configurations                  |
+| `queries.ts`       | Server           | Database query functions                   |
+| `authorization.ts` | Server           | Role-based access checks                   |
 
-```json
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/types/*": ["./src/types/*"]
-    }
-  }
+---
+
+## Mirror Pattern
+
+**Routes in `app/` mirror components in `components/`.** The page file imports the content component.
+
+```text
+Route:     src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/students/page.tsx
+Component: src/components/school-dashboard/listings/students/content.tsx
+```
+
+The page file is thin -- it imports and renders the content component:
+
+```tsx
+// page.tsx
+import { Content } from "@/components/school-dashboard/listings/students/content"
+
+export default function StudentsPage() {
+  return <Content />
 }
 ```
 
-### Import Examples
+---
 
-```typescript
-// Feature components
-import type { GalleryItem } from "@/types/gallery"
-// Utilities
-import { cn } from "@/lib/utils"
-// Shared components
-import { Button } from "@/components/ui/button"
-import { Logo } from "@/components/atoms/logo"
-import { GalleryCard } from "@/components/gallery/card"
-import { useGallery } from "@/components/gallery/use-gallery"
-import { Header } from "@/components/templates/header"
+## Prisma Schema (`prisma/`)
+
+```text
+prisma/
+├── schema.prisma               # Datasource, generator, model imports
+├── models/                     # 57 .prisma files
+│   ├── school.prisma           # School, TranslationCache
+│   ├── auth.prisma             # User, Account, Session, Role
+│   ├── students.prisma         # Student, Guardian
+│   ├── staff.prisma            # Staff, StaffMember
+│   ├── subjects.prisma         # Subject, SubjectAssignment
+│   ├── academic-structure.prisma # YearLevel, Class, Section
+│   ├── timetable.prisma        # Timetable, Period, Slot
+│   ├── attendance.prisma       # Attendance, AttendanceRecord
+│   ├── catalog.prisma          # CatalogSubject, CatalogTopic, CatalogLesson
+│   ├── exam.prisma             # Exam, ExamResult
+│   ├── finance-core.prisma     # Account, Transaction, Budget
+│   ├── subscription.prisma     # Subscription, Plan, Invoice
+│   ├── stream.prisma           # Course, Lesson, Progress
+│   └── ...                     # 44 more model files
+└── seeds/                      # 46 seed files
+    ├── index.ts                # Seed orchestrator (NEVER run directly)
+    ├── single.ts               # Single seed runner (ALWAYS use this)
+    ├── school.ts               # Demo school seed
+    ├── auth.ts                 # User accounts seed
+    ├── catalog.ts              # Subject catalog seed
+    ├── classes.ts              # Class structure seed
+    ├── timetable.ts            # Timetable seed
+    └── ...                     # 39 more seed files
 ```
 
 ---
 
-## Best Practices
+## Lib Utilities (`src/lib/`)
 
-### Component Organization
+76 modules. Key utilities:
 
-1. **Single Responsibility**: Each component should have one clear purpose
-2. **Consistent Naming**: Follow established naming patterns across features
-3. **Type Safety**: Use TypeScript for all components and utilities
-4. **Export Patterns**: Use named exports for components, default for pages
-
-### File Structure
-
-1. **Predictable Paths**: URL structure directly maps to directory structure
-2. **Feature Isolation**: Keep feature logic contained within feature directories
-3. **Shared Resources**: Place truly shared code in `lib/` and `components/atoms|templates/`
-4. **Documentation**: Include README.md files for complex features
-
-### Development Workflow
-
-1. **Route First**: Create route structure in `src/app/` first
-2. **Components Second**: Build corresponding components in `src/components/`
-3. **Types & Validation**: Define types and validation schemas early
-4. **Actions Last**: Implement server actions and API integrations
-
----
-
-## Micro-Frontend Considerations
-
-### Feature Independence
-
-- Each feature directory can be developed independently
-- Minimal cross-feature dependencies
-- Standardized interfaces between features
-- Shared design system ensures consistency
-
-### Reusability
-
-- Components built with reusability in mind
-- Clear separation of concerns
-- Consistent API patterns across features
-- Documentation for component usage
-
-### Scalability
-
-- New features follow established patterns
-- Clear onboarding path for contributors
-- Standardized development workflow
-- Automated tooling support
+| File                  | Purpose                                      |
+| --------------------- | -------------------------------------------- |
+| `db.ts`               | Prisma client singleton                      |
+| `tenant-context.ts`   | Multi-tenant context resolution              |
+| `catalog-setup.ts`    | Catalog bridge provisioning                  |
+| `google-translate.ts` | Google Translate API client                  |
+| `translate.ts`        | Translation with DB caching                  |
+| `content-display.ts`  | `getDisplayText()` for on-demand translation |
+| `auto-translate.ts`   | Auto-translation utilities                   |
+| `stripe.ts`           | Stripe payment integration                   |
+| `cloudfront.ts`       | CloudFront CDN utilities                     |
+| `rate-limit.ts`       | API rate limiting                            |
+| `oauth-redirect.ts`   | OAuth callback handling                      |
+| `school-access.ts`    | School access control                        |
+| `mapbox.ts`           | Mapbox geocoding                             |
+| `format-date.ts`      | Date formatting utilities                    |
+| `join-code.ts`        | School join code generation                  |
 
 ---
 
-## Contributing Guidelines
+## Key Rules
 
-When adding a new feature:
+| Rule                   | Detail                                                                 |
+| ---------------------- | ---------------------------------------------------------------------- |
+| Package manager        | `pnpm` only (Vercel requirement)                                       |
+| Environment            | Central `.env` only. Never `.env.local` or `.env.development`          |
+| Multi-tenant isolation | Every DB query must include `schoolId`                                 |
+| Mirror pattern         | `app/` routes map to `components/` directories                         |
+| Semantic HTML          | No hardcoded `text-*` or `font-*` classes. Use `h1`-`h6`, `p`, `small` |
+| Locale routing         | All routes under `[lang]/` for en/ar support                           |
+| Subdomain routing      | School routes under `s/[subdomain]/`                                   |
+| Import alias           | `@/*` maps to `./src/*`                                                |
+| Port                   | Always port 3000 for dev server                                        |
+| Seeding                | Always `pnpm db:seed:single <name>`. Never `pnpm db:seed`              |
 
-1. **Create route structure** in `src/app/[feature]/`
-2. **Create component directory** in `src/components/[feature]/`
-3. **Follow file conventions** using standard file names
-4. **Add TypeScript types** for all data structures
-5. **Implement validation schemas** for forms and APIs
-6. **Write custom hooks** for state management
-7. **Build UI components** following design system patterns
-8. **Add documentation** explaining feature usage
+---
 
-This structure ensures our codebase remains organized, scalable, and contributor-friendly while supporting our mission of building reusable automation components for businesses worldwide.
+## Import Examples
+
+```typescript
+import { auth } from "@/auth" // Authentication
+
+import { getDisplayText } from "@/lib/content-display" // On-demand translation
+import { db } from "@/lib/db" // Prisma client
+
+import { getTenantContext } from "@/lib/tenant-context" // Multi-tenant context
+import { cn } from "@/lib/utils" // Class merging utility
+
+import { Button } from "@/components/ui/button" // UI primitives
+import { Card } from "@/components/ui/card"
+import { PageHeader } from "@/components/atom/page-header" // Atoms
+
+import { Content } from "@/components/school-dashboard/listings/students/content"
+import { PlatformSidebar } from "@/components/template/platform-sidebar" // Templates
+```

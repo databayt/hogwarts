@@ -13,18 +13,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import type { getDictionary } from "@/components/internationalization/dictionaries"
-
-import { DOCS_LINKS } from "./docs-config"
 
 export function DocsSidebar({
   tree,
-  dictionary,
   lang,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   tree: typeof docsSource.pageTree
-  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang?: string
 }) {
   const pathname = usePathname()
@@ -41,23 +36,20 @@ export function DocsSidebar({
           <SidebarGroup className="p-0">
             <SidebarGroupContent>
               <SidebarMenu>
-                {DOCS_LINKS.map(({ key, href, fallback }) => {
-                  const fullHref = `${prefix}${href}`
-                  const isActive = pathname === fullHref || pathname === href
-                  const name =
-                    dictionary?.docs?.sidebar?.[
-                      key as keyof typeof dictionary.docs.sidebar
-                    ] || fallback
-
+                {tree.children.map((node) => {
+                  if (node.type !== "page") return null
+                  const fullHref = `${prefix}${node.url}`
+                  const isActive =
+                    pathname === fullHref || pathname === node.url
                   return (
-                    <SidebarMenuItem key={href}>
+                    <SidebarMenuItem key={node.url}>
                       <SidebarMenuButton
                         asChild
                         isActive={isActive}
                         className="relative h-[30px] w-full border border-transparent p-0 text-[0.8rem] font-medium"
                       >
                         <Link href={fullHref} className="block w-full">
-                          {name}
+                          {node.name}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

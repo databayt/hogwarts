@@ -73,7 +73,6 @@ const validationMessages = {
   maxTeachersLimit: "Maximum teachers limit exceeded",
   atLeastOneClass: "At least one class is required",
   maxClassesLimit: "Maximum classes limit exceeded",
-  maxFacilitiesLimit: "Maximum facilities limit exceeded",
 
   // Price validation
   tuitionFeeTooHigh: "Tuition fee is too high",

@@ -6,6 +6,7 @@ import {
   createActionResponse,
   type ActionResponse,
 } from "@/lib/action-response"
+import { setupCatalogForSchool } from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
 
 import { requireSchoolOwnership } from "../auth-helpers"
@@ -21,8 +22,21 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
         onboardingCompletedAt: new Date(),
         onboardingStep: "completed",
       },
-      select: { id: true, name: true, domain: true },
+      select: { id: true, name: true, domain: true, country: true },
     })
+
+    // Auto-setup academic structure (grades, levels, subject selections)
+    // Non-blocking: catalog setup failure should NOT prevent publishing
+    try {
+      await setupCatalogForSchool(schoolId, {
+        country: school.country || undefined,
+      })
+    } catch (catalogError) {
+      console.error(
+        `[publishSchool] Catalog setup failed for school ${schoolId}:`,
+        catalogError
+      )
+    }
 
     revalidatePath(`/onboarding/${schoolId}`)
 

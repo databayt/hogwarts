@@ -35,7 +35,6 @@ export function CapacityForm({
       studentCount: initialData?.studentCount || 400,
       teachers: initialData?.teachers || 10,
       classrooms: initialData?.classrooms || 10,
-      facilities: initialData?.facilities || 5,
     },
   })
 
@@ -148,14 +147,8 @@ export function CapacityForm({
             minValue={1}
           />
           <CounterRow
-            label={dict.classrooms || "Classrooms"}
+            label={dict.classSections || "Class Sections"}
             field="classrooms"
-            step={1}
-            minValue={1}
-          />
-          <CounterRow
-            label={dict.facilities || "Facilities"}
-            field="facilities"
             step={1}
             minValue={1}
           />

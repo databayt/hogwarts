@@ -102,6 +102,12 @@ export const platformNav: PlatformNavItem[] = [
     roles: ["ADMIN", "STAFF", "TEACHER"],
   },
   {
+    title: "Classrooms",
+    href: "/classrooms",
+    icon: "doorOpen",
+    roles: ["ADMIN", "STAFF"],
+  },
+  {
     title: "Lessons",
     href: "/lessons",
     icon: "bookOpen",

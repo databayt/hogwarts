@@ -74,6 +74,7 @@ import {
   createDepartment,
   deleteDepartment,
   getDepartments,
+  toggleDepartmentHead,
   updateDepartment,
 } from "./actions"
 
@@ -88,6 +89,7 @@ interface Teacher {
   emailAddress: string
   profilePhotoUrl?: string | null
   isPrimary: boolean
+  isDepartmentHead: boolean
 }
 
 interface Subject {
@@ -193,6 +195,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
     save: lang === "ar" ? "حفظ" : "Save",
     cancel: lang === "ar" ? "إلغاء" : "Cancel",
     primary: lang === "ar" ? "أساسي" : "Primary",
+    departmentHead: lang === "ar" ? "رئيس القسم" : "Department Head",
     noDepartments: lang === "ar" ? "لا توجد أقسام" : "No departments found",
     noTeachers: lang === "ar" ? "لا يوجد معلمون" : "No teachers assigned",
     noSubjects: lang === "ar" ? "لا توجد مواد" : "No subjects assigned",
@@ -659,11 +662,50 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                                   {teacher.emailAddress}
                                 </p>
                               </div>
-                              {teacher.isPrimary && (
-                                <Badge variant="default" className="text-xs">
-                                  {t.primary}
-                                </Badge>
-                              )}
+                              <div className="flex items-center gap-1">
+                                {teacher.isDepartmentHead && (
+                                  <Badge variant="default" className="text-xs">
+                                    {t.departmentHead}
+                                  </Badge>
+                                )}
+                                {teacher.isPrimary &&
+                                  !teacher.isDepartmentHead && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      {t.primary}
+                                    </Badge>
+                                  )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  disabled={isPending}
+                                  onClick={() => {
+                                    startTransition(async () => {
+                                      const res = await toggleDepartmentHead({
+                                        teacherId: teacher.id,
+                                        departmentId: dept.id,
+                                      })
+                                      if (res.success) {
+                                        toast.success(res.message || "Updated")
+                                        fetchDepartments()
+                                      } else {
+                                        toast.error(res.message || "Failed")
+                                      }
+                                    })
+                                  }}
+                                >
+                                  {teacher.isDepartmentHead
+                                    ? lang === "ar"
+                                      ? "إزالة"
+                                      : "Remove Head"
+                                    : lang === "ar"
+                                      ? "تعيين رئيس"
+                                      : "Make Head"}
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>

@@ -96,7 +96,6 @@ export function createMockSchool(
     maxStudents: faker.number.int({ min: 100, max: 5000 }),
     maxTeachers: faker.number.int({ min: 10, max: 500 }),
     maxClasses: faker.number.int({ min: 5, max: 200 }),
-    maxFacilities: faker.number.int({ min: 1, max: 50 }),
 
     // School details
     schoolLevel: randomFrom(SCHOOL_TYPES),

@@ -71,6 +71,7 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
         startPeriodId: c.startPeriodId ?? "",
         endPeriodId: c.endPeriodId ?? "",
         classroomId: c.classroomId ?? "",
+        gradeId: c.gradeId ?? undefined,
       })
     }
     void load()
@@ -84,6 +85,9 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
         : await createClass(values)
       if (res?.success) {
         toast.success(currentId ? "Class updated" : "Class created")
+        if (res.warning) {
+          toast.warning(res.warning)
+        }
         closeModal()
         // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {

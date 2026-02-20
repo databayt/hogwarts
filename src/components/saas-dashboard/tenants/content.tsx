@@ -77,6 +77,8 @@ async function getTenants(searchParams: Props["searchParams"]) {
           select: {
             students: true,
             teachers: true,
+            academicLevels: true,
+            academicGrades: true,
           },
         },
       },
@@ -95,6 +97,8 @@ async function getTenants(searchParams: Props["searchParams"]) {
     planType: tenant.planType as "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE",
     studentCount: tenant._count.students,
     teacherCount: tenant._count.teachers,
+    catalogLevels: tenant._count.academicLevels,
+    catalogGrades: tenant._count.academicGrades,
     createdAt: tenant.createdAt.toISOString(),
     trialEndsAt: undefined,
   }))

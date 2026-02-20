@@ -97,6 +97,7 @@ export async function seedTeachers(
 
   const teachers: TeacherRef[] = []
   const deptMap = new Map(departments.map((d) => [d.departmentName, d]))
+  const departmentHeadsAssigned = new Set<string>()
 
   // Process in batches
   await processBatch(teacherUsers, 20, async (user, index) => {
@@ -134,6 +135,9 @@ export async function seedTeachers(
 
       // Link to department if found
       if (department) {
+        const isHead = !departmentHeadsAssigned.has(department.id)
+        if (isHead) departmentHeadsAssigned.add(department.id)
+
         await prisma.teacherDepartment.upsert({
           where: {
             schoolId_teacherId_departmentId: {
@@ -144,12 +148,14 @@ export async function seedTeachers(
           },
           update: {
             isPrimary: true,
+            isDepartmentHead: isHead,
           },
           create: {
             schoolId,
             teacherId: teacher.id,
             departmentId: department.id,
             isPrimary: true,
+            isDepartmentHead: isHead,
           },
         })
       }

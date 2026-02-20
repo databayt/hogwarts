@@ -100,6 +100,42 @@ function toLevels(levels: string[]): ("ELEMENTARY" | "MIDDLE" | "HIGH")[] {
   return Array.from(result)
 }
 
+// Convert legacy level strings → grade arrays (fallback for subjects without explicit grades)
+function toGrades(levels: string[]): number[] {
+  const result = new Set<number>()
+  for (const level of levels) {
+    switch (level) {
+      case "all":
+        for (let i = 1; i <= 12; i++) result.add(i)
+        break
+      case "elementary":
+      case "KG-6":
+      case "1-6":
+        for (let i = 1; i <= 6; i++) result.add(i)
+        break
+      case "middle":
+        for (let i = 7; i <= 9; i++) result.add(i)
+        break
+      case "high":
+        for (let i = 10; i <= 12; i++) result.add(i)
+        break
+      case "7-12":
+        for (let i = 7; i <= 12; i++) result.add(i)
+        break
+      case "3-12":
+        for (let i = 3; i <= 12; i++) result.add(i)
+        break
+      case "4-12":
+        for (let i = 4; i <= 12; i++) result.add(i)
+        break
+      case "KG-9":
+        for (let i = 1; i <= 9; i++) result.add(i)
+        break
+    }
+  }
+  return Array.from(result).sort((a, b) => a - b)
+}
+
 // Department Arabic → English slug for grouping
 const DEPT_MAP: Record<string, string> = {
   اللغات: "languages",
@@ -175,6 +211,7 @@ export async function seedCatalog(
     const s = SUBJECTS[i]
     const slug = toSlug(s.name)
     const levels = toLevels(s.levels)
+    const grades = s.grades ?? toGrades(s.levels)
 
     const subject = await prisma.catalogSubject.upsert({
       where: { slug },
@@ -182,6 +219,7 @@ export async function seedCatalog(
         name: s.name,
         department: s.department,
         levels,
+        grades,
         description: s.description,
         imageKey: s.imageKey ?? null,
         color: SUBJECT_COLORS[slug] ?? s.color ?? null,
@@ -194,6 +232,7 @@ export async function seedCatalog(
         lang: "ar",
         department: s.department,
         levels,
+        grades,
         description: s.description,
         country: "SD",
         system: "national",

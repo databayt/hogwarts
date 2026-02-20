@@ -1,4 +1,4 @@
-import { Building2, DoorOpen, Laptop, UserCheck, Users } from "lucide-react"
+import { DoorOpen, Laptop, UserCheck, Users } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -6,7 +6,6 @@ interface CapacityCardProps {
   studentCount: number
   teachers: number
   classrooms: number
-  facilities: number
   className?: string
 }
 
@@ -14,7 +13,6 @@ export function CapacityCard({
   studentCount,
   teachers,
   classrooms,
-  facilities,
   className,
 }: CapacityCardProps) {
   const capacityItems = [
@@ -31,16 +29,10 @@ export function CapacityCard({
       color: "text-chart-2",
     },
     {
-      label: "Classrooms",
+      label: "Class Sections",
       value: classrooms,
       icon: DoorOpen,
       color: "text-chart-1",
-    },
-    {
-      label: "Facilities",
-      value: facilities,
-      icon: Building2,
-      color: "text-chart-3",
     },
   ]
 
@@ -53,7 +45,7 @@ export function CapacityCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-3 gap-4">
           {capacityItems.map((item) => (
             <div
               key={item.label}

@@ -7,9 +7,11 @@ export interface MapboxFeature {
   context?: Array<{
     id: string
     text: string
+    short_code?: string
   }>
   properties?: {
     address?: string
+    short_code?: string
   }
 }
 
@@ -110,7 +112,9 @@ export async function reverseGeocode(
 }
 
 /**
- * Convert a Mapbox feature to LocationResult
+ * Convert a Mapbox feature to LocationResult.
+ * Country is stored as ISO 2-letter code (e.g., "SD", "US") extracted from
+ * the Mapbox context `short_code` property. Falls back to human-readable name.
  */
 export function featureToLocationResult(
   feature: MapboxFeature
@@ -121,11 +125,16 @@ export function featureToLocationResult(
   const findContext = (prefix: string) =>
     context.find((c) => c.id?.startsWith(prefix))?.text || ""
 
+  const countryContext = context.find((c) => c.id?.startsWith("country"))
+  // Mapbox returns short_code as lowercase (e.g., "sd"), uppercase it for ISO
+  const countryCode =
+    countryContext?.short_code?.toUpperCase() || findContext("country")
+
   return {
     address: feature.place_name,
     city: findContext("place") || findContext("locality") || "",
     state: findContext("region"),
-    country: findContext("country"),
+    country: countryCode,
     postalCode: findContext("postcode"),
     latitude,
     longitude,

@@ -5,6 +5,7 @@ import { cookies } from "next/headers"
 import type { School } from "@prisma/client"
 import { z } from "zod"
 
+import { setupCatalogForSchool } from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
 import {
   logOperatorAudit,
@@ -303,5 +304,87 @@ export async function fetchTenants(input: GetTenantsInput) {
       data: [],
       total: 0,
     }
+  }
+}
+
+/**
+ * Setup catalog for a school tenant (academic structure + subject selections).
+ * Only triggers for schools that have no AcademicLevels yet.
+ */
+export async function tenantSetupCatalog(input: { tenantId: string }): Promise<
+  ActionResult<{
+    levels: number
+    grades: number
+    streams: number
+    selections: number
+  }>
+> {
+  try {
+    await requireOperator()
+
+    const school = await db.school.findUnique({
+      where: { id: input.tenantId },
+      select: { id: true, name: true },
+    })
+
+    if (!school) {
+      return { success: false, error: new Error("School not found") }
+    }
+
+    const result = await setupCatalogForSchool(input.tenantId, {
+      skipIfExists: true,
+    })
+
+    if (result.skipped) {
+      return {
+        success: false,
+        error: new Error(
+          "message" in result ? result.message : "Catalog already configured"
+        ),
+      }
+    }
+
+    revalidatePath("/saas-dashboard/tenants")
+    // After the skipped guard, result has levels/grades/streams/selections
+    const { levels, grades, streams, selections } = result as {
+      skipped: false
+      levels: number
+      grades: number
+      streams: number
+      selections: number
+    }
+    return {
+      success: true,
+      data: { levels, grades, streams, selections },
+    }
+  } catch (error) {
+    console.error("Failed to setup catalog:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error : new Error("Failed to setup catalog"),
+    }
+  }
+}
+
+/**
+ * Get catalog status for a tenant (levels, grades count).
+ */
+export async function tenantGetCatalogStatus(tenantId: string): Promise<{
+  configured: boolean
+  levels: number
+  grades: number
+}> {
+  try {
+    await requireOperator()
+
+    const [levels, grades] = await Promise.all([
+      db.academicLevel.count({ where: { schoolId: tenantId } }),
+      db.academicGrade.count({ where: { schoolId: tenantId } }),
+    ])
+
+    return { configured: levels > 0, levels, grades }
+  } catch {
+    return { configured: false, levels: 0, grades: 0 }
   }
 }

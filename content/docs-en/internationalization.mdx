@@ -5,7 +5,7 @@ description: "Complete guide to internationalization with Arabic (RTL) and Engli
 
 ## Overview
 
-This application provides full internationalization support with Arabic (RTL) as the default language alongside English (LTR). The system handles both **static UI translations** and **bilingual user-generated content**.
+This application provides full internationalization support with Arabic (RTL) as the default language alongside English (LTR). The system handles both **static UI translations** and **single-language user-generated content with on-demand translation**.
 
 ### Supported Languages
 
@@ -17,7 +17,7 @@ This application provides full internationalization support with Arabic (RTL) as
 ### Key Features
 
 - **URL-based routing**: `/[lang]/path` (e.g., `/ar/dashboard`, `/en/dashboard`)
-- **Bilingual content**: Separate fields for Arabic/English user content
+- **Single-language storage**: One `lang` field, translated on demand via Google Translate API
 - **Logical CSS properties**: `ms-`, `me-`, `ps-`, `pe-` for auto-mirroring
 - **Direction switching**: `dir` attribute on `<html>` element
 - **Smart fallbacks**: Falls back to available language if preferred is empty
@@ -65,153 +65,78 @@ export function LocaleIndicator() {
 
 ---
 
-## Bilingual User Content
+## User Content Storage
 
-For user-generated content (announcements, notifications, etc.), use separate fields for each language.
+All user-generated content uses **single-language storage** with a `lang` field. Content is stored in one language only. Translation happens on-demand via Google Translate API with database caching through the `TranslationCache` model.
 
-### Pattern 1: Dual Database Fields
+### Rules
 
-**Prisma Schema:**
+1. **Generic field names only** -- `title`, `body`, `name`, `description` (never `titleAr`, `nameEn`)
+2. **`lang` field** -- Every content model has `lang String @default("ar")` indicating the stored language
+3. **On-demand translation** -- Use `getDisplayText()` from `@/lib/content-display` to translate at display time
+4. **TranslationCache** -- Translated strings are cached in the database to avoid repeated API calls
+5. **School's preferred language** -- `School.preferredLanguage` determines the default storage language
+
+### Schema Pattern
 
 ```prisma
 model Announcement {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   schoolId String
-
-  // Bilingual content fields
-  titleEn  String?
-  titleAr  String?
-  bodyEn   String? @db.Text
-  bodyAr   String? @db.Text
-
-  // ... other fields
+  title    String?          // Generic field name (NOT titleEn/titleAr)
+  body     String? @db.Text // Generic field name (NOT bodyEn/bodyAr)
+  lang     String  @default("ar") // Language of stored content
 }
 ```
 
-**Usage in Components:**
+### Display with Translation
 
 ```tsx
-import { getLocalizedText } from "@/lib/i18n-content"
-import type { Locale } from "@/components/internationalization/config"
+import { getDisplayText } from "@/lib/content-display"
 
-interface Props {
-  announcement: {
-    titleEn: string | null
-    titleAr: string | null
-    bodyEn: string | null
-    bodyAr: string | null
-  }
-  lang: Locale
-}
+// Stored in Arabic, user views in English -> translates via API
+const title = await getDisplayText(announcement.title, "ar", "en", schoolId)
 
-export function AnnouncementCard({ announcement, lang }: Props) {
-  const title = getLocalizedText(
-    lang,
-    announcement.titleEn,
-    announcement.titleAr
-  )
-  const body = getLocalizedText(lang, announcement.bodyEn, announcement.bodyAr)
-
-  return (
-    <article>
-      <h2>{title}</h2>
-      <p>{body}</p>
-    </article>
-  )
-}
+// Same language -> returns directly, no API call
+const title = await getDisplayText(announcement.title, "ar", "ar", schoolId)
 ```
 
-### Pattern 2: JSON Storage
+### Form Pattern
 
-**Prisma Schema:**
-
-```prisma
-model Notification {
-  id      String @id @default(cuid())
-  // Store as JSON: { "en": "...", "ar": "..." }
-  title   Json
-  message Json
-}
-```
-
-**Usage:**
-
-```tsx
-import { getLocalizedFromJSON } from "@/lib/i18n-content"
-
-const title = getLocalizedFromJSON(lang, notification.title)
-```
-
-### Bilingual Form Pattern
+Forms collect content in a single language. The `lang` field is set based on the school's preferred language or the current locale:
 
 ```tsx
 "use client"
 
 import { useForm } from "react-hook-form"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-interface BilingualFormData {
-  titleEn: string
-  titleAr: string
-  bodyEn: string
-  bodyAr: string
+interface ContentFormData {
+  title: string
+  body: string
 }
 
-export function BilingualContentForm() {
-  const form = useForm<BilingualFormData>()
+export function ContentForm({ lang }: { lang: string }) {
+  const form = useForm<ContentFormData>()
 
   return (
-    <Tabs defaultValue="ar">
-      <TabsList>
-        <TabsTrigger value="ar">العربية</TabsTrigger>
-        <TabsTrigger value="en">English</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="ar" dir="rtl">
-        <Input {...form.register("titleAr")} placeholder="العنوان" />
-        <Textarea {...form.register("bodyAr")} placeholder="المحتوى" />
-      </TabsContent>
-
-      <TabsContent value="en" dir="ltr">
-        <Input {...form.register("titleEn")} placeholder="Title" />
-        <Textarea {...form.register("bodyEn")} placeholder="Content" />
-      </TabsContent>
-    </Tabs>
+    <form>
+      <input type="hidden" name="lang" value={lang} />
+      <Input {...form.register("title")} placeholder="Title" />
+      <Textarea {...form.register("body")} placeholder="Content" />
+    </form>
   )
 }
 ```
 
-### i18n Content Utilities
+### Infrastructure
 
-Location: `src/lib/i18n-content.ts`
-
-```ts
-// Check completion status
-
-// Convert legacy content during migration
-import {
-  convertToBilingual,
-  detectLanguage,
-  getBilingualStatus,
-  getLocalizedFromJSON,
-  getLocalizedFromObject,
-  getLocalizedText,
-} from "@/lib/i18n-content"
-
-// From dual fields
-const title = getLocalizedText(locale, item.titleEn, item.titleAr)
-
-// From BilingualText object
-const text = getLocalizedFromObject(locale, { en: "Hello", ar: "مرحبا" })
-
-// From JSON database field
-const message = getLocalizedFromJSON(locale, dbField)
-
-const { complete, missingEn, missingAr } = getBilingualStatus(item.title)
-
-const bilingual = convertToBilingual("مرحبا بالعالم") // { en: "", ar: "مرحبا بالعالم" }
-```
+| File                          | Purpose                     |
+| ----------------------------- | --------------------------- |
+| `src/lib/google-translate.ts` | Google Translate API client |
+| `src/lib/translate.ts`        | Translation with caching    |
+| `src/lib/auto-translate.ts`   | Auto-translation utilities  |
+| `src/lib/content-display.ts`  | `getDisplayText()` for UI   |
+| `prisma/models/school.prisma` | `TranslationCache` model    |
 
 ---
 
@@ -529,9 +454,9 @@ arabicPlural(count, "يوم", "يومان", "أيام") // day/days
 ### Content Guidelines
 
 1. **Avoid string concatenation** - Use full-sentence translations
-2. **Provide both languages** - Mark incomplete translations clearly
-3. **Use bilingual forms** - Tab-based input for ar/en content
-4. **Validate completeness** - Show warnings for missing translations
+2. **Generic field names only** - `title`, `body`, `name` (never `titleEn`/`titleAr`)
+3. **Single-language storage** - Store in one language with a `lang` field
+4. **On-demand translation** - Use `getDisplayText()` for display-time translation
 
 ### Typography
 
@@ -554,50 +479,46 @@ arabicPlural(count, "يوم", "يومان", "أيام") // day/days
 
 ## Migration Guide
 
-### Converting Legacy Content
+### Adding the `lang` Field to Legacy Models
 
-```ts
-import { convertToBilingual, detectLanguage } from "@/lib/i18n-content"
-
-// Migrate existing single-field content
-async function migrateAnnouncements() {
-  const announcements = await db.announcement.findMany()
-
-  for (const ann of announcements) {
-    const lang = detectLanguage(ann.title)
-    const titleBilingual = convertToBilingual(ann.title, lang)
-    const bodyBilingual = convertToBilingual(ann.body, lang)
-
-    await db.announcement.update({
-      where: { id: ann.id },
-      data: {
-        titleEn: titleBilingual.en,
-        titleAr: titleBilingual.ar,
-        bodyEn: bodyBilingual.en,
-        bodyAr: bodyBilingual.ar,
-      },
-    })
-  }
-}
-```
-
-### Prisma Migration Example
+If a model stores content without a `lang` field, add one and detect the stored language:
 
 ```sql
--- Add bilingual fields
-ALTER TABLE "announcements" ADD COLUMN "titleEn" TEXT;
-ALTER TABLE "announcements" ADD COLUMN "titleAr" TEXT;
-ALTER TABLE "announcements" ADD COLUMN "bodyEn" TEXT;
-ALTER TABLE "announcements" ADD COLUMN "bodyAr" TEXT;
+-- Add lang field with default
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "lang" TEXT DEFAULT 'ar';
 
--- Copy existing data (detect language and assign)
+-- Detect and update language for existing rows
 UPDATE "announcements"
-SET "titleAr" = "title", "bodyAr" = "body"
+SET "lang" = 'ar'
 WHERE "title" ~ '[\u0600-\u06FF]';
 
 UPDATE "announcements"
-SET "titleEn" = "title", "bodyEn" = "body"
+SET "lang" = 'en'
 WHERE "title" !~ '[\u0600-\u06FF]';
+```
+
+### Migrating from Dual Fields to Single-Language
+
+If any legacy code uses `titleEn`/`titleAr` patterns, migrate to the single-language storage model:
+
+```ts
+import { detectLanguage } from "@/lib/i18n-content"
+
+async function migrateToDualToSingle() {
+  const items = await db.announcement.findMany()
+
+  for (const item of items) {
+    // Keep the primary language content, detect which one it is
+    const title = item.titleAr || item.titleEn
+    const body = item.bodyAr || item.bodyEn
+    const lang = item.titleAr ? "ar" : "en"
+
+    await db.announcement.update({
+      where: { id: item.id },
+      data: { title, body, lang },
+    })
+  }
+}
 ```
 
 ---
@@ -620,7 +541,11 @@ src/
       en/
       ar/
   lib/
-    i18n-content.ts        # Bilingual content utilities
+    content-display.ts     # getDisplayText() for on-demand translation
+    google-translate.ts    # Google Translate API client
+    translate.ts           # Translation with caching
+    auto-translate.ts      # Auto-translation utilities
+    i18n-content.ts        # Legacy i18n content utilities
   styles/
     globals.css            # Base styles with logical properties
 ```
@@ -631,7 +556,9 @@ src/
 
 ### Internal
 
-- `src/lib/i18n-content.ts` - Bilingual content utilities
+- `src/lib/content-display.ts` - `getDisplayText()` for on-demand translation
+- `src/lib/google-translate.ts` - Google Translate API client
+- `src/lib/translate.ts` - Translation with database caching
 - `src/components/internationalization/` - Full i18n implementation
 
 ### External

@@ -1,0 +1,555 @@
+---
+title: "Hooks"
+description: "Canonical patterns for writing use-*.ts custom hooks in feature directories"
+---
+
+## Current Progress (Audit)
+
+78 use-\*.ts/tsx files audited across the codebase (~12,240 total lines):
+
+| Area                                        | Status | Detail                                                         |
+| ------------------------------------------- | ------ | -------------------------------------------------------------- |
+| `"use client"` directive                    | PASS   | All hook files include the directive                           |
+| Named exports only                          | PASS   | 100% use named exports                                         |
+| Return objects (not tuples)                 | PASS   | 90%+ return `{ value, setter, handler }` objects               |
+| Feature-scoped hooks co-located             | PASS   | Hooks live alongside their feature's components                |
+| Naming convention `use-{feature}.ts`        | PASS   | Consistent kebab-case file naming                              |
+| `use-media-query` duplicated 4 times        | FAIL   | Same hook in 4 different directories                           |
+| `use-debounced-callback` duplicated 2 times | FAIL   | Identical logic in table/ and saas-dashboard/hooks/            |
+| `use-callback-ref` duplicated 3 times       | FAIL   | Same hook in 3 locations                                       |
+| `use-lock-body` duplicated 2 times          | FAIL   | Identical scroll lock hook in 2 directories                    |
+| `use-mobile` duplicated 3 times             | FAIL   | Mobile detection hook copied 3 times                           |
+| 523-line use-form.ts multi-hook file        | FAIL   | Single file exports 5+ hooks for complex form state management |
+
+## 12 Categories of Hooks
+
+### Category 1: Form/State Management (~12 files)
+
+Complex form state, multi-step form orchestration, draft persistence.
+
+Reference: `form/use-form.ts` (523 lines)
+
+### Category 2: Data Fetching (~8 files)
+
+Server action wrappers with loading state, error handling, and optimistic updates.
+
+Reference: `use-domains.ts`, `use-billing.ts`
+
+### Category 3: File Operations (~6 files)
+
+Upload progress, drag-and-drop, file validation, image preview.
+
+Reference: `use-file-upload.ts`
+
+### Category 4: Auth/Identity (~3 files)
+
+Current user, current role, session status. Thin wrappers around NextAuth.
+
+Reference: `auth/use-current-user.ts`, `auth/use-current-role.ts`
+
+### Category 5: i18n (~2 files)
+
+Locale detection, RTL/LTR state, dictionary access.
+
+Reference: `internationalization/use-locale.ts`
+
+### Category 6: UI/Layout (~12 files)
+
+Media queries, scroll position, sidebar state, dialog management, keyboard shortcuts.
+
+Reference: `use-media-query.ts`, `use-mobile.ts`
+
+### Category 7: Video/Stream (~4 files)
+
+Video player state, playback controls, progress tracking.
+
+Reference: `stream/hooks/use-video-player.ts`
+
+### Category 8: Exam/Assessment (~3 files)
+
+Timer, answer tracking, exam submission state.
+
+Reference: `exams/hooks/use-exam-timer.ts`
+
+### Category 9: Onboarding Steps (~8 files)
+
+Per-step state management for onboarding wizard.
+
+Reference: `onboarding/hooks/use-step-state.ts`
+
+### Category 10: Communication (~2 files)
+
+Messaging, notification subscriptions.
+
+Reference: `messaging/use-messages.ts`
+
+### Category 11: Utilities (~8 files)
+
+Debounce, throttle, callback refs, intersection observer, local storage.
+
+Reference: `table/use-debounced-callback.ts`, `use-callback-ref.ts`
+
+### Category 12: Domain-Specific (~5 files)
+
+Feature-specific hooks that don't fit other categories (attendance, timetable, grades).
+
+Reference: `attendance/use-attendance.ts`
+
+## The 5 Rules
+
+### 1. Always `"use client"` at the top
+
+All hooks are client-side. They use React APIs (useState, useEffect, useCallback).
+
+```typescript
+"use client"
+
+import { useCallback, useState } from "react"
+
+// ...
+```
+
+### 2. Return objects, not tuples
+
+Return named properties in an object. This is more readable and extensible than tuple returns.
+
+```typescript
+// GOOD: Object return
+export function useDataTable<TData>(props: Props) {
+  // ...
+  return { table, isLoading, error }
+}
+
+// Usage: clear names
+const { table, isLoading } = useDataTable({ data, columns })
+
+// BAD: Tuple return (unnamed positions)
+export function useDataTable<TData>(props: Props) {
+  return [table, isLoading, error] as const
+}
+
+// Usage: positional, unclear
+const [table, isLoading] = useDataTable({ data, columns })
+```
+
+### 3. Accept options objects for complex hooks
+
+When a hook has more than 2 parameters, accept an options object.
+
+```typescript
+// GOOD: Options object
+interface UseDataTableProps<TData> {
+  data: TData[]
+  columns: ColumnDef<TData>[]
+  pageCount: number
+  initialState?: Partial<TableState>
+  debounceMs?: number
+  enableClientFiltering?: boolean
+}
+
+export function useDataTable<TData>(props: UseDataTableProps<TData>) {
+  const { data, columns, pageCount, debounceMs = 300 } = props
+  // ...
+}
+
+// BAD: Many positional parameters
+export function useDataTable<TData>(
+  data: TData[],
+  columns: ColumnDef<TData>[],
+  pageCount: number,
+  debounceMs?: number,
+  enableClientFiltering?: boolean
+) { ... }
+```
+
+### 4. Naming convention: `use-{feature}.ts` for logic, `.tsx` for JSX types
+
+Use `.ts` for hooks that return data/state. Use `.tsx` only when the hook returns JSX elements or uses JSX types.
+
+```
+use-data-table.ts     # Returns { table } object -- .ts
+use-current-user.ts   # Returns user object -- .ts
+use-file-upload.tsx    # Returns component with JSX -- .tsx
+```
+
+### 5. Co-locate hooks with their feature
+
+Hooks live in the same directory as the components that use them. Shared hooks live in `src/components/atom/` or `src/hooks/`.
+
+```
+# GOOD: Feature-scoped
+src/components/saas-dashboard/domains/
+  use-domains.ts     # Domain-specific hook
+
+# GOOD: Shared utility hook
+src/components/table/
+  use-data-table.ts  # Used by all tables
+
+# GOOD: Auth hooks
+src/components/auth/
+  use-current-user.ts
+  use-current-role.ts
+```
+
+## 4 Canonical Templates
+
+### Template A: Auth Hook (Minimal)
+
+Thin wrapper around NextAuth session. Reference: `auth/use-current-user.ts` (6 lines).
+
+```typescript
+import { useSession } from "next-auth/react"
+
+export const useCurrentUser = () => {
+  const session = useSession()
+
+  return session.data?.user
+}
+```
+
+And `auth/use-current-role.ts`:
+
+```typescript
+import { useSession } from "next-auth/react"
+
+export const useCurrentRole = () => {
+  const session = useSession()
+
+  return session.data?.user?.role
+}
+```
+
+Key points:
+
+- Minimal -- 6 lines each
+- Single responsibility: extract one value from session
+- No `"use client"` needed when the consumer is already a client component (but preferred for clarity)
+
+### Template B: URL-Synced Table Hook
+
+Full-featured table state with URL persistence via nuqs. Reference: `table/use-data-table.ts` (332 lines).
+
+```typescript
+"use client"
+
+/**
+ * useDataTable - URL-Synchronized TanStack Table Hook
+ *
+ * Manages table state (pagination, sorting, filtering) with URL persistence.
+ *
+ * KEY CONCEPTS:
+ * 1. URL uses 1-based pages, TanStack uses 0-based pageIndex
+ * 2. enableClientFiltering=false (default) → server handles filtering
+ * 3. Filter values split by ARRAY_SEPARATOR (",") for multi-select
+ * 4. Debounced URL updates to prevent excessive changes
+ */
+import * as React from "react"
+import {
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnFiltersState,
+  type PaginationState,
+  type SortingState,
+  type TableOptions,
+  type TableState,
+} from "@tanstack/react-table"
+import { parseAsInteger, parseAsString, useQueryStates } from "nuqs"
+
+const PAGE_KEY = "page"
+const PER_PAGE_KEY = "perPage"
+const SORT_KEY = "sort"
+const DEBOUNCE_MS = 300
+
+interface UseDataTableProps<TData>
+  extends
+    Omit<TableOptions<TData>, "state" | "pageCount" | "getCoreRowModel">,
+    Required<Pick<TableOptions<TData>, "pageCount">> {
+  initialState?: Omit<Partial<TableState>, "sorting">
+  debounceMs?: number
+  enableClientFiltering?: boolean
+}
+
+export function useDataTable<TData>(props: UseDataTableProps<TData>) {
+  const {
+    data,
+    columns,
+    pageCount,
+    initialState,
+    debounceMs = DEBOUNCE_MS,
+    enableClientFiltering = false,
+    ...tableOptions
+  } = props
+
+  // URL-synced pagination state
+  const [{ page, perPage }, setPaginationParams] = useQueryStates({
+    page: parseAsInteger.withDefault(1),
+    perPage: parseAsInteger.withDefault(
+      initialState?.pagination?.pageSize ?? 10
+    ),
+  })
+
+  const pagination: PaginationState = {
+    pageIndex: page - 1, // Convert 1-based URL to 0-based TanStack
+    pageSize: perPage,
+  }
+
+  // ... sorting, filtering state
+
+  const table = useReactTable({
+    data,
+    columns,
+    pageCount,
+    state: { pagination /* sorting, columnFilters */ },
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: enableClientFiltering
+      ? getFilteredRowModel()
+      : undefined,
+    manualPagination: true,
+    manualSorting: true,
+    manualFiltering: !enableClientFiltering,
+    ...tableOptions,
+  })
+
+  return { table }
+}
+```
+
+Key points:
+
+- JSDoc header documents key concepts and gotchas
+- Options object pattern with sensible defaults
+- URL state via nuqs with page index conversion (1-based URL, 0-based TanStack)
+- `enableClientFiltering` flag with inverted `manualFiltering` mapping
+- Returns `{ table }` object
+
+### Template C: Feature Data Hook
+
+Server action wrapper with loading, error, and data state. Reference: `use-domains.ts` pattern.
+
+```typescript
+"use client"
+
+import { useCallback, useState, useTransition } from "react"
+import { toast } from "sonner"
+
+import type { ActionResponse } from "@/lib/action-response"
+
+import { approveDomain, getDomains, rejectDomain } from "./actions"
+import type { DomainRequestWithSchool } from "./types"
+
+interface UseDomains {
+  domains: DomainRequestWithSchool[]
+  isLoading: boolean
+  refresh: () => Promise<void>
+  approve: (id: string) => Promise<void>
+  reject: (id: string, reason?: string) => Promise<void>
+}
+
+export function useDomains(
+  initialDomains: DomainRequestWithSchool[]
+): UseDomains {
+  const [domains, setDomains] = useState(initialDomains)
+  const [isPending, startTransition] = useTransition()
+
+  const refresh = useCallback(async () => {
+    startTransition(async () => {
+      const result = await getDomains({})
+      if (result.success) {
+        setDomains(result.data)
+      }
+    })
+  }, [])
+
+  const approve = useCallback(
+    async (id: string) => {
+      const result = await approveDomain(id)
+      if (result.success) {
+        toast.success("Domain approved")
+        await refresh()
+      } else {
+        toast.error(result.error || "Failed to approve")
+      }
+    },
+    [refresh]
+  )
+
+  const reject = useCallback(
+    async (id: string, reason?: string) => {
+      const result = await rejectDomain(id, reason)
+      if (result.success) {
+        toast.success("Domain rejected")
+        await refresh()
+      } else {
+        toast.error(result.error || "Failed to reject")
+      }
+    },
+    [refresh]
+  )
+
+  return {
+    domains,
+    isLoading: isPending,
+    refresh,
+    approve,
+    reject,
+  }
+}
+```
+
+Key points:
+
+- `initialDomains` for SSR data, `useState` for client updates
+- `useTransition` for non-blocking refreshes
+- Action wrappers with toast notifications
+- `useCallback` for stable function references
+- Returns object with data + handlers
+
+### Template D: Utility Hook (Shared)
+
+Generic utility hook used across features. Reference: `table/use-debounced-callback.ts`.
+
+```typescript
+"use client"
+
+import { useCallback, useRef } from "react"
+
+/**
+ * Returns a debounced version of the callback.
+ * The callback is delayed by `delay` ms after the last invocation.
+ */
+export function useDebouncedCallback<T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number
+): T {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  return useCallback(
+    ((...args: Parameters<T>) => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      timeoutRef.current = setTimeout(() => callback(...args), delay)
+    }) as T,
+    [callback, delay]
+  )
+}
+```
+
+Key points:
+
+- Generic type `T extends (...args: any[]) => any` preserves callback signature
+- JSDoc explains behavior
+- Single responsibility
+- No external dependencies
+
+## Anti-Patterns
+
+### 1. Duplicate hooks across directories (5 hooks, 15 copies)
+
+The same utility hooks are copied into multiple directories instead of being shared.
+
+```
+# BAD: use-media-query duplicated 4 times
+src/components/atom/sidebar/use-media-query.ts
+src/components/atom/modal/use-media-query.ts
+src/components/school-dashboard/use-media-query.ts
+src/hooks/use-media-query.ts
+
+# GOOD: Single shared location
+src/hooks/use-media-query.ts  # One copy, imported everywhere
+```
+
+Similar duplications:
+
+- `use-debounced-callback` (2 copies)
+- `use-callback-ref` (3 copies)
+- `use-lock-body` (2 copies)
+- `use-mobile` (3 copies)
+
+### 2. 523-line multi-hook file
+
+`form/use-form.ts` exports 5+ hooks from a single file. Each hook should be in its own file.
+
+```
+# BAD: use-form.ts (523 lines, 5+ hooks)
+
+# GOOD: Split by hook
+form/hooks/
+  use-form-state.ts
+  use-form-validation.ts
+  use-form-draft.ts
+  use-form-steps.ts
+  use-form-submission.ts
+```
+
+### 3. Hooks that should be util functions
+
+Some hooks don't use any React APIs and should be plain utility functions.
+
+```typescript
+// BAD: Hook that doesn't use React
+export function useFormatDate(date: Date) {
+  return date.toLocaleDateString() // No hooks used!
+}
+
+// GOOD: Plain function in util.ts
+export function formatDate(date: Date): string {
+  return date.toLocaleDateString()
+}
+```
+
+## Quick Reference
+
+### Naming Conventions
+
+| Pattern                    | Purpose                  | Example                     |
+| -------------------------- | ------------------------ | --------------------------- |
+| `use-{feature}.ts`         | Feature-specific hook    | `use-domains.ts`            |
+| `use-{behavior}.ts`        | Utility/shared hook      | `use-debounced-callback.ts` |
+| `use-current-{value}.ts`   | Session/context accessor | `use-current-user.ts`       |
+| `use-{entity}-{action}.ts` | Entity action hook       | `use-file-upload.ts`        |
+
+### Import Direction
+
+```
+actions.ts    (server actions)
+types.ts      (entity types)
+    |
+use-*.ts      (imports actions + types, exports hook)
+    |
++---+---+
+|       |
+form  table
+.tsx    .tsx
+```
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  actions.ts        # Server actions (hooks call these)
+  types.ts          # Entity types
+  use-feature.ts    # Feature hook (this file)
+  form.tsx           # Consumes hook
+  table.tsx          # Consumes hook
+  content.tsx        # Server component
+
+src/hooks/           # Shared utility hooks
+  use-media-query.ts
+  use-debounced-callback.ts
+  use-mobile.ts
+```
+
+### What Belongs Where
+
+| Content                      | Belongs in      | Not in      |
+| ---------------------------- | --------------- | ----------- |
+| React hooks (useState, etc.) | `use-*.ts`      | util.ts     |
+| Server action wrappers       | `use-*.ts`      | actions.ts  |
+| Pure formatting functions    | `util.ts`       | use-\*.ts   |
+| Feature-scoped hooks         | Feature dir     | src/hooks/  |
+| Shared utility hooks         | `src/hooks/`    | Feature dir |
+| Auth session accessors       | `auth/use-*.ts` | use-\*.ts   |

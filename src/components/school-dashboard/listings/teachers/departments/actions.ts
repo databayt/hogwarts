@@ -99,6 +99,7 @@ export async function getDepartments(
           emailAddress: td.teacher.emailAddress,
           profilePhotoUrl: td.teacher.profilePhotoUrl,
           isPrimary: td.isPrimary,
+          isDepartmentHead: td.isDepartmentHead,
         })),
         _count: dept._count,
       }))
@@ -258,6 +259,78 @@ export async function updateDepartment(
       success: false,
       message:
         error instanceof Error ? error.message : "Failed to update department",
+    }
+  }
+}
+
+// ============================================================================
+// Toggle Department Head
+// ============================================================================
+
+export async function toggleDepartmentHead(params: {
+  teacherId: string
+  departmentId: string
+}): Promise<ActionResult> {
+  try {
+    const { schoolId, role } = await getTenantContext()
+
+    if (!schoolId) {
+      return { success: false, message: "School not found" }
+    }
+
+    if (role !== "DEVELOPER" && role !== "ADMIN") {
+      return { success: false, message: "Insufficient permissions" }
+    }
+
+    const record = await db.teacherDepartment.findUnique({
+      where: {
+        schoolId_teacherId_departmentId: {
+          schoolId,
+          teacherId: params.teacherId,
+          departmentId: params.departmentId,
+        },
+      },
+    })
+
+    if (!record) {
+      return {
+        success: false,
+        message: "Teacher-department assignment not found",
+      }
+    }
+
+    // If making this teacher the head, unset any existing head in this department
+    if (!record.isDepartmentHead) {
+      await db.teacherDepartment.updateMany({
+        where: {
+          schoolId,
+          departmentId: params.departmentId,
+          isDepartmentHead: true,
+        },
+        data: { isDepartmentHead: false },
+      })
+    }
+
+    await db.teacherDepartment.update({
+      where: { id: record.id },
+      data: { isDepartmentHead: !record.isDepartmentHead },
+    })
+
+    revalidatePath("/teachers/departments")
+    return {
+      success: true,
+      message: record.isDepartmentHead
+        ? "Department head removed"
+        : "Department head assigned",
+    }
+  } catch (error) {
+    console.error("Failed to toggle department head:", error)
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to toggle department head",
     }
   }
 }

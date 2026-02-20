@@ -165,6 +165,7 @@ export interface SubjectData {
   name: string // Arabic primary (e.g. "اللغة العربية")
   department: string // Arabic department name (e.g. "اللغات")
   levels: string[]
+  grades?: number[] // Explicit grade numbers (e.g. [1,2,...,12])
   description: string // Arabic primary
   lang?: string
   imageKey?: string

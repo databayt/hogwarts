@@ -331,7 +331,7 @@ Preview:       hogwarts---branch.vercel.app → /[lang]/s/hogwarts/*
 Development:   hogwarts.localhost:3000 → /[lang]/s/hogwarts/*
 ```
 
-**Middleware** (`src/middleware.ts`) extracts the subdomain and rewrites to tenant-scoped routes.
+**Edge Proxy** (`src/proxy.ts`) extracts the subdomain and rewrites to tenant-scoped routes.
 
 ### Database Scoping
 
@@ -1362,7 +1362,7 @@ export function HostFooter() {
 - [Multi-Tenant Architecture](/docs/multi-tenant) - Subdomain routing
 - [Database Schema](/docs/database) - Prisma models
 - [Form Validation](/docs/validation) - Zod patterns
-- [Server Actions](/docs/server-actions) - Next.js 15 actions
+- [Server Actions](/docs/actions) - Next.js 16 server actions
 
 ---
 

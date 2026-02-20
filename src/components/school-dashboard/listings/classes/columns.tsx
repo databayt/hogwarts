@@ -24,6 +24,7 @@ export type ClassRow = {
   subjectName: string
   teacherName: string
   termName: string
+  gradeName: string
   courseCode: string | null
   credits: string | number | null
   evaluationType: string
@@ -62,6 +63,7 @@ export const getClassColumns = (
       dictionary?.courseCode || (lang === "ar" ? "رمز المقرر" : "Course Code"),
     subject: dictionary?.subject || (lang === "ar" ? "المادة" : "Subject"),
     teacher: dictionary?.teacher || (lang === "ar" ? "المعلم" : "Teacher"),
+    grade: lang === "ar" ? "الصف" : "Grade",
     credits: dictionary?.credits || (lang === "ar" ? "الساعات" : "Credits"),
     evaluation:
       dictionary?.evaluation || (lang === "ar" ? "التقييم" : "Evaluation"),
@@ -133,6 +135,23 @@ export const getClassColumns = (
       ),
       meta: { label: t.teacher, variant: "text" },
       id: "teacherName",
+      enableColumnFilter: true,
+    },
+    {
+      accessorKey: "gradeName",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.grade} />
+      ),
+      meta: { label: t.grade, variant: "text" },
+      id: "gradeName",
+      cell: ({ getValue }) => {
+        const value = getValue<string>()
+        return value ? (
+          <span className="text-xs">{value}</span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )
+      },
       enableColumnFilter: true,
     },
     {

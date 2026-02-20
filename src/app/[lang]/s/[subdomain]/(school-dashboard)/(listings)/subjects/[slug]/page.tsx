@@ -16,7 +16,6 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
   const subject = await db.catalogSubject.findUnique({
     where: { slug },
     select: {
-      id: true,
       name: true,
       slug: true,
       description: true,
@@ -26,6 +25,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       thumbnailKey: true,
       bannerUrl: true,
       levels: true,
+      grades: true,
       totalChapters: true,
       totalLessons: true,
       averageRating: true,
@@ -53,6 +53,8 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
               imageKey: true,
               thumbnailKey: true,
               durationMinutes: true,
+              videoCount: true,
+              resourceCount: true,
             },
           },
         },
@@ -65,6 +67,11 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
   }
 
   const heroImageUrl = getCatalogImageUrl(subject.bannerUrl, null, "original")
+  const subjectImageUrl = getCatalogImageUrl(
+    subject.thumbnailKey,
+    subject.imageKey,
+    "sm"
+  )
 
   const chapters = subject.chapters.map((ch) => ({
     id: ch.id,
@@ -79,6 +86,8 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       slug: l.slug,
       description: l.description,
       durationMinutes: l.durationMinutes,
+      videoCount: l.videoCount,
+      resourceCount: l.resourceCount,
       imageUrl: getCatalogImageUrl(l.thumbnailKey, l.imageKey, "md"),
     })),
   }))
@@ -94,7 +103,9 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
           department: subject.department,
           color: subject.color,
           heroImageUrl,
+          imageUrl: subjectImageUrl,
           levels: subject.levels,
+          grades: subject.grades,
           totalChapters: subject.totalChapters,
           totalLessons: subject.totalLessons,
           averageRating: subject.averageRating,

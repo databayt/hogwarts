@@ -1,64 +1,57 @@
 ---
 title: PRD
-description: Product Requirements Document for Hogwarts covering functional and non-functional requirements.
+description: Product Requirements Document for Hogwarts — the aspirational vision for a world-class school management platform.
 ---
 
 ## Executive Summary
 
-The global education sector manages over 2 million schools serving 1.5 billion students, yet 78% still rely on paper-based or fragmented digital systems. This inefficiency costs the industry $12B annually in wasted administrative processes, with each administrator losing 40 hours monthly to manual tasks. Meanwhile, 65% of parents express dissatisfaction with school communication, and manual attendance/grade tracking suffers from a 23% error rate.
+Hogwarts is an all-in-one, cloud-based school management platform — an operating system for educational institutions. It serves schools, teachers, students, and parents globally with multi-tenant architecture, role-based access, and Arabic-first internationalization.
 
-Hogwarts is envisioned as the world's most comprehensive, accessible, and user-friendly school management platform—a true operating system for educational institutions. We will revolutionize school administration by providing an all-in-one, cloud-based solution that serves schools, teachers, students, and parents globally.
+See [Progress](/docs/progress) for current implementation status.
 
 ---
 
 ## Project Classification
 
 - **Type:** SaaS B2B Multi-Tenant Web Application
-- **Domain:** Education Technology (EdTech) - K-12 School Management
-- **Complexity:** Level 4 (Enterprise-scale system, 200+ functional requirements, highly regulated domain)
+- **Domain:** Education Technology (EdTech) — K-12 School Management
+- **Complexity:** Level 4 (Enterprise-scale, 200+ functional requirements, highly regulated domain)
 - **Target Users:** School administrators, teachers, students, parents, accountants, staff
 
 ### Market Size (Middle East & Africa)
 
-The MEA region represents a high-growth opportunity for school management systems:
+| Region             | Size (2024) | Projected      | CAGR   |
+| ------------------ | ----------- | -------------- | ------ |
+| MEA EdTech         | $14.4B      | $33.0B by 2030 | ~14.6% |
+| Middle East EdTech | $11.3B      | $27.0B by 2033 | ~9.1%  |
+| GCC EdTech         | $3.02B      | $4.47B by 2030 | ~6.74% |
 
-**EdTech Market:**
+K-12 holds **44%** of the 2025 cohort — the largest revenue-generating sector.
 
-- MEA education technology market: **$14.4B** (2024) → **$33.0B** by 2030 (CAGR ~14.6%)
-- Middle East EdTech market: **$11.3B** (2024) → **$27.0B** by 2033 (CAGR ~9.1%)
-- K-12 segment holds **44%** of the 2025 cohort, the largest revenue-generating sector
-- GCC EdTech market: **$3.02B** (2024) → **$4.47B** by 2030 (CAGR ~6.74%)
+| Country      | Size     | CAGR   | Notes                       |
+| ------------ | -------- | ------ | --------------------------- |
+| Sudan        | Emerging | —      | Arabic-first target market  |
+| Saudi Arabia | $2.32B   | 12.77% | Largest MENA market         |
+| Egypt        | $302M    | 14.0%  | 234 active EdTech companies |
+| South Africa | $929M    | 11.78% | 40% of Africa EdTech 50     |
 
-**Country Wise:**
+### Domain Constraints
 
-| Country      | Size     | Growth      | Notes                       |
-| ------------ | -------- | ----------- | --------------------------- |
-| Sudan        | Emerging | -           | Arabic-first target market  |
-| Saudi Arabia | $2.32B   | 12.77% CAGR | Largest MENA market         |
-| Egypt        | $302M    | 14.0% CAGR  | 234 active EdTech companies |
-| South Africa | $929M    | 11.78% CAGR | 40% of Africa EdTech 50     |
-
-### Domain Context
-
-The K-12 education sector operates under unique constraints:
-
-- **Regulatory Compliance** - FERPA, COPPA, GDPR, and varying state/regional mandates
-- **Accessibility Requirements** - WCAG 2.1 AA compliance, multilingual support, RTL languages, offline capabilities
-- **Educational Standards** - National curriculum frameworks, standardized assessment reporting, academic calendar variations
-- **Security & Safety** - Child safety protocols, data encryption, multi-tenant isolation, audit trails
-- **Financial Complexity** - Multi-currency, complex fee structures, scholarship management, payment gateway integration
+- **Regulatory:** FERPA, COPPA, GDPR, regional mandates
+- **Accessibility:** WCAG 2.1 AA, multilingual RTL, offline capable
+- **Educational:** National curricula, standardized assessments, academic calendars
+- **Security:** Child safety protocols, encryption, multi-tenant isolation, audit trails
+- **Financial:** Multi-currency, fee structures, scholarships, payment gateways
 
 ---
 
-## Too Long; Didn't Read
+## TL;DR
 
-SaaS B2B multi-tenant school management system. Next.js 16 + React 19 + TypeScript + Prisma + PostgreSQL. A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents—all within a single platform.
+SaaS B2B multi-tenant school management system. Next.js 16 + React 19 + TypeScript + Prisma + PostgreSQL. A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents — all within a single platform.
 
 ---
 
 ## Success Criteria
-
-Success is measured by genuine transformation of educational operations and stakeholder satisfaction.
 
 ### Primary Metrics
 
@@ -68,29 +61,29 @@ Success is measured by genuine transformation of educational operations and stak
 | Parental Engagement        | 65% dissatisfaction | 85% satisfaction (NPS)        |
 | Data Accuracy              | 23% error rate      | \<1% error rate               |
 | School Operational Cost    | $15K-$50K/year      | 60% reduction                 |
-| Teacher Admin Time         | 11 hours/week       | 4 hours/week (64% reduction)  |
+| Teacher Admin Time         | 11 hours/week       | 4 hours/week                  |
 
 ### Business Metrics
 
-**Year 1:** 100 schools, $240K ARR, 98% CSAT, \<3% monthly churn
-
-**Year 3:** 2,500 schools, $6M ARR, 85+ NPS, \<1.5% monthly churn
-
-**Year 5:** 15,000 schools across 50+ countries, $36M ARR, IPO-ready metrics
+| Year | Schools | ARR   | NPS      | Churn     |
+| ---- | ------- | ----- | -------- | --------- |
+| 1    | 100     | $240K | 98% CSAT | \<3%/mo   |
+| 3    | 2,500   | $6M   | 85+      | \<1.5%/mo |
+| 5    | 15,000  | $36M  | —        | IPO-ready |
 
 ### Impact Milestones
 
 - Zero student data breaches
-- 1M+ students having better educational experiences
+- 1M+ students with better educational experiences
 - 100+ community-contributed features
 - Government partnerships in 10+ countries
-- Industry recognition as #1 open-source school management system
+- #1 open-source school management system
 
 ---
 
 ## MVP Scope
 
-A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents—all within a single platform.
+A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents.
 
 See [MVP](/docs/mvp) for detailed epic breakdown with story-level tracking.
 
@@ -155,12 +148,12 @@ See [MVP](/docs/mvp) for detailed epic breakdown with story-level tracking.
 
 ## Growth Phase
 
-Post-MVP features that expand capabilities and market reach:
+Post-MVP features expanding capabilities and market reach:
 
 - AI-powered predictive analytics
-- Digital classroom & LMS
+- Digital classroom & LMS integration
 - Comprehensive finance module (double-entry bookkeeping, payroll)
-- Library management
+- Library management system
 - Native mobile applications (React Native)
 - Internationalization expansion (French, Spanish, Hindi, Mandarin)
 - Regional compliance certifications
@@ -169,11 +162,11 @@ Post-MVP features that expand capabilities and market reach:
 
 ## Vision
 
-Long-term features that position Hogwarts as the definitive education platform:
+Long-term features positioning Hogwarts as the definitive education platform:
 
 - AI Teaching Assistant
 - Personalized learning paths
-- Marketplace & ecosystem
+- Marketplace & plugin ecosystem
 - Blockchain credentials
 - VR/AR learning experiences
 - District-level management
@@ -183,41 +176,19 @@ Long-term features that position Hogwarts as the definitive education platform:
 
 ## Tech Stack
 
-Multi-tenant subdomain-based architecture where each school gets isolated data via `schoolId` scoping. Stateless serverless functions on Vercel with 8-role RBAC system (Developer, Admin, Teacher, Student, Guardian, Accountant, Staff, User).
+Multi-tenant subdomain-based architecture. Each school gets isolated data via `schoolId` scoping. Stateless serverless functions on Vercel with 8-role RBAC.
 
 <div className="not-prose mt-4 mb-6 flex flex-wrap gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">Next.js</span>
-  <span className="bg-muted rounded px-2 py-1 text-xs">React</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">Next.js 16</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">React 19</span>
   <span className="bg-muted rounded px-2 py-1 text-xs">TypeScript</span>
   <span className="bg-muted rounded px-2 py-1 text-xs">Prisma</span>
   <span className="bg-muted rounded px-2 py-1 text-xs">PostgreSQL</span>
-  <span className="bg-muted rounded px-2 py-1 text-xs">NextAuth</span>
-  <span className="bg-muted rounded px-2 py-1 text-xs">Tailwind CSS</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">NextAuth v5</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">Tailwind CSS 4</span>
   <span className="bg-muted rounded px-2 py-1 text-xs">shadcn/ui</span>
   <span className="bg-muted rounded px-2 py-1 text-xs">Vercel</span>
 </div>
-
----
-
-## Multi-Tenancy Pattern
-
-**Critical Security Rule:**
-
-```typescript
-// NEVER do this
-await prisma.student.findMany()
-
-// ALWAYS scope by schoolId
-await prisma.student.findMany({
-  where: { schoolId },
-})
-```
-
-**Data Isolation:**
-
-- `@@unique([schoolId, email])` on all models
-- Automated tests verify no cross-tenant leaks
-- Audit trails: `schoolId` + `requestId` + `userId` + `timestamp`
 
 **Environment Routing:**
 
@@ -242,13 +213,6 @@ Custom:       www.theirschool.com (CNAME) → Hogwarts platform
 | ACCOUNTANT | Manage finances, generate reports (no academic data)         |
 | STAFF      | Limited operational module access                            |
 | USER       | Minimal access, pending role assignment                      |
-
-**Permission Matrix:**
-
-- Granular permissions: view/create/edit/delete/approve per feature
-- Department-based access: Teachers only see students in their classes
-- Data visibility rules: Students see only their own data
-- Delegation: Admins can delegate permissions temporarily
 
 ---
 
@@ -279,7 +243,7 @@ Custom:       www.theirschool.com (CNAME) → Hogwarts platform
 - OAuth 2.0 (Google Workspace, Microsoft 365)
 - SCIM (user provisioning)
 
-**Third-Party Integrations:**
+**Third-Party:**
 
 - Google Workspace, Microsoft 365, Zoom
 - Stripe (payments), Twilio (SMS), Resend (email)
@@ -292,33 +256,33 @@ Custom:       www.theirschool.com (CNAME) → Hogwarts platform
 
 ### Performance
 
-- Page load: Initial \<2s (3G), subsequent \<500ms (cached)
-- API response: 95th percentile \<500ms, 99th \<1s
-- Database queries: No N+1, query time \<100ms for 95%
-- Concurrent users: 10,000 per school without degradation
-- TTFB: \<200ms via edge caching
+| Metric                 | Target           |
+| ---------------------- | ---------------- |
+| Initial page load (3G) | \<2s             |
+| Subsequent navigation  | \<500ms          |
+| API response (P95)     | \<500ms          |
+| Database queries (P95) | \<100ms          |
+| TTFB                   | \<200ms via edge |
 
 ### Security
 
-- Data Encryption: AES-256 at rest, TLS 1.3 in transit
-- Authentication: Bcrypt (cost 12), JWT (24h), 2FA, rate limiting
-- Authorization: RBAC on every route, multi-tenant isolation
-- Input Validation: Zod (server-side), SQL injection protection, XSS prevention
-- Audit Logging: All modifications logged, 7-year retention
+- **Encryption:** AES-256 at rest, TLS 1.3 in transit
+- **Auth:** Bcrypt (cost 12), JWT (24h), 2FA, rate limiting
+- **Authorization:** RBAC on every route, multi-tenant isolation
+- **Validation:** Zod server-side, SQL injection + XSS prevention
+- **Audit:** All modifications logged, 7-year retention
 
 ### Scalability
 
-- Database: Prisma connection pooling, Neon Serverless PostgreSQL
-- Application: Vercel serverless, stateless architecture, edge caching
-- File Storage: S3-compatible (Cloudflare R2), CDN delivery
-- Load Testing: Quarterly tests simulating 50K concurrent users
+- **Database:** Prisma connection pooling, Neon Serverless PostgreSQL
+- **Application:** Vercel serverless, stateless, edge caching
+- **Storage:** S3-compatible (Cloudflare R2), CDN delivery
 
 ### Accessibility
 
 - WCAG 2.1 AA compliance
 - Keyboard navigation, screen reader support
 - Color contrast minimum 4.5:1
-- Layout adapts to 200% zoom
 - Automated checks in CI/CD (axe-core)
 
 ### Compliance
@@ -332,95 +296,44 @@ Custom:       www.theirschool.com (CNAME) → Hogwarts platform
 
 ## Design System
 
-**Typography:**
-
-- Arabic: Rubik
-- English: Inter
-- Use semantic HTML (`<h1>-<h6>`, `<p>`)
-- NO hardcoded `text-*` or `font-*` classes
-
-**Colors (OKLCH):**
-
-- Primary: Blue (#3B82F6)
-- Secondary: Amber (#F59E0B)
-- Success: Green (#10B981)
-- Warning: Orange (#F97316)
-- Error: Red (#EF4444)
-
-**Components:**
-
-- shadcn/ui (Radix UI primitives)
-- Responsive containers (`layout-container`)
-- Dark/light theme (next-themes)
+| Aspect       | Spec                                                   |
+| ------------ | ------------------------------------------------------ |
+| Arabic font  | Rubik                                                  |
+| English font | Inter                                                  |
+| Typography   | Semantic HTML only — no hardcoded `text-*` or `font-*` |
+| Colors       | OKLCH — Blue primary, Amber secondary                  |
+| Components   | shadcn/ui (Radix primitives)                           |
+| Theme        | Dark/light via next-themes                             |
 
 ---
 
-## Internationalization & RTL
+## Internationalization
 
-**Locales:** en, ar
-
-**RTL Support:**
-
-- Bidirectional layouts (mirrors for Arabic)
-- Mixed content support
-- Date/number localization
-- Language toggle (persistent)
-
-**URL Structure:**
-
-```text
-/[lang]/path → /en/docs, /ar/docs
-/[lang]/s/[school]/path → /en/s/demo/dashboard
-```
+| Feature     | Implementation                                     |
+| ----------- | -------------------------------------------------- |
+| Locales     | `en`, `ar`                                         |
+| RTL         | Bidirectional layouts, mirrors for Arabic          |
+| Storage     | Single-language + `lang` field                     |
+| Translation | On-demand via Google Translate API with DB caching |
+| URLs        | `/[lang]/path` → `/en/docs`, `/ar/docs`            |
 
 ---
 
 ## Development Approach
 
-**Agile Methodology:**
-
-- 1-week sprints
-- Weekly standups via Google Meet
-- Sprint planning, review, retrospective
-- CI/CD pipeline
-
-**Quality Gates:**
-
+- 1-week sprints with weekly standups
 - Code review (minimum 1 approver)
-- 80%+ code coverage for critical paths
-- No critical/high security vulnerabilities
-- All accessibility checks passing
-- Performance budgets met (Lighthouse ≥90)
+- 80%+ coverage for critical paths
+- Performance budgets (Lighthouse ≥90)
+- 20% sprint capacity reserved for tech debt
 
-**Tech Debt Management:**
+### Testing Pyramid
 
-- 20% sprint capacity reserved
-- Monthly architecture review
-- 6-month deprecation notice for breaking changes
-
----
-
-## Testing Strategy
-
-**Required:**
-
-- Multi-tenant isolation (automated suite)
-- Performance benchmarks (10K concurrent users)
-- Security penetration (annual)
-- Accessibility audits (quarterly)
-
-**Coverage Targets:**
-
-- Unit tests: 80%+ for business logic
-- Integration tests: All API endpoints
-- E2E tests: Critical user flows
-- Visual regression: Percy or Chromatic
-
-**Testing Pyramid:**
-
-- 70% Unit tests (Jest, React Testing Library)
-- 20% Integration tests (Supertest)
-- 10% E2E tests (Playwright)
+| Layer       | Share | Tool       |
+| ----------- | ----- | ---------- |
+| Unit        | 70%   | Vitest     |
+| Integration | 20%   | Supertest  |
+| E2E         | 10%   | Playwright |
 
 ---
 
@@ -430,8 +343,8 @@ Custom:       www.theirschool.com (CNAME) → Hogwarts platform
 | -------------------- | -------- | --------------------------------- |
 | Data breach          | Critical | Penetration testing, bug bounty   |
 | Multi-tenant leak    | Critical | Isolation tests, schoolId scoping |
-| Performance issues   | High     | Load testing, caching             |
 | Non-compliance       | Critical | Legal review, audits              |
+| Performance issues   | High     | Load testing, caching             |
 | Low adoption         | High     | User research, pilots             |
 | Integration failures | Medium   | Retry logic, monitoring           |
 | Competition          | Medium   | Rapid iteration                   |
@@ -441,10 +354,7 @@ Custom:       www.theirschool.com (CNAME) → Hogwarts platform
 
 ## References
 
-- [MVP](/docs/mvp) - Detailed epic breakdown with story tracking
-- [Architecture](/docs/architecture) - System design and specs
-- [Pattern](/docs/pattern) - Best practices and standards
-
----
-
-_Developer-focused PRD for Hogwarts school management platform._
+- [Progress](/docs/progress) — Current implementation status
+- [MVP](/docs/mvp) — Epic breakdown with story tracking
+- [Architecture](/docs/architecture) — System design and specs
+- [Pattern](/docs/pattern) — Best practices and standards

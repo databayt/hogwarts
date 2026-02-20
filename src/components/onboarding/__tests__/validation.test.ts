@@ -1246,27 +1246,6 @@ describe("Edge Cases", () => {
       })
       expect(result.success).toBe(true)
     })
-
-    it("should accept maxFacilities at 0", () => {
-      const result = onboardingValidation.safeParse({
-        maxFacilities: 0,
-      })
-      expect(result.success).toBe(true)
-    })
-
-    it("should accept maxFacilities at 100", () => {
-      const result = onboardingValidation.safeParse({
-        maxFacilities: 100,
-      })
-      expect(result.success).toBe(true)
-    })
-
-    it("should reject maxFacilities at 101", () => {
-      const result = onboardingValidation.safeParse({
-        maxFacilities: 101,
-      })
-      expect(result.success).toBe(false)
-    })
   })
 
   describe("special characters", () => {

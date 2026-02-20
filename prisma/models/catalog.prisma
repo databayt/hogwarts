@@ -35,6 +35,7 @@ model CatalogSubject {
   tags          String[]      @default([])
   status        ContentStatus @default(PUBLISHED)
   gradeRange    String? // e.g. "1-12", "7-12"
+  grades        Int[]         @default([])
 
   // ClickView integration
   clickviewId  String?
@@ -94,6 +95,7 @@ model CatalogChapter {
   thumbnailKey  String? // S3 key prefix for processed WebP variants
   color         String?
   gradeRange    String?
+  grades        Int[]         @default([])
   levels        SchoolLevel[]
   status        ContentStatus @default(PUBLISHED)
 
@@ -144,6 +146,7 @@ model CatalogLesson {
   durationMinutes Int?
   objectives      String?       @db.Text
   gradeRange      String?
+  grades          Int[]         @default([])
   levels          SchoolLevel[]
   status          ContentStatus @default(PUBLISHED)
 

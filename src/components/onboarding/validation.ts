@@ -176,13 +176,6 @@ export const onboardingValidation = z.object({
     .max(500, "Cannot exceed 500 classes")
     .optional(),
 
-  maxFacilities: z
-    .number()
-    .int("Must be a whole number")
-    .min(0, "Cannot be negative")
-    .max(100, "Cannot exceed 100 facilities")
-    .optional(),
-
   // School details
   schoolLevel: schoolTypeSchema.optional(),
   schoolType: schoolCategorySchema.optional(),
@@ -502,13 +495,6 @@ export function createOnboardingValidation(dictionary: Dictionary) {
       .int({ message: v.get("mustBeWholeNumber") })
       .min(1, { message: v.get("atLeastOneClass") })
       .max(500, { message: v.get("maxClassesLimit") })
-      .optional(),
-
-    maxFacilities: z
-      .number()
-      .int({ message: v.get("mustBeWholeNumber") })
-      .min(0, { message: v.get("nonNegative") })
-      .max(100, { message: v.get("maxFacilitiesLimit") })
       .optional(),
 
     // School details

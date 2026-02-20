@@ -1,44 +1,89 @@
 ---
 title: "Technology Stack"
-description: "State-of-art technology powering Hogwarts"
+description: "Core technologies powering the Hogwarts multi-tenant school management platform."
 ---
 
-<img src="/stack.png" alt="Technology Stack" />
+## Core Stack
 
-Hogwarts is built on a carefully curated technology stack that prioritizes performance, developer experience, and scalability. Our architecture follows modern best practices and leverages industry-leading tools across the full development lifecycle.
+| Technology       | Version         | Purpose                                                |
+| ---------------- | --------------- | ------------------------------------------------------ |
+| **Next.js**      | 16.1.0          | App Router, Turbopack, Server Components, streaming    |
+| **React**        | 19.2.0          | UI library with concurrent features, Server Components |
+| **TypeScript**   | 5.8.3           | Strict mode, type safety across the stack              |
+| **Prisma**       | 6.19.0          | ORM with 264 models, 132 enums, 57 schema files        |
+| **PostgreSQL**   | Neon Serverless | Multi-tenant database with connection pooling          |
+| **NextAuth**     | v5 beta.30      | OAuth (Google, Facebook), credentials, JWT sessions    |
+| **Tailwind CSS** | 4               | Utility-first CSS with OKLCH color format              |
+| **shadcn/ui**    | Latest          | Radix UI primitives, accessible components             |
 
-**Next.js 16**: Our React-based meta-framework providing server-side rendering, static site generation, and powerful developer tooling. Features App Router, streaming, and built-in optimizations for production-ready applications.
+## Runtime & Deployment
 
-**React 19**: Component-based UI library enabling declarative, efficient user interfaces with concurrent features, server components, and enhanced developer experience.
+| Technology        | Purpose                                               |
+| ----------------- | ----------------------------------------------------- |
+| **Vercel**        | Serverless deployment, edge caching, preview branches |
+| **Neon**          | Serverless PostgreSQL with branching workflows        |
+| **AWS S3**        | Image and file storage (catalog thumbnails, uploads)  |
+| **CloudFront**    | CDN delivery for S3 assets (WebP variants)            |
+| **Upstash Redis** | Custom domain resolution caching                      |
 
-**TypeScript**: Strongly-typed JavaScript superset enhancing code reliability, maintainability, and developer productivity through comprehensive static analysis and IDE integration.
+## Validation & Forms
 
-**Node.js**: JavaScript runtime built on Chrome's V8 engine, enabling server-side execution with event-driven, non-blocking I/O for scalable network applications.
+| Technology          | Version | Purpose                                       |
+| ------------------- | ------- | --------------------------------------------- |
+| **Zod**             | 4.0.14  | Schema validation on server and client        |
+| **React Hook Form** | 7.61.1  | Performant forms with minimal re-renders      |
+| **TanStack Table**  | 8.21.3  | DataTable with sorting, filtering, pagination |
 
-**Tailwind CSS**: Utility-first CSS framework enabling rapid, consistent, and maintainable styling with excellent performance characteristics and design system integration.
+## Authentication & Security
 
-**shadcn/ui**: High-quality, accessible React components built on Radix UI primitives, providing a solid foundation for consistent user experiences.
+| Technology                | Purpose                                  |
+| ------------------------- | ---------------------------------------- |
+| **Auth.js (NextAuth v5)** | Multi-provider OAuth, JWT sessions, RBAC |
+| **bcrypt**                | Password hashing (cost 12)               |
+| **PKCE**                  | OAuth security with S256 code challenge  |
+| **Rate limiting**         | 14 configs across routes (in-memory)     |
 
-**PlanetScale**: Serverless MySQL platform providing branching workflows, horizontal scaling, and zero-downtime schema changes with enterprise-grade reliability.
+## Key Libraries
 
-**Prisma**: Next-generation ORM offering type-safe database access, intuitive schema management, and powerful query capabilities with excellent TypeScript integration.
+| Library         | Purpose                                         |
+| --------------- | ----------------------------------------------- |
+| **nuqs**        | URL-persisted state (view toggles, filters)     |
+| **Resend**      | Transactional email (verification, invitations) |
+| **Sharp**       | Server-side image processing (WebP variants)    |
+| **Mapbox**      | Maps and geolocation (school location)          |
+| **Stripe**      | Payment processing (enrollment, subscriptions)  |
+| **Plaid**       | Banking integration (finance module)            |
+| **next-themes** | Dark/light theme switching                      |
+| **Fumadocs**    | MDX documentation framework                     |
 
-**Vercel**: Frontend cloud platform providing instant deployments, automatic scaling, and edge optimization with seamless Git integration and performance monitoring.
+## Design System
 
-**Zod**: TypeScript-first schema validation library ensuring runtime type safety and comprehensive data validation across API boundaries.
+| Aspect       | Spec                                     |
+| ------------ | ---------------------------------------- |
+| Arabic font  | Rubik                                    |
+| English font | Inter                                    |
+| Typography   | Semantic HTML only                       |
+| Colors       | OKLCH with Blue primary, Amber secondary |
+| Components   | shadcn/ui (Radix primitives)             |
+| Theme        | Dark/light via next-themes               |
 
-**React Hook Form**: Performant, flexible forms library with minimal re-renders, built-in validation, and excellent developer experience for complex form scenarios.
+## Development Tools
 
-**Auth.js**: Comprehensive authentication library providing secure, standards-compliant authentication with support for multiple providers and advanced security features.
+| Tool            | Purpose                                          |
+| --------------- | ------------------------------------------------ |
+| **pnpm**        | Package manager (Vercel requirement)             |
+| **Turbopack**   | Dev server bundler (via Next.js 16)              |
+| **Vitest**      | Unit testing                                     |
+| **Playwright**  | E2E testing                                      |
+| **ESLint**      | Linting                                          |
+| **Prettier**    | Code formatting                                  |
+| **Claude Code** | AI-assisted development (34 agents, 22 commands) |
 
-**Claude**: Advanced AI assistant integrated for intelligent code completion, documentation generation, and development workflow optimization.
+## Runtime Strategy
 
-**Python**: Versatile programming language powering our AI/ML pipelines, data processing, and backend automation with extensive ecosystem support.
-
-**Rust**: Systems programming language ensuring memory safety and high performance for critical components requiring zero-cost abstractions.
-
-**Figma**: Collaborative design platform enabling seamless design-to-development workflows, component libraries, and cross-functional team alignment.
-
----
-
-**This stack offers ecosystem harmony, ranks among the best in annual Stack Overflow benchmarks, and supports AI-assisted component creation and improvement.**
+| Route Type   | Runtime | Reason                             |
+| ------------ | ------- | ---------------------------------- |
+| Auth pages   | Node.js | bcrypt requires Node.js APIs       |
+| Prisma pages | Node.js | Prisma client requires Node.js     |
+| Static pages | Edge    | Faster TTFB via edge caching       |
+| Middleware   | Edge    | Subdomain detection, URL rewriting |

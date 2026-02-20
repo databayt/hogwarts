@@ -78,24 +78,33 @@ const forecast = [
 // UPCOMING CLASS CARD
 // ============================================================================
 
+export interface UpcomingClassData {
+  title: string
+  subtitle: string
+  description: string
+  details: Array<{ label: string; value: string }>
+}
+
 function UpcomingClassCard({
   locale,
   subdomain,
+  data,
 }: {
   locale: string
   subdomain: string
+  data?: UpcomingClassData | null
 }) {
   const [isFlipped, setIsFlipped] = useState(false)
 
-  const upcomingClass = {
-    title: "Upcoming Class",
-    subtitle: "Mathematics - Grade 10",
-    description: "Next scheduled class session",
+  const upcomingClass = data || {
+    title: "No timetable configured",
+    subtitle: "Set up your timetable to see upcoming classes",
+    description: "Configure your school timetable",
     details: [
-      { label: "Time", value: "09:00 AM" },
-      { label: "Room", value: "Hall A" },
-      { label: "Duration", value: "45 min" },
-      { label: "Students", value: "32" },
+      { label: "Time", value: "--:--" },
+      { label: "Room", value: "N/A" },
+      { label: "Duration", value: "N/A" },
+      { label: "Students", value: "0" },
     ],
   }
 
@@ -228,14 +237,23 @@ function UpcomingClassCard({
 export interface TopSectionProps {
   locale: string
   subdomain: string
+  upcomingClass?: UpcomingClassData | null
 }
 
-export function TopSection({ locale, subdomain }: TopSectionProps) {
+export function TopSection({
+  locale,
+  subdomain,
+  upcomingClass,
+}: TopSectionProps) {
   return (
     <section>
       <div className="flex flex-wrap items-start gap-8">
         {/* Upcoming Class Card */}
-        <UpcomingClassCard locale={locale} subdomain={subdomain} />
+        <UpcomingClassCard
+          locale={locale}
+          subdomain={subdomain}
+          data={upcomingClass}
+        />
 
         {/* Weather */}
         <div className="flex h-[280px] w-full max-w-sm flex-col justify-between">

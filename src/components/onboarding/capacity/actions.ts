@@ -65,7 +65,6 @@ export async function getSchoolCapacity(
       studentCount: school.maxStudents || 400,
       teachers: school.maxTeachers || 10,
       classrooms: school.maxClasses || 20,
-      facilities: 5,
     })
   } catch (error) {
     return createActionResponse(undefined, error)

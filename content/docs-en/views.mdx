@@ -1,0 +1,602 @@
+---
+title: "Views"
+description: "Canonical patterns for writing all.tsx and featured.tsx view components in feature directories"
+---
+
+## Current Progress (Audit)
+
+16 combined files audited across the codebase (9 all.tsx ~2,303 lines + 7 featured.tsx ~1,859 lines):
+
+| Area                                | Status | Detail                                                                |
+| ----------------------------------- | ------ | --------------------------------------------------------------------- |
+| `"use client"` directive            | PASS   | All 16 files include the directive                                    |
+| Card imports from card.tsx          | PASS   | 100% import card variants from co-located card.tsx                    |
+| Formatter imports from util.ts      | PASS   | featured.tsx files consistently import from util.ts                   |
+| `useMemo` for client-side filtering | PASS   | all.tsx files use useMemo for filtered results                        |
+| Grid/list view toggle               | PASS   | 7/9 all.tsx files provide layout switching                            |
+| Empty state with "Clear filters"    | PASS   | Consistent empty state handling across all.tsx files                  |
+| Multiple exports per featured.tsx   | PASS   | Featured, Recent, RequiringAttention, Stats exported from single file |
+
+## 2 View Patterns
+
+### Pattern 1: all.tsx -- Grid/List View with Filtering
+
+Full entity listing with search, filters, sort, and layout toggle. Always imports card variants from card.tsx and sort/filter functions from util.ts.
+
+Reference: `saas-dashboard/domains/all.tsx` (280 lines), `saas-dashboard/billing/all.tsx`
+
+### Pattern 2: featured.tsx -- Curated Views
+
+Multiple exports per file showing different slices of the same data: Featured (highlighted), Recent (newest), RequiringAttention (actionable), TopByUsage, OverviewStats. Always imports card variants from card.tsx and formatters from util.ts.
+
+Reference: `saas-dashboard/billing/featured.tsx` (354 lines), `saas-dashboard/domains/featured.tsx`
+
+## The 5 Rules
+
+### 1. Always `"use client"`
+
+View components use state (filters, sort, layout toggle) and event handlers.
+
+```typescript
+"use client"
+
+import { useState } from "react"
+
+// ...
+```
+
+### 2. Always import cards from card.tsx
+
+Never define card markup inline in view files. Import card variants from the co-located card.tsx.
+
+```typescript
+// GOOD: Cards from card.tsx
+import { DomainCard, DomainCompactCard } from "./card"
+
+// BAD: Inline card markup in all.tsx
+<div className="rounded-lg border p-4">
+  <h3>{domain.name}</h3>
+  {/* ... repeating card structure */}
+</div>
+```
+
+### 3. Use `useMemo` for client-side filtering
+
+Filter and sort operations should be memoized to prevent unnecessary recalculations.
+
+```typescript
+// GOOD: Memoized filtering
+const filteredDomains = useMemo(() => {
+  return domains.filter((d) => {
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase()
+      if (!d.domain.toLowerCase().includes(searchLower) &&
+          !d.school.name.toLowerCase().includes(searchLower)) {
+        return false
+      }
+    }
+    if (filters.status && d.status !== filters.status) return false
+    return true
+  })
+}, [domains, filters])
+
+// BAD: Filtering on every render
+const filteredDomains = domains.filter((d) => { ... })
+```
+
+### 4. Provide grid/list toggle
+
+all.tsx files should offer both grid and list layouts. Grid uses card variants; list uses compact card variants.
+
+```typescript
+const [view, setView] = useState<"grid" | "list">("grid")
+
+// Layout toggle buttons
+<div className="flex gap-1">
+  <Button
+    variant={view === "grid" ? "default" : "ghost"}
+    size="icon"
+    onClick={() => setView("grid")}
+  >
+    <Grid3x3 className="size-4" />
+  </Button>
+  <Button
+    variant={view === "list" ? "default" : "ghost"}
+    size="icon"
+    onClick={() => setView("list")}
+  >
+    <List className="size-4" />
+  </Button>
+</div>
+
+// Conditional rendering
+{view === "grid" ? (
+  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    {filteredDomains.map((d) => (
+      <DomainCard key={d.id} domain={d} showActions />
+    ))}
+  </div>
+) : (
+  <div className="space-y-2">
+    {filteredDomains.map((d) => (
+      <DomainCompactCard key={d.id} domain={d} />
+    ))}
+  </div>
+)}
+```
+
+### 5. Include empty state with "Clear filters"
+
+When filtering produces no results, show a clear message with a button to reset filters.
+
+```typescript
+{filteredDomains.length === 0 && (
+  <div className="flex flex-col items-center justify-center py-12 text-center">
+    <Globe className="text-muted-foreground mb-4 size-12" />
+    <h3>No domains found</h3>
+    <p className="muted">Try adjusting your search or filter criteria.</p>
+    <Button
+      variant="outline"
+      className="mt-4"
+      onClick={() => setFilters({ search: "", status: "" })}
+    >
+      Clear Filters
+    </Button>
+  </div>
+)}
+```
+
+## 2 Canonical Templates
+
+### Template A: all.tsx -- Grid/List with Filtering
+
+Full entity listing with search, status filter, sort, and layout toggle. Reference: `saas-dashboard/domains/all.tsx` (280 lines).
+
+```typescript
+"use client"
+
+import { useMemo, useState } from "react"
+import { Globe, Grid3x3, List, Search } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { DomainCard, DomainCompactCard } from "./card"
+import { DOMAIN_STATUSES } from "./config"
+import type { DomainRequestWithSchool } from "./types"
+import { sortDomains } from "./util"
+
+interface AllDomainsProps {
+  domains: DomainRequestWithSchool[]
+  defaultView?: "grid" | "list"
+  onDomainClick?: (domainId: string) => void
+  onApprove?: (domainId: string) => void
+  onReject?: (domainId: string) => void
+}
+
+export function AllDomains({
+  domains,
+  defaultView = "grid",
+  onDomainClick,
+  onApprove,
+  onReject,
+}: AllDomainsProps) {
+  const [view, setView] = useState<"grid" | "list">(defaultView)
+  const [search, setSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("")
+  const [sortField, setSortField] = useState<string>("createdAt")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+
+  // Client-side filtering
+  const filteredDomains = useMemo(() => {
+    let result = domains
+
+    if (search) {
+      const searchLower = search.toLowerCase()
+      result = result.filter(
+        (d) =>
+          d.domain.toLowerCase().includes(searchLower) ||
+          d.school.name.toLowerCase().includes(searchLower)
+      )
+    }
+
+    if (statusFilter) {
+      result = result.filter((d) => d.status === statusFilter)
+    }
+
+    return sortDomains(result, sortField, sortDirection)
+  }, [domains, search, statusFilter, sortField, sortDirection])
+
+  return (
+    <div className="space-y-6">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+          <Input
+            placeholder="Search domains..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All</SelectItem>
+            {DOMAIN_STATUSES.map((s) => (
+              <SelectItem key={s.value} value={s.value}>
+                {s.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="flex gap-1">
+          <Button
+            variant={view === "grid" ? "default" : "ghost"}
+            size="icon"
+            onClick={() => setView("grid")}
+          >
+            <Grid3x3 className="size-4" />
+          </Button>
+          <Button
+            variant={view === "list" ? "default" : "ghost"}
+            size="icon"
+            onClick={() => setView("list")}
+          >
+            <List className="size-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      {filteredDomains.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <Globe className="text-muted-foreground mb-4 size-12" />
+          <h3>No domains found</h3>
+          <p className="muted">Try adjusting your search or filters.</p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => {
+              setSearch("")
+              setStatusFilter("")
+            }}
+          >
+            Clear Filters
+          </Button>
+        </div>
+      ) : view === "grid" ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredDomains.map((domain) => (
+            <DomainCard
+              key={domain.id}
+              domain={domain}
+              showActions
+              onApprove={onApprove}
+              onReject={onReject}
+              onViewDetails={onDomainClick}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filteredDomains.map((domain) => (
+            <DomainCompactCard
+              key={domain.id}
+              domain={domain}
+              onClick={() => onDomainClick?.(domain.id)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+```
+
+Key points:
+
+- Search input with icon prefix
+- Select dropdown for status filtering
+- Grid/list toggle with icon buttons
+- `useMemo` for filtered + sorted results
+- Empty state with "Clear Filters" button
+- Cards imported from card.tsx
+- Sort function imported from util.ts
+- Action callbacks passed through to cards
+
+### Template B: featured.tsx -- Multiple Curated Views
+
+Multiple named exports, each showing a different slice of the data. Reference: `saas-dashboard/billing/featured.tsx` (354 lines).
+
+```typescript
+"use client"
+
+import { FileText, TrendingUp } from "lucide-react"
+
+import {
+  BillingSummaryCard,
+  InvoiceCard,
+  InvoiceHealthCard,
+  InvoiceStatsCard,
+} from "./card"
+import type { InvoiceWithSchool } from "./types"
+import { formatCurrency, isInvoiceOverdue } from "./util"
+
+// ============================================================================
+// Featured Invoices
+// ============================================================================
+
+interface FeaturedInvoicesProps {
+  invoices: InvoiceWithSchool[]
+  maxItems?: number
+  onInvoiceClick?: (invoiceId: string) => void
+  onMarkPaid?: (invoiceId: string) => void
+}
+
+export function FeaturedInvoices({
+  invoices,
+  maxItems = 6,
+  onInvoiceClick,
+  onMarkPaid,
+}: FeaturedInvoicesProps) {
+  const featuredInvoices = invoices.slice(0, maxItems)
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3>Featured Invoices</h3>
+          <p className="muted">Quick overview of recent and important invoices</p>
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {featuredInvoices.map((invoice) => (
+          <InvoiceCard
+            key={invoice.id}
+            invoice={invoice}
+            showActions
+            onViewDetails={onInvoiceClick}
+            onMarkPaid={onMarkPaid}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Recent Invoices
+// ============================================================================
+
+export function RecentInvoices({
+  invoices,
+  maxItems = 5,
+}: {
+  invoices: InvoiceWithSchool[]
+  maxItems?: number
+}) {
+  const recentInvoices = [...invoices]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, maxItems)
+
+  return (
+    <div className="space-y-4">
+      <h4>Recent Invoices</h4>
+      <div className="space-y-2">
+        {recentInvoices.map((invoice) => (
+          <div
+            key={invoice.id}
+            className="flex items-center justify-between rounded-lg border p-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
+                <FileText className="text-primary size-5" />
+              </div>
+              <div>
+                <h6>{invoice.stripeInvoiceId}</h6>
+                <small className="muted">{invoice.school.name}</small>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-medium tabular-nums">
+                {formatCurrency(invoice.amountDue, invoice.currency)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Requiring Attention
+// ============================================================================
+
+export function RequiringAttention({
+  invoices,
+}: {
+  invoices: InvoiceWithSchool[]
+}) {
+  const overdueInvoices = invoices.filter((inv) =>
+    isInvoiceOverdue(inv.periodEnd, inv.status)
+  )
+
+  if (overdueInvoices.length === 0) return null
+
+  return (
+    <div className="space-y-4">
+      <h4>Requiring Attention ({overdueInvoices.length})</h4>
+      <div className="grid gap-4 md:grid-cols-2">
+        {overdueInvoices.map((invoice) => (
+          <InvoiceCard key={invoice.id} invoice={invoice} showActions />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Overview Stats
+// ============================================================================
+
+export function OverviewStats({
+  invoices,
+}: {
+  invoices: InvoiceWithSchool[]
+}) {
+  const totalRevenue = invoices.reduce((sum, inv) => sum + inv.amountPaid, 0)
+  const totalOutstanding = invoices.reduce(
+    (sum, inv) => sum + (inv.amountDue - inv.amountPaid),
+    0
+  )
+
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      <InvoiceStatsCard
+        label="Total Revenue"
+        value={formatCurrency(totalRevenue, "usd")}
+        icon={<TrendingUp className="text-muted-foreground size-4" />}
+      />
+      <InvoiceStatsCard
+        label="Outstanding"
+        value={formatCurrency(totalOutstanding, "usd")}
+      />
+      <InvoiceStatsCard
+        label="Total Invoices"
+        value={String(invoices.length)}
+      />
+    </div>
+  )
+}
+```
+
+Key points:
+
+- Section separators (`// ====`) group each view
+- Each export is self-contained with its own Props interface
+- `Featured`: highlighted items with maxItems limit
+- `Recent`: sorted by createdAt descending
+- `RequiringAttention`: filtered to actionable items, returns null when empty
+- `OverviewStats`: aggregate calculations rendered via StatsCard
+- All card variants imported from card.tsx
+- All formatters imported from util.ts
+
+## Anti-Patterns
+
+### 1. Card markup inline in view files
+
+Repeating card structure in all.tsx instead of importing from card.tsx.
+
+```typescript
+// BAD: Inline card in all.tsx
+{domains.map((d) => (
+  <div className="rounded-lg border p-4">
+    <h3>{d.domain}</h3>
+    <Badge>{d.status}</Badge>
+    {/* ... duplicated structure */}
+  </div>
+))}
+
+// GOOD: Card from card.tsx
+{domains.map((d) => (
+  <DomainCard key={d.id} domain={d} showActions />
+))}
+```
+
+### 2. Filtering without useMemo
+
+Running filter/sort on every render without memoization.
+
+```typescript
+// BAD: Recalculates every render
+const filtered = domains.filter((d) => d.status === status)
+
+// GOOD: Memoized
+const filtered = useMemo(
+  () => domains.filter((d) => d.status === status),
+  [domains, status]
+)
+```
+
+### 3. Missing empty state
+
+No feedback when filters produce zero results.
+
+```typescript
+// BAD: Empty div when no results
+{filteredDomains.map((d) => <DomainCard key={d.id} domain={d} />)}
+// When empty: nothing renders, user thinks it's loading
+
+// GOOD: Explicit empty state
+{filteredDomains.length === 0 ? (
+  <EmptyState onClear={() => resetFilters()} />
+) : (
+  filteredDomains.map((d) => <DomainCard key={d.id} domain={d} />)
+)}
+```
+
+## Quick Reference
+
+### File Pattern
+
+| File           | Purpose                    | Exports                                        |
+| -------------- | -------------------------- | ---------------------------------------------- |
+| `all.tsx`      | Full listing + filter/sort | Single `All<Entity>` component                 |
+| `featured.tsx` | Curated views of same data | Multiple: Featured, Recent, RequiringAttention |
+
+### Import Direction
+
+```
+config.ts     (status options, filter defaults)
+types.ts      (entity types)
+util.ts       (sort, filter, format functions)
+card.tsx      (card variants)
+    |
++---+---+
+|       |
+all   featured
+.tsx    .tsx
+```
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  config.ts       # Filter options, defaults
+  types.ts        # Entity types
+  util.ts         # Sort, filter, format functions
+  card.tsx        # Card variants (imported by views)
+  all.tsx         # Grid/list with filtering (this file)
+  featured.tsx    # Curated views (this file)
+  content.tsx     # Server component (passes data to views)
+```
+
+### What Belongs Where
+
+| Content                     | Belongs in     | Not in      |
+| --------------------------- | -------------- | ----------- |
+| Search/filter UI            | `all.tsx`      | content.tsx |
+| Grid/list layout toggle     | `all.tsx`      | card.tsx    |
+| Client-side filtering logic | `all.tsx`      | util.ts     |
+| Sort functions              | `util.ts`      | all.tsx     |
+| Card rendering              | `card.tsx`     | all.tsx     |
+| Featured/Recent curation    | `featured.tsx` | content.tsx |
+| Aggregate statistics        | `featured.tsx` | util.ts     |
+| Empty state                 | `all.tsx`      | card.tsx    |

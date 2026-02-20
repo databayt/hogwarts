@@ -2,7 +2,15 @@
 
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Building2, Heart, Landmark, School, Wrench } from "lucide-react"
+import {
+  Building2,
+  GraduationCap,
+  Heart,
+  Landmark,
+  Layers,
+  School,
+  Wrench,
+} from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -42,6 +50,7 @@ export function DescriptionForm({
     resolver: zodResolver(descriptionSchema),
     defaultValues: {
       schoolType: initialData?.schoolType || "private",
+      schoolLevel: initialData?.schoolLevel || undefined,
     },
   })
 
@@ -95,6 +104,27 @@ export function DescriptionForm({
     },
   ]
 
+  const schoolLevels = [
+    {
+      id: "primary" as const,
+      title: dict.primaryLevel || "Primary",
+      subtitle: dict.primaryGrades || "Grades 1-6",
+      icon: School,
+    },
+    {
+      id: "secondary" as const,
+      title: dict.secondaryLevel || "Secondary",
+      subtitle: dict.secondaryGrades || "Grades 7-12",
+      icon: GraduationCap,
+    },
+    {
+      id: "both" as const,
+      title: dict.bothLevels || "Both",
+      subtitle: dict.bothGrades || "Grades 1-12",
+      icon: Layers,
+    },
+  ]
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
@@ -115,13 +145,13 @@ export function DescriptionForm({
                   <RadioGroup
                     onValueChange={(value) => {
                       field.onChange(value)
-                      // Immediately notify parent component
                       onTypeSelect?.(value)
-                      console.log("📝 School type selected:", value)
-                      // Auto-submit the form when school type is selected
-                      setTimeout(() => {
-                        form.handleSubmit(handleSubmit)()
-                      }, 100)
+                      // Auto-submit only if schoolLevel is already set
+                      if (form.getValues("schoolLevel")) {
+                        setTimeout(() => {
+                          form.handleSubmit(handleSubmit)()
+                        }, 100)
+                      }
                     }}
                     value={field.value}
                     className="grid grid-cols-2 gap-3 sm:grid-cols-3"
@@ -144,6 +174,57 @@ export function DescriptionForm({
                         >
                           <type.icon size={24} className="mb-3" />
                           <div className="font-medium">{type.title}</div>
+                        </label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </div>
+            </FormItem>
+          )}
+        />
+
+        {/* School Level Selection */}
+        <FormField
+          control={form.control}
+          name="schoolLevel"
+          render={({ field }) => (
+            <FormItem>
+              <div className="space-y-4">
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={(value) => {
+                      field.onChange(value)
+                      // Auto-submit when both type and level are selected
+                      setTimeout(() => {
+                        form.handleSubmit(handleSubmit)()
+                      }, 100)
+                    }}
+                    value={field.value}
+                    className="grid grid-cols-3 gap-3"
+                  >
+                    {schoolLevels.map((level) => (
+                      <div key={level.id}>
+                        <RadioGroupItem
+                          value={level.id}
+                          id={`level-${level.id}`}
+                          className="sr-only"
+                        />
+                        <label
+                          htmlFor={`level-${level.id}`}
+                          className={cn(
+                            "hover:border-foreground/50 flex h-[120px] cursor-pointer flex-col items-center justify-center rounded-lg border p-4 text-center transition-all",
+                            field.value === level.id
+                              ? "border-foreground bg-accent"
+                              : "border-border"
+                          )}
+                        >
+                          <level.icon size={24} className="mb-3" />
+                          <div className="font-medium">{level.title}</div>
+                          <div className="text-muted-foreground mt-1 text-xs">
+                            {level.subtitle}
+                          </div>
                         </label>
                       </div>
                     ))}

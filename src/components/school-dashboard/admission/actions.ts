@@ -490,8 +490,19 @@ export async function confirmEnrollment(params: {
       return { success: false, error: "Unauthorized" }
     }
 
+    // 1. Fetch the application with fields needed for Student creation
+    const application = await db.application.findUnique({
+      where: { id: params.id, schoolId },
+      include: { campaign: { select: { academicYear: true } } },
+    })
+
+    if (!application) {
+      return { success: false, error: "Application not found" }
+    }
+
     const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
 
+    // 2. Update application status to ADMITTED
     await db.application.update({
       where: { id: params.id, schoolId },
       data: {
@@ -501,6 +512,127 @@ export async function confirmEnrollment(params: {
         enrollmentNumber,
       },
     })
+
+    // 3. Create or find Student record if the application is linked to a user
+    if (application.userId) {
+      // Check if student already exists and belongs to a different school
+      const existingStudent = await db.student.findUnique({
+        where: { userId: application.userId },
+        select: { id: true, schoolId: true },
+      })
+
+      if (existingStudent && existingStudent.schoolId !== schoolId) {
+        return {
+          success: false,
+          error: "Student is already enrolled in another school",
+        }
+      }
+
+      const student = existingStudent
+        ? existingStudent
+        : await db.student.create({
+            data: {
+              schoolId,
+              userId: application.userId,
+              givenName: application.firstName,
+              middleName: application.middleName,
+              surname: application.lastName,
+              dateOfBirth: application.dateOfBirth,
+              gender: application.gender,
+              nationality: application.nationality ?? undefined,
+              email: application.email,
+              mobileNumber: application.phone,
+              currentAddress: application.address,
+              city: application.city,
+              state: application.state,
+              postalCode: application.postalCode,
+              country: application.country,
+              admissionNumber: enrollmentNumber,
+              admissionDate: new Date(),
+              enrollmentDate: new Date(),
+              status: "ACTIVE",
+              category: application.category ?? undefined,
+              previousSchoolName: application.previousSchool ?? undefined,
+              previousGrade: application.previousClass ?? undefined,
+            },
+          })
+
+      // 4. Try to match applyingForClass to a YearLevel and create StudentYearLevel
+      try {
+        const yearLevel = await db.yearLevel.findFirst({
+          where: {
+            schoolId,
+            levelName: application.applyingForClass,
+          },
+        })
+
+        if (yearLevel) {
+          // Find the school year matching the campaign's academic year
+          const schoolYear = await db.schoolYear.findFirst({
+            where: {
+              schoolId,
+              yearName: application.campaign.academicYear,
+            },
+          })
+
+          if (schoolYear) {
+            // Upsert to be idempotent (unique on [schoolId, studentId, yearId])
+            await db.studentYearLevel.upsert({
+              where: {
+                schoolId_studentId_yearId: {
+                  schoolId,
+                  studentId: student.id,
+                  yearId: schoolYear.id,
+                },
+              },
+              create: {
+                schoolId,
+                studentId: student.id,
+                levelId: yearLevel.id,
+                yearId: schoolYear.id,
+              },
+              update: {
+                levelId: yearLevel.id,
+              },
+            })
+          } else {
+            console.warn(
+              `[confirmEnrollment] No SchoolYear found for academicYear="${application.campaign.academicYear}" in school=${schoolId}`
+            )
+          }
+        } else {
+          console.warn(
+            `[confirmEnrollment] No YearLevel found matching applyingForClass="${application.applyingForClass}" in school=${schoolId}`
+          )
+        }
+      } catch (ylError) {
+        // Don't break enrollment if year level matching fails
+        console.warn(
+          "[confirmEnrollment] Failed to create StudentYearLevel:",
+          ylError
+        )
+      }
+
+      // 5. Update user role to STUDENT if not already a higher role
+      try {
+        const user = await db.user.findUnique({
+          where: { id: application.userId },
+          select: { role: true },
+        })
+
+        if (user && user.role === "USER") {
+          await db.user.update({
+            where: { id: application.userId },
+            data: { role: "STUDENT" },
+          })
+        }
+      } catch (roleError) {
+        console.warn(
+          "[confirmEnrollment] Failed to update user role:",
+          roleError
+        )
+      }
+    }
 
     revalidatePath("/admission/enrollment")
     return { success: true, data: null }
@@ -536,6 +668,148 @@ export async function recordPayment(params: {
   } catch (error) {
     console.error("[recordPayment]", error)
     return { success: false, error: "Failed to record payment" }
+  }
+}
+
+// ============================================================================
+// Placement Actions
+// ============================================================================
+
+export async function getAvailableClassesForPlacement(params: {
+  applyingForClass: string
+}): Promise<
+  ActionResult<
+    Array<{
+      id: string
+      name: string
+      enrolledStudents: number
+      maxCapacity: number
+    }>
+  >
+> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+    if (!schoolId) return { success: false, error: "Unauthorized" }
+
+    const classes = await db.class.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        name: true,
+        maxCapacity: true,
+        _count: { select: { studentClasses: true } },
+      },
+      orderBy: { name: "asc" },
+    })
+
+    return {
+      success: true,
+      data: classes.map((c) => ({
+        id: c.id,
+        name: c.name,
+        enrolledStudents: c._count.studentClasses,
+        maxCapacity: c.maxCapacity ?? 50,
+      })),
+    }
+  } catch (error) {
+    console.error("[getAvailableClassesForPlacement]", error)
+    return { success: false, error: "Failed to fetch classes" }
+  }
+}
+
+export async function placeStudentInClass(params: {
+  applicationId: string
+  classId: string
+}): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+    if (!schoolId) return { success: false, error: "Unauthorized" }
+
+    // Get the application and verify it's ADMITTED
+    const application = await db.application.findUnique({
+      where: { id: params.applicationId, schoolId },
+      select: { status: true, userId: true, firstName: true, lastName: true },
+    })
+
+    if (!application) return { success: false, error: "Application not found" }
+    if (application.status !== "ADMITTED") {
+      return {
+        success: false,
+        error: "Only admitted students can be placed in classes",
+      }
+    }
+
+    // Find the student record via userId
+    if (!application.userId) {
+      return {
+        success: false,
+        error: "No user account linked to this application",
+      }
+    }
+
+    const student = await db.student.findFirst({
+      where: { userId: application.userId, schoolId },
+      select: { id: true },
+    })
+
+    if (!student) {
+      return {
+        success: false,
+        error:
+          "Student record not found. Ensure enrollment is confirmed first.",
+      }
+    }
+
+    // Check class capacity
+    const classData = await db.class.findFirst({
+      where: { id: params.classId, schoolId },
+      select: {
+        id: true,
+        name: true,
+        maxCapacity: true,
+        _count: { select: { studentClasses: true } },
+      },
+    })
+
+    if (!classData) return { success: false, error: "Class not found" }
+
+    const maxCapacity = classData.maxCapacity ?? 50
+    if (classData._count.studentClasses >= maxCapacity) {
+      return {
+        success: false,
+        error: `Class "${classData.name}" is at full capacity (${classData._count.studentClasses}/${maxCapacity})`,
+      }
+    }
+
+    // Check for duplicate enrollment
+    const existing = await db.studentClass.findFirst({
+      where: { studentId: student.id, classId: params.classId, schoolId },
+    })
+
+    if (existing) {
+      return {
+        success: false,
+        error: `${application.firstName} ${application.lastName} is already enrolled in "${classData.name}"`,
+      }
+    }
+
+    // Create enrollment
+    await db.studentClass.create({
+      data: {
+        schoolId,
+        studentId: student.id,
+        classId: params.classId,
+      },
+    })
+
+    revalidatePath("/admission/enrollment")
+    revalidatePath("/classes")
+    return { success: true, data: null }
+  } catch (error) {
+    console.error("[placeStudentInClass]", error)
+    return { success: false, error: "Failed to place student" }
   }
 }
 

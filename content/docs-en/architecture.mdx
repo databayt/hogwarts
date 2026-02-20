@@ -36,15 +36,16 @@ This predictable structure eliminates guesswork. New features follow the same pa
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.0.3 with App Router and Turbopack, React 19.2.0, TypeScript
-- **Database**: PostgreSQL with Prisma ORM 6.16.2, Neon for serverless
-- **Authentication**: NextAuth v5 (beta) with Prisma adapter, OAuth and credentials
-- **Styling**: Tailwind CSS v4 with OKLCH color format, custom design system
-- **UI Components**: Radix UI primitives + custom shadcn/ui components
-- **Internationalization**: Custom i18n with English/Arabic (RTL) support
-- **Documentation**: MDX with custom components
-- **Runtime Strategy**: Node.js runtime for Prisma/bcrypt pages, Edge runtime for others
-- **Type Safety**: TypeScript Generics extensively used for reusability
+- **Framework**: Next.js 16.1.0 with App Router and Turbopack, React 19.2.0, TypeScript 5.8.3
+- **Database**: PostgreSQL with Prisma ORM 6.19.0 (264 models, 132 enums), Neon Serverless
+- **Authentication**: NextAuth v5 (beta.30) with custom multi-tenant Prisma adapter
+- **Styling**: Tailwind CSS v4 with OKLCH color format
+- **UI Components**: Radix UI primitives + shadcn/ui (35 component directories)
+- **Validation**: Zod 4.0.14 schemas with React Hook Form 7.61.1
+- **Internationalization**: Arabic (RTL) + English (LTR) with on-demand translation
+- **Documentation**: MDX with Fumadocs
+- **Runtime Strategy**: Node.js for Prisma/bcrypt pages, Edge for middleware/static
+- **Storage**: AWS S3 + CloudFront CDN for images, Upstash Redis for custom domains
 
 ## Standardized File Patterns
 
@@ -89,17 +90,19 @@ Each feature directory follows these naming conventions:
 
 ## Critical Files Reference
 
-| File                       | Purpose                               |
-| -------------------------- | ------------------------------------- |
-| `src/auth.ts`              | NextAuth configuration                |
-| `src/middleware.ts`        | Auth & i18n routing                   |
-| `src/routes.ts`            | Public/private route definitions      |
-| `prisma/schema.prisma`     | Database schema                       |
-| `src/app/globals.css`      | Theme variables                       |
-| `src/components/ui/`       | Base shadcn/ui components             |
-| `src/components/atom/`     | Atomic design components              |
-| `src/components/template/` | Layout templates (header, sidebar)    |
-| `CLAUDE.md`                | Project-wide architectural guidelines |
+| File                          | Lines    | Purpose                                                                   |
+| ----------------------------- | -------- | ------------------------------------------------------------------------- |
+| `src/proxy.ts`                | 388      | Edge middleware: subdomain detection, RBAC, URL rewriting, custom domains |
+| `src/auth.ts`                 | 777      | NextAuth: JWT callbacks, session management, redirect logic               |
+| `src/auth.config.ts`          | 151      | OAuth providers: Google, Facebook, Credentials                            |
+| `src/routes.ts`               | 410      | RBAC matrix: role-based route protection                                  |
+| `src/lib/rate-limit.ts`       | 537      | Rate limiting: 14 configs across routes                                   |
+| `src/lib/tenant-context.ts`   | 189      | Tenant resolution with caching                                            |
+| `src/lib/catalog-setup.ts`    | 366      | Catalog bridge: academic structure provisioning                           |
+| `src/lib/dns-service.ts`      | 644      | DNS verification: multi-provider custom domains                           |
+| `src/lib/security-headers.ts` | 173      | CSP, HSTS, XSS protection                                                 |
+| `prisma/models/`              | 57 files | 264 models, 132 enums                                                     |
+| `CLAUDE.md`                   | —        | Project-wide architectural guidelines                                     |
 
 ## Anti-Pattern Detection
 

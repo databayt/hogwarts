@@ -25,7 +25,7 @@ The platform has **four distinct entry points**, each serving different audience
     │     └── Prospective students/parents                         │
     │     └── "Apply" → Admission flow                             │
     │                                                              │
-    │  4. School Platform ({school}.databayt.org/s/*/platform)     │
+    │  4. School Platform ({school}.databayt.org/dashboard)        │
     │     └── Authenticated school management                      │
     │     └── Role-based access (30+ modules)                      │
     │     └── ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF             │
@@ -108,28 +108,33 @@ if (existingUser.role === "DEVELOPER") {
 ### Route Structure
 
 ```
-src/app/[lang]/(operator)/
-├── layout.tsx                 # OperatorAuthGuard wrapper
-├── o/
-│   ├── page.tsx               # Operator dashboard home
-│   ├── analytics/page.tsx     # Platform-wide analytics
-│   ├── billing/page.tsx       # Subscription management
-│   ├── domains/page.tsx       # Domain configuration
-│   ├── tenants/page.tsx       # School/tenant management
-│   ├── schools/page.tsx       # All schools list
-│   ├── profile/page.tsx       # Operator profile
-│   └── settings/page.tsx      # Platform settings
+src/app/[lang]/(saas-dashboard)/
+├── layout.tsx                 # SaaS auth guard (DEVELOPER only)
+├── dashboard/page.tsx         # Operator dashboard home
+├── analytics/page.tsx         # Platform-wide analytics
+├── billing/page.tsx           # Subscription management
+├── domains/page.tsx           # Domain configuration
+├── tenants/page.tsx           # School/tenant management
+├── product/page.tsx           # Product management
+├── sales/page.tsx             # Sales management
+├── profile/page.tsx           # Operator profile
+├── kanban/page.tsx            # Kanban board
+├── observability/page.tsx     # Platform observability
+└── (catalog)/                 # Catalog management
 ```
 
 ### Access Control
 
 ```typescript
-// OperatorAuthGuard (layout.tsx)
+// (saas-dashboard)/layout.tsx
 const session = await auth()
 
-if (!session || session.user.role !== "DEVELOPER") {
-  router.push(`/${lang}?access=denied`)
-  return null
+if (!session) {
+  redirect(`/${lang}/login?callbackUrl=/${lang}/dashboard`)
+}
+
+if (session.user?.role !== "DEVELOPER") {
+  redirect(`/${lang}/access-denied`)
 }
 ```
 
@@ -137,12 +142,12 @@ if (!session || session.user.role !== "DEVELOPER") {
 
 ### Key Components
 
-| Component         | Location                          | Purpose                        |
-| ----------------- | --------------------------------- | ------------------------------ |
-| `OperatorSidebar` | `components/operator/sidebar/`    | Navigation for operator routes |
-| `OperatorHeader`  | `components/operator/header/`     | Operator-specific header       |
-| `UserButton`      | `components/auth/user-button.tsx` | Logout (variant="saas")        |
-| `SchoolsTable`    | `components/operator/schools/`    | All schools data table         |
+| Component      | Location                             | Purpose                        |
+| -------------- | ------------------------------------ | ------------------------------ |
+| `SaasSidebar`  | `components/template/saas-sidebar/`  | Navigation for operator routes |
+| `SaasHeader`   | `components/template/saas-header/`   | Operator-specific header       |
+| `UserButton`   | `components/auth/user-button.tsx`    | Logout (variant="saas")        |
+| `TenantsTable` | `components/saas-dashboard/tenants/` | All schools data table         |
 
 ### Capabilities
 
@@ -157,14 +162,18 @@ if (!session || session.user.role !== "DEVELOPER") {
 
 ### Status
 
-| Feature           | Status      | Notes                     |
-| ----------------- | ----------- | ------------------------- |
-| Dashboard home    | Working     | Basic stats               |
-| Schools list      | Working     | DataTable with actions    |
-| Impersonation     | Partial     | Cookie-based, needs UI    |
-| Analytics         | Placeholder | Needs PostHog integration |
-| Billing           | Placeholder | Needs Stripe integration  |
-| Domain management | Placeholder | Needs Cloudflare API      |
+| Feature        | Status  | Notes                               |
+| -------------- | ------- | ----------------------------------- |
+| Dashboard home | Working | Basic stats                         |
+| Tenants        | Working | School/tenant management            |
+| Billing        | Partial | Has loading skeleton                |
+| Analytics      | Partial | Has loading skeleton                |
+| Domains        | Partial | Has loading skeleton                |
+| Sales          | Working | Has import, analytics sub-routes    |
+| Product        | Working | Product management with detail view |
+| Kanban         | Partial | Has loading skeleton                |
+| Observability  | Partial | Has loading skeleton                |
+| Profile        | Partial | Has loading skeleton                |
 
 ---
 
@@ -191,7 +200,7 @@ src/app/[lang]/s/[subdomain]/(site)/
 
 ### Subdomain Routing
 
-Middleware (`src/middleware.ts`) detects subdomain and rewrites to tenant-scoped routes:
+The edge proxy (`src/proxy.ts`) detects the subdomain and rewrites to tenant-scoped routes:
 
 ```typescript
 // Subdomain detection flow
@@ -263,48 +272,49 @@ export const publicRoutes = [
 
 ## Entry Point 4: School Platform (School Dashboard)
 
-**URL**: `https://{school}.databayt.org/dashboard` (and `/s/{subdomain}/(platform)/*`)
+**URL**: `https://{school}.databayt.org/dashboard` (and `/s/{subdomain}/(school-dashboard)/*`)
 
 **Purpose**: Authenticated school management platform with role-based access to 30+ modules.
 
 ### Route Structure
 
 ```
-src/app/[lang]/s/[subdomain]/(platform)/
+src/app/[lang]/s/[subdomain]/(school-dashboard)/
 ├── layout.tsx                # PlatformLayout with sidebar
 ├── dashboard/page.tsx        # Role-specific dashboard
-├── admin/                    # ADMIN, DEVELOPER only
-│   └── settings/page.tsx
-├── students/                 # ADMIN, TEACHER, STAFF
-│   ├── page.tsx
-│   └── [id]/page.tsx
-├── teachers/                 # ADMIN only
-├── parents/                  # ADMIN, TEACHER, STAFF
-├── subjects/                 # ADMIN, TEACHER
-├── classes/                  # ADMIN, TEACHER
-├── timetable/                # ADMIN, TEACHER
-├── lessons/                  # ADMIN, TEACHER
+├── admission/                # Admission management
 ├── attendance/               # ADMIN, TEACHER, STAFF
+├── billing/                  # Billing management
+├── cards/                    # Student/staff cards
+├── charts/                   # Data visualizations
 ├── exams/                    # ADMIN, TEACHER
-├── grades/                   # ADMIN, TEACHER
-├── assignments/              # ADMIN, TEACHER
-├── announcements/            # ADMIN, TEACHER, STAFF
-├── events/                   # All authenticated
 ├── finance/                  # All authenticated (role-specific views)
-│   ├── fees/
-│   ├── billing/
-│   ├── invoice/
-│   ├── receipt/
-│   ├── banking/
-│   ├── salary/
-│   ├── expenses/
-│   ├── payroll/
-│   ├── budget/
-│   ├── wallet/
-│   └── accounts/
+├── lab/                      # Lab management
 ├── library/                  # All authenticated
+├── messages/                 # Messaging system
+├── notifications/            # Notification center
 ├── profile/                  # All authenticated
-└── settings/                 # ADMIN, DEVELOPER
+├── sales/                    # Sales management
+├── school/                   # School configuration
+├── settings/                 # ADMIN, DEVELOPER
+├── stats/                    # Statistics dashboards
+├── stream/                   # Streaming/video content
+├── timetable/                # ADMIN, TEACHER
+├── unauthorized/             # Access denied page
+└── (listings)/               # Listings route group
+    ├── layout.tsx
+    ├── announcements/        # ADMIN, TEACHER, STAFF
+    ├── assignments/          # ADMIN, TEACHER
+    ├── classes/              # ADMIN, TEACHER
+    ├── classrooms/           # Classroom management
+    ├── events/               # All authenticated
+    ├── grades/               # ADMIN, TEACHER
+    ├── lessons/              # ADMIN, TEACHER
+    ├── parents/              # ADMIN, TEACHER, STAFF
+    ├── staff/                # Staff management
+    ├── students/             # ADMIN, TEACHER, STAFF
+    ├── subjects/             # ADMIN, TEACHER
+    └── teachers/             # ADMIN only
 ```
 
 ### Role-Based Access Control
@@ -388,12 +398,13 @@ export function isRouteAllowedForRole(pathname: string, role: Role): boolean {
 
 ### Key Components
 
-| Component         | Location                                         | Purpose                           |
-| ----------------- | ------------------------------------------------ | --------------------------------- |
-| `PlatformLayout`  | `app/[lang]/s/[subdomain]/(platform)/layout.tsx` | Main layout with sidebar          |
-| `PlatformSidebar` | `components/template/platform-sidebar/`          | Navigation based on role          |
-| `UserButton`      | `components/auth/user-button.tsx`                | Profile menu (variant="platform") |
-| `RoleGate`        | `components/auth/role-gate.tsx`                  | Conditional rendering by role     |
+| Component         | Location                                                 | Purpose                           |
+| ----------------- | -------------------------------------------------------- | --------------------------------- |
+| `PlatformLayout`  | `app/[lang]/s/[subdomain]/(school-dashboard)/layout.tsx` | Main layout with sidebar          |
+| `PlatformSidebar` | `components/template/platform-sidebar/`                  | Navigation based on role          |
+| `PlatformHeader`  | `components/template/platform-header/`                   | School-dashboard header           |
+| `UserButton`      | `components/auth/user-button.tsx`                        | Profile menu (variant="platform") |
+| `RoleGate`        | `components/auth/role-gate.tsx`                          | Conditional rendering by role     |
 
 ### Multi-Tenant Safety
 
@@ -629,10 +640,10 @@ The `UserButton` component adapts its menu based on entry point:
 
 ## Technical Implementation
 
-### Middleware Flow
+### Edge Proxy Flow
 
 ```typescript
-// src/middleware.ts - Simplified flow
+// src/proxy.ts - Simplified flow
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host")
   const subdomain = extractSubdomain(hostname)
@@ -743,12 +754,7 @@ test.describe("Entry Points", () => {
 
 ## Related Documentation
 
-- [Authentication](/docs/authantication) - Login/logout flows, OAuth, sessions
+- [Authentication](/docs/authentication) - Login/logout flows, OAuth, sessions
 - [Onboarding](/docs/onboarding) - School creation wizard
 - [Architecture](/docs/architecture) - Mirror pattern, file structure
 - [Multi-Tenant Safety](/docs/multi-tenant) - schoolId isolation
-
----
-
-**Last Updated**: December 17, 2024
-**Status**: Production

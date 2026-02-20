@@ -15,7 +15,6 @@ export function useFloorPlan() {
     resolver: zodResolver(floorPlanSchema),
     defaultValues: {
       teachers: listing?.maxTeachers || 1,
-      facilities: listing?.maxFacilities || 1,
       studentCount: listing?.maxStudents || 30,
     },
     mode: "onChange",
@@ -23,22 +22,19 @@ export function useFloorPlan() {
 
   const onSubmit = async (data: FloorPlanFormData) => {
     try {
-      console.log("🏫 School Capacity - Submitting:", data)
+      console.log("School Capacity - Submitting:", data)
 
-      // Update the listing with the school capacity data
       await updateListingData({
         maxTeachers: data.teachers,
-        maxFacilities: data.facilities,
         maxStudents: data.studentCount,
       })
 
-      // Navigate to next step
       const nextStep = STEP_NAVIGATION["capacity"].next
       if (nextStep) {
         goToNextStep(nextStep)
       }
     } catch (error) {
-      console.error("❌ Error submitting school capacity form:", error)
+      console.error("Error submitting school capacity form:", error)
     }
   }
 
@@ -56,8 +52,7 @@ export function useFloorPlan() {
 
   const decrement = (field: keyof FloorPlanFormData) => {
     const currentValue = form.getValues(field)
-    const minValue = field === "studentCount" ? 1 : 1
-    const newValue = Math.max(minValue, currentValue - 1)
+    const newValue = Math.max(1, currentValue - 1)
     form.setValue(field, newValue, { shouldValidate: true })
   }
 
@@ -75,7 +70,6 @@ export function useFloorPlan() {
     isFormValid,
     isDirty,
     teachers: form.watch("teachers"),
-    facilities: form.watch("facilities"),
     studentCount: form.watch("studentCount"),
   }
 }

@@ -12,6 +12,7 @@ export interface DepartmentTeacher {
   emailAddress: string
   profilePhotoUrl?: string | null
   isPrimary: boolean
+  isDepartmentHead: boolean
 }
 
 // ============================================================================

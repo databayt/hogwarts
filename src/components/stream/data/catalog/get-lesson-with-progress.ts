@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth"
 
+import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { getVideoUrl } from "@/lib/cloudfront"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -37,8 +38,19 @@ export interface CatalogLessonWithProgress {
     watchedSeconds: number
     totalSeconds: number | null
   } | null
+  color: string | null
   previousLesson: { id: string; title: string } | null
   nextLesson: { id: string; title: string; videoUrl?: string | null } | null
+  siblingLessons: Array<{
+    id: string
+    title: string
+    thumbnailUrl: string | null
+    color: string | null
+    duration: number | null
+    lessonPosition: number
+    chapterPosition: number
+    watchedMinutes: number | null
+  }>
 }
 
 /**
@@ -68,6 +80,7 @@ export async function getCatalogLessonWithProgress(
               id: true,
               name: true,
               slug: true,
+              color: true,
             },
           },
         },
@@ -163,8 +176,16 @@ export async function getCatalogLessonWithProgress(
       id: true,
       name: true,
       sequenceOrder: true,
+      thumbnailKey: true,
+      imageKey: true,
+      color: true,
+      durationMinutes: true,
       chapter: {
-        select: { sequenceOrder: true },
+        select: {
+          sequenceOrder: true,
+          name: true,
+          color: true,
+        },
       },
     },
     orderBy: [{ chapter: { sequenceOrder: "asc" } }, { sequenceOrder: "asc" }],
@@ -174,6 +195,24 @@ export async function getCatalogLessonWithProgress(
   const previousLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null
   const nextLesson =
     currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null
+
+  // Batch-fetch progress for sibling lessons
+  const siblingIds = allLessons
+    .filter((l) => l.id !== lessonId)
+    .map((l) => l.id)
+  const siblingProgress = await db.lessonProgress.findMany({
+    where: {
+      userId: session.user.id,
+      catalogLessonId: { in: siblingIds },
+    },
+    select: {
+      catalogLessonId: true,
+      watchedSeconds: true,
+    },
+  })
+  const progressMap = new Map(
+    siblingProgress.map((p) => [p.catalogLessonId, p.watchedSeconds])
+  )
 
   // Transform video URL
   const transformedVideoUrl = video?.videoUrl
@@ -185,7 +224,9 @@ export async function getCatalogLessonWithProgress(
     title: lesson.name,
     description: lesson.description,
     videoUrl: transformedVideoUrl,
-    thumbnailUrl: video?.thumbnailUrl ?? null,
+    thumbnailUrl:
+      getCatalogImageUrl(lesson.thumbnailKey, lesson.imageKey, "original") ??
+      null,
     duration: lesson.durationMinutes,
     videoDuration: video?.durationSeconds ?? null,
     position: lesson.sequenceOrder,
@@ -201,6 +242,11 @@ export async function getCatalogLessonWithProgress(
         slug: lesson.chapter.subject.slug,
       },
     },
+    color:
+      lesson.color ??
+      lesson.chapter.color ??
+      lesson.chapter.subject.color ??
+      null,
     attachments,
     progress: progress
       ? {
@@ -215,5 +261,20 @@ export async function getCatalogLessonWithProgress(
     nextLesson: nextLesson
       ? { id: nextLesson.id, title: nextLesson.name }
       : null,
+    siblingLessons: allLessons
+      .filter((l) => l.id !== lessonId)
+      .map((l) => ({
+        id: l.id,
+        title: l.name,
+        thumbnailUrl:
+          getCatalogImageUrl(l.thumbnailKey, l.imageKey, "original") ?? null,
+        color: l.color ?? l.chapter.color ?? null,
+        duration: l.durationMinutes,
+        lessonPosition: l.sequenceOrder,
+        chapterPosition: l.chapter.sequenceOrder,
+        watchedMinutes: progressMap.has(l.id)
+          ? Math.floor(progressMap.get(l.id)! / 60)
+          : null,
+      })),
   }
 }

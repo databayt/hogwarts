@@ -244,15 +244,6 @@ export default function SchoolDetail({
               </div>
             )}
 
-            {school.maxFacilities && (
-              <div>
-                <p className="text-muted-foreground text-sm font-medium">
-                  Facilities
-                </p>
-                <p className="text-sm">{school.maxFacilities} facilities</p>
-              </div>
-            )}
-
             {school.schoolLevel && (
               <div>
                 <p className="text-muted-foreground text-sm font-medium">

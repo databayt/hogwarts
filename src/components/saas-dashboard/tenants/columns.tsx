@@ -15,6 +15,7 @@ import {
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
+import { tenantSetupCatalog } from "./actions"
 import { TenantDetail } from "./detail"
 
 export type TenantRow = {
@@ -25,6 +26,8 @@ export type TenantRow = {
   planType: "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE"
   studentCount: number
   teacherCount: number
+  catalogLevels: number
+  catalogGrades: number
   createdAt: string
   trialEndsAt?: string | null
 }
@@ -101,6 +104,21 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
           </div>
         </div>
       )
+    },
+  },
+  {
+    id: "catalog",
+    header: "Catalog",
+    cell: ({ row }) => {
+      const tenant = row.original
+      if (tenant.catalogLevels > 0) {
+        return (
+          <span className="text-muted-foreground text-xs">
+            {tenant.catalogLevels} levels, {tenant.catalogGrades} grades
+          </span>
+        )
+      }
+      return <span className="text-xs text-yellow-600">Not configured</span>
     },
   },
   {
@@ -222,6 +240,28 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onToggleActive}>
               {tenant.isActive ? "Suspend" : "Activate"}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={async () => {
+                try {
+                  const res = await tenantSetupCatalog({
+                    tenantId: tenant.id,
+                  })
+                  if (res.success) {
+                    SuccessToast(
+                      `Catalog configured: ${res.data.levels} levels, ${res.data.grades} grades, ${res.data.selections} subject selections`
+                    )
+                  } else {
+                    ErrorToast(res.error?.message || "Failed to setup catalog")
+                  }
+                } catch (e) {
+                  ErrorToast(
+                    e instanceof Error ? e.message : "Failed to setup catalog"
+                  )
+                }
+              }}
+            >
+              Setup Catalog
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <div className="px-0">

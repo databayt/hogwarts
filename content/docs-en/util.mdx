@@ -1,0 +1,545 @@
+---
+title: "Util"
+description: "Canonical patterns for writing util.ts and utils.ts pure function modules in feature directories"
+---
+
+## Current Progress (Audit)
+
+26 total utility files audited across the codebase (10 util.ts + 16 utils.ts, ~7,455 total lines):
+
+| Area                                | Status | Detail                                                                   |
+| ----------------------------------- | ------ | ------------------------------------------------------------------------ |
+| Pure functions (no React, no hooks) | PASS   | 100% are pure -- no useState, useEffect, or React imports                |
+| No side effects                     | PASS   | No database calls, no API requests, no filesystem access                 |
+| Constants imported from config.ts   | PASS   | 80%+ import constants from co-located config.ts                          |
+| Types imported from types.ts        | PASS   | Entity types consistently imported from types.ts                         |
+| Named exports only                  | PASS   | Zero default exports across all utility files                            |
+| JSDoc on exported functions         | PASS   | Best examples: domains/util.ts, billing/util.ts                          |
+| No shared formatting utilities      | FAIL   | Currency formatted independently in 6+ files; no shared `formatCurrency` |
+| Duplicate sort helpers              | FAIL   | Sort-by-date, sort-by-name logic duplicated across 4+ files              |
+| Bloated files (>300 lines)          | FAIL   | 4 files over 300 lines; accounting/utils.ts at 507 lines                 |
+
+## 7 Categories of Utilities
+
+### Category 1: Formatting (~6 files)
+
+Currency, date, time, period formatting. Returns display strings from raw data.
+
+Reference: `billing/util.ts` (`formatCurrency`, `formatBillingPeriod`)
+
+### Category 2: Validation Helpers (~4 files)
+
+Domain, email, URL format checking. Returns boolean or `{ isValid, errors, warnings }`.
+
+Reference: `domains/util.ts` (`validateDomain`, `isValidDomainFormat`, `isReservedDomain`)
+
+### Category 3: Status/Health Checks (~3 files)
+
+Traffic-light health indicators from entity status. Maps status enums to labels, variants, colors.
+
+Reference: `domains/util.ts` (`getDomainHealth`, `getDomainStatusLabel`), `billing/util.ts` (`getInvoiceHealth`)
+
+### Category 4: Navigation (~2 files)
+
+Step progression for wizards. Next/previous step, first/last checks, progress calculation.
+
+Reference: `onboarding/util.ts` (`getNextStep`, `getPreviousStep`, `calculateProgress`)
+
+### Category 5: Sorting/Filtering (~3 files)
+
+Sort and filter arrays by field, direction, or predicate. Pure array transformations.
+
+Reference: `domains/util.ts` (`sortDomains`), `billing/util.ts` (`sortInvoices`)
+
+### Category 6: Calculations (~4 files)
+
+Grade calculation, accounting totals, attendance percentages, time slot computation.
+
+Reference: `finance/lib/accounting/utils.ts` (507 lines)
+
+### Category 7: Storage (~2 files)
+
+Draft persistence, local storage helpers. Serialize/deserialize form data.
+
+Reference: `onboarding/util.ts` (draft persistence functions)
+
+## Naming Convention
+
+| Name       | Scope                       | Example Location                                 |
+| ---------- | --------------------------- | ------------------------------------------------ |
+| `util.ts`  | Feature-scoped (singular)   | `src/components/saas-dashboard/domains/util.ts`  |
+| `utils.ts` | Standalone/library (plural) | `src/components/finance/lib/accounting/utils.ts` |
+
+**`util.ts` (singular)** lives inside the standard 6-file feature pattern alongside config.ts, types.ts, card.tsx, etc.
+
+**`utils.ts` (plural)** lives in shared/library directories, serving multiple features.
+
+## The 5 Rules
+
+### 1. Pure functions only -- no React, no hooks, no state
+
+Utility files must contain only pure functions. No React imports, no hooks, no side effects.
+
+```typescript
+// GOOD: Pure function
+export function formatCurrency(amount: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(amount / 100)
+}
+
+// BAD: Hook in utility file
+import { useState } from "react"
+export function useFormatCurrency() { ... } // This belongs in a hook file
+```
+
+### 2. Always import from config.ts and types.ts
+
+Utility functions should import constants from config.ts and types from types.ts. Never hardcode values.
+
+```typescript
+// GOOD: Constants from config, types from types
+import {
+  DOMAIN_STATUS_LABELS,
+  RESERVED_DOMAINS,
+  VALIDATION_RULES,
+} from "./config"
+import type { DomainStatus, DomainValidationResult } from "./types"
+
+export function getDomainStatusLabel(status: DomainStatus): string {
+  return DOMAIN_STATUS_LABELS[status]
+}
+
+export function isValidDomainFormat(domain: string): boolean {
+  if (domain.length > VALIDATION_RULES.DOMAIN_MAX_LENGTH) return false
+  return VALIDATION_RULES.DOMAIN_PATTERN.test(domain)
+}
+
+// BAD: Hardcoded constants
+export function getDomainStatusLabel(status: string): string {
+  switch (status) {
+    case "pending":
+      return "Pending" // should come from config
+    case "approved":
+      return "Approved" // should come from config
+    default:
+      return status
+  }
+}
+```
+
+### 3. No side effects -- server-safe and testable
+
+Functions must be deterministic and side-effect-free. No database calls, no API requests, no console.log.
+
+```typescript
+// GOOD: Pure, testable
+export function calculateProgress(data: OnboardingSchoolData): number {
+  const checks = [
+    !!(data.name && data.name !== "New School"),
+    !!data.description,
+    !!data.address,
+  ]
+  const completed = checks.filter(Boolean).length
+  return Math.round((completed / checks.length) * 100)
+}
+
+// BAD: Side effect (API call)
+export async function calculateProgress(schoolId: string): Promise<number> {
+  const data = await fetch(`/api/schools/${schoolId}`) // side effect!
+  // ...
+}
+```
+
+### 4. JSDoc on every exported function
+
+Every exported function should have a JSDoc comment explaining what it does and what it returns.
+
+```typescript
+// GOOD: JSDoc documentation
+/**
+ * Validate domain with detailed error messages
+ */
+export function validateDomain(domain: string): DomainValidationResult {
+  // ...
+}
+
+/**
+ * Normalize domain (remove protocol, www, trailing slash)
+ */
+export function normalizeDomain(domain: string): string {
+  // ...
+}
+```
+
+### 5. Max ~200 lines
+
+When a utility file exceeds ~200 lines, split by concern into a `lib/` subdirectory.
+
+```
+# BAD: accounting/utils.ts (507 lines)
+
+# GOOD: Split by concern
+finance/lib/
+  formatting.ts    # Currency, number formatting
+  calculations.ts  # Totals, balances, taxes
+  validation.ts    # Invoice/payment validation
+  index.ts         # Re-exports
+```
+
+## 2 Canonical Templates
+
+### Template A: Feature Utility (Domains)
+
+Domain validation, normalization, status helpers. Reference: `saas-dashboard/domains/util.ts` (332 lines).
+
+```typescript
+/**
+ * Utility functions for Domains feature
+ *
+ * Helper functions for domain validation, DNS management, and status handling.
+ */
+
+import {
+  ALLOWED_STATUS_TRANSITIONS,
+  DOMAIN_STATUS_LABELS,
+  RESERVED_DOMAINS,
+  RESERVED_KEYWORDS,
+  VALIDATION_RULES,
+} from "./config"
+import type { DomainStatus, DomainValidationResult } from "./types"
+
+// ============================================================================
+// Status Helpers
+// ============================================================================
+
+/**
+ * Get domain status label
+ */
+export function getDomainStatusLabel(status: DomainStatus): string {
+  return DOMAIN_STATUS_LABELS[status]
+}
+
+/**
+ * Get domain health indicator
+ */
+export function getDomainHealth(
+  status: DomainStatus
+): "healthy" | "warning" | "critical" {
+  switch (status) {
+    case "verified":
+      return "healthy"
+    case "approved":
+    case "pending":
+      return "warning"
+    case "rejected":
+      return "critical"
+    default:
+      return "warning"
+  }
+}
+
+// ============================================================================
+// Validation
+// ============================================================================
+
+/**
+ * Validate domain format
+ */
+export function isValidDomainFormat(domain: string): boolean {
+  if (!domain) return false
+  if (domain.length < VALIDATION_RULES.DOMAIN_MIN_LENGTH) return false
+  if (domain.length > VALIDATION_RULES.DOMAIN_MAX_LENGTH) return false
+  return VALIDATION_RULES.DOMAIN_PATTERN.test(domain)
+}
+
+/**
+ * Check if domain is reserved
+ */
+export function isReservedDomain(domain: string): boolean {
+  const lowerDomain = domain.toLowerCase()
+  if (
+    RESERVED_DOMAINS.some(
+      (reserved) =>
+        lowerDomain === reserved || lowerDomain.endsWith(`.${reserved}`)
+    )
+  ) {
+    return true
+  }
+  const parts = lowerDomain.split(".")
+  return parts.some((part) =>
+    RESERVED_KEYWORDS.includes(part as (typeof RESERVED_KEYWORDS)[number])
+  )
+}
+
+/**
+ * Validate domain with detailed error messages
+ */
+export function validateDomain(domain: string): DomainValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  if (!domain || domain.trim() === "") {
+    errors.push("Domain is required")
+    return { isValid: false, errors, warnings }
+  }
+
+  const trimmed = domain.trim().toLowerCase()
+
+  if (trimmed.length < VALIDATION_RULES.DOMAIN_MIN_LENGTH) {
+    errors.push("Domain is too short")
+  }
+  if (!VALIDATION_RULES.DOMAIN_PATTERN.test(trimmed)) {
+    errors.push("Invalid domain format")
+  }
+  if (isReservedDomain(trimmed)) {
+    errors.push("Domain is reserved")
+  }
+
+  return { isValid: errors.length === 0, errors, warnings }
+}
+
+// ============================================================================
+// Formatting
+// ============================================================================
+
+/**
+ * Normalize domain (remove protocol, www, trailing slash)
+ */
+export function normalizeDomain(domain: string): string {
+  let normalized = domain.trim().toLowerCase()
+  normalized = normalized.replace(/^https?:\/\//, "")
+  normalized = normalized.replace(/^www\./, "")
+  normalized = normalized.replace(/\/$/, "")
+  return normalized
+}
+
+/**
+ * Format time since a date
+ */
+export function formatTimeSince(date: Date | string): string {
+  const now = new Date()
+  const then = new Date(date)
+  const diffMs = now.getTime() - then.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return "Today"
+  if (diffDays === 1) return "Yesterday"
+  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+  return then.toLocaleDateString()
+}
+
+// ============================================================================
+// Sorting
+// ============================================================================
+
+/**
+ * Sort domains by field and direction
+ */
+export function sortDomains(
+  domains: DomainRequestWithSchool[],
+  field: string,
+  direction: "asc" | "desc"
+): DomainRequestWithSchool[] {
+  return [...domains].sort((a, b) => {
+    // ... comparison logic
+    return direction === "asc" ? comparison : -comparison
+  })
+}
+```
+
+Key points:
+
+- JSDoc module header explains the file's purpose
+- Section separators group by concern (status, validation, formatting, sorting)
+- All constants from config.ts, all types from types.ts
+- Pure functions with no side effects
+- `DomainValidationResult` return type with `{ isValid, errors, warnings }`
+
+### Template B: Navigation Utility (Onboarding)
+
+Step progression, progress calculation, and flow management. Reference: `onboarding/util.ts` (357 lines).
+
+```typescript
+import { ONBOARDING_STEPS, REQUIRED_STEPS, STEP_ORDER } from "./config"
+import type {
+  OnboardingProgress,
+  OnboardingSchoolData,
+  OnboardingStep,
+} from "./types"
+
+// ============================================================================
+// Step Navigation
+// ============================================================================
+
+export function getStepIndex(step: OnboardingStep): number {
+  return STEP_ORDER.indexOf(step)
+}
+
+export function getNextStep(
+  currentStep: OnboardingStep
+): OnboardingStep | null {
+  const currentIndex = getStepIndex(currentStep)
+  if (currentIndex === -1 || currentIndex >= STEP_ORDER.length - 1) {
+    return null
+  }
+  return STEP_ORDER[currentIndex + 1]
+}
+
+export function getPreviousStep(
+  currentStep: OnboardingStep
+): OnboardingStep | null {
+  const currentIndex = getStepIndex(currentStep)
+  if (currentIndex <= 0) return null
+  return STEP_ORDER[currentIndex - 1]
+}
+
+export function isFirstStep(step: OnboardingStep): boolean {
+  return getStepIndex(step) === 0
+}
+
+export function isLastStep(step: OnboardingStep): boolean {
+  return getStepIndex(step) === STEP_ORDER.length - 1
+}
+
+// ============================================================================
+// Progress Calculation
+// ============================================================================
+
+export function calculateProgress(data: OnboardingSchoolData): number {
+  const checks = [
+    !!(data.name && data.name !== "New School"),
+    !!data.description,
+    !!data.address,
+    !!data.city,
+    !!data.state,
+    !!(data.maxStudents && data.maxStudents > 0),
+    !!(data.maxTeachers && data.maxTeachers > 0),
+    !!data.logo,
+    !!data.primaryColor,
+    !!(data.tuitionFee && data.tuitionFee > 0),
+    !!data.currency,
+    !!data.paymentSchedule,
+    !!data.schoolLevel,
+    !!data.schoolType,
+  ]
+
+  const completed = checks.filter(Boolean).length
+  return Math.round((completed / checks.length) * 100)
+}
+
+export function getCompletedSteps(
+  data: OnboardingSchoolData
+): OnboardingStep[] {
+  // ... check each step's required fields
+}
+```
+
+Key points:
+
+- Step navigation using `STEP_ORDER` from config.ts
+- Progress calculation via boolean checklist pattern
+- All types from types.ts (`OnboardingStep`, `OnboardingSchoolData`)
+- Pure functions -- no React, no side effects
+
+## Anti-Patterns
+
+### 1. No shared formatting utilities
+
+Currency is formatted independently in 6+ files with slightly different logic.
+
+```typescript
+// BAD: 6 different formatCurrency implementations
+// billing/util.ts
+export function formatCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
+    amount / 100
+  )
+}
+
+// invoices/util.ts
+export function formatCurrency(amount: number) {
+  return `$${(amount / 100).toFixed(2)}` // Hardcoded USD!
+}
+
+// FIX: One formatCurrency in src/lib/formatting.ts
+```
+
+### 2. Duplicate sort helpers
+
+Sort-by-date and sort-by-name logic copied across 4+ utility files.
+
+```typescript
+// BAD: Same sort logic in multiple files
+// domains/util.ts
+export function sortDomains(items, field, dir) { ... }
+
+// billing/util.ts
+export function sortInvoices(items, field, dir) { ... }
+
+// FIX: Generic sortByField<T> in src/lib/sorting.ts
+```
+
+### 3. Bloated files over 300 lines
+
+`accounting/utils.ts` at 507 lines covers formatting, calculations, validation, and reporting.
+
+```
+# BAD: accounting/utils.ts (507 lines)
+
+# GOOD: Split by concern
+finance/lib/
+  formatting.ts     # Currency, number, date formatting
+  calculations.ts   # Totals, balances, taxes
+  validation.ts     # Payment validation
+```
+
+## Quick Reference
+
+### Naming Conventions
+
+| Pattern    | Scope              | Location                                |
+| ---------- | ------------------ | --------------------------------------- |
+| `util.ts`  | Feature-scoped     | `src/components/<feature>/util.ts`      |
+| `utils.ts` | Standalone/library | `src/components/<feature>/lib/utils.ts` |
+
+### Import Direction
+
+```
+config.ts     (constants, limits, labels)
+types.ts      (entity types, result types)
+    |
+util.ts       (imports both, exports pure functions)
+    |
++---+---+---+
+|   |   |   |
+card all featured detail
+.tsx .tsx .tsx      .tsx
+```
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  config.ts     # Constants that util.ts consumes
+  types.ts      # Types that util.ts consumes
+  util.ts       # Pure functions (this file)
+  card.tsx      # Imports formatters from util.ts
+  all.tsx       # Imports sort/filter from util.ts
+  featured.tsx  # Imports calculations from util.ts
+```
+
+### What Belongs Where
+
+| Content                      | Belongs in   | Not in             |
+| ---------------------------- | ------------ | ------------------ |
+| Pure formatting functions    | `util.ts`    | card.tsx, form.tsx |
+| Validation helpers           | `util.ts`    | validation.ts      |
+| Status label mapping         | `util.ts`    | config.ts          |
+| Sort/filter functions        | `util.ts`    | table.tsx, all.tsx |
+| Navigation helpers           | `util.ts`    | form.tsx           |
+| Constants/enums              | `config.ts`  | util.ts            |
+| React hooks                  | `use-*.ts`   | util.ts            |
+| Side effects (DB, API calls) | `actions.ts` | util.ts            |

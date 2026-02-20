@@ -1,6 +1,6 @@
 ---
 title: Database Seeds
-description: Full K-12 school simulation with single-language storage and on-demand translation for Demo Academy
+description: Full K-12 school simulation with 17 seeding phases, single-language storage, and global catalog
 ---
 
 # Database Seeds
@@ -10,11 +10,14 @@ The seed system creates a **realistic K-12 school simulation** for **demo.databa
 ## Quick Start
 
 ```bash
-# Seed everything (additive - safe to run multiple times)
-pnpm db:seed
+# Seed a single module (ALWAYS use this)
+pnpm db:seed:single <name>
+
+# List available seeds
+pnpm db:seed:single --list
 ```
 
-**Total seed time:** ~45 minutes (first run), ~10 minutes (subsequent runs)
+> **CRITICAL:** Never run `pnpm db:seed` directly. Always use `pnpm db:seed:single <name>` to seed individual modules. Full seed takes 45-120 minutes and is reserved for manual-only complete resets. See [CLAUDE.md rule #8](/docs/claude-code).
 
 ---
 
@@ -60,6 +63,9 @@ pnpm db:seed
 | Conversations       | ~50     | With 300+ messages                      |
 | Notifications       | ~500    | Mixed types                             |
 | Admission           | ~50     | Campaigns + applications                |
+| Catalog Subjects    | 62      | Platform-wide (no schoolId)             |
+| Catalog Chapters    | 201     | Organized by subject                    |
+| Catalog Lessons     | 986     | ClickView-sourced content               |
 | Audit Logs          | ~500    | System-wide activity                    |
 | Health Records      | ~110    | Health, disciplinary, achievements      |
 | Student Documents   | 200     | Birth certs, passports, medical         |
@@ -89,11 +95,17 @@ All accounts use password: **1234**
 
 ---
 
-## Execution Phases (16 Total)
+## Execution Phases (17 Total)
 
 The seed runs in dependency order:
 
 ```
+PHASE 0: GLOBAL CATALOG (Platform-Wide)
+├── Catalog Subjects (62)
+├── Catalog Chapters (201)
+├── Catalog Lessons (986)
+└── Catalog Images (S3/CloudFront)
+
 PHASE 1: CORE FOUNDATION
 ├── School (demo.databayt.org)
 └── School Branding
@@ -182,9 +194,10 @@ PHASE 16: COMPLIANCE & WELLNESS
 
 ```
 prisma/seeds/
-├── index.ts              # Main orchestrator (16 phases)
+├── index.ts              # Main orchestrator (17 phases)
 ├── types.ts              # TypeScript interfaces (generic field names)
 ├── constants.ts          # All data constants (generic names, Arabic values)
+├── topic-constants.ts    # Topic/chapter constants
 ├── utils.ts              # Helpers (upsert, batch, logging)
 │
 ├── school.ts             # School + Branding
@@ -199,6 +212,12 @@ prisma/seeds/
 ├── lessons.ts            # Lessons (subject-specific templates)
 ├── stream.ts             # LMS: Courses, Chapters, Enrollments
 ├── library.ts            # Books + Borrow Records
+├── catalog.ts            # Global catalog (CatalogSubject/Chapter/Lesson)
+├── clickview-catalog.ts  # ClickView-sourced catalog data
+├── clickview-images.ts   # ClickView banner images
+├── clickview-lesson-images.ts # ClickView lesson images
+├── catalog-images.ts     # Catalog image management
+├── academic-structure-catalog.ts # Catalog bridge setup
 ├── assignments.ts        # Assignments + Submissions
 ├── announcements.ts      # Announcements (Arabic + lang)
 ├── events.ts             # School events (MENA calendar)
@@ -228,7 +247,8 @@ prisma/seeds/
 │   └── questions.ts      # Question bank data (Arabic educational)
 │
 ├── ensure-demo.ts        # Vercel deployment safety
-└── reset-test-user.ts    # Reset user@databayt.org for testing
+├── reset-test-user.ts    # Reset user@databayt.org for testing
+└── single.ts             # Single-seed runner (pnpm db:seed:single)
 ```
 
 ---
@@ -450,14 +470,20 @@ Non-teaching staff with MENA positions, qualifications, and experience:
 ### Reset and Reseed
 
 ```bash
-# Reset Prisma (clears all data)
-pnpm prisma migrate reset
+# Seed a single module (recommended)
+pnpm db:seed:single <name>
 
-# Or just reseed (additive)
-pnpm db:seed
+# List available seed modules
+pnpm db:seed:single --list
 
 # Reset test user only
 pnpm db:reset-test-user
+
+# Full reset (DESTRUCTIVE - drops all data)
+pnpm prisma migrate reset
+
+# Full reseed (45-120 min - manual only)
+pnpm db:seed
 ```
 
 ### Common Issues

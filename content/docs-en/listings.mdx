@@ -7,7 +7,7 @@ description: "A unified pattern for data tables, grids, and CRUD operations acro
 
 **Listings** are the backbone of data-driven features in the platform. They provide a unified pattern for displaying, searching, filtering, creating, editing, and deleting records—all with a consistent UX and optimistic updates.
 
-Every listing follows the same structure, making it predictable for developers and consistent for users. Whether you're working with Students, Teachers, Classes, Events, or any other entity—the pattern remains the same.
+The platform currently has **12 listing entities**, each following the same structure. This makes the codebase predictable for developers and consistent for users. Whether you're working with Students, Teachers, Classrooms, Assignments, or any other entity—the pattern remains the same.
 
 ## Key Features
 
@@ -160,16 +160,16 @@ Table (table.tsx) ──────── Client Component
 
 The **Grades** module serves as the reference implementation with the complete pattern:
 
-| Pattern        | Reference File                                             |
-| -------------- | ---------------------------------------------------------- |
-| Server Actions | `src/components/platform/listings/grades/actions.ts`       |
-| Queries        | `src/components/platform/listings/grades/queries.ts`       |
-| Authorization  | `src/components/platform/listings/grades/authorization.ts` |
-| Validation     | `src/components/platform/listings/grades/validation.ts`    |
-| Table          | `src/components/platform/listings/grades/table.tsx`        |
-| Columns        | `src/components/platform/listings/grades/columns.tsx`      |
-| Form           | `src/components/platform/listings/grades/form.tsx`         |
-| Content        | `src/components/platform/listings/grades/content.tsx`      |
+| Pattern        | Reference File                                                     |
+| -------------- | ------------------------------------------------------------------ |
+| Server Actions | `src/components/school-dashboard/listings/grades/actions.ts`       |
+| Queries        | `src/components/school-dashboard/listings/grades/queries.ts`       |
+| Authorization  | `src/components/school-dashboard/listings/grades/authorization.ts` |
+| Validation     | `src/components/school-dashboard/listings/grades/validation.ts`    |
+| Table          | `src/components/school-dashboard/listings/grades/table.tsx`        |
+| Columns        | `src/components/school-dashboard/listings/grades/columns.tsx`      |
+| Form           | `src/components/school-dashboard/listings/grades/form.tsx`         |
+| Content        | `src/components/school-dashboard/listings/grades/content.tsx`      |
 
 ---
 
@@ -186,19 +186,20 @@ The **Grades** module serves as the reference implementation with the complete p
 
 ## Modules Status
 
-| Module            | Table | Grid | Search | Export | queries.ts | authorization.ts |
-| ----------------- | ----- | ---- | ------ | ------ | ---------- | ---------------- |
-| **Announcements** | ✅    | ✅   | ✅     | ✅     | ✅         | ✅               |
-| **Grades**        | ✅    | ✅   | ✅     | ✅     | ✅         | ✅               |
-| **Students**      | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
-| **Teachers**      | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
-| **Classes**       | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
-| **Subjects**      | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
-| **Events**        | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
-| **Lessons**       | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
-| **Parents**       | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
-
-✅ = Complete | 🔄 = Using pattern, needs queries.ts/authorization.ts
+| Module            | Table | Grid | Search | Export |
+| ----------------- | ----- | ---- | ------ | ------ |
+| **Announcements** | ✅    | ✅   | ✅     | ✅     |
+| **Assignments**   | ✅    | ✅   | ✅     | ✅     |
+| **Classes**       | ✅    | ✅   | ✅     | ✅     |
+| **Classrooms**    | ✅    | ✅   | ✅     | ✅     |
+| **Events**        | ✅    | ✅   | ✅     | ✅     |
+| **Grades**        | ✅    | ✅   | ✅     | ✅     |
+| **Lessons**       | ✅    | ✅   | ✅     | ✅     |
+| **Parents**       | ✅    | ✅   | ✅     | ✅     |
+| **Staff**         | ✅    | ✅   | ✅     | ✅     |
+| **Students**      | ✅    | ✅   | ✅     | ✅     |
+| **Subjects**      | ✅    | ✅   | ✅     | ✅     |
+| **Teachers**      | ✅    | ✅   | ✅     | ✅     |
 
 ---
 

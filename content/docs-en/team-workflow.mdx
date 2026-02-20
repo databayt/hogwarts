@@ -114,14 +114,14 @@ cd hogwarts
 pnpm install
 
 # 3. Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your values
+cp .env.example .env
+# Edit .env with your values
 
 # 4. Generate Prisma client
 pnpm prisma generate
 
 # 5. Seed database (optional, for test data)
-pnpm db:seed
+pnpm db:seed:single <name>
 
 # 6. Start development server
 pnpm dev
@@ -627,7 +627,7 @@ For small, low-risk changes:
 
 # Security-sensitive files require security team review
 /src/auth.ts @security-team
-/src/middleware.ts @security-team
+/src/proxy.ts @security-team
 /.env.example @security-team
 
 # Database changes require DBA review

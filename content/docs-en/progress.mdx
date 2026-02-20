@@ -1,0 +1,209 @@
+---
+title: "Progress"
+description: "Implementation progress tracker — what's built, what's in progress, and what's next."
+---
+
+Reality-first tracker for the Hogwarts platform. See [PRD](/docs/prd) for the aspirational vision and [MVP](/docs/mvp) for story-level details.
+
+## At a Glance
+
+| Metric                       | Count          |
+| ---------------------------- | -------------- |
+| Prisma models                | 264            |
+| Prisma enums                 | 132            |
+| Schema files                 | 57             |
+| Seed files                   | 45             |
+| Component directories        | 36+            |
+| School dashboard pages       | 150+           |
+| Listing entities (full CRUD) | 13             |
+| E2E test suites              | 20+ spec files |
+| CI/CD workflows              | 7              |
+| Lib utilities                | 55+            |
+
+---
+
+## Epic Progress
+
+| Epic              | Stories | Done | Status  | Notes                                                                               |
+| ----------------- | ------- | ---- | ------- | ----------------------------------------------------------------------------------- |
+| 01 Infrastructure | 15      | ~13  | Done    | CI/CD (7 workflows), Vitest, Playwright, E2E suites                                 |
+| 02 Authentication | 18      | ~15  | Done    | Google + Facebook + Credentials. RBAC enforced. Missing: 2FA                        |
+| 03 Configuration  | 12      | ~5   | Partial | Onboarding wizard (20+ steps) done. Settings page minimal                           |
+| 04 Student        | 20      | ~10  | Partial | Full CRUD, 8-tab profile, registration wizard, ID cards. Missing: detail route page |
+| 05 Listings       | 18      | ~15  | Done    | 13 entities with full CRUD pattern                                                  |
+| 06 Attendance     | 12      | ~10  | Done    | 148 files. QR, barcode, geofence, kiosk, AI, gamification, hall-pass                |
+| 07 Exam           | 15      | ~12  | Done    | 211 files. AI generation, QBank, auto-marking, proctoring, certificates             |
+| 08 Timetable      | 12      | ~10  | Done    | 74 files. 970-line algorithm, visual builder, multi-view, conflicts                 |
+| 09 Admission      | 15      | ~14  | Done    | Applications, campaigns, enrollment, merit scoring                                  |
+
+---
+
+## Beyond Original MVP
+
+Features built that weren't in the original 9-epic scope:
+
+| Module         | Files | Models | Highlights                                                                                         |
+| -------------- | ----- | ------ | -------------------------------------------------------------------------------------------------- |
+| **Finance**    | 205   | 40+    | Banking (Plaid), invoicing, payroll, budget, expenses, fees, salary, wallet, AI receipt extraction |
+| **Stream/LMS** | 102   | 8      | Admin CRUD, video player, enrollment, certificates, analytics, completion emails                   |
+| **Messaging**  | 32    | 12     | Chat interface, conversations, realtime hooks, attachments, search                                 |
+| **Catalog**    | —     | 9      | Platform-wide content: 62 subjects, 201 chapters, 986 lessons (ClickView-sourced)                  |
+
+---
+
+## Scope Exceeded
+
+Several epics far exceeded their original story scope:
+
+### Attendance (originally 12 stories)
+
+Built 148 files across 30+ Prisma models:
+
+| Feature                                      | Status |
+| -------------------------------------------- | ------ |
+| Daily marking                                | Done   |
+| QR code scanning                             | Done   |
+| Barcode scanning                             | Done   |
+| Geofence/GPS check-in                        | Done   |
+| Kiosk mode (keypad + scanner)                | Done   |
+| AI attendance insights                       | Done   |
+| Gamification (badges, streaks, competitions) | Done   |
+| Hall pass system                             | Done   |
+| Early warning & intervention                 | Done   |
+| Realtime live attendance                     | Done   |
+| PDF/Excel export                             | Done   |
+
+### Exams (originally 15 stories)
+
+Built 211 files across 25+ Prisma models:
+
+| Feature                                       | Status |
+| --------------------------------------------- | ------ |
+| Exam creation & scheduling                    | Done   |
+| AI exam generation                            | Done   |
+| Question bank with psychometrics              | Done   |
+| Auto-marking (AI + OCR + rubric + answer key) | Done   |
+| Paper generation (multiple templates)         | Done   |
+| Exam player with proctoring                   | Done   |
+| Results with batch PDF generation             | Done   |
+| Certificates                                  | Done   |
+| Quick exams/quizzes                           | Done   |
+| CGPA calculator + grade converter             | Done   |
+
+### Finance (not in original MVP)
+
+Built 205 files across 40+ Prisma models (8 schema files):
+
+| Sub-module                                    | Status |
+| --------------------------------------------- | ------ |
+| Chart of accounts                             | Done   |
+| Fee structures & assignments                  | Done   |
+| Invoicing (full system with email)            | Done   |
+| Payments & receipts                           | Done   |
+| Payroll (structures, timesheets, runs, slips) | Done   |
+| Banking (Plaid integration, reconciliation)   | Done   |
+| Budget management                             | Done   |
+| Expense tracking (AI receipt extraction)      | Done   |
+| Salary management                             | Done   |
+| Wallet system                                 | Done   |
+
+---
+
+## Database Growth
+
+| Phase        | Models | Notes                              |
+| ------------ | ------ | ---------------------------------- |
+| PRD estimate | ~36    | Original tenant-scoped models      |
+| Current      | 264    | Across 57 .prisma files, 132 enums |
+
+### Model Distribution
+
+| Category            | Models | schoolId               |
+| ------------------- | ------ | ---------------------- |
+| Core (School, User) | 2      | Yes                    |
+| Auth tokens         | ~15    | No (linked via userId) |
+| People              | ~30    | Yes                    |
+| Academic structure  | ~15    | Yes                    |
+| Catalog (global)    | 9      | No (by design)         |
+| Attendance          | 30+    | Yes                    |
+| Exams & assessment  | 25+    | Yes                    |
+| Finance             | 40+    | Yes                    |
+| Messaging           | 12     | Yes                    |
+| Admission           | 9      | Yes                    |
+| Stream/LMS          | 8      | Yes                    |
+| Timetable           | 5      | Yes                    |
+| Other               | 30+    | Yes                    |
+
+---
+
+## Listing Entities (13)
+
+All follow the standard pattern: `actions.ts` + `form.tsx` + `table.tsx` + `columns.tsx` + `content.tsx` + `validation.ts`
+
+| Entity        | Sub-modules                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| Students      | Profile (8 tabs), registration (7 steps), enrollment, ID cards, search, year-levels, academic-records |
+| Teachers      | Departments, detail, performance, schedule, settings                                                  |
+| Parents       | Standard CRUD                                                                                         |
+| Staff         | Standard CRUD                                                                                         |
+| Classes       | Capacity, schedule, settings, subjects, create                                                        |
+| Subjects      | Catalog integration                                                                                   |
+| Classrooms    | Standard CRUD                                                                                         |
+| Announcements | Standard CRUD                                                                                         |
+| Assignments   | Standard CRUD                                                                                         |
+| Events        | Attendance, calendar, categories, create, recurring, settings                                         |
+| Grades        | Certificate, generate                                                                                 |
+| Lessons       | Analytics, create, curriculum, resources, settings, templates                                         |
+| Library       | Standard CRUD                                                                                         |
+
+---
+
+## Critical Infrastructure
+
+| File                          | Lines | Purpose                                                                    |
+| ----------------------------- | ----- | -------------------------------------------------------------------------- |
+| `src/proxy.ts`                | 388   | Edge middleware — subdomain detection, RBAC, URL rewriting, custom domains |
+| `src/auth.ts`                 | 777   | Auth — JWT, cookies, redirect callback                                     |
+| `src/auth.config.ts`          | 151   | Auth providers — Google, Facebook, Credentials                             |
+| `src/routes.ts`               | 410   | RBAC matrix — role-based route protection                                  |
+| `src/lib/rate-limit.ts`       | 537   | Rate limiting — 14 configs                                                 |
+| `src/lib/tenant-context.ts`   | 189   | Tenant resolution with caching                                             |
+| `src/lib/catalog-setup.ts`    | 366   | Catalog bridge setup                                                       |
+| `src/lib/dns-service.ts`      | 644   | DNS verification — multi-provider                                          |
+| `src/lib/security-headers.ts` | 173   | CSP, HSTS, XSS protection                                                  |
+
+---
+
+## Known Gaps
+
+| Area       | Gap                                                                 | Priority |
+| ---------- | ------------------------------------------------------------------- | -------- |
+| Auth       | 2FA / Two-Factor Authentication not implemented                     | P1       |
+| Auth       | User invitation system                                              | P2       |
+| Student    | Detail route page missing (profile component exists, route doesn't) | P1       |
+| Config     | School settings page minimal (3 files)                              | P2       |
+| Config     | School branding UI (logo, colors)                                   | P2       |
+| Monitoring | Sentry DSN not configured                                           | P1       |
+| Cache      | In-memory only, no distributed cache                                | P2       |
+| Database   | No RLS at database level                                            | P2       |
+| SEO        | No canonical URLs                                                   | P3       |
+
+---
+
+## Seed Data (Demo School)
+
+17 seeding phases create a complete K-12 simulation at `demo.databayt.org`:
+
+| Entity             | Count   |
+| ------------------ | ------- |
+| Users              | 3,105   |
+| Teachers           | 100     |
+| Students           | 970     |
+| Guardians          | ~1,940  |
+| Classes            | 187     |
+| Attendance records | ~60,000 |
+| Catalog subjects   | 62      |
+| Catalog chapters   | 201     |
+| Catalog lessons    | 986     |
+
+See [Seeds](/docs/seeds) for full breakdown.

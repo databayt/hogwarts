@@ -42,7 +42,6 @@ export interface Listing {
   maxStudents?: number
   maxTeachers?: number
   maxClasses?: number
-  maxFacilities?: number
   isActive?: boolean
   // School fields
   schoolLevel?: "primary" | "secondary" | "both"

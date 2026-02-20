@@ -26,6 +26,7 @@ import {
 } from "./attendance-extras"
 import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
+import { backfillClassGrades } from "./backfill-class-grades"
 import { seedBanking } from "./banking"
 import { seedCatalog } from "./catalog"
 import { seedCatalogImages } from "./catalog-images"
@@ -702,6 +703,15 @@ const SEEDS: Record<string, SeedEntry> = {
       const teachers = await resolveTeachers(prisma, schoolId)
       const { adminUsers } = await resolveUsers(prisma, schoolId)
       await seedWellness(prisma, schoolId, students, teachers, adminUsers)
+    },
+  },
+
+  // Backfill scripts
+  "backfill-class-grades": {
+    description: "Backfill gradeId on Class records by parsing names",
+    global: true,
+    run: async () => {
+      await backfillClassGrades()
     },
   },
 }

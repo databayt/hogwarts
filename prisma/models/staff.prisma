@@ -78,13 +78,14 @@ model Department {
 }
 
 model TeacherDepartment {
-  id           String    @id @default(cuid())
-  schoolId     String
-  teacherId    String
-  departmentId String
-  isPrimary    Boolean   @default(false) // Primary department for the teacher
-  startDate    DateTime  @default(now())
-  endDate      DateTime?
+  id               String    @id @default(cuid())
+  schoolId         String
+  teacherId        String
+  departmentId     String
+  isPrimary        Boolean   @default(false) // Primary department for the teacher
+  isDepartmentHead Boolean   @default(false)
+  startDate        DateTime  @default(now())
+  endDate          DateTime?
 
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   teacher    Teacher    @relation(fields: [teacherId], references: [id], onDelete: Cascade)

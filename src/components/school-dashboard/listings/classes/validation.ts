@@ -9,6 +9,7 @@ export const classBaseSchema = z
     startPeriodId: z.string().min(1, "Start period is required"),
     endPeriodId: z.string().min(1, "End period is required"),
     classroomId: z.string().min(1, "Classroom is required"),
+    gradeId: z.string().optional().nullable(),
 
     // Course Management Fields
     courseCode: z.string().optional(),

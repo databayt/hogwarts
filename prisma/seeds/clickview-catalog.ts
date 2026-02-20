@@ -57,6 +57,19 @@ function levelToSchoolLevel(level: string): SchoolLevel {
   }
 }
 
+function levelToGrades(level: string): number[] {
+  switch (level) {
+    case "elementary":
+      return [1, 2, 3, 4, 5, 6]
+    case "middle":
+      return [7, 8, 9]
+    case "high":
+      return [10, 11, 12]
+    default:
+      return [1, 2, 3, 4, 5, 6]
+  }
+}
+
 function toSubjectSlug(level: string, name: string): string {
   const nameSlug = name
     .toLowerCase()
@@ -913,6 +926,7 @@ export async function seedClickViewCatalog(
     const entry = entries[i]
     const slug = toSubjectSlug(entry.level, entry.subjectName)
     const schoolLevel = levelToSchoolLevel(entry.level)
+    const grades = levelToGrades(entry.level)
     const clickviewId = extractClickViewId(entry.url)
 
     // Use illustration image if available locally, else fall back to cover URL or first topic
@@ -945,6 +959,7 @@ export async function seedClickViewCatalog(
         prerequisites: SLUG_PREREQUISITES[slug] ?? null,
         targetAudience: SLUG_TARGET_AUDIENCE[slug] ?? null,
         levels: [schoolLevel],
+        grades,
         clickviewId,
         clickviewUrl: entry.url
           ? `https://www.clickview.net${entry.url}`
@@ -963,6 +978,7 @@ export async function seedClickViewCatalog(
         lang: "en",
         department: entry.subjectName,
         levels: [schoolLevel],
+        grades,
         country: "US",
         system: "clickview",
         clickviewId,
@@ -995,6 +1011,7 @@ export async function seedClickViewCatalog(
           sequenceOrder: g + 1,
           color,
           imageKey: firstTopicImgSrc,
+          grades,
         },
         create: {
           subjectId: subject.id,
@@ -1004,6 +1021,7 @@ export async function seedClickViewCatalog(
           sequenceOrder: g + 1,
           color,
           imageKey: firstTopicImgSrc,
+          grades,
           levels: [schoolLevel],
           status: "PUBLISHED",
         },
@@ -1033,6 +1051,7 @@ export async function seedClickViewCatalog(
             videoCount,
             resourceCount,
             color,
+            grades,
           },
           create: {
             chapterId: chapter.id,
@@ -1045,6 +1064,7 @@ export async function seedClickViewCatalog(
             videoCount,
             resourceCount,
             color,
+            grades,
             levels: [schoolLevel],
             status: "PUBLISHED",
           },

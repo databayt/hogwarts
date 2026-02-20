@@ -54,7 +54,6 @@ export interface OnboardingSchoolData {
   maxStudents?: number
   maxTeachers?: number
   maxClasses?: number
-  maxFacilities?: number
 
   // School details
   schoolLevel?: SchoolType

@@ -84,7 +84,7 @@ import { assertClassPermission, getAuthContext } from "./authorization"
 // ============================================================================
 
 export type ActionResponse<T = void> =
-  | { success: true; data: T }
+  | { success: true; data: T; warning?: string }
   | { success: false; error: string }
 
 type ClassSelectResult = {
@@ -114,6 +114,7 @@ type ClassListResult = {
   subjectName: string
   teacherName: string
   termName: string
+  gradeName: string
   courseCode: string
   credits: string
   evaluationType: string
@@ -151,6 +152,18 @@ export async function createClass(
 
     const parsed = classCreateSchema.parse(input)
 
+    // Capacity cross-validation: warn if class maxCapacity > room capacity
+    let capacityWarning: string | undefined
+    if (parsed.classroomId && parsed.maxCapacity) {
+      const room = await db.classroom.findFirst({
+        where: { id: parsed.classroomId, schoolId },
+        select: { capacity: true, roomName: true },
+      })
+      if (room && parsed.maxCapacity > room.capacity) {
+        capacityWarning = `Class max capacity (${parsed.maxCapacity}) exceeds room "${room.roomName}" capacity (${room.capacity})`
+      }
+    }
+
     const row = await db.class.create({
       data: {
         schoolId,
@@ -161,6 +174,7 @@ export async function createClass(
         startPeriodId: parsed.startPeriodId,
         endPeriodId: parsed.endPeriodId,
         classroomId: parsed.classroomId,
+        gradeId: parsed.gradeId || null,
         courseCode: parsed.courseCode || null,
         credits: parsed.credits || null,
         evaluationType: parsed.evaluationType || "NORMAL",
@@ -172,7 +186,7 @@ export async function createClass(
     })
 
     revalidatePath(CLASSES_PATH)
-    return { success: true, data: { id: row.id } }
+    return { success: true, data: { id: row.id }, warning: capacityWarning }
   } catch (error) {
     console.error("[createClass] Error:", error)
 
@@ -224,6 +238,22 @@ export async function updateClass(
       return { success: false, error: "Class not found" }
     }
 
+    // Capacity cross-validation for updates
+    let capacityWarning: string | undefined
+    const effectiveClassroomId =
+      typeof rest.classroomId !== "undefined" ? rest.classroomId : null
+    const effectiveMaxCapacity =
+      typeof rest.maxCapacity !== "undefined" ? rest.maxCapacity : null
+    if (effectiveClassroomId && effectiveMaxCapacity) {
+      const room = await db.classroom.findFirst({
+        where: { id: effectiveClassroomId, schoolId },
+        select: { capacity: true, roomName: true },
+      })
+      if (room && effectiveMaxCapacity > room.capacity) {
+        capacityWarning = `Class max capacity (${effectiveMaxCapacity}) exceeds room "${room.roomName}" capacity (${room.capacity})`
+      }
+    }
+
     const data: Record<string, unknown> = {}
     if (typeof rest.name !== "undefined") data.name = rest.name
     if (typeof rest.subjectId !== "undefined") data.subjectId = rest.subjectId
@@ -248,11 +278,12 @@ export async function updateClass(
       data.duration = rest.duration || null
     if (typeof rest.prerequisiteId !== "undefined")
       data.prerequisiteId = rest.prerequisiteId || null
+    if (typeof rest.gradeId !== "undefined") data.gradeId = rest.gradeId || null
 
     await db.class.updateMany({ where: { id, schoolId }, data })
 
     revalidatePath(CLASSES_PATH)
-    return { success: true, data: undefined }
+    return { success: true, data: undefined, warning: capacityWarning }
   } catch (error) {
     console.error("[updateClass] Error:", error)
 
@@ -933,6 +964,12 @@ export async function getClasses(
               termNumber: true,
             },
           },
+          grade: {
+            select: {
+              name: true,
+              gradeNumber: true,
+            },
+          },
           _count: {
             select: {
               studentClasses: true,
@@ -951,6 +988,7 @@ export async function getClasses(
         ? `${c.teacher.givenName} ${c.teacher.surname}`
         : "Unknown",
       termName: c.term?.termNumber ? `Term ${c.term.termNumber}` : "Unknown",
+      gradeName: c.grade?.name || "",
       courseCode: c.courseCode || "",
       credits: c.credits?.toString() || "",
       evaluationType: c.evaluationType || "NORMAL",
@@ -1036,6 +1074,12 @@ export async function getClassesCSV(
             capacity: true,
           },
         },
+        grade: {
+          select: {
+            name: true,
+            gradeNumber: true,
+          },
+        },
         _count: {
           select: {
             studentClasses: true,
@@ -1049,6 +1093,7 @@ export async function getClassesCSV(
       classId: classItem.id,
       name: classItem.name || "",
       courseCode: classItem.courseCode || "",
+      grade: classItem.grade?.name || "",
       subject: classItem.subject?.subjectName || "",
       teacher: classItem.teacher
         ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
@@ -1071,6 +1116,7 @@ export async function getClassesCSV(
       { key: "classId" as const, label: "Class ID" },
       { key: "name" as const, label: "Class Name" },
       { key: "courseCode" as const, label: "Course Code" },
+      { key: "grade" as const, label: "Grade" },
       { key: "subject" as const, label: "Subject" },
       { key: "teacher" as const, label: "Teacher" },
       { key: "term" as const, label: "Term" },

@@ -376,12 +376,15 @@ For testing and development, the following seed accounts are available:
 | ADMIN      | `admin@databayt.org`      | `1234`   | School administrator         |
 | ACCOUNTANT | `accountant@databayt.org` | `1234`   | School finance access        |
 | STAFF      | `staff@databayt.org`      | `1234`   | Limited school access        |
+| TEACHER    | `teacher@databayt.org`    | `1234`   | School teacher               |
+| STUDENT    | `student@databayt.org`    | `1234`   | Student access               |
+| GUARDIAN   | `parent@databayt.org`     | `1234`   | Parent/guardian              |
 
 **Notes:**
 
 - DEVELOPER has no schoolId (platform-wide access)
 - All other roles are scoped to the demo school
-- Run `pnpm db:seed` to create these accounts
+- Run `pnpm db:seed:single users` to create these accounts
 - Seed data defined in `prisma/seeds/constants.ts`
 
 ### Implementation Details
@@ -885,11 +888,11 @@ This flow covers all scenarios when clicking the "Platform" link from a school m
 | Credentials Login         | ✅ Working     | Email verification required             |
 | Get Started → Onboarding  | ✅ Working     | Protected route, callback URL preserved |
 | School Dashboard Redirect | ✅ Working     | Based on schoolId lookup                |
-| Developer Platform Access | ⚠️ Partial     | Needs dedicated dashboard               |
-| Application Flow          | 🔲 Not Started | Admission module in progress            |
+| Developer Platform Access | ✅ Working     | SaaS dashboard with routes              |
+| Application Flow          | ✅ Working     | Admission module completed              |
 | School Join Codes         | 🔲 Not Started | Planned feature                         |
 | Invitation System         | 🔲 Not Started | Planned feature                         |
-| Impersonation Mode        | ⚠️ Partial     | Cookie-based, needs UI                  |
+| Impersonation Mode        | ✅ Working     | Cookie-based impersonation              |
 
 ### Recommended Improvements
 
@@ -1051,7 +1054,7 @@ Student → Enter code "HOGWARTS-2024" → Sign up → Auto-linked as STUDENT
 | `src/auth.ts`                            | NextAuth configuration, JWT callbacks, session management |
 | `src/auth.config.ts`                     | OAuth provider configurations with profile logging        |
 | `src/lib/multi-tenant-prisma-adapter.ts` | Custom Prisma adapter for multi-tenant OAuth              |
-| `src/middleware.ts`                      | Route protection, subdomain detection                     |
+| `src/proxy.ts`                           | Route protection, subdomain detection                     |
 | `src/routes.ts`                          | Public/protected route definitions                        |
 | `src/lib/tenant-context.ts`              | School context retrieval                                  |
 | `src/lib/school-access.ts`               | School ownership and access control                       |

@@ -10,21 +10,20 @@ This page explains how tenant routing works via subdomains, how the `schoolId` i
 ### Explain it like I'm five (ELI5)
 
 - Think of the website like a big city (the root domain).
-- Each school is a different house on its own street (the subdomain), like `khartoum.hogwarts.app`.
+- Each school is a different house on its own street (the subdomain), like `demo.databayt.org`.
 - When you walk into a house, you only see that family’s stuff. In our app, when you go to a school’s subdomain, you only see that school’s data.
 - The “key” we use to make sure we only look at the right family’s stuff is called `schoolId`.
 
 ### TL;DR — Quick test (dev + prod)
 
-- Dev (no subdomains): add `?x-school=khartoum` to any page, e.g. `/dashboard?x-school=khartoum`.
-- Dev (with local subdomains): set `NEXT_PUBLIC_ROOT_DOMAIN=localhost` and visit `http://khartoum.localhost:3000/dashboard`.
-- Prod: visit the subdomain directly, e.g., `https://khartoum.hogwarts.app/dashboard`.
+- Dev (with local subdomains): set `NEXT_PUBLIC_ROOT_DOMAIN=localhost` and visit `http://demo.localhost:3000/dashboard`.
+- Prod: visit the subdomain directly, e.g., `https://demo.databayt.org/dashboard`.
 - Role‑gated pages: ensure your user role (e.g., `ADMIN`) is set. See “Set my role for testing”.
 
 ### Concepts
 
-- **Root domain**: Your main host, e.g., `hogwarts.app` (set via `NEXT_PUBLIC_ROOT_DOMAIN`).
-- **Subdomain (tenant slug)**: The school’s unique domain slug stored on the `School` model as `domain` (e.g., `khartoum`). Full host example: `khartoum.hogwarts.app`.
+- **Root domain**: Your main host, e.g., `databayt.org` (set via `NEXT_PUBLIC_ROOT_DOMAIN`). The main app is served from `ed.databayt.org`.
+- **Subdomain (tenant slug)**: The school’s unique domain slug stored on the `School` model as `domain` (e.g., `demo`). Full host example: `demo.databayt.org`.
 - **Tenant identity**: All data is partitioned by `schoolId`. Every query/mutation must include `{ schoolId }`.
 
 ### Data model
@@ -34,39 +33,44 @@ This page explains how tenant routing works via subdomains, how the `schoolId` i
 model School {
   id      String @id @default(cuid())
   name    String
-  domain  String @unique // e.g. "khartoum" for khartoum.hogwarts.app
+  domain  String @unique // e.g. "demo" for demo.databayt.org
   // ...other fields
 }
 ```
 
 ### Request flow (overview)
 
-1. A user visits a host. In middleware, we extract the subdomain and propagate it in a header.
+1. A user visits a host. In the edge proxy (`src/proxy.ts`), we extract the subdomain from the hostname and propagate it via the `x-subdomain` header. The proxy handles three environments:
 
 ```ts
-// src/middleware.ts (excerpt)
-const host = nextUrl.hostname
-const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN // e.g. "hogwarts.app"
+// src/proxy.ts (excerpt)
 let subdomain: string | null = null
 
-const devDomainParam = nextUrl.searchParams.get("x-school")
-if (devDomainParam) {
-  subdomain = devDomainParam
-} else if (rootDomain && host.endsWith("." + rootDomain)) {
-  subdomain = host.slice(0, -(rootDomain.length + 1)) || null
+if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
+  // Production: school.databayt.org → "school"
+  subdomain = host.split(".")[0]
+} else if (host.includes("---") && host.endsWith(".vercel.app")) {
+  // Vercel preview: tenant---branch.vercel.app → "tenant"
+  subdomain = host.split("---")[0]
+} else if (host.includes("localhost") && host.includes(".")) {
+  // Development: subdomain.localhost:3000 → "subdomain"
+  const parts = host.split(".")
+  if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
+    subdomain = parts[0]
+  }
 }
 
-if (subdomain) {
-  const requestHeaders = new Headers(req.headers)
-  requestHeaders.set("x-subdomain", subdomain)
-  return Response.next({ request: { headers: requestHeaders } })
+// Custom domain fallback via Upstash Redis
+if (!subdomain) {
+  const customSubdomain = await resolveCustomDomain(host)
+  if (customSubdomain) subdomain = customSubdomain
 }
 ```
 
 2. On the server, we resolve `schoolId` using the injected header (or impersonation cookie, or session fallback).
 
 ```ts
-// src/components/platform/operator/lib/tenant.ts (excerpt)
+// src/lib/tenant-context.ts (excerpt)
 export async function getTenantContext() {
   const session = await auth()
   const cookieStore = await cookies()
@@ -105,40 +109,48 @@ export async function listStudents() {
 }
 ```
 
-### Why a header instead of DB calls in middleware?
+### Why a header instead of DB calls in the edge proxy?
 
-Next.js middleware can’t safely perform dynamic DB queries in all environments. We extract the subdomain in middleware, add it as `x-subdomain`, and resolve to `schoolId` later on the server where DB access is allowed.
+Next.js edge middleware can’t safely perform dynamic DB queries (Prisma requires Node.js runtime). The edge proxy (`src/proxy.ts`) extracts the subdomain from the hostname, sets the `x-subdomain` header, and rewrites the URL. The actual `schoolId` is resolved later on the server side (in `getTenantContext()`) where full DB access is available.
 
-### Local development without real subdomains
+### Custom domains via Redis
 
-You have two convenient options while developing on `localhost`:
+Schools can use their own domains (e.g., `school.edu.sa`) instead of `{slug}.databayt.org`. The edge proxy calls `resolveCustomDomain(host)` which looks up the hostname in Upstash Redis (`custom-domain:{host}` key) to find the corresponding subdomain slug. This runs only when no subdomain is detected via the standard hostname patterns, keeping the happy path fast.
 
-- Add `?x-school=<domain>` to any URL to simulate a tenant. Example: `/dashboard?x-school=khartoum`.
-- For public, unauthenticated APIs that support fallback, pass `?domain=<domain>`.
-  - See Timetable docs for examples:
-    - Terms: `GET /api/terms?domain=khartoum`
-    - Timetable: `GET /api/timetable?domain=khartoum&weekOffset=0`
+### Local development with subdomains
 
-Seeded demo domains: `khartoum`, `omdurman`, `portsudan`, `wadmadani`.
+Use `subdomain.localhost:3000` to simulate multi-tenant routing locally. Set the root domain env var to `localhost`:
+
+```bash
+NEXT_PUBLIC_ROOT_DOMAIN=localhost
+```
+
+Then visit `http://demo.localhost:3000/dashboard` to access the demo school dashboard.
+
+For public, unauthenticated APIs that support a domain fallback, pass `?domain=<domain>`:
+
+- Terms: `GET /api/terms?domain=demo`
+- Timetable: `GET /api/timetable?domain=demo&weekOffset=0`
+
+Seeded demo domain: `demo`.
 
 ### Hands‑on: interactive debug page
 
 - Visit `/operator/tenant-debug` in the app to see the current tenant and live counts for students/teachers/classes.
-- In development: click a school card to reload with `?x-school=<domain>` and watch the counts change instantly.
-- In production: navigate to the school’s subdomain (e.g., `khartoum.hogwarts.app/operator/tenant-debug`).
-- If you see “No active tenant detected”, either add `?x-school=<domain>` in dev or switch to the correct subdomain in prod.
+- In development: click a school card to switch context and watch the counts change instantly.
+- In production: navigate to the school’s subdomain (e.g., `demo.databayt.org/operator/tenant-debug`).
+- If you see “No active tenant detected”, switch to the correct subdomain (e.g., `demo.localhost:3000` in dev or `demo.databayt.org` in prod).
 
 ### Simple: set my school for testing
 
 Pick one of these:
 
-1. Easiest (URL param): add `?x-school=<domain>` to the page you’re testing.
-   - Example: `/dashboard?x-school=khartoum`.
+1. Easiest (local subdomain): visit `http://demo.localhost:3000/dashboard` to route as the demo school.
 
 2. Correct (user is tied to a school): set your user’s `schoolId` to match a school.
    - Using Prisma Studio:
      1. Run: `pnpm dlx prisma studio`
-     2. Open `School` table, copy the `id` of the row where `domain = "khartoum"`.
+     2. Open `School` table, copy the `id` of the row where `domain = "demo"`.
      3. Open `User` table, set your `schoolId` to that `id` and save.
 
 3. Operator (DEVELOPER only): start impersonation which sets a cookie overriding the tenant.
@@ -147,18 +159,21 @@ Pick one of these:
 
 ### Environment
 
-Set your root domain to enable subdomain parsing in middleware.
+Set your root domain to enable subdomain parsing in the edge proxy.
 
 ```bash
-NEXT_PUBLIC_ROOT_DOMAIN=hogwarts.app
+# Production
+NEXT_PUBLIC_ROOT_DOMAIN=databayt.org
+
+# Local development (enables demo.localhost:3000 routing)
+NEXT_PUBLIC_ROOT_DOMAIN=localhost
 ```
 
-If you deploy to a different host, update this variable accordingly (e.g., `ed.databayt.org`).
-
-In local development, to use subdomains like `khartoum.localhost:3000`, set:
+For custom domain resolution, configure Upstash Redis:
 
 ```bash
-NEXT_PUBLIC_ROOT_DOMAIN=localhost
+UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
 ```
 
 ### Set my role for testing
@@ -177,15 +192,15 @@ Pages and actions are often role‑gated (e.g., Admin‑only). Make your test us
 -- Make the user a developer
 UPDATE users SET role = 'DEVELOPER' WHERE email = 'me@example.com';
 
--- Tie the user to the khartoum school
+-- Tie the user to the demo school
 UPDATE users
-SET schoolId = (SELECT id FROM schools WHERE domain = 'khartoum')
+SET schoolId = (SELECT id FROM schools WHERE domain = 'demo')
 WHERE email = 'me@example.com';
 ```
 
 ### Auth session and tenant fallback
 
-Auth attaches `schoolId` to the JWT/session. If a request lacks `x-subdomain` and impersonation cookie, `getTenantContext()` falls back to `session.user.schoolId`.
+Auth attaches `schoolId` to the JWT/session. If a request lacks the `x-subdomain` header and impersonation cookie, `getTenantContext()` falls back to `session.user.schoolId`.
 
 ```ts
 // src/auth.ts (excerpt – JWT callback)
@@ -211,14 +226,15 @@ await prisma.student.findMany({ where: { schoolId } })
 
 ### Verifying your setup
 
-1. Visit `/docs` (public) to ensure middleware doesn’t block docs.
-2. Open the debug page: `/(platform)/operator/tenant-debug`.
-3. In dev, click a school card (adds `?x-school=<domain>`); in prod, move between subdomains.
+1. Visit `/docs` (public) to ensure the edge proxy doesn’t block docs.
+2. Open the debug page: `/(school-dashboard)/settings/tenant-debug`.
+3. In dev, switch between subdomains (e.g., `demo.localhost:3000`); in prod, move between subdomains (e.g., `demo.databayt.org`).
 4. Confirm the counts change as you switch tenants.
-5. Navigate to `/students` and `/teachers` with the same `?x-school=<domain>` in dev or under the subdomain in prod.
+5. Navigate to `/students` and `/teachers` under the subdomain in both dev and prod.
 
 ### Troubleshooting
 
 - Missing tenant: ensure `NEXT_PUBLIC_ROOT_DOMAIN` is set correctly and a `School` row exists with `domain` matching the subdomain.
-- Local dev without subdomain: use `?x-school=<domain>` or the public API `?domain=<domain>` fallbacks.
-- Session fallback is null: sign in a user that has `schoolId` or specify `x-school`.
+- Local dev: use `subdomain.localhost:3000` (e.g., `demo.localhost:3000`). For public APIs, use `?domain=<domain>` query param fallback.
+- Session fallback is null: sign in a user that has `schoolId` or navigate to the correct subdomain.
+- Custom domain not resolving: verify Upstash Redis has the `custom-domain:{host}` key mapped to the correct subdomain slug.

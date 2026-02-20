@@ -277,6 +277,16 @@ function placeClassGreedy(
     if (req.requiresLab && room.roomType !== "lab") {
       return false
     }
+    // Enforce allowedSubjectTypes: if set, the class's subject must match
+    if (room.allowedSubjectTypes.length > 0) {
+      const subjectLower = req.subjectName.toLowerCase()
+      const isAllowed = room.allowedSubjectTypes.some(
+        (t) =>
+          subjectLower.includes(t.toLowerCase()) ||
+          t.toLowerCase().includes(subjectLower)
+      )
+      if (!isAllowed) return false
+    }
     return true
   })
 

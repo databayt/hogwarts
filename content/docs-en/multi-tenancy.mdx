@@ -5,22 +5,22 @@ description: "Enterprise production guide for Hogwarts multi-tenant architecture
 
 Hogwarts is a multi-tenant school automation platform where each school operates on its own subdomain (`school.databayt.org`) with complete data isolation via `schoolId` scoping. This guide covers the full architecture from edge middleware to database isolation.
 
-**Key Stats**: 36 tenant-scoped models, 8 user roles, 4 entry points, 58 error boundaries, 488-line rate limiting system.
+**Key Stats**: ~220 tenant-scoped models across 264 total, 132 enums, 8 user roles, 4 entry points, 58 error boundaries, 537-line rate limiting system.
 
 ## Comparison: Hogwarts vs Vercel Platforms
 
-| Feature             | Vercel Platforms             | Hogwarts                               | Status      |
-| ------------------- | ---------------------------- | -------------------------------------- | ----------- |
-| Subdomain Routing   | Middleware                   | `proxy.ts` (337 lines)                 | Implemented |
-| Preview URLs        | `tenant---branch.vercel.app` | Implemented                            | Match       |
-| Tenant Data Store   | Redis (Upstash)              | PostgreSQL + In-Memory                 | Partial     |
-| Custom Domains      | Vercel Domains API           | DnsService (645 lines, not integrated) | Gap         |
-| Cross-subdomain SSO | Cookie domain                | `.databayt.org`                        | Implemented |
-| ISR + Middleware    | Native support               | Not leveraged                          | Opportunity |
-| Role-Based Access   | N/A (app-specific)           | 8 roles, RBAC matrix                   | Extra       |
-| Rate Limiting       | Upstash Ratelimit            | In-memory (488 lines, 14 configs)      | Partial     |
-| Error Monitoring    | Sentry/Datadog               | Sentry configured, DSN empty           | Gap         |
-| Security Headers    | Manual                       | CSP + HSTS + XSS (174 lines)           | Implemented |
+| Feature             | Vercel Platforms             | Hogwarts                                                           | Status      |
+| ------------------- | ---------------------------- | ------------------------------------------------------------------ | ----------- |
+| Subdomain Routing   | Middleware                   | `proxy.ts` (388 lines)                                             | Implemented |
+| Preview URLs        | `tenant---branch.vercel.app` | Implemented                                                        | Match       |
+| Tenant Data Store   | Redis (Upstash)              | PostgreSQL + In-Memory + Upstash Redis (custom domains)            | Implemented |
+| Custom Domains      | Vercel Domains API           | DnsService (644 lines) + `resolveCustomDomain()` via Upstash Redis | Partial     |
+| Cross-subdomain SSO | Cookie domain                | `.databayt.org`                                                    | Implemented |
+| ISR + Middleware    | Native support               | Not leveraged                                                      | Opportunity |
+| Role-Based Access   | N/A (app-specific)           | 8 roles, RBAC matrix                                               | Extra       |
+| Rate Limiting       | Upstash Ratelimit            | In-memory (537 lines, 14 configs)                                  | Partial     |
+| Error Monitoring    | Sentry/Datadog               | Sentry configured, DSN empty                                       | Gap         |
+| Security Headers    | Manual                       | CSP + HSTS + XSS (173 lines)                                       | Implemented |
 
 ---
 
@@ -92,21 +92,23 @@ Hogwarts has 4 distinct entry points for different user journeys:
 
 ### Critical Files Reference
 
-| File                          | Lines | Purpose                                                    |
-| ----------------------------- | ----- | ---------------------------------------------------------- |
-| `src/proxy.ts`                | 337   | Edge middleware — subdomain detection, URL rewriting, RBAC |
-| `src/lib/tenant-context.ts`   | 134   | Tenant resolution — single source of truth with caching    |
-| `src/auth.ts`                 | 1,432 | Auth configuration — JWT, cookies, redirect callback       |
-| `src/routes.ts`               | 412   | RBAC matrix — role-based route protection                  |
-| `src/lib/rate-limit.ts`       | 488   | Rate limiting — 14 configs, per-process storage            |
-| `src/lib/security-headers.ts` | 174   | Security headers — CSP, HSTS, XSS protection               |
-| `src/lib/dns-service.ts`      | 645   | DNS verification — multi-provider support                  |
+| File                          | Lines | Purpose                                                                    |
+| ----------------------------- | ----- | -------------------------------------------------------------------------- |
+| `src/proxy.ts`                | 388   | Edge middleware — subdomain detection, URL rewriting, RBAC                 |
+| `src/lib/tenant-context.ts`   | 189   | Tenant resolution — single source of truth with caching                    |
+| `src/auth.ts`                 | 777   | Auth configuration — JWT, cookies, redirect callback (split from monolith) |
+| `src/auth.config.ts`          | 151   | Auth configuration — providers, JWT strategy                               |
+| `src/routes.ts`               | 410   | RBAC matrix — role-based route protection                                  |
+| `src/lib/rate-limit.ts`       | 537   | Rate limiting — 14 configs, per-process storage                            |
+| `src/lib/security-headers.ts` | 173   | Security headers — CSP, HSTS, XSS protection                               |
+| `src/lib/dns-service.ts`      | 644   | DNS verification — multi-provider support                                  |
+| `src/lib/catalog-setup.ts`    | 366   | Catalog bridge setup — platform-wide content                               |
 
 ---
 
 ## 2. Edge Middleware
 
-**File**: `src/proxy.ts` (337 lines)
+**File**: `src/proxy.ts` (388 lines)
 
 The middleware runs on every non-static request at the Edge Function level. It must stay under 1MB — no heavy imports like NextAuth.
 
@@ -218,7 +220,7 @@ if (!subdomain && role && isSaasDashboardRoute(pathForRouteCheck)) {
 
 ## 3. Tenant Context Resolution
 
-**File**: `src/lib/tenant-context.ts` (134 lines)
+**File**: `src/lib/tenant-context.ts` (189 lines)
 
 Single source of truth for tenant isolation. Every server component and server action should use this to get `schoolId`.
 
@@ -303,7 +305,7 @@ type TenantContext = {
 
 ## 4. Authentication & SSO
 
-**File**: `src/auth.ts` (1,432 lines)
+**Files**: `src/auth.ts` (777 lines) + `src/auth.config.ts` (151 lines)
 
 ### JWT Strategy
 
@@ -489,18 +491,24 @@ model Student {
 
 ### Model Audit
 
-| Category         | Models                                                                      | schoolId | Status     |
-| ---------------- | --------------------------------------------------------------------------- | -------- | ---------- |
-| **Core**         | User, School                                                                | Present  | Compliant  |
-| **People**       | Student, Guardian, Teacher, Staff, StaffMember                              | Present  | Compliant  |
-| **Academic**     | Class, Subject, Attendance, Assignment, Exam, ExamResult, Lesson, Timetable | Present  | Compliant  |
-| **Finance**      | ChartOfAccount, JournalEntry, Invoice, Payment, Fee, Scholarship, Budget    | Present  | Compliant  |
-| **Operations**   | Announcement, Message, Event, Library, BorrowRecord                         | Present  | Compliant  |
-| **Admission**    | Lead, Application, Campaign                                                 | Present  | Compliant  |
-| **Stream (LMS)** | StreamCourse, StreamCategory, StreamEnrollment                              | Present  | Compliant  |
-| **Auth Tokens**  | Account, VerificationToken, PasswordResetToken, TwoFactorToken              | Missing  | Acceptable |
+| Category         | Models (representative)                                                      | Count | schoolId | Status                    |
+| ---------------- | ---------------------------------------------------------------------------- | ----- | -------- | ------------------------- |
+| **Core**         | School, User                                                                 | 2     | Present  | Compliant                 |
+| **People**       | Student, Guardian, Teacher, Staff, StaffMember + child models                | ~30   | Present  | Compliant                 |
+| **Academic**     | Class, Subject, Department, YearLevel, AcademicLevel, Grade, Stream          | ~15   | Present  | Compliant                 |
+| **Catalog**      | CatalogSubject, CatalogChapter, CatalogLesson, CatalogExam + bridge models   | 9     | Missing  | By design (platform-wide) |
+| **Attendance**   | 30+ models across basic + enhanced attendance                                | ~30   | Present  | Compliant                 |
+| **Exams**        | QBank, certificates, marking, rubrics                                        | ~25   | Present  | Compliant                 |
+| **Finance**      | ChartOfAccount, JournalEntry, Invoice, Payment, Fee, Budget (8 prisma files) | ~40   | Present  | Compliant                 |
+| **Messaging**    | Conversation, Message, Participant, Attachment, etc.                         | 12    | Present  | Compliant                 |
+| **Admission**    | Lead, Application, Campaign, AdmissionConfig, etc.                           | 9     | Present  | Compliant                 |
+| **Stream (LMS)** | StreamCourse, StreamCategory, StreamEnrollment, etc.                         | 8     | Present  | Compliant                 |
+| **Other**        | Notifications, Files, Events, Library, etc.                                  | ~20   | Present  | Compliant                 |
+| **Auth Tokens**  | Account, VerificationToken, PasswordResetToken, TwoFactorToken               | 4     | Missing  | Acceptable                |
 
-### Models WITHOUT schoolId (4 models)
+### Models WITHOUT schoolId (~44 models)
+
+#### Auth Tokens (4 models)
 
 | Model                | Reasoning                                 | Risk |
 | -------------------- | ----------------------------------------- | ---- |
@@ -514,6 +522,26 @@ These are acceptable because:
 - Token models are ephemeral (15 min - 24h expiry)
 - Scoped by email, not tenant-specific data
 - User association provides indirect tenant link
+
+#### Catalog Global Models (7+ models)
+
+| Model               | Reasoning                                                   | Risk |
+| ------------------- | ----------------------------------------------------------- | ---- |
+| `CatalogSubject`    | Platform-wide educational content shared across all schools | None |
+| `CatalogChapter`    | Platform-wide educational content shared across all schools | None |
+| `CatalogLesson`     | Platform-wide educational content shared across all schools | None |
+| `CatalogExam`       | Platform-wide educational content shared across all schools | None |
+| `CatalogQuestion`   | Platform-wide educational content shared across all schools | None |
+| `CatalogMaterial`   | Platform-wide educational content shared across all schools | None |
+| `CatalogAssignment` | Platform-wide educational content shared across all schools | None |
+
+Catalog models are intentionally global -- they represent platform-wide educational content shared across all schools. Schools access this content via bridge models (e.g., `CatalogBridge`) that are scoped by `schoolId`.
+
+#### Subscription Tiers (1 model)
+
+| Model              | Reasoning                                  | Risk |
+| ------------------ | ------------------------------------------ | ---- |
+| `SubscriptionTier` | Platform-wide pricing, not tenant-specific | None |
 
 ### Query Patterns
 
@@ -714,7 +742,7 @@ if (subdomainCache.size > 100) {
 | L3    | ISR           | 1 hour   | School marketing pages (roadmap)  |
 | L4    | CDN           | 24 hours | Static assets (current)           |
 
-**Upstash Redis** env vars are defined in `env.mjs` but not used in application code — see [Issue #4](/multi-tenant-issues.md#4-in-memory-tenant-cache-not-shared-across-serverless-instances).
+**Upstash Redis** is now partially used in production: `proxy.ts` uses `resolveCustomDomain()` to look up custom domain mappings via Upstash Redis at the edge. For general tenant resolution (subdomain-to-schoolId), caching remains in-memory only — see [Issue #4](/multi-tenant-issues.md#4-in-memory-tenant-cache-not-shared-across-serverless-instances).
 
 ### ISR Opportunity
 
@@ -733,7 +761,7 @@ See [Issue #10](/multi-tenant-issues.md#10-no-isrrevalidate-for-school-site-page
 
 ### Security Headers
 
-**File**: `src/lib/security-headers.ts` (174 lines)
+**File**: `src/lib/security-headers.ts` (173 lines)
 
 | Header                      | Value                                          | Purpose                                       |
 | --------------------------- | ---------------------------------------------- | --------------------------------------------- |
@@ -762,7 +790,7 @@ Dynamic CSP with nonce support and fallback to `'unsafe-inline'`:
 
 ### Rate Limiting
 
-**File**: `src/lib/rate-limit.ts` (488 lines)
+**File**: `src/lib/rate-limit.ts` (537 lines)
 
 Comprehensive rate limiting with 14 predefined configurations:
 
@@ -991,7 +1019,7 @@ curl https://demo---feature-branch.vercel.app/en
 
 ```bash
 pnpm db:reset-test-user    # Reset user@databayt.org
-pnpm db:seed                # Full re-seed
+pnpm db:seed:single users   # Re-seed users (or other module)
 ```
 
 ---
@@ -1044,12 +1072,12 @@ export async function createItem(data: FormData) {
 - [x] JWT strategy with extended user data (schoolId, role)
 - [x] RBAC at edge (route protection before server render)
 - [x] Tenant context resolution with caching
-- [x] `schoolId` on 36/40 business models (4 exceptions documented)
+- [x] `schoolId` on ~220/264 models (~44 without, including auth tokens + global catalog)
 - [x] `@@unique` constraints scoped by schoolId
 - [x] `@@index` on schoolId for performance
 - [x] Vercel preview URL support (`tenant---branch`)
 - [x] Locale detection with persistence
-- [x] Rate limiting (14 configs, 488 lines)
+- [x] Rate limiting (14 configs, 537 lines)
 - [x] Security headers (CSP, HSTS, XSS)
 - [x] Impersonation with audit logging and 1-hour maxAge
 - [x] Multi-tenant Prisma adapter for OAuth

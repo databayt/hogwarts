@@ -11,6 +11,7 @@ import {
   Clock,
   Cloud,
   CreditCard,
+  DoorOpen,
   FileText,
   GraduationCap,
   FileText as InvoiceIcon,
@@ -70,4 +71,5 @@ export const Icons = {
   trendingUp: TrendingUp,
   userPlus: UserPlus,
   sales: Target,
+  doorOpen: DoorOpen,
 }

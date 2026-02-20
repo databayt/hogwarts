@@ -5497,3 +5497,105 @@ export async function getStaffDashboardData() {
     announcementCount,
   }
 }
+
+// ============================================================================
+// Upcoming Class Data (for TopSection UpcomingClassCard)
+// ============================================================================
+
+export async function getUpcomingClass(): Promise<{
+  title: string
+  subtitle: string
+  description: string
+  details: Array<{ label: string; value: string }>
+} | null> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return null
+
+    const session = await auth()
+    const userId = session?.user?.id
+    const role = session?.user?.role
+
+    // Get current day/time info
+    const now = new Date()
+    const currentDay = now.getDay() // 0 = Sun ... 6 = Sat (matches Timetable.dayOfWeek Int)
+    const currentMinutes = now.getHours() * 60 + now.getMinutes()
+
+    // Find the next timetable slot for today
+    const timetableSlots = await db.timetable.findMany({
+      where: {
+        schoolId,
+        dayOfWeek: currentDay,
+        // If teacher, filter by their teacher record
+        ...(role === "TEACHER" && userId
+          ? {
+              class: {
+                teacher: { userId },
+              },
+            }
+          : {}),
+      },
+      include: {
+        class: {
+          select: {
+            name: true,
+            subject: { select: { subjectName: true } },
+            teacher: { select: { givenName: true, surname: true } },
+            _count: { select: { studentClasses: true } },
+          },
+        },
+        classroom: { select: { roomName: true } },
+        period: {
+          select: { name: true, startTime: true, endTime: true },
+        },
+      },
+      orderBy: { period: { startTime: "asc" } },
+    })
+
+    if (!timetableSlots.length) return null
+
+    // Find next upcoming slot (period start > current time)
+    const upcoming = timetableSlots.find((slot) => {
+      if (!slot.period?.startTime) return false
+      const startDate = new Date(slot.period.startTime)
+      const slotMinutes = startDate.getHours() * 60 + startDate.getMinutes()
+      return slotMinutes > currentMinutes
+    })
+
+    const slot = upcoming || timetableSlots[0]
+    if (!slot?.class) return null
+
+    const startTime = slot.period?.startTime
+      ? new Date(slot.period.startTime).toLocaleTimeString("en", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "--:--"
+    const endTime = slot.period?.endTime
+      ? new Date(slot.period.endTime).toLocaleTimeString("en", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "--:--"
+
+    return {
+      title: slot.class.subject?.subjectName || slot.class.name,
+      subtitle: slot.class.name,
+      description: slot.class.teacher
+        ? `${slot.class.teacher.givenName} ${slot.class.teacher.surname}`
+        : "No teacher assigned",
+      details: [
+        { label: "Time", value: `${startTime} - ${endTime}` },
+        { label: "Room", value: slot.classroom?.roomName || "N/A" },
+        { label: "Period", value: slot.period?.name || "N/A" },
+        {
+          label: "Students",
+          value: String(slot.class._count.studentClasses),
+        },
+      ],
+    }
+  } catch (error) {
+    console.error("[getUpcomingClass]", error)
+    return null
+  }
+}

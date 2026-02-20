@@ -57,12 +57,12 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### Blocker 2: Guardian Linking ✅ FIXED
 
-| Property   | Value                                                           |
-| ---------- | --------------------------------------------------------------- |
-| **URLs**   | `/[lang]/s/[subdomain]/(platform)/students/[id]` (Guardian tab) |
-| **Status** | ✅ FIXED - Schema updated, server actions implemented           |
-| **Impact** | Resolved - Parents can be linked to students                    |
-| **Files**  | `src/components/platform/students/guardian-tab/`                |
+| Property   | Value                                                                              |
+| ---------- | ---------------------------------------------------------------------------------- |
+| **URLs**   | `/[lang]/s/[subdomain]/(school-dashboard)/(listings)/students/[id]` (Guardian tab) |
+| **Status** | ✅ FIXED - Schema updated, server actions implemented                              |
+| **Impact** | Resolved - Parents can be linked to students                                       |
+| **Files**  | `src/components/school-dashboard/listings/students/guardian-tab/`                  |
 
 **Resolution:**
 
@@ -75,12 +75,12 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### Blocker 3: Academic Year Setup ✅ FIXED
 
-| Property   | Value                                              |
-| ---------- | -------------------------------------------------- |
-| **URLs**   | `/[lang]/s/[subdomain]/(platform)/school/academic` |
-| **Status** | ✅ COMPLETE - 5 entities fully implemented         |
-| **Impact** | Resolved - Full academic configuration available   |
-| **Files**  | `src/components/platform/settings/academic-year/`  |
+| Property   | Value                                                        |
+| ---------- | ------------------------------------------------------------ |
+| **URLs**   | `/[lang]/s/[subdomain]/(school-dashboard)/settings/academic` |
+| **Status** | ✅ COMPLETE - 5 entities fully implemented                   |
+| **Impact** | Resolved - Full academic configuration available             |
+| **Files**  | `src/components/school-dashboard/settings/academic-year/`    |
 
 **Resolution:**
 
@@ -94,12 +94,12 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### Blocker 4: Teacher-Class Assignment ✅ FIXED
 
-| Property   | Value                                                     |
-| ---------- | --------------------------------------------------------- |
-| **URLs**   | `/[lang]/s/[subdomain]/(platform)/classes`                |
-| **Status** | ✅ FIXED - ClassTeacher UI and server actions implemented |
-| **Impact** | Resolved - Subject teachers can be assigned to classes    |
-| **Files**  | `src/components/platform/classes/`                        |
+| Property   | Value                                                         |
+| ---------- | ------------------------------------------------------------- |
+| **URLs**   | `/[lang]/s/[subdomain]/(school-dashboard)/(listings)/classes` |
+| **Status** | ✅ FIXED - ClassTeacher UI and server actions implemented     |
+| **Impact** | Resolved - Subject teachers can be assigned to classes        |
+| **Files**  | `src/components/school-dashboard/listings/classes/`           |
 
 **Resolution:**
 
@@ -184,9 +184,9 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/dashboard` | Dashboard Home | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/dashboard/settings` | Dashboard Settings |
-  Ready |
+  `/[lang]/s/[subdomain]/(school-dashboard)/dashboard` | Dashboard Home | Ready
+  | | `/[lang]/s/[subdomain]/(school-dashboard)/dashboard/settings` | Dashboard
+  Settings | Ready |
 </div>
 
 **Completion:** 85%
@@ -198,18 +198,21 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | Issues | |-----|------|--------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/students` | Students List | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/students/manage` | Manage | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/students/enroll` | Enroll | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/students/settings` | Settings | Ready | - |
-  | `/[lang]/s/[subdomain]/(platform)/students/performance` | Performance |
-  Ready | - | | `/[lang]/s/[subdomain]/(platform)/students/analysis` | Analysis
-  | Ready | - | | `/[lang]/s/[subdomain]/(platform)/students/reports` | Reports
-  | Ready | - | | `/[lang]/s/[subdomain]/(platform)/students/guardians` |
-  Guardians | Ready | ✅ Fixed | |
-  `/[lang]/s/[subdomain]/(platform)/students/[id]` | Student Detail | Ready | ✅
-  Fixed | | `/[lang]/s/[subdomain]/(platform)/students/year-levels` | Year
-  Levels | Ready | - |
+  `/[lang]/s/[subdomain]/(school-dashboard)/students` | Students List | Ready |
+  - | | `/[lang]/s/[subdomain]/(school-dashboard)/students/manage` | Manage |
+  Ready | - | | `/[lang]/s/[subdomain]/(school-dashboard)/students/enroll` |
+  Enroll | Ready | - | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/students/settings` | Settings |
+  Ready | - | | `/[lang]/s/[subdomain]/(school-dashboard)/students/performance`
+  | Performance | Ready | - | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/students/analysis` | Analysis |
+  Ready | - | | `/[lang]/s/[subdomain]/(school-dashboard)/students/reports` |
+  Reports | Ready | - | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/students/guardians` | Guardians |
+  Ready | ✅ Fixed | | `/[lang]/s/[subdomain]/(school-dashboard)/students/[id]`
+  | Student Detail | Ready | ✅ Fixed | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/students/year-levels` | Year Levels
+  | Ready | - |
 </div>
 
 **Completion:** 90%
@@ -221,14 +224,16 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/teachers` | Teachers List | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/teachers/add` | Add Teacher | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/teachers/settings` | Settings | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/teachers/[id]` | Teacher Detail | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/teachers/departments` | Departments | Ready
-  | | `/[lang]/s/[subdomain]/(platform)/teachers/schedule` | Schedule | Ready |
-  | `/[lang]/s/[subdomain]/(platform)/teachers/performance` | Performance |
-  Ready |
+  `/[lang]/s/[subdomain]/(school-dashboard)/teachers` | Teachers List | Ready |
+  | `/[lang]/s/[subdomain]/(school-dashboard)/teachers/add` | Add Teacher |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/teachers/settings` |
+  Settings | Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/teachers/[id]`
+  | Teacher Detail | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/teachers/departments` | Departments
+  | Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/teachers/schedule` |
+  Schedule | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/teachers/performance` | Performance
+  | Ready |
 </div>
 
 **Completion:** 90%
@@ -240,14 +245,16 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | Issues | |-----|------|--------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/classes` | Classes List | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/classes/create` | Create Class | Ready | ✅
-  Fixed | | `/[lang]/s/[subdomain]/(platform)/classes/[id]` | Class Detail |
-  Ready | - | | `/[lang]/s/[subdomain]/(platform)/classes/settings` | Settings |
-  Ready | - | | `/[lang]/s/[subdomain]/(platform)/classes/schedule` | Schedule |
-  Ready | - | | `/[lang]/s/[subdomain]/(platform)/classes/capacity` | Capacity |
-  Ready | - | | `/[lang]/s/[subdomain]/(platform)/classes/subjects` | Subjects |
-  Ready | ✅ Fixed |
+  `/[lang]/s/[subdomain]/(school-dashboard)/classes` | Classes List | Ready | -
+  | | `/[lang]/s/[subdomain]/(school-dashboard)/classes/create` | Create Class |
+  Ready | ✅ Fixed | | `/[lang]/s/[subdomain]/(school-dashboard)/classes/[id]` |
+  Class Detail | Ready | - | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/classes/settings` | Settings | Ready
+  | - | | `/[lang]/s/[subdomain]/(school-dashboard)/classes/schedule` | Schedule
+  | Ready | - | | `/[lang]/s/[subdomain]/(school-dashboard)/classes/capacity` |
+  Capacity | Ready | - | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/classes/subjects` | Subjects | Ready
+  | ✅ Fixed |
 </div>
 
 **Completion:** 90%
@@ -259,7 +266,7 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/subjects` | Subjects List | Ready |
+  `/[lang]/s/[subdomain]/(school-dashboard)/subjects` | Subjects List | Ready |
 </div>
 
 **Completion:** 90%
@@ -271,22 +278,27 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/attendance` | Attendance Home | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/attendance/manual` | Manual Entry | Ready |
-  | `/[lang]/s/[subdomain]/(platform)/attendance/qr-code` | QR Code | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/attendance/barcode` | Barcode | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/attendance/geo` | Geolocation | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/attendance/bulk-upload` | Bulk Upload |
-  Ready | | `/[lang]/s/[subdomain]/(platform)/attendance/analytics` | Analytics
-  | In Progress | | `/[lang]/s/[subdomain]/(platform)/attendance/analysis` |
-  Analysis | In Progress | |
-  `/[lang]/s/[subdomain]/(platform)/attendance/reports` | Reports | In Progress
-  | | `/[lang]/s/[subdomain]/(platform)/attendance/recent` | Recent | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/attendance/bulk` | Bulk Management | Ready |
-  | `/[lang]/s/[subdomain]/(platform)/attendance/settings` | Settings | Ready |
-  | `/[lang]/s/[subdomain]/(platform)/attendance/config` | Config | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/attendance/interventions` | Interventions |
-  Ready |
+  `/[lang]/s/[subdomain]/(school-dashboard)/attendance` | Attendance Home |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/attendance/manual` |
+  Manual Entry | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/attendance/qr-code` | QR Code |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/attendance/barcode` |
+  Barcode | Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/attendance/geo`
+  | Geolocation | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/attendance/bulk-upload` | Bulk
+  Upload | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/attendance/analytics` | Analytics |
+  In Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/attendance/analysis`
+  | Analysis | In Progress | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/attendance/reports` | Reports | In
+  Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/attendance/recent` |
+  Recent | Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/attendance/bulk`
+  | Bulk Management | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/attendance/settings` | Settings |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/attendance/config` |
+  Config | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/attendance/interventions` |
+  Interventions | Ready |
 </div>
 
 **Completion:** 85%
@@ -298,34 +310,41 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/exams` | Exams List | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/new` | New Exam | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/[id]` | Exam Detail | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/[id]/edit` | Edit Exam | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/[id]/take` | Take Exam | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/upcoming` | Upcoming | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/mark` | Mark Page | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/mark/pending` | Mark Pending | Ready |
-  | `/[lang]/s/[subdomain]/(platform)/exams/mark/bulk/[id]` | Bulk Mark | Ready
-  | | `/[lang]/s/[subdomain]/(platform)/exams/mark/grade/[id]` | Grade Exam |
-  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/mark/questions` | Mark
-  Questions | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/result` |
-  Results List | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/result/[id]`
-  | Result Detail | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/result/[id]/analytics` | Result
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams` | Exams List | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/new` | New Exam | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/[id]` | Exam Detail | Ready |
+  | `/[lang]/s/[subdomain]/(school-dashboard)/exams/[id]/edit` | Edit Exam |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/exams/[id]/take` | Take
+  Exam | Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/exams/upcoming` |
+  Upcoming | Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/exams/mark` |
+  Mark Page | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/mark/pending` | Mark Pending |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/exams/mark/bulk/[id]` |
+  Bulk Mark | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/mark/grade/[id]` | Grade Exam
+  | Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/exams/mark/questions` |
+  Mark Questions | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/result` | Results List | Ready
+  | | `/[lang]/s/[subdomain]/(school-dashboard)/exams/result/[id]` | Result
+  Detail | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/result/[id]/analytics` |
+  Result Analytics | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/result/analytics` | Results
   Analytics | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/result/analytics` | Results Analytics
-  | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/result/recent` | Recent
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/result/recent` | Recent
   Results | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/result/[id]/pdf/batch` | PDF Batch |
-  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/qbank` | Question Bank |
-  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/qbank/new` | New Question |
-  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/qbank/[id]` | Question
-  Detail | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/qbank/ai-generate`
-  | AI Generate | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/generate` |
-  Generate Exams | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/exams/generate/templates` | Templates |
-  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/generate/templates/[id]` |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/result/[id]/pdf/batch` | PDF
+  Batch | Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/exams/qbank` |
+  Question Bank | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/qbank/new` | New Question |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/exams/qbank/[id]` |
+  Question Detail | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/qbank/ai-generate` | AI
+  Generate | Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/exams/generate`
+  | Generate Exams | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/generate/templates` |
+  Templates | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/exams/generate/templates/[id]` |
   Template Detail | Ready |
 </div>
 
@@ -338,8 +357,9 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/grades` | Grades List | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/grades/[id]` | Grade Detail | In Progress |
+  `/[lang]/s/[subdomain]/(school-dashboard)/grades` | Grades List | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/grades/[id]` | Grade Detail | In
+  Progress |
 </div>
 
 **Completion:** 75%
@@ -351,16 +371,19 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/timetable` | Timetable Home | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/timetable/by-class` | By Class | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/timetable/by-teacher` | By Teacher | Ready |
-  | `/[lang]/s/[subdomain]/(platform)/timetable/by-room` | By Room | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/timetable/generate` | Generate | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/timetable/conflicts` | Conflicts | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/timetable/settings` | Settings | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/timetable/templates` | Templates | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/timetable/analytics` | Analytics | In
-  Progress |
+  `/[lang]/s/[subdomain]/(school-dashboard)/timetable` | Timetable Home | Ready
+  | | `/[lang]/s/[subdomain]/(school-dashboard)/timetable/by-class` | By Class |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/timetable/by-teacher` | By
+  Teacher | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/timetable/by-room` | By Room | Ready
+  | | `/[lang]/s/[subdomain]/(school-dashboard)/timetable/generate` | Generate |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/timetable/conflicts` |
+  Conflicts | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/timetable/settings` | Settings |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/timetable/templates` |
+  Templates | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/timetable/analytics` | Analytics |
+  In Progress |
 </div>
 
 **Completion:** 95%
@@ -372,9 +395,10 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/announcements` | List | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/announcements/archived` | Archived | Ready |
-  | `/[lang]/s/[subdomain]/(platform)/announcements/config` | Config | Ready |
+  `/[lang]/s/[subdomain]/(school-dashboard)/announcements` | List | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/announcements/archived` | Archived |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/announcements/config` |
+  Config | Ready |
 </div>
 
 **Completion:** 85%
@@ -386,14 +410,16 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/events` | Events List | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/events/create` | Create Event | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/events/calendar` | Calendar | In Progress |
-  | `/[lang]/s/[subdomain]/(platform)/events/categories` | Categories | In
-  Progress | | `/[lang]/s/[subdomain]/(platform)/events/attendance` | Attendance
-  | In Progress | | `/[lang]/s/[subdomain]/(platform)/events/recurring` |
-  Recurring | In Progress | | `/[lang]/s/[subdomain]/(platform)/events/settings`
-  | Settings | In Progress |
+  `/[lang]/s/[subdomain]/(school-dashboard)/events` | Events List | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/events/create` | Create Event |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/events/calendar` |
+  Calendar | In Progress | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/events/categories` | Categories | In
+  Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/events/attendance` |
+  Attendance | In Progress | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/events/recurring` | Recurring | In
+  Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/events/settings` |
+  Settings | In Progress |
 </div>
 
 **Completion:** 70%
@@ -405,20 +431,26 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/finance` | Finance Home | In Progress | |
-  `/[lang]/s/[subdomain]/(platform)/finance/dashboard` | Dashboard | In Progress
-  | | `/[lang]/s/[subdomain]/(platform)/finance/fees` | Fees | In Progress | |
-  `/[lang]/s/[subdomain]/(platform)/finance/salary` | Salary | In Progress | |
-  `/[lang]/s/[subdomain]/(platform)/finance/expenses` | Expenses | In Progress |
-  | `/[lang]/s/[subdomain]/(platform)/finance/receipt` | Receipt | In Progress |
-  | `/[lang]/s/[subdomain]/(platform)/finance/banking` | Banking | In Progress |
-  | `/[lang]/s/[subdomain]/(platform)/finance/budget` | Budget | In Progress | |
-  `/[lang]/s/[subdomain]/(platform)/finance/accounts` | Accounts | In Progress |
-  | `/[lang]/s/[subdomain]/(platform)/finance/payroll` | Payroll | In Progress |
-  | `/[lang]/s/[subdomain]/(platform)/finance/timesheet` | Timesheet | In
-  Progress | | `/[lang]/s/[subdomain]/(platform)/finance/wallet` | Wallet | In
-  Progress | | `/[lang]/s/[subdomain]/(platform)/finance/reports` | Reports | In
-  Progress | | `/[lang]/s/[subdomain]/(platform)/finance/invoice/*` | Invoice (8
+  `/[lang]/s/[subdomain]/(school-dashboard)/finance` | Finance Home | In
+  Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/finance/dashboard` |
+  Dashboard | In Progress | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/finance/fees` | Fees | In Progress |
+  | `/[lang]/s/[subdomain]/(school-dashboard)/finance/salary` | Salary | In
+  Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/finance/expenses` |
+  Expenses | In Progress | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/finance/receipt` | Receipt | In
+  Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/finance/banking` |
+  Banking | In Progress | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/finance/budget` | Budget | In
+  Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/finance/accounts` |
+  Accounts | In Progress | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/finance/payroll` | Payroll | In
+  Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/finance/timesheet` |
+  Timesheet | In Progress | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/finance/wallet` | Wallet | In
+  Progress | | `/[lang]/s/[subdomain]/(school-dashboard)/finance/reports` |
+  Reports | In Progress | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/finance/invoice/*` | Invoice (8
   routes) | In Progress |
 </div>
 
@@ -431,22 +463,25 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | Issues | |-----|------|--------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/school` | School Home | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/school/academic` | Academic Year | Ready |
-  ✅ Fixed - 5 entities | | `/[lang]/s/[subdomain]/(platform)/school/billing` |
-  Billing | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/school/configuration` | Configuration |
-  Ready | - | | `/[lang]/s/[subdomain]/(platform)/school/security` | Security |
-  Ready | - | | `/[lang]/s/[subdomain]/(platform)/school/communication` |
+  `/[lang]/s/[subdomain]/(school-dashboard)/school` | School Home | Ready | - |
+  | `/[lang]/s/[subdomain]/(school-dashboard)/school/academic` | Academic Year |
+  Ready | ✅ Fixed - 5 entities | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/school/billing` | Billing | Ready |
+  - | | `/[lang]/s/[subdomain]/(school-dashboard)/school/configuration` |
+  Configuration | Ready | - | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/school/security` | Security | Ready
+  | - | | `/[lang]/s/[subdomain]/(school-dashboard)/school/communication` |
   Communication | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/school/membership` | Membership | Ready | -
-  | | `/[lang]/s/[subdomain]/(platform)/school/subscription` | Subscription |
-  Ready | - | | `/[lang]/s/[subdomain]/(platform)/school/integration` |
-  Integration | Ready | - | | `/[lang]/s/[subdomain]/(platform)/school/bulk` |
-  Bulk Operations | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/school/reports` | Reports | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/school/system` | System | Ready | - | |
-  `/[lang]/s/[subdomain]/(platform)/school/analysis` | Analysis | Ready | - |
+  `/[lang]/s/[subdomain]/(school-dashboard)/school/membership` | Membership |
+  Ready | - | | `/[lang]/s/[subdomain]/(school-dashboard)/school/subscription` |
+  Subscription | Ready | - | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/school/integration` | Integration |
+  Ready | - | | `/[lang]/s/[subdomain]/(school-dashboard)/school/bulk` | Bulk
+  Operations | Ready | - | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/school/reports` | Reports | Ready |
+  - | | `/[lang]/s/[subdomain]/(school-dashboard)/school/system` | System |
+  Ready | - | | `/[lang]/s/[subdomain]/(school-dashboard)/school/analysis` |
+  Analysis | Ready | - |
 </div>
 
 **Completion:** 85%
@@ -458,8 +493,9 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/parents` | Parents List | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/parents/[id]` | Parent Detail | Ready |
+  `/[lang]/s/[subdomain]/(school-dashboard)/parents` | Parents List | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/parents/[id]` | Parent Detail |
+  Ready |
 </div>
 
 **Completion:** 90%
@@ -471,11 +507,13 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 <div className="my-4 overflow-x-auto">
   | URL | Page | Status | |-----|------|--------| |
-  `/[lang]/s/[subdomain]/(platform)/admission` | Admission Home | Ready | |
-  `/[lang]/s/[subdomain]/(platform)/admission/applications` | Applications |
-  Ready | | `/[lang]/s/[subdomain]/(platform)/admission/enrollment` | Enrollment
-  | Ready | | `/[lang]/s/[subdomain]/(platform)/admission/merit` | Merit | Ready
-  | | `/[lang]/s/[subdomain]/(platform)/admission/settings` | Settings | Ready |
+  `/[lang]/s/[subdomain]/(school-dashboard)/admission` | Admission Home | Ready
+  | | `/[lang]/s/[subdomain]/(school-dashboard)/admission/applications` |
+  Applications | Ready | |
+  `/[lang]/s/[subdomain]/(school-dashboard)/admission/enrollment` | Enrollment |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/admission/merit` | Merit |
+  Ready | | `/[lang]/s/[subdomain]/(school-dashboard)/admission/settings` |
+  Settings | Ready |
 </div>
 
 **Completion:** 90%

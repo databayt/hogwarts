@@ -46,6 +46,7 @@ model Class {
   startPeriodId String
   endPeriodId   String
   classroomId   String
+  gradeId       String? // Links to AcademicGrade for grade-based filtering
   name          String
   lang          String  @default("ar") // Content language
 
@@ -58,14 +59,15 @@ model Class {
   duration       Int? // Duration in weeks
   prerequisiteId String? // Parent course (course hierarchy)
 
-  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subject      Subject   @relation(fields: [subjectId], references: [id])
-  teacher      Teacher   @relation(fields: [teacherId], references: [id])
-  term         Term      @relation(fields: [termId], references: [id])
-  startPeriod  Period    @relation("ClassStartPeriod", fields: [startPeriodId], references: [id])
-  endPeriod    Period    @relation("ClassEndPeriod", fields: [endPeriodId], references: [id])
-  classroom    Classroom @relation(fields: [classroomId], references: [id])
-  prerequisite Class?    @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id], onDelete: SetNull)
+  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subject      Subject        @relation(fields: [subjectId], references: [id])
+  teacher      Teacher        @relation(fields: [teacherId], references: [id])
+  term         Term           @relation(fields: [termId], references: [id])
+  startPeriod  Period         @relation("ClassStartPeriod", fields: [startPeriodId], references: [id])
+  endPeriod    Period         @relation("ClassEndPeriod", fields: [endPeriodId], references: [id])
+  classroom    Classroom      @relation(fields: [classroomId], references: [id])
+  grade        AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+  prerequisite Class?         @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id], onDelete: SetNull)
 
   studentClasses   StudentClass[]
   assignments      Assignment[]
@@ -98,6 +100,7 @@ model Class {
   @@unique([schoolId, name]) // Unique class name per school
   @@index([courseCode])
   @@index([evaluationType])
+  @@index([schoolId, gradeId])
   @@map("classes")
 }
 

@@ -21,7 +21,7 @@ The **File** module consolidates all file-related functionality into a single, c
 ## Module Structure
 
 ```
-src/components/platform/file/
+src/components/file/
 ├── index.ts              # Main exports
 ├── types.ts              # Core type definitions
 ├── config.ts             # Size limits, MIME types, provider config
@@ -388,7 +388,7 @@ import { TEACHER_EXPORT_COLUMNS } from "@/components/platform/listings/teachers/
 **Example: Student Export Columns**
 
 ```tsx
-// src/components/platform/students/columns/export.ts
+// src/components/school-dashboard/listings/students/columns/export.ts
 import { createColumnHelpers, type ExportColumn } from "@/components/file"
 
 export interface StudentExportData {
@@ -449,7 +449,7 @@ export const STUDENT_EXPORT_COLUMNS: ExportColumn<StudentExportData>[] = [
 **Usage in Export Button:**
 
 ```tsx
-// src/components/platform/students/export-button.tsx
+// src/components/school-dashboard/listings/students/export-button.tsx
 "use client"
 
 import { ExportButton as UnifiedExportButton } from "@/components/file"
@@ -1211,12 +1211,12 @@ const importColumns: ImportColumn<CreateStudentInput>[] = [
 
 The following legacy files are deprecated and re-export from the File module for backward compatibility:
 
-| Legacy Path                                        | Status          | Migration                               |
-| -------------------------------------------------- | --------------- | --------------------------------------- |
-| `src/lib/csv-export.ts`                            | Deprecated      | Use `@/components/file`                 |
-| `src/lib/csv-import.ts`                            | Domain-specific | Use for bulk student/teacher DB imports |
-| `src/components/file-upload/`                      | Deprecated      | Use `@/components/file`                 |
-| `src/components/platform/shared/export-button.tsx` | Deprecated      | Use `ExportButton` from File module     |
+| Legacy Path                                                | Status          | Migration                               |
+| ---------------------------------------------------------- | --------------- | --------------------------------------- |
+| `src/lib/csv-export.ts`                                    | Deprecated      | Use `@/components/file`                 |
+| `src/lib/csv-import.ts`                                    | Domain-specific | Use for bulk student/teacher DB imports |
+| `src/components/file-upload/`                              | Deprecated      | Use `@/components/file`                 |
+| `src/components/school-dashboard/shared/export-button.tsx` | Deprecated      | Use `ExportButton` from File module     |
 
 ### Migration Example
 
@@ -1251,7 +1251,7 @@ For common use cases, prefer preset components:
 Create reusable column configurations:
 
 ```tsx
-// src/components/platform/students/columns/export.ts
+// src/components/school-dashboard/listings/students/columns/export.ts
 export const STUDENT_EXPORT_COLUMNS: ExportColumn<Student>[] = [
   { key: "name", header: "Name", headerAr: "الاسم" },
   // ...

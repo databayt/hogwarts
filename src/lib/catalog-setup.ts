@@ -76,11 +76,7 @@ export async function setupCatalogForSchool(
     skipIfExists?: boolean
   }
 ) {
-  const {
-    country = "SD",
-    system = "national",
-    skipIfExists = true,
-  } = options ?? {}
+  const { system = "national", skipIfExists = true } = options ?? {}
 
   // Skip if school already has academic structure
   if (skipIfExists) {
@@ -92,11 +88,14 @@ export async function setupCatalogForSchool(
     }
   }
 
-  // Read school's level classification to filter applicable levels
+  // Read school's actual country and level classification
   const school = await db.school.findUnique({
     where: { id: schoolId },
-    select: { schoolLevel: true },
+    select: { schoolLevel: true, country: true },
   })
+
+  // Use school's country (ISO code), then options override, then fallback
+  const country = school?.country || options?.country || "SD"
   const allowedLevels =
     SCHOOL_LEVEL_TO_CATALOG[school?.schoolLevel ?? "both"] ??
     SCHOOL_LEVEL_TO_CATALOG.both

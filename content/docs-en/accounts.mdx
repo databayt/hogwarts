@@ -280,8 +280,8 @@ pnpm db:reset-test-user
 # Full re-seed (all data, additive/idempotent)
 pnpm db:seed
 
-# Nuclear option: drop all data and re-seed
+# Nuclear option: drop all data and re-seed (MANUAL ONLY)
 pnpm prisma migrate reset && pnpm db:seed
 ```
 
-**Important**: `pnpm db:seed` is idempotent — running it multiple times will not create duplicates. It uses `upsert` operations throughout.
+**Important**: `pnpm db:seed` takes 45-120 minutes. For individual modules, use `pnpm db:seed:single <name>` instead. Seeds use `upsert` operations and are idempotent.

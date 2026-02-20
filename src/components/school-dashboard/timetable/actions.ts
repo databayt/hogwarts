@@ -465,47 +465,31 @@ export async function validateRoomConstraints(input: {
     }
   }
 
-  // Check subject type requirements (if room has restrictions)
+  // Check subject type requirements using allowedSubjectTypes array
   if (
     constraint?.allowedSubjectTypes &&
     constraint.allowedSubjectTypes.length > 0
   ) {
     const subjectName = classInfo?.subject?.subjectName?.toLowerCase() || ""
-    const roomType = room.classroomType?.name?.toLowerCase() || ""
+    const allowed = (constraint.allowedSubjectTypes as string[]).map(
+      (t: string) => t.toLowerCase()
+    )
 
-    // Check if subject requires special room
-    const requiresLab =
-      subjectName.includes("lab") ||
-      subjectName.includes("science") ||
-      subjectName.includes("physics") ||
-      subjectName.includes("chemistry") ||
-      subjectName.includes("biology")
+    // Check if the class's subject matches any allowed type
+    const isAllowed = allowed.some(
+      (t: string) => subjectName.includes(t) || t.includes(subjectName)
+    )
 
-    const requiresComputer =
-      subjectName.includes("computer") ||
-      subjectName.includes("it") ||
-      subjectName.includes("programming")
-
-    const isLabRoom =
-      roomType.includes("lab") || roomType.includes("laboratory")
-    const isComputerRoom =
-      roomType.includes("computer") || roomType.includes("it")
-
-    if (requiresLab && !isLabRoom) {
+    if (!isAllowed) {
       violations.push({
         type: "ROOM_EQUIPMENT",
         severity: "warning",
-        message: `${classInfo?.subject?.subjectName} may require a lab room, but ${room.roomName} is a ${room.classroomType?.name || "regular"} room`,
-        details: { subjectName, roomType: room.classroomType?.name },
-      })
-    }
-
-    if (requiresComputer && !isComputerRoom) {
-      violations.push({
-        type: "ROOM_EQUIPMENT",
-        severity: "warning",
-        message: `${classInfo?.subject?.subjectName} may require a computer room, but ${room.roomName} is a ${room.classroomType?.name || "regular"} room`,
-        details: { subjectName, roomType: room.classroomType?.name },
+        message: `${classInfo?.subject?.subjectName} is not in the allowed subject types for ${room.roomName} (allowed: ${(constraint.allowedSubjectTypes as string[]).join(", ")})`,
+        details: {
+          subjectName: classInfo?.subject?.subjectName,
+          allowedTypes: constraint.allowedSubjectTypes,
+          roomType: room.classroomType?.name,
+        },
       })
     }
   }

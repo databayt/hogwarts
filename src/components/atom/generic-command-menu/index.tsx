@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { type DialogProps } from "@radix-ui/react-dialog"
+import { AnimatePresence, motion } from "framer-motion"
 import { ChevronRight, Clock, Laptop, Moon, Search, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
@@ -11,6 +12,8 @@ import { Button } from "@/components/ui/button"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
+  GLASS,
+  SPOTLIGHT_CATEGORIES,
   SpotlightBar,
   SpotlightCategories,
   SpotlightCategoryIcons,
@@ -45,19 +48,31 @@ export function GenericCommandMenu({
   const [activeCategory, setActiveCategory] =
     React.useState<SpotlightCategoryId | null>(null)
   const [showIcons, setShowIcons] = React.useState(false)
-  const [dropdownReady, setDropdownReady] = React.useState(false)
+  const [hoveredCategory, setHoveredCategory] =
+    React.useState<SpotlightCategoryId | null>(null)
+  const [dropdownVisible, setDropdownVisible] = React.useState(false)
+  const [dropdownExiting, setDropdownExiting] = React.useState(false)
   const { setTheme } = useTheme()
   const { recentSearchItems, addRecentItem } = useRecentItems()
   const { dictionary } = useDictionary()
+
+  // Ref to read showDropdown in callbacks without stale closures
+  const showDropdownRef = React.useRef(false)
 
   // Get translations
   const commandMenuDict = dictionary?.commandMenu as
     | Record<string, string>
     | undefined
-  const placeholder =
-    config.placeholder || commandMenuDict?.placeholder || "Spotlight search"
+  const basePlaceholder = "Spotlight Search"
   const emptyMessage =
     config.emptyMessage || commandMenuDict?.noResults || "No results found."
+
+  // Whether dropdown should be visible (intent)
+  const showDropdown = query.length > 0 || activeCategory !== null
+  showDropdownRef.current = showDropdown
+
+  // Icons show when: mouse moved, no dropdown intent, dropdown not exiting
+  const iconsCanShow = showIcons && !showDropdown && !dropdownExiting
 
   // Reset state when dialog closes
   React.useEffect(() => {
@@ -65,7 +80,9 @@ export function GenericCommandMenu({
       setQuery("")
       setActiveCategory(null)
       setShowIcons(false)
-      setDropdownReady(false)
+      setHoveredCategory(null)
+      setDropdownVisible(false)
+      setDropdownExiting(false)
     }
   }, [open])
 
@@ -115,6 +132,33 @@ export function GenericCommandMenu({
     return () => document.removeEventListener("keydown", down)
   }, [open])
 
+  // Sequence dropdown: show after icons recover, hide before icons split
+  React.useEffect(() => {
+    if (showDropdown) {
+      if (!showIcons) {
+        // No icons to wait for - show dropdown immediately
+        setDropdownVisible(true)
+      }
+      // If icons visible, wait for onExitComplete callback
+    } else if (dropdownVisible) {
+      // Start dropdown collapse
+      setDropdownVisible(false)
+      setDropdownExiting(true)
+    }
+  }, [showDropdown, showIcons, dropdownVisible])
+
+  // Called when icons finish their exit (recover complete)
+  const handleIconsExitComplete = React.useCallback(() => {
+    if (showDropdownRef.current) {
+      setDropdownVisible(true)
+    }
+  }, [])
+
+  // Called when dropdown finishes its exit (collapse complete)
+  const handleDropdownExitComplete = React.useCallback(() => {
+    setDropdownExiting(false)
+  }, [])
+
   // Filter items by role and query
   const filteredNavigation = React.useMemo(() => {
     let items = config.navigation || []
@@ -143,19 +187,6 @@ export function GenericCommandMenu({
       config.maxRecent || 5
     )
   }, [config.showRecent, config.maxRecent, recentSearchItems, query])
-
-  // Whether dropdown should be visible
-  const showDropdown = query.length > 0 || activeCategory !== null
-
-  // Sequence: bar expands first (300ms), then dropdown appears
-  React.useEffect(() => {
-    if (showDropdown) {
-      const timer = setTimeout(() => setDropdownReady(true), 700)
-      return () => clearTimeout(timer)
-    } else {
-      setDropdownReady(false)
-    }
-  }, [showDropdown])
 
   // Command execution handler
   const runCommand = React.useCallback((command: () => unknown) => {
@@ -254,7 +285,7 @@ export function GenericCommandMenu({
           onClick={() => setOpen(true)}
           {...props}
         >
-          <span className="hidden lg:inline-flex">{placeholder}</span>
+          <span className="hidden lg:inline-flex">{basePlaceholder}</span>
           <span className="inline-flex lg:hidden">
             {commandMenuDict?.searchShort || "Search..."}
           </span>
@@ -266,119 +297,146 @@ export function GenericCommandMenu({
 
       <SpotlightDialog open={open} onOpenChange={setOpen}>
         <div className="flex w-full flex-col items-center">
-          {/* Top row: pill bar + hover icons */}
           <div className="flex w-full items-center justify-center gap-2">
-            <SpotlightBar
-              className={cn(
-                showDropdown
-                  ? dropdownReady
-                    ? "w-full rounded-t-3xl rounded-b-none border-b-0 shadow-none"
-                    : "w-full"
-                  : showIcons
-                    ? "w-[calc(100%-14rem)]"
-                    : "w-full"
-              )}
+            {/* Unified container: bar + dropdown */}
+            <motion.div
+              animate={{
+                width: iconsCanShow ? "calc(100% - 14rem)" : "100%",
+              }}
+              transition={{
+                type: "spring",
+                duration: 0.45,
+                bounce: 0.1,
+              }}
+              className={cn(GLASS, "overflow-hidden rounded-[28px]")}
             >
-              <SpotlightInput
-                placeholder={placeholder}
-                value={query}
-                onValueChange={setQuery}
-              />
-            </SpotlightBar>
+              <SpotlightBar>
+                <SpotlightInput
+                  placeholder={hoveredCategory ? " " : basePlaceholder}
+                  value={query}
+                  onValueChange={setQuery}
+                />
+                {(() => {
+                  const hoveredCat = hoveredCategory
+                    ? SPOTLIGHT_CATEGORIES.find((c) => c.id === hoveredCategory)
+                    : null
+                  if (!hoveredCat || query) return null
+                  return (
+                    <span className="text-muted-foreground/70 pointer-events-none absolute start-14 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
+                      {hoveredCat.label}
+                      <kbd className="bg-muted rounded px-1 py-0.5 font-mono text-[10px]">
+                        ⌘
+                      </kbd>
+                      <kbd className="bg-muted rounded px-1 py-0.5 font-mono text-[10px]">
+                        {hoveredCat.shortcut.slice(-1)}
+                      </kbd>
+                    </span>
+                  )
+                })()}
+              </SpotlightBar>
 
-            {showIcons && !dropdownReady && (
-              <SpotlightCategoryIcons
-                activeCategory={activeCategory}
-                onSelect={handleCategorySelect}
-                className={cn(
-                  "transition-all duration-200",
-                  showDropdown && "pointer-events-none opacity-0"
+              <AnimatePresence onExitComplete={handleDropdownExitComplete}>
+                {dropdownVisible && (
+                  <SpotlightDropdown key="dropdown">
+                    <SpotlightCategories
+                      activeCategory={activeCategory}
+                      onSelect={handleCategorySelect}
+                    />
+                    <SpotlightList>
+                      <SpotlightEmpty>{emptyMessage}</SpotlightEmpty>
+
+                      {/* Recent items */}
+                      {shouldShowGroup("navigation") &&
+                        filteredRecent.length > 0 && (
+                          <SpotlightGroup>
+                            {filteredRecent.map((item) => (
+                              <SpotlightItem
+                                key={item.id}
+                                value={item.title}
+                                onSelect={() => handleItemSelect(item)}
+                              >
+                                <div data-slot="icon-wrapper">
+                                  <Clock className="size-5" />
+                                </div>
+                                {item.title}
+                              </SpotlightItem>
+                            ))}
+                          </SpotlightGroup>
+                        )}
+
+                      {/* Navigation items */}
+                      {shouldShowGroup("navigation") &&
+                        filteredNavigation.length > 0 && (
+                          <SpotlightGroup>
+                            {filteredNavigation.map(renderItem)}
+                          </SpotlightGroup>
+                        )}
+
+                      {/* Action items */}
+                      {shouldShowGroup("actions") &&
+                        filteredActions.length > 0 && (
+                          <SpotlightGroup>
+                            {filteredActions.map(renderItem)}
+                          </SpotlightGroup>
+                        )}
+
+                      {/* Settings items */}
+                      {shouldShowGroup("settings") &&
+                        filteredSettings.length > 0 && (
+                          <SpotlightGroup>
+                            {filteredSettings.map(renderItem)}
+                          </SpotlightGroup>
+                        )}
+
+                      {/* Theme switcher */}
+                      {shouldShowGroup("theme") && (
+                        <SpotlightGroup>
+                          <SpotlightItem
+                            onSelect={() => runCommand(() => setTheme("light"))}
+                          >
+                            <div data-slot="icon-wrapper">
+                              <Sun className="size-5" />
+                            </div>
+                            {commandMenuDict?.light || "Light"}
+                          </SpotlightItem>
+                          <SpotlightItem
+                            onSelect={() => runCommand(() => setTheme("dark"))}
+                          >
+                            <div data-slot="icon-wrapper">
+                              <Moon className="size-5" />
+                            </div>
+                            {commandMenuDict?.dark || "Dark"}
+                          </SpotlightItem>
+                          <SpotlightItem
+                            onSelect={() =>
+                              runCommand(() => setTheme("system"))
+                            }
+                          >
+                            <div data-slot="icon-wrapper">
+                              <Laptop className="size-5" />
+                            </div>
+                            {commandMenuDict?.system || "System"}
+                          </SpotlightItem>
+                        </SpotlightGroup>
+                      )}
+                    </SpotlightList>
+                  </SpotlightDropdown>
                 )}
-              />
-            )}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Category icons – cell division from bar edge */}
+            <AnimatePresence onExitComplete={handleIconsExitComplete}>
+              {iconsCanShow && (
+                <SpotlightCategoryIcons
+                  key="category-icons"
+                  activeCategory={activeCategory}
+                  onSelect={handleCategorySelect}
+                  onHover={setHoveredCategory}
+                />
+              )}
+            </AnimatePresence>
           </div>
-
-          {dropdownReady && (
-            <SpotlightDropdown className="mt-0 rounded-t-none rounded-b-3xl border-t-0">
-              <SpotlightCategories
-                activeCategory={activeCategory}
-                onSelect={handleCategorySelect}
-              />
-              <SpotlightList>
-                <SpotlightEmpty>{emptyMessage}</SpotlightEmpty>
-
-                {/* Recent items */}
-                {shouldShowGroup("navigation") && filteredRecent.length > 0 && (
-                  <SpotlightGroup>
-                    {filteredRecent.map((item) => (
-                      <SpotlightItem
-                        key={item.id}
-                        value={item.title}
-                        onSelect={() => handleItemSelect(item)}
-                      >
-                        <div data-slot="icon-wrapper">
-                          <Clock className="size-5" />
-                        </div>
-                        {item.title}
-                      </SpotlightItem>
-                    ))}
-                  </SpotlightGroup>
-                )}
-
-                {/* Navigation items */}
-                {shouldShowGroup("navigation") &&
-                  filteredNavigation.length > 0 && (
-                    <SpotlightGroup>
-                      {filteredNavigation.map(renderItem)}
-                    </SpotlightGroup>
-                  )}
-
-                {/* Action items */}
-                {shouldShowGroup("actions") && filteredActions.length > 0 && (
-                  <SpotlightGroup>
-                    {filteredActions.map(renderItem)}
-                  </SpotlightGroup>
-                )}
-
-                {/* Settings items */}
-                {shouldShowGroup("settings") && filteredSettings.length > 0 && (
-                  <SpotlightGroup>
-                    {filteredSettings.map(renderItem)}
-                  </SpotlightGroup>
-                )}
-
-                {/* Theme switcher */}
-                {shouldShowGroup("theme") && (
-                  <SpotlightGroup>
-                    <SpotlightItem
-                      onSelect={() => runCommand(() => setTheme("light"))}
-                    >
-                      <div data-slot="icon-wrapper">
-                        <Sun className="size-5" />
-                      </div>
-                      {commandMenuDict?.light || "Light"}
-                    </SpotlightItem>
-                    <SpotlightItem
-                      onSelect={() => runCommand(() => setTheme("dark"))}
-                    >
-                      <div data-slot="icon-wrapper">
-                        <Moon className="size-5" />
-                      </div>
-                      {commandMenuDict?.dark || "Dark"}
-                    </SpotlightItem>
-                    <SpotlightItem
-                      onSelect={() => runCommand(() => setTheme("system"))}
-                    >
-                      <div data-slot="icon-wrapper">
-                        <Laptop className="size-5" />
-                      </div>
-                      {commandMenuDict?.system || "System"}
-                    </SpotlightItem>
-                  </SpotlightGroup>
-                )}
-              </SpotlightList>
-            </SpotlightDropdown>
-          )}
         </div>
       </SpotlightDialog>
     </>

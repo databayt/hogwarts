@@ -22,6 +22,7 @@ import {
 import { getSubjects } from "@/components/school-dashboard/listings/subjects/actions"
 import { getTeachers } from "@/components/school-dashboard/listings/teachers/actions"
 
+import { getAcademicGrades } from "./grade-actions"
 import { ClassFormStepProps } from "./types"
 import { classCreateSchema } from "./validation"
 
@@ -32,14 +33,22 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
   const [teachers, setTeachers] = useState<
     Array<{ id: string; givenName: string; surname: string }>
   >([])
+  const [grades, setGrades] = useState<
+    Array<{ id: string; name: string; gradeNumber: number }>
+  >([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true)
-        // Load subjects from database
-        const subjectsRes = await getSubjects({ perPage: 100 })
+        // Load subjects, teachers, and grades in parallel
+        const [subjectsRes, teachersRes, gradesRes] = await Promise.all([
+          getSubjects({ perPage: 100 }),
+          getTeachers({ perPage: 100 }),
+          getAcademicGrades(),
+        ])
+
         if (subjectsRes.success && subjectsRes.data) {
           setSubjects(
             subjectsRes.data.rows.map((s: any) => ({
@@ -49,8 +58,6 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
           )
         }
 
-        // Load teachers from database
-        const teachersRes = await getTeachers({ perPage: 100 })
         if (teachersRes.success && teachersRes.data) {
           setTeachers(
             teachersRes.data.rows.map((t: any) => ({
@@ -59,6 +66,10 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
               surname: t.surname || "",
             }))
           )
+        }
+
+        if (gradesRes.success && gradesRes.data) {
+          setGrades(gradesRes.data)
         }
       } catch (error) {
         console.error("Failed to load data:", error)
@@ -146,6 +157,37 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
           </FormItem>
         )}
       />
+
+      {grades.length > 0 && (
+        <FormField
+          control={form.control}
+          name="gradeId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Grade</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value ?? ""}
+                disabled={isView}
+              >
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select grade (optional)" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {grades.map((grade) => (
+                    <SelectItem key={grade.id} value={grade.id}>
+                      {grade.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
     </div>
   )
 }

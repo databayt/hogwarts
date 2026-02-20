@@ -191,10 +191,8 @@ const generateMockTeacherProfile = (): TeacherProfile => ({
       {
         id: "dept-1",
         schoolId: "school-1",
-        name: "Computer Science",
-        code: "CS",
-        headOfDepartmentId: "teacher-2",
-        description: "Department of Computer Science and Engineering",
+        departmentName: "Computer Science",
+        lang: "en",
         createdAt: new Date("2018-01-01"),
         updatedAt: new Date(),
       },
