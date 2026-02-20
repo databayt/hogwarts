@@ -26,15 +26,33 @@ const nextConfig: NextConfig = {
   // Prevents 1GB+ function bundles on Vercel (limit: 300mb)
   outputFileTracingExcludes: {
     "*": [
+      // Build tooling (not needed at runtime)
       "./node_modules/@swc/core-linux-x64-gnu",
       "./node_modules/@swc/core-linux-x64-musl",
       "./node_modules/@esbuild",
       "./node_modules/esbuild",
       "./node_modules/tsx",
       "./node_modules/sharp",
+      // Large static assets (served from CDN/S3, not serverless functions)
+      "./public/clickview/**",
       "./public/anthropic/**",
       "./public/site/**",
+      "./public/story.mp4",
+      "./public/courses/**",
+      "./public/stream/**",
+      "./public/animations/**",
+      "./public/onboarding/**",
+      "./public/library/**",
+      "./public/icons/**",
+      // Content (processed at build time by fumadocs-mdx)
       "./content/**",
+      // Dev/test artifacts
+      "./screenshots/**",
+      "./playwright-report/**",
+      "./test-results/**",
+      "./.playwright-mcp/**",
+      "./tests/**",
+      "./scripts/**",
     ],
   },
 

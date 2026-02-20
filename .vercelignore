@@ -1,0 +1,45 @@
+# Large local-only assets (served from S3/CloudFront in production)
+public/clickview/
+scripts/clickview-data/
+
+# Scraped HTML files
+public/site/
+
+# Anthropic assets (not needed in production)
+public/anthropic/
+
+# Screenshots and temp images at root
+*.png
+*.mp4
+
+# Playwright artifacts
+.playwright-mcp/
+playwright-report/
+test-results/
+blob-report/
+tests/
+
+# Status/documentation markdown files at root
+BANNER_EXTRACTION_COMPLETE.md
+BANNER_EXTRACTION_FINAL_STATUS.md
+CLICKVIEW_BANNER_IMPLEMENTATION.md
+CLICKVIEW_BANNER_INTEGRATION.md
+CLICKVIEW_DOWNLOAD_STATUS.md
+CLICKVIEW_REORGANIZATION_COMPLETE.md
+CLICKVIEW_REORGANIZATION_STATUS.md
+CLICKVIEW_SCRAPING_PROGRESS.md
+IMPLEMENTATION_SUMMARY.md
+IMPROVED_EXTRACTION_SUMMARY.md
+MANUAL_EXTRACTION_GUIDE.md
+clickview-elementary-snapshot.md
+scripts/clickview-clone.md
+
+# Backup and dev files
+.backup/
+.gitignore.banner-test
+src/proxy.ts.real
+screenshots/
+
+# Claude plans
+.claude/plans/
+.claude/error.log
