@@ -53,6 +53,7 @@
   "includeCoAuthoredBy": true,
   "alwaysThinkingEnabled": true,
   "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "opus",
     "PROJECT_NAME": "Hogwarts School Automation Platform",
     "PROJECT_TYPE": "nextjs-prisma-multiTenant",
     "MULTI_TENANT": "true",

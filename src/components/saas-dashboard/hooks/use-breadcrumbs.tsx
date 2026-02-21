@@ -38,7 +38,7 @@ export function useBreadcrumbs() {
       { pattern: /\/students\/([^\/\?]+)$/, api: "students" },
       { pattern: /\/teachers\/([^\/\?]+)$/, api: "teachers" },
       { pattern: /\/parents\/([^\/\?]+)$/, api: "parents" },
-      { pattern: /\/classes\/([^\/\?]+)$/, api: "classes" },
+      { pattern: /\/classrooms\/([^\/\?]+)$/, api: "classes" },
       { pattern: /\/subjects\/([^\/\?]+)$/, api: "subjects" },
       { pattern: /\/lessons\/([^\/\?]+)$/, api: "lessons" },
       { pattern: /\/announcements\/([^\/\?]+)$/, api: "announcements" },

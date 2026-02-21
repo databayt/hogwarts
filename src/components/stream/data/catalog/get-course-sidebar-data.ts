@@ -2,7 +2,7 @@
 
 import { notFound } from "next/navigation"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image"
+import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
 
 /**

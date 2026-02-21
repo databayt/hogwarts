@@ -95,7 +95,7 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{t.topics}</h2>
         <Link
-          href="chapters"
+          href={`${subject.slug}/chapters`}
           className="text-muted-foreground hover:text-foreground text-xs transition-colors hover:underline"
         >
           {t.seeAll}
@@ -112,7 +112,7 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
             label={t.exploreAll}
             color={subject.color}
             imageUrl={subject.imageUrl}
-            href="chapters"
+            href={`${subject.slug}/chapters`}
           />
 
           {chapters.map((ch) => (

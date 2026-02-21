@@ -123,7 +123,7 @@ type ClassListResult = {
   createdAt: string
 }
 
-const CLASSES_PATH = "/classes"
+const CLASSES_PATH = "/classrooms"
 
 // ============================================================================
 // Mutations
@@ -152,15 +152,41 @@ export async function createClass(
 
     const parsed = classCreateSchema.parse(input)
 
-    // Capacity cross-validation: warn if class maxCapacity > room capacity
-    let capacityWarning: string | undefined
+    // Check plan limit before creating
+    const [classCount, schoolData] = await Promise.all([
+      db.class.count({ where: { schoolId } }),
+      db.school.findFirst({
+        where: { id: schoolId },
+        select: { maxClasses: true },
+      }),
+    ])
+    if (schoolData?.maxClasses && classCount >= schoolData.maxClasses) {
+      return {
+        success: false,
+        error: `Class limit reached (${classCount}/${schoolData.maxClasses}). Upgrade your plan to add more classes.`,
+      }
+    }
+
+    // Auto-set maxCapacity from room capacity if not provided
+    if (parsed.classroomId && !parsed.maxCapacity) {
+      const room = await db.classroom.findFirst({
+        where: { id: parsed.classroomId, schoolId },
+        select: { capacity: true },
+      })
+      if (room) parsed.maxCapacity = room.capacity
+    }
+
+    // Capacity cross-validation: hard error if class maxCapacity > room capacity
     if (parsed.classroomId && parsed.maxCapacity) {
       const room = await db.classroom.findFirst({
         where: { id: parsed.classroomId, schoolId },
         select: { capacity: true, roomName: true },
       })
       if (room && parsed.maxCapacity > room.capacity) {
-        capacityWarning = `Class max capacity (${parsed.maxCapacity}) exceeds room "${room.roomName}" capacity (${room.capacity})`
+        return {
+          success: false,
+          error: `Max capacity (${parsed.maxCapacity}) cannot exceed room "${room.roomName}" capacity (${room.capacity}). Reduce max capacity or choose a larger room.`,
+        }
       }
     }
 
@@ -186,7 +212,7 @@ export async function createClass(
     })
 
     revalidatePath(CLASSES_PATH)
-    return { success: true, data: { id: row.id }, warning: capacityWarning }
+    return { success: true, data: { id: row.id } }
   } catch (error) {
     console.error("[createClass] Error:", error)
 
@@ -238,8 +264,7 @@ export async function updateClass(
       return { success: false, error: "Class not found" }
     }
 
-    // Capacity cross-validation for updates
-    let capacityWarning: string | undefined
+    // Capacity cross-validation for updates: hard error
     const effectiveClassroomId =
       typeof rest.classroomId !== "undefined" ? rest.classroomId : null
     const effectiveMaxCapacity =
@@ -250,7 +275,10 @@ export async function updateClass(
         select: { capacity: true, roomName: true },
       })
       if (room && effectiveMaxCapacity > room.capacity) {
-        capacityWarning = `Class max capacity (${effectiveMaxCapacity}) exceeds room "${room.roomName}" capacity (${room.capacity})`
+        return {
+          success: false,
+          error: `Max capacity (${effectiveMaxCapacity}) cannot exceed room "${room.roomName}" capacity (${room.capacity}). Reduce max capacity or choose a larger room.`,
+        }
       }
     }
 
@@ -283,7 +311,7 @@ export async function updateClass(
     await db.class.updateMany({ where: { id, schoolId }, data })
 
     revalidatePath(CLASSES_PATH)
-    return { success: true, data: undefined, warning: capacityWarning }
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[updateClass] Error:", error)
 
@@ -1514,7 +1542,7 @@ export async function assignSubjectTeacher(
     })
 
     revalidatePath(CLASSES_PATH)
-    revalidatePath(`/classes/${parsed.classId}`)
+    revalidatePath(`/classrooms/${parsed.classId}`)
 
     return { success: true, data: { id: assignment.id } }
   } catch (error) {
@@ -1579,7 +1607,7 @@ export async function updateSubjectTeacher(input: {
     })
 
     revalidatePath(CLASSES_PATH)
-    revalidatePath(`/classes/${existing.classId}`)
+    revalidatePath(`/classrooms/${existing.classId}`)
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -1642,7 +1670,7 @@ export async function removeSubjectTeacher(input: {
     })
 
     revalidatePath(CLASSES_PATH)
-    revalidatePath(`/classes/${existing.classId}`)
+    revalidatePath(`/classrooms/${existing.classId}`)
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -1854,7 +1882,7 @@ export async function bulkDeleteClasses(input: {
       where: { id: { in: validIds }, schoolId },
     })
 
-    revalidatePath("/classes")
+    revalidatePath("/classrooms")
     return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[bulkDeleteClasses] Error:", error)

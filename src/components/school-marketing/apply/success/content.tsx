@@ -3,8 +3,16 @@
 import React from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { ArrowRight, Calendar, CheckCircle2, FileText } from "lucide-react"
+import {
+  ArrowRight,
+  Banknote,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  FileText,
+} from "lucide-react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -20,12 +28,18 @@ interface SuccessContentProps {
   dictionary: Dictionary
   applicationNumber?: string
   schoolName?: string
+  paymentMethod?: string | null
+  paymentReference?: string | null
+  applicationFeePaid?: boolean
 }
 
 export default function SuccessContent({
   dictionary,
   applicationNumber,
   schoolName = "School",
+  paymentMethod,
+  paymentReference,
+  applicationFeePaid,
 }: SuccessContentProps) {
   const params = useParams()
   const { locale } = useLocale()
@@ -83,6 +97,77 @@ export default function SuccessContent({
                     ? "يرجى الاحتفاظ بهذا الرقم للمراجع المستقبلية"
                     : "Please save this number for future reference")}
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Payment Status Section */}
+        {paymentMethod && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Banknote className="text-primary h-5 w-5" />
+                {isRTL ? "حالة الدفع" : "Payment Status"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {applicationFeePaid ? (
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium">
+                      {isRTL ? "تم تأكيد الدفع" : "Payment Confirmed"}
+                    </p>
+                    <Badge variant="default" className="mt-1">
+                      {isRTL ? "مدفوع" : "Paid"}
+                    </Badge>
+                  </div>
+                </div>
+              ) : paymentMethod === "cash" ? (
+                <div className="flex items-start gap-3">
+                  <Clock className="text-muted-foreground mt-0.5 h-5 w-5" />
+                  <div>
+                    <p className="font-medium">
+                      {isRTL
+                        ? "الدفع معلق — يرجى الدفع في المدرسة"
+                        : "Payment Pending — Please pay at school"}
+                    </p>
+                    {paymentReference && (
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        {isRTL ? "رقم المرجع: " : "Reference: "}
+                        <span className="font-mono font-medium">
+                          {paymentReference}
+                        </span>
+                      </p>
+                    )}
+                    <Badge variant="secondary" className="mt-2">
+                      {isRTL ? "نقداً في المدرسة" : "Cash at School"}
+                    </Badge>
+                  </div>
+                </div>
+              ) : paymentMethod === "bank_transfer" ? (
+                <div className="flex items-start gap-3">
+                  <Clock className="text-muted-foreground mt-0.5 h-5 w-5" />
+                  <div>
+                    <p className="font-medium">
+                      {isRTL
+                        ? "في انتظار تأكيد التحويل"
+                        : "Transfer Pending Confirmation"}
+                    </p>
+                    {paymentReference && (
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        {isRTL ? "رقم المرجع: " : "Reference: "}
+                        <span className="font-mono font-medium">
+                          {paymentReference}
+                        </span>
+                      </p>
+                    )}
+                    <Badge variant="secondary" className="mt-2">
+                      {isRTL ? "تحويل بنكي" : "Bank Transfer"}
+                    </Badge>
+                  </div>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         )}

@@ -3,7 +3,14 @@ import { AlertTriangle } from "lucide-react"
 
 import { Button } from "../ui/button"
 
-export function NewComers() {
+interface NewComersProps {
+  lang?: string
+  subdomain?: string
+}
+
+export function NewComers({ lang = "en", subdomain }: NewComersProps) {
+  const joinHref = subdomain ? `/${lang}/s/${subdomain}/join` : "/onboarding"
+
   return (
     <section className="py-16 md:py-24">
       <div className="text-center">
@@ -16,7 +23,7 @@ export function NewComers() {
 
         <p className="text-muted-foreground pb-8">Welcome on board</p>
 
-        <Link href="/onboarding">
+        <Link href={joinHref}>
           <Button size="lg" className="rounded-full py-6">
             Onboarding
           </Button>

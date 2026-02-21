@@ -112,14 +112,13 @@ schedule step    --> Period records + SchoolWeekConfig (via applyTimetableStruct
 
 ### Capacity Step Clarification
 
-The capacity step's form labels say **"Students"**, **"Teachers"**, **"Classrooms"**, and **"Facilities"**. What actually gets persisted:
+The capacity step's form labels say **"Students"**, **"Teachers"**, and **"Classrooms"**. What actually gets persisted:
 
 | Form Label     | Saved As             | What It Means                                      |
 | -------------- | -------------------- | -------------------------------------------------- |
 | Students       | `School.maxStudents` | Subscription/plan limit on total student records   |
 | Teachers       | `School.maxTeachers` | Subscription/plan limit on total teacher records   |
 | **Classrooms** | `School.maxClasses`  | Limits how many **`Class`** records can be created |
-| **Facilities** | _(not persisted)_    | Collected by the form but never saved to any field |
 
 Key distinction: **"Classrooms" in the form maps to `maxClasses`** -- it limits `Class` records (course sections), NOT physical `Classroom` records. No `Classroom` records are created during onboarding. The naming is a known source of confusion (see [Current Gaps](#current-gaps)).
 
@@ -129,7 +128,9 @@ When onboarding completes, `publishSchool()` sets `isPublished: true` and `onboa
 
 ### What Happens Next
 
-After publishing, `setupCatalogForSchool()` should be called to provision the academic structure and subject selections. This function reads the school's profile (`country`, `schoolLevel`) and auto-creates everything in Layer 3 and Layer 4.
+After publishing, `setupCatalogForSchool()` is called automatically to provision the academic structure and subject selections. This function reads the school's profile (`country`, `schoolLevel`) and auto-creates everything in Layer 3 and Layer 4.
+
+If catalog setup was missed during onboarding, SaaS admins can trigger it manually from the tenants table via **Setup Catalog** in the row actions dropdown. The button shows current status ("X levels, Y grades" or "Not configured") and calls `tenantSetupCatalog(schoolId)` with `skipIfExists: true`.
 
 **Depends on:** Layer 1 (catalog must exist to link subjects).
 
@@ -255,6 +256,7 @@ Teachers are connected to subjects and classes through multiple relationship typ
 | **Co-Teacher**        | `ClassTeacher` with `role`      | `PRIMARY`, `CO_TEACHER`, or `ASSISTANT`       |
 | **Subject Expert**    | `TeacherSubjectExpertise`       | Qualification metadata (`expertiseLevel`)     |
 | **Department Member** | `TeacherDepartment`             | Department membership with `isPrimary` flag   |
+| **Department Head**   | `TeacherDepartment`             | `isDepartmentHead: true` (one per department) |
 | **Homeroom Teacher**  | `Class` (pastoral, not subject) | Pastoral care, not tied to a specific subject |
 
 ### Assignment Flow
@@ -269,6 +271,7 @@ Teacher
   +--> TeacherDepartment         (which department)
   |      schoolId + teacherId + departmentId
   |      isPrimary: true/false
+  |      isDepartmentHead: true/false (one head per dept)
   |
   +--> Class (as primary teacher)  (what they DO teach)
   |      Class.teacherId = teacher.id
@@ -344,6 +347,15 @@ Student --> StudentClass --> Class --> Teacher (primary)
 Student --> StudentClass --> Class --> ClassTeacher (co-teachers)
 Student --> StudentClass --> Class --> Timetable (schedule)
 ```
+
+### Class Placement
+
+Two UI components handle placing admitted students into class sections:
+
+- **Placement Dialog** (`admission/placement-dialog.tsx`) -- shown per-student after admission. Displays available classes for the student's grade with capacity badges (`enrolled/max`). Validates `maxCapacity` before placement.
+- **Bulk Placement** (`admission/bulk-placement.tsx`) -- table of all `ADMITTED` students without class placement. Select multiple students, pick a target class, and batch-assign. Prevents placing into full classes.
+
+Both call `placeStudentInClass(applicationId, classId)` which creates the `StudentClass` record and checks for duplicate enrollment.
 
 **Depends on:** Layer 3 (grades must exist for placement) + Layer 4 (subjects must be selected).
 
@@ -454,17 +466,18 @@ The demo school seeds 28 rooms across 5 buildings:
 | `maintenanceBlocks`    | Scheduled maintenance windows                        |
 | `wheelchairAccessible` | Accessibility flag                                   |
 
-### Grade-to-Classroom Bridge
+### Grade-to-Class Bridge
 
-There is **no direct `gradeId` or `yearLevelId` on the `Class` model**. The grade connection is implicit. The `Class` model is the bridge between academics and physical space:
+The `Class` model has an optional `gradeId` FK linking directly to `AcademicGrade`. This connects academic structure to physical space:
 
 ```
 AcademicGrade (e.g., Grade 7)
     |
-    | (implicit -- via class name and StudentYearLevel/StudentClass joins)
+    | gradeId (optional FK)
     |
     +--> Class
     |      name: "Math - Grade 7 A"
+    |      gradeId     --> AcademicGrade (which grade)
     |      subjectId   --> Subject (what is taught)
     |      teacherId   --> Teacher (who teaches)
     |      classroomId --> Classroom (where it happens)
@@ -478,8 +491,10 @@ AcademicGrade (e.g., Grade 7)
 
 Key points:
 
-- **`Class` is the bridge** -- it holds `subjectId`, `teacherId`, `classroomId`, and `termId`
-- **No `gradeId` on Class** -- the grade connection is implicit (via the class name convention and `StudentYearLevel`/`StudentClass` join tables)
+- **`Class` is the bridge** -- it holds `gradeId`, `subjectId`, `teacherId`, `classroomId`, and `termId`
+- **`gradeId` is optional** -- existing records without it are backfilled via `pnpm db:seed:single backfill-class-grades` (parses grade number from class name)
+- **Class form** includes a grade selector dropdown when `AcademicGrade` records exist for the school
+- **Grade column** appears in the class table and CSV export
 - **Class sections** (A, B, C) are not a formal field -- they are encoded in the `name` (e.g., "Math - Grade 7 A")
 - **In seeds**, classrooms are assigned to classes via **round-robin** across available rooms, not by grade affinity
 
@@ -604,21 +619,21 @@ No Classrooms        --> No timetable slots      (classroomId is required)
 
 Known integration issues between layers:
 
-| Gap                                   | Layers    | Status | Description                                                                                                                   |
-| ------------------------------------- | --------- | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| ~~`setupCatalogForSchool` not wired~~ | 2 --> 3,4 | Fixed  | Now called in `congratulations/actions.ts` during final onboarding step.                                                      |
-| ~~`schoolLevel` not collected in UI~~ | 2 --> 3   | Fixed  | `description/form.tsx` now collects `schoolLevel` with auto-submit logic.                                                     |
-| `country` format mismatch             | 1 --> 4   | Open   | Catalog uses ISO codes (`"US"`, `"SD"`). Seeds use mixed formats: `"SD"`, `"Sudan"`, `"السودان"`. No validation enforces ISO. |
-| Head of Department not in schema      | 5a        | Open   | `TeacherDepartment` has `isPrimary` but no explicit `isDepartmentHead` flag.                                                  |
-| No auto-placement after ADMITTED      | 5b --> 7  | Open   | After `ADMITTED` status, no automated `Class` assignment. `applyingForClass` is a grade string, not a FK.                     |
-| Classroom setup not in onboarding     | 2 --> 6   | Open   | Capacity step saves `maxClasses` count but creates no `Classroom` records.                                                    |
-| Onboarding `facilities` not persisted | 2 --> 6   | Open   | Capacity form collects "facilities" count but never saves it.                                                                 |
-| `allowedSubjectTypes` unused          | 6 --> 7   | Open   | `RoomConstraint.allowedSubjectTypes` exists but timetable algorithm ignores it.                                               |
-| Dashboard mock room data              | 7         | Open   | `UpcomingClassCard` shows hardcoded room strings instead of querying timetable.                                               |
-| `maxClasses` naming confusion         | 2 --> 6   | Open   | Form says "Classrooms" but saves to `maxClasses` (limits `Class` records, not `Classroom` rooms).                             |
-| No `gradeId` on Class model           | 3 --> 5a  | Open   | Grade-to-class connection is implicit (via name and joins). No direct FK to `AcademicGrade`.                                  |
-| ~~No classroom CRUD UI~~              | 6         | Fixed  | Full 6-file CRUD pattern exists at `school-dashboard/listings/classrooms/`.                                                   |
-| Capacity cross-validation missing     | 5a --> 6  | Open   | `Class.maxCapacity` not validated against `Classroom.capacity`.                                                               |
+| Gap                                       | Layers    | Status | Description                                                                                                                   |
+| ----------------------------------------- | --------- | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| ~~`setupCatalogForSchool` not wired~~     | 2 --> 3,4 | Fixed  | Now called in `congratulations/actions.ts` during final onboarding step.                                                      |
+| ~~`schoolLevel` not collected in UI~~     | 2 --> 3   | Fixed  | `description/form.tsx` now collects `schoolLevel` with auto-submit logic.                                                     |
+| ~~`country` format mismatch~~             | 1 --> 4   | Fixed  | All models, seeds, and validation now use ISO 2-letter codes. Mapbox returns `short_code`, onboarding validates `^[A-Z]{2}$`. |
+| ~~Head of Department not in schema~~      | 5a        | Fixed  | `TeacherDepartment.isDepartmentHead` added. Toggle UI in department content. Seeded with one head per department.             |
+| ~~No auto-placement after ADMITTED~~      | 5b --> 7  | Fixed  | Placement dialog (per-student) and bulk placement (batch) UI. `placeStudentInClass` action validates capacity.                |
+| Classroom setup not in onboarding         | 2 --> 6   | Open   | Capacity step saves `maxClasses` count but creates no `Classroom` records.                                                    |
+| ~~Onboarding `facilities` not persisted~~ | 2 --> 6   | Fixed  | Removed from capacity form, validation, and types. No longer collected.                                                       |
+| ~~`allowedSubjectTypes` unused~~          | 6 --> 7   | Fixed  | Timetable algorithm now checks `RoomConstraint.allowedSubjectTypes` during slot generation.                                   |
+| ~~Dashboard mock room data~~              | 7         | Fixed  | `getUpcomingClass()` server action queries real timetable data (day, period, class, room).                                    |
+| `maxClasses` naming confusion             | 2 --> 6   | Open   | Form says "Classrooms" but saves to `maxClasses` (limits `Class` records, not `Classroom` rooms).                             |
+| ~~No `gradeId` on Class model~~           | 3 --> 5a  | Fixed  | Optional `gradeId` FK added to Class. Grade selector in form, grade column in table. Backfill script for existing records.    |
+| ~~No classroom CRUD UI~~                  | 6         | Fixed  | Full 6-file CRUD pattern exists at `school-dashboard/listings/classrooms/`.                                                   |
+| ~~Capacity cross-validation missing~~     | 5a --> 6  | Fixed  | `createClass` and `updateClass` return user-facing warning when `maxCapacity` exceeds room `capacity`.                        |
 
 ---
 

@@ -409,10 +409,12 @@
       }
     },
     "classes": {
-      "title": "Classes",
-      "description": "Manage academic classes and schedules",
+      "title": "Classrooms",
+      "description": "Manage academic classes, rooms, and schedules",
       "navigation": {
         "all": "All",
+        "rooms": "Rooms",
+        "configure": "Configure",
         "create": "Create",
         "subjects": "Subjects",
         "schedule": "Schedule",

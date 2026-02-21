@@ -79,13 +79,44 @@ export async function POST(req: Request) {
             schoolId?: string
             type?: string
             catalogSubjectId?: string
+            applicationId?: string
+            referenceNumber?: string
           }
           subscription?: string
           payment_status?: string
+          payment_intent?: string
         }
       }
     }
     const session = eventData.data.object
+
+    // Handle APPLICATION FEE payments (one-time, no subscription)
+    if (
+      session.metadata?.type === "application_fee" &&
+      session.metadata?.applicationId &&
+      !session.subscription
+    ) {
+      if (session.payment_status === "paid") {
+        try {
+          await db.application.update({
+            where: { id: session.metadata.applicationId },
+            data: {
+              applicationFeePaid: true,
+              paymentId: (session.payment_intent as string) ?? null,
+              paymentDate: new Date(),
+            },
+          })
+
+          console.log(
+            `[Webhook] Application fee paid: ${session.metadata.applicationId}`
+          )
+        } catch (error) {
+          console.error("[Webhook] Failed to record application fee:", error)
+        }
+      }
+
+      return new Response(null, { status: 200 })
+    }
 
     // Handle CATALOG ENROLLMENT payments (one-time, no subscription)
     if (

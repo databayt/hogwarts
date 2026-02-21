@@ -333,10 +333,13 @@ export type { ActionResponse as ActionResult } from "@/lib/action-response"
 
 export interface SubmitApplicationResult {
   applicationNumber: string
+  applicationId: string
   status: AdmissionApplicationStatus
   accessToken: string
   requiresPayment: boolean
-  paymentUrl?: string
+  applicationFee?: number
+  currency?: string
+  paymentMethods?: string[]
 }
 
 // ============================================

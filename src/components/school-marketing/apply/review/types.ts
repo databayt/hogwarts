@@ -1,5 +1,7 @@
 // Review Step Types
 
+import type { SubmitActionResult } from "./actions"
+
 export interface ReviewFormRef {
   submitApplication: () => Promise<void>
 }
@@ -7,7 +9,7 @@ export interface ReviewFormRef {
 export interface ReviewFormProps {
   sessionToken?: string
   dictionary?: Record<string, unknown>
-  onSuccess?: (applicationNumber: string) => void
+  onSuccess?: (result: SubmitActionResult) => void
 }
 
 export interface SubmissionResult {

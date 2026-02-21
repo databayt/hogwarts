@@ -408,4 +408,15 @@ export const APPLICATION_CONFIG: StepConfig = {
   groupLabels: ["Information", "Documents & Review"],
 }
 
+/** Internal onboarding wizard configuration */
+export const INTERNAL_ONBOARDING_CONFIG: StepConfig = {
+  steps: ["personal", "contact", "role-details", "documents", "review"],
+  groups: {
+    1: ["personal", "contact"],
+    2: ["role-details", "documents"],
+    3: ["review"],
+  },
+  groupLabels: ["Personal Information", "Role & Documents", "Review & Submit"],
+}
+
 export default FormFooter

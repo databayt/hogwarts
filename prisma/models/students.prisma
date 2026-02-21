@@ -32,7 +32,7 @@ model Student {
   dateOfBirth    DateTime  @db.Date
   gender         String
   bloodGroup     String? // A+, B-, O+, etc.
-  nationality    String?   @default("Saudi Arabia")
+  nationality    String?   @default("SD")
   passportNumber String?
   visaStatus     String? // For international students
   visaExpiryDate DateTime? @db.Date
@@ -48,7 +48,7 @@ model Student {
   city             String?
   state            String?
   postalCode       String?
-  country          String? @default("Saudi Arabia")
+  country          String? @default("SD")
 
   // Emergency Contact
   emergencyContactName     String?

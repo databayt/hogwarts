@@ -4,7 +4,7 @@
  * Extracted from catalog-image.ts to avoid pulling sharp/S3 into the client bundle.
  */
 
-import { getCloudFrontUrl, isCloudFrontConfigured } from "@/lib/cloudfront"
+import { getCloudFrontUrl, isCloudFrontConfigured } from "@/lib/cloudfront-url"
 
 export type CatalogImageSize = "sm" | "md" | "lg" | "original"
 

@@ -18,6 +18,7 @@ import {
 } from "@/components/school-dashboard/listings/classes/actions"
 import { classCreateSchema } from "@/components/school-dashboard/listings/classes/validation"
 
+import { CourseManagementStep } from "./course-management"
 import { InformationStep } from "./information"
 import { ScheduleStep } from "./schedule"
 
@@ -72,6 +73,13 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
         endPeriodId: c.endPeriodId ?? "",
         classroomId: c.classroomId ?? "",
         gradeId: c.gradeId ?? undefined,
+        courseCode: c.courseCode ?? undefined,
+        credits: c.credits ?? undefined,
+        evaluationType: c.evaluationType ?? "NORMAL",
+        minCapacity: c.minCapacity ?? undefined,
+        maxCapacity: c.maxCapacity ?? undefined,
+        duration: c.duration ?? undefined,
+        prerequisiteId: c.prerequisiteId ?? undefined,
       })
     }
     void load()
@@ -85,11 +93,7 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
         : await createClass(values)
       if (res?.success) {
         toast.success(currentId ? "Class updated" : "Class created")
-        if (res.warning) {
-          toast.warning(res.warning)
-        }
         closeModal()
-        // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
           onSuccess()
         } else {
@@ -115,31 +119,38 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
         setCurrentStep(2)
       }
     } else if (currentStep === 2) {
+      setCurrentStep(3)
+    } else if (currentStep === 3) {
       await form.handleSubmit(onSubmit)()
     }
   }
 
   const handleSaveCurrentStep = async () => {
     if (currentId) {
-      // For editing, save current step data
       const currentStepFields =
         currentStep === 1
           ? (["name", "subjectId", "teacherId"] as const)
-          : (["termId", "startPeriodId", "endPeriodId", "classroomId"] as const)
+          : currentStep === 2
+            ? ([
+                "termId",
+                "startPeriodId",
+                "endPeriodId",
+                "classroomId",
+              ] as const)
+            : (["courseCode", "credits", "minCapacity", "maxCapacity"] as const)
 
       const stepValid = await form.trigger(currentStepFields)
       if (stepValid) {
         await form.handleSubmit(onSubmit)()
       }
     } else {
-      // For creating, just go to next step
       await handleNext()
     }
   }
 
   const handleBack = () => {
-    if (currentStep === 2) {
-      setCurrentStep(1)
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
     } else {
       closeModal()
     }
@@ -151,6 +162,8 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
         return <InformationStep form={form} isView={isView} />
       case 2:
         return <ScheduleStep form={form} isView={isView} />
+      case 3:
+        return <CourseManagementStep form={form} isView={isView} />
       default:
         return null
     }
@@ -159,6 +172,7 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
   const stepLabels: Record<number, string> = {
     1: "Basic Information",
     2: "Schedule Details",
+    3: "Capacity & Course",
   }
 
   return (
@@ -181,7 +195,7 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
 
         <ModalFooter
           currentStep={currentStep}
-          totalSteps={2}
+          totalSteps={3}
           stepLabel={stepLabels[currentStep]}
           isView={isView}
           isEdit={!!currentId}

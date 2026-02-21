@@ -248,7 +248,9 @@ export const getClassColumns = (
               <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href={`/${lang}/classes/${classItem.id}`}>{t.view}</Link>
+                <Link href={`/${lang}/classrooms/${classItem.id}`}>
+                  {t.view}
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
               <DropdownMenuSeparator />

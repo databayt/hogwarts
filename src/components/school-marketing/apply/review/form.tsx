@@ -50,11 +50,11 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
         formData
       )
 
-      if (!result.success) {
+      if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to submit application")
       }
 
-      onSuccess?.(result.data?.applicationNumber || "")
+      onSuccess?.(result.data)
     }
 
     useImperativeHandle(ref, () => ({ submitApplication }))

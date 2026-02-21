@@ -60,7 +60,7 @@ export function CatalogDetailSkeleton() {
       <Skeleton className="h-4 w-48" />
 
       {/* Hero banner */}
-      <div className="rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 p-6 dark:from-blue-950/20 dark:to-purple-950/20">
+      <div className="rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 p-6 dark:from-blue-950/20 dark:to-purple-950/20">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="mt-2 h-4 w-96" />
         <div className="mt-3 flex gap-2">
@@ -69,7 +69,7 @@ export function CatalogDetailSkeleton() {
         </div>
       </div>
 
-      {/* 3 stat cards */}
+      {/* 3 stat cards (no description — detail cards show number only) */}
       <div className="grid gap-4 md:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <Card key={i}>
@@ -79,7 +79,6 @@ export function CatalogDetailSkeleton() {
             </CardHeader>
             <CardContent>
               <Skeleton className="h-7 w-20" />
-              <Skeleton className="mt-1 h-3 w-32" />
             </CardContent>
           </Card>
         ))}
@@ -134,7 +133,7 @@ export function CatalogDetailSkeleton() {
 export function CatalogAnalyticsSkeleton() {
   return (
     <div className="space-y-6">
-      {/* 6 stat cards */}
+      {/* 6 stat cards (no description — analytics cards show number only) */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <Card key={i}>
@@ -144,7 +143,6 @@ export function CatalogAnalyticsSkeleton() {
             </CardHeader>
             <CardContent>
               <Skeleton className="h-7 w-16" />
-              <Skeleton className="mt-1 h-3 w-24" />
             </CardContent>
           </Card>
         ))}

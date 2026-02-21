@@ -272,9 +272,9 @@ export function getSecondaryQuickActions(
         },
         {
           iconName: "Users",
-          label: "Classes",
-          description: "Manage classes",
-          href: "/classes",
+          label: "Classrooms",
+          description: "Manage classrooms",
+          href: "/classrooms",
         },
         {
           iconName: "Book",
@@ -288,9 +288,9 @@ export function getSecondaryQuickActions(
       return [
         {
           iconName: "Users",
-          label: "Classes",
-          description: "View assigned classes",
-          href: "/classes",
+          label: "Classrooms",
+          description: "View assigned classrooms",
+          href: "/classrooms",
         },
         {
           iconName: "Chat",

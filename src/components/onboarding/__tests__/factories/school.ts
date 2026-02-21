@@ -87,7 +87,7 @@ export function createMockSchool(
     address: faker.location.streetAddress(),
     city: faker.location.city(),
     state: faker.location.state(),
-    country: faker.location.country(),
+    country: faker.location.countryCode("alpha-2"),
     domain: generateValidDomain(),
     website: faker.internet.url(),
     logo: faker.image.url(),
@@ -228,7 +228,7 @@ export function createLocationStepData(
     address: overrides.address ?? faker.location.streetAddress(),
     city: overrides.city ?? faker.location.city(),
     state: overrides.state ?? faker.location.state(),
-    country: overrides.country ?? faker.location.country(),
+    country: overrides.country ?? faker.location.countryCode("alpha-2"),
   }
 }
 

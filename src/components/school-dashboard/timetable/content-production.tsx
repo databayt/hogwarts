@@ -8,7 +8,7 @@ import { SessionProvider } from "next-auth/react"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { TimetablePreview } from "./views"
+import { RoleRouter } from "./views"
 
 interface Props {
   dictionary?: Dictionary["school"]
@@ -20,7 +20,7 @@ function TimetableContentInner({ dictionary }: Props) {
 
   return (
     <div className="space-y-6">
-      {dictionary && <TimetablePreview dictionary={dictionary} lang={lang} />}
+      {dictionary && <RoleRouter dictionary={dictionary} lang={lang} />}
     </div>
   )
 }

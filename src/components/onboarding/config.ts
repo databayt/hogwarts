@@ -235,6 +235,15 @@ export const CURRENCIES = [
   { value: "GBP", label: "British Pound", symbol: "£" },
   { value: "CAD", label: "Canadian Dollar", symbol: "C$" },
   { value: "AUD", label: "Australian Dollar", symbol: "A$" },
+  { value: "SAR", label: "Saudi Riyal", symbol: "﷼" },
+  { value: "AED", label: "UAE Dirham", symbol: "د.إ" },
+  { value: "EGP", label: "Egyptian Pound", symbol: "ج.م" },
+  { value: "SDG", label: "Sudanese Pound", symbol: "ج.س" },
+  { value: "JOD", label: "Jordanian Dinar", symbol: "د.ا" },
+  { value: "KWD", label: "Kuwaiti Dinar", symbol: "د.ك" },
+  { value: "QAR", label: "Qatari Riyal", symbol: "ر.ق" },
+  { value: "BHD", label: "Bahraini Dinar", symbol: "د.ب" },
+  { value: "OMR", label: "Omani Rial", symbol: "ر.ع" },
 ] as const
 
 // Payment schedule options

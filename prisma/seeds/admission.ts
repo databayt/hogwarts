@@ -577,7 +577,7 @@ export async function seedApplications(
               city,
               state: "Khartoum",
               postalCode: String(randomNumber(10000, 99999)),
-              country: "Sudan",
+              country: "SD",
               fatherName: `${fatherFirstName} ${lastName}`,
               fatherOccupation: randomElement(OCCUPATIONS),
               fatherPhone: generatePhone(applicationIndex + 100),

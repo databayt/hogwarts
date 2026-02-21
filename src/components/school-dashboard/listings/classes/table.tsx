@@ -192,7 +192,7 @@ function ClassesTableInner({
   // Handle view
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/classes/${id}`)
+      router.push(`/classrooms/${id}`)
     },
     [router]
   )

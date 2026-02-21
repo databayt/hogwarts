@@ -18,7 +18,6 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3"
-import sharp from "sharp"
 
 import { getCloudFrontUrl, isCloudFrontConfigured } from "@/lib/cloudfront"
 
@@ -71,6 +70,7 @@ export async function processAndUploadCatalogImage(
   fileBuffer: Buffer,
   key: string
 ): Promise<string> {
+  const sharp = (await import("sharp")).default
   const client = getS3()
   const bucket = getBucket()
 

@@ -203,7 +203,7 @@ export const getStudentColumns = (
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={`/${lang}/classes?studentId=${student.id}`}>
+                <Link href={`/${lang}/classrooms?studentId=${student.id}`}>
                   <School className="me-2 h-4 w-4" />
                   {t.viewClasses}
                 </Link>

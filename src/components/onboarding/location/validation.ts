@@ -26,7 +26,10 @@ export function createLocationSchema(dictionary: Dictionary) {
     country: z
       .string()
       .min(1, { message: v.get("countryRequired") })
-      .trim(),
+      .trim()
+      .regex(/^[A-Z]{2}$/, {
+        message: v.get("countryRequired"),
+      }),
     postalCode: z.string().optional().default(""),
     latitude: z.number().optional().default(0),
     longitude: z.number().optional().default(0),
@@ -41,7 +44,12 @@ export const locationSchema = z.object({
   address: z.string().min(1, "Address is required").trim(),
   city: z.string().optional().default(""),
   state: z.string().optional().default(""),
-  country: z.string().optional().default(""),
+  country: z
+    .string()
+    .refine((val) => val === "" || /^[A-Z]{2}$/.test(val), {
+      message: "Country must be a 2-letter ISO code",
+    })
+    .default(""),
   postalCode: z.string().optional().default(""),
   latitude: z.number(),
   longitude: z.number(),

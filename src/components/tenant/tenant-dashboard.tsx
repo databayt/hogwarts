@@ -95,7 +95,7 @@ export default function TenantDashboard({
       title: "Create Class",
       description: "Set up a new class",
       icon: BookOpen,
-      href: "/classes/new",
+      href: "/classrooms/create",
       color: "bg-green-500",
     },
     {
@@ -349,10 +349,10 @@ export default function TenantDashboard({
               className="h-auto justify-start p-4"
               asChild
             >
-              <Link href="/classes">
+              <Link href="/classrooms">
                 <GraduationCap className="me-3 h-5 w-5" />
                 <div className="text-start">
-                  <h5>Classes</h5>
+                  <h5>Classrooms</h5>
                   <p className="muted text-gray-500">Manage class schedules</p>
                 </div>
                 <ArrowRight className="ms-auto h-4 w-4" />

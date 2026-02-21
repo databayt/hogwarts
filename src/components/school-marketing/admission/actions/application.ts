@@ -6,6 +6,10 @@ import { nanoid } from "nanoid"
 import { Resend } from "resend"
 
 import { db } from "@/lib/db"
+import {
+  resolveDefaultCurrency,
+  resolvePaymentGateways,
+} from "@/lib/payment/gateway-config"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 import type {
@@ -694,16 +698,33 @@ export async function submitApplication(
     const requiresPayment =
       campaign.applicationFee && Number(campaign.applicationFee) > 0
 
+    // Resolve available payment methods for this school's region
+    let paymentMethods: string[] | undefined
+    let currency: string | undefined
+    let applicationFee: number | undefined
+    if (requiresPayment) {
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { country: true, timezone: true },
+      })
+      paymentMethods = resolvePaymentGateways(school?.country, school?.timezone)
+      currency = resolveDefaultCurrency(school?.country, school?.timezone)
+      applicationFee = Number(campaign.applicationFee)
+    }
+
     revalidatePath(`/apply`)
 
     return {
       success: true,
       data: {
         applicationNumber,
+        applicationId: application.id,
         status: "SUBMITTED",
         accessToken,
         requiresPayment: !!requiresPayment,
-        // paymentUrl will be added when Stripe integration is implemented
+        applicationFee,
+        currency,
+        paymentMethods,
       },
     }
   } catch (error) {

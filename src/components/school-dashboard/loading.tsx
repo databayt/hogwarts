@@ -292,19 +292,21 @@ export function AttendanceSkeleton() {
 export function SubjectsBrowseSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="@container grid grid-cols-1 gap-4 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-4 rounded-lg border p-4"
-          >
-            <Skeleton className="size-16 flex-shrink-0 rounded-lg" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-20" />
+      <div className="@container">
+        <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 overflow-hidden rounded-lg border"
+            >
+              <Skeleton className="h-16 w-16 shrink-0 rounded-s-lg" />
+              <div className="min-w-0 space-y-2 pe-3">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-16" />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -323,16 +325,15 @@ export function SubjectDetailSkeleton() {
         <Skeleton className="h-4 w-16" />
       </div>
 
-      {/* Horizontal scroll row of topic cards */}
+      {/* Horizontal scroll row of topic pill cards */}
       <div className="flex gap-3 overflow-x-auto pb-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="w-52 flex-shrink-0 space-y-2 rounded-xl border p-3"
+            className="flex w-52 shrink-0 items-center gap-3 overflow-hidden rounded-lg border"
           >
-            <Skeleton className="h-28 w-full rounded-lg" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-14 w-14 shrink-0 rounded-s-lg" />
+            <Skeleton className="h-4 w-24 pe-3" />
           </div>
         ))}
       </div>
@@ -347,29 +348,33 @@ export function SubjectDetailSkeleton() {
 export function SubjectPickerSkeleton() {
   return (
     <div className="space-y-6">
-      {/* Search + filter */}
-      <div className="flex items-center gap-4">
-        <Skeleton className="h-10 flex-1 rounded-md" />
+      {/* Search + 2 filter selects */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[200px] flex-1">
+          <Skeleton className="h-10 w-full rounded-md" />
+        </div>
+        <Skeleton className="h-10 w-[160px] rounded-md" />
         <Skeleton className="h-10 w-[180px] rounded-md" />
       </div>
 
-      {/* Card grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-4 rounded-lg border p-4"
-          >
-            <Skeleton className="size-12 flex-shrink-0 rounded-lg" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-32" />
-              <div className="flex gap-2">
-                <Skeleton className="h-5 w-16 rounded-full" />
-                <Skeleton className="h-5 w-20 rounded-full" />
+      {/* Department heading */}
+      <Skeleton className="h-4 w-24" />
+
+      {/* Card grid — vertical cards with color banner */}
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Card key={i} className="overflow-hidden">
+            {/* Color banner */}
+            <Skeleton className="h-24 w-full rounded-none" />
+            {/* Card content */}
+            <CardContent className="p-3">
+              <Skeleton className="h-4 w-full" />
+              <div className="mt-1 flex items-center gap-3">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-16" />
               </div>
-            </div>
-            <Skeleton className="size-6 rounded" />
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>
@@ -406,9 +411,9 @@ export function SubjectContributeFormSkeleton() {
           </div>
         ))}
 
-        {/* Multi-col row */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+        {/* Multi-col row (question: 4 cols, assignment/material: 3 or 2 cols) */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="space-y-2">
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-10 w-full rounded-md" />
@@ -435,7 +440,7 @@ export function SubjectContributeFormSkeleton() {
 
 export function SubjectContributionsSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Tab bar */}
       <div className="bg-muted inline-flex gap-1 rounded-md p-1">
         {Array.from({ length: 3 }).map((_, i) => (
@@ -444,7 +449,7 @@ export function SubjectContributionsSkeleton() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <div className="bg-muted/50 flex h-12 items-center border-b px-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="mx-2 h-4 w-20 flex-1" />
@@ -510,94 +515,104 @@ export function ExamCertConfigListSkeleton() {
 }
 
 // =============================================================================
-// EXAM CERTIFICATE CONFIG FORM — centered max-w-3xl multi-section form
+// EXAM CERTIFICATE CONFIG FORM — multi-section form (no max-width)
 // =============================================================================
 
 export function ExamCertConfigFormSkeleton() {
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      {/* Header */}
-      <div>
-        <Skeleton className="h-7 w-48" />
-        <Skeleton className="mt-1 h-4 w-64" />
+    <div className="space-y-8">
+      {/* 2-col row: name + type */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+        ))}
       </div>
 
-      {/* Form sections */}
-      <div className="space-y-8">
-        {/* 2-col row */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-10 w-full rounded-md" />
-            </div>
-          ))}
-        </div>
+      {/* Textarea: description */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-20 w-full rounded-md" />
+      </div>
 
-        {/* Textarea */}
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-20 w-full rounded-md" />
-        </div>
+      {/* 3-col row: style, orientation, border */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+        ))}
+      </div>
 
-        {/* 3-col row */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-10 w-full rounded-md" />
-            </div>
-          ))}
-        </div>
-
-        {/* 2 textareas */}
+      {/* 2-col row: title EN + AR */}
+      <div className="grid gap-6 md:grid-cols-2">
         {Array.from({ length: 2 }).map((_, i) => (
           <div key={i} className="space-y-2">
             <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-24 w-full rounded-md" />
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
         ))}
+      </div>
 
-        {/* 3-col row */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-10 w-full rounded-md" />
-            </div>
-          ))}
+      {/* 2 body textareas: EN + AR */}
+      {Array.from({ length: 2 }).map((_, i) => (
+        <div key={i} className="space-y-2">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-24 w-full rounded-md" />
         </div>
+      ))}
 
-        {/* Signatures section */}
-        <div className="space-y-3">
+      {/* 3-col row: min percentage, min grade, top percentile */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+        ))}
+      </div>
+
+      {/* Signatures section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <Skeleton className="h-5 w-24" />
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="flex gap-4">
-              <Skeleton className="h-10 flex-1 rounded-md" />
-              <Skeleton className="h-10 flex-1 rounded-md" />
-              <Skeleton className="h-10 w-10 rounded-md" />
-            </div>
-          ))}
+          <Skeleton className="h-9 w-32 rounded-md" />
         </div>
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="flex gap-4">
+            <Skeleton className="h-10 flex-1 rounded-md" />
+            <Skeleton className="h-10 flex-1 rounded-md" />
+          </div>
+        ))}
+      </div>
 
-        {/* Switches row */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between rounded-lg border p-3"
-            >
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-5 w-10 rounded-full" />
-            </div>
-          ))}
-        </div>
+      {/* 2-col switches: logo + verification */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="flex items-center space-x-2">
+            <Skeleton className="h-5 w-10 rounded-full" />
+            <Skeleton className="h-4 w-28" />
+          </div>
+        ))}
+      </div>
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-3">
-          <Skeleton className="h-10 w-24 rounded-md" />
-          <Skeleton className="h-10 w-28 rounded-md" />
-        </div>
+      {/* 2-col row: verification prefix + expiry */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+        ))}
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-4">
+        <Skeleton className="h-10 w-28 rounded-md" />
+        <Skeleton className="h-10 w-24 rounded-md" />
       </div>
     </div>
   )
@@ -793,66 +808,74 @@ export function ExamQuickTakeSkeleton() {
 
 export function CommunicationBroadcastSkeleton() {
   return (
-    <div className="space-y-6">
-      {/* Form card */}
+    <div className="grid gap-6 lg:grid-cols-2">
+      {/* Left: Send form card */}
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-4 w-64" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="size-5" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+          <Skeleton className="h-4 w-56" />
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Type + Title */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-10 w-full rounded-md" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-10 w-full rounded-md" />
-            </div>
+          {/* Notification type */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
-          {/* Body */}
+          {/* Title */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+
+          {/* Message */}
           <div className="space-y-2">
             <Skeleton className="h-4 w-20" />
             <Skeleton className="h-24 w-full rounded-md" />
           </div>
 
-          {/* Audience selects */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* Target row: role + class */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-10 w-full rounded-md" />
             </div>
             <div className="space-y-2">
-              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-full rounded-md" />
             </div>
           </div>
 
           {/* Send button */}
-          <div className="flex justify-end">
-            <Skeleton className="h-10 w-28 rounded-md" />
-          </div>
+          <Skeleton className="h-10 w-full rounded-md" />
         </CardContent>
       </Card>
 
-      {/* Recent batches */}
-      <div className="space-y-3">
-        <Skeleton className="h-5 w-32" />
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
-            <CardContent className="flex items-center justify-between p-4">
+      {/* Right: Recent broadcasts card */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-36" />
+          <Skeleton className="h-4 w-16" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-start justify-between rounded-lg border p-3"
+            >
               <div className="space-y-1">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-3 w-56" />
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-20" />
               </div>
-              <Skeleton className="h-6 w-20 rounded-full" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   )
 }

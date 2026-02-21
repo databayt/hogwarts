@@ -67,7 +67,7 @@ export default function SiteContent({
       <BackgroundGradientAnimationDemo lang={lang} subdomain={subdomainValue} />
       <Newsletter />
       <FAQs />
-      <NewComers />
+      <NewComers lang={lang} subdomain={subdomainValue} />
       <Footer />
     </div>
   )

@@ -3587,6 +3587,7 @@ export async function generateTimetablePreview(input: {
       id: true,
       name: true,
       subjectId: true,
+      gradeId: true,
       subject: {
         select: {
           id: true,
@@ -3596,6 +3597,31 @@ export async function generateTimetablePreview(input: {
       _count: { select: { studentClasses: true } },
     },
   })
+
+  // Get weeklyPeriods from SchoolSubjectSelection (bridges catalog subjects to school config)
+  const subjectSelections = await db.schoolSubjectSelection.findMany({
+    where: { schoolId, isActive: true },
+    select: {
+      catalogSubjectId: true,
+      gradeId: true,
+      weeklyPeriods: true,
+      subject: { select: { name: true } },
+    },
+  })
+
+  // Build lookup: (normalizedSubjectName, gradeId) -> weeklyPeriods
+  const weeklyPeriodsMap = new Map<string, number>()
+  for (const sel of subjectSelections) {
+    if (sel.weeklyPeriods && sel.subject?.name) {
+      const key = `${sel.subject.name.toLowerCase().trim()}:${sel.gradeId}`
+      weeklyPeriodsMap.set(key, sel.weeklyPeriods)
+      // Also store without grade as fallback
+      const nameKey = sel.subject.name.toLowerCase().trim()
+      if (!weeklyPeriodsMap.has(nameKey)) {
+        weeklyPeriodsMap.set(nameKey, sel.weeklyPeriods)
+      }
+    }
+  }
 
   // Get teacher expertise mapping
   const teacherExpertise = await db.teacherSubjectExpertise.findMany({
@@ -3611,20 +3637,37 @@ export async function generateTimetablePreview(input: {
     subjectTeachers.get(te.subjectId)!.push(te.teacherId)
   }
 
-  const requirements: ClassRequirement[] = classes.map((c) => ({
-    classId: c.id,
-    className: c.name,
-    subjectId: c.subjectId || "",
-    subjectName: c.subject?.subjectName || c.name,
-    hoursPerWeek: 3, // Default to 3 periods per week (can be enhanced with subject metadata)
-    preferredTeacherIds: subjectTeachers.get(c.subjectId || "") || [],
-    requiresLab:
-      c.subject?.subjectName?.toLowerCase().includes("lab") ||
-      c.subject?.subjectName?.toLowerCase().includes("science") ||
-      false,
-    yearLevelId: "", // Year level not directly on Class, extracted from related data if needed
-    studentCount: c._count.studentClasses,
-  }))
+  const requirements: ClassRequirement[] = classes.map((c) => {
+    const subjectName = c.subject?.subjectName || c.name
+    const normalizedName = subjectName.toLowerCase().trim()
+
+    // Look up weeklyPeriods: try (name, gradeId) first, then name-only, fallback to 3
+    let hoursPerWeek = 3
+    if (c.gradeId) {
+      const gradeKey = `${normalizedName}:${c.gradeId}`
+      hoursPerWeek =
+        weeklyPeriodsMap.get(gradeKey) ??
+        weeklyPeriodsMap.get(normalizedName) ??
+        3
+    } else {
+      hoursPerWeek = weeklyPeriodsMap.get(normalizedName) ?? 3
+    }
+
+    return {
+      classId: c.id,
+      className: c.name,
+      subjectId: c.subjectId || "",
+      subjectName,
+      hoursPerWeek,
+      preferredTeacherIds: subjectTeachers.get(c.subjectId || "") || [],
+      requiresLab:
+        subjectName.toLowerCase().includes("lab") ||
+        subjectName.toLowerCase().includes("science") ||
+        false,
+      yearLevelId: "",
+      studentCount: c._count.studentClasses,
+    }
+  })
 
   // Get teachers with constraints
   const teachersData = await db.teacher.findMany({

@@ -35,7 +35,7 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
     Array<{ id: string; periodName: string }>
   >([])
   const [classrooms, setClassrooms] = useState<
-    Array<{ id: string; roomName: string }>
+    Array<{ id: string; roomName: string; capacity: number }>
   >([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -65,7 +65,8 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
           setClassrooms(
             roomsRes.rooms.map((r: any) => ({
               id: r.id,
-              roomName: r.roomName || "Unknown",
+              roomName: r.label || r.roomName || "Unknown",
+              capacity: r.capacity ?? 0,
             }))
           )
         }
@@ -213,6 +214,9 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
                 {classrooms.map((classroom) => (
                   <SelectItem key={classroom.id} value={classroom.id}>
                     {classroom.roomName}
+                    {classroom.capacity > 0
+                      ? ` (${classroom.capacity} seats)`
+                      : ""}
                   </SelectItem>
                 ))}
               </SelectContent>

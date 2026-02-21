@@ -116,7 +116,7 @@ export function CatalogChaptersContent({ subject, chapters, lang }: Props) {
         style={{ backgroundColor: subject.color ?? "#1e40af" }}
       >
         <Link
-          href="."
+          href={`../${subject.slug}`}
           className="inline-block rounded-full bg-white/20 px-6 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30"
         >
           {t.exploreMaterial}

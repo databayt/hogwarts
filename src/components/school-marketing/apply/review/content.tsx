@@ -9,6 +9,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import { useApplyValidation } from "../validation-context"
+import type { SubmitActionResult } from "./actions"
 import { REVIEW_STEP_CONFIG } from "./config"
 import { ReviewForm } from "./form"
 import type { ReviewFormRef } from "./types"
@@ -50,11 +51,25 @@ export default function ReviewContent({ dictionary }: Props) {
   const id = params.id as string
 
   const handleSuccess = useCallback(
-    (applicationNumber: string) => {
-      // Navigate to success page with application number
-      router.push(`/${locale}/apply/${id}/success?number=${applicationNumber}`)
+    (result: SubmitActionResult) => {
+      if (result.requiresPayment) {
+        // Redirect to payment page with application details
+        const searchParams = new URLSearchParams({
+          number: result.applicationNumber,
+          appId: result.applicationId,
+          fee: String(result.applicationFee ?? 0),
+          currency: result.currency ?? "USD",
+          methods: (result.paymentMethods ?? []).join(","),
+        })
+        router.push(`/${locale}/apply/${id}/payment?${searchParams.toString()}`)
+      } else {
+        // No fee required — go straight to success
+        router.push(
+          `/${locale}/apply/${id}/success?number=${result.applicationNumber}`
+        )
+      }
     },
-    [locale, subdomain, id, router]
+    [locale, id, router]
   )
 
   useEffect(() => {

@@ -19,6 +19,13 @@ import {
 } from "@aws-sdk/client-cloudfront"
 import { getSignedUrl } from "@aws-sdk/cloudfront-signer"
 
+// Import lightweight URL helpers (no SDK deps) and re-export for backward compatibility
+import {
+  getCloudFrontUrl,
+  isCloudFrontConfigured,
+  toCloudFrontUrl,
+} from "@/lib/cloudfront-url"
+
 // Lazy-init CloudFront client (only needed for cache invalidation)
 let cfClient: CloudFrontClient | null = null
 
@@ -41,14 +48,7 @@ function getCloudFrontClient(): CloudFrontClient | null {
   return cfClient
 }
 
-/**
- * Check if CDN/S3 image serving is configured.
- * Returns true when CloudFront domain OR S3 bucket is available,
- * since getCloudFrontUrl() falls back to direct S3 URLs.
- */
-export function isCloudFrontConfigured(): boolean {
-  return !!(process.env.CLOUDFRONT_DOMAIN || process.env.AWS_S3_BUCKET)
-}
+export { isCloudFrontConfigured, getCloudFrontUrl, toCloudFrontUrl }
 
 /**
  * Check if signed URLs are available
@@ -57,59 +57,6 @@ function isSigningConfigured(): boolean {
   return !!(
     process.env.CLOUDFRONT_KEY_PAIR_ID && process.env.CLOUDFRONT_PRIVATE_KEY
   )
-}
-
-/**
- * Convert an S3 key to a CloudFront URL
- * Falls back to raw S3 URL if CloudFront not configured
- */
-export function getCloudFrontUrl(s3Key: string): string {
-  const domain = process.env.CLOUDFRONT_DOMAIN
-  if (!domain) {
-    // Fallback to raw S3
-    const bucket = process.env.AWS_S3_BUCKET
-    const region = process.env.AWS_REGION || "us-east-1"
-    if (!bucket) return s3Key
-    return `https://${bucket}.s3.${region}.amazonaws.com/${s3Key}`
-  }
-
-  return `https://${domain}/${s3Key}`
-}
-
-/**
- * Convert any video URL to use CloudFront if applicable
- * - S3 URLs → CloudFront URL
- * - YouTube/Vimeo URLs → pass through
- * - Already CloudFront URLs → pass through
- */
-export function toCloudFrontUrl(url: string): string {
-  const domain = process.env.CLOUDFRONT_DOMAIN
-  if (!domain) return url
-
-  // Already a CloudFront URL
-  if (url.includes(domain)) return url
-
-  // YouTube/Vimeo — pass through
-  if (
-    url.includes("youtube.com") ||
-    url.includes("youtu.be") ||
-    url.includes("vimeo.com")
-  ) {
-    return url
-  }
-
-  // Vercel Blob — can't serve via our CloudFront
-  if (url.includes("vercel-storage.com") || url.includes("blob.vercel")) {
-    return url
-  }
-
-  // S3 URL → extract key and rewrite
-  const s3Match = url.match(/https?:\/\/[^/]+\.s3\.[^/]+\.amazonaws\.com\/(.+)/)
-  if (s3Match) {
-    return `https://${domain}/${s3Match[1]}`
-  }
-
-  return url
 }
 
 /**

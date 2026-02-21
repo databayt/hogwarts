@@ -632,6 +632,43 @@ export async function confirmEnrollment(params: {
           roleError
         )
       }
+
+      // 6. Auto-assign fees if matching FeeStructure exists
+      try {
+        const feeStructures = await db.feeStructure.findMany({
+          where: {
+            schoolId,
+            academicYear: application.campaign.academicYear,
+            isActive: true,
+          },
+        })
+
+        for (const fs of feeStructures) {
+          await db.feeAssignment.upsert({
+            where: {
+              studentId_feeStructureId_academicYear: {
+                studentId: student.id,
+                feeStructureId: fs.id,
+                academicYear: application.campaign.academicYear,
+              },
+            },
+            create: {
+              schoolId,
+              studentId: student.id,
+              feeStructureId: fs.id,
+              academicYear: application.campaign.academicYear,
+              finalAmount: fs.totalAmount,
+              status: "PENDING",
+            },
+            update: {}, // Don't overwrite existing
+          })
+        }
+      } catch (feeError) {
+        console.warn(
+          "[confirmEnrollment] Fee auto-assignment failed:",
+          feeError
+        )
+      }
     }
 
     revalidatePath("/admission/enrollment")
@@ -805,7 +842,7 @@ export async function placeStudentInClass(params: {
     })
 
     revalidatePath("/admission/enrollment")
-    revalidatePath("/classes")
+    revalidatePath("/classrooms")
     return { success: true, data: null }
   } catch (error) {
     console.error("[placeStudentInClass]", error)

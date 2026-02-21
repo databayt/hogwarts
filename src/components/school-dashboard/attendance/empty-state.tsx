@@ -67,7 +67,7 @@ export function AttendanceEmptyState({
         dictionary?.noClassesDesc ||
         "Create a class to start tracking attendance for your students.",
       defaultActionLabel: dictionary?.createClass || "Create Class",
-      defaultActionHref: "/classes",
+      defaultActionHref: "/classrooms",
     },
     "no-attendance": {
       icon: Calendar,
@@ -151,7 +151,7 @@ export function NoClassesEmptyState({ dictionary }: { dictionary?: any }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <Link href="/classes/new">
+          <Link href="/classrooms/create">
             <Button>
               <Plus className="me-2 h-4 w-4" />
               {dictionary?.createFirstClass || "Create Your First Class"}

@@ -287,7 +287,7 @@ export async function seedStaffMembers(
             joiningDate: new Date("2024-09-01"),
             city: "الخرطوم",
             state: "الخرطوم",
-            country: "السودان",
+            country: "SD",
             userId,
           },
         })
