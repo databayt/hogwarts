@@ -27,6 +27,9 @@ export default async function CatalogSubjectPage({ params }: Props) {
         include: {
           lessons: {
             orderBy: { sequenceOrder: "asc" },
+            include: {
+              _count: { select: { videos: true } },
+            },
           },
         },
       },

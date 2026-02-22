@@ -38,11 +38,13 @@ const examTypeLabels: Record<string, string> = {
 interface Props {
   dictionary: Dictionary
   lang: Locale
+  catalogSubjectId?: string
 }
 
 export default async function UpcomingExamsContent({
   dictionary,
   lang,
+  catalogSubjectId,
 }: Props) {
   const { schoolId } = await getTenantContext()
 
@@ -71,6 +73,7 @@ export default async function UpcomingExamsContent({
         schoolId,
         status: { in: ["PLANNED", "IN_PROGRESS"] },
         examDate: { gte: today },
+        ...(catalogSubjectId ? { catalogSubjectId } : {}),
       },
       include: {
         class: { select: { name: true } },

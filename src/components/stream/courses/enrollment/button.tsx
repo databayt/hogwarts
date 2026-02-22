@@ -10,6 +10,10 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { enrollInCourseAction } from "./actions"
 
+/**
+ * @deprecated Use CatalogEnrollmentButton from ./catalog-enrollment-button.tsx instead.
+ * This button targets the legacy StreamEnrollment model.
+ */
 export function EnrollmentButton({
   courseId,
   lang,

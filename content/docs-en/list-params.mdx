@@ -1,0 +1,303 @@
+---
+title: "List Params"
+description: "Canonical patterns for writing list-params.ts URL search parameter cache modules in feature directories"
+---
+
+## Current Progress (Audit)
+
+18 list-params.ts files audited across the codebase (~400 total lines):
+
+| Area                                            | Status | Detail                                                                          |
+| ----------------------------------------------- | ------ | ------------------------------------------------------------------------------- |
+| `createSearchParamsCache` from `nuqs/server`    | PASS   | All 18 files use the same nuqs API                                              |
+| Consistent pattern structure                    | PASS   | Every file exports cache + type alias in ~20 lines                              |
+| `page`, `perPage`, `sort` always present        | PASS   | Universal params included in all files                                          |
+| Column filter IDs match column accessorKeys     | PASS   | Filter names correspond to table column IDs                                     |
+| Named exports only                              | PASS   | Zero default exports                                                            |
+| Different filenames across codebase             | FAIL   | SaaS dashboard uses `searchparams.ts`, attendance uses `page-params.ts`         |
+| Missing list-params.ts for features with tables | FAIL   | ~10 features use table.tsx but define search params inline in content.tsx       |
+| Search param parsing inside content.tsx         | FAIL   | Some features define `createSearchParamsCache` directly in the server component |
+
+## Single Category
+
+### URL Search Parameter Cache (~18 files)
+
+All list-params.ts files follow the exact same pattern: a single `createSearchParamsCache` call with `page`, `perPage`, `sort`, and feature-specific column filters. Typically 15-25 lines.
+
+Reference: `listings/teachers/list-params.ts` (22 lines)
+
+## The 5 Rules
+
+### 1. Name the file `list-params.ts`
+
+Standardize on `list-params.ts` -- not `searchparams.ts`, `page-params.ts`, or `validation.ts` (for search params).
+
+```
+# GOOD: Consistent naming
+listings/teachers/list-params.ts
+listings/students/list-params.ts
+admission/list-params.ts
+
+# BAD: Inconsistent naming
+saas-dashboard/billing/validation.ts    # search params mixed with Zod
+attendance/page-params.ts               # different name
+```
+
+### 2. Single `createSearchParamsCache` call
+
+One cache per feature, exported as `<feature>SearchParams`.
+
+```typescript
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString,
+} from "nuqs/server"
+
+import { getSortingStateParser } from "@/components/table/lib/parsers"
+
+export const teachersSearchParams = createSearchParamsCache({
+  page: parseAsInteger.withDefault(1),
+  perPage: parseAsInteger.withDefault(20),
+  // column filters
+  name: parseAsString.withDefault(""),
+  emailAddress: parseAsString.withDefault(""),
+  status: parseAsString.withDefault(""),
+  sort: getSortingStateParser().withDefault([]),
+})
+```
+
+### 3. Export type alias
+
+Always export a type alias for the parsed search params. This gives content.tsx type-safe access to all params.
+
+```typescript
+// Usage in content.tsx:
+import type { TeachersSearch } from "./list-params"
+
+export type TeachersSearch = Awaited<
+  ReturnType<typeof teachersSearchParams.parse>
+>
+
+interface ContentProps {
+  searchParams: TeachersSearch
+}
+```
+
+### 4. Column filter IDs must match column IDs
+
+The parser key names in list-params.ts must match the `accessorKey` values in columns.tsx. This ensures URL state syncs with table filtering.
+
+```typescript
+// list-params.ts
+export const teachersSearchParams = createSearchParamsCache({
+  name: parseAsString.withDefault(""),          // matches columns.tsx accessorKey
+  emailAddress: parseAsString.withDefault(""),   // matches columns.tsx accessorKey
+  status: parseAsString.withDefault(""),         // matches columns.tsx accessorKey
+  // ...
+})
+
+// columns.tsx
+{
+  accessorKey: "name",           // ← must match list-params key
+  header: "Name",
+}
+{
+  accessorKey: "emailAddress",   // ← must match list-params key
+  header: "Email",
+}
+```
+
+### 5. Always include `page`, `perPage`, `sort`
+
+These three universal params must be present in every list-params.ts file, plus feature-specific column filters.
+
+```typescript
+export const featureSearchParams = createSearchParamsCache({
+  // Universal params (always present)
+  page: parseAsInteger.withDefault(1),
+  perPage: parseAsInteger.withDefault(20),
+  sort: getSortingStateParser().withDefault([]),
+
+  // Feature-specific column filters
+  name: parseAsString.withDefault(""),
+  status: parseAsString.withDefault(""),
+})
+```
+
+## Canonical Template
+
+The pattern is so uniform there is only one template. Reference: `listings/teachers/list-params.ts` (22 lines).
+
+```typescript
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString,
+} from "nuqs/server"
+
+import { getSortingStateParser } from "@/components/table/lib/parsers"
+
+export const teachersSearchParams = createSearchParamsCache({
+  page: parseAsInteger.withDefault(1),
+  perPage: parseAsInteger.withDefault(20),
+  // column filters (ids must match column ids)
+  name: parseAsString.withDefault(""),
+  emailAddress: parseAsString.withDefault(""),
+  status: parseAsString.withDefault(""),
+  sort: getSortingStateParser().withDefault([]),
+})
+
+export type TeachersSearch = Awaited<
+  ReturnType<typeof teachersSearchParams.parse>
+>
+```
+
+Key points:
+
+- Imports from `nuqs/server` (server-side cache)
+- `getSortingStateParser()` from shared table lib
+- `parseAsInteger` for page/perPage, `parseAsString` for column filters
+- `.withDefault()` on every parser (no undefined values)
+- Type alias exported for content.tsx props
+
+### Usage in content.tsx
+
+```typescript
+import { teachersSearchParams, type TeachersSearch } from "./list-params"
+import { getTeacherList } from "./queries"
+
+interface ContentProps {
+  searchParams: TeachersSearch
+}
+
+export async function Content({ searchParams }: ContentProps) {
+  const { page, perPage, name, status, sort } = searchParams
+
+  const { rows, count } = await getTeacherList(schoolId, {
+    page,
+    perPage,
+    search: name,
+    status: status || undefined,
+    sort,
+  })
+
+  return <Table data={rows} pageCount={Math.ceil(count / perPage)} />
+}
+```
+
+### Usage in page.tsx
+
+```typescript
+import type { SearchParams } from "nuqs/server"
+
+import { teachersSearchParams } from "@/components/.../list-params"
+import { Content } from "@/components/.../content"
+
+interface PageProps {
+  searchParams: Promise<SearchParams>
+}
+
+export default async function TeachersPage({ searchParams }: PageProps) {
+  const parsed = teachersSearchParams.parse(await searchParams)
+  return <Content searchParams={parsed} />
+}
+```
+
+## Anti-Patterns
+
+### 1. Different filenames across the codebase
+
+Search param caches should always be in `list-params.ts`. Other names break discoverability.
+
+```
+# BAD: Inconsistent naming
+saas-dashboard/billing/validation.ts     # Zod and search params mixed
+school-dashboard/attendance/page-params.ts  # different name
+
+# GOOD: Always list-params.ts
+saas-dashboard/billing/list-params.ts
+school-dashboard/attendance/list-params.ts
+```
+
+### 2. Missing list-params.ts for features with tables
+
+Features that use table.tsx but define search params inline in content.tsx or page.tsx.
+
+```typescript
+// BAD: Inline in content.tsx
+import { createSearchParamsCache, parseAsInteger } from "nuqs/server"
+
+const searchParams = createSearchParamsCache({
+  page: parseAsInteger.withDefault(1),
+  // ...
+})
+
+// GOOD: Dedicated list-params.ts file
+// list-params.ts
+export const featureSearchParams = createSearchParamsCache({ ... })
+export type FeatureSearch = Awaited<ReturnType<typeof featureSearchParams.parse>>
+```
+
+### 3. Defining search param parsing inside content.tsx
+
+Search param definitions should be co-located but in their own file, not mixed into the component.
+
+```
+# BAD: Mixed in content.tsx
+content.tsx (200 lines -- includes search param cache + component)
+
+# GOOD: Separated
+list-params.ts (22 lines -- search param cache only)
+content.tsx    (180 lines -- imports from list-params.ts)
+```
+
+## Quick Reference
+
+### File Structure
+
+```
+src/components/<feature>/
+  list-params.ts    # URL search parameter cache (this file)
+  content.tsx       # Server component (imports parsed params)
+  table.tsx         # Client component (syncs with URL state)
+  columns.tsx       # Column definitions (accessorKeys match param names)
+```
+
+### Parser Types
+
+| Parser                    | Type           | Used For                    |
+| ------------------------- | -------------- | --------------------------- |
+| `parseAsInteger`          | `number`       | `page`, `perPage`           |
+| `parseAsString`           | `string`       | Column filters, search text |
+| `getSortingStateParser()` | `SortingState` | Table sorting state         |
+
+### Naming Convention
+
+```
+<feature>SearchParams  → cache export name
+<Feature>Search        → type alias name
+```
+
+Examples:
+
+```typescript
+export const teachersSearchParams = createSearchParamsCache({ ... })
+export type TeachersSearch = Awaited<ReturnType<typeof teachersSearchParams.parse>>
+
+export const admissionSearchParams = createSearchParamsCache({ ... })
+export type AdmissionSearch = Awaited<ReturnType<typeof admissionSearchParams.parse>>
+```
+
+### Import Direction
+
+```
+list-params.ts     (search param cache + type)
+    |
++---+---+
+|       |
+page  content
+.tsx   .tsx
+```
+
+page.tsx parses raw searchParams through the cache, passes parsed result to content.tsx.

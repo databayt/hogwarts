@@ -19,6 +19,9 @@ enum QuestionType {
   SHORT_ANSWER // 1-2 sentence response
   ESSAY // Long-form answer
   FILL_BLANK // Fill in the blanks
+  MATCHING // Match items from two columns
+  ORDERING // Arrange items in correct sequence
+  MULTI_SELECT // Select all correct answers
 }
 
 enum DifficultyLevel {

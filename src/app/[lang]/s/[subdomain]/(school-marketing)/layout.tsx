@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { Chatbot } from "@/components/chatbot"
 import { type Locale } from "@/components/internationalization/config"
+import { LoadingWrapper } from "@/components/marketing/loading"
 import SiteHeader from "@/components/template/site-header/content"
 
 // import { SiteFooter } from "@/components/school-marketing-footer";
@@ -45,13 +46,15 @@ export default async function SiteLayout({
   const school = result.data
 
   return (
-    <div data-slot="site-layout" className="marketing-container">
-      <SiteHeader school={school} locale={lang} />
-      <main data-slot="main-content" role="main">
-        {children}
-      </main>
-      {/* <SiteFooter /> */}
-      <Chatbot lang={lang as Locale} promptType="schoolSite" />
-    </div>
+    <LoadingWrapper>
+      <div data-slot="site-layout" className="marketing-container">
+        <SiteHeader school={school} locale={lang} />
+        <main data-slot="main-content" role="main">
+          {children}
+        </main>
+        {/* <SiteFooter /> */}
+        <Chatbot lang={lang as Locale} promptType="schoolSite" />
+      </div>
+    </LoadingWrapper>
   )
 }

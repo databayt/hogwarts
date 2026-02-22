@@ -23,7 +23,7 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
   ]
 
   return (
-    <section className="grid h-[calc(80vh-3.5rem)] max-h-[700px] w-full grid-cols-1 lg:grid-cols-2">
+    <section className="grid h-[calc(100vh-3.5rem)] w-full grid-cols-1 py-8 lg:grid-cols-2">
       {/* Image Half */}
       <div className="relative h-full lg:order-last">
         <div

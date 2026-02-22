@@ -118,7 +118,8 @@ test.describe("Story 3.2: URL Rewriting @multi-tenant", () => {
 })
 
 test.describe("Story 3.2: Internal Route Mapping @multi-tenant", () => {
-  test("MT-010: Document URL rewrite mapping", async () => {
+  // TODO: Replace with real E2E assertions
+  test.fixme("MT-010: Document URL rewrite mapping", async () => {
     // This test documents the URL rewrite behavior
     console.log("=== URL REWRITE MAPPING ===")
     console.log("User URL                    → Internal Route")
@@ -128,8 +129,6 @@ test.describe("Story 3.2: Internal Route Mapping @multi-tenant", () => {
     console.log("demo.localhost/login        → /en/login (not rewritten)")
     console.log("demo.localhost/apply        → /en/s/demo/apply")
     console.log("==================================================")
-
-    expect(true).toBeTruthy()
   })
 
   test("MT-011: API routes accessible on subdomain", async ({ page }) => {

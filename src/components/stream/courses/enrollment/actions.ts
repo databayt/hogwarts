@@ -16,6 +16,12 @@ import {
 } from "@/components/stream/authorization"
 import { sendEnrollmentEmail } from "@/components/stream/shared/email-service"
 
+/**
+ * @deprecated Use catalog-actions.ts enrollInCatalogSubject() instead.
+ * Legacy action targeting StreamEnrollment model. Kept only because
+ * verifyPaymentAndActivateEnrollment() below is still used by the
+ * payment success page for legacy Stripe checkout sessions.
+ */
 export async function enrollInCourseAction(courseId: string) {
   const session = await auth()
   const { schoolId } = await getTenantContext()
@@ -239,6 +245,9 @@ export async function enrollInCourseAction(courseId: string) {
   redirect(checkoutUrl)
 }
 
+/**
+ * @deprecated Use catalog-actions.ts checkCatalogEnrollmentStatus() instead.
+ */
 export async function checkEnrollmentStatus(courseId: string) {
   const session = await auth()
   const { schoolId } = await getTenantContext()

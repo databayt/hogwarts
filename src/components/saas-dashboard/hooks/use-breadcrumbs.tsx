@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { usePathname } from "next/navigation"
 
+import { useBreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
+
 type BreadcrumbItem = {
   title: string
   link: string
@@ -25,9 +27,13 @@ const routeMapping: Record<string, BreadcrumbItem[]> = {
 export function useBreadcrumbs() {
   const pathname = usePathname()
   const [dynamicTitle, setDynamicTitle] = useState<string | null>(null)
+  const providedTitle = useBreadcrumbTitle()
 
   useEffect(() => {
     setDynamicTitle(null)
+
+    // Skip fetch if a page already provided the title via BreadcrumbTitle
+    if (providedTitle) return
 
     // Entity patterns with their API endpoints and exclusions
     const entityPatterns: Array<{
@@ -48,6 +54,10 @@ export function useBreadcrumbs() {
         pattern: /\/grades\/([^\/\?]+)$/,
         api: "grades",
         exclude: ["analytics", "reports", "generate"],
+      },
+      {
+        pattern: /\/stream\/dashboard\/[^\/]+\/([^\/\?]+)$/,
+        api: "catalog-lessons",
       },
     ]
 
@@ -72,7 +82,10 @@ export function useBreadcrumbs() {
         }
       }
     } catch {}
-  }, [pathname])
+  }, [pathname, providedTitle])
+
+  // Prefer provided title (instant, from server) over fetched title
+  const resolvedTitle = providedTitle ?? dynamicTitle
 
   const breadcrumbs = useMemo(() => {
     // Check if we have a custom mapping for this exact path
@@ -102,10 +115,9 @@ export function useBreadcrumbs() {
         index === finalSegments.length - 1 &&
         /^(?:[a-z0-9]{10,}|\w{6,})$/i.test(segment)
       // Special handling for lab -> Overview
-      let title =
-        isIdSegment && dynamicTitle
-          ? dynamicTitle
-          : segment.charAt(0).toUpperCase() + segment.slice(1)
+      let title = isIdSegment
+        ? (resolvedTitle ?? "\u00A0")
+        : segment.charAt(0).toUpperCase() + segment.slice(1)
       if (segment === "dashboard") {
         title = "Overview"
       }
@@ -115,7 +127,7 @@ export function useBreadcrumbs() {
       }
     })
     return items
-  }, [pathname, dynamicTitle])
+  }, [pathname, resolvedTitle])
 
   return breadcrumbs
 }

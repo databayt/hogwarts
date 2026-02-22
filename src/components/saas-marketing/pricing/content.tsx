@@ -15,7 +15,6 @@ import { PricingFaq } from "@/components/saas-marketing/pricing/pricing-faq"
 import { Callout } from "@/components/saas-marketing/pricing/shared/callout"
 
 import EnterpriseSection from "./enterprise-section"
-import PricingLoaderOverlay from "./loader-overlay"
 import PricingFAQs from "./pricing-faqs"
 import PricingHeader from "./pricing-header"
 import { SecurePayment } from "./secure-payment"
@@ -44,7 +43,6 @@ export default async function PricingContent(props: Props) {
 
   return (
     <div className="flex w-full flex-col items-center py-14">
-      <PricingLoaderOverlay />
       <PricingHeader />
       <PricingCards
         userId={user?.id}

@@ -194,11 +194,16 @@ export interface StreamDictionary {
   header: {
     home: string
     courses: string
+    /** @deprecated Use myLearning instead */
     favorite: string
+    myLearning: string
+    /** @deprecated Use manage instead */
     dashboard: string
+    manage: string
     signIn: string
     profile: string
   }
+  teach: string
   studentDashboard: {
     myCourses: string
     continueFromWhereYouLeftOff: string

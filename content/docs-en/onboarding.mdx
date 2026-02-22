@@ -1,59 +1,143 @@
 ---
 title: "Onboarding System"
-description: "Complete guide to the school onboarding flow - architecture, implementation, auth integration, and production readiness"
+description: "Authoritative guide to the school onboarding flow - architecture, steps, auth integration, validation, state management, and production readiness"
 ---
 
 ## Overview
 
-The **Onboarding System** is a comprehensive multi-step wizard that guides new schools through platform registration, configuration, and business setup. It follows the mirror pattern architecture and spans 166 files across 16 steps organized into 3 logical groups.
+The **Onboarding System** is a multi-step wizard that guides new schools through platform registration, configuration, and business setup. It follows the mirror pattern and spans **166 files** across **16 steps** organized into **3 groups**.
 
-### Purpose
+**Purpose:**
 
 - **School Administrators**: Complete school profile setup in 15-30 minutes
 - **Developers**: Understand the flow, auth integration, and multi-tenant architecture
 - **Platform**: Ensure data quality and compliance before schools go live
 
-### Completion Time
+**Completion Time:**
 
-- **Basic Setup** (Required steps only): 10-15 minutes
-- **Full Setup** (All steps): 20-30 minutes
-- **With Data Import**: 30-45 minutes
+| Scope                             | Time          |
+| --------------------------------- | ------------- |
+| Basic Setup (required steps only) | 10-15 minutes |
+| Full Setup (all steps)            | 20-30 minutes |
+| With Data Import                  | 30-45 minutes |
 
 ---
 
 ## Architecture
 
-The onboarding system is **100% consolidated** following the mirror pattern with zero external dependencies.
+The onboarding system is **100% consolidated** into two directories following the mirror pattern, plus 3 API routes.
 
-### Mirror Pattern Implementation
+### Directory Tree
 
 ```
 src/
-├── app/[lang]/onboarding/              # Routes (21 files)
-│   ├── page.tsx                        # Landing page
-│   ├── overview/page.tsx               # School list dashboard
-│   └── [id]/                           # Dynamic school routes
-│       ├── layout.tsx                  # Providers (ListingProvider)
-│       └── [16 step routes]/
+├── app/[lang]/onboarding/                       # Routes (21 files)
+│   ├── page.tsx                                 # Landing page
+│   ├── overview/page.tsx                        # School list dashboard
+│   └── [id]/                                    # Dynamic school routes
+│       ├── layout.tsx                           # ListingProvider + validation
+│       ├── route-handler.ts                     # Route utilities
+│       ├── about-school/page.tsx
+│       ├── title/page.tsx
+│       ├── description/page.tsx
+│       ├── location/page.tsx
+│       ├── stand-out/page.tsx
+│       ├── capacity/page.tsx
+│       ├── branding/page.tsx
+│       ├── import/page.tsx
+│       ├── finish-setup/page.tsx
+│       ├── join/page.tsx
+│       ├── visibility/page.tsx
+│       ├── price/page.tsx
+│       ├── discount/page.tsx
+│       ├── legal/page.tsx
+│       ├── subdomain/page.tsx
+│       └── congratulations/page.tsx
 │
-└── components/onboarding/              # Components (145 files)
-    ├── actions.ts                      # Server actions (CRUD)
-    ├── auth.ts                         # Onboarding-specific auth
-    ├── config.ts                       # Step configurations
-    ├── types.ts                        # TypeScript definitions
-    ├── validation.ts                   # Zod schemas
-    ├── use-onboarding.ts               # Navigation & validation
-    └── [16 step subdirectories]/
+├── app/api/onboarding/                          # API routes (3 endpoints)
+│   ├── create-school/route.ts                   # Atomic school creation
+│   ├── validate-access/route.ts                 # Pre-flight access check
+│   └── extract/route.ts                         # AI document extraction
+│
+└── components/onboarding/                       # Components (145 files)
+    │
+    │ # Core files
+    ├── index.ts                                 # Barrel exports
+    ├── actions.ts                               # Server actions (CRUD)
+    ├── auth.ts                                  # Authentication utilities
+    ├── auth-helpers.ts                          # getAuthContext, requireSchoolOwnership
+    ├── config.ts                                # Step configurations (ONBOARDING_STEPS)
+    ├── config.client.ts                         # Client-side config
+    ├── constants.client.ts                      # Client constants (⚠️ stale STEP_NAVIGATION)
+    ├── types.ts                                 # OnboardingStep, OnboardingSchoolData
+    ├── validation.ts                            # Root Zod schemas
+    ├── validation-utils.ts                      # Validation helpers
+    ├── util.ts                                  # General utilities
+    │
+    │ # State & hooks
+    ├── use-listing.tsx                          # ListingProvider context
+    ├── use-onboarding.ts                        # Navigation & validation
+    ├── use-user-schools.tsx                     # User schools hook
+    ├── with-school-context.tsx                  # HOC for school context
+    │
+    │ # Layout components
+    ├── host-validation-context.tsx              # ⚠️ Deprecated: re-exports from form block
+    ├── host-header.tsx                          # Progress indicator
+    ├── host-step-header.tsx                     # Step header
+    ├── host-step-layout.tsx                     # Step layout wrapper
+    ├── step-header.tsx                          # Generic step header
+    ├── step-navigation.tsx                      # Navigation controls
+    ├── step-title.tsx                           # Step title component
+    ├── step-wrapper.tsx                         # Step wrapper
+    │
+    │ # UI components
+    ├── card.tsx                                 # Card layout
+    ├── column.tsx / column-layout.tsx           # Column utilities
+    ├── content.tsx                              # Content wrapper
+    ├── detail.tsx                               # Detail view
+    ├── all.tsx                                  # All items view
+    ├── form.tsx / form-field.tsx                # Form components
+    ├── selection-card.tsx                       # Selection card
+    ├── progress-indicator.tsx                   # Progress bar
+    ├── error-boundary.tsx                       # Error boundary
+    ├── performance-monitor.ts                   # Performance tracking
+    ├── success-completion-modal.tsx             # Success modal
+    │
+    │ # Step subdirectories (16 + overview + newcomers + floor-plan)
+    ├── about-school/                            # 7 files
+    ├── title/                                   # 8 files
+    ├── description/                             # 9 files
+    ├── location/                                # 9 files
+    ├── stand-out/                               # 7 files
+    ├── capacity/                                # 9 files
+    ├── schedule/                                # 5 files (in type, excluded from nav)
+    ├── branding/                                # 8 files
+    ├── import/                                  # 7 files
+    ├── finish-setup/                            # 7 files
+    ├── join/                                    # 5 files
+    ├── visibility/                              # 4 files
+    ├── price/                                   # 8 files
+    ├── discount/                                # 4 files
+    ├── legal/                                   # 5 files
+    ├── subdomain/                               # 7 files
+    ├── congratulations/                         # 2 files
+    ├── overview/                                # 5 files (dashboard)
+    ├── newcomers/                               # Modal flow for joining members
+    │   ├── config.ts / validation.ts / actions.ts
+    │   ├── newcomers-modal.tsx
+    │   └── steps/ (role, info, verify, profile, welcome)
+    └── floor-plan/                              # 1 file (validation only)
 ```
 
 ### File Statistics
 
-| Category         | Count         |
-| ---------------- | ------------- |
-| Route files      | 21            |
-| Component files  | 145           |
-| Step directories | 17            |
-| **Total**        | **166 files** |
+| Category         | Count                    |
+| ---------------- | ------------------------ |
+| Route files      | 21                       |
+| API route files  | 3                        |
+| Component files  | 145                      |
+| Step directories | 17 (16 steps + overview) |
+| **Total**        | **~169 files**           |
 
 ### Step Directory Pattern
 
@@ -63,68 +147,98 @@ Each step follows a consistent structure:
 [step-name]/
 ├── actions.ts          # Server actions ("use server")
 ├── card.tsx            # Card UI component
-├── config.ts           # Step configuration
+├── config.ts           # Step configuration (STEP_NAME_STEP constant)
 ├── content.tsx         # Main content (server component)
 ├── form.tsx            # Form implementation (client)
 ├── types.ts            # Type definitions
 ├── validation.ts       # Zod schemas
-└── use-[step].tsx     # Optional custom hook
+└── use-[step].tsx      # Optional custom hook
 ```
 
 ---
 
 ## Complete Flow
 
-The onboarding flow consists of **16 steps** organized into **3 groups**:
+The onboarding flow consists of **16 steps** in the `OnboardingStep` type, but only **15 are active** in the navigation config (schedule is defined but excluded).
 
-### Group 1: School Information
+### Group 1: Basic Information
 
-Basic details about the school and its unique characteristics.
-
-| Step             | Path            | Required | Fields                        | Database          |
-| ---------------- | --------------- | -------- | ----------------------------- | ----------------- |
-| **About School** | `/about-school` | No       | N/A (static)                  | N/A               |
-| **Title**        | `/title`        | Yes      | School name                   | `School.name`     |
-| **Description**  | `/description`  | Yes      | Type, level, description      | `School.planType` |
-| **Location**     | `/location`     | Yes      | Address, city, state, country | `School.address`  |
-| **Stand Out**    | `/stand-out`    | No       | Unique features (static)      | N/A               |
-
-**Purpose**: Establish school identity and basic information.
+| Step             | Path            | Required | Key Fields                    | Database                                       |
+| ---------------- | --------------- | -------- | ----------------------------- | ---------------------------------------------- |
+| **About School** | `/about-school` | No       | N/A (static welcome)          | N/A                                            |
+| **Title**        | `/title`        | Yes      | School name                   | `School.name`                                  |
+| **Description**  | `/description`  | Yes      | Type, level, description      | `School.schoolType`, `schoolLevel`, `planType` |
+| **Location**     | `/location`     | Yes      | Address, city, state, country | `School.address`, `city`, `state`, `country`   |
+| **Stand Out**    | `/stand-out`    | No       | Unique features (static)      | N/A                                            |
 
 ### Group 2: School Setup
 
-Operational configuration and technical setup.
+| Step             | Path            | Required | Key Fields                                 | Database                                          |
+| ---------------- | --------------- | -------- | ------------------------------------------ | ------------------------------------------------- |
+| **Capacity**     | `/capacity`     | Yes      | maxStudents, maxTeachers, maxClasses       | `School.maxStudents`, `maxTeachers`, `maxClasses` |
+| **Schedule**     | -               | No       | Timetable structure                        | `School` (not in active nav)                      |
+| **Branding**     | `/branding`     | No       | Logo, primary color, border radius, shadow | `School.primaryColor`, `borderRadius`, `shadow`   |
+| **Import**       | `/import`       | No       | CSV/Excel upload                           | Bulk insert                                       |
+| **Finish Setup** | `/finish-setup` | No       | Review (static)                            | N/A                                               |
 
-| Step             | Path            | Required | Fields                               | Database                                        |
-| ---------------- | --------------- | -------- | ------------------------------------ | ----------------------------------------------- |
-| **Capacity**     | `/capacity`     | Yes      | maxStudents, maxTeachers, maxClasses | `School.max*`                                   |
-| **Branding**     | `/branding`     | No       | Logo, colors, theme                  | `School.primaryColor`, `borderRadius`, `shadow` |
-| **Import**       | `/import`       | No       | CSV/Excel upload                     | Bulk insert                                     |
-| **Finish Setup** | `/finish-setup` | No       | Review (static)                      | N/A                                             |
-
-**Purpose**: Configure capacity limits and visual identity.
+> **Note:** The `schedule` step exists in the `OnboardingStep` type and has a component directory (`components/onboarding/schedule/`) with actions, validation, and UI. However, it is **not included** in the active `ONBOARDING_CONFIG.steps` array in `src/components/form/footer.tsx`, so users do not navigate to it during the flow. It is available at `order: 5.5` in `config.ts` for future activation.
 
 ### Group 3: Business & Legal
 
-Pricing, compliance, and platform integration.
+| Step           | Path          | Required | Key Fields                        | Database                                                                                |
+| -------------- | ------------- | -------- | --------------------------------- | --------------------------------------------------------------------------------------- |
+| **Join**       | `/join`       | Yes      | Registration data                 | `User`                                                                                  |
+| **Visibility** | `/visibility` | No       | Public/private settings           | `School.isPublished`                                                                    |
+| **Price**      | `/price`      | Yes      | Tuition, fees, currency, schedule | `School.tuitionFee`, `registrationFee`, `applicationFee`, `currency`, `paymentSchedule` |
+| **Discount**   | `/discount`   | No       | Promo codes                       | `Discount` model                                                                        |
+| **Legal**      | `/legal`      | Yes      | Terms acceptance                  | `LegalConsent`                                                                          |
+| **Subdomain**  | `/subdomain`  | No       | Custom domain                     | `School.domain`                                                                         |
 
-| Step                | Path               | Required | Fields                  | Database                          |
-| ------------------- | ------------------ | -------- | ----------------------- | --------------------------------- |
-| **Join**            | `/join`            | Yes      | Registration data       | `User` (stored as JSON in email)  |
-| **Visibility**      | `/visibility`      | No       | Public/private settings | `School.isPublished`              |
-| **Price**           | `/price`           | Yes      | Tuition, fees, currency | `School.website` (pricing-set-\*) |
-| **Discount**        | `/discount`        | No       | Promo codes             | `Discount` model                  |
-| **Legal**           | `/legal`           | Yes      | Terms acceptance        | `LegalConsent`                    |
-| **Subdomain**       | `/subdomain`       | No       | Custom domain           | `School.domain`                   |
-| **Congratulations** | `/congratulations` | No       | Completion (static)     | N/A                               |
+After all steps: **Congratulations** page at `/congratulations` with smart redirect.
 
-**Purpose**: Set up business operations and legal compliance.
+### Active Navigation Config
+
+The actual step order is defined in `src/components/form/footer.tsx`:
+
+```typescript
+export const ONBOARDING_CONFIG: StepConfig = {
+  steps: [
+    "about-school",
+    "title",
+    "description",
+    "location",
+    "stand-out",
+    "capacity",
+    "branding",
+    "import",
+    "finish-setup",
+    "join",
+    "visibility",
+    "price",
+    "discount",
+    "legal",
+    "subdomain",
+  ],
+  groups: {
+    1: ["about-school", "title", "description", "location", "stand-out"],
+    2: ["capacity", "branding", "import", "finish-setup"],
+    3: ["join", "visibility", "price", "discount", "legal", "subdomain"],
+  },
+  groupLabels: [
+    "Tell us about your school",
+    "Set up your school",
+    "Finish up and publish",
+  ],
+}
+```
+
+### Newcomers Flow (Separate)
+
+The `newcomers/` subdirectory contains a **separate modal flow** for internal school members (teachers, staff, parents, students) joining an existing school. It has 5 steps: role → info → verify → profile → welcome.
 
 ---
 
 ## Auth Integration
-
-The onboarding flow is deeply integrated with the authentication system to ensure proper user-school linking and role assignment.
 
 ### Complete Authentication Flow
 
@@ -165,7 +279,7 @@ sequenceDiagram
 
     O->>U: Redirect to /onboarding/{schoolId}/about-school
 
-    Note over U,O: User completes 16 steps
+    Note over U,O: User completes steps
 
     U->>O: Complete all steps
     O->>O: Navigate to /subdomain
@@ -174,7 +288,6 @@ sequenceDiagram
 
     O->>U: Redirect to /congratulations
     U->>O: Click "Visit Your School"
-    O->>S: Smart redirect logic
 
     alt Has subdomain
         S->>U: Redirect to hogwarts.databayt.org
@@ -185,42 +298,36 @@ sequenceDiagram
 
 ### Atomic School Creation
 
-The `initializeSchoolSetup()` action uses Prisma transactions to ensure atomicity:
+`initializeSchoolSetup()` delegates to `ensureUserSchool()` in `src/lib/school-access.ts`, which uses Prisma transactions:
 
 ```typescript
-// src/lib/school-access.ts
 export async function ensureUserSchool(userId: string) {
   return await db.$transaction(async (tx) => {
-    // 1. Check if user already has a school
+    // 1. Check if user already has a school (idempotent)
     const user = await tx.user.findUnique({
       where: { id: userId },
       select: { schoolId: true },
     })
 
     if (user?.schoolId) {
-      // Idempotent: Return existing school
       const school = await tx.school.findUnique({
         where: { id: user.schoolId },
       })
       return { success: true, schoolId: user.schoolId, school }
     }
 
-    // 2. Create school and link user atomically
+    // 2. Create school + link user atomically
     const school = await tx.school.create({
       data: {
         name: "New School",
         domain: `school-${Date.now()}`,
-        createdByUserId: userId, // Track creator
+        createdByUserId: userId,
       },
     })
 
-    // 3. Link user to school and set role
     await tx.user.update({
       where: { id: userId },
-      data: {
-        schoolId: school.id,
-        role: "ADMIN",
-      },
+      data: { schoolId: school.id, role: "ADMIN" },
     })
 
     return { success: true, schoolId: school.id, school }
@@ -228,102 +335,37 @@ export async function ensureUserSchool(userId: string) {
 }
 ```
 
-**Key Features:**
+**Key properties:**
 
-- **Atomicity**: School creation and user linking happen in a single transaction
+- **Atomicity**: School creation and user linking in a single transaction
 - **Idempotency**: Safe to call multiple times (returns existing school)
-- **Race Condition Handling**: Transaction isolation prevents duplicate schools
-- **Session Sync**: Returns `_sessionRefreshRequired` hint for client
+- **Race condition handling**: Transaction isolation prevents duplicate schools
 
-### Session Refresh Flow
+### Session Refresh
 
-After atomic school creation, the session must be refreshed to include the new `schoolId`:
+After school creation, the client must refresh the session to get the new `schoolId` in the JWT:
 
 ```typescript
-// Client-side (after initializeSchoolSetup)
 const result = await initializeSchoolSetup()
 
 if (result.success && result.data._sessionRefreshRequired) {
-  // Trigger session refresh
   await fetch("/api/auth/session", { method: "GET" })
-
-  // Navigate to first step
   router.push(result.data._redirect)
 }
 ```
 
-### Multi-Tenant Scoping
+### Smart Redirect
 
-All onboarding queries include `schoolId` for tenant isolation:
+After completing onboarding, the system redirects based on subdomain:
 
-```typescript
-// ✅ CORRECT - Scoped by schoolId
-export async function updateListing(
-  id: string,
-  data: Partial<ListingFormData>
-) {
-  await requireSchoolOwnership(id) // Validates user owns this school
-
-  const listing = await db.school.update({
-    where: { id }, // schoolId is the primary key
-    data: {
-      ...data,
-      updatedAt: new Date(),
-    },
-  })
-
-  revalidatePath("/onboarding")
-  return createActionResponse(listing)
-}
-
-// ❌ WRONG - Missing ownership check
-export async function updateListing(
-  id: string,
-  data: Partial<ListingFormData>
-) {
-  // Anyone could update any school!
-  const listing = await db.school.update({
-    where: { id },
-    data,
-  })
-}
-```
-
-### Smart Redirect Logic
-
-After completing onboarding, the system redirects based on subdomain configuration:
-
-```typescript
-// src/auth.ts (NextAuth callbacks)
-async redirect({ url, baseUrl }) {
-  // If user just completed onboarding
-  if (url.includes('/congratulations')) {
-    const session = await auth();
-    const school = await db.school.findUnique({
-      where: { id: session.user.schoolId },
-      select: { domain: true }
-    });
-
-    if (school?.domain) {
-      // Redirect to school subdomain
-      return `https://${school.domain}.databayt.org`;
-    } else {
-      // Fallback to tenant-scoped dashboard
-      return `/s/${session.user.schoolId}/dashboard`;
-    }
-  }
-
-  return baseUrl;
-}
-```
+- **Has subdomain**: `https://{domain}.databayt.org`
+- **No subdomain**: `/s/{schoolId}/dashboard`
 
 ---
 
 ## Multi-Tenant Integration
 
-The onboarding system is designed for multi-tenant SaaS with strict data isolation.
-
-### Subdomain Routing Pattern
+### Subdomain Routing
 
 ```
 Production:    hogwarts.databayt.org → /[lang]/s/hogwarts/*
@@ -331,55 +373,19 @@ Preview:       hogwarts---branch.vercel.app → /[lang]/s/hogwarts/*
 Development:   hogwarts.localhost:3000 → /[lang]/s/hogwarts/*
 ```
 
-**Edge Proxy** (`src/proxy.ts`) extracts the subdomain and rewrites to tenant-scoped routes.
-
 ### Database Scoping
 
-All business models include `schoolId`:
-
-```prisma
-model School {
-  id              String   @id @default(cuid())
-  name            String
-  domain          String?  @unique
-  schoolId        String?  // Self-reference for consistency
-  createdByUserId String   // Track who created this school
-
-  // Relations
-  users           User[]
-  students        Student[]
-  teachers        Teacher[]
-
-  @@index([domain])
-}
-
-model Student {
-  id        String   @id @default(cuid())
-  schoolId  String   // Required for multi-tenancy
-  email     String
-
-  school    School   @relation(fields: [schoolId], references: [id])
-
-  @@unique([email, schoolId])  // Same email allowed across schools
-  @@index([schoolId])
-}
-```
+All business models include `schoolId` with `@@index([schoolId])` and uniqueness constraints scoped by schoolId. The `School` model uses its `id` as the primary key, with `domain` as a unique optional field.
 
 ### Ownership Verification
 
 All server actions verify ownership before mutations:
 
 ```typescript
-import { requireSchoolOwnership } from "@/lib/auth-security"
+import { requireSchoolOwnership } from "./auth-helpers"
 
-export async function updateListing(
-  id: string,
-  data: Partial<ListingFormData>
-) {
-  // Throws TenantError if user doesn't own this school
-  await requireSchoolOwnership(id)
-
-  // Proceed with mutation
+export async function updateListing(id: string, data: Partial<Listing>) {
+  await requireSchoolOwnership(id) // Throws if user doesn't own this school
   await db.school.update({ where: { id }, data })
 }
 ```
@@ -388,17 +394,16 @@ export async function updateListing(
 
 ## Validation System
 
-The onboarding system uses Zod for type-safe validation with i18n support.
+### Factory Pattern
 
-### Validation Factory Pattern
+Step schemas use factory functions that accept a dictionary for i18n:
 
 ```typescript
-// validation.ts
+// src/components/onboarding/validation.ts
 import { getValidationMessages } from "@/components/internationalization/helpers"
 
 export function createTitleStepValidation(dictionary: Dictionary) {
   const v = getValidationMessages(dictionary)
-
   return z
     .object({
       name: z
@@ -411,9 +416,7 @@ export function createTitleStepValidation(dictionary: Dictionary) {
 }
 ```
 
-### Step-Specific Schemas
-
-Each step has its own validation schema:
+### Step Schemas
 
 | Step        | Schema                      | Required Fields                                        |
 | ----------- | --------------------------- | ------------------------------------------------------ |
@@ -423,219 +426,115 @@ Each step has its own validation schema:
 | Capacity    | `capacityStepValidation`    | maxStudents, maxTeachers                               |
 | Price       | `priceStepValidation`       | tuitionFee, currency, paymentSchedule                  |
 | Legal       | `legalStepValidation`       | termsAccepted, privacyAccepted, dataProcessingAccepted |
-
-### Validation Helpers
-
-```typescript
-// Validate a step's data
-export function validateStep(step: OnboardingStep, data: any) {
-  try {
-    switch (step) {
-      case "title":
-        titleStepValidation.parse(data)
-        break
-      case "description":
-        descriptionStepValidation.parse(data)
-        break
-      // ...
-    }
-    return { isValid: true, errors: {} }
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errors: Record<string, string> = {}
-      error.issues.forEach((err) => {
-        if (err.path.length > 0) {
-          errors[err.path.join(".")] = err.message
-        }
-      })
-      return { isValid: false, errors }
-    }
-    return { isValid: false, errors: { general: "Validation failed" } }
-  }
-}
-
-// Get required fields for a step
-export function getRequiredFieldsForStep(step: OnboardingStep): string[] {
-  switch (step) {
-    case "title":
-      return ["name"]
-    case "description":
-      return ["description"]
-    case "location":
-      return ["address", "city", "state"]
-    case "capacity":
-      return ["maxStudents", "maxTeachers"]
-    case "price":
-      return ["tuitionFee", "currency", "paymentSchedule"]
-    case "legal":
-      return ["termsAccepted", "privacyAccepted", "dataProcessingAccepted"]
-    default:
-      return []
-  }
-}
-```
+| Subdomain   | `domainSchema`              | domain (3-63 chars, lowercase alphanumeric + hyphens)  |
 
 ### Domain Validation
-
-Custom regex patterns for subdomain validation:
 
 ```typescript
 export const domainSchema = z
   .string()
   .min(3, "Domain must be at least 3 characters")
   .max(63, "Domain must be less than 63 characters")
-  .regex(
-    /^[a-z0-9-]+$/,
-    "Domain can only contain lowercase letters, numbers, and hyphens"
-  )
-  .regex(/^[a-z0-9]/, "Domain must start with a letter or number")
-  .regex(/[a-z0-9]$/, "Domain must end with a letter or number")
-  .refine(
-    (val) => !val.includes("--"),
-    "Domain cannot contain consecutive hyphens"
-  )
+  .regex(/^[a-z0-9-]+$/, "lowercase letters, numbers, and hyphens only")
+  .regex(/^[a-z0-9]/, "Must start with a letter or number")
+  .regex(/[a-z0-9]$/, "Must end with a letter or number")
+  .refine((val) => !val.includes("--"), "No consecutive hyphens")
 ```
+
+### Known Validation Discrepancies
+
+There are value mismatches between the root `validation.ts` and step-specific schemas:
+
+| Field                  | Root `validation.ts` | `price/validation.ts` | `constants.client.ts` |
+| ---------------------- | -------------------- | --------------------- | --------------------- |
+| tuitionFee max         | 100,000              | **50,000**            | -                     |
+| registrationFee max    | 10,000               | **5,000**             | -                     |
+| maxStudents min        | 1                    | -                     | **10**                |
+| maxTeachers max        | 1,000                | -                     | **500**               |
+| maxClasses max         | 500                  | -                     | **100**               |
+| name max length        | 100                  | -                     | **40**                |
+| description min length | 10                   | -                     | **50**                |
+
+The price sub-module uses lower limits than the root schema, and `FORM_LIMITS` in `constants.client.ts` disagrees with the root validation on several fields.
 
 ---
 
 ## State Management
 
-The onboarding system uses React Context for state management with server-client synchronization.
+### ListingProvider
 
-### ListingProvider Context
-
-Manages school data state across all steps:
+Manages school data state across all steps. Defined in `src/components/onboarding/use-listing.tsx`:
 
 ```typescript
-// use-listing.tsx
 interface ListingContextType {
-  listing: OnboardingSchoolData | null;
-  isLoading: boolean;
-  error: string | null;
-  updateListing: (data: Partial<OnboardingSchoolData>) => Promise<void>;
-  refreshListing: () => Promise<void>;
-}
-
-export function ListingProvider({ children, schoolId }: Props) {
-  const [listing, setListing] = useState<OnboardingSchoolData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load listing on mount
-  useEffect(() => {
-    async function loadListing() {
-      const response = await getListing(schoolId);
-      if (response.success) {
-        setListing(response.data);
-      }
-    }
-    loadListing();
-  }, [schoolId]);
-
-  const updateListing = async (data: Partial<OnboardingSchoolData>) => {
-    const response = await updateListingAction(schoolId, data);
-    if (response.success) {
-      setListing(prev => ({ ...prev, ...response.data }));
-    }
-  };
-
-  return (
-    <ListingContext.Provider value={{ listing, isLoading, updateListing }}>
-      {children}
-    </ListingContext.Provider>
-  );
-}
-
-// Usage in components
-export function TitleForm() {
-  const { listing, updateListing } = useListing();
-
-  const handleSubmit = async (data: { name: string }) => {
-    await updateListing(data);
-  };
+  listing: Listing | null
+  isLoading: boolean
+  error: string | null
+  setListing: (listing: Listing | null) => void
+  updateListingData: (data: Partial<Listing>) => Promise<void>
+  createNewListing: (data?: Partial<Listing>) => Promise<string | null>
+  loadListing: (id: string) => Promise<void>
+  clearError: () => void
 }
 ```
 
-### HostValidationProvider
+Wrapped at the layout level in `src/app/[lang]/onboarding/[id]/layout.tsx`, providing context to all step pages.
 
-> **Note**: `HostValidationContext` is now an alias for `WizardValidationContext` from the Form Block.
-> Both imports work identically. New code should import from `@/components/form`.
->
-> ```tsx
-> // New way (recommended)
-> import {
->   useWizardValidation,
->   WizardValidationProvider,
-> } from "@/components/form"
-> // Legacy way (still works)
-> import {
->   HostValidationProvider,
->   useHostValidation,
-> } from "@/components/onboarding/host-validation-context"
-> ```
+### HostValidationProvider (Deprecated)
 
-Manages form validation state across steps:
+`src/components/onboarding/host-validation-context.tsx` is a deprecated shim that re-exports from the form block:
 
 ```typescript
-// host-validation-context.tsx (now re-exports from form block)
-interface ValidationContextType {
-  isNextDisabled: boolean
-  enableNext: () => void
-  disableNext: () => void
-  customNavigation?: CustomNavigation
-  setCustomNavigation: (navigation?: CustomNavigation) => void
-}
-
-// Usage in layout
-;<HostValidationProvider>{children}</HostValidationProvider>
-
-// Usage in step components
-const { enableNext, disableNext } = useHostValidation()
-
-useEffect(() => {
-  if (form.formState.isValid) {
-    enableNext()
-  } else {
-    disableNext()
-  }
-}, [form.formState.isValid])
+// Deprecated - re-exports from form block
+export {
+  WizardValidationProvider as HostValidationProvider,
+  useWizardValidation as useHostValidation,
+} from "@/components/form/template/wizard-validation-context"
 ```
+
+New code should import directly from `@/components/form`:
+
+```typescript
+// Recommended
+import {
+  useWizardValidation,
+  WizardValidationProvider,
+} from "@/components/form"
+// Legacy (still works)
+import {
+  HostValidationProvider,
+  useHostValidation,
+} from "@/components/onboarding/host-validation-context"
+```
+
+### FormFooter (Replaced HostFooter)
+
+`host-footer.tsx` no longer exists. The barrel export in `index.ts` re-exports `FormFooter` as `HostFooter` for backward compatibility:
+
+```typescript
+// src/components/onboarding/index.ts
+export { FormFooter as HostFooter } from "@/components/form/footer"
+```
+
+The actual navigation is handled by `FormFooter` from `src/components/form/footer.tsx`, which accepts a `StepConfig` object and renders Back/Next buttons, progress bars per group, and save/help controls.
 
 ### useOnboarding Hook
 
-Main hook for navigation and validation:
+Main hook for navigation and validation in `src/components/onboarding/use-onboarding.ts`:
 
 ```typescript
 export function useOnboarding(schoolId?: string) {
-  const [school, setSchool] = useState<OnboardingSchoolData | null>(null)
-  const [progress, setProgress] = useState<OnboardingProgress | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Load school data and progress
-  const loadSchoolData = useCallback(async () => {
-    const [schoolResponse, statusResponse] = await Promise.all([
-      getListing(schoolId),
-      getSchoolSetupStatus(schoolId),
-    ])
-
-    if (schoolResponse.success) setSchool(schoolResponse.data)
-    if (statusResponse.success) setProgress(statusResponse.data)
-  }, [schoolId])
-
-  // Navigate to next step
-  const goToNextStep = useCallback(async () => {
-    await proceedToTitle(schoolId)
-  }, [schoolId])
-
-  // Validate current step
-  const validateCurrentStep = useCallback(() => {
-    return validateStep(currentStep, school)
-  }, [school, currentStep])
+  // Parallelizes school data and status loading
+  const [schoolResponse, statusResponse] = await Promise.all([
+    getListing(schoolId),
+    getSchoolSetupStatus(schoolId),
+  ])
 
   return {
     school,
     progress,
     isLoading,
-    updateSchool: updateSchoolData,
+    updateSchool,
     goToNextStep,
     validateCurrentStep,
   }
@@ -644,753 +543,269 @@ export function useOnboarding(schoolId?: string) {
 
 ---
 
+## API Routes
+
+Three API endpoints under `src/app/api/onboarding/`:
+
+| Route                             | Method | Purpose                                                                                                                                                                                      |
+| --------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/onboarding/create-school`   | POST   | Idempotent atomic school creation via Prisma `$transaction`; handles race conditions (P2002 unique violation); returns existing school if already created                                    |
+| `/api/onboarding/validate-access` | POST   | Pre-flight check verifying user can access onboarding; auto-provisions school if needed; returns redirect URL if schoolId mismatch                                                           |
+| `/api/onboarding/extract`         | POST   | AI-powered document extraction from uploaded files (10MB max; JPEG/PNG/WebP/PDF); extracts structured data for steps: title, description, location, capacity, branding, import, price, legal |
+
+---
+
+## Server Actions
+
+All server actions are in `src/components/onboarding/actions.ts`:
+
+### `initializeSchoolSetup()`
+
+Creates or retrieves school for onboarding. Delegates to `ensureUserSchool()` for atomic transaction.
+
+**Returns:** `{ ...school, _redirect: "/onboarding/{id}/about-school", _sessionRefreshRequired: true }`
+
+### `getListing(id)`
+
+Fetches school data with ownership verification via `requireSchoolOwnership(id)`.
+
+### `updateListing(id, data)`
+
+Updates school fields for a specific step. Validates ownership first.
+
+### `getSchoolSetupStatus(schoolId)`
+
+Calculates onboarding completion percentage based on 6 checks:
+
+1. Name set (not "New School")
+2. School type set
+3. Address set
+4. Max students set
+5. Tuition fee set
+6. Domain set
+
+Returns `{ completionPercentage, nextStep }`.
+
+### `reserveSubdomainForSchool(schoolId, subdomain)`
+
+Reserves a subdomain. Delegates to `reserveSubdomain()` in `src/lib/subdomain-actions.ts`.
+
+### `getCurrentUserSchool()`
+
+Returns the current user's schoolId from auth context or database lookup.
+
+### `getUserSchools()`
+
+Lists schools owned by or associated with the current user.
+
+### `proceedToTitle(schoolId)`
+
+Validates ownership and redirects to the about-school step.
+
+---
+
+## Implementation Status
+
+| Step         | UI  | Form | Actions | Validation |   DB    |         Production          |
+| ------------ | :-: | :--: | :-----: | :--------: | :-----: | :-------------------------: |
+| About School | ✅  |  ✅  |   ✅    |     ✅     |   N/A   |             ✅              |
+| Title        | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
+| Description  | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
+| Location     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    | Partial (Maps API pending)  |
+| Stand Out    | ✅  |  ✅  |   ✅    |     ✅     |   N/A   |             ✅              |
+| Capacity     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
+| Schedule     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |      Not in active nav      |
+| Branding     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
+| Import       | ✅  |  ✅  |   ✅    |     ✅     | Partial | Partial (parser incomplete) |
+| Finish Setup | ✅  |  ✅  |   ✅    |     ✅     |   N/A   |             ✅              |
+| Join         | ✅  |  ✅  |   ✅    |     ✅     | Partial | Partial (workflow pending)  |
+| Visibility   | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
+| Price        | ✅  |  ✅  |   ✅    |     ✅     | Partial |  Partial (Stripe pending)   |
+| Discount     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
+| Legal        | ✅  |  ✅  |   ✅    |     ✅     | Partial |   Partial (docs pending)    |
+| Subdomain    | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |    Partial (DNS pending)    |
+
+---
+
 ## Production Blockers
 
-Comprehensive tracking of issues preventing production deployment.
+### P0 - Critical
 
-### P0 - Critical Blockers
-
-**Must fix before production.**
-
-#### 1. Join Step Data Storage Issue
-
-- **Issue**: Join step stores registration data as JSON in `User.email` field
-- **Impact**: Data corruption, type confusion, violates schema constraints
-- **Current Implementation**:
-  ```typescript
-  // join/actions.ts (WRONG)
-  await db.user.update({
-    where: { id: userId },
-    data: {
-      email: JSON.stringify(registrationData), // ❌ Violates email field type
-    },
-  })
-  ```
-- **Fix Required**:
-
-  ```typescript
-  // Create proper UserProfile model
-  model UserProfile {
-    id              String   @id @default(cuid())
-    userId          String   @unique
-    firstName       String
-    lastName        String
-    phoneNumber     String?
-    department      String?
-
-    user            User     @relation(fields: [userId], references: [id])
-  }
-  ```
-
-#### 2. Legal Step Missing Database Fields
-
-- **Issue**: Legal consent not persisted to database
-- **Impact**: No audit trail for compliance (GDPR, data protection)
-- **Fix Required**:
-
-  ```prisma
-  model LegalConsent {
-    id                      String   @id @default(cuid())
-    schoolId                String
-    userId                  String
-    termsVersion            String
-    termsAcceptedAt         DateTime
-    privacyVersion          String
-    privacyAcceptedAt       DateTime
-    dataProcessingVersion   String
-    dataProcessingAcceptedAt DateTime
-    ipAddress               String?
-
-    school                  School   @relation(fields: [schoolId], references: [id])
-    user                    User     @relation(fields: [userId], references: [id])
-
-    @@index([schoolId])
-    @@index([userId])
-  }
-  ```
-
-#### 3. Steps Without Form Handlers
-
-- **Issue**: Some steps have forms but no server action integration
-- **Affected Steps**: Stand Out, Finish Setup
-- **Impact**: Data not persisted
-- **Fix**: Add server actions or mark as informational-only
+| #   | Issue                                  | Impact                    | Status                            |
+| --- | -------------------------------------- | ------------------------- | --------------------------------- |
+| 1   | Debug `console.log` in `actions.ts`    | Performance, info leakage | Open                              |
+| 2   | Auth fallback logic                    | Security vulnerability    | ✅ Resolved (atomic transactions) |
+| 3   | Missing error boundaries on some steps | White screen on errors    | Open                              |
 
 ### P1 - High Priority
 
-**Should fix before production.**
-
-#### 1. Maps API Integration
-
-- **Status**: Not implemented
-- **Step Affected**: Location
-- **Required Actions**:
-  - [ ] Integrate Google Maps or Mapbox API
-  - [ ] Implement geocoding for addresses
-  - [ ] Add location picker component
-  - [ ] Store latitude/longitude in database
-
-#### 2. Stripe Payment Processing
-
-- **Status**: Not implemented
-- **Steps Affected**: Price, Discount
-- **Required Actions**:
-  - [ ] Set up Stripe Connect for schools
-  - [ ] Implement subscription billing
-  - [ ] Add payment method collection
-  - [ ] Create invoice generation system
-
-#### 3. CSV/Excel Parser
-
-- **Status**: UI complete, parser missing
-- **Step Affected**: Import
-- **Required Actions**:
-  - [ ] Implement CSV parsing logic (use `papaparse`)
-  - [ ] Add Excel file support (use `xlsx`)
-  - [ ] Create column mapping interface
-  - [ ] Add data validation and sanitization
-  - [ ] Implement batch import with progress tracking
-
-#### 4. DNS Configuration
-
-- **Status**: Form complete, DNS setup missing
-- **Step Affected**: Subdomain
-- **Required Actions**:
-  - [ ] Integrate with DNS provider (Cloudflare/Route53)
-  - [ ] Implement subdomain availability checking
-  - [ ] Add SSL certificate provisioning (Let's Encrypt)
-  - [ ] Create subdomain verification process
+| #   | Issue                                     | Steps Affected   | Status                      |
+| --- | ----------------------------------------- | ---------------- | --------------------------- |
+| 1   | Maps API integration                      | Location         | Blocked (API key)           |
+| 2   | Stripe payment processing                 | Price, Discount  | Blocked (account setup)     |
+| 3   | CSV/Excel parser                          | Import           | UI complete, parser missing |
+| 4   | DNS configuration                         | Subdomain        | Form complete, DNS missing  |
+| 5   | File upload service (virus scanning, CDN) | Import, Branding | Partial                     |
 
 ### P2 - Medium Priority
 
-**Nice to have for production.**
-
-#### 1. Invitation System
-
-- **Status**: Basic implementation
-- **Step Affected**: Join
-- **Required**:
-  - [ ] Generate unique invitation codes
-  - [ ] Implement role-based access control
-  - [ ] Add approval workflow for teachers/staff
-  - [ ] Create invitation email templates
-
-#### 2. Legal Document Templates
-
-- **Status**: UI complete, documents missing
-- **Step Affected**: Legal
-- **Required**:
-  - [ ] Add terms of service template
-  - [ ] Add privacy policy template
-  - [ ] Implement version control for legal docs
-  - [ ] Add consent tracking with timestamps
+| #   | Issue                                         | Steps Affected | Status                    |
+| --- | --------------------------------------------- | -------------- | ------------------------- |
+| 1   | Invitation system (codes, approval workflow)  | Join           | Basic implementation      |
+| 2   | Legal document templates + version control    | Legal          | UI complete, docs missing |
+| 3   | Performance optimizations (caching, prefetch) | All            | Partial                   |
 
 ---
 
-## API Reference
+## Technical Debt
 
-Server actions for onboarding CRUD operations.
+### `constants.client.ts` Has Stale Step Names
 
-### initializeSchoolSetup()
+`STEP_NAVIGATION` in `src/components/onboarding/constants.client.ts` defines steps that do **not exist** in the `OnboardingStep` type:
 
-Creates or retrieves school for onboarding flow.
+- Stale steps: `admin-account`, `school-info`, `academic-setup`, `review`, `tour`
+- Missing steps: `description`, `location`, `capacity`, `branding`, `import`, `join`, `visibility`, `price`, `discount`, `legal`, `stand-out`, `finish-setup`
 
-```typescript
-export async function initializeSchoolSetup(): Promise<ActionResponse>
-```
+This map is typed as `Record<string, ...>` (not `Record<OnboardingStep, ...>`), so there is no compile-time enforcement. The actual navigation is `ONBOARDING_CONFIG` in `src/components/form/footer.tsx`.
 
-**Returns:**
+Additionally, `FORM_LIMITS` in the same file disagrees with the root `validation.ts` on several bounds (see [Validation Discrepancies](#known-validation-discrepancies) above).
 
-```typescript
-{
-  success: true,
-  data: {
-    id: string,
-    name: "New School",
-    domain: "school-1234567890",
-    _redirect: "/onboarding/{schoolId}/about-school",
-    _sessionRefreshRequired: true
-  }
-}
-```
+### Config Defined in 3 Places
 
-**Flow:**
+`HOSTING_STEPS` / step ordering is defined in:
 
-1. Get authenticated user context
-2. Check if user already has a school (idempotent)
-3. If not, create school and link user atomically
-4. Return school with redirect hint
-5. Client refreshes session to get `schoolId` in JWT
+1. `config.ts` → `ONBOARDING_STEPS` (authoritative, 16 steps with metadata)
+2. `src/components/form/footer.tsx` → `ONBOARDING_CONFIG` (runtime navigation, 15 steps)
+3. `constants.client.ts` → `STEP_NAVIGATION` (stale, does not match)
 
-**Usage:**
+Should consolidate to a single source of truth in `config.ts`.
 
-```typescript
-// onboarding/page.tsx
-const result = await initializeSchoolSetup()
+### Action File Naming
 
-if (result.success && result.data._sessionRefreshRequired) {
-  await fetch("/api/auth/session") // Refresh session
-  router.push(result.data._redirect)
-}
-```
+Some step subdirectories use `action.ts` (singular), others use `actions.ts` (plural). Should standardize to `actions.ts`.
 
-### createListing()
+### Listing Interface vs Types
 
-Creates a new school listing (rarely used - initializeSchoolSetup preferred).
-
-```typescript
-export async function createListing(
-  data: ListingFormData
-): Promise<ActionResponse>
-```
-
-**Parameters:**
-
-```typescript
-interface ListingFormData {
-  name?: string
-  description?: string
-  address?: string
-  domain?: string
-  maxStudents?: number
-  maxTeachers?: number
-  // ... (30+ fields)
-}
-```
-
-### updateListing()
-
-Updates school data for a specific step.
-
-```typescript
-export async function updateListing(
-  id: string,
-  data: Partial<ListingFormData>
-): Promise<ActionResponse>
-```
-
-**Example:**
-
-```typescript
-// title/actions.ts
-export async function updateSchoolTitle(schoolId: string, name: string) {
-  const result = await updateListing(schoolId, { name })
-
-  if (result.success) {
-    revalidatePath(`/onboarding/${schoolId}`)
-  }
-
-  return result
-}
-```
-
-### getListing()
-
-Fetches school data with ownership verification.
-
-```typescript
-export async function getListing(id: string): Promise<ActionResponse>
-```
-
-**Returns:**
-
-```typescript
-{
-  success: true,
-  data: {
-    id: string,
-    name: string,
-    address: string,
-    maxStudents: number,
-    // ... (all school fields)
-  }
-}
-```
-
-**Security:**
-
-- Verifies `requireSchoolOwnership(id)` before returning data
-- Uses onboarding fallback for 1-hour grace period during setup
-- Returns 403 if user doesn't own the school
-
-### getSchoolSetupStatus()
-
-Calculates onboarding completion percentage and next step.
-
-```typescript
-export async function getSchoolSetupStatus(
-  schoolId: string
-): Promise<ActionResponse>
-```
-
-**Returns:**
-
-```typescript
-{
-  success: true,
-  data: {
-    id: string,
-    name: string,
-    completionPercentage: 75,
-    nextStep: "price",
-    missingFields: ["tuitionFee", "currency"]
-  }
-}
-```
-
-**Logic:**
-
-```typescript
-const checks = [
-  !!school.name && school.name !== "New School",
-  !!school.address,
-  !!school.planType?.includes("-"), // Has school description
-  !!school.website?.startsWith("pricing-set-"), // Has pricing
-  !!school.maxStudents,
-  !!school.maxTeachers,
-]
-
-const completionPercentage = Math.round(
-  (checks.filter(Boolean).length / checks.length) * 100
-)
-```
-
-### reserveSubdomainForSchool()
-
-Reserves a subdomain for the school.
-
-```typescript
-export async function reserveSubdomainForSchool(
-  schoolId: string,
-  subdomain: string
-): Promise<ActionResponse>
-```
-
-**Validation:**
-
-- Checks subdomain availability
-- Validates format (lowercase, alphanumeric + hyphens)
-- Prevents reserved subdomains (www, api, admin, etc.)
+The `Listing` interface in `use-listing.tsx` has `schoolType` with 5 values, while `SchoolCategory` in `types.ts` and `SCHOOL_CATEGORIES` in `config.ts` have 9 values (adding `national`, `british`, `ib`, `american`).
 
 ---
 
-## Component Flow Diagram
-
-```mermaid
-graph TD
-    A[Marketing Page] -->|Click Get Started| B[Auth Flow]
-    B -->|OAuth/Credentials| C[User Created]
-    C -->|No schoolId| D[Redirect to /onboarding]
-
-    D --> E[initializeSchoolSetup]
-    E -->|Check User School| F{Has School?}
-
-    F -->|No| G[Atomic Transaction]
-    G --> H[Create School]
-    G --> I[Link User.schoolId]
-    G --> J[Set User.role = ADMIN]
-    G --> K[Commit]
-    K --> L[Return School + _sessionRefreshRequired]
-
-    F -->|Yes| M[Return Existing School]
-
-    L --> N[Client Refreshes Session]
-    M --> N
-    N --> O[Navigate to /about-school]
-
-    O --> P[ListingProvider Loads]
-    P --> Q[Group 1: School Info]
-    Q --> R[About School - Static]
-    R --> S[Title - School Name]
-    S --> T[Description - Type & Details]
-    T --> U[Location - Address]
-    U --> V[Stand Out - Features]
-
-    V --> W[Group 2: Setup]
-    W --> X[Capacity - Limits]
-    X --> Y[Branding - Visual]
-    Y --> Z[Import - CSV/Excel]
-    Z --> AA[Finish Setup - Review]
-
-    AA --> AB[Group 3: Business]
-    AB --> AC[Join - Registration]
-    AC --> AD[Visibility - Privacy]
-    AD --> AE[Price - Tuition]
-    AE --> AF[Discount - Promos]
-    AF --> AG[Legal - Terms]
-    AG --> AH[Subdomain - Domain]
-
-    AH --> AI[Congratulations]
-    AI -->|Has Domain| AJ[Redirect to school.databayt.org]
-    AI -->|No Domain| AK[Redirect to /s/schoolId/dashboard]
-```
-
----
-
-## Testing Guide
-
-Comprehensive testing strategy for the onboarding system.
-
-### Test Coverage Target
-
-**95%+ coverage** across all test types.
+## Test Coverage
 
 ### Unit Tests
 
-Test validation schemas and utility functions:
+**File:** `src/components/onboarding/__tests__/validation.test.ts` (1,277 lines)
 
-```typescript
-// validation.test.ts
-import { describe, expect, it } from "vitest"
+Comprehensive tests for all Zod schemas including domain, email, URL, phone, enums, each step validation, `validateStep` helper, `getRequiredFieldsForStep`, i18n factory functions, and edge cases.
 
-import { validateStep } from "./validation"
+### Property Tests
 
-describe("Onboarding Validation", () => {
-  it("should validate title step with valid name", () => {
-    const result = validateStep("title", { name: "Hogwarts School" })
-    expect(result.isValid).toBe(true)
-    expect(result.errors).toEqual({})
-  })
+**File:** `src/components/onboarding/__tests__/validation.property.test.ts` (244 lines)
 
-  it("should reject title step with short name", () => {
-    const result = validateStep("title", { name: "H" })
-    expect(result.isValid).toBe(false)
-    expect(result.errors.name).toContain("at least 2 characters")
-  })
+Property-based tests using `fast-check` for domain validation, email patterns, phone numbers, price field bounds, capacity constraints, and hex color validation.
 
-  it("should validate domain format", () => {
-    const result = validateStep("subdomain", { domain: "hogwarts-school" })
-    expect(result.isValid).toBe(true)
-  })
+### Test Factories
 
-  it("should reject invalid domain format", () => {
-    const result = validateStep("subdomain", { domain: "Hogwarts_123" })
-    expect(result.isValid).toBe(false)
-    expect(result.errors.domain).toContain(
-      "lowercase letters, numbers, and hyphens"
-    )
-  })
-})
-```
+**Directory:** `src/components/onboarding/__tests__/factories/`
 
-### Integration Tests
-
-Test server actions with database:
-
-```typescript
-// actions.test.ts
-import { beforeEach, describe, expect, it } from "vitest"
-
-import { db } from "@/lib/db"
-
-import { initializeSchoolSetup, updateListing } from "./actions"
-
-describe("Onboarding Actions", () => {
-  beforeEach(async () => {
-    await db.school.deleteMany()
-    await db.user.deleteMany()
-  })
-
-  it("should create school and link user atomically", async () => {
-    const userId = "user-123"
-    const result = await initializeSchoolSetup(userId)
-
-    expect(result.success).toBe(true)
-    expect(result.data.name).toBe("New School")
-
-    // Verify user is linked
-    const user = await db.user.findUnique({ where: { id: userId } })
-    expect(user.schoolId).toBe(result.data.id)
-    expect(user.role).toBe("ADMIN")
-  })
-
-  it("should be idempotent - return existing school", async () => {
-    const userId = "user-123"
-    const result1 = await initializeSchoolSetup(userId)
-    const result2 = await initializeSchoolSetup(userId)
-
-    expect(result1.data.id).toBe(result2.data.id)
-  })
-})
-```
+| File            | Exports                                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `school.ts`     | `createMockSchool`, `createMinimalSchool`, `createDraftSchool`, step-specific factories (`createTitleStepData`, `createDescriptionStepData`, etc.), invalid/edge-case data factories |
+| `user.ts`       | `createMockUser`                                                                                                                                                                     |
+| `dictionary.ts` | `createMockDictionary` for i18n schema tests                                                                                                                                         |
 
 ### E2E Tests (Playwright)
 
-Test complete onboarding flow:
+**Directory:** `tests/e2e/epic-5-onboarding/`
 
-```typescript
-// onboarding.e2e.ts
-import { expect, test } from "@playwright/test"
+| File                      | Purpose                                |
+| ------------------------- | -------------------------------------- |
+| `get-started.spec.ts`     | Landing page and initiation flow       |
+| `full-journey.spec.ts`    | Complete end-to-end onboarding         |
+| `onboarding-flow.spec.ts` | Step-by-step navigation and validation |
 
-test.describe("Onboarding Flow", () => {
-  test("should complete onboarding successfully", async ({ page }) => {
-    // 1. Start onboarding
-    await page.goto("/onboarding")
-    await page.click("text=Get Started")
+---
 
-    // 2. Login
-    await page.fill('input[name="email"]', "admin@hogwarts.edu")
-    await page.fill('input[name="password"]', "password123")
-    await page.click('button[type="submit"]')
+## File Reference
 
-    // 3. Initialize school
-    await page.waitForURL(/\/onboarding\/[^\/]+\/about-school/)
-    await page.click("text=Next")
+### Routes
 
-    // 4. Title step
-    await page.fill('input[name="name"]', "Hogwarts School of Witchcraft")
-    await page.click('button:has-text("Next")')
+| Path                                             | Purpose                              |
+| ------------------------------------------------ | ------------------------------------ |
+| `src/app/[lang]/onboarding/page.tsx`             | Landing page                         |
+| `src/app/[lang]/onboarding/overview/page.tsx`    | School list dashboard                |
+| `src/app/[lang]/onboarding/[id]/layout.tsx`      | ListingProvider + validation context |
+| `src/app/[lang]/onboarding/[id]/[step]/page.tsx` | Each step page (16 routes)           |
 
-    // 5. Description step
-    await page.selectOption('select[name="schoolType"]', "private")
-    await page.selectOption('select[name="schoolLevel"]', "both")
-    await page.fill('textarea[name="description"]', "A magical school...")
-    await page.click('button:has-text("Next")')
+### API Routes
 
-    // 6. Location step
-    await page.fill('input[name="address"]', "123 Hogwarts Lane")
-    await page.fill('input[name="city"]', "Hogsmeade")
-    await page.fill('input[name="state"]', "Scotland")
-    await page.click('button:has-text("Next")')
+| Path                                              | Purpose                 |
+| ------------------------------------------------- | ----------------------- |
+| `src/app/api/onboarding/create-school/route.ts`   | Atomic school creation  |
+| `src/app/api/onboarding/validate-access/route.ts` | Access pre-flight check |
+| `src/app/api/onboarding/extract/route.ts`         | AI document extraction  |
 
-    // ... Continue through all steps
+### Core Components
 
-    // 16. Congratulations
-    await page.waitForURL(/\/congratulations/)
-    await expect(page.locator("h1")).toContainText("Congratulations")
-  })
-})
-```
+| Path                                                         | Purpose                                       |
+| ------------------------------------------------------------ | --------------------------------------------- |
+| `src/components/onboarding/actions.ts`                       | Server actions                                |
+| `src/components/onboarding/config.ts`                        | Step config (authoritative)                   |
+| `src/components/onboarding/types.ts`                         | `OnboardingStep` type, `OnboardingSchoolData` |
+| `src/components/onboarding/validation.ts`                    | Root Zod schemas                              |
+| `src/components/onboarding/use-listing.tsx`                  | `ListingProvider` context                     |
+| `src/components/onboarding/use-onboarding.ts`                | Navigation + validation hook                  |
+| `src/components/onboarding/auth-helpers.ts`                  | `getAuthContext`, `requireSchoolOwnership`    |
+| `src/components/form/footer.tsx`                             | `FormFooter` + `ONBOARDING_CONFIG`            |
+| `src/components/form/template/wizard-validation-context.tsx` | Validation context (canonical)                |
+| `src/lib/school-access.ts`                                   | `ensureUserSchool` (atomic transaction)       |
 
-### Test Types Summary
+### Tests
 
-| Test Type   | Tool            | Coverage          | Files                   |
-| ----------- | --------------- | ----------------- | ----------------------- |
-| Unit        | Vitest          | Validation, utils | `*.test.ts`             |
-| Integration | Vitest + Prisma | Server actions    | `*.integration.test.ts` |
-| E2E         | Playwright      | Complete flow     | `onboarding.e2e.ts`     |
-| Visual      | Storybook       | UI components     | `*.stories.tsx`         |
+| Path                                                              | Purpose                        |
+| ----------------------------------------------------------------- | ------------------------------ |
+| `src/components/onboarding/__tests__/validation.test.ts`          | Unit tests (1,277 lines)       |
+| `src/components/onboarding/__tests__/validation.property.test.ts` | Property tests (244 lines)     |
+| `src/components/onboarding/__tests__/factories/`                  | Test data factories            |
+| `tests/e2e/epic-5-onboarding/`                                    | Playwright E2E tests (3 specs) |
 
 ---
 
 ## Troubleshooting
 
-Common issues and solutions.
-
-### Issue: Build Hangs at "Environments: .env"
+### Build Hangs at "Environments: .env"
 
 **Cause:** TypeScript errors in onboarding components.
+**Fix:** Run `pnpm tsc --noEmit` to identify errors.
 
-**Fix:**
-
-```bash
-# Check for errors
-pnpm tsc --noEmit
-
-# Look for common issues:
-# - Missing imports
-# - Type mismatches in validation schemas
-# - Incorrect dictionary property access
-```
-
-### Issue: Session Missing schoolId After School Creation
+### Session Missing schoolId After School Creation
 
 **Cause:** Session not refreshed after atomic transaction.
+**Fix:** Call `fetch("/api/auth/session")` after `initializeSchoolSetup()` returns `_sessionRefreshRequired: true`.
 
-**Fix:**
+### Cross-Tenant Access Denied
 
-```typescript
-// Client-side after initializeSchoolSetup
-const result = await initializeSchoolSetup()
+**Cause:** User trying to access a school they don't own.
+**Fix:** `requireSchoolOwnership(id)` throws `TenantError` - ensure the correct schoolId is being passed.
 
-if (result.success && result.data._sessionRefreshRequired) {
-  // REQUIRED: Refresh session
-  await fetch("/api/auth/session", { method: "GET" })
-
-  // Now navigate
-  router.push(result.data._redirect)
-}
-```
-
-### Issue: Cross-Tenant Access Denied Error
-
-**Cause:** User trying to access school they don't own.
-
-**Fix:**
-
-```typescript
-// Verify ownership before mutation
-export async function updateListing(
-  id: string,
-  data: Partial<ListingFormData>
-) {
-  await requireSchoolOwnership(id) // Throws TenantError if not owner
-
-  // Proceed with update
-  await db.school.update({ where: { id }, data })
-}
-```
-
-### Issue: Subdomain Already Taken
+### Subdomain Already Taken
 
 **Cause:** Another school reserved the subdomain.
+**Fix:** The `reserveSubdomainForSchool` action checks availability and returns an error with code `DOMAIN_TAKEN`.
 
-**Fix:**
-
-```typescript
-// Check availability before reservation
-const existing = await db.school.findFirst({
-  where: { domain: subdomain },
-})
-
-if (existing) {
-  return {
-    success: false,
-    error: {
-      message: `Domain "${subdomain}" is already taken`,
-      code: "DOMAIN_TAKEN",
-    },
-  }
-}
-```
-
-### Issue: Form Data Not Persisting
+### Form Data Not Persisting
 
 **Cause:** Missing `revalidatePath()` after mutation.
+**Fix:** All update actions must call `revalidatePath("/onboarding")` after database writes.
 
-**Fix:**
+### Dictionary Property Not Found
 
-```typescript
-export async function updateSchoolTitle(schoolId: string, name: string) {
-  await db.school.update({
-    where: { id: schoolId },
-    data: { name },
-  })
-
-  // REQUIRED: Revalidate cache
-  revalidatePath(`/onboarding/${schoolId}`)
-
-  return { success: true }
-}
-```
-
-### Issue: Dictionary Property Not Found
-
-**Cause:** Missing translation key in dictionary.
-
-**Fix:**
-
-```typescript
-// Always provide fallback
-const label = dictionary?.onboarding?.title?.label || 'School Name';
-
-// Or use optional chaining
-<Input placeholder={dictionary?.onboarding?.title?.placeholder} />
-```
+**Cause:** Missing translation key.
+**Fix:** Use optional chaining: `dictionary?.onboarding?.title?.label`
 
 ---
 
-## Performance Optimizations
+## Related Files
 
-Strategies to ensure fast onboarding experience.
-
-### Code Splitting
-
-Each step is dynamically imported:
-
-```typescript
-// layout.tsx
-const StepContent = dynamic(() => import('./[step]/content'), {
-  loading: () => <Skeleton />,
-  ssr: true // Keep SSR for SEO
-});
-```
-
-### Optimistic Updates
-
-Update UI immediately before server confirmation:
-
-```typescript
-export function useListing() {
-  const updateListing = async (data: Partial<OnboardingSchoolData>) => {
-    // Optimistic update
-    setListing((prev) => ({ ...prev, ...data }))
-
-    try {
-      const response = await updateListingAction(schoolId, data)
-      if (!response.success) {
-        // Rollback on error
-        await refreshListing()
-      }
-    } catch (error) {
-      // Rollback on error
-      await refreshListing()
-    }
-  }
-}
-```
-
-### Prefetching Next Steps
-
-Load next step data in background:
-
-```typescript
-export function HostFooter() {
-  const nextStep = getNextStep(currentStep)
-
-  useEffect(() => {
-    // Prefetch next step component
-    router.prefetch(`/onboarding/${schoolId}/${nextStep}`)
-  }, [nextStep])
-}
-```
-
-### Performance Targets
-
-| Metric           | Target  | Actual |
-| ---------------- | ------- | ------ |
-| Initial Load     | < 2s    | 1.8s   |
-| Step Navigation  | < 500ms | 420ms  |
-| Form Submit      | < 1s    | 850ms  |
-| Data Persistence | < 2s    | 1.5s   |
-
----
-
-## Related Documentation
-
-- [Authentication Guide](/docs/auth) - NextAuth v5 integration
-- [Multi-Tenant Architecture](/docs/multi-tenant) - Subdomain routing
-- [Database Schema](/docs/database) - Prisma models
-- [Form Validation](/docs/validation) - Zod patterns
-- [Server Actions](/docs/actions) - Next.js 16 server actions
-
----
-
-## Changelog
-
-### December 15, 2024
-
-- Added comprehensive documentation (~1500 lines)
-- Documented auth integration with Mermaid diagrams
-- Added production blocker tracking
-- Included API reference and troubleshooting
-
-### December 6, 2024
-
-- Implemented atomic school-user linking with Prisma transactions
-- Added session refresh flow documentation
-- Deprecated 1-hour fallback logic (now logged as warning)
-- Consolidated external dependencies to 100%
-
-### November 2024
-
-- Initial onboarding system implementation
-- 16 steps across 3 groups
-- Mirror pattern architecture
-- ListingProvider context integration
-
----
-
-**Last Updated**: December 15, 2024
-**Status**: 75% Production Ready (P0 blockers remaining)
-**Version**: 1.3.0
+- **[README.md](https://github.com/databayt/hogwarts/blob/main/src/components/onboarding/README.md)** - Architecture overview and step implementation status table
+- **[ISSUE.md](https://github.com/databayt/hogwarts/blob/main/src/components/onboarding/ISSUE.md)** - Production readiness tracker with sprint planning and launch criteria

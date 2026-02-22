@@ -5807,3 +5807,105 @@ export async function getSlotsNeedingSubstitutes(input: {
     totalCount: slotsNeeding.length,
   }
 }
+
+// ============================================================================
+// SLOT EDITOR RESOURCE ACTIONS
+// ============================================================================
+
+/**
+ * Get subjects available for the slot editor dialog.
+ * Returns SubjectInfo[] derived from classes in the given term.
+ */
+export async function getSubjectsForSlotEditor(input: { termId: string }) {
+  await requireReadAccess()
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const classes = await db.class.findMany({
+    where: { schoolId, termId: input.termId },
+    select: {
+      subjectId: true,
+      subject: {
+        select: {
+          id: true,
+          subjectName: true,
+          department: { select: { departmentName: true } },
+        },
+      },
+    },
+    distinct: ["subjectId"],
+  })
+
+  const SLOT_EDITOR_COLORS = [
+    "#3B82F6",
+    "#10B981",
+    "#8B5CF6",
+    "#6366F1",
+    "#EC4899",
+    "#14B8A6",
+    "#F59E0B",
+    "#84CC16",
+    "#0EA5E9",
+    "#F43F5E",
+    "#F97316",
+    "#A855F7",
+    "#22C55E",
+    "#EF4444",
+    "#64748B",
+  ]
+
+  return {
+    subjects: classes
+      .filter((c) => c.subject)
+      .map((c, idx) => ({
+        id: c.subject!.id,
+        name: c.subject!.subjectName,
+        code: c.subject!.subjectName.slice(0, 4).toUpperCase(),
+        color: SLOT_EDITOR_COLORS[idx % SLOT_EDITOR_COLORS.length],
+        department: c.subject!.department?.departmentName,
+        hoursPerWeek: 3,
+        isCore: true,
+      })),
+  }
+}
+
+/**
+ * Get teachers with subject expertise for the slot editor dialog.
+ * Returns TeacherInfo[] with subjects[] populated from TeacherSubjectExpertise.
+ */
+export async function getTeachersForSlotEditor(input: { termId: string }) {
+  await requireReadAccess()
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const teachers = await db.teacher.findMany({
+    where: { schoolId, employmentStatus: "ACTIVE" },
+    select: {
+      id: true,
+      givenName: true,
+      surname: true,
+      user: { select: { email: true, image: true } },
+      teacherDepartments: {
+        where: { isPrimary: true },
+        select: { department: { select: { departmentName: true } } },
+        take: 1,
+      },
+      subjectExpertise: {
+        where: { schoolId },
+        select: { subjectId: true },
+      },
+    },
+  })
+
+  return {
+    teachers: teachers.map((t) => ({
+      id: t.id,
+      firstName: t.givenName || "",
+      lastName: t.surname || "",
+      email: t.user?.email || "",
+      photoUrl: t.user?.image || undefined,
+      department: t.teacherDepartments[0]?.department?.departmentName,
+      subjects: t.subjectExpertise.map((e) => e.subjectId),
+    })),
+  }
+}

@@ -54,36 +54,47 @@ export function PersonalStep() {
     },
   })
 
-  // Sync form changes to context
+  // Sync form data + validation + navigation via single watch subscription
   useEffect(() => {
-    const subscription = form.watch((value) => {
+    const evaluate = (value: Partial<PersonalSchemaType>) => {
       updateStepData("personal", value as PersonalSchemaType)
+
+      const isValid =
+        value.givenName && value.surname && value.dateOfBirth && value.gender
+      if (isValid) {
+        enableNext()
+        setCustomNavigation({
+          onNext: async () => {
+            const valid = await form.trigger()
+            if (valid) {
+              updateStepData("personal", form.getValues())
+              router.push(`/${locale}/s/${subdomain}/join/contact`)
+            }
+          },
+        })
+      } else {
+        disableNext()
+        setCustomNavigation(undefined)
+      }
+    }
+
+    // Evaluate initial values
+    evaluate(form.getValues())
+
+    const subscription = form.watch((value) => {
+      evaluate(value as Partial<PersonalSchemaType>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateStepData])
-
-  // Validation + navigation
-  useEffect(() => {
-    const data = form.watch()
-    const isValid =
-      data.givenName && data.surname && data.dateOfBirth && data.gender
-
-    if (isValid) {
-      enableNext()
-      setCustomNavigation({
-        onNext: async () => {
-          const valid = await form.trigger()
-          if (valid) {
-            updateStepData("personal", form.getValues())
-            router.push(`/${locale}/s/${subdomain}/join/contact`)
-          }
-        },
-      })
-    } else {
-      disableNext()
-      setCustomNavigation(undefined)
-    }
-  })
+  }, [
+    form,
+    updateStepData,
+    enableNext,
+    disableNext,
+    setCustomNavigation,
+    router,
+    locale,
+    subdomain,
+  ])
 
   const meta = STEP_META.personal
 

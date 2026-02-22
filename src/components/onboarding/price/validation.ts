@@ -3,7 +3,22 @@ import { z } from "zod"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getValidationMessages } from "@/components/internationalization/helpers"
 
-const CurrencyEnum = ["USD", "EUR", "GBP", "CAD", "AUD"] as const
+const CurrencyEnum = [
+  "USD",
+  "EUR",
+  "GBP",
+  "CAD",
+  "AUD",
+  "SAR",
+  "AED",
+  "EGP",
+  "SDG",
+  "JOD",
+  "KWD",
+  "QAR",
+  "BHD",
+  "OMR",
+] as const
 const PaymentScheduleEnum = [
   "monthly",
   "quarterly",

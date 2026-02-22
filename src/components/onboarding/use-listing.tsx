@@ -50,7 +50,21 @@ export interface Listing {
   tuitionFee?: number
   registrationFee?: number
   applicationFee?: number
-  currency?: "USD" | "EUR" | "GBP" | "CAD" | "AUD"
+  currency?:
+    | "USD"
+    | "EUR"
+    | "GBP"
+    | "CAD"
+    | "AUD"
+    | "SAR"
+    | "AED"
+    | "EGP"
+    | "SDG"
+    | "JOD"
+    | "KWD"
+    | "QAR"
+    | "BHD"
+    | "OMR"
   paymentSchedule?: "monthly" | "quarterly" | "semester" | "annual"
   // Branding fields
   primaryColor?: string

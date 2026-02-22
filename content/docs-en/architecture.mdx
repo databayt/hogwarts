@@ -51,23 +51,28 @@ This predictable structure eliminates guesswork. New features follow the same pa
 
 Each feature directory follows these naming conventions:
 
-| File            | Purpose                                                           |
-| --------------- | ----------------------------------------------------------------- |
-| `content.tsx`   | Compose feature/page UI: headings, sections, layout orchestration |
-| `actions.ts`    | Server actions & API calls: validate, scope tenant, mutate        |
-| `config.ts`     | Enums, option lists, labels, defaults for the feature             |
-| `validation.ts` | Zod schemas & refinements; parse and infer types                  |
-| `types.ts`      | Domain and UI types; generic helpers for forms/tables             |
-| `form.tsx`      | Typed forms (RHF) with resolvers and submit handling              |
-| `card.tsx`      | Card components for KPIs, summaries, quick actions                |
-| `all.tsx`       | List view with table, filters, pagination                         |
-| `featured.tsx`  | Curated feature list showcasing selections                        |
-| `detail.tsx`    | Detail view with sections, relations, actions                     |
-| `util.ts`       | Pure utilities and mappers used in the feature                    |
-| `column.tsx`    | Typed Table column builders and cell renderers                    |
-| `use-abc.ts`    | Feature hooks: fetching, mutations, derived state                 |
-| `README.md`     | Feature README: purpose, APIs, decisions                          |
-| `ISSUE.md`      | Known issues and follow-ups for the feature                       |
+| File               | Purpose                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `content.tsx`      | Server component: data fetching, composition, layout orchestration                  |
+| `client.tsx`       | Client boundary: single `"use client"` wrapper per feature (NEW)                    |
+| `actions.ts`       | Server actions & API calls: validate, scope tenant, mutate                          |
+| `queries.ts`       | Read-only database queries: select objects, where-builders, pagination, stats       |
+| `authorization.ts` | RBAC permission checks: check/assert/can/getAllowedActions per feature              |
+| `config.ts`        | Enums, option lists, labels, defaults for the feature                               |
+| `validation.ts`    | Zod schemas & refinements; parse and infer types                                    |
+| `types.ts`         | Domain and UI types; generic helpers for forms/tables                               |
+| `form.tsx`         | Typed forms (RHF) with resolvers and submit handling                                |
+| `card.tsx`         | Card components for KPIs, summaries, quick actions                                  |
+| `all.tsx`          | List view with table, filters, pagination                                           |
+| `featured.tsx`     | Curated feature list showcasing selections                                          |
+| `detail.tsx`       | Detail view with sections, relations, actions                                       |
+| `util.ts`          | Pure utilities and mappers used in the feature                                      |
+| `columns.tsx`      | Typed Table column builders and cell renderers                                      |
+| `use-abc.ts`       | Feature hooks: fetching, mutations, derived state                                   |
+| `table.tsx`        | Client component wrapping DataTable atom with columns, toolbar, modals              |
+| `list-params.ts`   | URL search parameter cache via nuqs for type-safe table state                       |
+| `README.md`        | Feature context: quick-reference tables, files, decisions, entry points (~40 lines) |
+| `ISSUE.md`         | Active issues, completed log, tech debt tracker (~40 lines)                         |
 
 ## Decision Framework
 

@@ -20,6 +20,10 @@ export interface AnalyticsData {
   revenueByMonth: Array<{ month: string; revenue: number }>
 }
 
+/**
+ * Stream analytics using catalog-based models (Enrollment + SchoolSubjectSelection).
+ * Migrated from legacy StreamCourse/StreamEnrollment queries.
+ */
 export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
   try {
     const session = await auth()
@@ -37,30 +41,35 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
       throw new Error("School context required")
     }
 
-    // Get total counts
+    const schoolFilter = schoolId ? { schoolId } : {}
+
+    // Get total counts using catalog models
     const [totalCourses, totalEnrollments, enrollments] = await Promise.all([
-      db.streamCourse.count({
+      // Active subjects for this school (via bridge table)
+      db.schoolSubjectSelection.count({
         where: {
-          schoolId: schoolId || undefined,
-          isPublished: true,
-        },
-      }),
-      db.streamEnrollment.count({
-        where: {
-          schoolId: schoolId || undefined,
+          ...schoolFilter,
           isActive: true,
         },
       }),
-      db.streamEnrollment.findMany({
+      // Active enrollments (catalog-based)
+      db.enrollment.count({
         where: {
-          schoolId: schoolId || undefined,
+          ...schoolFilter,
+          isActive: true,
+        },
+      }),
+      // All active enrollments with subject details
+      db.enrollment.findMany({
+        where: {
+          ...schoolFilter,
           isActive: true,
         },
         include: {
-          course: {
+          subject: {
             select: {
               id: true,
-              title: true,
+              name: true,
               price: true,
             },
           },
@@ -74,9 +83,9 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
       }),
     ])
 
-    // Calculate total revenue
+    // Calculate total revenue from subject prices
     const totalRevenue = enrollments.reduce(
-      (sum, enrollment) => sum + (enrollment.course.price || 0),
+      (sum, enrollment) => sum + (Number(enrollment.subject.price) || 0),
       0
     )
 
@@ -87,15 +96,12 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    const recentEnrollments = await db.streamEnrollment.groupBy({
-      by: ["createdAt"],
+    const recentEnrollments = await db.enrollment.findMany({
       where: {
-        schoolId: schoolId || undefined,
-        createdAt: {
-          gte: sevenDaysAgo,
-        },
+        ...schoolFilter,
+        createdAt: { gte: sevenDaysAgo },
       },
-      _count: true,
+      select: { createdAt: true },
     })
 
     const enrollmentTrend = Array.from({ length: 7 }, (_, i) => {
@@ -108,26 +114,23 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
         return enrollDate === dateStr
       }).length
 
-      return {
-        date: dateStr,
-        count,
-      }
+      return { date: dateStr, count }
     })
 
-    // Get top courses by enrollment
-    const courseCounts = enrollments.reduce(
+    // Get top subjects by enrollment
+    const subjectCounts = enrollments.reduce(
       (acc, enrollment) => {
-        const courseId = enrollment.course.id
-        if (!acc[courseId]) {
-          acc[courseId] = {
-            id: courseId,
-            title: enrollment.course.title,
+        const subjectId = enrollment.subject.id
+        if (!acc[subjectId]) {
+          acc[subjectId] = {
+            id: subjectId,
+            title: enrollment.subject.name,
             enrollments: 0,
             revenue: 0,
           }
         }
-        acc[courseId].enrollments++
-        acc[courseId].revenue += enrollment.course.price || 0
+        acc[subjectId].enrollments++
+        acc[subjectId].revenue += Number(enrollment.subject.price) || 0
         return acc
       },
       {} as Record<
@@ -136,7 +139,7 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
       >
     )
 
-    const topCourses = Object.values(courseCounts)
+    const topCourses = Object.values(subjectCounts)
       .sort((a, b) => b.enrollments - a.enrollments)
       .slice(0, 5)
 
@@ -144,18 +147,14 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
     const sixMonthsAgo = new Date()
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
 
-    const revenueData = await db.streamEnrollment.findMany({
+    const revenueData = await db.enrollment.findMany({
       where: {
-        schoolId: schoolId || undefined,
-        createdAt: {
-          gte: sixMonthsAgo,
-        },
+        ...schoolFilter,
+        createdAt: { gte: sixMonthsAgo },
       },
       include: {
-        course: {
-          select: {
-            price: true,
-          },
+        subject: {
+          select: { price: true },
         },
       },
     })
@@ -176,12 +175,9 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
           })
           return enrollMonth === monthStr
         })
-        .reduce((sum, e) => sum + (e.course.price || 0), 0)
+        .reduce((sum, e) => sum + (Number(e.subject.price) || 0), 0)
 
-      return {
-        month: monthStr,
-        revenue: monthRevenue,
-      }
+      return { month: monthStr, revenue: monthRevenue }
     })
 
     return {

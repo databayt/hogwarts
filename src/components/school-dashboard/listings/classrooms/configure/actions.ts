@@ -65,25 +65,33 @@ export async function getGradeConfiguration(): Promise<
       }),
     ])
 
-    // Count rooms linked to classes for each grade
-    const gradeConfigs: GradeConfig[] = await Promise.all(
-      grades.map(async (g) => {
-        const roomCount = await db.classroom.count({
-          where: {
-            schoolId,
-            classes: { some: { gradeId: g.id } },
-          },
-        })
-        return {
-          gradeId: g.id,
-          gradeName: g.name,
-          gradeNumber: g.gradeNumber,
-          existingSections: g._count.classes,
-          existingRooms: roomCount,
-          maxStudents: g.maxStudents,
-        }
-      })
-    )
+    // Single query: count distinct classrooms per grade via classes
+    const classesWithRooms = await db.class.findMany({
+      where: {
+        schoolId,
+        gradeId: { in: grades.map((g) => g.id) },
+      },
+      select: { gradeId: true, classroomId: true },
+      distinct: ["gradeId", "classroomId"],
+    })
+
+    const roomCountByGrade = new Map<string, number>()
+    for (const row of classesWithRooms) {
+      if (!row.gradeId) continue
+      roomCountByGrade.set(
+        row.gradeId,
+        (roomCountByGrade.get(row.gradeId) ?? 0) + 1
+      )
+    }
+
+    const gradeConfigs: GradeConfig[] = grades.map((g) => ({
+      gradeId: g.id,
+      gradeName: g.name,
+      gradeNumber: g.gradeNumber,
+      existingSections: g._count.classes,
+      existingRooms: roomCountByGrade.get(g.id) ?? 0,
+      maxStudents: g.maxStudents,
+    }))
 
     return {
       success: true,
@@ -203,96 +211,88 @@ export async function generateSections(
       }
     }
 
-    for (const gradeConfig of parsed.grades) {
-      const grade = await db.academicGrade.findFirst({
-        where: { id: gradeConfig.gradeId, schoolId },
-        select: { name: true, gradeNumber: true },
-      })
-
-      if (!grade) continue
-
-      // Get existing classes for this grade
-      const existingClasses = await db.class.findMany({
-        where: { schoolId, gradeId: gradeConfig.gradeId },
-        select: { name: true },
-      })
-
-      const existingCount = existingClasses.length
-      const needed = Math.max(0, gradeConfig.sections - existingCount)
-
-      if (needed === 0) {
-        details.push(`${grade.name}: already has ${existingCount} sections`)
-        continue
-      }
-
-      // Determine which section letters are already used
-      const usedLetters = new Set(
-        existingClasses
-          .map((c) => {
-            const match = c.name.match(/-([A-J])$/)
-            return match ? match[1] : null
-          })
-          .filter(Boolean)
-      )
-
-      let created = 0
-      for (let i = 0; i < SECTION_LETTERS.length && created < needed; i++) {
-        const letter = SECTION_LETTERS[i]
-        if (usedLetters.has(letter)) continue
-
-        // Create Classroom
-        const roomName = `Grade ${grade.gradeNumber} - Room ${letter}`
-
-        // Check if room already exists
-        const existingRoom = await db.classroom.findUnique({
-          where: { schoolId_roomName: { schoolId, roomName } },
-          select: { id: true },
+    // Wrap all mutations in a transaction for atomicity
+    await db.$transaction(async (tx) => {
+      for (const gradeConfig of parsed.grades) {
+        const grade = await tx.academicGrade.findFirst({
+          where: { id: gradeConfig.gradeId, schoolId },
+          select: { name: true, gradeNumber: true },
         })
 
-        let classroomId: string
-        if (existingRoom) {
-          classroomId = existingRoom.id
-        } else {
-          const newRoom = await db.classroom.create({
-            data: {
+        if (!grade) continue
+
+        // Get existing classes for this grade
+        const existingClasses = await tx.class.findMany({
+          where: { schoolId, gradeId: gradeConfig.gradeId },
+          select: { name: true },
+        })
+
+        const existingCount = existingClasses.length
+        const needed = Math.max(0, gradeConfig.sections - existingCount)
+
+        if (needed === 0) {
+          details.push(`${grade.name}: already has ${existingCount} sections`)
+          continue
+        }
+
+        // Determine which section letters are already used
+        const usedLetters = new Set(
+          existingClasses
+            .map((c) => {
+              const match = c.name.match(/-([A-J])$/)
+              return match ? match[1] : null
+            })
+            .filter(Boolean)
+        )
+
+        let created = 0
+        for (let i = 0; i < SECTION_LETTERS.length && created < needed; i++) {
+          const letter = SECTION_LETTERS[i]
+          if (usedLetters.has(letter)) continue
+
+          const roomName = `Grade ${grade.gradeNumber} - Room ${letter}`
+
+          // Upsert to handle concurrent requests gracefully
+          const room = await tx.classroom.upsert({
+            where: { schoolId_roomName: { schoolId, roomName } },
+            create: {
               schoolId,
               roomName,
               typeId: gradeConfig.roomType,
               capacity: gradeConfig.capacityPerSection,
             },
+            update: {},
           })
-          classroomId = newRoom.id
+
+          const className = `Grade ${grade.gradeNumber}-${letter}`
+          await tx.class.create({
+            data: {
+              schoolId,
+              name: className,
+              gradeId: gradeConfig.gradeId,
+              classroomId: room.id,
+              subjectId: defaultSubject.id,
+              teacherId: defaultTeacher.id,
+              termId: defaultTerm.id,
+              startPeriodId,
+              endPeriodId,
+              maxCapacity: gradeConfig.capacityPerSection,
+              minCapacity: Math.max(
+                1,
+                Math.floor(gradeConfig.capacityPerSection * 0.5)
+              ),
+            },
+          })
+
+          created++
+          totalCreated++
         }
 
-        // Create Class
-        const className = `${grade.name}-${letter}`
-        await db.class.create({
-          data: {
-            schoolId,
-            name: className,
-            gradeId: gradeConfig.gradeId,
-            classroomId,
-            subjectId: defaultSubject.id,
-            teacherId: defaultTeacher.id,
-            termId: defaultTerm.id,
-            startPeriodId,
-            endPeriodId,
-            maxCapacity: gradeConfig.capacityPerSection,
-            minCapacity: Math.max(
-              1,
-              Math.floor(gradeConfig.capacityPerSection * 0.5)
-            ),
-          },
-        })
-
-        created++
-        totalCreated++
+        details.push(
+          `${grade.name}: created ${created} new section${created !== 1 ? "s" : ""} with rooms`
+        )
       }
-
-      details.push(
-        `${grade.name}: created ${created} new section${created !== 1 ? "s" : ""} with rooms`
-      )
-    }
+    })
 
     revalidatePath("/classrooms")
     return { success: true, data: { created: totalCreated, details } }

@@ -7,16 +7,16 @@ description: "Canonical patterns for writing detail.tsx view components in featu
 
 12 detail.tsx files audited across the codebase (~4,217 total lines):
 
-| Area                                         | Status | Detail                                                              |
-| -------------------------------------------- | ------ | ------------------------------------------------------------------- |
-| Standard props `{ data, error, dict, lang }` | PASS   | 10/12 files follow the standard prop pattern                        |
-| `<Alert variant="destructive">` for errors   | PASS   | Consistent error state handling with shadcn Alert                   |
-| Back navigation with `<ArrowLeft>`           | PASS   | All files include back button in header                             |
-| `<Tabs>` for sub-sections                    | PASS   | 8/12 files use Tabs for organizing detail content                   |
-| Loading skeleton export                      | PASS   | 9/12 files export a `Loading` skeleton component                    |
-| `"use client"` directive                     | PASS   | 11/12 files are client components                                   |
-| 963-line catalog/detail.tsx monolith         | FAIL   | Mixes detail view, enrollment flow, review system, and video player |
-| product/detail.tsx is a 31-line stub         | FAIL   | Incomplete implementation with placeholder content                  |
+| Area                                               | Status | Detail                                                              |
+| -------------------------------------------------- | ------ | ------------------------------------------------------------------- |
+| Standard props `{ data, error, dictionary, lang }` | PASS   | 10/12 files follow the standard prop pattern                        |
+| `<Alert variant="destructive">` for errors         | PASS   | Consistent error state handling with shadcn Alert                   |
+| Back navigation with `<ArrowLeft>`                 | PASS   | All files include back button in header                             |
+| `<Tabs>` for sub-sections                          | PASS   | 8/12 files use Tabs for organizing detail content                   |
+| Loading skeleton export                            | PASS   | 9/12 files export a `Loading` skeleton component                    |
+| `"use client"` directive                           | PASS   | 11/12 files are client components                                   |
+| 963-line catalog/detail.tsx monolith               | FAIL   | Mixes detail view, enrollment flow, review system, and video player |
+| product/detail.tsx is a 31-line stub               | FAIL   | Incomplete implementation with placeholder content                  |
 
 ## 3 Categories of detail.tsx
 
@@ -30,7 +30,7 @@ Reference: `listings/announcements/detail.tsx` (268 lines), `listings/classes/de
 
 Detail view rendered in a sheet or sidebar panel. Compact layout for admin overview with quick actions.
 
-Reference: `saas-dashboard/tenants/detail.tsx`, `saas-dashboard/billing/detail.tsx`
+Reference: `saas-dashboard/tenants/detail.tsx`, `saas-dashboard/catalog/detail.tsx`
 
 ### Category 3: Server Component Detail (~1 file)
 
@@ -312,6 +312,8 @@ export function Loading() {
 }
 ```
 
+> **Note:** Prefer `<Link href="...">` for navigation over `router.back()` for better predictability and server-side rendering compatibility.
+
 Key points:
 
 - Standard 4-prop interface: `data`, `error`, `dictionary`, `lang`
@@ -452,7 +454,83 @@ export function DetailContent({ data, error }: DetailProps) {
 }
 ```
 
+## Server-First Architecture
+
+detail.tsx can often be a **server component**. Most detail views render data without interactivity. Only add `"use client"` when you need:
+
+- `useRouter()` for back navigation (prefer `<Link href={parentRoute}>` instead)
+- Click handlers on action buttons
+- Client state (tabs with URL params can use server-side rendering)
+
+### Prefer Server Components
+
+Before adding `"use client"` to a detail.tsx, check:
+
+```typescript
+// GOOD: Server component detail (no "use client" needed)
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+
+export function AnnouncementDetail({ data, error, lang }: Props) {
+  if (error || !data) return <ErrorAlert error={error} />
+
+  return (
+    <div className="space-y-6">
+      <Button variant="ghost" asChild>
+        <Link href={`/${lang}/announcements`}>
+          <ArrowLeft className="me-2 h-4 w-4" />
+          Back
+        </Link>
+      </Button>
+      {/* Pure data display -- no hooks needed */}
+    </div>
+  )
+}
+
+// BAD: Client component just for router.back()
+"use client"
+import { useRouter } from "next/navigation"
+
+export function AnnouncementDetail({ data }: Props) {
+  const router = useRouter()
+  return (
+    <Button onClick={() => router.back()}>Back</Button> // Use <Link> instead
+  )
+}
+```
+
+### When Client Detail Is Necessary
+
+Use `"use client"` detail only when the component needs:
+
+| Need                          | Solution                                      |
+| ----------------------------- | --------------------------------------------- |
+| Back navigation               | `<Link>` (server) or `router.back()` (client) |
+| Action buttons (edit, delete) | Callbacks from client.tsx                     |
+| Tab state                     | URL-based tabs (server) or useState (client)  |
+| Interactive content (video)   | Extract to client sub-component               |
+
+### Boundary Placement
+
+When detail needs interactivity, import it from client.tsx:
+
+```
+content.tsx (server, fetches entity)
+    → client.tsx ("use client", action handlers)
+        → detail.tsx (client leaf, renders view)
+```
+
+When detail is pure display, content.tsx can render it directly:
+
+```
+content.tsx (server, fetches entity) → detail.tsx (server, renders view)
+```
+
 ## Quick Reference
+
+> **Loading:** Use `loading.tsx` in the route segment for page-level loading states. For component-level loading within detail views, use `<Suspense fallback={<DetailSkeleton />}>`.
 
 ### Standard Detail Layout
 

@@ -390,9 +390,8 @@ model AdmissionSettings {
   // Payment Settings
   enableOnlinePayment     Boolean @default(false)
   stripeAccountId         String?
-  paymentMethods          Json?    // Array of enabled payment methods
+  paymentMethods          Json?    // ["stripe", "cash", "bank_transfer"]
   bankDetails             Json?    // { bankName, accountName, accountNumber, iban, swiftCode }
-  enabledPaymentMethods   Json?    // ["stripe", "cash", "bank_transfer"]
   cashPaymentInstructions String?  // Custom instructions for cash payments
 
   // Merit Criteria Weights

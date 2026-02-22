@@ -1,0 +1,267 @@
+---
+title: "README.md"
+description: "Canonical template for writing concise, AI-parseable README.md files in feature directories"
+---
+
+## Current Progress (Audit)
+
+65 README.md files audited across `src/components/`:
+
+| Area                      | Status | Detail                                        |
+| ------------------------- | ------ | --------------------------------------------- |
+| Existence in feature dirs | PASS   | 65/68 feature directories have README.md      |
+| Average line count        | FAIL   | ~200-400 lines (target: ~40)                  |
+| Tables over prose         | FAIL   | Most use prose paragraphs instead of tables   |
+| Decision documentation    | FAIL   | Only 12/65 document architectural decisions   |
+| Entry points documented   | MIXED  | 30/65 specify what to read first              |
+| Dependency mapping        | FAIL   | Only 8/65 list internal/external dependencies |
+| Auto-update after changes | FAIL   | No README references self-update rules        |
+
+## The 5 Rules
+
+### 1. Tables, not prose
+
+Every section is a key-value table. Zero paragraphs except the one-line purpose.
+
+```markdown
+<!-- BAD: Prose paragraph -->
+
+This feature handles student attendance tracking. It provides
+a form for teachers to mark attendance, a table for viewing
+historical records, and server actions for CRUD operations.
+
+<!-- GOOD: Table -->
+
+## Quick Reference
+
+| Key       | Value                            |
+| --------- | -------------------------------- |
+| URL       | `/s/:subdomain/attendance`       |
+| Directory | `src/components/attendance/`     |
+| Status    | Active                           |
+| Models    | `Attendance`, `AttendanceRecord` |
+| schoolId  | Yes                              |
+```
+
+### 2. Max 40 lines
+
+If the README exceeds 40 lines, split or delete content. The README is an index, not documentation.
+
+```markdown
+<!-- BAD: 200+ lines with code examples, API docs, field descriptions -->
+
+<!-- GOOD: ~40 lines of tables pointing to actual files -->
+
+| File          | Purpose                                |
+| ------------- | -------------------------------------- |
+| `content.tsx` | Server component, data fetching        |
+| `actions.ts`  | Server actions: create, update, delete |
+| `types.ts`    | Domain types and form interfaces       |
+```
+
+### 3. Only document what code cannot tell you
+
+Don't list types (read `types.ts`), don't list fields (read schema), don't copy code examples. Document decisions, context, and gotchas.
+
+```markdown
+<!-- BAD: Duplicating what's in types.ts -->
+
+### Types
+
+- `StudentAttendance` has fields: id, studentId, date, status...
+
+<!-- GOOD: Pointing to the file -->
+
+| File       | Purpose                          |
+| ---------- | -------------------------------- |
+| `types.ts` | Domain types and form interfaces |
+```
+
+### 4. Auto-update on change
+
+After modifying a feature, update its README.md status and files table. The README is the entry point an agent reads first.
+
+```markdown
+<!-- BAD: README says "Draft" but feature has been in production for months -->
+
+<!-- GOOD: Status reflects reality -->
+
+| Key    | Value  |
+| ------ | ------ |
+| Status | Stable |
+```
+
+### 5. Mirror-pattern alignment
+
+README lives in `src/components/<feature>/README.md`, not in `app/`. One README per feature directory.
+
+```markdown
+<!-- BAD: README in app/ route directory -->
+
+src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/README.md
+
+<!-- GOOD: README in components/ feature directory -->
+
+src/components/school-dashboard/attendance/README.md
+```
+
+## Canonical Template
+
+The target README.md for every feature directory (~40 lines):
+
+```markdown
+# <Feature>
+
+> One-line purpose.
+
+## Quick Reference
+
+| Key       | Value                       |
+| --------- | --------------------------- |
+| URL       | `/s/:subdomain/<feature>`   |
+| Directory | `src/components/<feature>/` |
+| Status    | Draft / Active / Stable     |
+| Models    | `Model1`, `Model2`          |
+| schoolId  | Yes                         |
+
+## Files
+
+| File            | Purpose                                |
+| --------------- | -------------------------------------- |
+| `content.tsx`   | Server component, data fetching        |
+| `actions.ts`    | Server actions: create, update, delete |
+| `form.tsx`      | Create/edit form with Zod validation   |
+| `columns.tsx`   | Table column definitions               |
+| `types.ts`      | Domain types and form interfaces       |
+| `validation.ts` | Zod schemas                            |
+
+## Decisions
+
+| Decision                    | Rationale                         |
+| --------------------------- | --------------------------------- |
+| Server-side filtering       | Dataset too large for client-side |
+| Single form for create/edit | Reduces duplication, same schema  |
+
+## Dependencies
+
+| Type     | Name                               |
+| -------- | ---------------------------------- |
+| Internal | `school-dashboard/context`, `auth` |
+| External | `@tanstack/react-table`, `zod`     |
+
+## Entry Point
+
+- **Read first**: `content.tsx` → `actions.ts` → `types.ts`
+- **Test**: `pnpm vitest src/components/<feature>/`
+- **URL**: `demo.localhost:3000/en/s/demo/<feature>`
+```
+
+## Anti-Patterns
+
+### 1. Prose paragraphs describing what the feature does
+
+Use the one-liner in the blockquote. Tables for everything else.
+
+```markdown
+<!-- BAD -->
+
+This module provides a comprehensive attendance tracking system
+that allows teachers to mark daily attendance for students...
+
+<!-- GOOD -->
+
+> Daily attendance tracking with bulk marking and reports.
+```
+
+### 2. Listing every Prisma field
+
+That's what the schema is for. The README points to files, not duplicates them.
+
+```markdown
+<!-- BAD -->
+
+### Fields
+
+- id: String (cuid)
+- studentId: String (relation)
+- date: DateTime
+- status: AttendanceStatus (enum: PRESENT, ABSENT, LATE, EXCUSED)
+  ...
+
+<!-- GOOD -->
+
+| Models | `Attendance`, `AttendanceRecord` |
+```
+
+### 3. Copy-pasting code examples
+
+Point to the file instead. Code in README goes stale instantly.
+
+````markdown
+<!-- BAD -->
+
+### Usage
+
+\```tsx
+import { createAttendance } from "./actions"
+const result = await createAttendance({ studentId, date, status })
+\```
+
+<!-- GOOD -->
+
+| File         | Purpose                                |
+| ------------ | -------------------------------------- |
+| `actions.ts` | Server actions: create, update, delete |
+````
+
+### 4. README exceeding 40 lines
+
+If it's longer, you're duplicating code. Split detailed docs to the docs site.
+
+### 5. Stale TODO lists
+
+TODOs belong in ISSUE.md, not README.md.
+
+```markdown
+<!-- BAD: In README.md -->
+
+## TODO
+
+- [ ] Add bulk delete
+- [ ] Fix validation error
+
+<!-- GOOD: In ISSUE.md -->
+
+| 1 | P1 | Add bulk delete | Open |
+| 2 | P0 | Fix validation error | Open |
+```
+
+## Quick Reference
+
+| Section         | Content                                  | Max Rows |
+| --------------- | ---------------------------------------- | -------- |
+| Quick Reference | URL, directory, status, models, schoolId | 5        |
+| Files           | File → purpose (only existing files)     | 10       |
+| Decisions       | Decision → rationale (MADR-lite)         | 5        |
+| Dependencies    | Internal + external deps                 | 6        |
+| Entry Point     | Read first, test command, URL            | 3 lines  |
+
+### Status Values
+
+| Status | Meaning                            |
+| ------ | ---------------------------------- |
+| Draft  | In development, not yet functional |
+| Active | Working, may have known issues     |
+| Stable | Production-ready, well-tested      |
+
+### What Belongs Where
+
+| Content                | Belongs in   | Not in        |
+| ---------------------- | ------------ | ------------- |
+| Feature purpose        | `README.md`  | Code comments |
+| Architecture decisions | `README.md`  | ISSUE.md      |
+| Known bugs             | `ISSUE.md`   | README.md     |
+| Tech debt              | `ISSUE.md`   | README.md     |
+| Field descriptions     | `types.ts`   | README.md     |
+| API documentation      | Docs site    | README.md     |
+| Code examples          | Source files | README.md     |

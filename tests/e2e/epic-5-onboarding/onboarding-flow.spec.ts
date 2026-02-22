@@ -310,11 +310,6 @@ test.describe("Story 5.3: Step Validation @onboarding", () => {
         .first()
         .isVisible({ timeout: TIMEOUTS.short })
         .catch(() => false)
-
-      // At least some feedback should be shown
-      console.log(
-        `Validation state: formError=${hasFormError}, toast=${hasToast}`
-      )
     }
 
     // Verify page has no SSE regardless
@@ -370,9 +365,7 @@ test.describe("Story 5.3: Back Navigation @onboarding", () => {
     if (await descTextarea.isVisible().catch(() => false)) {
       const currentValue = await descTextarea.inputValue()
       // Data should be preserved (loaded from server)
-      console.log(
-        `Description after back nav: "${currentValue.substring(0, 50)}..."`
-      )
+      expect(currentValue.length).toBeGreaterThan(0)
     }
 
     // Go back to title step
@@ -383,7 +376,6 @@ test.describe("Story 5.3: Back Navigation @onboarding", () => {
     const titleTextarea = page.locator("textarea").first()
     if (await titleTextarea.isVisible().catch(() => false)) {
       const currentTitle = await titleTextarea.inputValue()
-      console.log(`Title after back nav: "${currentTitle}"`)
       // Title should be preserved from server state
       expect(currentTitle.length).toBeGreaterThan(0)
     }
@@ -445,7 +437,6 @@ test.describe("Story 5.3: Refresh Persistence @onboarding", () => {
     const titleTextarea = page.locator("textarea").first()
     if (await titleTextarea.isVisible().catch(() => false)) {
       const value = await titleTextarea.inputValue()
-      console.log(`Title after refresh and back nav: "${value}"`)
       // Data should persist because it was saved to the server
       expect(value.length).toBeGreaterThan(0)
     }
@@ -479,9 +470,6 @@ test.describe("Story 5.3: Subdomain Availability @onboarding", () => {
     // Check if we're on subdomain step (may redirect if steps aren't sequential)
     const currentStep = onboarding.getCurrentStep()
     if (currentStep !== "subdomain") {
-      console.log(
-        `Redirected from subdomain to ${currentStep} - steps may require sequential completion`
-      )
       // Skip this test if sequential enforcement is in place
       return
     }
@@ -503,19 +491,12 @@ test.describe("Story 5.3: Subdomain Availability @onboarding", () => {
       "Subdomain availability check should show a result"
     ).toBeTruthy()
 
-    console.log(
-      `Subdomain "${uniqueSubdomain}": available=${isAvailable}, unavailable=${isUnavailable}`
-    )
-
     // Test with "demo" which should be taken
     await onboarding.fillSubdomain("demo")
     await page.waitForTimeout(2000)
 
     const demoAvailable = await onboarding.isSubdomainAvailable()
     const demoUnavailable = await onboarding.isSubdomainUnavailable()
-    console.log(
-      `Subdomain "demo": available=${demoAvailable}, unavailable=${demoUnavailable}`
-    )
 
     // "demo" should be taken
     if (demoUnavailable) {
@@ -538,7 +519,7 @@ test.describe("Story 5.3: Subdomain Availability @onboarding", () => {
       await page.waitForTimeout(2000)
       // After regenerating, subdomain input should have a value
       const regeneratedValue = await onboarding.subdomainInput.inputValue()
-      console.log(`Regenerated subdomain: "${regeneratedValue}"`)
+      expect(regeneratedValue.length).toBeGreaterThan(0)
     }
 
     await assertNoSSE(page)
@@ -598,11 +579,6 @@ test.describe("Story 5.3: Onboarding Access Control @onboarding", () => {
       url.includes("/dashboard") ||
       (url.includes("/onboarding") && !url.includes(schoolId)) // Redirected to own onboarding
 
-    // Even if access is technically allowed, document the behavior
-    console.log(
-      `Non-owner access attempt: URL=${url}, contains schoolId=${url.includes(schoolId)}, blocked=${isBlocked}`
-    )
-
     // At minimum, the page should not have SSE
     await assertNoSSE(page)
   })
@@ -653,7 +629,7 @@ test.describe("Story 5.3: Onboarding Access Control @onboarding", () => {
       .first()
       .isVisible()
       .catch(() => false)
-    console.log(`DEVELOPER can create school: ${canCreate}`)
+    expect(canCreate).toBeTruthy()
   })
 })
 
@@ -811,7 +787,6 @@ test.describe("Story 5.3: Navigation & UI @onboarding", () => {
       await onboarding.gotoStep(schoolId, step)
       await page.waitForTimeout(1000)
       await assertNoSSE(page)
-      console.log(`Step "${step}": No SSE`)
     }
   })
 
@@ -860,11 +835,6 @@ test.describe("Story 5.3: Navigation & UI @onboarding", () => {
     const url = page.url()
     // Should redirect to login with callbackUrl
     const isRedirected = url.includes("/login") || url.includes("callbackUrl")
-
-    // Or the onboarding page itself may handle the redirect client-side
-    console.log(
-      `Unauthenticated access URL: ${url}, redirected=${isRedirected}`
-    )
 
     // At minimum, page should not have SSE
     await assertNoSSE(page)
@@ -937,7 +907,6 @@ test.describe("Story 5.3: Step Content @onboarding", () => {
     // Should have subdomain preview (.databayt.org)
     const subdomainPreview = page.locator('text=".databayt.org"')
     const hasPreview = await subdomainPreview.isVisible().catch(() => false)
-    console.log(`Subdomain preview visible: ${hasPreview}`)
 
     // Type a school name and verify character count updates
     await textarea.fill("Test School ABC")
@@ -949,7 +918,6 @@ test.describe("Story 5.3: Step Content @onboarding", () => {
       .first()
       .isVisible()
       .catch(() => false)
-    console.log(`Character count visible: ${hasCharCount}`)
 
     await assertNoSSE(page)
   })
@@ -973,9 +941,6 @@ test.describe("Story 5.3: Step Content @onboarding", () => {
 
     const currentStep = onboarding.getCurrentStep()
     if (currentStep !== "legal") {
-      console.log(
-        `Could not navigate directly to legal step (got ${currentStep}), skipping content check`
-      )
       return
     }
 
@@ -1000,10 +965,6 @@ test.describe("Story 5.3: Step Content @onboarding", () => {
       .first()
       .isVisible({ timeout: TIMEOUTS.short })
       .catch(() => false)
-
-    console.log(
-      `Legal step: heading=${hasHeading}, radios=${hasRadios}, safety=${hasSafetySection}`
-    )
 
     await assertNoSSE(page)
   })

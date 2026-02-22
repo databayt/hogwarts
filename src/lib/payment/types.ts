@@ -1,15 +1,4 @@
-export type PaymentGateway = "stripe" | "cash" | "bank_transfer" | "tap"
-
-export type PaymentMethodType =
-  | "CARD"
-  | "CASH"
-  | "BANK_TRANSFER"
-  | "APPLE_PAY"
-  | "MADA"
-  | "STCPAY"
-  | "KNET"
-  | "BENEFIT"
-  | "FAWRY"
+export type PaymentGateway = "stripe" | "cash" | "bank_transfer"
 
 export interface BankDetails {
   bankName: string

@@ -7,7 +7,11 @@ import { usePageHeading } from "./page-heading-context"
 export function PageHeadingDisplay() {
   const { heading } = usePageHeading()
 
-  if (!heading) return null
+  if (!heading || !heading.title) return null
 
-  return <PageHeading title={heading.title} description={heading.description} />
+  return (
+    <div className="mb-6">
+      <PageHeading title={heading.title} description={heading.description} />
+    </div>
+  )
 }

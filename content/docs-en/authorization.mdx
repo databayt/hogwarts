@@ -1,0 +1,563 @@
+---
+title: "Authorization"
+description: "Canonical patterns for writing authorization.ts RBAC permission check modules in feature directories"
+---
+
+## Current Progress (Audit)
+
+15 authorization.ts + 5 permissions.ts files audited across the codebase (~3,800 total lines):
+
+| Area                                         | Status | Detail                                                                          |
+| -------------------------------------------- | ------ | ------------------------------------------------------------------------------- |
+| `UserRole` import from `@prisma/client`      | PASS   | All files import the enum from Prisma                                           |
+| Named exports only                           | PASS   | Zero default exports across all 20 files                                        |
+| JSDoc permission matrix                      | PASS   | Best examples document full role/action matrix in tabular JSDoc                 |
+| DEVELOPER early exit                         | PASS   | First check in every permission function                                        |
+| Pure functions (no side effects)             | PASS   | No `auth()`, no `getTenantContext()`, no database calls                         |
+| `AuthContext` interface duplicated           | FAIL   | Same `{ userId, role, schoolId }` type defined independently in all 15 files    |
+| `session: any` in `getAuthContext`           | FAIL   | Loses type safety; should accept typed session from NextAuth                    |
+| `permissions.ts` vs `authorization.ts` split | FAIL   | 5 files use `permissions.ts` name instead of `authorization.ts`                 |
+| Missing authorization.ts for ~20+ features   | FAIL   | Inline `if (role !== "ADMIN")` checks in actions.ts instead of dedicated module |
+| Mixed pure + async guards                    | FAIL   | Some files mix pure permission checks with async server-side `auth()` calls     |
+
+## Two Categories of authorization.ts
+
+### Category 1: CRUD Authorization (~12 files)
+
+Permission checks for standard CRUD operations on a single entity. Typically 100-200 lines.
+
+Reference: `listings/teachers/authorization.ts` (166 lines)
+
+### Category 2: Domain Authorization (~3 files)
+
+Ownership-based permission checks with JSDoc permission matrix and domain-specific actions. Typically 80-150 lines.
+
+Reference: `stream/authorization.ts` (ownership checks for courses, JSDoc matrix)
+
+## The 6 Rules
+
+### 1. Name the file `authorization.ts`
+
+Standardize on `authorization.ts` -- not `permissions.ts`. The codebase currently has a 15/5 split; all new files must use `authorization.ts`.
+
+```
+# GOOD: Consistent naming
+listings/teachers/authorization.ts
+listings/students/authorization.ts
+stream/authorization.ts
+
+# BAD: Inconsistent naming (5 files)
+finance/lib/permissions.ts
+timetable/permissions.ts
+exams/lib/permissions.ts
+```
+
+### 2. Four standard exports
+
+Every authorization.ts file exports these four functions:
+
+```typescript
+// 1. Full permission check with context
+export function checkTeacherPermission(
+  auth: AuthContext,
+  action: TeacherAction,
+  teacher?: TeacherContext
+): boolean { ... }
+
+// 2. Assert (throws on failure)
+export function assertTeacherPermission(
+  auth: AuthContext,
+  action: TeacherAction,
+  teacher?: TeacherContext
+): void { ... }
+
+// 3. Convenience helpers (one per action)
+export function canCreateTeacher(role: UserRole): boolean { ... }
+export function canDeleteTeacher(role: UserRole): boolean { ... }
+
+// 4. Get all allowed actions for a role
+export function getAllowedActions(role: UserRole): TeacherAction[] { ... }
+```
+
+### 3. Define action union type
+
+Each feature defines its own action type as a string union. Standard CRUD plus feature-specific actions.
+
+```typescript
+export type TeacherAction =
+  | "create"
+  | "read"
+  | "update"
+  | "delete"
+  | "export"
+  | "bulk_action"
+  | "assign_class"
+
+export type StreamAction = "create" | "read" | "update" | "delete" | "enroll"
+```
+
+### 4. AuthContext from shared module
+
+The `AuthContext` interface should be imported from a shared location, not duplicated in every file.
+
+```typescript
+// feature/authorization.ts
+import type { AuthContext } from "@/lib/auth-context"
+
+// GOOD: Import from shared module (target state)
+// src/lib/auth-context.ts
+export interface AuthContext {
+  userId: string
+  role: UserRole
+  schoolId: string | null
+}
+
+// BAD: Duplicated in every file (current state, 15+ copies)
+export interface AuthContext {
+  userId: string
+  role: UserRole
+  schoolId: string | null
+}
+```
+
+### 5. DEVELOPER early exit, then schoolId, then role matrix
+
+Every `check*Permission` function follows this order:
+
+```typescript
+export function checkTeacherPermission(
+  auth: AuthContext,
+  action: TeacherAction,
+  teacher?: TeacherContext
+): boolean {
+  const { role, userId, schoolId } = auth
+
+  // 1. DEVELOPER has full access (early exit)
+  if (role === "DEVELOPER") return true
+
+  // 2. Must have school context
+  if (!schoolId) return false
+
+  // 3. School scope check (if entity has schoolId)
+  if (teacher?.schoolId && schoolId !== teacher.schoolId) return false
+
+  // 4. Role-specific permissions
+  if (role === "ADMIN") return true
+
+  if (role === "TEACHER") {
+    if (action === "read") return true
+    if (action === "update") return teacher?.userId === userId
+    return false
+  }
+
+  if (["STAFF", "ACCOUNTANT"].includes(role)) {
+    return action === "read" || action === "export"
+  }
+
+  // 5. Default deny
+  return false
+}
+```
+
+### 6. Pure functions only
+
+Authorization functions must be pure -- no `auth()`, no `getTenantContext()`, no database calls, no side effects. They receive all context as parameters.
+
+```typescript
+// GOOD: Pure function, all context as params
+export function canCreateTeacher(role: UserRole): boolean {
+  return ["DEVELOPER", "ADMIN"].includes(role)
+}
+
+// BAD: Async function with side effects
+export async function canCreateTeacher(): Promise<boolean> {
+  const session = await auth() // Side effect!
+  return ["DEVELOPER", "ADMIN"].includes(session?.user?.role)
+}
+```
+
+## 2 Canonical Templates
+
+### Template A: CRUD Authorization
+
+Standard RBAC for entity CRUD operations. Reference: `listings/teachers/authorization.ts` (166 lines).
+
+```typescript
+/**
+ * Authorization for Teachers module
+ * Implements RBAC for teacher operations
+ *
+ * Permission Rules:
+ * - DEVELOPER: Full access to all teachers across all schools
+ * - ADMIN: Full access within their school
+ * - TEACHER: Can view all teachers in school, edit own profile
+ * - STAFF: Read-only access
+ * - ACCOUNTANT: Read-only access (for payroll context)
+ */
+
+import { UserRole } from "@prisma/client"
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export type TeacherAction =
+  | "create"
+  | "read"
+  | "update"
+  | "delete"
+  | "export"
+  | "bulk_action"
+  | "assign_class"
+
+export interface AuthContext {
+  userId: string
+  role: UserRole
+  schoolId: string | null
+}
+
+export interface TeacherContext {
+  id?: string
+  schoolId?: string
+  userId?: string | null
+}
+
+// ============================================================================
+// Permission Check
+// ============================================================================
+
+export function checkTeacherPermission(
+  auth: AuthContext,
+  action: TeacherAction,
+  teacher?: TeacherContext
+): boolean {
+  const { role, userId, schoolId } = auth
+
+  if (role === "DEVELOPER") return true
+  if (!schoolId) return false
+
+  if (role === "ADMIN") {
+    if (!teacher?.schoolId) return true
+    return schoolId === teacher.schoolId
+  }
+
+  if (role === "TEACHER") {
+    if (action === "read") {
+      if (!teacher?.schoolId) return false
+      return schoolId === teacher.schoolId
+    }
+    if (action === "update") {
+      if (!teacher?.userId) return false
+      return teacher.userId === userId && schoolId === teacher.schoolId
+    }
+    return false
+  }
+
+  if (["STAFF", "ACCOUNTANT"].includes(role)) {
+    return action === "read" || action === "export"
+  }
+
+  return false
+}
+
+// ============================================================================
+// Assert (throws on failure)
+// ============================================================================
+
+export function assertTeacherPermission(
+  auth: AuthContext,
+  action: TeacherAction,
+  teacher?: TeacherContext
+): void {
+  if (!checkTeacherPermission(auth, action, teacher)) {
+    throw new Error(
+      `Unauthorized: ${auth.role} cannot ${action} teacher${teacher?.id ? ` ${teacher.id}` : ""}`
+    )
+  }
+}
+
+// ============================================================================
+// Convenience Helpers
+// ============================================================================
+
+export function getAuthContext(session: any): AuthContext | null {
+  if (!session?.user) return null
+  return {
+    userId: session.user.id,
+    role: session.user.role as UserRole,
+    schoolId: session.user.schoolId || null,
+  }
+}
+
+export function canCreateTeacher(role: UserRole): boolean {
+  return ["DEVELOPER", "ADMIN"].includes(role)
+}
+
+export function canDeleteTeacher(role: UserRole): boolean {
+  return ["DEVELOPER", "ADMIN"].includes(role)
+}
+
+export function canExportTeachers(role: UserRole): boolean {
+  return ["DEVELOPER", "ADMIN", "ACCOUNTANT", "STAFF"].includes(role)
+}
+
+export function getAllowedActions(role: UserRole): TeacherAction[] {
+  switch (role) {
+    case "DEVELOPER":
+    case "ADMIN":
+      return [
+        "create",
+        "read",
+        "update",
+        "delete",
+        "export",
+        "bulk_action",
+        "assign_class",
+      ]
+    case "TEACHER":
+      return ["read", "update"]
+    case "STAFF":
+    case "ACCOUNTANT":
+      return ["read", "export"]
+    default:
+      return []
+  }
+}
+```
+
+Key points:
+
+- JSDoc header documents the full permission matrix
+- DEVELOPER early exit, then schoolId, then role-specific logic
+- `check*` returns boolean, `assert*` throws
+- Convenience helpers for common action checks
+- `getAllowedActions` returns the action list for UI (show/hide buttons)
+
+### Template B: Domain Authorization with Ownership
+
+Ownership-based permissions with JSDoc matrix table. Reference: `stream/authorization.ts`.
+
+```typescript
+/**
+ * Authorization for Stream LMS
+ * Implements RBAC with ownership checks
+ *
+ * Permission matrix:
+ * | Role       | Create | Read | Update Own | Update Any | Delete Own | Delete Any | Enroll |
+ * |------------|--------|------|------------|------------|------------|------------|--------|
+ * | DEVELOPER  | Y      | Y    | Y          | Y          | Y          | Y          | Y      |
+ * | ADMIN      | Y      | Y    | Y          | Y          | Y          | Y          | Y      |
+ * | TEACHER    | Y      | Y    | Y          | N          | Y          | N          | Y      |
+ * | STUDENT    | N      | Y    | N          | N          | N          | N          | Y      |
+ * | GUARDIAN   | N      | Y    | N          | N          | N          | N          | Y      |
+ * | Others     | N      | Y    | N          | N          | N          | N          | N      |
+ */
+
+import { UserRole } from "@prisma/client"
+
+export type StreamAction = "create" | "read" | "update" | "delete" | "enroll"
+
+export interface AuthContext {
+  userId: string
+  role: UserRole
+  schoolId: string | null
+}
+
+export interface CourseContext {
+  id?: string
+  userId?: string // Course creator (ownership)
+  schoolId?: string
+}
+
+export function checkStreamPermission(
+  auth: AuthContext,
+  action: StreamAction,
+  course?: CourseContext
+): boolean {
+  const { role, userId, schoolId } = auth
+
+  if (role === "DEVELOPER") return true
+  if (!schoolId) return false
+  if (course?.schoolId && schoolId !== course.schoolId) return false
+
+  if (action === "read") return true
+
+  if (action === "enroll") {
+    return ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN"].includes(role)
+  }
+
+  if (role === "ADMIN") return true
+
+  if (role === "TEACHER") {
+    if (action === "create") return true
+    // Update/delete own courses only
+    if (!course?.userId) return false
+    return course.userId === userId
+  }
+
+  return false
+}
+```
+
+Key points:
+
+- JSDoc includes full permission matrix table
+- Ownership check: `course.userId === userId` for update/delete
+- School scope enforced before role checks
+- Domain-specific action: `enroll` beyond standard CRUD
+
+## Anti-Patterns
+
+### 1. AuthContext duplicated in 15+ files
+
+The same 4-line interface is defined independently in every authorization.ts file.
+
+```typescript
+// GOOD: Import from shared module
+import type { AuthContext } from "@/lib/auth-context"
+
+// BAD: Defined in every file (15+ copies)
+export interface AuthContext {
+  userId: string
+  role: UserRole
+  schoolId: string | null
+}
+```
+
+### 2. `session: any` loses type safety
+
+`getAuthContext(session: any)` erases NextAuth's session type.
+
+```typescript
+// BAD: any parameter
+export function getAuthContext(session: any): AuthContext | null {
+  if (!session?.user) return null
+  return { userId: session.user.id, role: session.user.role as UserRole, ... }
+}
+
+// GOOD: Typed session (target state)
+import type { Session } from "next-auth"
+export function getAuthContext(session: Session | null): AuthContext | null {
+  if (!session?.user) return null
+  return { userId: session.user.id, role: session.user.role, ... }
+}
+```
+
+### 3. Mixed pure + async guards
+
+Some files mix pure permission logic with async server-side `auth()` calls. Keep them separate.
+
+```typescript
+// BAD: Async guard in authorization.ts
+export async function requireTeacherAccess(action: TeacherAction) {
+  const session = await auth() // Side effect
+  const ctx = getAuthContext(session)
+  if (!ctx || !checkTeacherPermission(ctx, action)) {
+    throw new Error("Unauthorized")
+  }
+  return ctx
+}
+
+// GOOD: Pure check in authorization.ts, async guard in actions.ts
+// authorization.ts
+export function checkTeacherPermission(auth: AuthContext, action: TeacherAction): boolean { ... }
+
+// actions.ts
+const session = await auth()
+const ctx = getAuthContext(session)
+if (!ctx || !canCreateTeacher(ctx.role)) {
+  return { success: false, error: "Unauthorized" }
+}
+```
+
+### 4. Missing authorization.ts in ~20+ features
+
+Features use inline permission checks in actions.ts instead of a dedicated module.
+
+```typescript
+// BAD: Inline permission check in actions.ts
+export async function createItem(input: ...) {
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "DEVELOPER") {
+    return { success: false, error: "Unauthorized" }
+  }
+  // ...
+}
+
+// GOOD: Dedicated authorization.ts
+// authorization.ts
+export function canCreateItem(role: UserRole): boolean {
+  return ["DEVELOPER", "ADMIN"].includes(role)
+}
+
+// actions.ts
+import { canCreateItem } from "./authorization"
+if (!canCreateItem(authContext.role)) {
+  return { success: false, error: "Unauthorized" }
+}
+```
+
+### 5. `permissions.ts` vs `authorization.ts` naming split
+
+5 files use `permissions.ts` while 15 use `authorization.ts`. Standardize on `authorization.ts`.
+
+```
+# Current: inconsistent naming
+finance/lib/permissions.ts       → rename to authorization.ts
+finance/banking/lib/permissions.ts → rename to authorization.ts
+timetable/permissions.ts          → rename to authorization.ts
+exams/lib/permissions.ts          → rename to authorization.ts
+profile/detail/permissions.ts     → rename to authorization.ts
+```
+
+## Quick Reference
+
+### Four Export Functions
+
+| Export                     | Signature                                  | Purpose                           |
+| -------------------------- | ------------------------------------------ | --------------------------------- |
+| `check<Entity>Permission`  | `(auth, action, entity?) => boolean`       | Full permission check             |
+| `assert<Entity>Permission` | `(auth, action, entity?) => void` (throws) | Guard that throws on failure      |
+| `can<Action><Entity>`      | `(role) => boolean`                        | Convenience helper for one action |
+| `getAllowedActions`        | `(role) => Action[]`                       | UI: which buttons to show         |
+
+### Permission Check Order
+
+```
+1. DEVELOPER early exit  → return true
+2. schoolId required     → return false if missing
+3. School scope match    → return false if entity.schoolId !== auth.schoolId
+4. Role-specific matrix  → ADMIN, TEACHER, STAFF, etc.
+5. Default deny          → return false
+```
+
+### Import Direction
+
+```
+authorization.ts   (pure permission checks)
+    |
+actions.ts         (imports check/can helpers)
+    |
+content.tsx        (imports getAllowedActions for UI)
+```
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  authorization.ts  # RBAC permission checks (this file)
+  actions.ts        # Server actions (imports from authorization.ts)
+  queries.ts        # Read-only queries
+  content.tsx       # Server component (imports getAllowedActions)
+```
+
+### What Belongs Where
+
+| Content                    | Belongs in                    | Not in           |
+| -------------------------- | ----------------------------- | ---------------- |
+| Pure permission checks     | `authorization.ts`            | actions.ts       |
+| Action type union          | `authorization.ts`            | types.ts         |
+| AuthContext type           | `@/lib/auth-context` (shared) | authorization.ts |
+| `auth()` calls             | `actions.ts`                  | authorization.ts |
+| `getTenantContext()` calls | `actions.ts`                  | authorization.ts |
+| Inline `if (role !== ...)` | `authorization.ts`            | actions.ts       |

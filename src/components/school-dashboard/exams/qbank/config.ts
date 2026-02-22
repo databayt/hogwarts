@@ -42,6 +42,27 @@ export const QUESTION_TYPES = [
     icon: "BookOpen",
     supportsAutoGrading: false,
   },
+  {
+    label: "Matching",
+    value: QuestionType.MATCHING,
+    description: "Match items from two columns",
+    icon: "ArrowLeftRight",
+    supportsAutoGrading: true,
+  },
+  {
+    label: "Ordering",
+    value: QuestionType.ORDERING,
+    description: "Arrange items in the correct sequence",
+    icon: "ListOrdered",
+    supportsAutoGrading: true,
+  },
+  {
+    label: "Multi Select",
+    value: QuestionType.MULTI_SELECT,
+    description: "Select all correct answers from a list",
+    icon: "CheckCheck",
+    supportsAutoGrading: true,
+  },
 ] as const
 
 // Difficulty Levels Configuration
@@ -187,6 +208,9 @@ export const DEFAULT_POINTS_BY_TYPE = {
   [QuestionType.FILL_BLANK]: 2,
   [QuestionType.SHORT_ANSWER]: 3,
   [QuestionType.ESSAY]: 5,
+  [QuestionType.MATCHING]: 2,
+  [QuestionType.ORDERING]: 2,
+  [QuestionType.MULTI_SELECT]: 1.5,
 } as const
 
 // Time Estimates (in minutes)
@@ -196,6 +220,9 @@ export const DEFAULT_TIME_ESTIMATES = {
   [QuestionType.FILL_BLANK]: 2,
   [QuestionType.SHORT_ANSWER]: 5,
   [QuestionType.ESSAY]: 15,
+  [QuestionType.MATCHING]: 3,
+  [QuestionType.ORDERING]: 2,
+  [QuestionType.MULTI_SELECT]: 2,
 } as const
 
 // Template Distribution Defaults

@@ -40,18 +40,13 @@ test.describe("Story 6.1: Cookie Domain Setup @sso", () => {
     )
 
     if (sessionCookie) {
-      console.log(`Session cookie found: ${sessionCookie.name}`)
-      console.log(`Domain: ${sessionCookie.domain}`)
-      console.log(`HttpOnly: ${sessionCookie.httpOnly}`)
-      console.log(`Secure: ${sessionCookie.secure}`)
-    } else {
-      console.log(
-        "Session cookie not set (expected in dev with protocol mismatch)"
-      )
+      expect(sessionCookie.name).toBeTruthy()
+      expect(sessionCookie.httpOnly).toBeTruthy()
     }
   })
 
-  test("SSO-002: Cookie domain configuration (production)", async () => {
+  // TODO: Replace with real E2E assertions
+  test.fixme("SSO-002: Cookie domain configuration (production)", async () => {
     // Document expected production behavior
     console.log("=== PRODUCTION COOKIE DOMAIN ===")
     console.log("Expected domain: .databayt.org")
@@ -60,8 +55,6 @@ test.describe("Story 6.1: Cookie Domain Setup @sso", () => {
     console.log("  - demo.databayt.org (school)")
     console.log("  - *.databayt.org (any school)")
     console.log("================================")
-
-    expect(true).toBeTruthy()
   })
 
   test("SSO-003: Cookie httpOnly flag", async ({ page, context }) => {
@@ -85,7 +78,8 @@ test.describe("Story 6.1: Cookie Domain Setup @sso", () => {
 })
 
 test.describe("Story 6.2: SSO Flow Documentation @sso", () => {
-  test("SSO-004: Document SSO flow (production)", async () => {
+  // TODO: Replace with real E2E assertions
+  test.fixme("SSO-004: Document SSO flow (production)", async () => {
     console.log("=== PRODUCTION SSO FLOW ===")
     console.log("1. User logs in at ed.databayt.org/login")
     console.log("2. Session cookie set with domain=.databayt.org")
@@ -95,8 +89,6 @@ test.describe("Story 6.2: SSO Flow Documentation @sso", () => {
     console.log("")
     console.log("Result: Seamless SSO across all subdomains")
     console.log("===========================")
-
-    expect(true).toBeTruthy()
   })
 
   test("SSO-005: Session preserved across subdomains (if cookie domain correct)", async ({
@@ -123,29 +115,25 @@ test.describe("Story 6.2: SSO Flow Documentation @sso", () => {
         c.name.includes("next-auth.session-token")
     )
 
-    // Document cookie domain
     if (sessionCookie) {
-      console.log(`Cookie domain: ${sessionCookie.domain}`)
-      console.log(
-        `SSO would work if domain starts with '.' (e.g., .databayt.org)`
-      )
+      expect(sessionCookie.domain).toBeTruthy()
     }
   })
 
-  test("SSO-006: Logout clears all subdomains (production)", async () => {
+  // TODO: Replace with real E2E assertions
+  test.fixme("SSO-006: Logout clears all subdomains (production)", async () => {
     console.log("=== LOGOUT BEHAVIOR ===")
     console.log("When user logs out:")
     console.log("1. Cookie deleted with domain=.databayt.org")
     console.log("2. Session cleared on ALL subdomains")
     console.log("3. Any subdomain visit requires re-login")
     console.log("=======================")
-
-    expect(true).toBeTruthy()
   })
 })
 
 test.describe("Story 6.3: SSO Limitations (Development) @sso", () => {
-  test("SSO-007: Document localhost SSO limitation", async () => {
+  // TODO: Replace with real E2E assertions
+  test.fixme("SSO-007: Document localhost SSO limitation", async () => {
     console.log("=== LOCALHOST SSO LIMITATION ===")
     console.log("")
     console.log("KNOWN ISSUE: SSO does NOT work on localhost")
@@ -163,8 +151,6 @@ test.describe("Story 6.3: SSO Limitations (Development) @sso", () => {
     console.log("  3. Login separately on each subdomain during local dev")
     console.log("")
     console.log("================================")
-
-    expect(true).toBeTruthy()
   })
 
   test("SSO-008: Manual re-login required on localhost", async ({ page }) => {
@@ -187,8 +173,7 @@ test.describe("Story 6.3: SSO Limitations (Development) @sso", () => {
     // On localhost, user will NOT be authenticated on subdomain
     // This documents the expected behavior
     const url = page.url()
-    console.log(`After navigating to subdomain: ${url}`)
-    console.log("On localhost, SSO is not expected to work")
+    expect(url).toBeTruthy()
   })
 
   test("SSO-009: Separate login works on subdomain", async ({ page }) => {
@@ -210,7 +195,8 @@ test.describe("Story 6.3: SSO Limitations (Development) @sso", () => {
     expect(url).toMatch(/\/dashboard/)
   })
 
-  test("SSO-010: Document workaround for local testing", async () => {
+  // TODO: Replace with real E2E assertions
+  test.fixme("SSO-010: Document workaround for local testing", async () => {
     console.log("=== LOCAL TESTING WORKAROUND ===")
     console.log("")
     console.log("To test authenticated features locally:")
@@ -231,7 +217,5 @@ test.describe("Story 6.3: SSO Limitations (Development) @sso", () => {
     console.log("  - Test on *.vercel.app (shares cookies)")
     console.log("")
     console.log("================================")
-
-    expect(true).toBeTruthy()
   })
 })

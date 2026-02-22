@@ -1,0 +1,756 @@
+---
+title: "Client"
+description: "Canonical patterns for writing client.tsx boundary components in feature directories"
+---
+
+## Purpose
+
+client.tsx is the **single `"use client"` boundary** per feature directory. It sits between the server component (content.tsx) and interactive leaf components (form.tsx, table.tsx, detail.tsx), keeping content.tsx as a pure server component.
+
+## The Problem
+
+Without client.tsx, content.tsx is often forced to be a client component just to add a modal, event handler, or interactive toggle:
+
+```typescript
+// BAD: content.tsx forced to be "use client" for one interactive element
+"use client"
+
+import { useState } from "react"
+
+import { Button } from "@/components/ui/button"
+
+import { TeacherForm } from "./form"
+import { TeachersTable } from "./table"
+
+export default function TeachersContent({ data, dictionary, lang }) {
+  const [showForm, setShowForm] = useState(false)
+
+  return (
+    <>
+      <Button onClick={() => setShowForm(true)}>Add Teacher</Button>
+      <TeachersTable data={data} dictionary={dictionary} lang={lang} />
+      {showForm && <TeacherForm />}
+    </>
+  )
+}
+```
+
+This makes the entire component tree client-rendered, losing server-side rendering benefits: larger bundle, no streaming, no direct database access.
+
+## The Solution
+
+Split the boundary. content.tsx stays server (fetches data), client.tsx handles interactivity:
+
+```
+page.tsx → content.tsx (server) → client.tsx ("use client") → form.tsx, table.tsx
+```
+
+content.tsx fetches data on the server and passes it to client.tsx. client.tsx manages all interactive state.
+
+## Current Progress (Audit)
+
+1 client.tsx file exists in the codebase. This is a new standard pattern being introduced.
+
+| Area                         | Status      | Detail                                                                 |
+| ---------------------------- | ----------- | ---------------------------------------------------------------------- |
+| Pattern established          | NEW         | Introducing as standard boundary pattern                               |
+| content.tsx server ratio     | 49.3%       | Only 111/225 content.tsx files are server components                   |
+| Target                       | 90%+        | Goal: 90%+ server content.tsx by extracting client logic to client.tsx |
+| Leaf components (form/table) | 100% client | All form.tsx, table.tsx, columns.tsx are already "use client"          |
+
+## When to Use client.tsx
+
+Not every feature needs client.tsx. Use this decision tree:
+
+| Scenario                                                    | Use client.tsx?                       |
+| ----------------------------------------------------------- | ------------------------------------- |
+| content.tsx only renders a table with server data           | No -- pass data directly to table.tsx |
+| content.tsx needs modal state for create/edit               | **Yes**                               |
+| content.tsx needs view toggles, selections, or filters      | **Yes**                               |
+| content.tsx is pure server composition (dashboard stats)    | No                                    |
+| content.tsx has both server data fetching AND interactivity | **Yes** -- split them                 |
+
+## 3 Categories of client.tsx
+
+### Category 1: CRUD Feature Client (~50% of features)
+
+Manages modal state for create/edit/view operations. Composes table.tsx and form.tsx. Receives server-fetched data as props.
+
+### Category 2: Interactive Dashboard Client (~30% of features)
+
+Manages tab state, view toggles, selection state, and drill-down navigation. Composes cards, tables, and detail views.
+
+### Category 3: Wizard/Flow Client (~20% of features)
+
+Manages step state, validation context, and navigation for multi-step flows. Composes step form components.
+
+## The 5 Rules
+
+### 1. Always `"use client"` -- this IS the boundary
+
+client.tsx is the single point where the server/client boundary is crossed for the feature.
+
+```typescript
+"use client"
+
+import { useState } from "react"
+
+// ...
+```
+
+### 2. Accept server-fetched data as props
+
+Never fetch data in client.tsx. Data comes from the server via content.tsx props.
+
+```typescript
+// GOOD: Data from server via props
+interface TeacherClientProps {
+  data: TeacherRow[]
+  total: number
+  dictionary: Dictionary["school"]
+  lang: Locale
+}
+
+export function TeacherClient({
+  data,
+  total,
+  dictionary,
+  lang,
+}: TeacherClientProps) {
+  // Interactive logic only -- data already fetched
+}
+
+// BAD: Fetching data in client.tsx
+export function TeacherClient() {
+  const [data, setData] = useState<TeacherRow[]>([])
+  useEffect(() => {
+    getTeachers().then(setData) // Should be in content.tsx
+  }, [])
+}
+```
+
+### 3. Compose leaf components (form.tsx, table.tsx, detail.tsx)
+
+client.tsx orchestrates interactive sub-components. It doesn't render raw UI -- it delegates to specialized components.
+
+```typescript
+// GOOD: Compose leaf components
+export function TeacherClient({ data, dictionary, lang }: Props) {
+  const { modal, openModal, closeModal } = useModal()
+
+  return (
+    <>
+      <TeachersTable
+        data={data}
+        dictionary={dictionary.teachers}
+        lang={lang}
+        onEdit={(row) => openModal(row.id)}
+        onView={(row) => openModal(`view:${row.id}`)}
+      />
+      {modal.isOpen && (
+        <TeacherForm onSuccess={() => closeModal()} />
+      )}
+    </>
+  )
+}
+
+// BAD: Rendering raw UI in client.tsx
+export function TeacherClient({ data }: Props) {
+  return (
+    <div className="grid gap-4">
+      {data.map((teacher) => (
+        <div key={teacher.id}>
+          <h3>{teacher.name}</h3>
+          {/* 100 lines of inline card markup */}
+        </div>
+      ))}
+    </div>
+  )
+}
+```
+
+### 4. Handle all interactive state
+
+Modal toggles, view selections, form visibility, tab state -- all live in client.tsx.
+
+```typescript
+export function AnnouncementClient({ data, dictionary, lang }: Props) {
+  const [view, setView] = useState<"table" | "grid">("table")
+  const { modal, openModal, closeModal } = useModal()
+
+  return (
+    <div className="space-y-6">
+      {/* View toggle */}
+      <div className="flex gap-2">
+        <Button
+          variant={view === "table" ? "default" : "ghost"}
+          onClick={() => setView("table")}
+        >
+          Table
+        </Button>
+        <Button
+          variant={view === "grid" ? "default" : "ghost"}
+          onClick={() => setView("grid")}
+        >
+          Grid
+        </Button>
+      </div>
+
+      {/* Conditional rendering */}
+      {view === "table" ? (
+        <AnnouncementsTable data={data} onEdit={(row) => openModal(row.id)} />
+      ) : (
+        <AllAnnouncements announcements={data} />
+      )}
+
+      {/* Modal form */}
+      {modal.isOpen && <AnnouncementForm onSuccess={() => closeModal()} />}
+    </div>
+  )
+}
+```
+
+### 5. Use `children` prop for server-rendered content slots
+
+When client.tsx wraps content that doesn't need interactivity, use the `children` prop to pass server-rendered content through without re-rendering it on the client.
+
+```typescript
+// client.tsx
+"use client"
+
+interface ClientShellProps {
+  children: React.ReactNode
+  onAction?: () => void
+}
+
+export function ClientShell({ children, onAction }: ClientShellProps) {
+  return (
+    <div>
+      <Button onClick={onAction}>Action</Button>
+      {children} {/* Server-rendered content passes through */}
+    </div>
+  )
+}
+
+// content.tsx (server)
+import { ClientShell } from "./client"
+import { StatsCards } from "./stats-cards" // Server component
+
+export default async function DashboardContent() {
+  const stats = await getStats(schoolId)
+
+  return (
+    <ClientShell>
+      <StatsCards stats={stats} /> {/* Rendered on server, passed through */}
+    </ClientShell>
+  )
+}
+```
+
+## 3 Canonical Templates
+
+### Template A: CRUD Feature Client
+
+Standard client boundary for a feature with table + modal form. Reference pattern for listings features.
+
+```typescript
+"use client"
+
+import { useMemo } from "react"
+
+import { useModal } from "@/components/atom/modal/context"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { SubjectCreateForm } from "./form"
+import { getSubjectColumns } from "./columns"
+import { SubjectsTable } from "./table"
+import type { SubjectRow } from "./types"
+
+interface SubjectClientProps {
+  data: SubjectRow[]
+  total: number
+  dictionary: Dictionary["school"]
+  lang: Locale
+  perPage?: number
+}
+
+export function SubjectClient({
+  data,
+  total,
+  dictionary,
+  lang,
+  perPage,
+}: SubjectClientProps) {
+  const { modal, openModal, closeModal } = useModal()
+  const t = dictionary?.subjects
+
+  const callbacks = useMemo(
+    () => ({
+      onView: (row: SubjectRow) => openModal(`view:${row.id}`),
+      onEdit: (row: SubjectRow) => openModal(row.id),
+    }),
+    [openModal]
+  )
+
+  return (
+    <>
+      <SubjectsTable
+        initialData={data}
+        total={total}
+        dictionary={t}
+        lang={lang}
+        callbacks={callbacks}
+        perPage={perPage}
+      />
+      {modal.isOpen && (
+        <SubjectCreateForm
+          dictionary={t}
+          onSuccess={() => closeModal()}
+        />
+      )}
+    </>
+  )
+}
+```
+
+Corresponding content.tsx becomes pure server:
+
+```typescript
+// content.tsx (server -- no "use client")
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { SubjectClient } from "./client"
+import { getSubjectsList } from "./queries"
+
+interface Props {
+  searchParams: Promise<SearchParams>
+  dictionary: Dictionary["school"]
+  lang: Locale
+}
+
+export default async function SubjectsContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return null
+
+  const { rows, count } = await getSubjectsList(schoolId)
+
+  return (
+    <SubjectClient
+      data={rows}
+      total={count}
+      dictionary={dictionary}
+      lang={lang}
+    />
+  )
+}
+```
+
+Key points:
+
+- content.tsx is async server component -- direct database access via queries.ts
+- client.tsx receives pre-fetched data, manages modal state
+- Leaf components (table.tsx, form.tsx) receive callbacks and data
+- `useMemo` for stable callback references
+- Consider `useOptimistic` (React 19) for optimistic UI updates on mutations
+
+### Template B: Interactive Dashboard Client
+
+Client boundary for a dashboard with tabs, stats, and drill-down navigation.
+
+```typescript
+"use client"
+
+import { useState } from "react"
+
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { AllDomains } from "./all"
+import { FeaturedDomains, OverviewStats, RequiringAttention } from "./featured"
+import type { DomainRequestWithSchool } from "./types"
+
+interface DomainDashboardClientProps {
+  domains: DomainRequestWithSchool[]
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export function DomainDashboardClient({
+  domains,
+  dictionary,
+  lang,
+}: DomainDashboardClientProps) {
+  const [activeTab, setActiveTab] = useState("overview")
+
+  const handleApprove = async (id: string) => {
+    // Call server action, refresh data
+  }
+
+  const handleReject = async (id: string, reason?: string) => {
+    // Call server action, refresh data
+  }
+
+  return (
+    <div className="space-y-6">
+      <OverviewStats domains={domains} />
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="all">All Domains</TabsTrigger>
+          <TabsTrigger value="attention">Needs Attention</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <FeaturedDomains
+            domains={domains}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+        </TabsContent>
+
+        <TabsContent value="all">
+          <AllDomains
+            domains={domains}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+        </TabsContent>
+
+        <TabsContent value="attention">
+          <RequiringAttention domains={domains} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+```
+
+Key points:
+
+- Tab state managed in client.tsx
+- View components (all.tsx, featured.tsx) receive data and callbacks
+- Server actions called from client.tsx, not from leaf components
+- Stats component can be server-rendered via children slot
+
+### Template C: Wizard Flow Client
+
+Client boundary for a multi-step wizard with validation context and step navigation.
+
+```typescript
+"use client"
+
+import { useRef, useState } from "react"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { PersonalForm } from "./personal/form"
+import { ContactForm } from "./contact/form"
+import { DocumentsForm } from "./documents/form"
+import type { PersonalFormRef, ContactFormRef, DocumentsFormRef } from "./types"
+
+const STEPS = ["personal", "contact", "documents"] as const
+type Step = (typeof STEPS)[number]
+
+interface ApplyClientProps {
+  initialData?: Record<string, unknown>
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export function ApplyClient({
+  initialData,
+  dictionary,
+  lang,
+}: ApplyClientProps) {
+  const [currentStep, setCurrentStep] = useState<Step>("personal")
+  const personalRef = useRef<PersonalFormRef>(null)
+  const contactRef = useRef<ContactFormRef>(null)
+  const documentsRef = useRef<DocumentsFormRef>(null)
+
+  const handleNext = async () => {
+    try {
+      switch (currentStep) {
+        case "personal":
+          await personalRef.current?.saveAndNext()
+          setCurrentStep("contact")
+          break
+        case "contact":
+          await contactRef.current?.saveAndNext()
+          setCurrentStep("documents")
+          break
+        case "documents":
+          await documentsRef.current?.saveAndNext()
+          toast.success("Application submitted")
+          break
+      }
+    } catch (error) {
+      toast.error("Please fix the errors before continuing")
+    }
+  }
+
+  const handleBack = () => {
+    const currentIndex = STEPS.indexOf(currentStep)
+    if (currentIndex > 0) setCurrentStep(STEPS[currentIndex - 1])
+  }
+
+  return (
+    <div className="space-y-6">
+      {currentStep === "personal" && (
+        <PersonalForm
+          ref={personalRef}
+          initialData={initialData?.personal}
+          dictionary={dictionary}
+        />
+      )}
+      {currentStep === "contact" && (
+        <ContactForm
+          ref={contactRef}
+          initialData={initialData?.contact}
+          dictionary={dictionary}
+        />
+      )}
+      {currentStep === "documents" && (
+        <DocumentsForm
+          ref={documentsRef}
+          initialData={initialData?.documents}
+          dictionary={dictionary}
+        />
+      )}
+
+      <div className="flex justify-between">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          disabled={currentStep === "personal"}
+        >
+          Back
+        </Button>
+        <Button onClick={handleNext}>
+          {currentStep === "documents" ? "Submit" : "Next"}
+        </Button>
+      </div>
+    </div>
+  )
+}
+```
+
+Key points:
+
+- Step state and navigation in client.tsx
+- Form refs expose `saveAndNext()` via `useImperativeHandle`
+- Each step form is a separate leaf component
+- content.tsx loads initial data on server, passes to client.tsx
+
+## Anti-Patterns
+
+### 1. `"use client"` in content.tsx when client.tsx should exist
+
+The most common anti-pattern. content.tsx becomes a client component when it only needs one interactive element.
+
+```typescript
+// BAD: content.tsx forced to be client
+"use client"
+
+import { useState } from "react"
+
+export default function TeachersContent({ data }) {
+  const [showForm, setShowForm] = useState(false)
+  // 50+ lines of what should be server-rendered UI...
+  return (
+    <>
+      <Button onClick={() => setShowForm(true)}>Add</Button>
+      {/* ... */}
+    </>
+  )
+}
+
+// GOOD: Split into content.tsx (server) + client.tsx
+// content.tsx
+export default async function TeachersContent({ dictionary, lang }) {
+  const { schoolId } = await getTenantContext()
+  const data = await getTeachersList(schoolId)
+  return <TeacherClient data={data} dictionary={dictionary} lang={lang} />
+}
+
+// client.tsx
+"use client"
+export function TeacherClient({ data, dictionary, lang }) {
+  const [showForm, setShowForm] = useState(false)
+  return (
+    <>
+      <Button onClick={() => setShowForm(true)}>Add</Button>
+      <TeachersTable data={data} />
+      {showForm && <TeacherForm />}
+    </>
+  )
+}
+```
+
+### 2. Fetching data in client.tsx
+
+client.tsx should never import `db` or call server actions for initial data loading.
+
+```typescript
+// BAD: Data fetching in client.tsx
+"use client"
+
+import { useEffect, useState } from "react"
+
+import { getTeachers } from "./actions"
+
+export function TeacherClient() {
+  const [data, setData] = useState([])
+  useEffect(() => {
+    getTeachers().then((result) => setData(result.data))
+  }, [])
+  // ...
+}
+
+// GOOD: Data from content.tsx via props
+```
+
+```typescript
+"use client"
+
+export function TeacherClient({ data }: { data: TeacherRow[] }) {
+  // Data already fetched on server, use it directly
+}
+```
+
+### 3. Multiple client boundaries per feature
+
+One feature should have one client.tsx, not multiple client boundaries scattered across components.
+
+```
+# BAD: Multiple boundaries
+feature/
+  content.tsx     # "use client" -- boundary 1
+  header.tsx      # "use client" -- boundary 2
+  sidebar.tsx     # "use client" -- boundary 3
+
+# GOOD: Single boundary
+feature/
+  content.tsx     # Server component
+  client.tsx      # "use client" -- single boundary
+  header.tsx      # Client leaf (imported by client.tsx)
+  sidebar.tsx     # Client leaf (imported by client.tsx)
+```
+
+> **Nuance:** For very large features, multiple small client boundaries can be better than one large client.tsx. The key principle is to push `"use client"` as deep as possible in the component tree, not necessarily to have exactly one file.
+
+### 4. client.tsx rendering raw UI
+
+client.tsx should orchestrate, not implement. UI belongs in leaf components.
+
+```typescript
+// BAD: 300 lines of JSX in client.tsx
+"use client"
+export function TeacherClient({ data }) {
+  return (
+    <div className="grid gap-4">
+      {data.map((teacher) => (
+        <div key={teacher.id} className="rounded-lg border p-4">
+          <h3 className="font-semibold">{teacher.name}</h3>
+          <p className="text-muted-foreground">{teacher.email}</p>
+          {/* 50 more lines of card markup... */}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// GOOD: Delegate to leaf components
+"use client"
+export function TeacherClient({ data }) {
+  return <TeachersTable data={data} />
+}
+```
+
+## Quick Reference
+
+### Data Flow
+
+```
+page.tsx (server, thin)
+    |
+content.tsx (server, data fetching)
+    |
+client.tsx ("use client", interactive boundary)
+    |
++---+---+---+---+
+|   |   |   |   |
+form table card detail all
+.tsx .tsx  .tsx .tsx   .tsx
+```
+
+### Import Direction
+
+```
+queries.ts    (server data fetching)
+    |
+content.tsx   (server, imports queries + client)
+    |
+client.tsx    (imports leaf components)
+    |
++---+---+---+
+|   |   |   |
+form table columns
+.tsx .tsx  .tsx
+```
+
+### Co-located File Structure
+
+```
+src/components/<feature>/
+  queries.ts      # Prisma queries (server only)
+  content.tsx     # Server component (fetches data, renders client)
+  client.tsx      # Client boundary (this file)
+  form.tsx        # Form leaf component
+  table.tsx       # Table leaf component
+  columns.tsx     # Column definitions
+  card.tsx        # Card variants
+  detail.tsx      # Detail view
+  types.ts        # Shared types
+  config.ts       # Constants, options
+  validation.ts   # Zod schemas
+  actions.ts      # Server actions (mutations)
+  util.ts         # Pure utility functions
+```
+
+### What Belongs Where
+
+| Content                    | Belongs in    | Not in      |
+| -------------------------- | ------------- | ----------- |
+| `"use client"` boundary    | `client.tsx`  | content.tsx |
+| Data fetching (initial)    | `content.tsx` | client.tsx  |
+| Modal/form toggle state    | `client.tsx`  | content.tsx |
+| View switching state       | `client.tsx`  | content.tsx |
+| Server action calls (CRUD) | `client.tsx`  | form.tsx    |
+| Raw UI rendering           | Leaf files    | client.tsx  |
+| Step navigation (wizards)  | `client.tsx`  | form.tsx    |
+| `children` slots           | `client.tsx`  | leaf files  |
+
+### Migration Checklist
+
+When converting a client content.tsx to the server content + client.tsx pattern:
+
+1. Identify which parts of content.tsx need client APIs (hooks, state, handlers)
+2. Move data fetching (db queries, `getTenantContext()`) to stay in content.tsx
+3. Create client.tsx with the interactive parts
+4. Remove `"use client"` from content.tsx
+5. Make content.tsx `async` and add server data fetching
+6. Pass data from content.tsx to client.tsx via props
+7. Verify content.tsx has no React hooks, state, or event handlers

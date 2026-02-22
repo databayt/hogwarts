@@ -5,7 +5,7 @@ description: "Canonical patterns for writing content.tsx in the mirror pattern"
 
 ## Current Progress (Audit)
 
-218 content.tsx files audited across all route groups:
+225 content.tsx files audited across all route groups:
 
 | Area                                  | Status | Detail                                                                                      |
 | ------------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
@@ -37,9 +37,9 @@ description: "Canonical patterns for writing content.tsx in the mirror pattern"
 
 Content components split into two categories based on where data fetching happens:
 
-**Server content components (~60 files):** Async functions that fetch data via `db`/`queries.ts`, pass pre-computed data to client sub-components. No `"use client"` directive.
+**Server content components (~111 files):** Async functions that fetch data via `db`/`queries.ts`, pass pre-computed data to client sub-components. No `"use client"` directive.
 
-**Client content components (~100+ files):** `"use client"` directive, use hooks and state, fetch data via server actions from `actions.ts`. Handle user interaction directly.
+**Client content components (~114 files):** `"use client"` directive, use hooks and state, fetch data via server actions from `actions.ts`. Handle user interaction directly.
 
 Decision tree:
 
@@ -273,12 +273,13 @@ Never import `db` in client content. Use server actions from co-located `actions
 "use client"
 
 import { db } from "@/lib/db" // WRONG
+```
+
+```tsx
+// GOOD: Server actions
+"use client"
 
 import { getAttendanceList, markAttendance } from "./actions"
-
-// GOOD: Server actions
-
-;("use client")
 
 export default function AttendanceContent({ dictionary }: Props) {
   const load = useCallback(async () => {
@@ -290,6 +291,8 @@ export default function AttendanceContent({ dictionary }: Props) {
 ```
 
 ## 5 Canonical Templates
+
+> **Streaming tip:** Server content components can use `<Suspense>` to stream independent data blocks. Wrap slow queries in their own async component and nest inside `<Suspense fallback={<Skeleton />}>` for progressive rendering.
 
 ### Template A: Server Listing Content (~50 files)
 
@@ -497,6 +500,8 @@ Key points:
 - Dictionary with English fallbacks for all text
 - Reference: `attendance/content.tsx`
 
+> **React 19 tip:** Consider using `useActionState` (replaces `useFormState`) for form submissions and `useOptimistic` for optimistic UI updates instead of manual `useState` + `try/finally` patterns.
+
 ### Template D: Server Composition Content (~15 files)
 
 Sync server component that composes section sub-components. No data fetching.
@@ -561,7 +566,7 @@ import { useHostValidation } from "@/components/onboarding/host-validation-conte
 import HostStepHeader from "@/components/onboarding/step-header"
 
 interface Props {
-  dictionary?: any // TODO: Replace with Dictionary["onboarding"]
+  dictionary?: Dictionary["school"] // TODO: type to Dictionary["onboarding"]
 }
 
 export default function AboutSchoolContent({ dictionary }: Props) {

@@ -10,6 +10,7 @@ import {
   Loader2,
 } from "lucide-react"
 
+import type { BankDetails } from "@/lib/payment/types"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,7 +21,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { useLocale } from "@/components/internationalization/use-locale"
 
 import {
   createStripeCheckout,
@@ -34,6 +34,7 @@ interface PaymentContentProps {
   fee: number
   currency: string
   methods: string[]
+  locale: string
 }
 
 const GATEWAY_CONFIG: Record<
@@ -76,13 +77,12 @@ export default function PaymentContent({
   fee,
   currency,
   methods,
+  locale,
 }: PaymentContentProps) {
   const params = useParams()
   const router = useRouter()
-  const { locale } = useLocale()
   const isRTL = locale === "ar"
   const subdomain = params.subdomain as string
-  const id = params.id as string
 
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -90,14 +90,7 @@ export default function PaymentContent({
   const [resultData, setResultData] = useState<{
     referenceNumber?: string
     cashInstructions?: string
-    bankDetails?: {
-      bankName: string
-      accountName: string
-      accountNumber: string
-      iban?: string
-      swiftCode?: string
-      reference: string
-    }
+    bankDetails?: BankDetails
   } | null>(null)
 
   const handlePayment = async (method: string) => {
@@ -109,8 +102,7 @@ export default function PaymentContent({
         const result = await createStripeCheckout(
           subdomain,
           applicationId,
-          fee,
-          currency
+          locale
         )
         if (!result.success) {
           setError(result.error ?? "Payment failed")
@@ -284,7 +276,7 @@ export default function PaymentContent({
             <Button
               onClick={() =>
                 router.push(
-                  `/${locale}/apply/${id}/success?number=${applicationNumber}`
+                  `/${locale}/s/${subdomain}/apply/${applicationId}/success?number=${applicationNumber}`
                 )
               }
             >

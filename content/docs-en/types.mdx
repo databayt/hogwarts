@@ -497,8 +497,10 @@ export async function createTeacher(
 
 Other shared types that should follow this pattern:
 
+> **Note:** `src/lib/action-response.ts` has a `"use server"` directive, so client components must use `import type` (not value import) to reference `ActionResponse`.
+
 - `ExtendedUser` -- canonical at `src/components/auth/user.ts`
-- `PaginationParams` -- should be canonical at `src/lib/pagination.ts`
+- `PaginationParams` -- should be consolidated (currently defined independently in 10+ queries.ts files)
 
 ## Anti-Patterns
 
@@ -511,18 +513,22 @@ Other shared types that should follow this pattern:
 The canonical version at `src/lib/action-response.ts` is ignored. Each actions.ts redefines its own `ActionResponse<T>` with subtle differences (some have `code`, some don't, some have `errors` record).
 
 ```typescript
+// GOOD: One import
+import type { ActionResponse } from "@/lib/action-response"
+
 // BAD: 38+ independent definitions
 // onboarding/actions.ts
 type ActionResponse<T> = { success: boolean; data?: T; error?: string }
 
 // admission/actions.ts
-interface ActionResponse<T> = { success: boolean; data?: T; message?: string }
+interface ActionResponse<T> {
+  success: boolean
+  data?: T
+  message?: string
+}
 
 // attendance/actions.ts
 type ActionResponse = { success: boolean; error?: string }
-
-// GOOD: One import
-import type { ActionResponse } from "@/lib/action-response"
 ```
 
 ### 3. Row type divergence between types.ts and columns.tsx
@@ -589,10 +595,6 @@ import type { StudentRow } from "./types"
 export type StudentRow = {
   id: string
   name: string
-  // ...
-}
-
-export function getColumns(): ColumnDef<StudentRow>[] {
   // ...
 }
 
@@ -680,7 +682,7 @@ export interface ExamFormProps {
 | Query params / filters                 | `types.ts` or `list-params.ts`            | queries.ts               |
 | ActionResponse                         | `@/lib/action-response`                   | actions.ts               |
 | ExtendedUser                           | `@/components/auth/user`                  | any feature types.ts     |
-| PaginationParams                       | `@/lib/pagination` (canonical)            | queries.ts               |
+| PaginationParams                       | Single shared location (to be created)    | queries.ts               |
 
 ### Import Hierarchy
 

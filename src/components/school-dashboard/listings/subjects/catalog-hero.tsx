@@ -113,7 +113,11 @@ export function CatalogHero({ subject, lang }: Props) {
       {grades.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {grades.map((g) => (
-            <Badge key={g} variant="secondary">
+            <Badge
+              key={g}
+              variant="secondary"
+              className="text-muted-foreground"
+            >
               {gradeLabel(g, isRTL ? "ar" : "en")}
             </Badge>
           ))}

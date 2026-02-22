@@ -234,8 +234,6 @@ test.describe("Story 5.4: Full Journey (Get Started -> Dashboard) @onboarding @c
     if (domainText) {
       schoolSubdomain = domainText.replace(".databayt.org", "").trim()
     }
-    console.log(`Extracted subdomain: ${schoolSubdomain}`)
-
     // Verify "Go to Dashboard" link is visible
     const hasDashboardButton = await onboarding.goToDashboardButton
       .isVisible({ timeout: TIMEOUTS.medium })
@@ -268,7 +266,6 @@ test.describe("Story 5.4: Full Journey (Get Started -> Dashboard) @onboarding @c
     // ====================================================================
 
     const dashboardUrl = page.url()
-    console.log(`Final dashboard URL: ${dashboardUrl}`)
 
     // On localhost, school dashboard uses path-based routing: /s/{subdomain}/...
     const isDashboard =
@@ -294,9 +291,5 @@ test.describe("Story 5.4: Full Journey (Get Started -> Dashboard) @onboarding @c
       isDashboard || hasMainContent || hasHeading,
       `Expected school dashboard. URL: ${dashboardUrl}`
     ).toBeTruthy()
-
-    console.log(
-      `Full journey complete: Marketing -> Login -> Onboarding (${schoolId}) -> Dashboard (${dashboardUrl})`
-    )
   })
 })

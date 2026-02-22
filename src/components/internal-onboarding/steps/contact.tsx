@@ -70,14 +70,6 @@ export function ContactStep() {
     },
   })
 
-  // Sync form to context
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      updateStepData("contact", value as ContactSchemaType)
-    })
-    return () => subscription.unsubscribe()
-  }, [form, updateStepData])
-
   const handleSendOtp = useCallback(async () => {
     const email = form.getValues("email")
     if (!email) return
@@ -108,30 +100,50 @@ export function ContactStep() {
     }
   }, [form, otpCode, updateStepData])
 
-  // Validation + navigation
+  // Sync form data + validation + navigation via single watch subscription
   useEffect(() => {
-    const data = form.watch()
-    const isValid = data.email && otpVerified
+    const evaluate = (value: Partial<ContactSchemaType>) => {
+      updateStepData("contact", value as ContactSchemaType)
 
-    if (isValid) {
-      enableNext()
-      setCustomNavigation({
-        onNext: async () => {
-          const valid = await form.trigger()
-          if (valid) {
-            updateStepData("contact", {
-              ...form.getValues(),
-              emailVerified: true,
-            })
-            router.push(`/${locale}/s/${subdomain}/join/role-details`)
-          }
-        },
-      })
-    } else {
-      disableNext()
-      setCustomNavigation(undefined)
+      const isValid = value.email && otpVerified
+      if (isValid) {
+        enableNext()
+        setCustomNavigation({
+          onNext: async () => {
+            const valid = await form.trigger()
+            if (valid) {
+              updateStepData("contact", {
+                ...form.getValues(),
+                emailVerified: true,
+              })
+              router.push(`/${locale}/s/${subdomain}/join/role-details`)
+            }
+          },
+        })
+      } else {
+        disableNext()
+        setCustomNavigation(undefined)
+      }
     }
-  })
+
+    // Evaluate initial values
+    evaluate(form.getValues())
+
+    const subscription = form.watch((value) => {
+      evaluate(value as Partial<ContactSchemaType>)
+    })
+    return () => subscription.unsubscribe()
+  }, [
+    form,
+    updateStepData,
+    enableNext,
+    disableNext,
+    setCustomNavigation,
+    router,
+    locale,
+    subdomain,
+    otpVerified,
+  ])
 
   const meta = STEP_META.contact
 

@@ -1,0 +1,621 @@
+---
+title: "Queries"
+description: "Canonical patterns for writing queries.ts read-only database query modules in feature directories"
+---
+
+## Current Progress (Audit)
+
+17 queries.ts files audited across the codebase (~5,500 total lines):
+
+| Area                                              | Status | Detail                                                                      |
+| ------------------------------------------------- | ------ | --------------------------------------------------------------------------- |
+| `schoolId` in every query                         | PASS   | 100% of queries include schoolId for multi-tenant isolation                 |
+| `as const` on select objects                      | PASS   | All select objects use `as const` for type narrowing                        |
+| `Promise.all` for parallel queries                | PASS   | List+count pairs consistently parallelized                                  |
+| Named exports only                                | PASS   | Zero default exports across all 17 files                                    |
+| JSDoc on exported functions                       | PASS   | All reference implementations document parameters                           |
+| Section separator comments (`// ====`)            | PASS   | Consistent grouping: Types, Select Objects, Query Builders, Query Functions |
+| `PaginationParams`/`SortParam` duplicated         | FAIL   | Same types defined independently in all 17 files                            |
+| Helper/formatter functions mixed in               | FAIL   | `formatTeacherName`, `getTeacherInitials` belong in util.ts                 |
+| Read functions still in actions.ts                | FAIL   | ~70% of features have reads mixed into actions.ts instead of queries.ts     |
+| Raw `db.model.findMany()` without select          | FAIL   | ~25 features use inline queries with no select objects                      |
+| Missing queries.ts for features with inline reads | FAIL   | ~25 feature directories have reads in actions.ts but no queries.ts          |
+
+## Two Categories of queries.ts
+
+### Category 1: CRUD Entity (~12 files)
+
+Single-model queries with list, detail, and stats functions. Typically 200-350 lines.
+
+Reference: `listings/teachers/queries.ts` (328 lines), `listings/grades/queries.ts`
+
+### Category 2: Multi-Entity Domain (~5 files)
+
+Multiple related models with separate select/where/list functions per model. Typically 300-600 lines.
+
+Reference: `admission/queries.ts` (campaigns, applications, merit lists, enrollments)
+
+## The 7 Rules
+
+### 1. `schoolId` as first parameter
+
+Every exported query function takes `schoolId` as its first parameter. This enforces multi-tenant isolation at the function signature level.
+
+```typescript
+// GOOD: schoolId is always first
+export async function getTeacherList(
+  schoolId: string,
+  params: Partial<TeacherQueryParams> = {}
+) { ... }
+
+export async function getTeacherDetail(schoolId: string, id: string) { ... }
+
+export async function getTeacherStats(schoolId: string) { ... }
+
+// BAD: Missing schoolId (breaks tenant isolation)
+export async function getTeacherList(params: TeacherQueryParams) { ... }
+```
+
+### 2. Two select objects per entity
+
+Define `<entity>ListSelect` (minimal fields for tables) and `<entity>DetailSelect` (full fields for detail/edit views), both with `as const`.
+
+```typescript
+/** Minimal fields for list display */
+export const teacherListSelect = {
+  id: true,
+  givenName: true,
+  surname: true,
+  emailAddress: true,
+  gender: true,
+  userId: true,
+  createdAt: true,
+} as const
+
+/** Full fields for detail/edit */
+export const teacherDetailSelect = {
+  id: true,
+  schoolId: true,
+  givenName: true,
+  middleName: true,
+  surname: true,
+  // ... all fields
+  user: {
+    select: {
+      id: true,
+      email: true,
+      image: true,
+    },
+  },
+  classes: {
+    select: { id: true, name: true },
+    take: 5,
+  },
+} as const
+```
+
+### 3. `build<Entity>Where()` function
+
+Centralize where-clause construction. Returns `Prisma.<Entity>WhereInput`, never inline where objects.
+
+```typescript
+export function buildTeacherWhere(
+  schoolId: string,
+  filters: TeacherListFilters = {}
+): Prisma.TeacherWhereInput {
+  const where: Prisma.TeacherWhereInput = { schoolId }
+
+  if (filters.search) {
+    where.OR = [
+      { givenName: { contains: filters.search, mode: "insensitive" } },
+      { surname: { contains: filters.search, mode: "insensitive" } },
+      { emailAddress: { contains: filters.search, mode: "insensitive" } },
+    ]
+  }
+
+  if (filters.status === "active") {
+    where.NOT = { userId: null }
+  } else if (filters.status === "inactive") {
+    where.userId = null
+  }
+
+  return where
+}
+```
+
+### 4. `Promise.all` for list+count
+
+Always parallelize `findMany` and `count` for paginated list queries. Return consistent `{ rows, count }` shape.
+
+```typescript
+export async function getTeacherList(
+  schoolId: string,
+  params: Partial<TeacherQueryParams> = {}
+) {
+  const where = buildTeacherWhere(schoolId, params)
+  const orderBy = buildTeacherOrderBy(params.sort)
+  const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 20)
+
+  const [rows, count] = await Promise.all([
+    db.teacher.findMany({
+      where,
+      orderBy,
+      skip,
+      take,
+      select: teacherListSelect,
+    }),
+    db.teacher.count({ where }),
+  ])
+
+  return { rows, count }
+}
+
+// BAD: Sequential queries (waterfall)
+const rows = await db.teacher.findMany({ where })
+const count = await db.teacher.count({ where })
+```
+
+### 5. No `"use server"` directive
+
+queries.ts files are plain modules imported by content.tsx (server component) and actions.ts (server actions). They are not server actions themselves.
+
+```typescript
+// queries.ts -- NO directive
+import { Prisma } from "@prisma/client"
+
+import { db } from "@/lib/db"
+
+// content.tsx -- imports queries
+
+// actions.ts -- also imports queries
+import { getTeacherDetail, getTeacherList } from "./queries"
+```
+
+### 6. Return `{ rows, count }` for all list queries
+
+Consistent shape enables generic table components and pagination logic.
+
+```typescript
+// GOOD: Consistent return shape
+export async function getTeacherList(...) {
+  // ...
+  return { rows, count }
+}
+
+export async function getStudentList(...) {
+  // ...
+  return { rows, count }
+}
+
+// BAD: Inconsistent return shapes
+export async function getTeachers(...) {
+  return db.teacher.findMany({ where }) // raw array
+}
+```
+
+### 7. Max ~400 lines
+
+Split into a `queries/` subdirectory for complex domains with multiple entities.
+
+```
+# BAD: 800-line monolith
+admission/queries.ts  -- campaigns, applications, merit, enrollment
+
+# GOOD: Split by entity
+admission/queries/
+  campaigns.ts       # Campaign list/detail/stats
+  applications.ts    # Application list/detail
+  merit.ts           # Merit list queries
+  enrollment.ts      # Enrollment queries
+  index.ts           # Re-exports
+```
+
+## 2 Canonical Templates
+
+### Template A: CRUD Entity
+
+Single-model queries with types, select objects, where builder, list, detail, and stats. Reference: `listings/teachers/queries.ts` (328 lines).
+
+```typescript
+/**
+ * Query builders for Teachers module
+ *
+ * Centralizes query logic for:
+ * - Filtering, sorting, pagination
+ * - Select objects (list vs detail)
+ * - Multi-tenant safety (schoolId)
+ */
+
+import { Prisma } from "@prisma/client"
+
+import { db } from "@/lib/db"
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export type TeacherListFilters = {
+  search?: string
+  status?: "active" | "inactive"
+  departmentId?: string
+}
+
+export type PaginationParams = {
+  page: number
+  perPage: number
+}
+
+export type SortParam = {
+  id: string
+  desc?: boolean
+}
+
+export type TeacherQueryParams = TeacherListFilters &
+  PaginationParams & {
+    sort?: SortParam[]
+  }
+
+// ============================================================================
+// Select Objects
+// ============================================================================
+
+/** Minimal fields for list display */
+export const teacherListSelect = {
+  id: true,
+  givenName: true,
+  surname: true,
+  emailAddress: true,
+  gender: true,
+  userId: true,
+  createdAt: true,
+} as const
+
+/** Full fields for detail/edit */
+export const teacherDetailSelect = {
+  id: true,
+  schoolId: true,
+  givenName: true,
+  middleName: true,
+  surname: true,
+  // ... all fields
+  user: {
+    select: { id: true, email: true, image: true },
+  },
+} as const
+
+// ============================================================================
+// Query Builders
+// ============================================================================
+
+export function buildTeacherWhere(
+  schoolId: string,
+  filters: TeacherListFilters = {}
+): Prisma.TeacherWhereInput {
+  const where: Prisma.TeacherWhereInput = { schoolId }
+
+  if (filters.search) {
+    where.OR = [
+      { givenName: { contains: filters.search, mode: "insensitive" } },
+      { surname: { contains: filters.search, mode: "insensitive" } },
+    ]
+  }
+
+  return where
+}
+
+export function buildTeacherOrderBy(
+  sortParams?: SortParam[]
+): Prisma.TeacherOrderByWithRelationInput[] {
+  if (sortParams?.length) {
+    return sortParams.map((s) => ({
+      [s.id]: s.desc ? "desc" : "asc",
+    }))
+  }
+  return [{ createdAt: "desc" }]
+}
+
+// ============================================================================
+// Query Functions
+// ============================================================================
+
+export async function getTeacherList(
+  schoolId: string,
+  params: Partial<TeacherQueryParams> = {}
+) {
+  const where = buildTeacherWhere(schoolId, params)
+  const orderBy = buildTeacherOrderBy(params.sort)
+  const skip = ((params.page ?? 1) - 1) * (params.perPage ?? 20)
+
+  const [rows, count] = await Promise.all([
+    db.teacher.findMany({
+      where,
+      orderBy,
+      skip,
+      take: params.perPage ?? 20,
+      select: teacherListSelect,
+    }),
+    db.teacher.count({ where }),
+  ])
+
+  return { rows, count }
+}
+
+export async function getTeacherDetail(schoolId: string, id: string) {
+  return db.teacher.findFirst({
+    where: { id, schoolId },
+    select: teacherDetailSelect,
+  })
+}
+
+export async function getTeacherStats(schoolId: string) {
+  const [total, recentHires] = await Promise.all([
+    db.teacher.count({ where: { schoolId } }),
+    db.teacher.count({
+      where: {
+        schoolId,
+        createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+      },
+    }),
+  ])
+
+  return { total, recentHires }
+}
+```
+
+Key points:
+
+- JSDoc header documents the module purpose
+- Section separators group Types, Select Objects, Query Builders, Query Functions
+- `schoolId` first in every function
+- `as const` on select objects
+- `Promise.all` for list+count and stats
+- Returns `{ rows, count }` for list queries
+
+### Template B: Multi-Entity Domain
+
+Multiple related models with separate queries per entity. Reference: `admission/queries.ts`.
+
+```typescript
+/**
+ * Query builders for Admission module
+ * Handles campaigns, applications, merit lists, and enrollment
+ */
+
+import { Prisma } from "@prisma/client"
+
+import { db } from "@/lib/db"
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export type CampaignListFilters = {
+  name?: string
+  status?: string
+  academicYear?: string
+}
+
+export type ApplicationListFilters = {
+  search?: string
+  campaignId?: string
+  status?: string
+}
+
+export type PaginationParams = {
+  page: number
+  perPage: number
+}
+
+export type SortParam = {
+  id: string
+  desc: boolean
+}
+
+// ============================================================================
+// Campaign Select & Queries
+// ============================================================================
+
+export const campaignListSelect = {
+  id: true,
+  name: true,
+  academicYear: true,
+  startDate: true,
+  endDate: true,
+  status: true,
+  totalSeats: true,
+  _count: { select: { applications: true } },
+} as const
+
+export function buildCampaignWhere(
+  schoolId: string,
+  filters: CampaignListFilters = {}
+): Prisma.AdmissionCampaignWhereInput {
+  const where: Prisma.AdmissionCampaignWhereInput = { schoolId }
+  if (filters.name) {
+    where.name = { contains: filters.name, mode: "insensitive" }
+  }
+  if (filters.status) {
+    where.status = filters.status as any
+  }
+  return where
+}
+
+export async function getCampaignList(schoolId: string, params: any = {}) {
+  const where = buildCampaignWhere(schoolId, params)
+  const [rows, count] = await Promise.all([
+    db.admissionCampaign.findMany({ where, select: campaignListSelect }),
+    db.admissionCampaign.count({ where }),
+  ])
+  return { rows, count }
+}
+
+// ============================================================================
+// Application Select & Queries
+// ============================================================================
+
+export const applicationListSelect = {
+  id: true,
+  applicationNumber: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  status: true,
+  createdAt: true,
+} as const
+
+export async function getApplicationList(schoolId: string, params: any = {}) {
+  // ... similar pattern with where builder + Promise.all
+}
+```
+
+Key points:
+
+- Each entity gets its own section: select object, where builder, query functions
+- Same `{ rows, count }` return shape across all entities
+- Section separators clearly delineate entity boundaries
+- Split into `queries/` subdirectory when file exceeds ~400 lines
+
+## Anti-Patterns
+
+### 1. PaginationParams/SortParam duplicated 17 times
+
+Every queries.ts file defines its own `PaginationParams` and `SortParam` types identically.
+
+```typescript
+// BAD: Defined in every queries.ts file
+export type PaginationParams = {
+  page: number
+  perPage: number
+}
+
+export type SortParam = {
+  id: string
+  desc?: boolean
+}
+
+// GOOD: Import from shared module (target state)
+// src/lib/query-types.ts
+export type PaginationParams = { page: number; perPage: number }
+export type SortParam = { id: string; desc?: boolean }
+```
+
+### 2. Helper functions in queries.ts
+
+Formatting functions like `formatTeacherName` and `getTeacherInitials` are pure display utilities that belong in util.ts, not queries.ts.
+
+```typescript
+// BAD: In queries.ts
+export function formatTeacherName(teacher: {
+  givenName: string
+  surname: string
+}) {
+  return `${teacher.givenName} ${teacher.surname}`
+}
+
+// GOOD: Move to util.ts
+// util.ts
+export function formatTeacherName(teacher: {
+  givenName: string
+  surname: string
+}) {
+  return `${teacher.givenName} ${teacher.surname}`
+}
+```
+
+### 3. Read functions in actions.ts
+
+~70% of features have read queries mixed into actions.ts instead of separated into queries.ts.
+
+```typescript
+// BAD: Read function in actions.ts
+"use server"
+export async function getGrades(schoolId: string) {
+  return db.grade.findMany({ where: { schoolId } })
+}
+
+// GOOD: Move to queries.ts (no "use server" needed)
+// queries.ts
+export async function getGradeList(schoolId: string) {
+  const [rows, count] = await Promise.all([
+    db.grade.findMany({ where: { schoolId }, select: gradeListSelect }),
+    db.grade.count({ where: { schoolId } }),
+  ])
+  return { rows, count }
+}
+```
+
+### 4. Raw queries without select objects
+
+Some features query with `findMany` but no select, returning all columns unnecessarily.
+
+```typescript
+// BAD: No select (returns all 30+ columns)
+const teachers = await db.teacher.findMany({ where: { schoolId } })
+
+// GOOD: Explicit select (returns only needed columns)
+const teachers = await db.teacher.findMany({
+  where: { schoolId },
+  select: teacherListSelect,
+})
+```
+
+### 5. ~25 features missing queries.ts entirely
+
+Features with inline reads in actions.ts or content.tsx that should have a dedicated queries.ts file.
+
+## Quick Reference
+
+### File Structure
+
+```
+src/components/<feature>/
+  queries.ts        # Read-only database queries (this file)
+  actions.ts        # Server actions -- mutations only (imports from queries.ts)
+  content.tsx       # Server component (imports from queries.ts)
+  types.ts          # Shared types
+```
+
+### Function Naming Conventions
+
+| Prefix   | Purpose                   | Example                  |
+| -------- | ------------------------- | ------------------------ |
+| `get`    | Retrieve data             | `getTeacherList`         |
+| `build`  | Construct query parts     | `buildTeacherWhere`      |
+| `verify` | Ownership/existence check | `verifyTeacherOwnership` |
+| `count`  | Count records             | `countActiveTeachers`    |
+
+### Section Order
+
+```
+Types            → Filter types, pagination, sort params
+Select Objects   → ListSelect, DetailSelect (as const)
+Query Builders   → buildWhere, buildOrderBy, buildPagination
+Query Functions  → getList, getDetail, getStats
+```
+
+### Import Direction
+
+```
+queries.ts     (read-only queries)
+    |
++---+---+
+|       |
+content actions
+.tsx    .ts
+```
+
+content.tsx and actions.ts both import FROM queries.ts. Queries never import from actions.
+
+### What Belongs Where
+
+| Content                     | Belongs in   | Not in     |
+| --------------------------- | ------------ | ---------- |
+| `db.model.findMany()`       | `queries.ts` | actions.ts |
+| `db.model.count()`          | `queries.ts` | actions.ts |
+| `db.model.groupBy()`        | `queries.ts` | actions.ts |
+| `db.model.create()`         | `actions.ts` | queries.ts |
+| `db.model.update()`         | `actions.ts` | queries.ts |
+| `db.model.delete()`         | `actions.ts` | queries.ts |
+| Select objects (`as const`) | `queries.ts` | types.ts   |
+| Filter type definitions     | `queries.ts` | types.ts   |
+| Formatting helpers          | `util.ts`    | queries.ts |

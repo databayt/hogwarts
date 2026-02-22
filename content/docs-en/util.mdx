@@ -190,6 +190,8 @@ finance/lib/
 
 ## 2 Canonical Templates
 
+> **Note:** The templates below exceed the ~200 line guideline because they show complete real-world utilities for reference. In practice, split large util.ts files by concern (e.g., `formatters.ts`, `mappers.ts`, `validators.ts`).
+
 ### Template A: Feature Utility (Domains)
 
 Domain validation, normalization, status helpers. Reference: `saas-dashboard/domains/util.ts` (332 lines).
@@ -208,7 +210,11 @@ import {
   RESERVED_KEYWORDS,
   VALIDATION_RULES,
 } from "./config"
-import type { DomainStatus, DomainValidationResult } from "./types"
+import type {
+  DomainRequestWithSchool,
+  DomainStatus,
+  DomainValidationResult,
+} from "./types"
 
 // ============================================================================
 // Status Helpers
@@ -358,6 +364,8 @@ Key points:
 - Pure functions with no side effects
 - `DomainValidationResult` return type with `{ isValid, errors, warnings }`
 
+> **Note:** `formatTimeSince` calls `new Date()` internally, making it non-deterministic. For testability, consider accepting a `now` parameter with `new Date()` as the default.
+
 ### Template B: Navigation Utility (Onboarding)
 
 Step progression, progress calculation, and flow management. Reference: `onboarding/util.ts` (357 lines).
@@ -496,6 +504,36 @@ finance/lib/
   validation.ts     # Payment validation
 ```
 
+## Server-First Architecture
+
+util.ts is naturally server-compatible -- pure functions with no React dependencies run on both server and client. This is the ideal pattern for maximum reusability.
+
+### Server-Only Utilities
+
+For utilities that must never be bundled to the client (e.g., they import server-only modules), use the `server-only` package:
+
+```typescript
+import "server-only"
+
+// This will cause a build error if imported in a client component
+export function getSchoolSecret(schoolId: string): string {
+  return process.env[`SCHOOL_${schoolId}_SECRET`] || ""
+}
+```
+
+### Shared vs Feature-Scoped
+
+util.ts files are imported by both server and client components. This makes them the ideal location for logic shared across the boundary:
+
+```
+content.tsx (server) → imports formatCurrency from util.ts
+card.tsx (client)    → imports formatCurrency from util.ts
+detail.tsx (server)  → imports formatCurrency from util.ts
+all.tsx (client)     → imports sortItems from util.ts
+```
+
+Since util.ts has no React dependencies, it works identically on server and client with zero overhead.
+
 ## Quick Reference
 
 ### Naming Conventions
@@ -543,3 +581,5 @@ src/components/<feature>/
 | Constants/enums              | `config.ts`  | util.ts            |
 | React hooks                  | `use-*.ts`   | util.ts            |
 | Side effects (DB, API calls) | `actions.ts` | util.ts            |
+
+> **Clarification:** Validation schemas belong in `validation.ts` (Zod schemas for input validation). Only pure formatting/mapping helpers belong in `util.ts`. See the architecture doc for the distinction.

@@ -37,6 +37,8 @@ Reference: `saas-dashboard/billing/featured.tsx` (354 lines), `saas-dashboard/do
 
 View components use state (filters, sort, layout toggle) and event handlers.
 
+> **Clarification:** Most views need `"use client"` for interactivity (tabs, filters, state). Pure display views that only compose server-rendered cards/sections can omit the directive.
+
 ```typescript
 "use client"
 
@@ -64,6 +66,8 @@ import { DomainCard, DomainCompactCard } from "./card"
 
 Filter and sort operations should be memoized to prevent unnecessary recalculations.
 
+> **React Compiler note:** When React Compiler is enabled, manual `useMemo` calls are unnecessary as the compiler auto-memoizes. Until then, use `useMemo` for expensive column/row computations.
+
 ```typescript
 // GOOD: Memoized filtering
 const filteredDomains = useMemo(() => {
@@ -87,6 +91,8 @@ const filteredDomains = domains.filter((d) => { ... })
 ### 4. Provide grid/list toggle
 
 all.tsx files should offer both grid and list layouts. Grid uses card variants; list uses compact card variants.
+
+> **URL state:** Prefer nuqs `useQueryState()` over `useState` for filter/tab state. This syncs state to URL params for shareable links and browser back/forward support.
 
 ```typescript
 const [view, setView] = useState<"grid" | "list">("grid")
@@ -134,7 +140,7 @@ When filtering produces no results, show a clear message with a button to reset 
   <div className="flex flex-col items-center justify-center py-12 text-center">
     <Globe className="text-muted-foreground mb-4 size-12" />
     <h3>No domains found</h3>
-    <p className="muted">Try adjusting your search or filter criteria.</p>
+    <p className="text-muted-foreground">Try adjusting your search or filter criteria.</p>
     <Button
       variant="outline"
       className="mt-4"
@@ -265,7 +271,7 @@ export function AllDomains({
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Globe className="text-muted-foreground mb-4 size-12" />
           <h3>No domains found</h3>
-          <p className="muted">Try adjusting your search or filters.</p>
+          <p className="text-muted-foreground">Try adjusting your search or filters.</p>
           <Button
             variant="outline"
             className="mt-4"
@@ -359,7 +365,7 @@ export function FeaturedInvoices({
       <div className="flex items-center justify-between">
         <div>
           <h3>Featured Invoices</h3>
-          <p className="muted">Quick overview of recent and important invoices</p>
+          <p className="text-muted-foreground">Quick overview of recent and important invoices</p>
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -384,9 +390,11 @@ export function FeaturedInvoices({
 export function RecentInvoices({
   invoices,
   maxItems = 5,
+  onInvoiceClick,
 }: {
   invoices: InvoiceWithSchool[]
   maxItems?: number
+  onInvoiceClick?: (invoiceId: string) => void
 }) {
   const recentInvoices = [...invoices]
     .sort(
@@ -400,25 +408,12 @@ export function RecentInvoices({
       <h4>Recent Invoices</h4>
       <div className="space-y-2">
         {recentInvoices.map((invoice) => (
-          <div
+          <InvoiceCard
             key={invoice.id}
-            className="flex items-center justify-between rounded-lg border p-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
-                <FileText className="text-primary size-5" />
-              </div>
-              <div>
-                <h6>{invoice.stripeInvoiceId}</h6>
-                <small className="muted">{invoice.school.name}</small>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="font-medium tabular-nums">
-                {formatCurrency(invoice.amountDue, invoice.currency)}
-              </div>
-            </div>
-          </div>
+            invoice={invoice}
+            compact
+            onViewDetails={onInvoiceClick}
+          />
         ))}
       </div>
     </div>
@@ -550,6 +545,49 @@ No feedback when filters produce zero results.
 ) : (
   filteredDomains.map((d) => <DomainCard key={d.id} domain={d} />)
 )}
+```
+
+## Server-First Architecture
+
+View components (all.tsx, featured.tsx) are client components because they manage filter/sort state. However, prefer server-side filtering when possible.
+
+### Server-Side vs Client-Side Filtering
+
+| Dataset Size      | Approach                                  | Pattern                                       |
+| ----------------- | ----------------------------------------- | --------------------------------------------- |
+| Large (100+ rows) | Server-side (preferred)                   | table.tsx with URL-based pagination + filters |
+| Small (under 100) | Client-side (acceptable)                  | all.tsx with `useMemo` filtering              |
+| Mixed             | Server for initial, client for refinement | Hybrid approach                               |
+
+For large datasets, move filtering to the server and use table.tsx with server-side pagination instead of all.tsx with client-side filtering:
+
+```typescript
+// GOOD: Large dataset -- use server-side filtering via table.tsx
+// content.tsx (server)
+const { rows, count } = await getTeachersList(schoolId, {
+  search: sp.search,
+  status: sp.status,
+  page: sp.page,
+})
+return <TeachersTable data={rows} total={count} />
+
+// BAD: Large dataset with client-side filtering
+// all.tsx (client) -- filtering 500+ items in the browser
+const filtered = useMemo(
+  () => teachers.filter((t) => t.name.includes(search)),
+  [teachers, search]
+)
+```
+
+### Boundary Placement
+
+View components are leaf components imported by client.tsx:
+
+```
+content.tsx (server, fetches data)
+    → client.tsx ("use client", tab state)
+        → all.tsx (client leaf, filter/sort UI)
+        → featured.tsx (client leaf, curated views)
 ```
 
 ## Quick Reference

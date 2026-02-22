@@ -244,15 +244,13 @@ test.describe("Story 2.5: Session Management @auth", () => {
 
     if (sessionCookie && env === "production") {
       expect(sessionCookie.secure).toBeTruthy()
-    } else {
-      // In local dev, secure may not be set
-      console.log("Local dev mode - secure flag may not be set")
     }
   })
 })
 
 test.describe("Story 2.5: Session Timeout Documentation @auth", () => {
-  test("AUTH-046: Document session expiry behavior", async ({ page }) => {
+  // TODO: Replace with real E2E assertions
+  test.fixme("AUTH-046: Document session expiry behavior", async ({ page }) => {
     // This test documents the expected session behavior
     console.log("=== SESSION EXPIRY DOCUMENTATION ===")
     console.log("1. NextAuth sessions default to 30 days")
@@ -260,8 +258,5 @@ test.describe("Story 2.5: Session Timeout Documentation @auth", () => {
     console.log("3. After expiry, user is redirected to login")
     console.log("4. Session token is stored in httpOnly cookie")
     console.log("=====================================")
-
-    // Test passes - documentation only
-    expect(true).toBeTruthy()
   })
 })

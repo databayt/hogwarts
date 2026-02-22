@@ -201,13 +201,8 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
-export type DomainRow = {
-  id: string
-  schoolName: string
-  domain: string
-  status: string
-  createdAt?: string
-}
+// Rule 2: Import row type from types.ts, not defined inline
+import type { DomainRow } from "./types"
 
 export const domainColumns: ColumnDef<DomainRow>[] = [
   {
@@ -401,6 +396,8 @@ Key points:
 - `<DataTableToolbar>` rendered as child of `<DataTable>` (slot pattern)
 - Columns received as prop for flexibility
 
+> **Streaming tip:** Wrap server-rendered table content in `<Suspense fallback={<TableSkeleton />}>` for progressive loading. The table skeleton should match the table layout to prevent layout shift.
+
 ## Anti-Patterns
 
 ### 1. useModal hooks inside cell renderers (19 files)
@@ -471,6 +468,64 @@ export function DataTable() { ... } // Shadows the import!
 export function ReceiptTable() { ... }
 ```
 
+## Server-First Architecture
+
+table.tsx and columns.tsx are always client components -- TanStack Table requires hooks, and column cell renderers use JSX. However, **data must always be fetched on the server**.
+
+### Data Flow
+
+```
+page.tsx (server) → content.tsx (server, fetches data) → client.tsx ("use client") → table.tsx
+```
+
+Never fetch data inside table.tsx. Data comes from the server via props:
+
+```typescript
+// GOOD: Server-fetched data via props
+interface TeachersTableProps {
+  initialData: TeacherRow[]
+  total: number
+  dictionary: Dictionary["school"]["teachers"]
+  lang: Locale
+}
+
+export function TeachersTable({ initialData, total }: TeachersTableProps) {
+  // Table receives pre-fetched data
+  const { table } = useDataTable({ data: initialData, columns, pageCount })
+  return <DataTable table={table} />
+}
+
+// BAD: Fetching inside table.tsx
+export function TeachersTable() {
+  const [data, setData] = useState([])
+  useEffect(() => {
+    getTeachers().then(setData) // Should be in content.tsx
+  }, [])
+}
+```
+
+### Load-More Exception
+
+The one acceptable case for server action calls in table.tsx is incremental loading (load-more pagination), where the initial data comes from the server and subsequent pages are loaded on demand:
+
+```typescript
+const handleLoadMore = useCallback(async () => {
+  const result = await getItems({ page: nextPage }) // OK for pagination
+  setData((prev) => [...prev, ...result.data])
+}, [nextPage])
+```
+
+### Boundary Placement
+
+table.tsx should be imported by client.tsx, which manages modal state and callbacks:
+
+```
+content.tsx (server, fetches data)
+    → client.tsx ("use client", modal state, callbacks)
+        → table.tsx (client leaf, renders DataTable)
+        → columns.tsx (client leaf, column definitions)
+```
+
 ## Quick Reference
 
 ### Naming Conventions
@@ -520,3 +575,5 @@ meta: {
   ],
 }
 ```
+
+> **URL state:** This project uses [nuqs](https://nuqs.47ng.com/) for URL-based search params. Table filters, sorting, and pagination should sync to URL params via `createSearchParamsCache()` for shareable links and browser back/forward support.

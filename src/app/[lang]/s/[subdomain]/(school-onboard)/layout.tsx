@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import ErrorBoundary from "@/components/school-marketing/apply/error-boundary"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -34,7 +35,9 @@ export default async function SchoolOnboardLayout({
 
   return (
     <div className="min-h-screen">
-      <main>{children}</main>
+      <main>
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </main>
     </div>
   )
 }

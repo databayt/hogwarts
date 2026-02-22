@@ -189,7 +189,11 @@ Email, phone, CUID, and name patterns should be defined once and imported everyw
 ```typescript
 // feature/validation.ts
 import { cuidSchema, emailSchema, phoneSchema } from "@/lib/validation"
+```
 
+> **Note:** `src/lib/validation.ts` doesn't exist yet — this is the target location for shared validation primitives. Currently, each feature defines its own email/phone/name schemas independently.
+
+```typescript
 // GOOD: Shared primitives (target state)
 // src/lib/validation.ts
 export const emailSchema = z
@@ -304,7 +308,7 @@ Single step in a wizard form, importing limits from config. Reference: `apply/pe
 ```typescript
 import { z } from "zod"
 
-import { FORM_LIMITS } from "../config.client"
+import { FORM_LIMITS } from "../config"
 
 export const personalSchema = z.object({
   firstName: z
@@ -407,7 +411,16 @@ export type GetWeeklyTimetableInput = z.infer<typeof getWeeklyTimetableSchema>
 // Mutation Schemas
 // ============================================================================
 
-// ... slot creation, bulk upsert, conflict resolution schemas
+export const createSlotSchema = z.object({
+  termId: cuidSchema,
+  dayOfWeek: dayOfWeekSchema,
+  periodId: cuidSchema,
+  classId: cuidSchema,
+  teacherId: cuidSchema,
+  roomId: cuidSchema.optional(),
+})
+
+export type CreateSlotInput = z.infer<typeof createSlotSchema>
 ```
 
 Key points:
@@ -623,6 +636,17 @@ export type LeadInput = z.infer<typeof createLeadSchema>
 | `.omit({ rating: true })` | Exclude specific fields       | `bookSchema.omit({ rating: true })`               |
 | `.merge(other)`           | Combine two schemas           | `baseSchema.merge(employmentSchema)`              |
 | `.refine(fn)`             | Cross-field validation        | Date range, coupled fields                        |
+
+### Zod 4 Notes
+
+This project uses Zod 4.0.14 (major upgrade from Zod 3). Key differences:
+
+- `z.object()` is stricter by default — unknown keys are stripped (same as `.strip()` in Zod 3)
+- `z.string().email()` validates more strictly
+- `.parse()` error format changed — use `error.issues` (not `error.errors`) for iteration
+- Import is still `import { z } from "zod"` — no breaking import changes
+- `z.infer<>` works identically
+- `.refine()` and `.transform()` APIs unchanged
 
 ### Import Direction
 

@@ -118,10 +118,6 @@ test.describe("Story 4.4: STUDENT Permissions @rbac", () => {
       url.includes("/login") ||
       !url.includes("/finance")
 
-    // If still on finance page, it might be a limited view - document this
-    if (url.includes("/finance")) {
-      console.log("Note: STUDENT has limited finance access (expected)")
-    }
     expect(isBlocked || url.includes("/finance")).toBeTruthy()
   })
 })

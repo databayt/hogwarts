@@ -105,36 +105,47 @@ function TeacherFields() {
   })
 
   useEffect(() => {
-    const subscription = form.watch((value) => {
+    const evaluate = (value: Partial<TeacherDetailsData>) => {
       updateStepData("roleDetails", value as TeacherDetailsData)
+
+      const isValid =
+        value.subjects && value.subjects.length > 0 && value.employmentType
+      if (isValid) {
+        enableNext()
+        setCustomNavigation({
+          onNext: async () => {
+            const valid = await form.trigger()
+            if (valid) {
+              updateStepData(
+                "roleDetails",
+                form.getValues() as TeacherDetailsData
+              )
+              router.push(`/${locale}/s/${subdomain}/join/documents`)
+            }
+          },
+        })
+      } else {
+        disableNext()
+        setCustomNavigation(undefined)
+      }
+    }
+
+    evaluate(form.getValues() as unknown as Partial<TeacherDetailsData>)
+
+    const subscription = form.watch((value) => {
+      evaluate(value as unknown as Partial<TeacherDetailsData>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateStepData])
-
-  useEffect(() => {
-    const data = form.watch()
-    const isValid =
-      data.subjects && data.subjects.length > 0 && data.employmentType
-
-    if (isValid) {
-      enableNext()
-      setCustomNavigation({
-        onNext: async () => {
-          const valid = await form.trigger()
-          if (valid) {
-            updateStepData(
-              "roleDetails",
-              form.getValues() as TeacherDetailsData
-            )
-            router.push(`/${locale}/s/${subdomain}/join/documents`)
-          }
-        },
-      })
-    } else {
-      disableNext()
-      setCustomNavigation(undefined)
-    }
-  })
+  }, [
+    form,
+    updateStepData,
+    enableNext,
+    disableNext,
+    setCustomNavigation,
+    router,
+    locale,
+    subdomain,
+  ])
 
   return (
     <Form {...form}>
@@ -307,32 +318,46 @@ function StaffFields() {
   })
 
   useEffect(() => {
-    const subscription = form.watch((value) => {
+    const evaluate = (value: Partial<StaffDetailsData>) => {
       updateStepData("roleDetails", value as StaffDetailsData)
+
+      const isValid = value.position && value.employmentType
+      if (isValid) {
+        enableNext()
+        setCustomNavigation({
+          onNext: async () => {
+            const valid = await form.trigger()
+            if (valid) {
+              updateStepData(
+                "roleDetails",
+                form.getValues() as StaffDetailsData
+              )
+              router.push(`/${locale}/s/${subdomain}/join/documents`)
+            }
+          },
+        })
+      } else {
+        disableNext()
+        setCustomNavigation(undefined)
+      }
+    }
+
+    evaluate(form.getValues())
+
+    const subscription = form.watch((value) => {
+      evaluate(value as Partial<StaffDetailsData>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateStepData])
-
-  useEffect(() => {
-    const data = form.watch()
-    const isValid = data.position && data.employmentType
-
-    if (isValid) {
-      enableNext()
-      setCustomNavigation({
-        onNext: async () => {
-          const valid = await form.trigger()
-          if (valid) {
-            updateStepData("roleDetails", form.getValues() as StaffDetailsData)
-            router.push(`/${locale}/s/${subdomain}/join/documents`)
-          }
-        },
-      })
-    } else {
-      disableNext()
-      setCustomNavigation(undefined)
-    }
-  })
+  }, [
+    form,
+    updateStepData,
+    enableNext,
+    disableNext,
+    setCustomNavigation,
+    router,
+    locale,
+    subdomain,
+  ])
 
   return (
     <Form {...form}>
@@ -448,32 +473,46 @@ function AdminFields() {
   })
 
   useEffect(() => {
-    const subscription = form.watch((value) => {
+    const evaluate = (value: Partial<AdminDetailsData>) => {
       updateStepData("roleDetails", value as AdminDetailsData)
+
+      const isValid = value.position && value.administrativeArea
+      if (isValid) {
+        enableNext()
+        setCustomNavigation({
+          onNext: async () => {
+            const valid = await form.trigger()
+            if (valid) {
+              updateStepData(
+                "roleDetails",
+                form.getValues() as AdminDetailsData
+              )
+              router.push(`/${locale}/s/${subdomain}/join/documents`)
+            }
+          },
+        })
+      } else {
+        disableNext()
+        setCustomNavigation(undefined)
+      }
+    }
+
+    evaluate(form.getValues())
+
+    const subscription = form.watch((value) => {
+      evaluate(value as Partial<AdminDetailsData>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateStepData])
-
-  useEffect(() => {
-    const data = form.watch()
-    const isValid = data.position && data.administrativeArea
-
-    if (isValid) {
-      enableNext()
-      setCustomNavigation({
-        onNext: async () => {
-          const valid = await form.trigger()
-          if (valid) {
-            updateStepData("roleDetails", form.getValues() as AdminDetailsData)
-            router.push(`/${locale}/s/${subdomain}/join/documents`)
-          }
-        },
-      })
-    } else {
-      disableNext()
-      setCustomNavigation(undefined)
-    }
-  })
+  }, [
+    form,
+    updateStepData,
+    enableNext,
+    disableNext,
+    setCustomNavigation,
+    router,
+    locale,
+    subdomain,
+  ])
 
   return (
     <Form {...form}>
@@ -549,35 +588,46 @@ function StudentFields() {
   })
 
   useEffect(() => {
-    const subscription = form.watch((value) => {
+    const evaluate = (value: Partial<StudentDetailsData>) => {
       updateStepData("roleDetails", value as StudentDetailsData)
+
+      const isValid = value.gradeLevel && value.studentType
+      if (isValid) {
+        enableNext()
+        setCustomNavigation({
+          onNext: async () => {
+            const valid = await form.trigger()
+            if (valid) {
+              updateStepData(
+                "roleDetails",
+                form.getValues() as StudentDetailsData
+              )
+              router.push(`/${locale}/s/${subdomain}/join/documents`)
+            }
+          },
+        })
+      } else {
+        disableNext()
+        setCustomNavigation(undefined)
+      }
+    }
+
+    evaluate(form.getValues())
+
+    const subscription = form.watch((value) => {
+      evaluate(value as Partial<StudentDetailsData>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateStepData])
-
-  useEffect(() => {
-    const data = form.watch()
-    const isValid = data.gradeLevel && data.studentType
-
-    if (isValid) {
-      enableNext()
-      setCustomNavigation({
-        onNext: async () => {
-          const valid = await form.trigger()
-          if (valid) {
-            updateStepData(
-              "roleDetails",
-              form.getValues() as StudentDetailsData
-            )
-            router.push(`/${locale}/s/${subdomain}/join/documents`)
-          }
-        },
-      })
-    } else {
-      disableNext()
-      setCustomNavigation(undefined)
-    }
-  })
+  }, [
+    form,
+    updateStepData,
+    enableNext,
+    disableNext,
+    setCustomNavigation,
+    router,
+    locale,
+    subdomain,
+  ])
 
   return (
     <Form {...form}>

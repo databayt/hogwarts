@@ -309,6 +309,8 @@ Key points:
 
 ### Template B: Wizard Step Form with forwardRef
 
+> **React 19:** `ref` is now a regular prop — `forwardRef` is no longer needed. Pass `ref` directly in the component's props interface.
+
 One step in a multi-step wizard. Parent controls navigation via ref. Reference: `apply/personal/form.tsx` (330 lines).
 
 ```typescript
@@ -398,7 +400,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
 
 Key points:
 
-- `forwardRef` + `useImperativeHandle` expose `saveAndNext()` to the parent orchestrator
+- `forwardRef` + `useImperativeHandle` expose `saveAndNext()` to the parent orchestrator (note: in React 19, `forwardRef` is no longer needed — `ref` can be accepted as a regular prop)
 - `form.watch()` syncs values to shared context (`useApplySession`)
 - Client validation via `form.trigger()`, then server validation via action
 - Props and ref types imported from `./types`
@@ -611,6 +613,95 @@ export function MyForm({ items }: { items: Item[] }) {
   // ... renders form only
 }
 ```
+
+## Server-First Architecture
+
+form.tsx is always a client component -- forms require browser APIs (event handlers, state, refs). However, React 19 introduces patterns that minimize client-side JavaScript.
+
+### Boundary Placement
+
+form.tsx should be a **leaf component** imported by client.tsx, not by content.tsx directly. This keeps the `"use client"` boundary as narrow as possible:
+
+```
+content.tsx (server) → client.tsx ("use client") → form.tsx (client leaf)
+```
+
+content.tsx fetches data on the server (e.g., existing entity for edit mode). client.tsx manages modal state and renders form.tsx when needed.
+
+### Progressive Enhancement with React 19
+
+For simple forms that don't need client-side validation UX, use `useActionState` with native `<form action={}>`:
+
+```typescript
+"use client"
+
+import { useActionState } from "react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+
+import { createItem } from "./actions"
+
+export function SimpleForm() {
+  const [state, action, pending] = useActionState(createItem, null)
+
+  return (
+    <form action={action} className="space-y-4">
+      <Input name="title" required defaultValue="" />
+      <Input name="description" defaultValue="" />
+
+      {state?.error && (
+        <p className="text-destructive text-sm">{state.error}</p>
+      )}
+
+      <Button type="submit" disabled={pending}>
+        {pending ? "Saving..." : "Save"}
+      </Button>
+    </form>
+  )
+}
+```
+
+This works without react-hook-form or zodResolver -- the server action validates with Zod. Use this for simple forms (1-5 fields, no complex validation UX). Use the full react-hook-form pattern for complex forms (multi-step, field arrays, real-time validation).
+
+> **`useActionState` signature requirement:** The server action passed to `useActionState` must accept `(prevState, formData)` as parameters — not just `(formData)`. The framework passes the previous state as the first argument automatically:
+>
+> ```typescript
+> // actions.ts — server action for useActionState
+> "use server"
+>
+> type ActionResponse = { error?: string; success?: boolean } | null
+>
+> export async function createItem(
+>   prevState: ActionResponse,
+>   formData: FormData
+> ): Promise<ActionResponse> {
+>   const title = formData.get("title") as string
+>   // validate and save...
+>   return { success: true }
+> }
+> ```
+
+> **React 19 tip:** Use `useFormStatus` for submit button pending state instead of threading `pending` through props:
+>
+> ```typescript
+> import { useFormStatus } from "react-dom"
+>
+> function SubmitButton({ label }: { label: string }) {
+>   const { pending } = useFormStatus()
+>   return <Button type="submit" disabled={pending}>{pending ? "Saving..." : label}</Button>
+> }
+> ```
+
+### When to Use Each Pattern
+
+| Scenario                             | Pattern                            |
+| ------------------------------------ | ---------------------------------- |
+| Simple create form (1-5 fields)      | `useActionState` + native `<form>` |
+| Complex CRUD form with edit mode     | react-hook-form + zodResolver      |
+| Multi-step wizard                    | react-hook-form + forwardRef       |
+| Form with real-time field validation | react-hook-form + zodResolver      |
+| Form with file uploads               | react-hook-form + custom handlers  |
 
 ## Quick Reference
 

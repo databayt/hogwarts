@@ -4,11 +4,11 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogCourseSidebarData } from "@/components/stream/data/catalog/get-course-sidebar-data"
 
 interface Props {
-  params: Promise<{ slug: string }>
+  params: Promise<{ lang: string; subdomain: string; slug: string }>
 }
 
 export default async function StreamCourseSlugRoute({ params }: Props) {
-  const { slug } = await params
+  const { lang, subdomain, slug } = await params
   const { schoolId } = await getTenantContext()
 
   const course = await getCatalogCourseSidebarData(slug, schoolId)
@@ -17,7 +17,9 @@ export default async function StreamCourseSlugRoute({ params }: Props) {
   const firstLesson = firstChapter?.lessons[0]
 
   if (firstLesson) {
-    redirect(`/stream/dashboard/${slug}/${firstLesson.id}`)
+    redirect(
+      `/${lang}/s/${subdomain}/stream/dashboard/${slug}/${firstLesson.id}`
+    )
   }
 
   return (

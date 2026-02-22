@@ -53,15 +53,14 @@ export default function ReviewContent({ dictionary }: Props) {
   const handleSuccess = useCallback(
     (result: SubmitActionResult) => {
       if (result.requiresPayment) {
-        // Redirect to payment page with application details
+        // Redirect to payment page — only pass display-only params;
+        // fee/currency/methods are resolved server-side from DB
         const searchParams = new URLSearchParams({
           number: result.applicationNumber,
-          appId: result.applicationId,
-          fee: String(result.applicationFee ?? 0),
-          currency: result.currency ?? "USD",
-          methods: (result.paymentMethods ?? []).join(","),
         })
-        router.push(`/${locale}/apply/${id}/payment?${searchParams.toString()}`)
+        router.push(
+          `/${locale}/apply/${result.applicationId}/payment?${searchParams.toString()}`
+        )
       } else {
         // No fee required — go straight to success
         router.push(

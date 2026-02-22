@@ -643,26 +643,28 @@ export async function confirmEnrollment(params: {
           },
         })
 
-        for (const fs of feeStructures) {
-          await db.feeAssignment.upsert({
-            where: {
-              studentId_feeStructureId_academicYear: {
+        await Promise.all(
+          feeStructures.map((fs) =>
+            db.feeAssignment.upsert({
+              where: {
+                studentId_feeStructureId_academicYear: {
+                  studentId: student.id,
+                  feeStructureId: fs.id,
+                  academicYear: application.campaign.academicYear,
+                },
+              },
+              create: {
+                schoolId,
                 studentId: student.id,
                 feeStructureId: fs.id,
                 academicYear: application.campaign.academicYear,
+                finalAmount: fs.totalAmount,
+                status: "PENDING",
               },
-            },
-            create: {
-              schoolId,
-              studentId: student.id,
-              feeStructureId: fs.id,
-              academicYear: application.campaign.academicYear,
-              finalAmount: fs.totalAmount,
-              status: "PENDING",
-            },
-            update: {}, // Don't overwrite existing
-          })
-        }
+              update: {}, // Don't overwrite existing
+            })
+          )
+        )
       } catch (feeError) {
         console.warn(
           "[confirmEnrollment] Fee auto-assignment failed:",

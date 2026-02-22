@@ -1,5 +1,6 @@
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -48,12 +49,14 @@ export default async function ClassesContent({
           subject: {
             select: {
               subjectName: true,
+              lang: true,
             },
           },
           teacher: {
             select: {
               givenName: true,
               surname: true,
+              lang: true,
             },
           },
           term: {
@@ -64,6 +67,7 @@ export default async function ClassesContent({
           grade: {
             select: {
               name: true,
+              lang: true,
             },
           },
           _count: {
@@ -75,22 +79,44 @@ export default async function ClassesContent({
       }),
       classModel.count({ where }),
     ])
-    data = rows.map((c: any) => ({
-      id: c.id,
-      name: c.name,
-      subjectName: c.subject?.subjectName || "Unknown",
-      teacherName: c.teacher
-        ? `${c.teacher.givenName} ${c.teacher.surname}`
-        : "Unknown",
-      termName: c.term?.termNumber ? `Term ${c.term.termNumber}` : "Unknown",
-      gradeName: c.grade?.name || "",
-      courseCode: c.courseCode || null,
-      credits: c.credits || null,
-      evaluationType: c.evaluationType || "NORMAL",
-      enrolledStudents: c._count?.studentClasses || 0,
-      maxCapacity: c.maxCapacity || 50,
-      createdAt: (c.createdAt as Date).toISOString(),
-    }))
+    data = await Promise.all(
+      rows.map(async (c: any) => ({
+        id: c.id,
+        name: await getDisplayText(
+          c.name,
+          (c.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId!
+        ),
+        subjectName: await getDisplayText(
+          c.subject?.subjectName || "Unknown",
+          (c.subject?.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId!
+        ),
+        teacherName: c.teacher
+          ? await getDisplayText(
+              `${c.teacher.givenName} ${c.teacher.surname}`,
+              (c.teacher.lang as "ar" | "en") || "ar",
+              lang,
+              schoolId!
+            )
+          : "Unknown",
+        termName: c.term?.termNumber ? `Term ${c.term.termNumber}` : "Unknown",
+        gradeName: await getDisplayText(
+          c.grade?.name || "",
+          (c.grade?.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId!
+        ),
+        courseCode: c.courseCode || null,
+        credits: c.credits || null,
+        evaluationType: c.evaluationType || "NORMAL",
+        enrolledStudents: c._count?.studentClasses || 0,
+        maxCapacity: c.maxCapacity || 50,
+        createdAt: (c.createdAt as Date).toISOString(),
+      }))
+    )
     total = count as number
   }
   return (

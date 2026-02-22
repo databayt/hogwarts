@@ -5,13 +5,13 @@ description: "Canonical patterns for writing layout.tsx in Next.js 16"
 
 ## Current Progress (Audit)
 
-51 layout.tsx files audited across 8+ route groups:
+55 layout.tsx files audited across 8+ route groups:
 
 | Area                                 | Status | Detail                                                                                    |
 | ------------------------------------ | ------ | ----------------------------------------------------------------------------------------- |
-| Promise-based params                 | PASS   | All 42 async layouts correctly use `Promise<>`                                            |
+| Promise-based params                 | PASS   | All 46 async layouts correctly use `Promise<>`                                            |
 | Provider hierarchy                   | PASS   | Clean nesting: root → [lang] → route group. No duplicates                                 |
-| `export default function` convention | PASS   | 49/51 use function declarations                                                           |
+| `export default function` convention | PASS   | 53/55 use function declarations                                                           |
 | Parallel data fetching               | PASS   | School-dashboard uses `Promise.all([getSchool, auth])`                                    |
 | `force-dynamic` on dashboard layouts | PASS   | Both dashboard layouts set it correctly                                                   |
 | Root layout html/body                | PASS   | Only root layout has `<html>` and `<body>`                                                |
@@ -66,12 +66,9 @@ import { ReactNode } from "react"
 // GOOD
 import type { ReactNode } from "react"
 
-// OK: Mixed import (value + type in one statement)
-import {
-  isRTL as checkIsRTL,
-  Locale,
-  type Locale,
-} from "@/components/internationalization/config"
+// BAD: Value import when only type is needed
+import { Locale } from "@/components/internationalization/config"
+// GOOD: Type-only import
 import type { Locale } from "@/components/internationalization/config"
 ```
 
@@ -354,6 +351,8 @@ export function generateStaticParams() {
 }
 ```
 
+> Note: The actual locale layout wraps 8 providers (DirectionProvider, SessionProvider, NuqsAdapter, ThemeProvider, UserThemeProvider, AnalyticsProvider, ServiceWorkerProvider, Toaster). This template shows the essential 5 for clarity.
+
 Key points:
 
 - `generateMetadata` for localized metadata
@@ -397,7 +396,7 @@ export default async function PlatformLayout({ children, params }: Props) {
       <SidebarProvider>
         <ModalProvider>
           <PageHeadingProvider>
-            {/* Header, Sidebar, children */}
+            {/* Header uses session for user display, Sidebar, children */}
           </PageHeadingProvider>
         </ModalProvider>
       </SidebarProvider>
@@ -495,7 +494,7 @@ const pendingCount = await db.catalogQuestion.count({
 })
 ```
 
-Layouts don't re-render on navigation, but they DO re-execute their server component function on every soft navigation within their subtree. A DB query here means a database round-trip on every page change. Move the count to the specific page that displays it.
+In Next.js 16, layouts persist across soft navigation and do NOT re-execute. However, they DO re-execute on hard navigation (full page reload). A DB query here means a database round-trip on initial load and hard navigations. Move the count to the specific page that displays it to keep layouts lean and side-effect-free.
 
 ### 2. Redundant auth checks
 
@@ -596,4 +595,4 @@ If params aren't needed, don't declare them. This is a passthrough layout preten
 - Root layout MUST have `<html>` and `<body>` -- must NOT have manual `<head>` tags (use Metadata API)
 - Use `template.tsx` instead of `layout.tsx` if you need re-mounting on navigation
 - Turbopack is the default bundler
-- React Compiler support is stable (`reactCompiler: true`)
+- React Compiler support is available (`reactCompiler: true` in next.config) but not currently enabled in this project

@@ -389,7 +389,7 @@ The platform has three distinct notions of "capacity" that are easy to conflate:
 | Enrollment min       | `minCapacity` | `Class`     | 10           | Class creation        | Minimum students to run this class              |
 | Enrollment max       | `maxCapacity` | `Class`     | 50           | Class creation        | Maximum students enrolled in this class         |
 
-**Plan limits** (School) gate how many records can be created. **Room capacity** (Classroom) describes physical space. **Enrollment bounds** (Class) control class size. These three are independent -- the platform does not currently validate them against each other (e.g., a class with `maxCapacity: 50` can be assigned to a room with `capacity: 30`).
+**Plan limits** (School) gate how many records can be created. **Room capacity** (Classroom) describes physical space. **Enrollment bounds** (Class) control class size. Cross-validation is now enforced: `createClass` and `updateClass` return a hard error when `maxCapacity` exceeds the assigned room's `capacity`. The `maxClasses` plan limit is also enforced in `createClass` and `generateSections`.
 
 ### 8 Room Types
 
@@ -495,7 +495,7 @@ Key points:
 - **`gradeId` is optional** -- existing records without it are backfilled via `pnpm db:seed:single backfill-class-grades` (parses grade number from class name)
 - **Class form** includes a grade selector dropdown when `AcademicGrade` records exist for the school
 - **Grade column** appears in the class table and CSV export
-- **Class sections** (A, B, C) are not a formal field -- they are encoded in the `name` (e.g., "Math - Grade 7 A")
+- **Class sections** (A, B, C) are not a formal field -- they are encoded in the `name` (e.g., "Grade 7-A"). The Configure tab auto-provisions sections with consistent naming (`Grade N-A`, `Grade N-B`, etc.)
 - **In seeds**, classrooms are assigned to classes via **round-robin** across available rooms, not by grade affinity
 
 ### When to Configure Classrooms
@@ -507,7 +507,9 @@ Classrooms have **no schema dependency** on other layers -- they can be created 
 
 Current state:
 
-- Full CRUD UI exists at `school-dashboard/listings/classrooms/` (actions, form, table, columns, content, validation)
+- Unified `/classrooms` route with tabs: All, Rooms, Configure, Capacity, Subjects, Schedule, Settings
+- Auto-provisioning via Configure tab creates both `Classroom` + `Class` records atomically (wrapped in `db.$transaction`)
+- `maxClasses` plan limit enforced in both `createClass` and `generateSections`
 - The demo school has 28 rooms seeded across 5 buildings
 - The onboarding capacity step does **not** create `Classroom` records (only saves `maxClasses` limit)
 - The `maxClasses` value from onboarding limits `Class` records, not `Classroom` records
@@ -619,21 +621,21 @@ No Classrooms        --> No timetable slots      (classroomId is required)
 
 Known integration issues between layers:
 
-| Gap                                       | Layers    | Status | Description                                                                                                                   |
-| ----------------------------------------- | --------- | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| ~~`setupCatalogForSchool` not wired~~     | 2 --> 3,4 | Fixed  | Now called in `congratulations/actions.ts` during final onboarding step.                                                      |
-| ~~`schoolLevel` not collected in UI~~     | 2 --> 3   | Fixed  | `description/form.tsx` now collects `schoolLevel` with auto-submit logic.                                                     |
-| ~~`country` format mismatch~~             | 1 --> 4   | Fixed  | All models, seeds, and validation now use ISO 2-letter codes. Mapbox returns `short_code`, onboarding validates `^[A-Z]{2}$`. |
-| ~~Head of Department not in schema~~      | 5a        | Fixed  | `TeacherDepartment.isDepartmentHead` added. Toggle UI in department content. Seeded with one head per department.             |
-| ~~No auto-placement after ADMITTED~~      | 5b --> 7  | Fixed  | Placement dialog (per-student) and bulk placement (batch) UI. `placeStudentInClass` action validates capacity.                |
-| Classroom setup not in onboarding         | 2 --> 6   | Open   | Capacity step saves `maxClasses` count but creates no `Classroom` records.                                                    |
-| ~~Onboarding `facilities` not persisted~~ | 2 --> 6   | Fixed  | Removed from capacity form, validation, and types. No longer collected.                                                       |
-| ~~`allowedSubjectTypes` unused~~          | 6 --> 7   | Fixed  | Timetable algorithm now checks `RoomConstraint.allowedSubjectTypes` during slot generation.                                   |
-| ~~Dashboard mock room data~~              | 7         | Fixed  | `getUpcomingClass()` server action queries real timetable data (day, period, class, room).                                    |
-| `maxClasses` naming confusion             | 2 --> 6   | Open   | Form says "Classrooms" but saves to `maxClasses` (limits `Class` records, not `Classroom` rooms).                             |
-| ~~No `gradeId` on Class model~~           | 3 --> 5a  | Fixed  | Optional `gradeId` FK added to Class. Grade selector in form, grade column in table. Backfill script for existing records.    |
-| ~~No classroom CRUD UI~~                  | 6         | Fixed  | Full 6-file CRUD pattern exists at `school-dashboard/listings/classrooms/`.                                                   |
-| ~~Capacity cross-validation missing~~     | 5a --> 6  | Fixed  | `createClass` and `updateClass` return user-facing warning when `maxCapacity` exceeds room `capacity`.                        |
+| Gap                                       | Layers    | Status  | Description                                                                                                                                                                     |
+| ----------------------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~`setupCatalogForSchool` not wired~~     | 2 --> 3,4 | Fixed   | Now called in `congratulations/actions.ts` during final onboarding step.                                                                                                        |
+| ~~`schoolLevel` not collected in UI~~     | 2 --> 3   | Fixed   | `description/form.tsx` now collects `schoolLevel` with auto-submit logic.                                                                                                       |
+| ~~`country` format mismatch~~             | 1 --> 4   | Fixed   | All models, seeds, and validation now use ISO 2-letter codes. Mapbox returns `short_code`, onboarding validates `^[A-Z]{2}$`.                                                   |
+| ~~Head of Department not in schema~~      | 5a        | Fixed   | `TeacherDepartment.isDepartmentHead` added. Toggle UI in department content. Seeded with one head per department.                                                               |
+| ~~No auto-placement after ADMITTED~~      | 5b --> 7  | Fixed   | Placement dialog (per-student) and bulk placement (batch) UI. `placeStudentInClass` action validates capacity.                                                                  |
+| Classroom setup not in onboarding         | 2 --> 6   | Partial | Capacity step saves `maxClasses` count but creates no `Classroom` records. Post-onboarding, the Configure tab auto-provisions rooms and sections per grade.                     |
+| ~~Onboarding `facilities` not persisted~~ | 2 --> 6   | Fixed   | Removed from capacity form, validation, and types. No longer collected.                                                                                                         |
+| ~~`allowedSubjectTypes` unused~~          | 6 --> 7   | Fixed   | Timetable algorithm now checks `RoomConstraint.allowedSubjectTypes` during slot generation.                                                                                     |
+| ~~Dashboard mock room data~~              | 7         | Fixed   | `getUpcomingClass()` server action queries real timetable data (day, period, class, room).                                                                                      |
+| `maxClasses` naming confusion             | 2 --> 6   | Open    | Form says "Classrooms" but saves to `maxClasses` (limits `Class` records, not `Classroom` rooms). Less confusing now that the UI route is `/classrooms`.                        |
+| ~~No `gradeId` on Class model~~           | 3 --> 5a  | Fixed   | Optional `gradeId` FK added to Class. Grade selector in form, grade column in table. Backfill script for existing records.                                                      |
+| ~~No classroom CRUD UI~~                  | 6         | Fixed   | Full 6-file CRUD pattern exists at `school-dashboard/listings/classrooms/`.                                                                                                     |
+| ~~Capacity cross-validation missing~~     | 5a --> 6  | Fixed   | `createClass` and `updateClass` enforce a hard error when `maxCapacity` exceeds room `capacity`. `maxClasses` plan limit also enforced in `createClass` and `generateSections`. |
 
 ---
 

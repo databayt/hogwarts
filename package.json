@@ -20,7 +20,9 @@
     "db:seed": "tsx prisma/seeds/index.ts",
     "db:seed:single": "tsx prisma/seeds/single.ts",
     "db:reset-test-user": "tsx prisma/seeds/reset-test-user.ts",
+    "seed:videos": "tsx scripts/seed-s3-videos.ts",
     "test": "vitest",
+    "test:integration": "vitest --config vitest.config.integration.mts --run",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:all": "playwright test",
     "test:e2e:smoke": "playwright test --project=smoke",
@@ -230,6 +232,7 @@
     "@types/react-dropzone": "^5.1.0",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^4.0.18",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "csv-parse": "^6.1.0",
@@ -237,6 +240,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
     "eslint-config-prettier": "^10.1.8",
+    "fast-check": "^4.5.3",
     "jsdom": "^27.2.0",
     "ora": "^9.0.0",
     "prettier": "^3.7.4",
@@ -248,7 +252,8 @@
     "tw-animate-css": "^1.3.6",
     "typescript": "^5.8.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^2.0.6",
+    "vitest": "^4.0.18",
+    "vitest-axe": "^0.1.0",
     "zustand": "^5.0.7"
   }
 }

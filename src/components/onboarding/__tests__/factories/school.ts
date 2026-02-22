@@ -29,7 +29,22 @@ const SCHOOL_CATEGORIES: SchoolCategory[] = [
   "technical",
   "special",
 ]
-const CURRENCIES: Currency[] = ["USD", "EUR", "GBP", "CAD", "AUD"]
+const CURRENCIES: Currency[] = [
+  "USD",
+  "EUR",
+  "GBP",
+  "CAD",
+  "AUD",
+  "SAR",
+  "AED",
+  "EGP",
+  "SDG",
+  "JOD",
+  "KWD",
+  "QAR",
+  "BHD",
+  "OMR",
+]
 const PAYMENT_SCHEDULES: PaymentSchedule[] = [
   "monthly",
   "quarterly",

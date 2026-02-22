@@ -80,7 +80,12 @@ export async function getCatalogCourse(
     }
   }
 
-  // Parallelize enrollment count, quiz count, and school name
+  // Collect all lesson IDs for creator attribution
+  const allLessonIds = subject.chapters.flatMap((c) =>
+    c.lessons.map((l) => l.id)
+  )
+
+  // Parallelize enrollment count, quiz count, and course creator
   const [enrollmentCount, quizCount, schoolName] = await Promise.all([
     db.enrollment.count({
       where: { catalogSubjectId: subject.id, isActive: true },
@@ -88,20 +93,39 @@ export async function getCatalogCourse(
     db.catalogExam.count({
       where: { subjectId: subject.id, status: "PUBLISHED" },
     }),
-    schoolId
-      ? db.school
-          .findUnique({
-            where: { id: schoolId },
-            select: { name: true, preferredLanguage: true },
+    // Dynamic creator attribution — find who contributed the most videos
+    allLessonIds.length > 0
+      ? db.lessonVideo
+          .groupBy({
+            by: ["schoolId"],
+            where: {
+              catalogLessonId: { in: allLessonIds },
+              approvalStatus: "APPROVED",
+            },
+            _count: true,
+            orderBy: { _count: { schoolId: "desc" } },
+            take: 1,
           })
-          .then(async (s) => {
-            if (!s?.name) return null
-            const storedLang = (s.preferredLanguage || "ar") as "ar" | "en"
+          .then(async (groups) => {
+            const topCreatorSchoolId = groups[0]?.schoolId ?? null
+            // Platform content (null schoolId) → "Hogwarts Academy"
+            if (!topCreatorSchoolId) return "Hogwarts Academy"
+            const school = await db.school.findUnique({
+              where: { id: topCreatorSchoolId },
+              select: { name: true, preferredLanguage: true },
+            })
+            if (!school?.name) return "Hogwarts Academy"
+            const storedLang = (school.preferredLanguage || "ar") as "ar" | "en"
             const displayLang = (lang === "ar" ? "ar" : "en") as "ar" | "en"
-            if (storedLang === displayLang) return s.name
-            return getDisplayText(s.name, storedLang, displayLang, schoolId)
+            if (storedLang === displayLang) return school.name
+            return getDisplayText(
+              school.name,
+              storedLang,
+              displayLang,
+              topCreatorSchoolId
+            )
           })
-      : Promise.resolve(null),
+      : Promise.resolve("Hogwarts Academy"),
   ])
 
   // Map to Stream-compatible shape

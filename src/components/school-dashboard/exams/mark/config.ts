@@ -44,6 +44,24 @@ export const QUESTION_TYPES: Record<
     icon: "Pencil",
     autoGradable: true,
   },
+  MATCHING: {
+    label: "Matching",
+    description: "Match items from two columns",
+    icon: "ArrowLeftRight",
+    autoGradable: true,
+  },
+  ORDERING: {
+    label: "Ordering",
+    description: "Arrange items in the correct sequence",
+    icon: "ListOrdered",
+    autoGradable: true,
+  },
+  MULTI_SELECT: {
+    label: "Multi Select",
+    description: "Select all correct answers from a list",
+    icon: "CheckCheck",
+    autoGradable: true,
+  },
 }
 
 // Difficulty Level Configurations

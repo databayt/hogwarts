@@ -802,6 +802,8 @@ Fix: Use `ActionResponse<T>` from `@/lib/action-response` for all mutations. Rea
 | 4    | `schema.parse(input)`                    | Validate with Zod          |
 | 5    | `db.model.create()` + `revalidatePath()` | Execute + invalidate cache |
 
+> **Tip:** Use `revalidateTag(tag)` for targeted cache invalidation when paths are insufficient. Tag-based revalidation is more granular than path-based.
+
 ### Function Naming Conventions
 
 | Prefix    | Purpose                | Example                    |
@@ -832,6 +834,8 @@ Promise<ActionResponse<void>>
 Promise<ActionResponse<SubscriptionWithTier>>
 ```
 
+> **Note:** `redirect()` is valid in server actions for navigation after mutations (e.g., after creating a resource, redirect to its detail page). It throws internally, so it must be called outside try/catch blocks.
+
 ### Input Patterns
 
 | Pattern                  | When to Use                |
@@ -839,6 +843,42 @@ Promise<ActionResponse<SubscriptionWithTier>>
 | `z.infer<typeof schema>` | Standard -- always prefer  |
 | `FormData`               | Never -- parse through Zod |
 | `{ field: type }`        | Only in SaaS admin (small) |
+
+### Consuming Actions in Client Components (React 19)
+
+Use `useActionState` (replaces `useFormState`) to consume server actions in forms:
+
+```typescript
+"use client"
+
+import { useActionState } from "react"
+import { createItem } from "./actions"
+
+function ItemForm() {
+  const [state, formAction, isPending] = useActionState(createItem, null)
+
+  return (
+    <form action={formAction}>
+      {state?.error && <p className="text-destructive">{state.error}</p>}
+      <input name="title" required />
+      <button type="submit" disabled={isPending}>
+        {isPending ? "Creating..." : "Create"}
+      </button>
+    </form>
+  )
+}
+```
+
+Use `useFormStatus` for nested submit button components:
+
+```typescript
+import { useFormStatus } from "react-dom"
+
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  return <button type="submit" disabled={pending}>{pending ? "Saving..." : "Save"}</button>
+}
+```
 
 ### Import Direction
 

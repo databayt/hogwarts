@@ -1,23 +1,31 @@
 "use server"
 
+import { revalidatePath } from "next/cache"
 import { nanoid } from "nanoid"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import type { PaymentCheckoutResult } from "@/lib/payment/types"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 
-import type { ActionResult } from "../../admission/types"
+function getBaseUrl(subdomain: string): string {
+  const isProd = process.env.NODE_ENV === "production"
+  return isProd
+    ? `https://${subdomain}.databayt.org`
+    : `http://${subdomain}.localhost:3000`
+}
 
 /**
- * Create a Stripe Checkout session for an application fee
+ * Create a Stripe Checkout session for an application fee.
+ * Fee amount and currency are always sourced from the database
+ * (campaign.applicationFee / school.currency) — never from client params.
  */
 export async function createStripeCheckout(
   subdomain: string,
   applicationId: string,
-  amount: number,
-  currency: string
-): Promise<ActionResult<PaymentCheckoutResult>> {
+  locale: string
+): Promise<ActionResponse<PaymentCheckoutResult>> {
   try {
     if (!stripe) {
       return { success: false, error: "Stripe is not configured" }
@@ -28,14 +36,19 @@ export async function createStripeCheckout(
       return { success: false, error: "School not found" }
     }
 
+    const schoolId = schoolResult.data.id
+
     const application = await db.application.findFirst({
-      where: { id: applicationId, schoolId: schoolResult.data.id },
+      where: { id: applicationId, schoolId },
       select: {
         id: true,
         applicationNumber: true,
         email: true,
         firstName: true,
         lastName: true,
+        campaign: {
+          select: { applicationFee: true },
+        },
       },
     })
 
@@ -43,10 +56,20 @@ export async function createStripeCheckout(
       return { success: false, error: "Application not found" }
     }
 
+    // Fee comes from DB — never from URL params
+    const fee = application.campaign.applicationFee
+    if (!fee || Number(fee) <= 0) {
+      return { success: false, error: "No application fee configured" }
+    }
+
+    const currency = schoolResult.data.currency ?? "USD"
+    const amount = Number(fee)
     const referenceNumber = `PAY-${nanoid(10).toUpperCase()}`
 
     // Convert amount to Stripe's smallest currency unit (cents/fils)
     const unitAmount = Math.round(amount * 100)
+
+    const baseUrl = getBaseUrl(subdomain)
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -68,21 +91,23 @@ export async function createStripeCheckout(
       metadata: {
         type: "application_fee",
         applicationId: application.id,
-        schoolId: schoolResult.data.id,
+        schoolId,
         referenceNumber,
       },
-      success_url: `https://${subdomain}.databayt.org/apply/${applicationId}/success?number=${application.applicationNumber}`,
-      cancel_url: `https://${subdomain}.databayt.org/apply/${applicationId}/payment?number=${application.applicationNumber}&cancelled=true`,
+      success_url: `${baseUrl}/${locale}/s/${subdomain}/apply/${applicationId}/success?number=${application.applicationNumber}`,
+      cancel_url: `${baseUrl}/${locale}/s/${subdomain}/apply/${applicationId}/payment?number=${application.applicationNumber}&cancelled=true`,
     })
 
     // Record the payment method on the application
     await db.application.update({
-      where: { id: applicationId },
+      where: { id: applicationId, schoolId },
       data: {
         paymentMethod: "stripe",
         paymentReference: referenceNumber,
       },
     })
+
+    revalidatePath("/apply")
 
     return {
       success: true,
@@ -104,15 +129,17 @@ export async function createStripeCheckout(
 export async function recordCashPaymentIntent(
   subdomain: string,
   applicationId: string
-): Promise<ActionResult<PaymentCheckoutResult>> {
+): Promise<ActionResponse<PaymentCheckoutResult>> {
   try {
     const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
       return { success: false, error: "School not found" }
     }
 
+    const schoolId = schoolResult.data.id
+
     const application = await db.application.findFirst({
-      where: { id: applicationId, schoolId: schoolResult.data.id },
+      where: { id: applicationId, schoolId },
       select: { id: true, applicationNumber: true },
     })
 
@@ -124,17 +151,19 @@ export async function recordCashPaymentIntent(
 
     // Get school's custom cash instructions
     const settings = await db.admissionSettings.findUnique({
-      where: { schoolId: schoolResult.data.id },
+      where: { schoolId },
       select: { cashPaymentInstructions: true },
     })
 
     await db.application.update({
-      where: { id: applicationId },
+      where: { id: applicationId, schoolId },
       data: {
         paymentMethod: "cash",
         paymentReference: referenceNumber,
       },
     })
+
+    revalidatePath("/apply")
 
     return {
       success: true,
@@ -156,15 +185,17 @@ export async function recordCashPaymentIntent(
 export async function recordBankTransferIntent(
   subdomain: string,
   applicationId: string
-): Promise<ActionResult<PaymentCheckoutResult>> {
+): Promise<ActionResponse<PaymentCheckoutResult>> {
   try {
     const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
       return { success: false, error: "School not found" }
     }
 
+    const schoolId = schoolResult.data.id
+
     const application = await db.application.findFirst({
-      where: { id: applicationId, schoolId: schoolResult.data.id },
+      where: { id: applicationId, schoolId },
       select: { id: true, applicationNumber: true },
     })
 
@@ -176,12 +207,12 @@ export async function recordBankTransferIntent(
 
     // Get school's bank details
     const settings = await db.admissionSettings.findUnique({
-      where: { schoolId: schoolResult.data.id },
+      where: { schoolId },
       select: { bankDetails: true },
     })
 
     await db.application.update({
-      where: { id: applicationId },
+      where: { id: applicationId, schoolId },
       data: {
         paymentMethod: "bank_transfer",
         paymentReference: referenceNumber,
@@ -189,6 +220,8 @@ export async function recordBankTransferIntent(
     })
 
     const bankDetails = settings?.bankDetails as Record<string, string> | null
+
+    revalidatePath("/apply")
 
     return {
       success: true,

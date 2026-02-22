@@ -42,7 +42,9 @@ import {
   getClassesForSelection,
   getGradeLevelsForSelection,
   getRoomsForSelection,
+  getSubjectsForSlotEditor,
   getTeachersForSelection,
+  getTeachersForSlotEditor,
   getTermsForSelection,
   getTimetableByClass,
   getTimetableByGradeLevel,
@@ -93,9 +95,11 @@ function groupClassesByGrade(
 ): Map<string, Array<{ id: string; label: string }>> {
   const groups = new Map<string, Array<{ id: string; label: string }>>()
   for (const cls of classes) {
-    // Extract grade from class name like "Mathematics - Grade 10"
+    // Extract grade from class name like "Mathematics - Grade 10 A"
     const match = cls.label.match(/ - (.+)$/)
-    const gradeName = match ? match[1] : "Other"
+    let gradeName = match ? match[1] : "Other"
+    // Strip trailing section letter (e.g., "Grade 7 A" -> "Grade 7")
+    gradeName = gradeName.replace(/\s+[A-Z]$/, "")
     if (!groups.has(gradeName)) {
       groups.set(gradeName, [])
     }
@@ -196,6 +200,17 @@ export default function AdminView({
     loadEntityList()
   }, [termId, viewMode])
 
+  // Clear grade data when term changes to prevent stale data
+  useEffect(() => {
+    setGradeData(new Map())
+    setExpandedGrades(new Set())
+  }, [termId])
+
+  // Load slot editor resources when term changes
+  useEffect(() => {
+    loadSlotEditorResources()
+  }, [termId])
+
   // Load timetable when selection changes
   useEffect(() => {
     if (selectedId && viewMode !== "grade") {
@@ -210,6 +225,37 @@ export default function AdminView({
     ])
     setTerms(termsResult.terms)
     setRooms(roomsResult.rooms)
+  }
+
+  const loadSlotEditorResources = async () => {
+    const [subjectsResult, teachersResult, classesResult, roomsResult] =
+      await Promise.all([
+        getSubjectsForSlotEditor({ termId }),
+        getTeachersForSlotEditor({ termId }),
+        getClassesForSelection({ termId }),
+        getRoomsForSelection(),
+      ])
+    setSlotEditorSubjects(subjectsResult.subjects)
+    setSlotEditorTeachers(teachersResult.teachers)
+    setSlotEditorClasses(
+      classesResult.classes.map((c) => ({
+        id: c.id,
+        name: c.label,
+        grade: "",
+        section: "",
+        capacity: 50,
+        currentEnrollment: 0,
+      }))
+    )
+    setSlotEditorClassrooms(
+      roomsResult.rooms.map((r) => ({
+        id: r.id,
+        name: r.label,
+        capacity: r.capacity,
+        type: "regular" as const,
+        isAvailable: true,
+      }))
+    )
   }
 
   const loadEntityList = async () => {
@@ -231,7 +277,7 @@ export default function AdminView({
     }
   }
 
-  const loadTimetable = async () => {
+  const loadTimetable = useCallback(async () => {
     setIsLoadingData(true)
     try {
       let result: any
@@ -249,7 +295,7 @@ export default function AdminView({
     } finally {
       setIsLoadingData(false)
     }
-  }
+  }, [viewMode, selectedId, termId])
 
   const loadGradeData = async (gradeName: string) => {
     setLoadingGrades((prev) => new Set(prev).add(gradeName))
@@ -341,46 +387,15 @@ export default function AdminView({
     }
   }
 
-  // Handle slot click to open editor
+  // Handle slot click to open editor (data already loaded via loadSlotEditorResources)
   const handleSlotClick = useCallback(
     (day: number, periodId: string, slot?: any) => {
       setSelectedDay(day)
       setSelectedPeriod(periodId)
       setSelectedSlot(slot || null)
-
-      // Build simplified data for the slot editor from existing state
-      const teacherInfos: TeacherInfo[] = teachers.map((t) => ({
-        id: t.id,
-        firstName: t.label.split(" ")[0] || "",
-        lastName: t.label.split(" ").slice(1).join(" ") || "",
-        email: "",
-        subjects: [],
-      }))
-      setSlotEditorTeachers(teacherInfos)
-
-      const classInfos: ClassInfo[] = classes.map((c) => ({
-        id: c.id,
-        name: c.label,
-        grade: "",
-        section: "",
-        capacity: 50,
-        currentEnrollment: 0,
-      }))
-      setSlotEditorClasses(classInfos)
-
-      const roomInfos: ClassroomInfo[] = rooms.map((r) => ({
-        id: r.id,
-        name: r.label,
-        capacity: r.capacity,
-        type: "regular" as const,
-        isAvailable: true,
-      }))
-      setSlotEditorClassrooms(roomInfos)
-
-      setSlotEditorSubjects([])
       setSlotEditorOpen(true)
     },
-    [teachers, classes, rooms]
+    []
   )
 
   // Handle slot save
@@ -407,7 +422,7 @@ export default function AdminView({
       setConflictSlotIds(conflictIds)
       setConflicts(result.conflicts)
     },
-    [termId, selectedId, viewMode]
+    [termId, loadTimetable]
   )
 
   // Handle conflict suggestion application
@@ -691,6 +706,7 @@ export default function AdminView({
                   viewMode={viewMode}
                   editable={true}
                   onSlotClick={handleSlotClick}
+                  conflictSlotIds={conflictSlotIds}
                 />
               </CardContent>
             </Card>

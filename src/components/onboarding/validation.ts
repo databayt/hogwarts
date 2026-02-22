@@ -48,7 +48,22 @@ export const schoolCategorySchema = z.enum([
   "ib",
   "american",
 ])
-export const currencySchema = z.enum(["USD", "EUR", "GBP", "CAD", "AUD"])
+export const currencySchema = z.enum([
+  "USD",
+  "EUR",
+  "GBP",
+  "CAD",
+  "AUD",
+  "SAR",
+  "AED",
+  "EGP",
+  "SDG",
+  "JOD",
+  "KWD",
+  "QAR",
+  "BHD",
+  "OMR",
+])
 export const paymentScheduleSchema = z.enum([
   "monthly",
   "quarterly",

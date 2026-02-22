@@ -29,7 +29,9 @@ import { seedAllUsers } from "./auth"
 import { backfillClassGrades } from "./backfill-class-grades"
 import { seedBanking } from "./banking"
 import { seedCatalog } from "./catalog"
+import { seedCatalogContent } from "./catalog-content"
 import { seedCatalogImages } from "./catalog-images"
+import { seedCatalogVideos } from "./catalog-videos"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
 import { seedClickViewCatalog } from "./clickview-catalog"
@@ -338,6 +340,21 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedClickViewLessonImages(prisma)
+    },
+  },
+  "catalog-content": {
+    description:
+      "Catalog content (videos, materials, exams, questions, assignments)",
+    global: true,
+    run: async (prisma) => {
+      await seedCatalogContent(prisma)
+    },
+  },
+  "catalog-videos": {
+    description: "Catalog lesson videos (S3/CloudFront)",
+    global: true,
+    run: async (prisma) => {
+      await seedCatalogVideos(prisma)
     },
   },
   school: {

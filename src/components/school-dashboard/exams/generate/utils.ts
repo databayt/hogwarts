@@ -264,13 +264,18 @@ function getDefaultPointsForQuestion(
   type: QuestionType,
   difficulty: DifficultyLevel
 ): number {
-  const basePoints = {
+  const pointsMap: Record<QuestionType, number> = {
     [QuestionType.MULTIPLE_CHOICE]: 1,
     [QuestionType.TRUE_FALSE]: 1,
     [QuestionType.FILL_BLANK]: 2,
     [QuestionType.SHORT_ANSWER]: 3,
     [QuestionType.ESSAY]: 5,
-  }[type]
+    [QuestionType.MATCHING]: 2,
+    [QuestionType.ORDERING]: 2,
+    [QuestionType.MULTI_SELECT]: 1.5,
+  }
+
+  const basePoints = pointsMap[type]
 
   const multiplier = {
     [DifficultyLevel.EASY]: 1,

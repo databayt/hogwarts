@@ -6,6 +6,8 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { StreamDashboardContent } from "@/components/stream/dashboard/content"
+import { getChildrenProgress } from "@/components/stream/dashboard/parent/actions"
+import { ParentProgressContent } from "@/components/stream/dashboard/parent/content"
 import { getCatalogDashboardData } from "@/components/stream/data/catalog/get-dashboard-data"
 
 interface Props {
@@ -35,6 +37,18 @@ export default async function StreamDashboardPage({ params }: Props) {
 
   if (!session?.user) {
     redirect(`/${lang}/s/${subdomain}/auth/login`)
+  }
+
+  // Guardian view: show children's progress
+  if (session.user.role === "GUARDIAN") {
+    const childrenProgress = await getChildrenProgress()
+    return (
+      <ParentProgressContent
+        dictionary={dictionary.stream || {}}
+        lang={lang}
+        childrenProgress={childrenProgress}
+      />
+    )
   }
 
   // Fetch dashboard data from catalog

@@ -129,7 +129,8 @@ test.describe("Story 3.4: Tenant Isolation @multi-tenant @critical", () => {
     await assertNoSSE(page)
   })
 
-  test("MT-017: Document schoolId query requirement", async () => {
+  // TODO: Replace with real E2E assertions
+  test.fixme("MT-017: Document schoolId query requirement", async () => {
     // This documents the critical multi-tenancy requirement
     console.log("=== TENANT ISOLATION REQUIREMENT ===")
     console.log("CRITICAL: Every database query MUST include schoolId")
@@ -142,8 +143,6 @@ test.describe("Story 3.4: Tenant Isolation @multi-tenant @critical", () => {
     console.log("")
     console.log("Missing schoolId = data visible across schools!")
     console.log("=====================================")
-
-    expect(true).toBeTruthy()
   })
 })
 
@@ -190,7 +189,8 @@ test.describe("Story 3.4: Cross-Tenant Access Prevention @multi-tenant @critical
     expect(isProtected).toBeTruthy()
   })
 
-  test("MT-019: API calls without schoolId should fail or return empty", async ({
+  // TODO: Replace with real E2E assertions
+  test.fixme("MT-019: API calls without schoolId should fail or return empty", async ({
     page,
   }) => {
     // This documents the expected API behavior
@@ -200,13 +200,12 @@ test.describe("Story 3.4: Cross-Tenant Access Prevention @multi-tenant @critical
     console.log("3. Missing schoolId = throw error or return empty")
     console.log("4. DEVELOPER can query without schoolId (platform admin)")
     console.log("============================")
-
-    expect(true).toBeTruthy()
   })
 })
 
 test.describe("Story 3.3: Tenant Context Priority @multi-tenant", () => {
-  test("MT-020: Document tenant context resolution priority", async () => {
+  // TODO: Replace with real E2E assertions
+  test.fixme("MT-020: Document tenant context resolution priority", async () => {
     console.log("=== TENANT CONTEXT PRIORITY ===")
     console.log("1. Impersonation cookie (highest - DEVELOPER feature)")
     console.log("2. x-subdomain header (set by middleware)")
@@ -217,7 +216,5 @@ test.describe("Story 3.3: Tenant Context Priority @multi-tenant", () => {
     console.log("  Server Action → getTenantContext() → Returns schoolId")
     console.log("  Database Query → MUST include schoolId")
     console.log("================================")
-
-    expect(true).toBeTruthy()
   })
 })

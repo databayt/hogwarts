@@ -83,6 +83,8 @@ interface SimpleGridProps {
   onSlotClick?: (day: number, periodId: string, slot?: Slot) => void
   /** Highlight the current day column */
   highlightToday?: boolean
+  /** Set of slot IDs that have conflicts (shown with red ring) */
+  conflictSlotIds?: Set<string>
 }
 
 function getSubjectColor(subject: string): string {
@@ -117,6 +119,7 @@ export default function SimpleGrid({
   editable = false,
   onSlotClick,
   highlightToday = false,
+  conflictSlotIds,
 }: SimpleGridProps) {
   // Get current day for highlighting
   const today = highlightToday ? new Date().getDay() : -1
@@ -282,6 +285,11 @@ export default function SimpleGrid({
                 {sortedDays.map((day, dayIdx) => {
                   const slot = slotMap.get(`${day}-${period.id}`)
                   const display = slot ? getSlotDisplay(slot) : null
+                  const isConflicted =
+                    slot &&
+                    conflictSlotIds &&
+                    (conflictSlotIds.has(slot.id) ||
+                      conflictSlotIds.has(slot.classId || ""))
 
                   return (
                     <div
@@ -295,6 +303,7 @@ export default function SimpleGrid({
                           ? "border-e border-neutral-200 dark:border-neutral-700"
                           : "",
                         editable && "cursor-pointer hover:shadow-inner",
+                        isConflicted && "ring-2 ring-red-500",
                         "print:min-h-12 print:py-2"
                       )}
                       onClick={() =>

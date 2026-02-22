@@ -1,3 +1,4 @@
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -25,7 +26,8 @@ export default async function ClassroomsContent({ lang }: Props) {
           roomName: true,
           capacity: true,
           typeId: true,
-          classroomType: { select: { id: true, name: true } },
+          lang: true,
+          classroomType: { select: { id: true, name: true, lang: true } },
           _count: { select: { classes: true, timetables: true } },
           createdAt: true,
         },
@@ -33,16 +35,28 @@ export default async function ClassroomsContent({ lang }: Props) {
       db.classroom.count({ where: { schoolId } }),
     ])
 
-    data = rows.map((r) => ({
-      id: r.id,
-      roomName: r.roomName,
-      capacity: r.capacity,
-      typeName: r.classroomType.name,
-      typeId: r.typeId,
-      classCount: r._count.classes,
-      timetableCount: r._count.timetables,
-      createdAt: r.createdAt.toISOString(),
-    }))
+    data = await Promise.all(
+      rows.map(async (r) => ({
+        id: r.id,
+        roomName: await getDisplayText(
+          r.roomName,
+          (r.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId!
+        ),
+        capacity: r.capacity,
+        typeName: await getDisplayText(
+          r.classroomType.name,
+          (r.classroomType.lang as "ar" | "en") || "ar",
+          lang,
+          schoolId!
+        ),
+        typeId: r.typeId,
+        classCount: r._count.classes,
+        timetableCount: r._count.timetables,
+        createdAt: r.createdAt.toISOString(),
+      }))
+    )
     total = count
   }
 

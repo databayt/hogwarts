@@ -12,6 +12,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Video,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -61,6 +62,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { CatalogImageUpload } from "@/components/saas-dashboard/catalog/image-upload"
+import { LessonVideoManager } from "@/components/saas-dashboard/catalog/video-manager"
 import { Shell as PageContainer } from "@/components/table/shell"
 
 import {
@@ -85,6 +87,7 @@ interface Lesson {
   durationMinutes: number | null
   description: string | null
   objectives: string | null
+  _count?: { videos: number }
 }
 
 interface Chapter {
@@ -176,6 +179,11 @@ export function CatalogDetail({ subject, lang }: Props) {
   const [lessonDuration, setLessonDuration] = useState("")
   const [lessonObjectives, setLessonObjectives] = useState("")
   const [lessonStatus, setLessonStatus] = useState<string>("DRAFT")
+
+  // Video dialog state
+  const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false)
+  const [videoLessonId, setVideoLessonId] = useState<string | null>(null)
+  const [videoLessonName, setVideoLessonName] = useState("")
 
   // ==========================================
   // CHAPTER HANDLERS
@@ -438,6 +446,16 @@ export function CatalogDetail({ subject, lang }: Props) {
   }
 
   // ==========================================
+  // VIDEO HANDLER
+  // ==========================================
+
+  const handleManageVideos = (lesson: Lesson) => {
+    setVideoLessonId(lesson.id)
+    setVideoLessonName(lesson.name)
+    setIsVideoDialogOpen(true)
+  }
+
+  // ==========================================
   // Computed
   // ==========================================
 
@@ -561,6 +579,7 @@ export function CatalogDetail({ subject, lang }: Props) {
                 onCreateLesson={handleCreateLesson}
                 onEditLesson={handleEditLesson}
                 onDeleteLesson={handleDeleteLesson}
+                onManageVideos={handleManageVideos}
               />
             ))}
             {chapters.length === 0 && (
@@ -781,6 +800,25 @@ export function CatalogDetail({ subject, lang }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Video Dialog */}
+      <Dialog open={isVideoDialogOpen} onOpenChange={setIsVideoDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Manage Videos</DialogTitle>
+            <DialogDescription>
+              Upload or link videos for this lesson. Platform videos are visible
+              to all schools by default.
+            </DialogDescription>
+          </DialogHeader>
+          {videoLessonId && (
+            <LessonVideoManager
+              lessonId={videoLessonId}
+              lessonName={videoLessonName}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   )
 }
@@ -797,6 +835,7 @@ interface ChapterItemProps {
   onCreateLesson: (chapterId: string) => void
   onEditLesson: (lesson: Lesson, chapterId: string) => void
   onDeleteLesson: (lessonId: string, chapterId: string) => void
+  onManageVideos: (lesson: Lesson) => void
 }
 
 function ChapterItem({
@@ -807,6 +846,7 @@ function ChapterItem({
   onCreateLesson,
   onEditLesson,
   onDeleteLesson,
+  onManageVideos,
 }: ChapterItemProps) {
   const [open, setOpen] = useState(false)
 
@@ -899,6 +939,21 @@ function ChapterItem({
                 {lesson.status}
               </Badge>
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative h-6 w-6"
+                  onClick={() => onManageVideos(lesson)}
+                  disabled={isPending}
+                  title="Manage videos"
+                >
+                  <Video className="size-3" />
+                  {(lesson._count?.videos ?? 0) > 0 && (
+                    <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-bold">
+                      {lesson._count!.videos}
+                    </span>
+                  )}
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"

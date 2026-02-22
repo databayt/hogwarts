@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with this repository.
 
 ## Quick Start
 
-**Hogwarts** - Multi-tenant school automation platform (Next.js 15, React 19, Prisma, NextAuth v5)
+**Hogwarts** - Multi-tenant school automation platform (Next.js 16, React 19, Prisma, NextAuth v5)
 
 ```bash
 pnpm install && pnpm prisma generate && pnpm db:seed && pnpm dev
@@ -81,28 +81,49 @@ Development:   subdomain.localhost → /[lang]/s/subdomain/...
 
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import { z } from "zod"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import { itemSchema } from "./validation"
 
-export async function createItem(data: FormData) {
-  // 1. Authenticate and get schoolId
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
-  if (!schoolId) throw new Error("Unauthorized")
+export async function createItem(
+  input: z.infer<typeof itemSchema>
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    // 1. Authenticate
+    const session = await auth()
+    if (!session?.user) {
+      return { success: false, error: "Not authenticated" }
+    }
 
-  // 2. Validate (both client UX and server security)
-  const validated = itemSchema.parse(Object.fromEntries(data))
+    // 2. Get tenant context
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
 
-  // 3. Execute with schoolId scope (CRITICAL)
-  const item = await db.item.create({
-    data: { ...validated, schoolId },
-  })
+    // 3. Check permission (import from ./authorization)
+    // if (!canCreateItem(role)) return { success: false, error: "Unauthorized" }
 
-  // 4. Revalidate or redirect
-  revalidatePath(`/items`)
-  return { success: true, item }
+    // 4. Validate input
+    const parsed = itemSchema.parse(input)
+
+    // 5. Execute + revalidate
+    const item = await db.item.create({
+      data: { ...parsed, schoolId },
+    })
+
+    revalidatePath("/items")
+    return { success: true, data: { id: item.id } }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create item",
+    }
+  }
 }
 ```
 
@@ -222,10 +243,12 @@ src/app/[lang]/s/[subdomain]/(school-dashboard)/<feature>/page.tsx
 src/components/<feature>/
 ├── content.tsx       # Server component (main UI)
 ├── actions.ts        # Server actions ("use server")
+├── queries.ts        # Read-only database queries
+├── authorization.ts  # Permission checks (RBAC)
 ├── validation.ts     # Zod schemas
 ├── form.tsx          # Client component
 ├── table.tsx         # Client component (DataTable)
-└── column.tsx        # Client component (column definitions)
+└── columns.tsx       # Client component (column definitions)
 ```
 
 ### Column Definition Gotcha (SSE Prevention)

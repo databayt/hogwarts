@@ -6,6 +6,7 @@ model Classroom {
   typeId   String
   roomName String
   capacity Int
+  lang     String @default("ar")
 
   school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classroomType ClassroomType @relation(fields: [typeId], references: [id])
@@ -26,6 +27,7 @@ model ClassroomType {
   id       String @id @default(cuid())
   schoolId String
   name     String // e.g., "Lecture Hall", "Lab", "Computer Room", "Library"
+  lang     String @default("ar")
 
   school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classrooms Classroom[]

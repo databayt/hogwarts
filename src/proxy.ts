@@ -358,7 +358,14 @@ export async function proxy(req: NextRequest) {
     // User sees: school.databayt.org/dashboard
     // Server sees: school.databayt.org/en/s/school/dashboard
     // File lives at: src/app/[lang]/s/[subdomain]/(school-dashboard)/dashboard/page.tsx
-    url.pathname = `/${locale}/s/${subdomain}${pathWithoutLocale}`
+    if (
+      pathWithoutLocale.startsWith(`/s/${subdomain}/`) ||
+      pathWithoutLocale === `/s/${subdomain}`
+    ) {
+      url.pathname = `/${locale}${pathWithoutLocale}`
+    } else {
+      url.pathname = `/${locale}/s/${subdomain}${pathWithoutLocale}`
+    }
 
     const response = NextResponse.rewrite(url)
     // Pass subdomain to downstream components via header

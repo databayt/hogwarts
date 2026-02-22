@@ -8,9 +8,9 @@ public/site/
 # Anthropic assets (not needed in production)
 public/anthropic/
 
-# Screenshots and temp images at root
-*.png
-*.mp4
+# Screenshots and temp images at root (root-only, not public/)
+/*.png
+/*.mp4
 
 # Playwright artifacts
 .playwright-mcp/

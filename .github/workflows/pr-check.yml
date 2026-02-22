@@ -89,8 +89,8 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm prisma generate
 
-      - name: Run Tests
-        run: pnpm test --run
+      - name: Run Tests with Coverage
+        run: pnpm test --run --coverage
 
   build:
     name: Build Verification
@@ -127,6 +127,36 @@ jobs:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'placeholder-secret-for-build' }}
           AUTH_URL: ${{ secrets.AUTH_URL || 'http://localhost:3000' }}
           SKIP_ENV_VALIDATION: true
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'needs-integration-tests')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: Run Integration Tests
+        run: pnpm vitest --config vitest.config.integration.mts --run
+        env:
+          DATABASE_URL: ${{ secrets.NEON_INTEGRATION_DATABASE_URL }}
 
   pr-summary:
     name: PR Summary

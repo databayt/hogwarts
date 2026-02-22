@@ -111,6 +111,15 @@ export default defineConfig({
   /* Configure projects for different test suites */
   projects: [
     // ============================================
+    // Auth Setup (runs once, saves storage state)
+    // ============================================
+    {
+      name: "setup",
+      testMatch: /.*\.setup\.ts/,
+      testDir: "./tests",
+    },
+
+    // ============================================
     // Smoke Tests (run first, fast critical path)
     // ============================================
     {
@@ -124,15 +133,17 @@ export default defineConfig({
     },
 
     // ============================================
-    // E2E Tests - Chromium (default)
+    // E2E Tests - Chromium (default, depends on auth setup)
     // ============================================
     {
       name: "chromium",
       testDir: "./tests/e2e",
+      dependencies: ["setup"],
       use: {
         ...devices["Desktop Chrome"],
         channel: "chromium",
         baseURL: "http://localhost:3000",
+        storageState: "playwright/.auth/admin.json",
       },
     },
 

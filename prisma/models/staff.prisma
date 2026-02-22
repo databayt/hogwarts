@@ -6,6 +6,7 @@ model Teacher {
   employeeId   String? // External employee identifier
   givenName    String
   surname      String
+  lang         String  @default("ar")
   gender       String?
   emailAddress String
 

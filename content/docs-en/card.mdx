@@ -5,7 +5,7 @@ description: "Canonical patterns for writing card.tsx display components in feat
 
 ## Current Progress (Audit)
 
-92 total card files audited across the codebase (27 card.tsx + 65 \*-card.tsx, ~3,755 lines in card.tsx):
+92 total card files audited across the codebase (27 card.tsx + 71 \*-card.tsx, ~3,755 lines in card.tsx):
 
 | Area                                         | Status | Detail                                                                        |
 | -------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
@@ -42,7 +42,7 @@ Reference: `onboarding/branding/card.tsx`, `onboarding/curriculum/card.tsx`
 
 Component showcase cards in `atom/lab/`. Demonstrate card variations for the design system.
 
-Reference: `atom/lab/card/` (30+ variants)
+Reference: `atom/lab/*-card.tsx` (30+ variants in the flat `atom/lab/` directory)
 
 ## The 5 Rules
 
@@ -250,13 +250,13 @@ export function DomainCard({
 
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between">
-          <small className="muted">Requested</small>
+          <small className="text-muted-foreground">Requested</small>
           <div className="font-medium">{formatTimeSince(domain.createdAt)}</div>
         </div>
         {domain.notes && (
           <div>
-            <small className="muted">Notes</small>
-            <p className="muted line-clamp-2">{domain.notes}</p>
+            <small className="text-muted-foreground">Notes</small>
+            <p className="text-muted-foreground line-clamp-2">{domain.notes}</p>
           </div>
         )}
       </CardContent>
@@ -366,13 +366,13 @@ export function InvoiceCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between">
-          <small className="muted">Period</small>
+          <small className="text-muted-foreground">Period</small>
           <div className="font-medium">
             {formatBillingPeriod(invoice.periodStart, invoice.periodEnd)}
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <small className="muted">Amount</small>
+          <small className="text-muted-foreground">Amount</small>
           <div className="font-medium tabular-nums">
             {formatCurrency(invoice.amountDue, invoice.currency)}
           </div>
@@ -411,10 +411,12 @@ export function InvoiceStatsCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        {/* Note: Use semantic HTML (<h2>, <h3>) instead of hardcoded text-* classes */}
         <CardTitle className="text-sm font-medium">{label}</CardTitle>
         {icon}
       </CardHeader>
       <CardContent>
+        {/* Note: Use semantic HTML (<h2>, <h3>) instead of hardcoded text-* classes */}
         <div className="text-2xl font-bold tabular-nums">{value}</div>
         {description && (
           <p className="text-muted-foreground text-xs">{description}</p>
@@ -462,6 +464,8 @@ Key points:
 - Stats card: KPI metric with label and trend
 - Health card: aggregate status overview
 - All formatters from util.ts
+
+> **Semantic HTML:** Per project convention, prefer semantic HTML elements (`<h2>`, `<h3>`, `<p>`) over hardcoded `text-2xl font-bold` classes. Import `typography` from `@/lib/typography` for consistent text styling.
 
 ## Anti-Patterns
 
@@ -521,6 +525,90 @@ Currency, dates, and status labels formatted directly in card components.
 // GOOD: Formatters from util.ts
 <div>{formatCurrency(amount, currency)}</div>
 <div>{formatTimeSince(date)}</div>
+```
+
+## Server-First Architecture
+
+Many cards are pure data display and can be **server components**. Only add `"use client"` when the card has:
+
+- `onClick` handlers or interactive callbacks
+- `showActions` with button event handlers
+- Client state (hover state tracking, animation state)
+
+### Server Component Cards (Preferred)
+
+Cards that only display data don't need `"use client"`:
+
+```typescript
+// GOOD: Server component card (no "use client")
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
+import type { InvoiceWithSchool } from "./types"
+import { formatCurrency, getInvoiceStatusLabel } from "./util"
+
+export function InvoiceCard({ invoice }: { invoice: InvoiceWithSchool }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{invoice.stripeInvoiceId}</CardTitle>
+        <CardDescription>{invoice.school.name}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="font-medium tabular-nums">
+          {formatCurrency(invoice.amountDue, invoice.currency)}
+        </div>
+        <Badge>{getInvoiceStatusLabel(invoice.status)}</Badge>
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+### When Cards Need Client
+
+Add `"use client"` only for interactive cards:
+
+```typescript
+// Client card -- has onClick callbacks
+"use client"
+
+export function DomainCard({
+  domain,
+  showActions,
+  onApprove,
+  onReject,
+}: DomainCardProps) {
+  return (
+    <Card>
+      {/* ... display content ... */}
+      {showActions && (
+        <CardFooter>
+          <Button onClick={() => onApprove?.(domain.id)}>Approve</Button>
+        </CardFooter>
+      )}
+    </Card>
+  )
+}
+```
+
+### Split Pattern for Mixed Cards
+
+When a card file has both display-only and interactive variants, consider splitting:
+
+```
+# Display cards as server components
+card.tsx           # InvoiceCard, InvoiceStatsCard (server, display-only)
+card-actions.tsx   # InvoiceActionCard (client, with onClick handlers)
+
+# Or keep together with "use client" if all variants need interactivity
+card.tsx           # "use client" -- all variants have callbacks
 ```
 
 ## Quick Reference

@@ -53,6 +53,34 @@ const HIGH_SCHOOL_STREAMS = [
   { name: "الأدبي", slug: "arts", streamType: "ARTS" as const },
 ]
 
+/**
+ * Get default weekly periods for a subject based on name and grade.
+ * Core subjects get more periods; electives/specials get fewer.
+ */
+function getDefaultWeeklyPeriods(
+  subjectName: string,
+  gradeNumber: number
+): number {
+  const name = subjectName.toLowerCase()
+  if (name.includes("math") || name.includes("رياضيات"))
+    return gradeNumber <= 6 ? 5 : 4
+  if (name.includes("arabic") || name.includes("عربي")) return 5
+  if (name.includes("english") || name.includes("إنجليزي"))
+    return gradeNumber <= 6 ? 4 : 5
+  if (name.includes("science") || name.includes("علوم"))
+    return gradeNumber <= 6 ? 3 : 4
+  if (
+    name.includes("pe") ||
+    name.includes("بدني") ||
+    name.includes("art") ||
+    name.includes("فن") ||
+    name.includes("music") ||
+    name.includes("موسيقى")
+  )
+    return 2
+  return 3
+}
+
 /** Map School.schoolLevel to catalog level names */
 const SCHOOL_LEVEL_TO_CATALOG: Record<string, string[]> = {
   primary: ["ELEMENTARY"],
@@ -239,6 +267,7 @@ export async function setupCatalogForSchool(
             gradeId: gradeRecord.id,
             isRequired: true,
             isActive: true,
+            weeklyPeriods: getDefaultWeeklyPeriods(subject.name, gradeNumber),
           },
         })
         selectionCount++

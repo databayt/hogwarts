@@ -257,6 +257,9 @@ export function getEstimatedGradingTime(questionType: QuestionType): number {
     FILL_BLANK: 1,
     SHORT_ANSWER: 2,
     ESSAY: 5,
+    MATCHING: 1,
+    ORDERING: 1,
+    MULTI_SELECT: 0.5,
   }
 
   return gradingTimes[questionType] ?? 2

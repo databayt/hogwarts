@@ -107,12 +107,43 @@ export const essaySchema = questionBankBaseSchema.extend({
     .min(20, "Grading rubric must be at least 20 characters"),
 })
 
+export const matchingSchema = questionBankBaseSchema.extend({
+  questionType: z.literal(QuestionType.MATCHING),
+  options: z
+    .array(questionOptionSchema)
+    .min(2, "At least 2 matching pairs required")
+    .max(10, "Maximum 10 matching pairs"),
+})
+
+export const orderingSchema = questionBankBaseSchema.extend({
+  questionType: z.literal(QuestionType.ORDERING),
+  options: z
+    .array(questionOptionSchema)
+    .min(2, "At least 2 items required")
+    .max(10, "Maximum 10 items"),
+})
+
+export const multiSelectSchema = questionBankBaseSchema.extend({
+  questionType: z.literal(QuestionType.MULTI_SELECT),
+  options: z
+    .array(questionOptionSchema)
+    .min(2, "At least 2 options required")
+    .max(8, "Maximum 8 options")
+    .refine(
+      (options) => options.filter((opt) => opt.isCorrect).length >= 2,
+      "At least two correct answers are required"
+    ),
+})
+
 export const questionBankSchema = z.discriminatedUnion("questionType", [
   multipleChoiceSchema,
   trueFalseSchema,
   fillBlankSchema,
   shortAnswerSchema,
   essaySchema,
+  matchingSchema,
+  orderingSchema,
+  multiSelectSchema,
 ])
 
 export type QuestionBankSchema = z.infer<typeof questionBankSchema>
@@ -285,6 +316,12 @@ export function validateQuestionByType(
       return shortAnswerSchema.safeParse(data)
     case QuestionType.ESSAY:
       return essaySchema.safeParse(data)
+    case QuestionType.MATCHING:
+      return matchingSchema.safeParse(data)
+    case QuestionType.ORDERING:
+      return orderingSchema.safeParse(data)
+    case QuestionType.MULTI_SELECT:
+      return multiSelectSchema.safeParse(data)
     default:
       return {
         success: false,

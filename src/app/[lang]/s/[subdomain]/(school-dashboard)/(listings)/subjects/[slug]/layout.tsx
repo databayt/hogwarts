@@ -49,7 +49,7 @@ export default async function CatalogSubjectLayout({
   )
 
   return (
-    <div className="space-y-5">
+    <div className="mt-3 space-y-5">
       <CatalogHero
         subject={{
           name: subject.name,

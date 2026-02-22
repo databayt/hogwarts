@@ -7,6 +7,24 @@ import { getVideoUrl } from "@/lib/cloudfront"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+export interface AvailableVideo {
+  id: string
+  videoUrl: string
+  thumbnailUrl: string | null
+  durationSeconds: number | null
+  isFeatured: boolean
+  source: "own-school" | "featured" | "other-school"
+  instructor: {
+    id: string
+    name: string | null
+    image: string | null
+  }
+  school: {
+    id: string | null
+    name: string | null
+  }
+}
+
 export interface CatalogLessonWithProgress {
   id: string
   title: string
@@ -51,6 +69,7 @@ export interface CatalogLessonWithProgress {
     chapterPosition: number
     watchedMinutes: number | null
   }>
+  availableVideos: AvailableVideo[]
 }
 
 /**
@@ -110,7 +129,7 @@ export async function getCatalogLessonWithProgress(
     isEnrolled = !!enrollment
   }
 
-  // Check if subject is paid — return null for non-enrolled paid content
+  // Block non-enrolled users only for paid content; free content is accessible to all
   if (!isEnrolled && !isAdmin) {
     const subject = await db.catalogSubject.findUnique({
       where: { id: lesson.chapter.subject.id },
@@ -118,8 +137,9 @@ export async function getCatalogLessonWithProgress(
     })
     const isPaid = subject?.price && Number(subject.price) > 0
 
-    // For both free and paid subjects, non-enrolled non-admin users can't access
-    return null
+    if (isPaid) {
+      return null
+    }
   }
 
   // Get lesson progress
@@ -147,8 +167,8 @@ export async function getCatalogLessonWithProgress(
     },
   })
 
-  // Get the featured/approved video for this lesson
-  const video = await db.lessonVideo.findFirst({
+  // Get ALL approved videos for this lesson (multi-instructor support)
+  const videos = await db.lessonVideo.findMany({
     where: {
       catalogLessonId: lessonId,
       approvalStatus: "APPROVED",
@@ -158,11 +178,30 @@ export async function getCatalogLessonWithProgress(
     },
     orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
     select: {
+      id: true,
       videoUrl: true,
       thumbnailUrl: true,
       durationSeconds: true,
+      isFeatured: true,
+      schoolId: true,
+      user: {
+        select: {
+          id: true,
+          username: true,
+          image: true,
+        },
+      },
+      school: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   })
+
+  // Use the first (highest-ranked) video as default
+  const video = videos[0] ?? null
 
   // Get all lessons in the subject for navigation
   const allLessons = await db.catalogLesson.findMany({
@@ -218,6 +257,31 @@ export async function getCatalogLessonWithProgress(
   const transformedVideoUrl = video?.videoUrl
     ? getVideoUrl(video.videoUrl, { isFree: true })
     : null
+
+  // Map available videos with source labels
+  const availableVideos: AvailableVideo[] = videos.map((v) => {
+    let source: AvailableVideo["source"] = "other-school"
+    if (v.isFeatured) source = "featured"
+    else if (schoolId && v.schoolId === schoolId) source = "own-school"
+
+    return {
+      id: v.id,
+      videoUrl: getVideoUrl(v.videoUrl, { isFree: true }),
+      thumbnailUrl: v.thumbnailUrl,
+      durationSeconds: v.durationSeconds,
+      isFeatured: v.isFeatured,
+      source,
+      instructor: {
+        id: v.user.id,
+        name: v.user.username,
+        image: v.user.image,
+      },
+      school: {
+        id: v.school?.id ?? null,
+        name: v.school?.name ?? null,
+      },
+    }
+  })
 
   return {
     id: lesson.id,
@@ -276,5 +340,6 @@ export async function getCatalogLessonWithProgress(
           ? Math.floor(progressMap.get(l.id)! / 60)
           : null,
       })),
+    availableVideos,
   }
 }

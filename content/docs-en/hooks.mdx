@@ -14,7 +14,7 @@ description: "Canonical patterns for writing use-*.ts custom hooks in feature di
 | Return objects (not tuples)                 | PASS   | 90%+ return `{ value, setter, handler }` objects               |
 | Feature-scoped hooks co-located             | PASS   | Hooks live alongside their feature's components                |
 | Naming convention `use-{feature}.ts`        | PASS   | Consistent kebab-case file naming                              |
-| `use-media-query` duplicated 4 times        | FAIL   | Same hook in 4 different directories                           |
+| `use-media-query` duplicated 5 times        | FAIL   | Same hook in 5 different directories                           |
 | `use-debounced-callback` duplicated 2 times | FAIL   | Identical logic in table/ and saas-dashboard/hooks/            |
 | `use-callback-ref` duplicated 3 times       | FAIL   | Same hook in 3 locations                                       |
 | `use-lock-body` duplicated 2 times          | FAIL   | Identical scroll lock hook in 2 directories                    |
@@ -63,25 +63,25 @@ Reference: `use-media-query.ts`, `use-mobile.ts`
 
 Video player state, playback controls, progress tracking.
 
-Reference: `stream/hooks/use-video-player.ts`
+Reference: `stream/shared/video-player/hooks/use-video-player.ts`
 
 ### Category 8: Exam/Assessment (~3 files)
 
 Timer, answer tracking, exam submission state.
 
-Reference: `exams/hooks/use-exam-timer.ts`
+Reference: `exams/take/hooks/use-exam-session.ts`, `use-proctor.ts`, `use-auto-save.ts`
 
 ### Category 9: Onboarding Steps (~8 files)
 
 Per-step state management for onboarding wizard.
 
-Reference: `onboarding/hooks/use-step-state.ts`
+Reference: `onboarding/use-onboarding.ts`, `onboarding/use-listing.tsx`, `onboarding/title/use-title.tsx`, `onboarding/price/use-price.tsx`
 
 ### Category 10: Communication (~2 files)
 
 Messaging, notification subscriptions.
 
-Reference: `messaging/use-messages.ts`
+Reference: `messaging/hooks/use-realtime-messages.ts`
 
 ### Category 11: Utilities (~8 files)
 
@@ -93,7 +93,7 @@ Reference: `table/use-debounced-callback.ts`, `use-callback-ref.ts`
 
 Feature-specific hooks that don't fit other categories (attendance, timetable, grades).
 
-Reference: `attendance/use-attendance.ts`
+Reference: `attendance/shared/hooks.ts` (planned: `attendance/use-attendance.ts`)
 
 ## The 5 Rules
 
@@ -162,7 +162,15 @@ export function useDataTable<TData>(
 ) { ... }
 ```
 
-### 4. Naming convention: `use-{feature}.ts` for logic, `.tsx` for JSX types
+### 4. Naming convention: `use-{feature}.ts` matches the directory name
+
+Hook files follow the `use-<feature>.ts` convention where `<feature>` matches the parent directory name:
+
+- `attendance/use-attendance.ts` (not `attendance/hooks/use-attendance.ts`)
+- `onboarding/use-onboarding.ts` (not `onboarding/use-step-state.ts`)
+- `exams/use-exams.ts` (not `exams/hooks/use-exam-timer.ts`)
+
+No `hooks/` subdirectories -- hooks live directly in the feature directory. The filename matches the directory name: `use-<dirname>.ts`.
 
 Use `.ts` for hooks that return data/state. Use `.tsx` only when the hook returns JSX elements or uses JSX types.
 
@@ -174,16 +182,17 @@ use-file-upload.tsx    # Returns component with JSX -- .tsx
 
 ### 5. Co-locate hooks with their feature
 
-Hooks live in the same directory as the components that use them. Shared hooks live in `src/components/atom/` or `src/hooks/`.
+- **Feature-specific hooks**: `src/components/<feature>/use-<feature>.ts`
+- **Shared/reusable hooks**: `src/hooks/use-<name>.ts`
 
 ```
-# GOOD: Feature-scoped
+# GOOD: Feature-scoped (hook name matches directory)
 src/components/saas-dashboard/domains/
   use-domains.ts     # Domain-specific hook
 
 # GOOD: Shared utility hook
-src/components/table/
-  use-data-table.ts  # Used by all tables
+src/hooks/
+  use-media-query.ts # One copy, imported everywhere
 
 # GOOD: Auth hooks
 src/components/auth/
@@ -198,6 +207,8 @@ src/components/auth/
 Thin wrapper around NextAuth session. Reference: `auth/use-current-user.ts` (6 lines).
 
 ```typescript
+"use client"
+
 import { useSession } from "next-auth/react"
 
 export const useCurrentUser = () => {
@@ -210,6 +221,8 @@ export const useCurrentUser = () => {
 And `auth/use-current-role.ts`:
 
 ```typescript
+"use client"
+
 import { useSession } from "next-auth/react"
 
 export const useCurrentRole = () => {
@@ -223,7 +236,7 @@ Key points:
 
 - Minimal -- 6 lines each
 - Single responsibility: extract one value from session
-- No `"use client"` needed when the consumer is already a client component (but preferred for clarity)
+- Always include `"use client"` directive -- all hooks are client-side by definition
 
 ### Template B: URL-Synced Table Hook
 
@@ -445,6 +458,19 @@ Key points:
 - Single responsibility
 - No external dependencies
 
+## React 19 Hooks
+
+React 19 introduces new hooks that should be preferred over custom alternatives:
+
+| Hook             | Purpose                           | Replaces                                                 |
+| ---------------- | --------------------------------- | -------------------------------------------------------- |
+| `useActionState` | Form state from server actions    | Custom `useFormState` patterns, `useState` + `try/catch` |
+| `useOptimistic`  | Optimistic UI updates             | Manual `setState` before server response                 |
+| `useFormStatus`  | Submit button pending state       | Custom `isPending` prop threading                        |
+| `use()`          | Unwrap promises/context in render | `useEffect` + `useState` for async data                  |
+
+These are built into React 19 and should be used instead of building custom hooks for the same purpose.
+
 ## Anti-Patterns
 
 ### 1. Duplicate hooks across directories (5 hooks, 15 copies)
@@ -452,10 +478,11 @@ Key points:
 The same utility hooks are copied into multiple directories instead of being shared.
 
 ```
-# BAD: use-media-query duplicated 4 times
-src/components/atom/sidebar/use-media-query.ts
-src/components/atom/modal/use-media-query.ts
-src/components/school-dashboard/use-media-query.ts
+# BAD: use-media-query duplicated 5 times
+src/components/school-dashboard/timetable/use-media-query.ts
+src/components/table/use-media-query.ts
+src/components/saas-marketing/pricing/hooks/use-media-query.ts
+src/components/saas-dashboard/hooks/use-media-query.ts
 src/hooks/use-media-query.ts
 
 # GOOD: Single shared location
@@ -501,16 +528,68 @@ export function formatDate(date: Date): string {
 }
 ```
 
+## Server-First Architecture
+
+Hooks are inherently client-side -- they use React state, effects, and refs. Before creating a hook, ask whether a server pattern would be better.
+
+### When NOT to Use a Hook
+
+| Need             | Don't use hook      | Use instead                              |
+| ---------------- | ------------------- | ---------------------------------------- |
+| Fetch data       | `useFetchItems()`   | Server component + `queries.ts`          |
+| Format display   | `useFormatDate()`   | Pure function in `util.ts`               |
+| URL state        | `usePageParam()`    | `searchParams` in server component       |
+| Auth check       | `useIsAdmin()`      | `auth()` in server component             |
+| Constants/config | `useAppConfig()`    | Import from `config.ts`                  |
+| Derived data     | `useFilteredList()` | Compute in server component or `util.ts` |
+
+### Minimize Hook Usage
+
+The goal is to push logic to the server wherever possible:
+
+```typescript
+// BAD: Hook for something the server can do
+"use client"
+export function useTeacherCount(schoolId: string) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    getTeacherCount(schoolId).then(setCount)
+  }, [schoolId])
+  return count
+}
+
+// GOOD: Server component
+export default async function TeacherStats() {
+  const { schoolId } = await getTenantContext()
+  const count = await db.teacher.count({ where: { schoolId } })
+  return <StatsCard label="Teachers" value={count} />
+}
+```
+
+### Boundary Placement
+
+Hooks live in client components. client.tsx is the primary consumer of feature hooks:
+
+```
+client.tsx ("use client")
+    → use-feature.ts (feature hook)
+    → use-data-table.ts (table hook)
+```
+
+content.tsx (server) should never import hooks.
+
 ## Quick Reference
 
 ### Naming Conventions
 
-| Pattern                    | Purpose                  | Example                     |
-| -------------------------- | ------------------------ | --------------------------- |
-| `use-{feature}.ts`         | Feature-specific hook    | `use-domains.ts`            |
-| `use-{behavior}.ts`        | Utility/shared hook      | `use-debounced-callback.ts` |
-| `use-current-{value}.ts`   | Session/context accessor | `use-current-user.ts`       |
-| `use-{entity}-{action}.ts` | Entity action hook       | `use-file-upload.ts`        |
+Hook files use `use-<feature>.ts` where `<feature>` matches the parent directory name:
+
+| Pattern                    | Location                       | Example                               |
+| -------------------------- | ------------------------------ | ------------------------------------- |
+| `use-{dirname}.ts`         | Feature directory (co-located) | `domains/use-domains.ts`              |
+| `use-{behavior}.ts`        | `src/hooks/` (shared/reusable) | `src/hooks/use-debounced-callback.ts` |
+| `use-current-{value}.ts`   | `auth/` (session accessors)    | `auth/use-current-user.ts`            |
+| `use-{entity}-{action}.ts` | Feature directory              | `use-file-upload.ts`                  |
 
 ### Import Direction
 
@@ -529,16 +608,18 @@ form  table
 ### Co-located File Structure
 
 ```
+# Feature-specific hooks: live in the feature directory, name matches dirname
 src/components/<feature>/
-  actions.ts        # Server actions (hooks call these)
-  types.ts          # Entity types
-  use-feature.ts    # Feature hook (this file)
-  form.tsx           # Consumes hook
-  table.tsx          # Consumes hook
-  content.tsx        # Server component
+  actions.ts              # Server actions (hooks call these)
+  types.ts                # Entity types
+  use-<feature>.ts        # Feature hook (name matches directory)
+  form.tsx                # Consumes hook
+  table.tsx               # Consumes hook
+  content.tsx             # Server component
 
-src/hooks/           # Shared utility hooks
-  use-media-query.ts
+# Shared/reusable hooks: live in src/hooks/
+src/hooks/
+  use-media-query.ts      # One copy, imported everywhere
   use-debounced-callback.ts
   use-mobile.ts
 ```

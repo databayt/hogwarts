@@ -9,6 +9,9 @@
 
 import { cleanup } from "@testing-library/react"
 import { afterEach, beforeAll, expect, vi } from "vitest"
+import * as matchers from "vitest-axe/matchers"
+
+expect.extend(matchers)
 
 /**
  * Mock environment variables for tests
