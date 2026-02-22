@@ -208,10 +208,13 @@
       "home": "Home",
       "courses": "Courses",
       "favorite": "Favorite",
+      "myLearning": "My Learning",
       "dashboard": "Dashboard",
+      "manage": "Manage",
       "signIn": "Sign In",
       "profile": "Profile"
     },
+    "teach": "Teach",
     "studentDashboard": {
       "myCourses": "My Courses",
       "continueFromWhereYouLeftOff": "Continue learning where you left off",

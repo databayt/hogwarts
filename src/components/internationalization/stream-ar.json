@@ -208,10 +208,13 @@
       "home": "الرئيسية",
       "courses": "الدورات",
       "favorite": "المفضلة",
+      "myLearning": "تعلمي",
       "dashboard": "لوحة التحكم",
+      "manage": "إدارة",
       "signIn": "تسجيل الدخول",
       "profile": "الملف الشخصي"
     },
+    "teach": "تدريس",
     "studentDashboard": {
       "myCourses": "دوراتي",
       "continueFromWhereYouLeftOff": "تابع التعلم من حيث توقفت",

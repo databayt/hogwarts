@@ -163,17 +163,21 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   console.log(`   Found ${subjects.length} subjects`)
 
   // 3. Build all records in memory
-  const videos: Parameters<typeof prisma.lessonVideo.createMany>[0]["data"] = []
-  const materials: Parameters<
-    typeof prisma.catalogMaterial.createMany
-  >[0]["data"] = []
-  const exams: Parameters<typeof prisma.catalogExam.createMany>[0]["data"] = []
-  const questions: Parameters<
-    typeof prisma.catalogQuestion.createMany
-  >[0]["data"] = []
-  const assignments: Parameters<
-    typeof prisma.catalogAssignment.createMany
-  >[0]["data"] = []
+  const videos: NonNullable<
+    Parameters<typeof prisma.lessonVideo.createMany>[0]
+  >["data"] = []
+  const materials: NonNullable<
+    Parameters<typeof prisma.catalogMaterial.createMany>[0]
+  >["data"] = []
+  const exams: NonNullable<
+    Parameters<typeof prisma.catalogExam.createMany>[0]
+  >["data"] = []
+  const questions: NonNullable<
+    Parameters<typeof prisma.catalogQuestion.createMany>[0]
+  >["data"] = []
+  const assignments: NonNullable<
+    Parameters<typeof prisma.catalogAssignment.createMany>[0]
+  >["data"] = []
 
   let globalIdx = 0
 
@@ -242,7 +246,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
           bloomLevel: bloom,
           points: diff === "EASY" ? 1 : diff === "MEDIUM" ? 2 : 3,
           options:
-            qType === "MULTIPLE_CHOICE" ? mcqOptions(subject.name) : null,
+            qType === "MULTIPLE_CHOICE" ? mcqOptions(subject.name) : undefined,
           sampleAnswer: `Sample answer for ${subject.name} question`,
           explanation: `This tests understanding of ${subject.name} at ${diff.toLowerCase()} level.`,
           approvalStatus: "APPROVED",
@@ -304,7 +308,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
           bloomLevel: bloom,
           points: diff === "EASY" ? 1 : diff === "MEDIUM" ? 2 : 3,
           options:
-            qType === "MULTIPLE_CHOICE" ? mcqOptions(chapter.name) : null,
+            qType === "MULTIPLE_CHOICE" ? mcqOptions(chapter.name) : undefined,
           sampleAnswer: `Sample answer for ${chapter.name}`,
           explanation: `This tests ${chapter.name} knowledge at ${diff.toLowerCase()} level.`,
           approvalStatus: "APPROVED",
@@ -375,7 +379,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
             bloomLevel: bloom,
             points: diff === "EASY" ? 1 : diff === "MEDIUM" ? 2 : 3,
             options:
-              qType === "MULTIPLE_CHOICE" ? mcqOptions(lesson.name) : null,
+              qType === "MULTIPLE_CHOICE" ? mcqOptions(lesson.name) : undefined,
             sampleAnswer: `Sample answer for ${lesson.name}`,
             explanation: `This covers ${lesson.name} at ${diff.toLowerCase()} difficulty.`,
             approvalStatus: "APPROVED",
