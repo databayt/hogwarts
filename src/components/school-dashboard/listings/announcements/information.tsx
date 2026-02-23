@@ -50,7 +50,7 @@ export function InformationStep({
   useEffect(() => {
     const loadSuggestions = async () => {
       try {
-        const result = await getPreviousAnnouncements()
+        const result = await getPreviousAnnouncements({ displayLang: lang })
         if (result.success && result.data) {
           setSuggestions(
             result.data.map((a) => ({

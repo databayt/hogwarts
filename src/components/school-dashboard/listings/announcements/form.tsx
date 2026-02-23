@@ -67,7 +67,7 @@ export function AnnouncementCreateForm({
   useEffect(() => {
     const load = async () => {
       if (!currentId) return
-      const res = await getAnnouncement({ id: currentId })
+      const res = await getAnnouncement({ id: currentId, displayLang: lang })
       if (!res.success || !res.data) return
       const a = res.data
       form.reset({
@@ -87,8 +87,10 @@ export function AnnouncementCreateForm({
   }, [currentId])
 
   async function onSubmit(values: AnnouncementFormValues) {
-    // Set language from app locale
-    values.lang = lang === "ar" ? "ar" : "en"
+    // For new announcements, use app locale. For edits, preserve original lang.
+    if (!currentId) {
+      values.lang = lang === "ar" ? "ar" : "en"
+    }
 
     const res = currentId
       ? await updateAnnouncement({ id: currentId, ...values })

@@ -2,8 +2,8 @@
 public/clickview/
 scripts/clickview-data/
 
-# Scraped HTML files
-public/site/
+# Scraped HTML files (keep images, exclude only HTML)
+public/site/*.html
 
 # Anthropic assets (not needed in production)
 public/anthropic/

@@ -909,7 +909,9 @@ export async function getAnnouncements(
  * Get previous announcements for autocomplete suggestions
  * Returns recent announcements with titles and bodies
  */
-export async function getPreviousAnnouncements(): Promise<
+export async function getPreviousAnnouncements(options?: {
+  displayLang?: "ar" | "en"
+}): Promise<
   ActionResponse<
     Array<{
       id: string
@@ -945,6 +947,30 @@ export async function getPreviousAnnouncements(): Promise<
         lang: true,
       },
     })
+
+    // Translate suggestions if displayLang differs from stored lang
+    const displayLang = options?.displayLang
+    if (displayLang) {
+      const translated = await Promise.all(
+        announcements.map(async (a) => {
+          const storedLang = (a.lang as "ar" | "en") || "ar"
+          if (storedLang === displayLang) return a
+          const fields = await getDisplayFields(
+            a,
+            ["title", "body"],
+            storedLang,
+            displayLang,
+            schoolId
+          )
+          return {
+            ...a,
+            title: fields.title || a.title,
+            body: fields.body || a.body,
+          }
+        })
+      )
+      return { success: true, data: translated }
+    }
 
     return { success: true, data: announcements }
   } catch (error) {
