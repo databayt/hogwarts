@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Unified File Block - File Browser Component
  * Grid/List view file browser with selection and actions
@@ -167,7 +170,7 @@ export function FileBrowser({
           {breadcrumbs.map((crumb, idx) => (
             <React.Fragment key={crumb.path}>
               {idx > 0 && (
-                <ChevronRight className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+                <ChevronRight className="text-muted-foreground h-4 w-4 flex-shrink-0 rtl:rotate-180" />
               )}
               <button
                 onClick={() => actions.navigateTo(crumb.path)}
@@ -188,7 +191,7 @@ export function FileBrowser({
         <div className="flex items-center gap-2">
           {/* Search */}
           <div className="relative">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+            <Search className="text-muted-foreground absolute start-2.5 top-2.5 h-4 w-4" />
             <Input
               placeholder={dictionary?.search || "Search..."}
               value={state.searchQuery}
@@ -455,7 +458,7 @@ function GridView({
           onDoubleClick={() => onFileOpen(file)}
         >
           {/* Selection Checkbox */}
-          <div className="absolute top-2 left-2 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="absolute start-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
             <Checkbox checked={selectedIds.has(file.id)} />
           </div>
 

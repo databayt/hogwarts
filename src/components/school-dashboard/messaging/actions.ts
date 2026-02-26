@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Messaging (Direct Messages & Group Chats) Server Actions Module
  *
@@ -76,6 +79,7 @@ import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import {
   checkMessageSendRateLimit,
@@ -152,12 +156,12 @@ export async function createConversation(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = createConversationSchema.parse(input)
@@ -262,12 +266,12 @@ export async function updateConversation(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = updateConversationSchema.parse(input)
@@ -352,12 +356,12 @@ export async function archiveConversation(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = archiveConversationSchema.parse(input)
@@ -424,12 +428,12 @@ export async function sendMessage(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = createMessageSchema.parse(input)
@@ -653,12 +657,12 @@ export async function editMessage(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = updateMessageSchema.parse(input)
@@ -730,12 +734,12 @@ export async function deleteMessage(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = deleteMessageSchema.parse(input)
@@ -806,12 +810,12 @@ export async function markMessageAsRead(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = markMessageAsReadSchema.parse(input)
@@ -865,7 +869,7 @@ export async function markConversationAsRead(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const parsed = markConversationAsReadSchema.parse(input)
@@ -906,12 +910,12 @@ export async function addParticipant(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = addParticipantSchema.parse(input)
@@ -997,7 +1001,7 @@ export async function removeParticipant(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const parsed = removeParticipantSchema.parse(input)
@@ -1065,12 +1069,12 @@ export async function addReaction(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = addReactionSchema.parse(input)
@@ -1129,7 +1133,7 @@ export async function removeReaction(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const parsed = removeReactionSchema.parse(input)
@@ -1183,7 +1187,7 @@ export async function loadMoreMessages(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Check if user is participant in this conversation
@@ -1231,7 +1235,7 @@ export async function pinConversation(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Update user's participant record
@@ -1269,7 +1273,7 @@ export async function muteConversation(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Update user's participant record
@@ -1307,7 +1311,7 @@ export async function unmuteConversation(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Update user's participant record
@@ -1349,12 +1353,12 @@ export async function leaveConversation(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Get conversation to check type
@@ -1439,12 +1443,12 @@ export async function searchMessaging(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate query
@@ -1521,12 +1525,12 @@ export async function searchConversationMessages(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate query
@@ -1594,12 +1598,12 @@ export async function fetchSearchSuggestions(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Import function with alias to avoid collision

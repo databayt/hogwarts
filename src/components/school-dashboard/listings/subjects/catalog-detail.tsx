@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -7,6 +9,7 @@ import { BookOpen, ChevronRight } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 // ---------------------------------------------------------------------------
 // Types (exported for catalog-hero.tsx and catalog-chapters.tsx)
@@ -61,23 +64,20 @@ interface Props {
 // ---------------------------------------------------------------------------
 
 export function CatalogDetailContent({ subject, chapters, lang }: Props) {
-  const isRTL = lang === "ar"
+  const { dictionary } = useDictionary()
+  const cat = dictionary?.school?.subjects?.catalog as
+    | Record<string, string>
+    | undefined
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const t = useMemo(
     () => ({
-      topics: isRTL
-        ? "\u0627\u0644\u0645\u0648\u0627\u0636\u064a\u0639"
-        : "Topics",
-      seeAll: isRTL ? "\u0639\u0631\u0636 \u0627\u0644\u0643\u0644" : "See all",
-      exploreAll: isRTL
-        ? "\u0627\u0633\u062a\u0643\u0634\u0641 \u0643\u0644 \u0627\u0644\u0645\u0648\u0627\u0636\u064a\u0639"
-        : "Explore all topics",
-      noTopics: isRTL
-        ? "\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0648\u0627\u0636\u064a\u0639 \u0645\u062a\u0627\u062d\u0629"
-        : "No topics available",
+      chapters: cat?.chapters || "Chapters",
+      seeAll: cat?.seeAll || "See all",
+      exploreAll: cat?.exploreAll || "Explore all chapters",
+      noChapters: cat?.noChapters || "No chapters available",
     }),
-    [isRTL]
+    [cat]
   )
 
   const scroll = useCallback((direction: "left" | "right") => {
@@ -91,9 +91,9 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
 
   return chapters.length > 0 ? (
     <>
-      {/* Topics heading + See all */}
+      {/* Chapters heading + See all */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{t.topics}</h2>
+        <h2 className="text-lg font-semibold">{t.chapters}</h2>
         <Link
           href={`${subject.slug}/chapters`}
           className="text-muted-foreground hover:text-foreground text-xs transition-colors hover:underline"
@@ -102,7 +102,7 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
         </Link>
       </div>
 
-      {/* Horizontal scrollable topic cards */}
+      {/* Horizontal scrollable chapter cards */}
       <div className="relative">
         <div
           ref={scrollRef}
@@ -134,7 +134,7 @@ export function CatalogDetailContent({ subject, chapters, lang }: Props) {
     <Card>
       <CardContent className="py-8 text-center">
         <BookOpen className="text-muted-foreground mx-auto h-12 w-12" />
-        <p className="text-muted-foreground mt-4">{t.noTopics}</p>
+        <p className="text-muted-foreground mt-4">{t.noChapters}</p>
       </CardContent>
     </Card>
   )
@@ -188,7 +188,7 @@ function ExploreAllCard({
 }
 
 // ---------------------------------------------------------------------------
-// TopicCard — horizontal pill card (chapter thumbnail in scroll row)
+// ChapterCard — horizontal pill card (chapter thumbnail in scroll row)
 // ---------------------------------------------------------------------------
 
 function TopicCard({

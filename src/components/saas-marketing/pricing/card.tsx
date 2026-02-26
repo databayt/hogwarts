@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { Check } from "lucide-react"
 
@@ -14,6 +16,7 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { BillingFormButton } from "@/components/saas-marketing/pricing/forms/billing-form-button"
 import {
   SubscriptionPlan,
@@ -36,6 +39,7 @@ interface PricingCardProps {
   subscriptionPlan?: UserSubscriptionPlan
   userRole?: string
   lang?: Locale
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
 }
 
 export function PricingCard({
@@ -45,10 +49,12 @@ export function PricingCard({
   subscriptionPlan,
   userRole,
   lang,
+  dictionary,
 }: PricingCardProps) {
+  const pricing = dictionary?.marketing?.pricing
   const isPro = isProTitle(offer.title)
   const isStarter = isStarterTitle(offer.title)
-  const priceDisplay = getPriceDisplay(offer, isYearly)
+  const priceDisplay = getPriceDisplay(offer, isYearly, pricing)
 
   const ctaArea = (
     <>
@@ -58,7 +64,7 @@ export function PricingCard({
             href={`/${lang}/dashboard`}
             className={cn(buttonVariants({ variant: "default" }))}
           >
-            Start trial
+            {pricing?.constants?.startTrial || "Start trial"}
           </Link>
         ) : (
           <BillingFormButton
@@ -66,6 +72,7 @@ export function PricingCard({
             offer={offer}
             subscriptionPlan={subscriptionPlan}
             userRole={userRole as any}
+            dictionary={dictionary}
           />
         )
       ) : (
@@ -86,18 +93,20 @@ export function PricingCard({
             "transition-transform hover:scale-[1.01]"
           )}
         >
-          {getCtaLabel(offer.title)}
+          {getCtaLabel(offer.title, pricing)}
         </Link>
       )}
       {(!userId || !subscriptionPlan) && isPro && (
         <a href="#more-info" className="ms-3">
-          <small className="muted">More info ↗</small>
+          <small className="muted">
+            {pricing?.constants?.moreInfo || "More info"} ↗
+          </small>
         </a>
       )}
     </>
   )
 
-  const includesHeading = getIncludesHeading(offer.title)
+  const includesHeading = getIncludesHeading(offer.title, pricing)
 
   return (
     <Card
@@ -111,7 +120,9 @@ export function PricingCard({
         <CardTitle className="tracking-tight">
           {priceDisplay}
           <span className="muted ms-1">
-            {offer.prices.monthly > 0 ? "/mo" : ""}
+            {offer.prices.monthly > 0
+              ? pricing?.constants?.perMonth || "/mo"
+              : ""}
           </span>
         </CardTitle>
       </CardHeader>

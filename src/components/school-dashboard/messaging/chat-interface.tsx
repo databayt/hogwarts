@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useOptimistic, useState } from "react"
 import {
   EllipsisVertical,
@@ -23,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "@/components/ui/use-toast"
 import type { UploadedFileResult } from "@/components/file"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { MessageInput } from "./message-input"
@@ -65,6 +68,8 @@ export function ChatInterface({
   hasMoreMessages = false,
   className,
 }: ChatInterfaceProps) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const [messages, setMessages] = useState<MessageDTO[]>(initialMessages)
   const [replyTo, setReplyTo] = useState<MessageDTO | null>(null)
   const [editingMessage, setEditingMessage] = useState<MessageDTO | null>(null)
@@ -128,9 +133,7 @@ export function ChatInterface({
 
   const displayName =
     conversation.type === "direct" && otherUser
-      ? otherUser.username ||
-        otherUser.email ||
-        (locale === "ar" ? "مستخدم" : "User")
+      ? otherUser.username || otherUser.email || m?.ui?.user_fallback || "User"
       : conversation.title || config.label
 
   const avatarUrl =
@@ -341,9 +344,8 @@ export function ChatInterface({
       setEditingMessage(null)
     } catch (error) {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
-        description:
-          locale === "ar" ? "فشل إرسال الرسالة" : "Failed to send message",
+        title: m?.notifications?.error || "Error",
+        description: m?.errors?.send_failed || "Failed to send message",
       })
     }
   }
@@ -358,9 +360,8 @@ export function ChatInterface({
       await onDeleteMessage(messageId)
     } catch (error) {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
-        description:
-          locale === "ar" ? "فشل حذف الرسالة" : "Failed to delete message",
+        title: m?.notifications?.error || "Error",
+        description: m?.errors?.delete_failed || "Failed to delete message",
       })
     }
   }
@@ -370,9 +371,8 @@ export function ChatInterface({
       await onReactToMessage(messageId, emoji)
     } catch (error) {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
-        description:
-          locale === "ar" ? "فشل إضافة التفاعل" : "Failed to add reaction",
+        title: m?.notifications?.error || "Error",
+        description: m?.errors?.react_failed || "Failed to add reaction",
       })
     }
   }
@@ -421,14 +421,14 @@ export function ChatInterface({
             {conversation.type !== "direct" && (
               <p className="text-muted-foreground text-sm">
                 {conversation.participantCount}{" "}
-                {locale === "ar" ? "عضو" : "members"}
+                {m?.ui?.members_label || "members"}
               </p>
             )}
             {typingUsers.length > 0 && (
               <p className="text-muted-foreground text-sm italic">
                 {typingUsers.length === 1
-                  ? `${typingUsers[0].user.username} ${locale === "ar" ? "يكتب..." : "is typing..."}`
-                  : `${typingUsers.length} ${locale === "ar" ? "يكتبون..." : "are typing..."}`}
+                  ? `${typingUsers[0].user.username} ${m?.ui?.is_typing || "is typing..."}`
+                  : `${typingUsers.length} ${m?.ui?.are_typing || "are typing..."}`}
               </p>
             )}
           </div>
@@ -454,16 +454,16 @@ export function ChatInterface({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onViewDetails}>
                 <Info className="me-2 h-4 w-4" />
-                {locale === "ar" ? "التفاصيل" : "Details"}
+                {m?.ui?.details || "Details"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled>
                 <Phone className="me-2 h-4 w-4" />
-                {locale === "ar" ? "مكالمة صوتية" : "Voice call"}
+                {m?.ui?.voice_call || "Voice call"}
               </DropdownMenuItem>
               <DropdownMenuItem disabled>
                 <Video className="me-2 h-4 w-4" />
-                {locale === "ar" ? "مكالمة فيديو" : "Video call"}
+                {m?.ui?.video_call || "Video call"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -500,9 +500,8 @@ export function ChatInterface({
         />
       ) : (
         <div className="text-muted-foreground bg-muted/50 p-4 text-center text-sm">
-          {locale === "ar"
-            ? "ليس لديك صلاحية لإرسال رسائل في هذه المحادثة"
-            : "You don't have permission to send messages in this conversation"}
+          {m?.ui?.no_permission_send ||
+            "You don't have permission to send messages in this conversation"}
         </div>
       )}
     </div>

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Loader2, MapPin, Navigation, Search, X } from "lucide-react"
 import mapboxgl from "mapbox-gl"
@@ -207,7 +209,7 @@ export function MapboxLocationPicker({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-10 w-10 shrink-0 rounded-none rounded-l-md"
+            className="h-10 w-10 shrink-0 rounded-none rounded-s-md"
             onClick={handleGps}
             disabled={gpsLoading}
           >
@@ -233,32 +235,32 @@ export function MapboxLocationPicker({
 
           {/* Right icons */}
           {searchLoading && (
-            <Loader2 className="text-muted-foreground mr-3 h-4 w-4 animate-spin" />
+            <Loader2 className="text-muted-foreground me-3 h-4 w-4 animate-spin" />
           )}
           {query.length > 0 && !searchLoading && (
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="mr-1 h-8 w-8"
+              className="me-1 h-8 w-8"
               onClick={handleClear}
             >
               <X className="h-4 w-4" />
             </Button>
           )}
           {query.length === 0 && !searchLoading && (
-            <Search className="text-muted-foreground mr-3 h-4 w-4" />
+            <Search className="text-muted-foreground me-3 h-4 w-4" />
           )}
         </div>
 
         {/* Results Dropdown */}
         {displayResults && (
-          <div className="bg-popover border-border absolute top-full right-0 left-0 z-20 mt-1 max-h-48 overflow-auto rounded-md border shadow-md">
+          <div className="bg-popover border-border absolute start-0 end-0 top-full z-20 mt-1 max-h-48 overflow-auto rounded-md border shadow-md">
             {results.map((feature) => (
               <button
                 key={feature.id}
                 type="button"
-                className="hover:bg-accent flex w-full items-start gap-2 px-3 py-2 text-left"
+                className="hover:bg-accent flex w-full items-start gap-2 px-3 py-2 text-start"
                 onClick={() => handleSelectResult(feature)}
               >
                 <MapPin className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
@@ -278,7 +280,7 @@ export function MapboxLocationPicker({
 
         {/* Tap hint when no pin */}
         {!value?.latitude && !value?.longitude && mapReady && (
-          <div className="bg-background/90 pointer-events-none absolute top-3 right-3 left-3 rounded-lg px-3 py-2 text-center">
+          <div className="bg-background/90 pointer-events-none absolute start-3 end-3 top-3 rounded-lg px-3 py-2 text-center">
             <p className="text-muted-foreground text-xs">
               Tap on the map to place a pin
             </p>

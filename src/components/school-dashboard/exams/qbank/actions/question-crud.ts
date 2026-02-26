@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
@@ -58,21 +60,57 @@ export async function createQuestion(
       delete data.standardIds
     }
 
+    // Parse optional visibility for catalog
+    const visibility = (data.visibility as string) || "PRIVATE"
+    delete data.visibility
+
     const validated = questionBankSchema.parse(data)
 
-    // Create question with transaction to ensure analytics record is created
+    // Resolve catalog subject from school subject
+    const subject = await db.subject.findFirst({
+      where: { id: validated.subjectId, schoolId },
+      select: { catalogSubjectId: true },
+    })
+
+    // Extract optional fields from the discriminated union safely
+    const v = validated as Record<string, unknown>
+
+    // Create question with transaction: catalog first, then school mirror
     const question = await db.$transaction(async (tx) => {
-      // Create question
+      // 1. Create in catalog first (single source of truth)
+      const catalogQuestion = await tx.catalogQuestion.create({
+        data: {
+          catalogSubjectId: subject?.catalogSubjectId ?? null,
+          questionText: validated.questionText,
+          questionType: validated.questionType,
+          difficulty: validated.difficulty,
+          bloomLevel: validated.bloomLevel,
+          points: validated.points,
+          options: (v.options as any) ?? undefined,
+          sampleAnswer: (v.sampleAnswer as string) ?? null,
+          explanation: validated.explanation ?? null,
+          tags: validated.tags ?? [],
+          contributedBy: userId,
+          contributedSchoolId: schoolId,
+          approvalStatus: "APPROVED",
+          visibility: visibility as any,
+          status: "PUBLISHED",
+        },
+      })
+
+      // 2. Create school mirror with catalog link
       const newQuestion = await tx.questionBank.create({
         data: {
           ...validated,
           schoolId,
           createdBy: userId,
           source: "MANUAL",
+          catalogQuestionId: catalogQuestion.id,
+          catalogSubjectId: subject?.catalogSubjectId ?? null,
         },
       })
 
-      // Create analytics record
+      // 3. Create analytics record
       await tx.questionAnalytics.create({
         data: {
           questionId: newQuestion.id,
@@ -80,7 +118,7 @@ export async function createQuestion(
         },
       })
 
-      // Link to standards if provided
+      // 4. Link to standards if provided
       if (standardIds.length > 0) {
         await tx.questionStandard.createMany({
           data: standardIds.map((standardId) => ({
@@ -176,6 +214,7 @@ export async function updateQuestion(
     delete data.id
 
     const validated = questionBankSchema.parse(data)
+    const uv = validated as Record<string, unknown>
 
     // Update with schoolId scope and handle standards in transaction
     const question = await db.$transaction(async (tx) => {
@@ -190,6 +229,32 @@ export async function updateQuestion(
           updatedAt: new Date(),
         },
       })
+
+      // Sync changes back to CatalogQuestion if this school is the contributor
+      if (updated.catalogQuestionId) {
+        const catalogQ = await tx.catalogQuestion.findFirst({
+          where: {
+            id: updated.catalogQuestionId,
+            contributedSchoolId: schoolId,
+          },
+        })
+        if (catalogQ) {
+          await tx.catalogQuestion.update({
+            where: { id: catalogQ.id },
+            data: {
+              questionText: validated.questionText,
+              questionType: validated.questionType,
+              difficulty: validated.difficulty,
+              bloomLevel: validated.bloomLevel,
+              points: validated.points,
+              options: (uv.options as any) ?? undefined,
+              sampleAnswer: (uv.sampleAnswer as string) ?? null,
+              explanation: validated.explanation ?? null,
+              tags: validated.tags ?? [],
+            },
+          })
+        }
+      }
 
       // Update standards if provided
       if (standardIds !== undefined) {
@@ -297,6 +362,12 @@ export async function deleteQuestion(
 
     // Delete with transaction to ensure cascade
     await db.$transaction(async (tx) => {
+      // Get the question to check for catalog link
+      const question = await tx.questionBank.findFirst({
+        where: { id: questionId, schoolId },
+        select: { catalogQuestionId: true },
+      })
+
       // Delete analytics first
       await tx.questionAnalytics.deleteMany({
         where: {
@@ -305,13 +376,33 @@ export async function deleteQuestion(
         },
       })
 
-      // Delete question
+      // Delete school mirror
       await tx.questionBank.delete({
         where: {
           id: questionId,
           schoolId, // CRITICAL: Multi-tenant scope
         },
       })
+
+      // Clean up CatalogQuestion if this school is the contributor and no other schools use it
+      if (question?.catalogQuestionId) {
+        const otherMirrors = await tx.questionBank.count({
+          where: { catalogQuestionId: question.catalogQuestionId },
+        })
+        if (otherMirrors === 0) {
+          const catalogQ = await tx.catalogQuestion.findFirst({
+            where: {
+              id: question.catalogQuestionId,
+              contributedSchoolId: schoolId,
+            },
+          })
+          if (catalogQ) {
+            await tx.catalogQuestion.delete({
+              where: { id: catalogQ.id },
+            })
+          }
+        }
+      }
     })
 
     revalidatePath("/exams/qbank")
@@ -481,26 +572,63 @@ export async function duplicateQuestion(
       }
     }
 
-    // Create duplicate with transaction
+    // Create duplicate with transaction: new CatalogQuestion + new QuestionBank mirror
     const duplicate = await db.$transaction(async (tx) => {
-      // Destructure to exclude id and relation fields
-      const { id, generationJob, analytics, examQuestions, ...questionData } =
-        original as any
+      // Resolve catalog subject from school subject
+      const subject = await tx.subject.findFirst({
+        where: { id: original.subjectId, schoolId },
+        select: { catalogSubjectId: true },
+      })
 
-      // Create duplicate question
-      const newQuestion = await tx.questionBank.create({
+      // 1. Create new CatalogQuestion for the duplicate
+      const catalogQuestion = await tx.catalogQuestion.create({
         data: {
-          ...questionData,
+          catalogSubjectId:
+            subject?.catalogSubjectId ?? original.catalogSubjectId,
           questionText: `${original.questionText} (Copy)`,
-          createdBy: userId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          // Keep same school context
-          schoolId,
+          questionType: original.questionType,
+          difficulty: original.difficulty,
+          bloomLevel: original.bloomLevel,
+          points: original.points,
+          options: original.options ?? undefined,
+          sampleAnswer: original.sampleAnswer ?? null,
+          explanation: original.explanation ?? null,
+          tags: original.tags ?? [],
+          contributedBy: userId,
+          contributedSchoolId: schoolId,
+          approvalStatus: "APPROVED",
+          visibility: "PRIVATE",
+          status: "PUBLISHED",
         },
       })
 
-      // Create analytics for duplicate
+      // 2. Create school mirror
+      const newQuestion = await tx.questionBank.create({
+        data: {
+          schoolId,
+          subjectId: original.subjectId,
+          questionText: `${original.questionText} (Copy)`,
+          questionType: original.questionType,
+          difficulty: original.difficulty,
+          bloomLevel: original.bloomLevel,
+          points: original.points,
+          options: original.options ?? undefined,
+          sampleAnswer: original.sampleAnswer ?? null,
+          gradingRubric: original.gradingRubric ?? null,
+          tags: original.tags ?? [],
+          explanation: original.explanation ?? null,
+          source: original.source,
+          imageUrl: original.imageUrl ?? null,
+          createdBy: userId,
+          catalogQuestionId: catalogQuestion.id,
+          catalogSubjectId:
+            subject?.catalogSubjectId ?? original.catalogSubjectId,
+          catalogChapterId: original.catalogChapterId ?? null,
+          catalogLessonId: original.catalogLessonId ?? null,
+        },
+      })
+
+      // 3. Create analytics for duplicate
       await tx.questionAnalytics.create({
         data: {
           questionId: newQuestion.id,

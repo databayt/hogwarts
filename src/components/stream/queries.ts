@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Shared query builders and utilities for Stream LMS courses
  * Consolidates query logic to eliminate duplication and improve maintainability

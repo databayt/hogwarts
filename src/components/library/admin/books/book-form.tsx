@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -64,6 +66,11 @@ export default function BookForm({
       totalCopies: bookData?.totalCopies || 1,
       videoUrl: bookData?.videoUrl || "",
       summary: bookData?.summary || "",
+      isbn: bookData?.isbn || "",
+      publisher: bookData?.publisher || "",
+      publicationYear: bookData?.publicationYear || undefined,
+      language: bookData?.language || "",
+      pageCount: bookData?.pageCount || undefined,
     },
   })
 
@@ -239,6 +246,107 @@ export default function BookForm({
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="isbn"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>ISBN</FormLabel>
+              <FormControl>
+                <Input placeholder="978-..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="publisher"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t.library.admin?.publisher || "Publisher"}</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={t.library.admin?.publisher || "Publisher"}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="publicationYear"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t.library.admin?.publicationYear || "Year"}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1000}
+                    max={2100}
+                    placeholder="2024"
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      field.onChange(val ? parseInt(val) : undefined)
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="language"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t.library.admin?.language || "Language"}</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={t.library.admin?.language || "Language"}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="pageCount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t.library.admin?.pageCount || "Pages"}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1}
+                    placeholder="300"
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      field.onChange(val ? parseInt(val) : undefined)
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

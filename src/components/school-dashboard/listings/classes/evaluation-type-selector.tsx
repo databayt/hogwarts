@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { type UseFormReturn } from "react-hook-form"
 
 import { EVALUATION_TYPES } from "@/lib/evaluation-types"

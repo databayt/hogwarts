@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { Database } from "lucide-react"
 import { useSession } from "next-auth/react"
@@ -134,7 +136,7 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
                   >
                     {tab.label}
                     {activeTab === tab.value && (
-                      <span className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
+                      <span className="bg-primary absolute start-0 end-0 bottom-0 h-0.5" />
                     )}
                   </button>
                 )

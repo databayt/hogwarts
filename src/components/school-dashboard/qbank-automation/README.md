@@ -549,7 +549,7 @@ const aiModel = "gpt-4-turbo-preview" // or custom model
 
 ## License
 
-MIT License - Part of Hogwarts School Automation Platform
+SSPL-1.0 - Part of Hogwarts School Automation Platform
 
 ---
 

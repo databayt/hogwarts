@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -355,10 +357,13 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
   }
 }
 
-function formatDate(date: string | Date | undefined): string {
+function formatDate(
+  date: string | Date | undefined,
+  locale: string = "ar"
+): string {
   if (!date) return "N/A"
   const d = new Date(date)
-  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" })
+  return d.toLocaleDateString(locale, { month: "short", year: "numeric" })
 }
 
 export default function ProfileSidebar({

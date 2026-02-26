@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -196,7 +198,7 @@ export function TimetableHeader({
         >
           <ChevronLeft
             className={cn(
-              "h-4 w-4",
+              "h-4 w-4 rtl:rotate-180",
               "text-neutral-700 dark:text-neutral-300",
               (isWeekChangeLoading || !isNextWeek) &&
                 "text-neutral-400 dark:text-neutral-600"
@@ -215,7 +217,7 @@ export function TimetableHeader({
         >
           <ChevronRight
             className={cn(
-              "h-4 w-4",
+              "h-4 w-4 rtl:rotate-180",
               "text-neutral-700 dark:text-neutral-300",
               (isWeekChangeLoading || isNextWeek) &&
                 "text-neutral-400 dark:text-neutral-600"

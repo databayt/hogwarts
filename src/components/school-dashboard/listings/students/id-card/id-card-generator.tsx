@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useRef, useState } from "react"
 import { addYears, format } from "date-fns"
 import html2canvas from "html2canvas"
@@ -42,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { Student } from "../registration/types"
 import { IDCardPreview } from "./id-card-preview"
@@ -68,6 +71,8 @@ export function IDCardGenerator({
   students,
   schoolInfo,
 }: IDCardGeneratorProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
     new Set()
   )
@@ -249,10 +254,13 @@ export function IDCardGenerator({
 
       // Download PDF
       pdf.save(`student-id-cards-${format(new Date(), "yyyy-MM-dd")}.pdf`)
-      toast.success(`Generated ID cards for ${selectedStudents.size} students`)
+      toast.success(
+        t?.success?.saved ||
+          `Generated ID cards for ${selectedStudents.size} students`
+      )
     } catch (error) {
       console.error("Error generating PDF:", error)
-      toast.error("Failed to generate ID cards")
+      toast.error(t?.error?.generic || "Failed to generate ID cards")
     } finally {
       setIsGenerating(false)
     }
@@ -261,7 +269,7 @@ export function IDCardGenerator({
   // Print cards
   const handlePrint = () => {
     window.print()
-    toast.success("Print dialog opened")
+    toast.success(t?.success?.saved || "Print dialog opened")
   }
 
   const previewData = getPreviewData()
@@ -345,7 +353,7 @@ export function IDCardGenerator({
               {/* Search and Filters */}
               <div className="flex gap-4">
                 <div className="relative flex-1">
-                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
+                  <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
                   <Input
                     placeholder="Search by name or GR number..."
                     value={searchQuery}

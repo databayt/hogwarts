@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Check } from "lucide-react"
@@ -78,7 +80,7 @@ export default function PaidInvoiceContent({
           href={`/${lang}/invoice`}
           className={buttonVariants({ size: "icon" })}
         >
-          <ArrowLeft />
+          <ArrowLeft className="rtl:rotate-180" />
         </Link>
         <h1 className="font-semibold"> Invoice Status</h1>
       </div>

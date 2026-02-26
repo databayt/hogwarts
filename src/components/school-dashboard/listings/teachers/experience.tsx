@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { format } from "date-fns"
 import { Briefcase, Building, Calendar, Plus, Trash } from "lucide-react"
 import { useFieldArray, type UseFormReturn } from "react-hook-form"
@@ -172,7 +174,7 @@ export function ExperienceStep({ form, isView }: TeacherFormStepProps) {
             <Card key={field.id} className="relative">
               {/* Timeline connector */}
               {index < fields.length - 1 && (
-                <div className="bg-border absolute top-full left-8 h-4 w-0.5" />
+                <div className="bg-border absolute start-8 top-full h-4 w-0.5" />
               )}
 
               <CardHeader className="pb-3">

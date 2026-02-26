@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useFormContext } from "react-hook-form"
 
 import {
@@ -43,6 +45,13 @@ export default function StepContact({ dictionary, lang }: Props) {
   const { control } = useFormContext<ApplicationFormData>()
   const isRTL = lang === "ar"
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { formSteps?: Record<string, string> } }
+      }
+    )?.school?.admission?.formSteps ?? {}
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -53,16 +62,14 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "البريد الإلكتروني" : "Email"}{" "}
+                {dict.emailAddress || "Email"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   type="email"
-                  placeholder={
-                    isRTL ? "example@email.com" : "example@email.com"
-                  }
+                  placeholder="example@email.com"
                 />
               </FormControl>
               <FormMessage />
@@ -77,15 +84,11 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "رقم الهاتف" : "Phone Number"}{" "}
+                {dict.phoneNumber || "Phone Number"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  type="tel"
-                  placeholder={isRTL ? "+249 123 456 789" : "+249 123 456 789"}
-                />
+                <Input {...field} type="tel" placeholder="+249 123 456 789" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,13 +102,9 @@ export default function StepContact({ dictionary, lang }: Props) {
         name="alternatePhone"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{isRTL ? "رقم هاتف بديل" : "Alternate Phone"}</FormLabel>
+            <FormLabel>{dict.alternatePhone || "Alternate Phone"}</FormLabel>
             <FormControl>
-              <Input
-                {...field}
-                type="tel"
-                placeholder={isRTL ? "+249 987 654 321" : "+249 987 654 321"}
-              />
+              <Input {...field} type="tel" placeholder="+249 987 654 321" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -119,15 +118,13 @@ export default function StepContact({ dictionary, lang }: Props) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>
-              {isRTL ? "العنوان" : "Address"}{" "}
+              {dict.address || "Address"}{" "}
               <span className="text-destructive">*</span>
             </FormLabel>
             <FormControl>
               <Textarea
                 {...field}
-                placeholder={
-                  isRTL ? "أدخل العنوان الكامل" : "Enter full address"
-                }
+                placeholder={dict.enterFullAddress || "Enter full address"}
                 rows={2}
               />
             </FormControl>
@@ -144,13 +141,13 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "المدينة" : "City"}{" "}
+                {dict.city || "City"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder={isRTL ? "أدخل المدينة" : "Enter city"}
+                  placeholder={dict.enterCity || "Enter city"}
                 />
               </FormControl>
               <FormMessage />
@@ -165,13 +162,13 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "الولاية" : "State/Province"}{" "}
+                {dict.stateProvince || "State/Province"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder={isRTL ? "أدخل الولاية" : "Enter state"}
+                  placeholder={dict.enterState || "Enter state"}
                 />
               </FormControl>
               <FormMessage />
@@ -188,11 +185,11 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "الرمز البريدي" : "Postal Code"}{" "}
+                {dict.postalCode || "Postal Code"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
-                <Input {...field} placeholder={isRTL ? "12345" : "12345"} />
+                <Input {...field} placeholder="12345" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -206,7 +203,7 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "الدولة" : "Country"}{" "}
+                {dict.country || "Country"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <Select
@@ -216,7 +213,7 @@ export default function StepContact({ dictionary, lang }: Props) {
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue
-                      placeholder={isRTL ? "اختر الدولة" : "Select country"}
+                      placeholder={dict.selectCountry || "Select country"}
                     />
                   </SelectTrigger>
                 </FormControl>

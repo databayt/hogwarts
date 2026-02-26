@@ -814,4 +814,4 @@ When adding new features:
 
 **Platform Status:** Production-ready MVP with ongoing enhancements
 
-**License:** MIT
+**License:** SSPL-1.0

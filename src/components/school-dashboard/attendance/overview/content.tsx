@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useTransition } from "react"
 import Link from "next/link"
 import {
@@ -102,6 +104,7 @@ export function AttendanceOverviewContent({
   const [classes, setClasses] = useState<ClassData | null>(null)
   const [followUp, setFollowUp] = useState<FollowUpData | null>(null)
   const [markingClass, setMarkingClass] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const basePath = `/${locale}/s/${subdomain}/attendance`
   const d = dictionary?.school?.attendance
@@ -111,11 +114,21 @@ export function AttendanceOverviewContent({
   }, [])
 
   async function loadData() {
+    setLoadError(null)
     startTransition(async () => {
       const [dashResult, classResult, followResult] = await Promise.all([
-        getTodaysDashboard(),
-        getTeacherClassesToday(),
-        getFollowUpStudents({ limit: 5 }),
+        getTodaysDashboard().catch(() => ({
+          success: false as const,
+          error: "Failed",
+        })),
+        getTeacherClassesToday().catch(() => ({
+          success: false as const,
+          error: "Failed",
+        })),
+        getFollowUpStudents({ limit: 5 }).catch(() => ({
+          success: false as const,
+          error: "Failed",
+        })),
       ])
 
       if (dashResult.success && dashResult.data)
@@ -124,6 +137,23 @@ export function AttendanceOverviewContent({
         setClasses(classResult.data as ClassData)
       if (followResult.success && followResult.data)
         setFollowUp(followResult.data as FollowUpData)
+
+      // Show error if all fetches failed
+      if (
+        !dashResult.success &&
+        !classResult.success &&
+        !followResult.success
+      ) {
+        const errorMsg =
+          ("error" in dashResult && dashResult.error) ||
+          ("error" in classResult && classResult.error) ||
+          ("error" in followResult && followResult.error)
+        setLoadError(
+          errorMsg
+            ? String(errorMsg)
+            : "Unable to load attendance data. Please try again."
+        )
+      }
     })
   }
 
@@ -136,13 +166,34 @@ export function AttendanceOverviewContent({
     setMarkingClass(null)
   }
 
-  const currentTime = new Date().toLocaleTimeString("en-US", {
+  const currentTime = new Date().toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   })
 
   return (
     <div className="flex flex-col gap-6 pb-14">
+      {/* Error State */}
+      {loadError && !dashboard && (
+        <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/20">
+          <CardContent className="flex items-center gap-3 p-4">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
+            <div className="flex-1">
+              <p className="font-medium text-red-800 dark:text-red-200">
+                {loadError}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Check that students are enrolled in classes and the school has
+                an active term configured.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => loadData()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Today's Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -339,7 +390,7 @@ export function AttendanceOverviewContent({
                     )}
                     <Button variant="ghost" size="sm" asChild>
                       <Link href={`${basePath}/manual?classId=${cls.id}`}>
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                       </Link>
                     </Button>
                   </div>
@@ -430,11 +481,9 @@ export function AttendanceOverviewContent({
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link
-                      href={student.actionUrl || `${basePath}/early-warning`}
-                    >
+                    <Link href={student.actionUrl || `${basePath}/analysis`}>
                       View
-                      <ChevronRight className="ms-1 h-4 w-4" />
+                      <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
                     </Link>
                   </Button>
                 </div>
@@ -589,7 +638,7 @@ export function AttendanceOverviewContent({
           className="h-auto flex-col gap-1 py-3"
           asChild
         >
-          <Link href={`${basePath}/config`}>
+          <Link href={`${basePath}/settings`}>
             <span className="text-lg">⚙️</span>
             <span className="text-xs">{d?.settings || "Settings"}</span>
           </Link>

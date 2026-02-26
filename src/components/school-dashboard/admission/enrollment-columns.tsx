@@ -1,8 +1,12 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Check, Clock, Ellipsis, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,6 +21,8 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+
+import { confirmEnrollment, recordPayment } from "./actions"
 
 export type EnrollmentRow = {
   id: string
@@ -225,15 +231,64 @@ export const getEnrollmentColumns = (
       cell: ({ row }) => {
         const enrollment = row.original
         const router = useRouter()
+        const [isPending, startTransition] = useTransition()
 
         const onView = () => {
           router.push(`/admission/applications/${enrollment.id}`)
         }
 
+        const onRecordPayment = () => {
+          startTransition(async () => {
+            const result = await recordPayment({
+              id: enrollment.id,
+              paymentId: `CASH-${Date.now()}`,
+            })
+            if (result.success) {
+              toast.success(
+                t?.enrollment?.paymentRecorded || "Payment recorded"
+              )
+            } else {
+              toast.error(result.error || "Failed to record payment")
+            }
+          })
+        }
+
+        const onConfirmEnrollment = () => {
+          startTransition(async () => {
+            const result = await confirmEnrollment({ id: enrollment.id })
+            if (result.success) {
+              toast.success(
+                t?.enrollment?.enrollmentConfirmed || "Enrollment confirmed"
+              )
+            } else {
+              toast.error(result.error || "Failed to confirm enrollment")
+            }
+          })
+        }
+
+        const onVerifyDocuments = () => {
+          router.push(`/admission/applications/${enrollment.id}`)
+        }
+
+        const onSendReminder = () => {
+          const name = enrollment.applicantName || enrollment.firstName
+          const subject = encodeURIComponent(
+            `Enrollment Reminder - ${enrollment.applicationNumber}`
+          )
+          const body = encodeURIComponent(
+            `Dear ${name},\n\nThis is a reminder regarding your enrollment application (${enrollment.applicationNumber}).\n\nPlease complete any outstanding steps at your earliest convenience.\n\nThank you.`
+          )
+          window.open(`mailto:?subject=${subject}&body=${body}`, "_blank")
+        }
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0"
+                disabled={isPending}
+              >
                 <Ellipsis className="h-4 w-4" />
                 <span className="sr-only">Open menu</span>
               </Button>
@@ -247,22 +302,28 @@ export const getEnrollmentColumns = (
                 {t?.applications?.viewDetails || "View Details"}
               </DropdownMenuItem>
               {!enrollment.applicationFeePaid && (
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={onRecordPayment}
+                  disabled={isPending}
+                >
                   {t?.enrollment?.recordPayment || "Record Payment"}
                 </DropdownMenuItem>
               )}
               {!enrollment.hasDocuments && (
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={onVerifyDocuments}>
                   {t?.enrollment?.verifyDocuments || "Verify Documents"}
                 </DropdownMenuItem>
               )}
               {enrollment.admissionOffered &&
                 !enrollment.admissionConfirmed && (
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={onConfirmEnrollment}
+                    disabled={isPending}
+                  >
                     {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
                   </DropdownMenuItem>
                 )}
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={onSendReminder}>
                 {t?.enrollment?.sendReminder || "Send Reminder"}
               </DropdownMenuItem>
             </DropdownMenuContent>

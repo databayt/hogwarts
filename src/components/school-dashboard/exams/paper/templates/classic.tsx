@@ -1,20 +1,23 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Classic Exam Paper Template
  * Traditional academic style with school header and structured layout
+ * Production-quality: proper page breaks, binding margins, section dividers
  */
 
 import React from "react"
 import {
   Document,
   Font,
-  Image,
   Page,
   StyleSheet,
   Text,
   View,
 } from "@react-pdf/renderer"
 
-import { PAGE_DIMENSIONS, PAGE_MARGINS } from "../config"
+import { PAGE_MARGINS } from "../config"
 import type { ExamPaperData, QuestionForPaper } from "../types"
 import { AnswerSheet } from "./components/answer-sheet"
 import { EssayQuestion } from "./components/essay-question"
@@ -22,10 +25,14 @@ import { FillBlankQuestion } from "./components/fill-blank"
 import { Footer } from "./components/footer"
 import { Header } from "./components/header"
 import { Instructions } from "./components/instructions"
+import { MatchingQuestion } from "./components/matching-question"
 import { MCQQuestion } from "./components/mcq-question"
+import { OrderingQuestion } from "./components/ordering-question"
 import { ShortAnswerQuestion } from "./components/short-answer"
 import { StudentInfo } from "./components/student-info"
 import { TrueFalseQuestion } from "./components/tf-question"
+import { BookletCoverPage, BookletTOC } from "./layouts/booklet"
+import { TwoColumnLayout } from "./layouts/two-column"
 
 // ============================================================================
 // Font Registration
@@ -74,15 +81,29 @@ Font.registerHyphenationCallback((word) => [word])
 // Styles
 // ============================================================================
 
-const createStyles = (locale: "en" | "ar" = "en") => {
+const createStyles = (
+  locale: "en" | "ar" = "en",
+  orientation: "portrait" | "landscape" = "portrait"
+) => {
   const isRTL = locale === "ar"
   const fontFamily = isRTL ? "Rubik" : "Inter"
 
+  // Binding margin: extra space on the left (portrait) or top (landscape) for stapling
+  const bindingMargin = 15
+  const leftMargin =
+    orientation === "portrait"
+      ? PAGE_MARGINS.left + bindingMargin
+      : PAGE_MARGINS.left
+  const topMargin =
+    orientation === "landscape"
+      ? PAGE_MARGINS.top + bindingMargin
+      : PAGE_MARGINS.top
+
   return StyleSheet.create({
     page: {
-      paddingTop: PAGE_MARGINS.top,
+      paddingTop: topMargin,
       paddingBottom: PAGE_MARGINS.bottom + 20, // Extra for footer
-      paddingLeft: PAGE_MARGINS.left,
+      paddingLeft: leftMargin,
       paddingRight: PAGE_MARGINS.right,
       fontFamily,
       fontSize: 11,
@@ -95,9 +116,9 @@ const createStyles = (locale: "en" | "ar" = "en") => {
     questionsContainer: {
       marginTop: 15,
     },
+    // wrap={false} prevents splitting a question across pages
     questionWrapper: {
       marginBottom: 20,
-      breakInside: "avoid",
     },
     sectionTitle: {
       fontSize: 12,
@@ -106,12 +127,18 @@ const createStyles = (locale: "en" | "ar" = "en") => {
       marginTop: 20,
       marginBottom: 10,
       paddingBottom: 5,
-      borderBottomWidth: 1,
-      borderBottomColor: "#E5E7EB",
       textTransform: "uppercase",
     },
-    pageBreak: {
-      breakBefore: "page",
+    // Section divider line between question type groups
+    sectionDivider: {
+      borderBottomWidth: 1.5,
+      borderBottomColor: "#9CA3AF",
+      marginBottom: 5,
+    },
+    sectionDividerThin: {
+      borderBottomWidth: 0.5,
+      borderBottomColor: "#D1D5DB",
+      marginBottom: 10,
     },
   })
 }
@@ -168,13 +195,19 @@ function QuestionRenderer({
     case "ESSAY":
       return <EssayQuestion {...commonProps} answerLines={answerLinesEssay} />
 
+    case "MATCHING":
+      return <MatchingQuestion {...commonProps} />
+
+    case "ORDERING":
+      return <OrderingQuestion {...commonProps} />
+
     default:
       return null
   }
 }
 
 // ============================================================================
-// Group Questions by Type (Optional)
+// Group Questions by Type
 // ============================================================================
 
 function groupQuestionsByType(questions: QuestionForPaper[]) {
@@ -205,7 +238,9 @@ export function ClassicTemplate({
 }: ClassicTemplateProps) {
   const { exam, school, questions, config, metadata } = data
   const locale = metadata.locale
-  const styles = createStyles(locale)
+  const orientation =
+    (config.orientation as "portrait" | "landscape") || "portrait"
+  const styles = createStyles(locale, orientation)
   const isRTL = locale === "ar"
   const fontFamily = isRTL ? "Rubik" : "Inter"
 
@@ -225,12 +260,36 @@ export function ClassicTemplate({
       ar: "القسم د: أسئلة الإجابة القصيرة",
     },
     ESSAY: { en: "Section E: Essay Questions", ar: "القسم هـ: أسئلة المقال" },
+    MATCHING: {
+      en: "Section F: Matching Questions",
+      ar: "القسم و: أسئلة المطابقة",
+    },
+    ORDERING: {
+      en: "Section G: Ordering Questions",
+      ar: "القسم ز: أسئلة الترتيب",
+    },
   }
 
-  // Calculate total pages (rough estimate)
-  const estimatedPages = Math.ceil(questions.length / 10) + 1
+  const isTwoColumn = config.layout === "TWO_COLUMN"
+  const isBooklet = config.layout === "BOOKLET"
 
-  // Render questions
+  // Render a single question element
+  const renderQuestion = (q: QuestionForPaper) => (
+    <View key={q.id} style={styles.questionWrapper} wrap={false}>
+      <QuestionRenderer
+        question={q}
+        showNumber={config.showQuestionNumbers}
+        showPoints={config.showPointsPerQuestion}
+        showType={config.showQuestionType ?? false}
+        answerLinesShort={config.answerLinesShort}
+        answerLinesEssay={config.answerLinesEssay}
+        locale={locale}
+        fontFamily={fontFamily}
+      />
+    </View>
+  )
+
+  // Render questions with layout awareness
   const renderQuestions = () => {
     if (groupByType) {
       const grouped = groupQuestionsByType(questions)
@@ -240,70 +299,106 @@ export function ClassicTemplate({
         "FILL_BLANK",
         "SHORT_ANSWER",
         "ESSAY",
+        "MATCHING",
+        "ORDERING",
       ]
       let globalOrder = 1
 
       return typeOrder
         .filter((type) => grouped[type]?.length > 0)
-        .map((type, sectionIndex) => (
-          <View key={type}>
-            <Text style={styles.sectionTitle}>
-              {sectionLabels[type]?.[locale] || type}
-            </Text>
-            {grouped[type].map((q) => {
-              const orderToShow = globalOrder++
-              return (
-                <View key={q.id} style={styles.questionWrapper}>
-                  <QuestionRenderer
-                    question={{ ...q, order: orderToShow }}
-                    showNumber={config.showQuestionNumbers}
-                    showPoints={config.showPointsPerQuestion}
-                    showType={config.showQuestionType ?? false}
-                    answerLinesShort={config.answerLinesShort}
-                    answerLinesEssay={config.answerLinesEssay}
-                    locale={locale}
-                    fontFamily={fontFamily}
-                  />
-                </View>
-              )
-            })}
-          </View>
-        ))
+        .map((type) => {
+          const sectionQuestions = grouped[type].map((q) => ({
+            ...q,
+            order: globalOrder++,
+          }))
+          const questionElements = sectionQuestions.map(renderQuestion)
+
+          return (
+            <View key={type}>
+              <View style={styles.sectionDivider} />
+              <View style={styles.sectionDividerThin} />
+              <Text style={styles.sectionTitle}>
+                {sectionLabels[type]?.[locale] || type}
+              </Text>
+              {isTwoColumn ? (
+                <TwoColumnLayout questions={sectionQuestions} locale={locale}>
+                  {questionElements}
+                </TwoColumnLayout>
+              ) : (
+                questionElements
+              )}
+            </View>
+          )
+        })
     }
 
     // Sequential order
-    return questions.map((q) => (
-      <View key={q.id} style={styles.questionWrapper}>
-        <QuestionRenderer
-          question={q}
-          showNumber={config.showQuestionNumbers}
-          showPoints={config.showPointsPerQuestion}
-          showType={config.showQuestionType ?? false}
-          answerLinesShort={config.answerLinesShort}
-          answerLinesEssay={config.answerLinesEssay}
-          locale={locale}
-          fontFamily={fontFamily}
-        />
-      </View>
-    ))
+    const questionElements = questions.map(renderQuestion)
+
+    if (isTwoColumn) {
+      return (
+        <TwoColumnLayout questions={questions} locale={locale}>
+          {questionElements}
+        </TwoColumnLayout>
+      )
+    }
+
+    return questionElements
   }
 
   // Determine if we need a separate answer sheet
   const needsAnswerSheet = config.answerSheetType !== "NONE"
   const isBubbleSheet = config.answerSheetType === "BUBBLE"
 
+  const pageProps = {
+    size: config.pageSize as "A4" | "LETTER",
+    orientation: (config.orientation === "landscape"
+      ? "landscape"
+      : "portrait") as "portrait" | "landscape",
+  }
+
+  const footerElement = config.showPageNumbers && (
+    <Footer
+      showTotal={config.showTotalPages}
+      customText={config.customFooter ?? undefined}
+      versionCode={metadata.versionCode}
+      locale={locale}
+      fontFamily={fontFamily}
+    />
+  )
+
   return (
     <Document>
+      {/* Booklet: Cover Page */}
+      {isBooklet && (
+        <Page {...pageProps} style={styles.page}>
+          <BookletCoverPage
+            exam={exam}
+            school={school}
+            metadata={metadata}
+            locale={locale}
+            fontFamily={fontFamily}
+          />
+          {footerElement}
+        </Page>
+      )}
+
+      {/* Booklet: Table of Contents */}
+      {isBooklet && (
+        <Page {...pageProps} style={styles.page}>
+          <BookletTOC
+            questions={questions}
+            locale={locale}
+            fontFamily={fontFamily}
+          />
+          {footerElement}
+        </Page>
+      )}
+
       {/* Main Exam Paper */}
-      <Page
-        size={config.pageSize as "A4" | "LETTER"}
-        orientation={
-          config.orientation === "landscape" ? "landscape" : "portrait"
-        }
-        style={styles.page}
-      >
-        {/* Header with School Info */}
-        {(config.showSchoolLogo || config.showExamTitle) && (
+      <Page {...pageProps} style={styles.page} wrap>
+        {/* Header (skip in booklet mode - cover page has it) */}
+        {!isBooklet && (config.showSchoolLogo || config.showExamTitle) && (
           <Header
             school={school}
             exam={exam}
@@ -315,8 +410,8 @@ export function ClassicTemplate({
           />
         )}
 
-        {/* Student Info Section */}
-        {config.showStudentInfo && (
+        {/* Student Info (skip in booklet mode - cover page has it) */}
+        {!isBooklet && config.showStudentInfo && (
           <StudentInfo locale={locale} fontFamily={fontFamily} />
         )}
 
@@ -335,29 +430,12 @@ export function ClassicTemplate({
         {/* Questions */}
         <View style={styles.questionsContainer}>{renderQuestions()}</View>
 
-        {/* Footer */}
-        {config.showPageNumbers && (
-          <Footer
-            currentPage={1}
-            totalPages={estimatedPages}
-            showTotal={config.showTotalPages}
-            customText={config.customFooter ?? undefined}
-            versionCode={metadata.versionCode}
-            locale={locale}
-            fontFamily={fontFamily}
-          />
-        )}
+        {footerElement}
       </Page>
 
-      {/* Separate Answer Sheet (if enabled) */}
+      {/* Answer Sheet */}
       {needsAnswerSheet && (
-        <Page
-          size={config.pageSize as "A4" | "LETTER"}
-          orientation={
-            config.orientation === "landscape" ? "landscape" : "portrait"
-          }
-          style={styles.page}
-        >
+        <Page {...pageProps} style={styles.page}>
           <AnswerSheet
             questions={questions}
             isBubbleSheet={isBubbleSheet}
@@ -367,18 +445,7 @@ export function ClassicTemplate({
             fontFamily={fontFamily}
             versionCode={metadata.versionCode}
           />
-
-          {config.showPageNumbers && (
-            <Footer
-              currentPage={estimatedPages}
-              totalPages={estimatedPages}
-              showTotal={config.showTotalPages}
-              customText={config.customFooter ?? undefined}
-              versionCode={metadata.versionCode}
-              locale={locale}
-              fontFamily={fontFamily}
-            />
-          )}
+          {footerElement}
         </Page>
       )}
     </Document>

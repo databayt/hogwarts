@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import type { ComponentType, SVGProps } from "react"
 import {
   ArrowRight,
@@ -61,7 +63,7 @@ export function FlowChart({
                 <span>{nodeById[e.from]?.label ?? e.from}</span>
               </div>
               <ArrowRight
-                className={`${large ? "h-6 w-6" : "h-4 w-4"} text-muted-foreground`}
+                className={`${large ? "h-6 w-6" : "h-4 w-4"} text-muted-foreground rtl:rotate-180`}
               />
               {e.note && (
                 <span

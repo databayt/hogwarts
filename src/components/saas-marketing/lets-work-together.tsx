@@ -1,3 +1,7 @@
+"use client"
+
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -37,7 +41,7 @@ export default function LetsWorkTogether({
           <p className="muted mb-4">{dict.description}</p>
           <div className="mt-4 flex items-center gap-4">
             <Link
-              href="https://github.com/abdout/databayt"
+              href="https://github.com/databayt/hogwarts"
               target="_blank"
               rel="noopener noreferrer"
               className="transition-opacity hover:opacity-80"
@@ -75,7 +79,14 @@ export default function LetsWorkTogether({
               <Button type="submit" className="w-fit px-8">
                 {dict.submit}
               </Button>
-              <Button type="submit" variant="ghost" className="w-fit px-4">
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-fit px-4"
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("open-chatbot"))
+                }
+              >
                 {dict.liveChat}
               </Button>
             </div>

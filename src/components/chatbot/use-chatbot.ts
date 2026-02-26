@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState } from "react"
 import type { CoreMessage } from "ai"
 
@@ -9,10 +11,12 @@ import type { ChatbotState, ChatMessage } from "./type"
 
 interface UseChatbotOptions {
   promptType?: SystemPromptType
+  subdomain?: string
 }
 
 export function useChatbot({
   promptType = "saasMarketing",
+  subdomain,
 }: UseChatbotOptions = {}) {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -56,8 +60,12 @@ export function useChatbot({
           })
         )
 
-        // Call the server action with the prompt type
-        const result = await sendMessageAction(coreMessages, promptType)
+        // Call the server action with the prompt type and subdomain
+        const result = await sendMessageAction(
+          coreMessages,
+          promptType,
+          subdomain
+        )
 
         if (!result.success) {
           throw new Error(result.error || "Failed to send message")
@@ -92,7 +100,7 @@ export function useChatbot({
         setIsLoading(false)
       }
     },
-    [messages, promptType]
+    [messages, promptType, subdomain]
   )
 
   const clearMessages = useCallback(() => {

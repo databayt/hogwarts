@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Attendance Calendar View Component
  *
@@ -34,6 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 // Types
 export interface DayAttendance {
@@ -97,6 +101,8 @@ export function AttendanceCalendarView({
   locale = "en",
   isLoading = false,
 }: CalendarViewProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.calendar
   const isRTL = locale === "ar"
   const daysOfWeek = isRTL ? DAYS_AR : DAYS_EN
 
@@ -184,7 +190,7 @@ export function AttendanceCalendarView({
       <Card>
         <CardContent className="flex min-h-[400px] items-center justify-center">
           <div className="text-muted-foreground animate-pulse">
-            Loading calendar...
+            {t?.loading_calendar || "Loading calendar..."}
           </div>
         </CardContent>
       </Card>
@@ -199,18 +205,18 @@ export function AttendanceCalendarView({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" />
-              Attendance Calendar
+              {t?.title || "Attendance Calendar"}
             </CardTitle>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={goToToday}>
-                Today
+                {t?.today || "Today"}
               </Button>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={isRTL ? goToNextMonth : goToPreviousMonth}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
               </Button>
               <span className="min-w-[140px] text-center text-sm font-medium">
                 {monthName}
@@ -220,12 +226,12 @@ export function AttendanceCalendarView({
                 size="icon"
                 onClick={isRTL ? goToPreviousMonth : goToNextMonth}
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Button>
             </div>
           </div>
           <CardDescription>
-            Click on a day to view detailed attendance
+            {t?.description || "Click on a day to view detailed attendance"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -309,23 +315,29 @@ export function AttendanceCalendarView({
                           <>
                             <div className="flex items-center gap-2 text-xs">
                               <span className="h-2 w-2 rounded-full bg-green-500" />
-                              <span>Present: {day.present}</span>
+                              <span>
+                                {t?.present_label || "Present"}: {day.present}
+                              </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
                               <span className="h-2 w-2 rounded-full bg-red-500" />
-                              <span>Absent: {day.absent}</span>
+                              <span>
+                                {t?.absent_label || "Absent"}: {day.absent}
+                              </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
                               <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                              <span>Late: {day.late}</span>
+                              <span>
+                                {t?.late_label || "Late"}: {day.late}
+                              </span>
                             </div>
                             <div className="mt-1 border-t pt-1 text-xs font-medium">
-                              Rate: {day.rate}%
+                              {t?.rate || "Rate"}: {day.rate}%
                             </div>
                           </>
                         ) : (
                           <p className="text-muted-foreground text-xs">
-                            No data
+                            {t?.no_data || "No data"}
                           </p>
                         )}
                       </div>
@@ -370,8 +382,12 @@ export function AttendanceCalendarView({
       {data?.weeklyStats && data.weeklyStats.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Weekly Breakdown</CardTitle>
-            <CardDescription>Week by week attendance summary</CardDescription>
+            <CardTitle className="text-base">
+              {t?.weekly_breakdown || "Weekly Breakdown"}
+            </CardTitle>
+            <CardDescription>
+              {t?.weekly_summary || "Week by week attendance summary"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -381,7 +397,9 @@ export function AttendanceCalendarView({
                   className="flex items-center justify-between rounded-lg border p-3"
                 >
                   <div>
-                    <p className="font-medium">Week {week.weekNumber}</p>
+                    <p className="font-medium">
+                      {t?.week || "Week"} {week.weekNumber}
+                    </p>
                     <p className="text-muted-foreground text-xs">
                       {new Date(week.startDate).toLocaleDateString(
                         isRTL ? "ar-SA" : "en-US",
@@ -410,7 +428,8 @@ export function AttendanceCalendarView({
                         </Badge>
                       </div>
                       <p className="text-muted-foreground mt-0.5 text-xs">
-                        {week.present}/{week.total} present
+                        {week.present}/{week.total}{" "}
+                        {t?.present_count || "present"}
                       </p>
                     </div>
                   </div>
@@ -442,7 +461,7 @@ export function AttendanceCalendarView({
               if (!dayData || dayData.total === 0) {
                 return (
                   <p className="text-muted-foreground text-sm">
-                    No attendance data for this date
+                    {t?.no_data_for_date || "No attendance data for this date"}
                   </p>
                 )
               }
@@ -453,26 +472,32 @@ export function AttendanceCalendarView({
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {dayData.present}
                     </p>
-                    <p className="text-muted-foreground text-xs">Present</p>
+                    <p className="text-muted-foreground text-xs">
+                      {t?.present_label || "Present"}
+                    </p>
                   </div>
                   <div className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
                     <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                       {dayData.absent}
                     </p>
-                    <p className="text-muted-foreground text-xs">Absent</p>
+                    <p className="text-muted-foreground text-xs">
+                      {t?.absent_label || "Absent"}
+                    </p>
                   </div>
                   <div className="rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20">
                     <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                       {dayData.late}
                     </p>
-                    <p className="text-muted-foreground text-xs">Late</p>
+                    <p className="text-muted-foreground text-xs">
+                      {t?.late_label || "Late"}
+                    </p>
                   </div>
                   <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
                     <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       {dayData.excused + dayData.sick}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                      Excused/Sick
+                      {t?.excused_sick || "Excused/Sick"}
                     </p>
                   </div>
                 </div>

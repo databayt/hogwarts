@@ -62,3 +62,12 @@ export {
   TourBookingPage,
   type ApplicationStepName,
 } from "./admission.page"
+
+// Internal onboarding (join) page object
+export {
+  INTERNAL_ONBOARDING_STEPS,
+  JoinOnboardingPage,
+  JOIN_ROLES,
+  type InternalOnboardingStep,
+  type JoinRole,
+} from "./join-onboarding.page"

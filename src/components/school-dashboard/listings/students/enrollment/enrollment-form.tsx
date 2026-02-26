@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
@@ -46,6 +48,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { Batch, Student } from "../registration/types"
 import type { Course, Section, Subject } from "./types"
@@ -70,6 +73,8 @@ export function EnrollmentForm({
   onSubmit,
   onCancel,
 }: EnrollmentFormProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null)
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
@@ -111,9 +116,11 @@ export function EnrollmentForm({
     try {
       setIsSubmitting(true)
       await onSubmit(data)
-      toast.success("Student enrolled successfully")
+      toast.success(
+        t?.success?.studentCreated || "Student enrolled successfully"
+      )
     } catch (error) {
-      toast.error("Failed to enroll student")
+      toast.error(t?.error?.generic || "Failed to enroll student")
       console.error(error)
     } finally {
       setIsSubmitting(false)

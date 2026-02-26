@@ -1,6 +1,10 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
+
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   AreaChartStacked,
@@ -52,7 +56,13 @@ export interface RoleChartData {
 // SECTION TITLES BY ROLE
 // ============================================================================
 
-function getChartSectionTitle(role: DashboardRole): string {
+function getChartSectionTitle(
+  role: DashboardRole,
+  dict?: Record<string, string>
+): string {
+  const roleKey = role.toLowerCase()
+  if (dict?.[roleKey]) return dict[roleKey]
+
   switch (role) {
     case "STUDENT":
       return "Academic Performance"
@@ -71,7 +81,7 @@ function getChartSectionTitle(role: DashboardRole): string {
     case "DEVELOPER":
       return "Platform Analytics"
     default:
-      return "Analytics"
+      return dict?.default || "Analytics"
   }
 }
 
@@ -367,9 +377,14 @@ const defaultDataByRole: Record<DashboardRole, RoleChartData> = {
  * RadialTextChart & AreaChartStacked (2-column grid).
  */
 function ChartSectionInner({ role, className }: ChartSectionProps) {
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.charts as
+    | Record<string, string>
+    | undefined
+
   // Use default data based on role (API data is in legacy format)
   const data = defaultDataByRole[role] || defaultDataByRole.ADMIN
-  const sectionTitle = getChartSectionTitle(role)
+  const sectionTitle = getChartSectionTitle(role, dict)
 
   return (
     <section className={className}>

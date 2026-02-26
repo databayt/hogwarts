@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns"
@@ -84,6 +86,7 @@ import {
   FileUploader,
   type UploadedFileResult,
 } from "@/components/file"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface User {
   id: string
@@ -160,6 +163,8 @@ export function CommunicationHub({
   onDeleteMessage,
   onEditMessage,
 }: CommunicationHubProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
   >(conversations[0]?.id || null)
@@ -256,13 +261,13 @@ export function CommunicationHub({
       setMessageInput("")
       setAttachedFiles([])
     } catch (error) {
-      toast.error("Failed to send message")
+      toast.error(t?.error?.generic || "Failed to send message")
     }
   }
 
   const handleCreateConversation = async () => {
     if (selectedParticipants.length === 0) {
-      toast.error("Please select at least one participant")
+      toast.error(t?.error?.generic || "Please select at least one participant")
       return
     }
 
@@ -279,16 +284,16 @@ export function CommunicationHub({
       setNewChatDialogOpen(false)
       setSelectedParticipants([])
       setGroupName("")
-      toast.success("Conversation created")
+      toast.success(t?.success?.created || "Conversation created")
     } catch (error) {
-      toast.error("Failed to create conversation")
+      toast.error(t?.error?.createFailed || "Failed to create conversation")
     }
   }
 
   const handleUploadComplete = (files: UploadedFileResult[]) => {
     setAttachedFiles((prev) => [...prev, ...files])
     setShowFileUploader(false)
-    toast.success(`${files.length} file(s) added`)
+    toast.success(t?.success?.saved || `${files.length} file(s) added`)
   }
 
   const handleUploadError = (error: string) => {

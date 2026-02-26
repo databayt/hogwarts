@@ -1,0 +1,63 @@
+Hogwarts - School Automation Platform
+Copyright (c) 2025-present databayt
+
+This product is licensed under the Server Side Public License v1 (SSPL-1.0).
+See the LICENSE file for the full license text.
+
+This product includes software developed by third parties under their
+respective licenses:
+
+---
+
+shadcn/ui
+Copyright (c) 2023 shadcn
+License: MIT
+Location: src/components/ui/
+https://github.com/shadcn-ui/ui
+
+---
+
+Radix UI
+Copyright (c) 2022 WorkOS
+License: MIT
+https://github.com/radix-ui/primitives
+
+---
+
+Next.js
+Copyright (c) 2024 Vercel, Inc.
+License: MIT
+https://github.com/vercel/next.js
+
+---
+
+Prisma
+Copyright (c) 2020 Prisma Data, Inc.
+License: Apache-2.0
+https://github.com/prisma/prisma
+
+---
+
+Auth.js (NextAuth.js)
+Copyright (c) 2022-2024 Balazs Orban
+License: ISC
+https://github.com/nextauthjs/next-auth
+
+---
+
+Lucide Icons
+Copyright (c) 2020 Lucide Contributors
+License: ISC
+https://github.com/lucide-icons/lucide
+
+---
+
+Tailwind CSS
+Copyright (c) Tailwind Labs, Inc.
+License: MIT
+https://github.com/tailwindlabs/tailwindcss
+
+---
+
+For a complete list of dependencies and their licenses, see package.json
+and run: pnpm licenses list

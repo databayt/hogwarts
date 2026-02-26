@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Pencil } from "lucide-react"
@@ -60,9 +62,13 @@ interface Props {
   lang: Locale
 }
 
-function formatFee(value: number | null | undefined, currency: string): string {
+function formatFee(
+  value: number | null | undefined,
+  currency: string,
+  locale: string = "ar"
+): string {
   if (value == null) return "Not set"
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits: 0,

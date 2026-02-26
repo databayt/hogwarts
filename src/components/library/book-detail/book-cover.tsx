@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState } from "react"
 import Image from "next/image"
 
@@ -64,6 +66,7 @@ export default function BookCover({
             height={600}
             className="book-cover-detail-image"
             priority
+            unoptimized
             onError={() => setImageError(true)}
           />
         )

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { format } from "date-fns"
@@ -71,6 +73,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Student {
   id: string
@@ -204,6 +207,8 @@ export function ReportCardGenerator({
   onUpdateRemarks,
   currentUserRole,
 }: ReportCardGeneratorProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [selectedTerm, setSelectedTerm] = useState<string>(terms[0]?.id || "")
   const [selectedClass, setSelectedClass] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -273,38 +278,44 @@ export function ReportCardGenerator({
 
   const handleGeneratePDF = async (reportCard: ReportCard) => {
     try {
-      toast.info("Generating PDF...")
+      toast.info(t?.info?.generating || "Generating PDF...")
       const blob = await onGeneratePDF(reportCard.id)
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
       a.download = `report-card-${reportCard.student.studentId}-${reportCard.term}.pdf`
       a.click()
-      toast.success("PDF generated successfully")
+      toast.success(t?.success?.reportGenerated || "PDF generated successfully")
     } catch (error) {
-      toast.error("Failed to generate PDF")
+      toast.error(t?.error?.reportGenerationFailed || "Failed to generate PDF")
     }
   }
 
   const handleBulkPDF = async () => {
     if (selectedCards.length === 0) {
-      toast.error("No report cards selected")
+      toast.error(dictionary?.common?.error || "No report cards selected")
       return
     }
 
     try {
-      toast.info(`Generating ${selectedCards.length} PDFs...`)
+      toast.info(
+        t?.info?.generating || `Generating ${selectedCards.length} PDFs...`
+      )
       const blob = await onGenerateBulkPDF(selectedCards)
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
       a.download = `report-cards-bulk-${format(new Date(), "yyyy-MM-dd")}.zip`
       a.click()
-      toast.success("Bulk PDFs generated successfully")
+      toast.success(
+        t?.success?.reportGenerated || "Bulk PDFs generated successfully"
+      )
       setSelectedCards([])
       setBulkActionMode(false)
     } catch (error) {
-      toast.error("Failed to generate bulk PDFs")
+      toast.error(
+        t?.error?.reportGenerationFailed || "Failed to generate bulk PDFs"
+      )
     }
   }
 
@@ -314,9 +325,11 @@ export function ReportCardGenerator({
   ) => {
     try {
       await onSendToParent(reportCard.id, method)
-      toast.success(`Report card sent via ${method}`)
+      toast.success(t?.success?.sent || `Report card sent via ${method}`)
     } catch (error) {
-      toast.error(`Failed to send report card via ${method}`)
+      toast.error(
+        t?.error?.sendFailed || `Failed to send report card via ${method}`
+      )
     }
   }
 
@@ -328,10 +341,10 @@ export function ReportCardGenerator({
         teacher: teacherRemarks,
         principal: principalRemarks,
       })
-      toast.success("Remarks saved successfully")
+      toast.success(t?.success?.saved || "Remarks saved successfully")
       setRemarksDialogOpen(false)
     } catch (error) {
-      toast.error("Failed to save remarks")
+      toast.error(t?.error?.saveFailed || "Failed to save remarks")
     }
   }
 

@@ -1,5 +1,8 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Salary Sub-Block Server Actions
  *
@@ -9,6 +12,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -46,7 +50,7 @@ export async function getSalaryStructures(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const whereClause: any = { schoolId }
@@ -96,7 +100,7 @@ export async function getSalaryStructure(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const salaryStructure = await db.salaryStructure.findFirst({
@@ -155,7 +159,7 @@ export async function createSalaryStructure(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -210,7 +214,7 @@ export async function updateSalaryStructure(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -261,7 +265,7 @@ export async function deactivateSalaryStructure(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     await db.salaryStructure.update({
@@ -295,7 +299,7 @@ export async function addAllowance(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -332,7 +336,7 @@ export async function updateAllowance(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -375,7 +379,7 @@ export async function deleteAllowance(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     await db.salaryAllowance.delete({
@@ -405,7 +409,7 @@ export async function addDeduction(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -442,7 +446,7 @@ export async function updateDeduction(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -482,7 +486,7 @@ export async function deleteDeduction(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     await db.salaryDeduction.delete({
@@ -513,7 +517,7 @@ export async function calculateSalary(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const salaryStructure = await db.salaryStructure.findFirst({
@@ -596,7 +600,7 @@ export async function applySalaryIncrement(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -669,7 +673,7 @@ export async function getSalarySummary(): Promise<ActionResult<any>> {
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const [

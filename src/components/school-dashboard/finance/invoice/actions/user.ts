@@ -1,8 +1,11 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 /**
@@ -13,7 +16,7 @@ export async function deleteCurrentUser() {
     const session = await auth()
 
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const userId = session.user.id

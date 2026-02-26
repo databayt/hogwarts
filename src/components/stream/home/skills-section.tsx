@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -113,7 +115,7 @@ export function SkillsSection({
                       />
 
                       {/* Info Section - White box at bottom with padding on sides */}
-                      <div className="bg-card absolute right-2 bottom-2 left-2 flex flex-col gap-2 rounded-xl p-3">
+                      <div className="bg-card absolute start-2 end-2 bottom-2 flex flex-col gap-2 rounded-xl p-3">
                         {/* Learner Count Badge */}
                         <div className="border-border text-muted-foreground inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-xs">
                           <Users className="h-3 w-3" />

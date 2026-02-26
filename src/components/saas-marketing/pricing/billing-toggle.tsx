@@ -1,14 +1,24 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { cn } from "@/lib/utils"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface BillingToggleProps {
   isYearly: boolean
   onChange: (isYearly: boolean) => void
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
 }
 
-export function BillingToggle({ isYearly, onChange }: BillingToggleProps) {
+export function BillingToggle({
+  isYearly,
+  onChange,
+  dictionary,
+}: BillingToggleProps) {
+  const pricing = dictionary?.marketing?.pricing
+
   return (
     <div className="mt-10 mb-4 flex items-center gap-5">
       <ToggleGroup
@@ -25,8 +35,10 @@ export function BillingToggle({ isYearly, onChange }: BillingToggleProps) {
         <span
           aria-hidden
           className={cn(
-            "bg-muted pointer-events-none absolute inset-y-0 left-0 w-1/2 rounded-md transition-transform duration-200 ease-out",
-            isYearly ? "translate-x-full" : "translate-x-0"
+            "bg-muted pointer-events-none absolute inset-y-0 start-0 w-1/2 rounded-md transition-transform duration-200 ease-out",
+            isYearly
+              ? "translate-x-full rtl:-translate-x-full"
+              : "translate-x-0"
           )}
         />
         <ToggleGroupItem
@@ -39,7 +51,7 @@ export function BillingToggle({ isYearly, onChange }: BillingToggleProps) {
           )}
           aria-label="Toggle monthly billing"
         >
-          MONTHLY
+          {pricing?.constants?.monthly || "MONTHLY"}
         </ToggleGroupItem>
         <ToggleGroupItem
           value="yearly"
@@ -51,7 +63,7 @@ export function BillingToggle({ isYearly, onChange }: BillingToggleProps) {
           )}
           aria-label="Toggle yearly billing"
         >
-          YEARLY (SAVE 20%)
+          {pricing?.constants?.yearly || "YEARLY (SAVE 20%)"}
         </ToggleGroupItem>
       </ToggleGroup>
     </div>

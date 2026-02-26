@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
@@ -52,29 +54,21 @@ function ParentsTableInner({
 
   // Translations with fallbacks
   const t = {
-    name: dictionary?.name || (lang === "ar" ? "الاسم" : "Name"),
-    email: dictionary?.email || (lang === "ar" ? "البريد الإلكتروني" : "Email"),
-    status: dictionary?.status || (lang === "ar" ? "الحالة" : "Status"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
-    allParents:
-      dictionary?.allParents ||
-      (lang === "ar" ? "جميع أولياء الأمور" : "All Parents"),
-    addNewParent:
-      dictionary?.addNewParent ||
-      (lang === "ar"
-        ? "أضف ولي أمر جديد إلى مدرستك"
-        : "Add a new parent to your school"),
-    search:
-      dictionary?.search ||
-      (lang === "ar" ? "بحث في أولياء الأمور..." : "Search parents..."),
-    create: dictionary?.create || (lang === "ar" ? "إنشاء" : "Create"),
-    export: dictionary?.export || (lang === "ar" ? "تصدير" : "Export"),
-    reset: dictionary?.reset || (lang === "ar" ? "إعادة تعيين" : "Reset"),
-    active: dictionary?.active || (lang === "ar" ? "نشط" : "Active"),
-    inactive: dictionary?.inactive || (lang === "ar" ? "غير نشط" : "Inactive"),
+    name: dictionary?.name || "Name",
+    email: dictionary?.email || "Email",
+    status: dictionary?.status || "Status",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
+    allParents: dictionary?.allParents || "All Parents",
+    addNewParent: dictionary?.addNewParent || "Add a new parent to your school",
+    search: dictionary?.search || "Search parents...",
+    create: dictionary?.create || "Create",
+    export: dictionary?.export || "Export",
+    reset: dictionary?.reset || "Reset",
+    active: dictionary?.active || "Active",
+    inactive: dictionary?.inactive || "Inactive",
   }
 
   // View mode (table/grid)
@@ -121,8 +115,7 @@ function ParentsTableInner({
   const handleDelete = useCallback(
     async (parent: ParentRow) => {
       try {
-        const deleteMsg =
-          lang === "ar" ? `حذف ${parent.name}؟` : `Delete ${parent.name}?`
+        const deleteMsg = `${t.delete} ${parent.name}?`
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
 
@@ -136,7 +129,7 @@ function ParentsTableInner({
           // Revert on error
           refresh()
           ErrorToast(
-            lang === "ar" ? "فشل حذف ولي الأمر" : "Failed to delete parent"
+            dictionary?.failedToDeleteParent || "Failed to delete parent"
           )
         }
       } catch (e) {
@@ -144,9 +137,7 @@ function ParentsTableInner({
         ErrorToast(
           e instanceof Error
             ? e.message
-            : lang === "ar"
-              ? "فشل الحذف"
-              : "Failed to delete"
+            : dictionary?.failedToDeleteParent || "Failed to delete"
         )
       }
     },
@@ -192,9 +183,8 @@ function ParentsTableInner({
     (parent: ParentRow) => {
       if (!parent.userId) {
         ErrorToast(
-          lang === "ar"
-            ? "هذا الوالد ليس لديه حساب مستخدم"
-            : "This parent does not have a user account"
+          dictionary?.noAccountMessage ||
+            "This parent does not have a user account"
         )
         return
       }
@@ -230,8 +220,8 @@ function ParentsTableInner({
     create: t.create,
     reset: t.reset,
     export: t.export,
-    exportCSV: lang === "ar" ? "تصدير CSV" : "Export CSV",
-    exporting: lang === "ar" ? "جاري التصدير..." : "Exporting...",
+    exportCSV: dictionary?.exportCSV || "Export CSV",
+    exporting: dictionary?.exporting || "Exporting...",
   }
 
   return (
@@ -306,12 +296,8 @@ function ParentsTableInner({
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
                 {isLoading
-                  ? lang === "ar"
-                    ? "جاري التحميل..."
-                    : "Loading..."
-                  : lang === "ar"
-                    ? "تحميل المزيد"
-                    : "Load More"}
+                  ? dictionary?.loading || "Loading..."
+                  : dictionary?.loadMore || "Load More"}
               </button>
             </div>
           )}

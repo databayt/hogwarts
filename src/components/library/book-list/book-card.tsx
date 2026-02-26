@@ -1,8 +1,11 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 
 import { BookCoverImage } from "@/components/ui/imagekit-image"
 
@@ -13,6 +16,7 @@ interface Props {
 }
 
 export default function BookCard({ book }: Props) {
+  const { lang } = useParams()
   const [imageError, setImageError] = useState(false)
 
   // Check if it's a valid ImageKit URL
@@ -40,12 +44,11 @@ export default function BookCard({ book }: Props) {
   return (
     <li className="list-none">
       <Link
-        href={`/library/books/${book.id}`}
-        className="bg-card border-border block overflow-hidden rounded-lg border transition-shadow hover:shadow-lg"
+        href={`/${lang}/library/books/${book.id}`}
+        className="block overflow-hidden rounded-lg transition-shadow hover:shadow-lg"
       >
-        {/* Book Cover */}
         <div
-          className="relative aspect-[3/4] overflow-hidden"
+          className="relative aspect-[3/4] overflow-hidden rounded-lg"
           style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
         >
           {hasValidImage ? (
@@ -65,37 +68,13 @@ export default function BookCard({ book }: Props) {
                 alt={book.title}
                 fill
                 className="object-cover"
+                unoptimized
                 onError={() => setImageError(true)}
               />
             )
           ) : (
             <FallbackContent />
           )}
-        </div>
-
-        {/* Book Info */}
-        <div className="space-y-2 p-4">
-          <h4 className="text-foreground line-clamp-1 font-semibold">
-            {book.title}
-          </h4>
-          <p className="text-muted-foreground text-sm">by {book.author}</p>
-
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{book.genre}</span>
-            <span className="text-amber-500">⭐ {book.rating}/5</span>
-          </div>
-
-          <p
-            className={`text-sm font-medium ${
-              book.availableCopies > 0
-                ? "text-green-600 dark:text-green-400"
-                : "text-red-600 dark:text-red-400"
-            }`}
-          >
-            {book.availableCopies > 0
-              ? `${book.availableCopies} available`
-              : "Unavailable"}
-          </p>
         </div>
       </Link>
     </li>

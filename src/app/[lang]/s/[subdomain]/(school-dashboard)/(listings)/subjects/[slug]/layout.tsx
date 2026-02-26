@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { notFound } from "next/navigation"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
@@ -21,6 +24,7 @@ export default async function CatalogSubjectLayout({
     select: {
       name: true,
       slug: true,
+      clickviewId: true,
       description: true,
       department: true,
       color: true,
@@ -39,6 +43,20 @@ export default async function CatalogSubjectLayout({
 
   if (!subject) {
     notFound()
+  }
+
+  // Fetch grade siblings for toggle (same clickviewId, different grades)
+  let gradeSiblings: { grade: number; slug: string }[] = []
+  if (subject.clickviewId) {
+    const siblings = await db.catalogSubject.findMany({
+      where: { clickviewId: subject.clickviewId, status: "PUBLISHED" },
+      select: { grades: true, slug: true },
+      orderBy: { sortOrder: "asc" },
+    })
+    gradeSiblings = siblings
+      .filter((s) => s.grades.length > 0)
+      .map((s) => ({ grade: s.grades[0], slug: s.slug }))
+      .sort((a, b) => a.grade - b.grade)
   }
 
   const heroImageUrl = getCatalogImageUrl(subject.bannerUrl, null, "original")
@@ -67,6 +85,7 @@ export default async function CatalogSubjectLayout({
           usageCount: subject.usageCount,
           ratingCount: subject.ratingCount,
         }}
+        gradeSiblings={gradeSiblings}
         lang={lang}
       />
       {children}

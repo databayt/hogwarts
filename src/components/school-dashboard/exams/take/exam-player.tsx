@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Exam Player Component
  *
@@ -596,7 +599,7 @@ export function ExamPlayer({
                       onClick={() => goToQuestion(currentQuestionIndex - 1)}
                       disabled={currentQuestionIndex === 0}
                     >
-                      <ChevronLeft className="me-2 h-4 w-4" />
+                      <ChevronLeft className="me-2 h-4 w-4 rtl:rotate-180" />
                       Previous
                     </Button>
 
@@ -605,7 +608,7 @@ export function ExamPlayer({
                       disabled={currentQuestionIndex === totalQuestions - 1}
                     >
                       Next
-                      <ChevronRight className="ms-2 h-4 w-4" />
+                      <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                     </Button>
                   </div>
                 </CardContent>

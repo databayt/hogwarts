@@ -1,53 +1,18 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo } from "react"
 import { Clock } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-
-// Subject color mapping with hover effects (reference UI pattern)
-const SUBJECT_COLORS: Record<string, string> = {
-  Math: "bg-purple-100 hover:bg-purple-200 border-purple-300 dark:bg-purple-900/50 dark:hover:bg-purple-900/70 dark:border-purple-800",
-  English:
-    "bg-green-100 hover:bg-green-200 border-green-300 dark:bg-green-900/50 dark:hover:bg-green-900/70 dark:border-green-800",
-  Science:
-    "bg-pink-100 hover:bg-pink-200 border-pink-300 dark:bg-pink-900/50 dark:hover:bg-pink-900/70 dark:border-pink-800",
-  Arabic:
-    "bg-blue-100 hover:bg-blue-200 border-blue-300 dark:bg-blue-900/50 dark:hover:bg-blue-900/70 dark:border-blue-800",
-  PE: "bg-orange-100 hover:bg-orange-200 border-orange-300 dark:bg-orange-900/50 dark:hover:bg-orange-900/70 dark:border-orange-800",
-  Music:
-    "bg-yellow-100 hover:bg-yellow-200 border-yellow-300 dark:bg-yellow-900/50 dark:hover:bg-yellow-900/70 dark:border-yellow-800",
-  Art: "bg-rose-100 hover:bg-rose-200 border-eose-300 dark:bg-rose-900/50 dark:hover:bg-rose-900/70 dark:border-eose-800",
-  History:
-    "bg-amber-100 hover:bg-amber-200 border-amber-300 dark:bg-amber-900/50 dark:hover:bg-amber-900/70 dark:border-amber-800",
-  Geography:
-    "bg-teal-100 hover:bg-teal-200 border-teal-300 dark:bg-teal-900/50 dark:hover:bg-teal-900/70 dark:border-teal-800",
-  Islamic:
-    "bg-emerald-100 hover:bg-emerald-200 border-emerald-300 dark:bg-emerald-900/50 dark:hover:bg-emerald-900/70 dark:border-emerald-800",
-  Computer:
-    "bg-cyan-100 hover:bg-cyan-200 border-cyan-300 dark:bg-cyan-900/50 dark:hover:bg-cyan-900/70 dark:border-cyan-800",
-  Physics:
-    "bg-indigo-100 hover:bg-indigo-200 border-indigo-300 dark:bg-indigo-900/50 dark:hover:bg-indigo-900/70 dark:border-indigo-800",
-  Chemistry:
-    "bg-violet-100 hover:bg-violet-200 border-violet-300 dark:bg-violet-900/50 dark:hover:bg-violet-900/70 dark:border-violet-800",
-  Biology:
-    "bg-lime-100 hover:bg-lime-200 border-lime-300 dark:bg-lime-900/50 dark:hover:bg-lime-900/70 dark:border-lime-800",
-  Social:
-    "bg-sky-100 hover:bg-sky-200 border-sky-300 dark:bg-sky-900/50 dark:hover:bg-sky-900/70 dark:border-sky-800",
-  Lunch:
-    "bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700",
-}
-
-// Fallback colors with hover effects for unknown subjects
-const FALLBACK_COLORS = [
-  "bg-red-100 hover:bg-red-200 border-eed-300 dark:bg-red-900/50 dark:hover:bg-red-900/70 dark:border-eed-800",
-  "bg-orange-100 hover:bg-orange-200 border-orange-300 dark:bg-orange-900/50 dark:hover:bg-orange-900/70 dark:border-orange-800",
-  "bg-yellow-100 hover:bg-yellow-200 border-yellow-300 dark:bg-yellow-900/50 dark:hover:bg-yellow-900/70 dark:border-yellow-800",
-  "bg-green-100 hover:bg-green-200 border-green-300 dark:bg-green-900/50 dark:hover:bg-green-900/70 dark:border-green-800",
-  "bg-blue-100 hover:bg-blue-200 border-blue-300 dark:bg-blue-900/50 dark:hover:bg-blue-900/70 dark:border-blue-800",
-]
+import {
+  DAY_LABELS_AR,
+  DAY_LABELS_EN,
+  EMPTY_CELL_STYLE,
+  getSubjectTailwind,
+} from "../config"
 
 interface Slot {
   id: string
@@ -85,28 +50,12 @@ interface SimpleGridProps {
   highlightToday?: boolean
   /** Set of slot IDs that have conflicts (shown with red ring) */
   conflictSlotIds?: Set<string>
-}
-
-function getSubjectColor(subject: string): string {
-  if (!subject) return "bg-muted border-border"
-
-  // Check direct mapping first
-  if (SUBJECT_COLORS[subject]) {
-    return SUBJECT_COLORS[subject]
+  dictionary?: {
+    period?: string
+    lunch?: string
+    lunchBreak?: string
+    days?: string[]
   }
-
-  // Check partial matches
-  for (const [key, color] of Object.entries(SUBJECT_COLORS)) {
-    if (subject.toLowerCase().includes(key.toLowerCase())) {
-      return color
-    }
-  }
-
-  // Fallback based on hash
-  const hash = subject
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return FALLBACK_COLORS[hash % FALLBACK_COLORS.length]
 }
 
 export default function SimpleGrid({
@@ -120,9 +69,20 @@ export default function SimpleGrid({
   onSlotClick,
   highlightToday = false,
   conflictSlotIds,
+  dictionary,
 }: SimpleGridProps) {
   // Get current day for highlighting
   const today = highlightToday ? new Date().getDay() : -1
+
+  // Compute lunch time from periods
+  const lunchTime = useMemo(() => {
+    const breakPeriod = periods.find(
+      (p) => p.isBreak && p.name.toLowerCase().includes("lunch")
+    )
+    if (!breakPeriod) return ""
+    const d = new Date(breakPeriod.startTime)
+    return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`
+  }, [periods])
 
   // Build a map for quick slot lookup
   const slotMap = useMemo(() => {
@@ -236,7 +196,8 @@ export default function SimpleGrid({
                 "print:py-3 print:text-base print:font-semibold"
               )}
             >
-              {DAY_LABELS[day]}
+              {dictionary?.days?.[day] ??
+                (isRTL ? DAY_LABELS_AR[day] : DAY_LABELS_EN[day])}
             </div>
           ))}
         </div>
@@ -250,11 +211,13 @@ export default function SimpleGrid({
                 <div className={cn("grid", gridColsClass)}>
                   <div className="flex flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800">
                     <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                      Lunch
+                      {dictionary?.lunch ?? "Lunch"}
                     </span>
-                    <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                      (12:20)
-                    </span>
+                    {lunchTime && (
+                      <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        ({lunchTime})
+                      </span>
+                    )}
                   </div>
                   <div
                     className={cn(
@@ -263,7 +226,7 @@ export default function SimpleGrid({
                     )}
                   >
                     <span className="font-medium text-neutral-500 dark:text-neutral-400">
-                      Lunch Break
+                      {dictionary?.lunchBreak ?? "Lunch Break"}
                     </span>
                   </div>
                 </div>
@@ -274,7 +237,8 @@ export default function SimpleGrid({
                 {/* Period Cell */}
                 <div className="flex flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800 print:py-3">
                   <span className="text-sm font-medium text-neutral-700 sm:text-base dark:text-neutral-300 print:text-sm">
-                    Period {period.name}
+                    {(dictionary?.period ?? "Period") + " "}
+                    {period.name}
                   </span>
                   <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                     ({formatTime(period.startTime)})
@@ -297,11 +261,12 @@ export default function SimpleGrid({
                       className={cn(
                         "flex min-h-14 flex-col items-center justify-center px-2 py-2 transition-all duration-200 sm:min-h-20 sm:px-4 sm:py-4",
                         slot && display?.primary
-                          ? getSubjectColor(display.primary)
-                          : "bg-neutral-50 dark:bg-neutral-800/30",
+                          ? getSubjectTailwind(display.primary)
+                          : EMPTY_CELL_STYLE,
                         dayIdx < sortedDays.length - 1
                           ? "border-e border-neutral-200 dark:border-neutral-700"
                           : "",
+                        day === today && "bg-primary/5",
                         editable && "cursor-pointer hover:shadow-inner",
                         isConflicted && "ring-2 ring-red-500",
                         "print:min-h-12 print:py-2"

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { Check, ChevronRight, Eye, TriangleAlert } from "lucide-react"
 
@@ -88,7 +90,7 @@ export default function StatsStatus() {
                   </div>
                 </div>
                 <ChevronRight
-                  className="text-muted-foreground/60 group-hover:text-muted-foreground size-5 shrink-0"
+                  className="text-muted-foreground/60 group-hover:text-muted-foreground size-5 shrink-0 rtl:rotate-180"
                   aria-hidden={true}
                 />
               </div>

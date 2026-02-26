@@ -1,10 +1,13 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import {
   checkRateLimit,
@@ -31,7 +34,7 @@ export async function processBarcodeScan(
     }
 
     const { barcode, classId, format, scannedAt, deviceId } = data
-    const schoolId = session.user.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       throw new Error("School ID is required")
@@ -233,7 +236,7 @@ export async function assignBarcodeToStudent(
       throw new Error("Insufficient permissions")
     }
 
-    const schoolId = session.user.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       throw new Error("School ID is required")
@@ -321,7 +324,7 @@ export async function getStudentBarcodes(studentId?: string) {
       throw new Error("Unauthorized")
     }
 
-    const schoolId = session.user.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       throw new Error("School ID is required")
@@ -379,7 +382,7 @@ export async function updateBarcodeStatus(
       throw new Error("Insufficient permissions")
     }
 
-    const schoolId = session.user.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       throw new Error("School ID is required")
@@ -434,7 +437,7 @@ export async function deleteBarcode(identifierId: string) {
       throw new Error("Only administrators can delete barcodes")
     }
 
-    const schoolId = session.user.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       throw new Error("School ID is required")
@@ -486,7 +489,7 @@ export async function bulkImportBarcodes(csvData: string) {
       throw new Error("Insufficient permissions")
     }
 
-    const schoolId = session.user.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       throw new Error("School ID is required")

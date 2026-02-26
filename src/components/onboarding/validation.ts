@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Onboarding Validation Schemas
  *
@@ -7,7 +10,7 @@
  *
  * Key responsibilities:
  * - Validate school metadata (name, description, location, contact)
- * - Enforce capacity constraints (students: 1-10K, teachers: 1-1K, classes: 1-500)
+ * - Enforce capacity constraints (students: 1-10K, teachers: 1-500, classes: 1-100)
  * - Validate pricing tiers (tuition: 0-100K, registration: 0-10K, application: 0-1K)
  * - Ensure brand consistency (hex colors, border radius, shadow sizes)
  * - Enforce legal compliance (GDPR/privacy consent must be explicit)
@@ -181,14 +184,14 @@ export const onboardingValidation = z.object({
     .number()
     .int("Must be a whole number")
     .min(1, "Must have at least 1 teacher")
-    .max(1000, "Cannot exceed 1,000 teachers")
+    .max(500, "Cannot exceed 500 teachers")
     .optional(),
 
   maxClasses: z
     .number()
     .int("Must be a whole number")
     .min(1, "Must have at least 1 class")
-    .max(500, "Cannot exceed 500 classes")
+    .max(100, "Cannot exceed 100 classes")
     .optional(),
 
   // School details
@@ -502,14 +505,14 @@ export function createOnboardingValidation(dictionary: Dictionary) {
       .number()
       .int({ message: v.get("mustBeWholeNumber") })
       .min(1, { message: v.get("atLeastOneTeacher") })
-      .max(1000, { message: v.get("maxTeachersLimit") })
+      .max(500, { message: v.get("maxTeachersLimit") })
       .optional(),
 
     maxClasses: z
       .number()
       .int({ message: v.get("mustBeWholeNumber") })
       .min(1, { message: v.get("atLeastOneClass") })
-      .max(500, { message: v.get("maxClassesLimit") })
+      .max(100, { message: v.get("maxClassesLimit") })
       .optional(),
 
     // School details

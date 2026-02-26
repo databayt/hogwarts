@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import {
   AlertCircle,
   Building,
@@ -6,6 +9,7 @@ import {
   Crown,
   DollarSign,
   MapPin,
+  Palette,
   School,
   Settings,
   Users,
@@ -26,6 +30,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { AcademicSection } from "./academic-section"
+import { BrandingSection } from "./branding-section"
 import { CapacitySection } from "./capacity-section"
 import { PlanLimitsSection } from "./plan-limits-section"
 import { SchoolIdentityForm } from "./school-identity-form"
@@ -57,6 +62,8 @@ export default async function ConfigurationContent({
     description: string | null
     schoolType: string | null
     schoolLevel: string | null
+    system: string | null
+    preferredLanguage: string
     city: string | null
     state: string | null
     country: string | null
@@ -70,6 +77,12 @@ export default async function ConfigurationContent({
     applicationFee: unknown
     currency: string
     paymentSchedule: string
+  } | null = null
+
+  let brandingInfo: {
+    primaryColor: string | null
+    secondaryColor: string | null
+    borderRadius: string | null
   } | null = null
 
   let academicYearsCount = 0
@@ -97,6 +110,7 @@ export default async function ConfigurationContent({
     try {
       ;[
         schoolInfo,
+        brandingInfo,
         academicYearsCount,
         termsCount,
         yearLevelsCount,
@@ -123,6 +137,8 @@ export default async function ConfigurationContent({
               description: true,
               schoolType: true,
               schoolLevel: true,
+              system: true,
+              preferredLanguage: true,
               city: true,
               state: true,
               country: true,
@@ -136,6 +152,16 @@ export default async function ConfigurationContent({
               applicationFee: true,
               currency: true,
               paymentSchedule: true,
+            },
+          })
+          .catch(() => null),
+        db.schoolBranding
+          .findUnique({
+            where: { schoolId },
+            select: {
+              primaryColor: true,
+              secondaryColor: true,
+              borderRadius: true,
             },
           })
           .catch(() => null),
@@ -327,6 +353,8 @@ export default async function ConfigurationContent({
               description: schoolInfo?.description || "",
               schoolType: schoolInfo?.schoolType || "",
               schoolLevel: schoolInfo?.schoolLevel || "",
+              system: schoolInfo?.system || "",
+              preferredLanguage: schoolInfo?.preferredLanguage || "ar",
             }}
             lang={lang}
           />
@@ -365,6 +393,45 @@ export default async function ConfigurationContent({
               city: schoolInfo?.city || "",
               state: schoolInfo?.state || "",
               country: schoolInfo?.country || "",
+            }}
+            lang={lang}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Branding Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Palette className="h-5 w-5 text-pink-500" />
+              <div>
+                <CardTitle>
+                  {isArabic ? "الهوية البصرية" : "Branding"}
+                </CardTitle>
+                <CardDescription>
+                  {isArabic
+                    ? "الشعار والألوان وتخصيص المظهر"
+                    : "Logo, colors, and appearance customization"}
+                </CardDescription>
+              </div>
+            </div>
+            {(brandingInfo?.primaryColor || schoolInfo?.logoUrl) && (
+              <Badge variant="outline" className="gap-1">
+                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                {isArabic ? "مكتمل" : "Configured"}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <BrandingSection
+            schoolId={schoolId || ""}
+            initialData={{
+              logoUrl: schoolInfo?.logoUrl || "",
+              primaryColor: brandingInfo?.primaryColor || "",
+              secondaryColor: brandingInfo?.secondaryColor || "",
+              borderRadius: brandingInfo?.borderRadius || "md",
             }}
             lang={lang}
           />

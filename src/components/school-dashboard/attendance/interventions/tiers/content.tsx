@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * MTSS Tiered Interventions Content
  *
@@ -13,6 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   createTieredIntervention,
@@ -118,6 +122,8 @@ interface MTSSContentProps {
 }
 
 export function MTSSContent({ locale }: MTSSContentProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.mtss
   const isRTL = locale === "ar"
   const [isLoading, setIsLoading] = useState(true)
   const [selectedTier, setSelectedTier] = useState<TierLevel>("TIER_2")
@@ -193,12 +199,10 @@ export function MTSSContent({ locale }: MTSSContentProps) {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">
-          {isRTL ? "نظام MTSS للتدخلات" : "MTSS Intervention System"}
+          {t?.title || "MTSS Intervention System"}
         </h1>
         <p className="text-muted-foreground">
-          {isRTL
-            ? "إدارة التدخلات متعددة المستويات للحضور"
-            : "Multi-tiered system of supports for attendance"}
+          {t?.subtitle || "Multi-tiered system of supports for attendance"}
         </p>
       </div>
 
@@ -208,7 +212,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "تدخلات معلقة" : "Pending"}
+                {t?.pending || "Pending"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -218,7 +222,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "مكتملة هذا الشهر" : "Completed This Month"}
+                {t?.completed_this_month || "Completed This Month"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -230,7 +234,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "تصعيدات" : "Escalations"}
+                {t?.escalations || "Escalations"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -242,7 +246,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
           <Card className={stats.overdue > 0 ? "border-destructive" : ""}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "متأخرة" : "Overdue"}
+                {t?.overdue || "Overdue"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -294,17 +298,14 @@ export function MTSSContent({ locale }: MTSSContentProps) {
             >
               <p className="font-medium">
                 {tier === "TIER_1" &&
-                  (isRTL
-                    ? "الطلاب بنسبة غياب أقل من 10% - التركيز على الوقاية والتعزيز الإيجابي"
-                    : "Students with <10% absence rate - Focus on prevention and positive reinforcement")}
+                  (t?.tier1_desc ||
+                    "Students with <10% absence rate - Focus on prevention and positive reinforcement")}
                 {tier === "TIER_2" &&
-                  (isRTL
-                    ? "الطلاب بنسبة غياب 10-19% - يحتاجون تدخل مبكر ودعم موجه"
-                    : "Students with 10-19% absence rate - Need early intervention and targeted support")}
+                  (t?.tier2_desc ||
+                    "Students with 10-19% absence rate - Need early intervention and targeted support")}
                 {tier === "TIER_3" &&
-                  (isRTL
-                    ? "الطلاب بنسبة غياب 20% أو أكثر - يحتاجون دعم مكثف وتدخل عاجل"
-                    : "Students with 20%+ absence rate - Need intensive support and urgent intervention")}
+                  (t?.tier3_desc ||
+                    "Students with 20%+ absence rate - Need intensive support and urgent intervention")}
               </p>
             </div>
 
@@ -313,9 +314,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
               <Card>
                 <CardContent className="py-12 text-center">
                   <p className="text-muted-foreground">
-                    {isRTL
-                      ? "لا يوجد طلاب في هذا المستوى"
-                      : "No students in this tier"}
+                    {t?.no_students_in_tier || "No students in this tier"}
                   </p>
                 </CardContent>
               </Card>
@@ -378,12 +377,12 @@ export function MTSSContent({ locale }: MTSSContentProps) {
                           </p>
                           <p className="text-muted-foreground text-xs">
                             {student.absentDays}/{student.totalDays}{" "}
-                            {isRTL ? "أيام" : "days"}
+                            {t?.days || "days"}
                           </p>
                         </div>
                         {student.hasActiveIntervention && (
                           <Badge variant="outline">
-                            {isRTL ? "تدخل نشط" : "Active"}
+                            {t?.active || "Active"}
                           </Badge>
                         )}
                       </div>
@@ -393,9 +392,8 @@ export function MTSSContent({ locale }: MTSSContentProps) {
                     {selectedStudent?.id === student.id && (
                       <div className="border-t px-4 py-3">
                         <p className="text-muted-foreground mb-2 text-sm">
-                          {isRTL
-                            ? "اختر إجراء التدخل:"
-                            : "Select intervention action:"}
+                          {t?.select_intervention ||
+                            "Select intervention action:"}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {getRecommendedActions(tier).map((action) => (

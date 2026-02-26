@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Separator } from "@/components/ui/separator"
 import { UserButton } from "@/components/auth/user-button"
 import { DOCS_LINKS } from "@/components/docs/docs-config"

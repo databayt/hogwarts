@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Mobile Grading Component
  *
@@ -324,12 +327,12 @@ export function MobileGrading({
         </motion.div>
 
         {/* Swipe Indicators */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center ps-2">
+        <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2">
           <div className="rounded-full bg-red-500/20 p-2">
             <X className="h-6 w-6 text-red-500" />
           </div>
         </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pe-2">
+        <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-2">
           <div className="rounded-full bg-green-500/20 p-2">
             <Check className="h-6 w-6 text-green-500" />
           </div>
@@ -373,7 +376,7 @@ export function MobileGrading({
               onClick={goToPrevious}
               disabled={currentIndex === 0}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
             </Button>
 
             {/* Wrong (0 points) */}
@@ -442,7 +445,7 @@ export function MobileGrading({
                 disabled={currentIndex === answers.length - 1}
               >
                 {d?.skip ?? "Skip"}
-                <ChevronRight className="ms-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
               </Button>
             )}
           </div>

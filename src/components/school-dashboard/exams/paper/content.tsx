@@ -1,11 +1,23 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Exam Paper Content
  * Main page for paper configuration and generation
  */
 
 import Link from "next/link"
-import { Download, Eye, FileText, Key, Printer, RefreshCw } from "lucide-react"
+import {
+  CheckCircle2,
+  Eye,
+  FileText,
+  Printer,
+  RefreshCw,
+  Settings,
+  Sparkles,
+} from "lucide-react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -16,10 +28,11 @@ import {
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { getOrCreatePaperConfig, getPaperConfig } from "./actions"
+import { getOrCreatePaperConfig, getPaperData } from "./actions"
 import type { PaperConfigWithRelations } from "./actions/types"
 import { ConfigForm } from "./config-form"
 import { GenerationPanel } from "./generation-panel"
+import { PaperActions } from "./paper-actions"
 import { PaperList } from "./paper-list"
 
 interface ContentProps {
@@ -34,6 +47,10 @@ export async function Content({
   dictionary,
 }: ContentProps) {
   const isRTL = locale === "ar"
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const t = (dictionary as any)?.generate?.paper as
+    | Record<string, string>
+    | undefined
 
   // Get or create config
   const configResult = await getOrCreatePaperConfig(generatedExamId)
@@ -43,12 +60,11 @@ export async function Content({
       <div className="container mx-auto py-6">
         <Card>
           <CardHeader>
-            <CardTitle>{isRTL ? "خطأ" : "Error"}</CardTitle>
+            <CardTitle>{t?.error || "Error"}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              {configResult.error ||
-                (isRTL ? "فشل تحميل البيانات" : "Failed to load data")}
+              {configResult.error || t?.failed_to_load || "Failed to load data"}
             </p>
           </CardContent>
         </Card>
@@ -57,6 +73,10 @@ export async function Content({
   }
 
   const config = configResult.data
+
+  // Fetch paper data for download/print
+  const paperDataResult = await getPaperData(generatedExamId)
+  const paperData = paperDataResult.success ? paperDataResult.data : null
 
   return (
     <div
@@ -67,23 +87,22 @@ export async function Content({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {isRTL ? "إنشاء ورقة الاختبار" : "Exam Paper Generation"}
+            {t?.title || "Exam Paper Generation"}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {isRTL
-              ? "تخصيص وطباعة أوراق الاختبار"
-              : "Configure and print exam papers"}
+            {t?.subtitle || "Configure and print exam papers"}
           </p>
         </div>
 
         {/* Quick Actions */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link href={`/${locale}/exams/paper/${generatedExamId}/preview`}>
               <Eye className="h-4 w-4" />
-              <span className="ms-2">{isRTL ? "معاينة" : "Preview"}</span>
+              <span className="ms-2">{t?.preview || "Preview"}</span>
             </Link>
           </Button>
+          <PaperActions data={paperData} locale={locale} />
         </div>
       </div>
 
@@ -104,38 +123,97 @@ export async function Content({
               <FileText className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
                 {config.generatedExam.questions.length}{" "}
-                {isRTL ? "سؤال" : "questions"}
+                {t?.questions || "questions"}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Printer className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
                 {config.papers.length}{" "}
-                {isRTL ? "نسخة مطبوعة" : "printed versions"}
+                {t?.printed_versions || "printed versions"}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <RefreshCw className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
                 {config.versionCount}{" "}
-                {isRTL ? "نسخ مطلوبة" : "versions to generate"}
+                {t?.versions_to_generate || "versions to generate"}
               </span>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Progress Stepper */}
+      <div className="flex items-center justify-center gap-1 sm:gap-3">
+        {[
+          {
+            step: 1,
+            label: t?.configure || "Configure",
+            done: true,
+          },
+          {
+            step: 2,
+            label: t?.generate || "Generate",
+            done: config.papers.length > 0,
+          },
+          {
+            step: 3,
+            label: t?.preview || "Preview",
+            done: config.papers.some((p) => p.pdfUrl),
+          },
+          {
+            step: 4,
+            label: t?.papers || "Download",
+            done: config.papers.some((p) => p.pdfUrl),
+          },
+        ].map(({ step, label, done }, idx) => (
+          <div key={step} className="flex items-center gap-1 sm:gap-3">
+            {idx > 0 && (
+              <div
+                className={`hidden h-px w-6 sm:block ${done ? "bg-primary" : "bg-muted-foreground/30"}`}
+              />
+            )}
+            <div className="flex items-center gap-1.5">
+              {done ? (
+                <CheckCircle2 className="text-primary h-5 w-5" />
+              ) : (
+                <div className="text-muted-foreground flex h-5 w-5 items-center justify-center rounded-full border text-xs">
+                  {step}
+                </div>
+              )}
+              <span
+                className={`text-xs sm:text-sm ${done ? "text-primary font-medium" : "text-muted-foreground"}`}
+              >
+                {label}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Main Tabs */}
-      <Tabs defaultValue="config" className="space-y-4">
+      <Tabs
+        defaultValue={config.papers.length > 0 ? "papers" : "config"}
+        className="space-y-4"
+      >
         <TabsList>
-          <TabsTrigger value="config">
-            {isRTL ? "الإعدادات" : "Settings"}
+          <TabsTrigger value="config" className="gap-1.5">
+            <Settings className="h-3.5 w-3.5" />
+            {t?.settings || "Settings"}
           </TabsTrigger>
-          <TabsTrigger value="generate">
-            {isRTL ? "إنشاء" : "Generate"}
+          <TabsTrigger value="generate" className="gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" />
+            {t?.generate || "Generate"}
+            {config.papers.length > 0 && (
+              <Badge variant="secondary" className="ms-1 px-1.5 py-0 text-xs">
+                {config.papers.length}
+              </Badge>
+            )}
           </TabsTrigger>
-          <TabsTrigger value="papers">
-            {isRTL ? "الأوراق" : "Papers"}
+          <TabsTrigger value="papers" className="gap-1.5">
+            <FileText className="h-3.5 w-3.5" />
+            {t?.papers || "Papers"}
           </TabsTrigger>
         </TabsList>
 

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
@@ -14,32 +17,43 @@ interface Props {
   subdomain: string
 }
 
-export function EnrollmentClosed({ school, lang, subdomain }: Props) {
-  const isRTL = lang === "ar"
+export function EnrollmentClosed({
+  school,
+  dictionary,
+  lang,
+  subdomain,
+}: Props) {
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { portal?: Record<string, string> } }
+      }
+    )?.school?.admission?.portal ?? {}
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-6 py-16 text-center">
-      <div className="text-6xl">{isRTL ? "📋" : "📋"}</div>
+      <div className="text-6xl">{"📋"}</div>
       <h2 className="font-heading text-2xl font-bold">
-        {isRTL ? "التسجيل مغلق حالياً" : "Enrollment is Currently Closed"}
+        {dict.enrollmentClosed || "Enrollment is Currently Closed"}
       </h2>
       <p className="text-muted-foreground">
-        {isRTL
-          ? `${school.name} لا تقبل طلبات في الوقت الحالي. يرجى زيارة صفحة القبول للاطلاع على المواعيد القادمة.`
-          : `${school.name} is not accepting applications at this time. Please visit the admissions page for upcoming enrollment dates.`}
+        {(
+          dict.enrollmentClosedDesc ||
+          "{schoolName} is not accepting applications at this time. Please visit the admissions page for upcoming enrollment dates."
+        ).replace("{schoolName}", school.name)}
       </p>
       <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Link
           href={`/${lang}/s/${subdomain}/admissions`}
           className={cn(buttonVariants({ variant: "default" }))}
         >
-          {isRTL ? "صفحة القبول" : "View Admissions"}
+          {dict.viewAdmissions || "View Admissions"}
         </Link>
         <Link
           href={`/${lang}/s/${subdomain}/inquiry`}
           className={cn(buttonVariants({ variant: "outline" }))}
         >
-          {isRTL ? "تواصل معنا" : "Contact Us"}
+          {dict.contactUs || "Contact Us"}
         </Link>
       </div>
     </div>

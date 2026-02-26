@@ -1,5 +1,9 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getDisplayName } from "@/lib/transliterate-name"
@@ -73,7 +77,7 @@ export default async function StudentsContent({
             take: 1,
             include: {
               class: {
-                select: { name: true },
+                select: { name: true, lang: true },
               },
             },
           },
@@ -81,16 +85,28 @@ export default async function StudentsContent({
       }),
       studentModel.count({ where }),
     ])
-    data = rows.map((s: any) => ({
-      id: s.id,
-      userId: s.userId,
-      name: getDisplayName(s.givenName, s.surname, lang),
-      className: s.studentClasses?.[0]?.class?.name || "-",
-      status: s.userId ? "active" : "inactive",
-      createdAt: (s.createdAt as Date).toISOString(),
-      classCount: s._count?.studentClasses || 0,
-      gradeCount: s._count?.results || 0,
-    }))
+    data = await Promise.all(
+      rows.map(async (s: any) => {
+        const cls = s.studentClasses?.[0]?.class
+        return {
+          id: s.id,
+          userId: s.userId,
+          name: getDisplayName(s.givenName, s.surname, lang),
+          className: cls?.name
+            ? await getDisplayText(
+                cls.name,
+                cls.lang || "ar",
+                lang,
+                effectiveSchoolId!
+              )
+            : "-",
+          status: s.userId ? "active" : "inactive",
+          createdAt: (s.createdAt as Date).toISOString(),
+          classCount: s._count?.studentClasses || 0,
+          gradeCount: s._count?.results || 0,
+        }
+      })
+    )
     total = count as number
   }
   return (

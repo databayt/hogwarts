@@ -1,5 +1,8 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Fees Sub-Block Server Actions
  *
@@ -9,6 +12,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -46,7 +50,7 @@ export async function getFeeStructures(): Promise<ActionResult<any[]>> {
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const feeStructures = await db.feeStructure.findMany({
@@ -76,7 +80,7 @@ export async function createFeeStructure(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Extract and validate data
@@ -143,7 +147,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -199,7 +203,7 @@ export async function bulkAssignFees(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -250,7 +254,7 @@ export async function getStudentFees(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const feeAssignments = await db.feeAssignment.findMany({
@@ -284,7 +288,7 @@ export async function recordPayment(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -369,7 +373,7 @@ export async function applyScholarship(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Verify scholarship exists
@@ -414,7 +418,7 @@ export async function issueFine(data: FormData): Promise<ActionResult<string>> {
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -451,7 +455,7 @@ export async function waiveFine(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     await db.fine.update({
@@ -485,7 +489,7 @@ export async function getFeeCollectionSummary(): Promise<ActionResult<any>> {
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const [

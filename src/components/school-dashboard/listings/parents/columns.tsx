@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
@@ -37,17 +39,16 @@ export const getParentColumns = (
   callbacks?: ParentColumnCallbacks
 ): ColumnDef<ParentRow>[] => {
   const t = {
-    name: dictionary?.name || (lang === "ar" ? "الاسم" : "Name"),
-    email: dictionary?.email || (lang === "ar" ? "البريد الإلكتروني" : "Email"),
-    status: dictionary?.status || (lang === "ar" ? "الحالة" : "Status"),
-    created:
-      dictionary?.created || (lang === "ar" ? "تاريخ الإنشاء" : "Created"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
-    active: dictionary?.active || (lang === "ar" ? "نشط" : "Active"),
-    inactive: dictionary?.inactive || (lang === "ar" ? "غير نشط" : "Inactive"),
+    name: dictionary?.name || "Name",
+    email: dictionary?.email || "Email",
+    status: dictionary?.status || "Status",
+    created: dictionary?.created || "Created",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
+    active: dictionary?.active || "Active",
+    inactive: dictionary?.inactive || "Inactive",
   }
 
   return [

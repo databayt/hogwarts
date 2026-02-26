@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Invoice seed data for testing and development
 // This file provides comprehensive test data for the invoice module
 

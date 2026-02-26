@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { BackButton } from "@/components/auth/back-button"
 import { Header } from "@/components/auth/header"

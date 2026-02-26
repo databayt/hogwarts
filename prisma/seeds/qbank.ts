@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * QBank (Question Bank) Seed
  * Creates real Arabic educational questions from data/questions.ts
@@ -14,6 +17,22 @@ import {
 } from "./data/questions"
 import type { SubjectRef, UserRef } from "./types"
 import { logSuccess, processBatch } from "./utils"
+
+// Map English catalog subject names → Arabic SUBJECT_QUESTIONS keys
+const ENGLISH_TO_ARABIC_SUBJECT: Record<string, string> = {
+  Math: "الرياضيات",
+  Physics: "الفيزياء",
+  "Physical Science": "الفيزياء",
+  "English Language Arts": "اللغة العربية",
+  "Life Science": "العلوم",
+  "Life Sciences": "العلوم",
+  "Chemical Science": "العلوم",
+  Chemistry: "العلوم",
+  "Earth and Space Science": "العلوم",
+  "Religion and Ethics": "التربية الإسلامية",
+  "Religion and Philosophy": "التربية الإسلامية",
+  Religion: "القرآن الكريم",
+}
 
 // ============================================================================
 // QBANK SEEDING
@@ -37,8 +56,11 @@ export async function seedQBank(
 
   await processBatch(subjects, 5, async (subject) => {
     // Get real questions for this subject, or fall back to generic
+    const arabicKey = ENGLISH_TO_ARABIC_SUBJECT[subject.subjectName]
     const questions: QuestionData[] =
-      SUBJECT_QUESTIONS[subject.subjectName] || GENERIC_QUESTIONS
+      (arabicKey
+        ? SUBJECT_QUESTIONS[arabicKey]
+        : SUBJECT_QUESTIONS[subject.subjectName]) || GENERIC_QUESTIONS
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i]

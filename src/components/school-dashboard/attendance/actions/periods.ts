@@ -1,11 +1,14 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 
 import type { ActionResponse } from "./core"
 
@@ -48,24 +51,13 @@ export async function getPeriodsForClass(input: {
     const dateObj = new Date(input.date)
     const dayOfWeek = dateObj.getDay() // 0 = Sunday
 
-    // Get active term
-    const activeTerm = await db.term.findFirst({
-      where: {
-        schoolId,
-        isActive: true,
-      },
-    })
+    // Use shared 3-priority term resolution
+    const { term: activeTerm, source } = await resolveActiveTerm(schoolId)
 
     if (!activeTerm) {
       return {
-        success: true,
-        data: {
-          periods: [],
-          settings: {
-            isPeriodBasedAttendance: false,
-            schoolName: "",
-          },
-        },
+        success: false,
+        error: "No academic term found. Set up terms in Timetable > Settings.",
       }
     }
 
@@ -192,21 +184,13 @@ export async function getCurrentPeriod(classId?: string): Promise<
     const dayOfWeek = now.getDay()
     const currentTime = now.toTimeString().slice(0, 8) // HH:MM:SS
 
-    // Get active term
-    const activeTerm = await db.term.findFirst({
-      where: {
-        schoolId,
-        isActive: true,
-      },
-    })
+    // Use shared 3-priority term resolution
+    const { term: activeTerm } = await resolveActiveTerm(schoolId)
 
     if (!activeTerm) {
       return {
-        success: true,
-        data: {
-          currentPeriod: null,
-          nextPeriod: null,
-        },
+        success: false,
+        error: "No academic term found. Set up terms in Timetable > Settings.",
       }
     }
 

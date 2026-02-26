@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -48,12 +50,12 @@ interface Props {
 }
 
 // Course types based on chapter count
-const getCourseType = (chaptersCount: number, isRTL: boolean): string => {
+const getCourseType = (chaptersCount: number, courseTypes?: any): string => {
   if (chaptersCount >= 10)
-    return isRTL ? "شهادة احترافية" : "Professional Certificate"
-  if (chaptersCount >= 5) return isRTL ? "تخصص" : "Specialization"
-  if (chaptersCount >= 3) return isRTL ? "دورة" : "Course"
-  return isRTL ? "دورة قصيرة" : "Short Course"
+    return courseTypes?.professionalCertificate || "Professional Certificate"
+  if (chaptersCount >= 5) return courseTypes?.specialization || "Specialization"
+  if (chaptersCount >= 3) return courseTypes?.course || "Course"
+  return courseTypes?.shortCourse || "Short Course"
 }
 
 // Admin Course Card matching public style + admin actions
@@ -72,7 +74,10 @@ function AdminCourseCard({
 }) {
   const isRTL = lang === "ar"
   const chaptersCount = course.chapters.length
-  const courseType = getCourseType(chaptersCount, isRTL)
+  const courseType = getCourseType(
+    chaptersCount,
+    dictionary?.stream?.courseTypes
+  )
 
   return (
     <div className="group relative">
@@ -92,7 +97,7 @@ function AdminCourseCard({
         )}
 
         {/* Status Badge */}
-        <div className="absolute top-2 left-2">
+        <div className="absolute start-2 top-2">
           <Badge variant={course.isPublished ? "default" : "secondary"}>
             {course.isPublished
               ? (dictionary?.stream?.adminCourses?.published ?? "Published")
@@ -101,7 +106,7 @@ function AdminCourseCard({
         </div>
 
         {/* Admin Actions */}
-        <div className="absolute top-2 right-2">
+        <div className="absolute end-2 top-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="size-8">
@@ -217,7 +222,7 @@ export default function AdminCoursesContent({
             <Button
               variant={view === "grid" ? "secondary" : "ghost"}
               size="icon"
-              className="h-8 w-8 rounded-r-none"
+              className="h-8 w-8 rounded-e-none"
               onClick={() => setView("grid")}
             >
               <Grid3X3 className="size-4" />
@@ -225,7 +230,7 @@ export default function AdminCoursesContent({
             <Button
               variant={view === "table" ? "secondary" : "ghost"}
               size="icon"
-              className="h-8 w-8 rounded-l-none"
+              className="h-8 w-8 rounded-s-none"
               onClick={() => setView("table")}
             >
               <List className="size-4" />

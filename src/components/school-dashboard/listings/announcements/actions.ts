@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Announcements Server Actions Module
  *
@@ -83,9 +86,11 @@ import { Prisma } from "@prisma/client"
 import type { AnnouncementConfig as PrismaAnnouncementConfig } from "@prisma/client"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { withAutoTranslation } from "@/lib/auto-translate"
 import { getDisplayFields } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertAnnouncementPermission,
@@ -162,13 +167,13 @@ export async function createAnnouncement(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -220,12 +225,22 @@ export async function createAnnouncement(
         expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : null,
         pinned: parsed.pinned || false,
         featured: parsed.featured || false,
-        // CRITICAL: Add author tracking (will work after schema migration)
-        // createdBy: authContext.userId,
-        // publishedAt: If published immediately, set publishedAt
+        createdBy: authContext.userId,
         publishedAt: parsed.published ? new Date() : null,
       },
     })
+
+    // Dispatch notifications when publishing immediately
+    if (parsed.published) {
+      dispatchAnnouncementNotifications(row.id, schoolId, {
+        title: parsed.title || "New Announcement",
+        scope: parsed.scope,
+        classId: parsed.classId || undefined,
+        role: parsed.role || undefined,
+      }).catch((err) =>
+        console.error("[createAnnouncement] Notification dispatch failed:", err)
+      )
+    }
 
     // Revalidate cache - both path and tags
     revalidatePath(ANNOUNCEMENTS_PATH)
@@ -280,13 +295,13 @@ export async function createAnnouncementWithTranslation(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate scope permissions
@@ -384,13 +399,13 @@ export async function updateAnnouncement(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -508,13 +523,13 @@ export async function deleteAnnouncement(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -599,13 +614,13 @@ export async function toggleAnnouncementPublish(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -652,10 +667,23 @@ export async function toggleAnnouncementPublish(input: {
       where: { id, schoolId },
       data: {
         published: publish,
-        // Will add publishedAt after schema migration
-        // publishedAt: publish ? new Date() : null
+        publishedAt: publish ? new Date() : null,
       },
     })
+
+    // Dispatch notifications when publishing
+    if (publish) {
+      dispatchAnnouncementNotifications(id, schoolId, {
+        title:
+          existing.scope === "school" ? "New Announcement" : "New Announcement",
+        scope: existing.scope as "school" | "class" | "role",
+      }).catch((err) =>
+        console.error(
+          "[toggleAnnouncementPublish] Notification dispatch failed:",
+          err
+        )
+      )
+    }
 
     // Revalidate cache - both path and tags
     revalidatePath(ANNOUNCEMENTS_PATH)
@@ -703,13 +731,13 @@ export async function getAnnouncement(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -809,13 +837,13 @@ export async function getAnnouncements(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -926,13 +954,13 @@ export async function getPreviousAnnouncements(options?: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Fetch recent announcements for suggestions (limit to 20 most recent)
@@ -1015,13 +1043,13 @@ export async function getAnnouncementConfig(): Promise<
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Try to find existing config
@@ -1081,7 +1109,7 @@ export async function updateAnnouncementConfig(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Only admins can update config
@@ -1095,7 +1123,7 @@ export async function updateAnnouncementConfig(
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -1161,7 +1189,7 @@ export async function getAnnouncementTemplates(): Promise<
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const templates = await db.announcementTemplate.findMany({
@@ -1183,4 +1211,40 @@ export async function getAnnouncementTemplates(): Promise<
         error instanceof Error ? error.message : "Failed to fetch templates",
     }
   }
+}
+
+// ============================================================================
+// Notification Helpers
+// ============================================================================
+
+/**
+ * Dispatch notifications to target audience when an announcement is published
+ */
+async function dispatchAnnouncementNotifications(
+  announcementId: string,
+  schoolId: string,
+  params: {
+    title: string
+    scope: "school" | "class" | "role"
+    classId?: string
+    role?: string
+  }
+) {
+  const bodyPreview = params.title.slice(0, 200)
+
+  await dispatchNotificationsToAudience({
+    schoolId,
+    type: "announcement",
+    title: params.title,
+    body: bodyPreview,
+    priority: "normal",
+    channels: ["in_app"],
+    metadata: {
+      announcementId,
+      url: `/announcements/${announcementId}`,
+    },
+    targetScope: params.scope,
+    targetClassId: params.classId,
+    targetRole: params.role,
+  })
 }

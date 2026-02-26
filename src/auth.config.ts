@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import bcrypt from "bcryptjs"
 import type { NextAuthConfig } from "next-auth"
 import Credentials from "next-auth/providers/credentials"

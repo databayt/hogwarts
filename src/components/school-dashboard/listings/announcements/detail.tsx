@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -59,7 +61,7 @@ export function AnnouncementDetailContent({
     title: d?.announcementTitle || "Title",
     content: d?.content || "Content",
     scope: d?.scope || "Scope",
-    priority: d?.priority || "Priority",
+    priority: d?.priority?.label || "Priority",
     status: d?.status || "Status",
     published: d?.published || "Published",
     draft: d?.draft || "Draft",
@@ -83,7 +85,7 @@ export function AnnouncementDetailContent({
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="me-2 h-4 w-4" />
+          <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
           {t.back}
         </Button>
         <Alert variant="destructive">
@@ -135,7 +137,7 @@ export function AnnouncementDetailContent({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           </Button>
           <div>
             <h1 className="text-2xl font-semibold">{title}</h1>

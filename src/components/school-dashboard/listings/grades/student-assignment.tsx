@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useEffect, useState, useTransition } from "react"
 import { type UseFormReturn } from "react-hook-form"
-import { z } from "zod"
 
 import {
   FormControl,
@@ -19,8 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import {
+  getSchoolAssignments,
+  getSchoolClasses,
+  getSchoolStudents,
+} from "./data-fetchers"
 import { ResultFormStepProps } from "./types"
-import { resultCreateSchema } from "./validation"
 
 export function StudentAssignmentStep({
   form,
@@ -36,33 +41,33 @@ export function StudentAssignmentStep({
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
     []
   )
+  const [isLoading, startTransition] = useTransition()
+
+  const selectedClassId = form.watch("classId")
 
   useEffect(() => {
-    const loadData = async () => {
+    startTransition(async () => {
       try {
-        // This would need to be implemented in separate actions
-        // For now, we'll use placeholders
-        setStudents([
-          { id: "stu_001", givenName: "Harry", surname: "Potter" },
-          { id: "stu_002", givenName: "Hermione", surname: "Granger" },
-          { id: "stu_003", givenName: "Ron", surname: "Weasley" },
+        const [classData, studentData, assignmentData] = await Promise.all([
+          getSchoolClasses(),
+          getSchoolStudents(selectedClassId || undefined),
+          getSchoolAssignments(selectedClassId || undefined),
         ])
-        setAssignments([
-          { id: "ass_001", title: "Transfiguration Quiz", totalPoints: 100 },
-          { id: "ass_002", title: "Potions Essay", totalPoints: 50 },
-          { id: "ass_003", title: "Creatures Test", totalPoints: 75 },
-        ])
-        setClasses([
-          { id: "cls_001", name: "Transfiguration 101" },
-          { id: "cls_002", name: "Potions 101" },
-          { id: "cls_003", name: "Creatures 101" },
-        ])
+
+        if (classData.success && classData.data) {
+          setClasses(classData.data)
+        }
+        if (studentData.success && studentData.data) {
+          setStudents(studentData.data)
+        }
+        if (assignmentData.success && assignmentData.data) {
+          setAssignments(assignmentData.data)
+        }
       } catch (error) {
         console.error("Failed to load data:", error)
       }
-    }
-    loadData()
-  }, [])
+    })
+  }, [selectedClassId])
 
   // Auto-populate maxScore when assignment changes
   const selectedAssignmentId = form.watch("assignmentId")
@@ -80,10 +85,10 @@ export function StudentAssignmentStep({
     <div className="w-full space-y-4">
       <FormField
         control={form.control}
-        name="studentId"
+        name="classId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{dictionary.student}</FormLabel>
+            <FormLabel>{dictionary.class}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -91,7 +96,40 @@ export function StudentAssignmentStep({
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={dictionary.selectStudent} />
+                  <SelectValue placeholder={dictionary.selectClass} />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {classes.map((cls) => (
+                  <SelectItem key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="studentId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{dictionary.student}</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView || isLoading}
+            >
+              <FormControl>
+                <SelectTrigger className="w-full">
+                  <SelectValue
+                    placeholder={
+                      isLoading ? "Loading..." : dictionary.selectStudent
+                    }
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -116,11 +154,15 @@ export function StudentAssignmentStep({
             <Select
               onValueChange={field.onChange}
               value={field.value}
-              disabled={isView}
+              disabled={isView || isLoading}
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={dictionary.selectAssignment} />
+                  <SelectValue
+                    placeholder={
+                      isLoading ? "Loading..." : dictionary.selectAssignment
+                    }
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -128,35 +170,6 @@ export function StudentAssignmentStep({
                   <SelectItem key={assignment.id} value={assignment.id}>
                     {assignment.title} ({assignment.totalPoints}{" "}
                     {dictionary.points})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="classId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{dictionary.class}</FormLabel>
-            <Select
-              onValueChange={field.onChange}
-              value={field.value}
-              disabled={isView}
-            >
-              <FormControl>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={dictionary.selectClass} />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.id} value={cls.id}>
-                    {cls.name}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -11,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createAssignment,
   getAssignment,
@@ -27,6 +30,8 @@ interface AssignmentCreateFormProps {
 }
 
 export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
+  const { dictionary: fullDict } = useDictionary()
+  const t = fullDict?.messages?.toast
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
@@ -78,7 +83,11 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
         ? await updateAssignment({ id: currentId, ...values })
         : await createAssignment(values)
       if (res?.success) {
-        toast.success(currentId ? "Assignment updated" : "Assignment created")
+        toast.success(
+          currentId
+            ? t?.success?.assignmentUpdated || "Assignment updated"
+            : t?.success?.assignmentCreated || "Assignment created"
+        )
         closeModal()
         // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
@@ -90,13 +99,17 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
         toast.error(
           res?.error ||
             (currentId
-              ? "Failed to update assignment"
-              : "Failed to create assignment")
+              ? t?.error?.assignmentUpdateFailed ||
+                "Failed to update assignment"
+              : t?.error?.assignmentCreateFailed ||
+                "Failed to create assignment")
         )
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      toast.error("An unexpected error occurred")
+      toast.error(
+        fullDict?.common?.unexpectedError || "An unexpected error occurred"
+      )
     }
   }
 

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Unified File Block - ID Card Template
  * PDF template for student, teacher, staff, and parent ID cards

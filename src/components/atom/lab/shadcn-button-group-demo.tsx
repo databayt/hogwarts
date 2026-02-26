@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import {
   Archive,
@@ -46,7 +48,7 @@ export function ShadcnButtonGroupDemo() {
       {/* Back Button (Hidden on Mobile) */}
       <div className="hidden sm:flex">
         <Button variant="outline" size="icon" aria-label="Go Back">
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4 rtl:rotate-180" />
         </Button>
       </div>
 

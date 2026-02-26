@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Script to set up PostgreSQL triggers for real-time geofence notifications
  * Run with: npx tsx scripts/setup-geo-triggers.ts

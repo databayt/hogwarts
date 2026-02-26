@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState } from "react"
 import Image from "next/image"
 
@@ -94,7 +96,8 @@ export function BookCover({
     )
   }
 
-  // Fallback to regular Image for non-ImageKit URLs
+  // External URLs (Open Library, etc.) bypass Next.js image proxy
+  // to avoid NAT64/private-IP blocking in /_next/image
   return (
     <Image
       src={coverUrl}
@@ -103,6 +106,7 @@ export function BookCover({
       height={height}
       className={`h-full w-full object-cover ${className}`}
       priority={priority}
+      unoptimized
       onError={() => setImageError(true)}
     />
   )

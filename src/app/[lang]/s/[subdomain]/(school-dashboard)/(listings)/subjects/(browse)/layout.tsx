@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -25,6 +28,10 @@ export default async function SubjectsBrowseLayout({
     },
     { name: isAr ? "متوسط" : "Middle", href: `/${lang}/subjects/middle` },
     { name: isAr ? "ثانوي" : "High", href: `/${lang}/subjects/high` },
+    {
+      name: isAr ? "الكتالوج" : "Catalog",
+      href: `/${lang}/subjects/catalog`,
+    },
     {
       name: isAr ? "المساهمة" : "Contribute",
       href: `/${lang}/subjects/contribute`,

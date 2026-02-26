@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Library Management System - Configuration Constants
 
 export const LIBRARY_CONFIG = {
@@ -11,7 +14,7 @@ export const LIBRARY_CONFIG = {
   MAX_RATING: 5,
 
   // Pagination
-  BOOKS_PER_PAGE: 10,
+  BOOKS_PER_PAGE: 20,
   ADMIN_BOOKS_PER_PAGE: 20,
 
   // Colors
@@ -64,6 +67,16 @@ export const BOOK_GENRES = [
 
 export type BookGenre = (typeof BOOK_GENRES)[number]
 
+export const BOOK_GRADE_LEVELS = [
+  "GENERAL",
+  "KG",
+  "PRIMARY",
+  "INTERMEDIATE",
+  "SECONDARY",
+] as const
+
+export type BookGradeLevel = (typeof BOOK_GRADE_LEVELS)[number]
+
 // Admin navigation items
 export const ADMIN_NAV_ITEMS = [
   {
@@ -80,5 +93,15 @@ export const ADMIN_NAV_ITEMS = [
     title: "Add New Book",
     href: "/library/admin/books/new",
     icon: "Plus",
+  },
+  {
+    title: "Browse Catalog",
+    href: "/library/catalog",
+    icon: "Library",
+  },
+  {
+    title: "Contribute Book",
+    href: "/library/contribute",
+    icon: "BookPlus",
   },
 ] as const

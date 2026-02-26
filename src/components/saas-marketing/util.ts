@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Utility functions for Marketing components
  *
@@ -7,8 +10,12 @@
 /**
  * Format price for display
  */
-export function formatPrice(price: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatPrice(
+  price: number,
+  currency = "USD",
+  locale = "ar"
+): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits: 0,

@@ -27,7 +27,7 @@ model: sonnet
 - **Zero Critical Vulnerabilities**: Maintain clean security posture
 - **Automated Scanning**: Daily security audits via pnpm audit
 - **Rapid Response**: <24 hour patch deployment for critical issues
-- **License Compliance**: Verify MIT-compatible licenses
+- **License Compliance**: Verify SSPL-compatible licenses
 - **Supply Chain Security**: Verify package integrity
 
 ### Performance Impact
@@ -635,7 +635,7 @@ jobs:
 - ❌ Duplicate dependencies (check with `pnpm why`)
 - ❌ Large bundle size increases (>10KB) from new packages
 - ❌ Using deprecated packages
-- ❌ Non-MIT-compatible licenses
+- ❌ Non-SSPL-compatible licenses
 - ❌ Phantom dependencies (imports not in package.json)
 
 ---

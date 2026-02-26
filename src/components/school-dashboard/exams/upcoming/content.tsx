@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { ElementType } from "react"
 import Link from "next/link"
 import { addDays, differenceInDays, format } from "date-fns"
@@ -9,6 +12,7 @@ import {
   Clock,
 } from "lucide-react"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
@@ -22,6 +26,7 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 // Short labels for exam types - keep badges compact
 const examTypeLabels: Record<string, string> = {
@@ -76,28 +81,44 @@ export default async function UpcomingExamsContent({
         ...(catalogSubjectId ? { catalogSubjectId } : {}),
       },
       include: {
-        class: { select: { name: true } },
-        subject: { select: { subjectName: true } },
+        class: { select: { name: true, lang: true } },
+        subject: { select: { subjectName: true, lang: true } },
       },
       orderBy: { examDate: "asc" },
       take: 30,
     })
 
-    upcomingExams = exams.map((exam) => ({
-      id: exam.id,
-      title: exam.title,
-      description: exam.description,
-      examDate: exam.examDate,
-      startTime: exam.startTime,
-      endTime: exam.endTime,
-      duration: exam.duration,
-      totalMarks: exam.totalMarks,
-      examType: exam.examType,
-      status: exam.status,
-      className: exam.class?.name || "Unknown",
-      subjectName: exam.subject?.subjectName || "Unknown",
-      daysUntil: differenceInDays(exam.examDate, today),
-    }))
+    upcomingExams = await Promise.all(
+      exams.map(async (exam) => ({
+        id: exam.id,
+        title: exam.title,
+        description: exam.description,
+        examDate: exam.examDate,
+        startTime: exam.startTime,
+        endTime: exam.endTime,
+        duration: exam.duration,
+        totalMarks: exam.totalMarks,
+        examType: exam.examType,
+        status: exam.status,
+        className: exam.class?.name
+          ? await getDisplayText(
+              exam.class.name,
+              (exam.class.lang || "ar") as SupportedLanguage,
+              lang,
+              schoolId!
+            )
+          : "Unknown",
+        subjectName: exam.subject?.subjectName
+          ? await getDisplayText(
+              exam.subject.subjectName,
+              (exam.subject.lang || "ar") as SupportedLanguage,
+              lang,
+              schoolId!
+            )
+          : "Unknown",
+        daysUntil: differenceInDays(exam.examDate, today),
+      }))
+    )
   }
 
   // Use exams dictionary - upcoming keys may not exist, use fallbacks
@@ -196,7 +217,7 @@ export default async function UpcomingExamsContent({
           <Button asChild variant="ghost" size="sm">
             <Link href={`/${lang}/exams/${exam.id}`}>
               {d?.actions?.viewDetails || "View Details"}
-              <ChevronRight className="ms-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
             </Link>
           </Button>
         </div>

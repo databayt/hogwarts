@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Banking Component Type Definitions
  * Provides comprehensive type safety for all banking-related components

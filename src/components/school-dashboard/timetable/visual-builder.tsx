@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import {
@@ -47,6 +49,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface TimeSlot {
   id: string
@@ -272,6 +275,8 @@ export function TimetableBuilder({
   initialEntries = [],
   onSave,
 }: TimetableBuilderProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [entries, setEntries] = useState<Map<string, TimetableEntry>>(
     new Map(initialEntries.map((e) => [`${e.dayOfWeek}-${e.timeSlotId}`, e]))
   )
@@ -334,7 +339,7 @@ export function TimetableBuilder({
     }
 
     setEntries((prev) => new Map(prev).set(key, newEntry))
-    toast.success(`Added ${subject.name} to timetable`)
+    toast.success(t?.success?.updated || `Added ${subject.name} to timetable`)
   }
 
   const handleRemoveEntry = (entryId: string) => {
@@ -348,7 +353,7 @@ export function TimetableBuilder({
       }
       return newEntries
     })
-    toast.success("Removed from timetable")
+    toast.success(t?.success?.deleted || "Removed from timetable")
   }
 
   const handleSave = async () => {
@@ -356,9 +361,9 @@ export function TimetableBuilder({
     try {
       const entriesArray = Array.from(entries.values())
       await onSave(entriesArray)
-      toast.success("Timetable saved successfully")
+      toast.success(t?.success?.saved || "Timetable saved successfully")
     } catch (error) {
-      toast.error("Failed to save timetable")
+      toast.error(t?.error?.saveFailed || "Failed to save timetable")
     } finally {
       setSaving(false)
     }
@@ -387,9 +392,11 @@ export function TimetableBuilder({
           data.map((e) => [`${e.dayOfWeek}-${e.timeSlotId}`, e])
         )
         setEntries(newEntries)
-        toast.success("Timetable imported successfully")
+        toast.success(
+          t?.success?.importCompleted || "Timetable imported successfully"
+        )
       } catch (error) {
-        toast.error("Failed to import timetable")
+        toast.error(t?.error?.importFailed || "Failed to import timetable")
       }
     }
     reader.readAsText(file)
@@ -398,7 +405,7 @@ export function TimetableBuilder({
   const handleClearAll = () => {
     if (confirm("Are you sure you want to clear the entire timetable?")) {
       setEntries(new Map())
-      toast.success("Timetable cleared")
+      toast.success(t?.success?.deleted || "Timetable cleared")
     }
   }
 

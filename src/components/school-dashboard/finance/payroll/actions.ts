@@ -1,5 +1,8 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Payroll Sub-Block Server Actions
  *
@@ -9,6 +12,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -46,7 +50,7 @@ export async function getPayrollRuns(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const whereClause: any = { schoolId }
@@ -78,7 +82,7 @@ export async function getPayrollRun(runId: string): Promise<ActionResult<any>> {
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const payrollRun = await db.payrollRun.findFirst({
@@ -121,7 +125,7 @@ export async function createPayrollRun(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const formData = Object.fromEntries(data)
@@ -170,7 +174,7 @@ export async function generateSalarySlips(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get payroll run
@@ -355,7 +359,7 @@ export async function approvePayroll(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Verify payroll run exists and is in correct status
@@ -402,7 +406,7 @@ export async function rejectPayroll(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const payrollRun = await db.payrollRun.findFirst({
@@ -449,7 +453,7 @@ export async function processPayments(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Verify payroll run is approved
@@ -515,7 +519,7 @@ export async function getTeacherSalarySlips(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const salarySlips = await db.salarySlip.findMany({
@@ -552,7 +556,7 @@ export async function getSalarySlip(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const salarySlip = await db.salarySlip.findFirst({
@@ -601,7 +605,7 @@ export async function getPayrollSummary(): Promise<ActionResult<any>> {
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const [totalRuns, pendingApproval, approvedRuns, paidRuns, totalPayments] =
@@ -643,7 +647,7 @@ export async function deletePayrollRun(runId: string): Promise<ActionResult> {
     const { schoolId } = await getTenantContext()
 
     if (!session?.user?.id || !schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const payrollRun = await db.payrollRun.findFirst({

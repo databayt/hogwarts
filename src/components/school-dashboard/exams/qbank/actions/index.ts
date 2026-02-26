@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Central export file for all qbank actions
  * Refactored from original 569-line actions.ts into focused modules

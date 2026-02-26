@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { Edit, MoreHorizontal, Trash2 } from "lucide-react"
 
@@ -97,7 +99,7 @@ export function CertificateConfigList({
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
                     <a href={`certificates/configs/${config.id}/edit`}>
-                      <Edit className="mr-2 h-4 w-4" />
+                      <Edit className="me-2 h-4 w-4" />
                       Edit
                     </a>
                   </DropdownMenuItem>
@@ -105,7 +107,7 @@ export function CertificateConfigList({
                     className="text-destructive"
                     onClick={() => handleDelete(config.id)}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash2 className="me-2 h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>

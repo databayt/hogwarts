@@ -164,5 +164,9 @@
     "books": "Loading books...",
     "bookDetails": "Loading book details...",
     "profile": "Loading profile..."
+  },
+  "hero": {
+    "title": "Revelio",
+    "subtitle": "Unlock hidden."
   }
 }

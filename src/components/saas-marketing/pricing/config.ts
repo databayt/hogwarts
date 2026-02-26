@@ -1,8 +1,39 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { env } from "@/env.mjs"
 import type {
   PlansRow,
   SubscriptionPlan,
 } from "@/components/saas-marketing/pricing/types"
+
+// Type for the pricing section of the dictionary
+type PricingDict =
+  | {
+      constants?: {
+        free?: string
+        includes?: string
+        everythingInHobby?: string
+        everythingInPro?: string
+        startTrial?: string
+        getPro?: string
+        getUltra?: string
+        monthly?: string
+        yearly?: string
+        perMonth?: string
+        moreInfo?: string
+        loading?: string
+        unavailable?: string
+        manageSubscription?: string
+        getPlan?: string
+      }
+      plans?: {
+        hobby?: { title?: string; description?: string; benefits?: string[] }
+        pro?: { title?: string; description?: string; benefits?: string[] }
+        ultra?: { title?: string; description?: string; benefits?: string[] }
+      }
+    }
+  | undefined
 
 export const isProTitle = (title: string): boolean =>
   title.toLowerCase() === "pro"
@@ -10,25 +41,29 @@ export const isProTitle = (title: string): boolean =>
 export const isStarterTitle = (title: string): boolean =>
   title.toLowerCase() === "hobby"
 
-export const getIncludesHeading = (title: string): string =>
+export const getIncludesHeading = (
+  title: string,
+  pricing?: PricingDict
+): string =>
   isStarterTitle(title)
-    ? "Includes"
+    ? pricing?.constants?.includes || "Includes"
     : isProTitle(title)
-      ? "Everything in Hobby, plus"
-      : "Everything in Pro, plus"
+      ? pricing?.constants?.everythingInHobby || "Everything in Hobby, plus"
+      : pricing?.constants?.everythingInPro || "Everything in Pro, plus"
 
-export const getCtaLabel = (title: string): string =>
+export const getCtaLabel = (title: string, pricing?: PricingDict): string =>
   isStarterTitle(title)
-    ? "Start trial"
+    ? pricing?.constants?.startTrial || "Start trial"
     : isProTitle(title)
-      ? "Get Pro"
-      : "Get Ultra"
+      ? pricing?.constants?.getPro || "Get Pro"
+      : pricing?.constants?.getUltra || "Get Ultra"
 
 export const getPriceDisplay = (
   offer: SubscriptionPlan,
-  isYearly: boolean
+  isYearly: boolean,
+  pricing?: PricingDict
 ): string => {
-  if (offer.prices.monthly === 0) return "Free"
+  if (offer.prices.monthly === 0) return pricing?.constants?.free || "Free"
   if (isYearly) {
     const discountedPerMonth = offer.prices.monthly * 0.8
     return `$${discountedPerMonth}`
@@ -41,7 +76,7 @@ export const getYearlyTotal = (offer: SubscriptionPlan): number => {
   return offer.prices.monthly * 12 * 0.8
 }
 
-// Pricing data moved here from subscriptions.ts
+// Default pricing data (fallback when no dictionary)
 export const pricingData: SubscriptionPlan[] = [
   {
     title: "Hobby",
@@ -97,6 +132,24 @@ export const pricingData: SubscriptionPlan[] = [
     },
   },
 ]
+
+// Get pricing data with dictionary translations applied
+export const getPricingData = (pricing?: PricingDict): SubscriptionPlan[] => {
+  if (!pricing?.plans) return pricingData
+
+  return pricingData.map((plan) => {
+    const key = plan.title.toLowerCase() as "hobby" | "pro" | "ultra"
+    const dictPlan = pricing.plans?.[key]
+    if (!dictPlan) return plan
+
+    return {
+      ...plan,
+      title: dictPlan.title || plan.title,
+      description: dictPlan.description || plan.description,
+      benefits: dictPlan.benefits || plan.benefits,
+    }
+  })
+}
 
 export const plansColumns = ["hobby", "pro", "ultra", "enterprise"] as const
 
@@ -183,3 +236,10 @@ export const comparePlans: PlansRow[] = [
     tooltip: "Higher plans include more comprehensive onboarding assistance.",
   },
 ]
+
+// Get compare plans with dictionary translations applied
+export const getComparePlans = (pricing?: PricingDict): PlansRow[] => {
+  // For now, return the default comparePlans since the feature names
+  // in the dictionary use a different structure than the current hardcoded data
+  return comparePlans
+}

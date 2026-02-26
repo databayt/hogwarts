@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 export type PeriodType = "class" | "break" | "lunch"
 
 export interface StructurePeriod {
@@ -410,6 +413,163 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     isDefault: false,
     sortOrder: 5,
   },
+  {
+    slug: "us-standard",
+    name: "US Standard",
+    nameEn: "US Standard",
+    description: "7 periods x 50min, Mon-Fri",
+    descriptionEn: "7 periods x 50min, Mon-Fri, standard US K-12 schedule",
+    country: "US",
+    schoolType: ["public", "private", "charter"],
+    schoolLevel: ["primary", "secondary", "both"],
+    workingDays: [1, 2, 3, 4, 5], // Mon-Fri
+    periods: [
+      {
+        name: "Period 1",
+        startTime: "08:00",
+        endTime: "08:50",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Period 2",
+        startTime: "08:55",
+        endTime: "09:45",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Period 3",
+        startTime: "09:50",
+        endTime: "10:40",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Break",
+        startTime: "10:40",
+        endTime: "10:55",
+        type: "break",
+        durationMinutes: 15,
+      },
+      {
+        name: "Period 4",
+        startTime: "10:55",
+        endTime: "11:45",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Lunch",
+        startTime: "11:45",
+        endTime: "12:25",
+        type: "lunch",
+        durationMinutes: 40,
+      },
+      {
+        name: "Period 5",
+        startTime: "12:25",
+        endTime: "13:15",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Period 6",
+        startTime: "13:20",
+        endTime: "14:10",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Period 7",
+        startTime: "14:15",
+        endTime: "15:05",
+        type: "class",
+        durationMinutes: 50,
+      },
+    ],
+    lunchAfterPeriod: 4,
+    periodsPerDay: 7,
+    schoolStart: "08:00",
+    schoolEnd: "15:05",
+    isDefault: true,
+    sortOrder: 6,
+  },
+  {
+    slug: "intl-default",
+    name: "International Default",
+    nameEn: "International Default",
+    description: "6 periods x 50min, Mon-Fri",
+    descriptionEn: "6 periods x 50min, Mon-Fri, generic international schedule",
+    country: "*",
+    schoolType: [],
+    schoolLevel: ["primary", "secondary", "both"],
+    workingDays: [1, 2, 3, 4, 5], // Mon-Fri
+    periods: [
+      {
+        name: "Period 1",
+        startTime: "08:00",
+        endTime: "08:50",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Period 2",
+        startTime: "08:55",
+        endTime: "09:45",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Break",
+        startTime: "09:45",
+        endTime: "10:05",
+        type: "break",
+        durationMinutes: 20,
+      },
+      {
+        name: "Period 3",
+        startTime: "10:05",
+        endTime: "10:55",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Period 4",
+        startTime: "11:00",
+        endTime: "11:50",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Lunch",
+        startTime: "11:50",
+        endTime: "12:30",
+        type: "lunch",
+        durationMinutes: 40,
+      },
+      {
+        name: "Period 5",
+        startTime: "12:30",
+        endTime: "13:20",
+        type: "class",
+        durationMinutes: 50,
+      },
+      {
+        name: "Period 6",
+        startTime: "13:25",
+        endTime: "14:15",
+        type: "class",
+        durationMinutes: 50,
+      },
+    ],
+    lunchAfterPeriod: 4,
+    periodsPerDay: 6,
+    schoolStart: "08:00",
+    schoolEnd: "14:15",
+    isDefault: false,
+    sortOrder: 99,
+  },
 ]
 
 /** Legacy template name → structure slug mapping */
@@ -428,12 +588,29 @@ export function getRecommendedStructures(
   schoolType?: string,
   schoolLevel?: string
 ): TimetableStructure[] {
-  return TIMETABLE_STRUCTURES.filter((s) => {
+  const countryMatch = TIMETABLE_STRUCTURES.filter((s) => {
     if (s.country !== country) return false
-    if (schoolType && !s.schoolType.includes(schoolType)) return false
+    if (
+      schoolType &&
+      s.schoolType.length > 0 &&
+      !s.schoolType.includes(schoolType)
+    )
+      return false
     if (schoolLevel && !s.schoolLevel.includes(schoolLevel)) return false
     return true
-  }).sort((a, b) => {
+  })
+
+  // Fall back to wildcard structures when no country-specific match
+  const results =
+    countryMatch.length > 0
+      ? countryMatch
+      : TIMETABLE_STRUCTURES.filter((s) => {
+          if (s.country !== "*") return false
+          if (schoolLevel && !s.schoolLevel.includes(schoolLevel)) return false
+          return true
+        })
+
+  return results.sort((a, b) => {
     if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1
     return a.sortOrder - b.sortOrder
   })

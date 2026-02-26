@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { CircleCheck, Info } from "lucide-react"
 
 import {
@@ -6,25 +9,44 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { HeaderSection } from "@/components/atom/header-section"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   comparePlans,
+  getComparePlans,
   plansColumns,
 } from "@/components/saas-marketing/pricing/config"
 import { PlansRow } from "@/components/saas-marketing/pricing/types"
 
-export function ComparePlans() {
+interface ComparePlansProps {
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
+}
+
+export function ComparePlans({ dictionary }: ComparePlansProps) {
+  const pricing = dictionary?.marketing?.pricing
+  const plans = getComparePlans(pricing)
+
+  const planNameMap: Record<string, string> = {
+    hobby: pricing?.planNames?.hobby || "hobby",
+    pro: pricing?.planNames?.pro || "pro",
+    ultra: pricing?.planNames?.ultra || "ultra",
+    enterprise: pricing?.planNames?.enterprise || "enterprise",
+  }
+
   const renderCell = (value: string | boolean | null) => {
-    if (value === null) return "—"
+    if (value === null) return "\u2014"
     if (typeof value === "boolean")
-      return value ? <CircleCheck className="mx-auto size-5" /> : "—"
+      return value ? <CircleCheck className="mx-auto size-5" /> : "\u2014"
     return value
   }
 
   return (
     <div className="w-full py-20">
       <HeaderSection
-        title="Compare Plans"
-        subtitle="Find the perfect plan tailored for your business needs!"
+        title={pricing?.comparePlans?.title || "Compare Plans"}
+        subtitle={
+          pricing?.comparePlans?.subtitle ||
+          "Find the perfect plan tailored for your business needs!"
+        }
       />
 
       {/* Sticky header row - flush with page header */}
@@ -36,7 +58,7 @@ export function ComparePlans() {
               key={col}
               className="font-heading flex-1 py-5 text-center tracking-wide text-black capitalize"
             >
-              {col}
+              {planNameMap[col] || col}
             </div>
           ))}
         </div>
@@ -46,7 +68,7 @@ export function ComparePlans() {
       <div className="overflow-x-auto">
         <table className="w-full table-fixed">
           <tbody>
-            {comparePlans.map((row: PlansRow, index: number) => (
+            {plans.map((row: PlansRow, index: number) => (
               <tr key={index}>
                 <td
                   data-tip={row.tooltip ? row.tooltip : ""}

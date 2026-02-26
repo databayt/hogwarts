@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useState } from "react"
 import { FileText, Upload, X } from "lucide-react"
 
@@ -107,7 +109,7 @@ export default function ImportContent({ dictionary }: Props) {
                 <Button
                   size="icon"
                   variant="destructive"
-                  className="absolute top-2 right-2"
+                  className="absolute end-2 top-2"
                   onClick={removeFile}
                 >
                   <X className="h-4 w-4" />

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Login Action Tests
  *
@@ -72,6 +75,11 @@ vi.mock("@/components/auth/tokens", () => ({
 vi.mock("@/components/auth/mail", () => ({
   sendTwoFactorTokenEmail: vi.fn(),
   sendVerificationEmail: vi.fn(),
+}))
+
+vi.mock("@/lib/audit-log", () => ({
+  isBruteForceBlocked: vi.fn().mockResolvedValue(false),
+  logLoginAttempt: vi.fn(),
 }))
 
 vi.mock("@/routes", () => ({
@@ -245,7 +253,8 @@ describe("Login Action - Email Verification", () => {
     )
     expect(mockedSendVerificationEmail).toHaveBeenCalledWith(
       "unverified@example.com",
-      "verification-token"
+      "verification-token",
+      "en"
     )
   })
 
@@ -311,7 +320,8 @@ describe("Login Action - Two-Factor Authentication", () => {
     expect(mockedGenerateTwoFactorToken).toHaveBeenCalledWith("2fa@example.com")
     expect(mockedSendTwoFactorTokenEmail).toHaveBeenCalledWith(
       "2fa@example.com",
-      "123456"
+      "123456",
+      "en"
     )
   })
 
@@ -476,11 +486,11 @@ describe("Login Action - Smart Subdomain Redirect", () => {
       password: "password123",
     })
 
-    // In development, should use localhost
+    // Without callbackUrl, teacher stays on SaaS marketing (no subdomain redirect)
     expect(mockedSignIn).toHaveBeenCalledWith("credentials", {
       email: "teacher@example.com",
       password: "password123",
-      redirectTo: expect.stringContaining("hogwarts"),
+      redirectTo: "/ar",
     })
   })
 
@@ -505,7 +515,7 @@ describe("Login Action - Smart Subdomain Redirect", () => {
     expect(mockedSignIn).toHaveBeenCalledWith("credentials", {
       email: "dev@example.com",
       password: "password123",
-      redirectTo: "/dashboard",
+      redirectTo: "/ar/dashboard",
     })
   })
 

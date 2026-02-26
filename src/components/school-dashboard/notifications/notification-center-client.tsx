@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -103,7 +105,7 @@ export function NotificationCenterClient({
     <div className="relative">
       {/* Connection indicator */}
       {!isConnected && (
-        <div className="text-muted-foreground absolute top-0 right-0 flex items-center gap-2 text-xs">
+        <div className="text-muted-foreground absolute end-0 top-0 flex items-center gap-2 text-xs">
           <span className="bg-muted-foreground h-2 w-2 animate-pulse rounded-full" />
           <span>Connecting...</span>
         </div>

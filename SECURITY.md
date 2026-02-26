@@ -20,8 +20,9 @@ We take the security of Hogwarts seriously. If you believe you have found a secu
 
 ### Please DO:
 
-1. **Email us directly** at: security@databayt.org
-2. Include the following information:
+1. **GitHub Security Advisories** (preferred): Use [private vulnerability reporting](https://github.com/databayt/hogwarts/security/advisories/new)
+2. **Email us directly** at: security@databayt.org
+3. Include the following information:
    - Type of vulnerability (e.g., SQL injection, XSS, authentication bypass)
    - Full paths of source file(s) related to the vulnerability
    - Step-by-step instructions to reproduce the issue
@@ -30,10 +31,14 @@ We take the security of Hogwarts seriously. If you believe you have found a secu
 
 ### What to Expect
 
-- **Initial Response**: Within 48 hours, we will acknowledge receipt of your report
-- **Assessment**: Within 7 days, we will assess the vulnerability and provide an estimated timeline
-- **Resolution**: We aim to resolve critical vulnerabilities within 30 days
-- **Disclosure**: We will coordinate disclosure with you after the fix is released
+| Action                     | Timeframe              |
+| -------------------------- | ---------------------- |
+| Acknowledgment             | Within 48 hours        |
+| Initial assessment         | Within 5 business days |
+| Critical vulnerability fix | Within 7 days          |
+| High vulnerability fix     | Within 14 days         |
+| Medium/Low fix             | Within 30 days         |
+| Public disclosure          | After fix is deployed  |
 
 ### Safe Harbor
 

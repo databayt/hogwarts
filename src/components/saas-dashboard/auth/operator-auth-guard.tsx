@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"

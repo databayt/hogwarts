@@ -1,9 +1,12 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 // Schema for school identity update
@@ -21,6 +24,8 @@ const schoolIdentitySchema = z.object({
   description: z.string().optional(),
   schoolType: z.string().optional(),
   schoolLevel: z.string().optional(),
+  system: z.string().optional(),
+  preferredLanguage: z.string().optional(),
 })
 
 // Schema for branding update
@@ -54,7 +59,7 @@ export async function updateSchoolIdentity(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate input
@@ -86,6 +91,8 @@ export async function updateSchoolIdentity(
         description: validatedData.description || null,
         schoolType: validatedData.schoolType || null,
         schoolLevel: validatedData.schoolLevel || null,
+        system: validatedData.system || null,
+        preferredLanguage: validatedData.preferredLanguage || "ar",
       },
     })
 
@@ -113,7 +120,7 @@ export async function updateSchoolBranding(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate input
@@ -178,7 +185,7 @@ export async function updateSchoolLocation(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const validatedData = schoolLocationSchema.parse(data)
@@ -224,7 +231,7 @@ export async function updateSchoolPricing(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const validatedData = schoolPricingSchema.parse(data)
@@ -272,7 +279,7 @@ export async function updatePlanLimits(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate input
@@ -320,7 +327,7 @@ export async function updateSchoolCapacity(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate input

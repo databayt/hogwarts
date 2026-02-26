@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Seed System Orchestrator
  *
@@ -15,7 +18,7 @@
  *   - 2000 Guardians (2 per student)
  *   - 14 Year Levels (KG1-12)
  *   - 6 Departments
- *   - 19 Subjects (bilingual)
+ *   - 62 ClickView Subjects (K-12)
  *   - 30+ Classrooms
  *   - 400+ Classes
  *   - 200+ Assignments + 500 Submissions
@@ -46,6 +49,7 @@ import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { seedBanking } from "./banking"
 import { seedCatalog } from "./catalog"
+import { seedCatalogBooks } from "./catalog-books"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
 import { seedEvents } from "./events"
@@ -225,6 +229,10 @@ async function main() {
 
     await measureDuration("Library (with borrow records)", () =>
       seedLibrary(prisma, school.id, students)
+    )
+
+    await measureDuration("Catalog Books", () =>
+      seedCatalogBooks(prisma, school.id)
     )
 
     // ========================================================================

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -262,7 +265,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               className="text-primary inline-flex items-center text-xs hover:underline"
             >
               {d?.cards?.invoicing?.viewAll || "View All"}{" "}
-              <ChevronRight className="ms-1 h-3 w-3" />
+              <ChevronRight className="ms-1 h-3 w-3 rtl:rotate-180" />
             </Link>
           </CardContent>
         </Card>
@@ -293,7 +296,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               className="text-primary inline-flex items-center text-xs hover:underline"
             >
               {d?.cards?.fees?.viewStructures || "View Fees"}{" "}
-              <ChevronRight className="ms-1 h-3 w-3" />
+              <ChevronRight className="ms-1 h-3 w-3 rtl:rotate-180" />
             </Link>
           </CardContent>
         </Card>
@@ -326,7 +329,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               className="text-primary inline-flex items-center text-xs hover:underline"
             >
               {d?.cards?.payroll?.viewRuns || "View Payroll"}{" "}
-              <ChevronRight className="ms-1 h-3 w-3" />
+              <ChevronRight className="ms-1 h-3 w-3 rtl:rotate-180" />
             </Link>
           </CardContent>
         </Card>
@@ -355,7 +358,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               className="text-primary inline-flex items-center text-xs hover:underline"
             >
               {d?.cards?.reports?.viewReports || "View Reports"}{" "}
-              <ChevronRight className="ms-1 h-3 w-3" />
+              <ChevronRight className="ms-1 h-3 w-3 rtl:rotate-180" />
             </Link>
           </CardContent>
         </Card>

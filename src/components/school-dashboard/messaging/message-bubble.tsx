@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { format } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
@@ -27,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { MessageDTO } from "./types"
 
@@ -68,6 +71,8 @@ export function MessageBubble({
   isFirstInGroup = true,
   isLastInGroup = true,
 }: MessageBubbleOptimizedProps) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const [showReactions, setShowReactions] = useState(false)
   const isOwnMessage = message.senderId === currentUserId
   const isDeleted = message.isDeleted
@@ -78,9 +83,9 @@ export function MessageBubble({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(message.content)
-      toast({ title: locale === "ar" ? "تم النسخ" : "Copied" })
+      toast({ title: m?.ui?.copied || "Copied" })
     } catch (error) {
-      toast({ title: locale === "ar" ? "فشل النسخ" : "Failed to copy" })
+      toast({ title: m?.ui?.copy_failed || "Failed to copy" })
     }
   }
 
@@ -174,9 +179,7 @@ export function MessageBubble({
               </p>
               <p className="text-muted-foreground truncate">
                 {message.replyTo.isDeleted
-                  ? locale === "ar"
-                    ? "تم حذف الرسالة"
-                    : "Message deleted"
+                  ? m?.ui?.message_deleted || "Message deleted"
                   : message.replyTo.content}
               </p>
             </div>
@@ -188,8 +191,8 @@ export function MessageBubble({
               "relative px-3 py-2 break-words shadow-sm",
               // iMessage-style rounded corners with asymmetric tail
               isOwnMessage
-                ? "bg-primary text-primary-foreground rounded-[18px] rounded-tr-[4px]"
-                : "bg-muted text-foreground border-border rounded-[18px] rounded-tl-[4px] border",
+                ? "bg-primary text-primary-foreground rounded-[18px] rounded-se-[4px]"
+                : "bg-muted text-foreground border-border rounded-[18px] rounded-ss-[4px] border",
               isDeleted && "italic opacity-60",
               isPending && "opacity-70" // Optimistic message (pending)
             )}
@@ -197,9 +200,7 @@ export function MessageBubble({
             {/* Message content */}
             {isDeleted ? (
               <span className="text-muted-foreground">
-                {locale === "ar"
-                  ? "تم حذف هذه الرسالة"
-                  : "This message was deleted"}
+                {m?.ui?.this_message_deleted || "This message was deleted"}
               </span>
             ) : (
               <>
@@ -249,7 +250,7 @@ export function MessageBubble({
                             : "text-muted-foreground"
                         )}
                       >
-                        {locale === "ar" ? "معدلة" : "edited"}
+                        {m?.ui?.edited || "edited"}
                       </span>
                     )}
                     <span
@@ -291,7 +292,7 @@ export function MessageBubble({
             <div
               className={cn(
                 "absolute top-0 opacity-0 transition-opacity group-hover:opacity-100",
-                isOwnMessage ? "-left-10" : "-right-10"
+                isOwnMessage ? "-start-10" : "-end-10"
               )}
             >
               <DropdownMenu>
@@ -309,29 +310,29 @@ export function MessageBubble({
                     onClick={() => setShowReactions(!showReactions)}
                   >
                     <Smile className="me-2 h-4 w-4" />
-                    {locale === "ar" ? "تفاعل" : "React"}
+                    {m?.actions?.react || "React"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onReply?.(message)}>
                     <Reply className="me-2 h-4 w-4" />
-                    {locale === "ar" ? "رد" : "Reply"}
+                    {m?.actions?.reply || "Reply"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleCopy}>
                     <Copy className="me-2 h-4 w-4" />
-                    {locale === "ar" ? "نسخ" : "Copy"}
+                    {m?.actions?.copy || "Copy"}
                   </DropdownMenuItem>
                   {isOwnMessage && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => onEdit?.(message)}>
                         <Pencil className="me-2 h-4 w-4" />
-                        {locale === "ar" ? "تعديل" : "Edit"}
+                        {m?.actions?.edit || "Edit"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onDelete?.(message.id)}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="me-2 h-4 w-4" />
-                        {locale === "ar" ? "حذف" : "Delete"}
+                        {m?.actions?.delete || "Delete"}
                       </DropdownMenuItem>
                     </>
                   )}

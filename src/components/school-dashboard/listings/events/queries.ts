@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Query builders for Events module
  * Pattern follows grades module for consistency
@@ -294,6 +297,41 @@ export async function verifyEventOwnership(
   })
 
   return events.map((e) => e.id)
+}
+
+/**
+ * Get events for a specific month (for calendar view)
+ */
+export async function getEventsForMonth(
+  schoolId: string,
+  year: number,
+  month: number
+) {
+  const startOfMonth = new Date(year, month - 1, 1)
+  const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
+
+  const events = await db.event.findMany({
+    where: {
+      schoolId,
+      eventDate: {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      },
+      status: { not: "CANCELLED" },
+    },
+    orderBy: [{ eventDate: "asc" }, { startTime: "asc" }],
+    select: eventListSelect,
+  })
+
+  // Group by date
+  const grouped: Record<string, typeof events> = {}
+  for (const event of events) {
+    const dateKey = event.eventDate.toISOString().split("T")[0]
+    if (!grouped[dateKey]) grouped[dateKey] = []
+    grouped[dateKey].push(event)
+  }
+
+  return { events, grouped }
 }
 
 // ============================================================================

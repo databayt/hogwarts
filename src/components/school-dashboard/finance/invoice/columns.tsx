@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis, Eye, Pencil, Trash2 } from "lucide-react"
@@ -88,7 +90,7 @@ export const getInvoiceColumns = (
       const invoice = row.original
       return (
         <span className="font-medium">
-          {new Intl.NumberFormat("en-US", {
+          {new Intl.NumberFormat(lang || "ar", {
             style: "currency",
             currency: invoice.currency,
           }).format(invoice.total)}

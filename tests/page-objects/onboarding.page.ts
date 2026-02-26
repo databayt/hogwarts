@@ -12,6 +12,7 @@ export const ONBOARDING_STEPS = [
   "location",
   "stand-out",
   "capacity",
+  "schedule",
   "branding",
   "import",
   "finish-setup",
@@ -29,7 +30,7 @@ export type OnboardingStepName = (typeof ONBOARDING_STEPS)[number]
  * Page Object: School Onboarding Flow
  *
  * Encapsulates all onboarding page interactions for cleaner tests.
- * Supports the 15-step onboarding wizard plus congratulations page.
+ * Supports the 16-step onboarding wizard plus congratulations page.
  */
 export class OnboardingFlowPage {
   readonly page: Page
@@ -150,7 +151,7 @@ export class OnboardingFlowPage {
 
     // Onboarding dashboard
     this.createNewSchoolLink = page.locator(
-      'a:has-text("Create a new school"), a:has-text("Create New School")'
+      'a:has-text("Create a new school"), a:has-text("Create New School"), a:has-text("انشاء مدرسة جديدة")'
     )
     this.createFromTemplateLink = page.locator(
       'a:has-text("Create from template")'
@@ -158,9 +159,11 @@ export class OnboardingFlowPage {
 
     // Form footer navigation
     this.nextButton = page.locator(
-      'footer button:has-text("Next"), footer button:has-text("Finish")'
+      'footer button:has-text("Next"), footer button:has-text("Finish"), footer button:has-text("التالي"), footer button:has-text("إنهاء")'
     )
-    this.backButton = page.locator('footer button:has-text("Back")')
+    this.backButton = page.locator(
+      'footer button:has-text("Back"), footer button:has-text("رجوع")'
+    )
     this.skipButton = page.locator('button:has-text("Skip")')
 
     // Title step - uses textarea, not input
@@ -363,8 +366,19 @@ export class OnboardingFlowPage {
    * Automatically recovers from error boundaries before attempting to click.
    */
   async clickNext(): Promise<void> {
-    // Recover from error boundary if present (e.g., transient session sync issues)
-    await this.recoverFromError()
+    // Only recover if error boundary is actually visible (fast check)
+    const hasError = await this.page
+      .locator("text=/Something went wrong/i")
+      .isVisible({ timeout: 500 })
+      .catch(() => false)
+    if (hasError) await this.recoverFromError()
+
+    // Dismiss any toast overlay that might block the button
+    await this.page
+      .locator("[data-sonner-toast]")
+      .first()
+      .click({ force: true, timeout: 500 })
+      .catch(() => {})
 
     await this.nextButton
       .first()
@@ -719,7 +733,19 @@ export class OnboardingFlowPage {
   }
 
   // =========================================================================
-  // STEP INTERACTIONS - Branding (Step 7)
+  // STEP INTERACTIONS - Schedule (Step 7)
+  // =========================================================================
+
+  /**
+   * Schedule step - configure school schedule or just proceed
+   */
+  async completeSchedule(): Promise<void> {
+    await this.page.waitForTimeout(500)
+    await this.clickNext()
+  }
+
+  // =========================================================================
+  // STEP INTERACTIONS - Branding (Step 8)
   // =========================================================================
 
   /**
@@ -1084,6 +1110,9 @@ export class OnboardingFlowPage {
           await this.completeCapacity(
             schoolData.capacity || { students: 500, teachers: 30 }
           )
+          break
+        case "schedule":
+          await this.completeSchedule()
           break
         case "branding":
           await this.completeBranding()

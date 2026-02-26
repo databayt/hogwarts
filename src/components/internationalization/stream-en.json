@@ -279,6 +279,43 @@
     "enrollmentButton": {
       "loading": "Loading...",
       "enrollInCourse": "Enroll in Course"
+    },
+    "certificate": {
+      "title": "Certificate of Completion",
+      "completed": "Completed:",
+      "certificateNumber": "Certificate #:",
+      "view": "View",
+      "download": "Download",
+      "downloading": "Downloading...",
+      "linkCopied": "Link copied to clipboard!"
+    },
+    "coursesFilter": {
+      "all": "All",
+      "noCoursesAvailable": "No Courses Available",
+      "noCoursesAvailableDesc": "There are currently no courses available. Check back soon!",
+      "seeMore": "See More"
+    },
+    "adminCoursesColumns": {
+      "title": "Title",
+      "status": "Status",
+      "published": "Published",
+      "draft": "Draft",
+      "price": "Price",
+      "free": "Free",
+      "enrollments": "Enrollments",
+      "chapters": "Chapters",
+      "created": "Created",
+      "actions": "Actions",
+      "openMenu": "Open menu",
+      "editInfo": "Edit Info",
+      "manageChapters": "Manage Chapters",
+      "delete": "Delete"
+    },
+    "courseTypes": {
+      "professionalCertificate": "Professional Certificate",
+      "specialization": "Specialization",
+      "course": "Course",
+      "shortCourse": "Short Course"
     }
   }
 }

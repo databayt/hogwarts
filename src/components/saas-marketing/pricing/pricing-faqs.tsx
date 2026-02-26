@@ -1,4 +1,9 @@
-const faqs = [
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+import type { getDictionary } from "@/components/internationalization/dictionaries"
+
+const defaultFaqs = [
   {
     question: "What's included in the One Project plan?",
     answer:
@@ -21,19 +26,31 @@ const faqs = [
   },
 ]
 
-export default function PricingFAQs() {
+interface PricingFAQsProps {
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
+}
+
+export default function PricingFAQs({ dictionary }: PricingFAQsProps) {
+  const pricing = dictionary?.marketing?.pricing
+  const faqs = pricing?.faqs?.questions || defaultFaqs
+
   return (
     <section className="scroll-py-16 py-16 md:scroll-py-32 md:py-32">
       <div className="flex w-full max-w-6xl">
         <div className="grid gap-x-32 gap-y-12 px-2 lg:[grid-template-columns:1fr_auto]">
           <div className="text-center lg:text-start">
             <h1 className="font-heading mb-4 text-4xl font-extrabold md:text-5xl">
-              Frequently <br className="hidden lg:block" /> Asked{" "}
-              <br className="hidden lg:block" />
-              Questions
+              {pricing?.faqs?.title || (
+                <>
+                  Frequently <br className="hidden lg:block" /> Asked{" "}
+                  <br className="hidden lg:block" />
+                  Questions
+                </>
+              )}
             </h1>
             <p className="muted">
-              Your guide to pricing and plans with Databayt.
+              {pricing?.faqs?.subtitle ||
+                "Your guide to pricing and plans with Databayt."}
             </p>
           </div>
 

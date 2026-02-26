@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { BookOpen, GraduationCap, TriangleAlert, Users } from "lucide-react"
 import {
   Label,
@@ -16,6 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { QuickLookData } from "./actions"
 import { ChartSection } from "./chart-section"
@@ -106,9 +109,12 @@ const radialShapeConfig = {
 } satisfies ChartConfig
 
 function AttendanceSection() {
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.attendance
+
   return (
     <section>
-      <SectionHeading title="Attendance Overview" />
+      <SectionHeading title={dict?.overview || "Attendance Overview"} />
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Radial Grid Chart - Attendance by Grade */}
         <Card className="bg-muted flex flex-col border-none shadow-none">
@@ -178,7 +184,7 @@ function AttendanceSection() {
                               y={(viewBox.cy || 0) + 24}
                               className="fill-muted-foreground"
                             >
-                              Attendance
+                              {dict?.attendance || "Attendance"}
                             </tspan>
                           </text>
                         )
@@ -194,33 +200,39 @@ function AttendanceSection() {
         {/* Summary Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Summary</CardTitle>
+            <CardTitle className="text-base">
+              {dict?.summary || "Summary"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-muted/30 rounded-lg p-4 text-center">
               <p className="text-primary text-4xl font-bold">91%</p>
               <p className="text-muted-foreground mt-1 text-sm">
-                Average Attendance
+                {dict?.averageAttendance || "Average Attendance"}
               </p>
             </div>
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
               <div className="flex items-center gap-2">
                 <TriangleAlert className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                  Attention Needed
+                  {dict?.attentionNeeded || "Attention Needed"}
                 </span>
               </div>
               <p className="text-muted-foreground mt-1 text-xs">
-                Grade 10 has 85% attendance
+                {dict?.gradeAttendance || "Grade 10 has 85% attendance"}
               </p>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total Students</span>
+                <span className="text-muted-foreground">
+                  {dict?.totalStudents || "Total Students"}
+                </span>
                 <span className="font-medium">196</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Present Today</span>
+                <span className="text-muted-foreground">
+                  {dict?.presentToday || "Present Today"}
+                </span>
                 <span className="font-medium text-emerald-600 dark:text-emerald-400">
                   178
                 </span>
@@ -244,11 +256,13 @@ function QuickActionsSection({
   locale: string
   subdomain: string
 }) {
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.quickActionsSection
   const actions = getQuickActionsByRole("ADMIN", subdomain)
 
   return (
     <section>
-      <SectionHeading title="Quick Actions" />
+      <SectionHeading title={dict?.title || "Quick Actions"} />
       <QuickActions actions={actions} locale={locale} />
     </section>
   )

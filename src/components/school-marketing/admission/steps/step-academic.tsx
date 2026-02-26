@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect } from "react"
 import { useFormContext } from "react-hook-form"
 
@@ -51,6 +53,13 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
   const isRTL = lang === "ar"
   const dateOfBirth = watch("dateOfBirth")
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { formSteps?: Record<string, string> } }
+      }
+    )?.school?.admission?.formSteps ?? {}
+
   // Auto-suggest grade based on DOB
   useEffect(() => {
     if (dateOfBirth) {
@@ -72,7 +81,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
-            {isRTL ? "التعليم السابق" : "Previous Education"}
+            {dict.previousEducation || "Previous Education"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -83,14 +92,12 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {isRTL ? "المدرسة السابقة" : "Previous School"}
+                    {dict.previousSchool || "Previous School"}
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={
-                        isRTL ? "أدخل اسم المدرسة" : "Enter school name"
-                      }
+                      placeholder={dict.enterSchoolName || "Enter school name"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -103,12 +110,14 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {isRTL ? "الصف السابق" : "Previous Class/Grade"}
+                    {dict.previousClass || "Previous Class/Grade"}
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={isRTL ? "مثل: الصف الرابع" : "e.g., Grade 4"}
+                      placeholder={
+                        dict.previousClassPlaceholder || "e.g., Grade 4"
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -123,12 +132,12 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {isRTL ? "الدرجات / النسبة المئوية" : "Marks / Percentage"}
+                    {dict.marksPercentage || "Marks / Percentage"}
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={isRTL ? "مثل: 85%" : "e.g., 85%"}
+                      placeholder={dict.marksPlaceholder || "e.g., 85%"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -140,13 +149,11 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               name="previousPercentage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {isRTL ? "المعدل التراكمي" : "GPA (if applicable)"}
-                  </FormLabel>
+                  <FormLabel>{dict.gpa || "GPA (if applicable)"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={isRTL ? "مثل: 3.5" : "e.g., 3.5"}
+                      placeholder={dict.gpaPlaceholder || "e.g., 3.5"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -160,15 +167,14 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {isRTL ? "الإنجازات والجوائز" : "Achievements & Awards"}
+                  {dict.achievementsAwards || "Achievements & Awards"}
                 </FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
                     placeholder={
-                      isRTL
-                        ? "أدخل أي إنجازات أو جوائز"
-                        : "Enter any achievements or awards"
+                      dict.enterAchievements ||
+                      "Enter any achievements or awards"
                     }
                     rows={2}
                   />
@@ -184,7 +190,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
-            {isRTL ? "التقديم لـ" : "Applying For"}
+            {dict.applyingFor || "Applying For"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -194,14 +200,14 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {isRTL ? "الصف المتقدم إليه" : "Grade Applying For"}{" "}
+                  {dict.gradeApplyingFor || "Grade Applying For"}{" "}
                   <span className="text-destructive">*</span>
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={isRTL ? "اختر الصف" : "Select grade"}
+                        placeholder={dict.selectGrade || "Select grade"}
                       />
                     </SelectTrigger>
                   </FormControl>
@@ -225,7 +231,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {isRTL ? "التخصص المفضل" : "Preferred Stream"}
+                    {dict.preferredStream || "Preferred Stream"}
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -234,7 +240,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={isRTL ? "اختر التخصص" : "Select stream"}
+                          placeholder={dict.selectStream || "Select stream"}
                         />
                       </SelectTrigger>
                     </FormControl>
@@ -256,7 +262,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {isRTL ? "اللغة الثانية" : "Second Language"}
+                    {dict.secondLanguage || "Second Language"}
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -265,7 +271,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={isRTL ? "اختر اللغة" : "Select language"}
+                          placeholder={dict.selectLanguage || "Select language"}
                         />
                       </SelectTrigger>
                     </FormControl>
@@ -287,7 +293,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {isRTL ? "اللغة الثالثة" : "Third Language"}
+                    {dict.thirdLanguage || "Third Language"}
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -296,7 +302,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={isRTL ? "اختر اللغة" : "Select language"}
+                          placeholder={dict.selectLanguage || "Select language"}
                         />
                       </SelectTrigger>
                     </FormControl>

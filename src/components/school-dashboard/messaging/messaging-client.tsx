@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Menu, X } from "lucide-react"
@@ -8,6 +10,7 @@ import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   addReaction,
@@ -45,6 +48,8 @@ export function MessagingClient({
   locale = "en",
 }: MessagingClientProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const [conversations, setConversations] =
     useState<ConversationDTO[]>(initialConversations)
   const [activeConversation, setActiveConversation] =
@@ -209,15 +214,14 @@ export function MessagingClient({
         router.push("/messages")
       }
       toast({
-        title: locale === "ar" ? "تمت الأرشفة" : "Archived",
+        title: m?.notifications?.archived || "Archived",
         description:
-          locale === "ar"
-            ? "تم أرشفة المحادثة بنجاح"
-            : "Conversation archived successfully",
+          m?.notifications?.archived_success ||
+          "Conversation archived successfully",
       })
     } else {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
+        title: m?.notifications?.error || "Error",
         description: result.error,
       })
     }
@@ -233,15 +237,14 @@ export function MessagingClient({
         router.push("/messages")
       }
       toast({
-        title: locale === "ar" ? "تم الحذف" : "Deleted",
+        title: m?.notifications?.deleted || "Deleted",
         description:
-          locale === "ar"
-            ? "تم حذف المحادثة بنجاح"
-            : "Conversation deleted successfully",
+          m?.notifications?.deleted_success ||
+          "Conversation deleted successfully",
       })
     } else {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
+        title: m?.notifications?.error || "Error",
         description: result.error,
       })
     }
@@ -275,26 +278,16 @@ export function MessagingClient({
         })
       )
       toast({
-        title:
-          locale === "ar"
-            ? isPinned
-              ? "تم إلغاء التثبيت"
-              : "تم التثبيت"
-            : isPinned
-              ? "Unpinned"
-              : "Pinned",
-        description:
-          locale === "ar"
-            ? isPinned
-              ? "تم إلغاء تثبيت المحادثة"
-              : "تم تثبيت المحادثة"
-            : isPinned
-              ? "Conversation unpinned"
-              : "Conversation pinned",
+        title: isPinned
+          ? m?.notifications?.unpinned || "Unpinned"
+          : m?.notifications?.pinned || "Pinned",
+        description: isPinned
+          ? m?.notifications?.unpinned_success || "Conversation unpinned"
+          : m?.notifications?.pinned_success || "Conversation pinned",
       })
     } else {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
+        title: m?.notifications?.error || "Error",
         description: result.error,
       })
     }
@@ -330,26 +323,16 @@ export function MessagingClient({
         })
       )
       toast({
-        title:
-          locale === "ar"
-            ? isMuted
-              ? "تم إلغاء الكتم"
-              : "تم الكتم"
-            : isMuted
-              ? "Unmuted"
-              : "Muted",
-        description:
-          locale === "ar"
-            ? isMuted
-              ? "تم إلغاء كتم المحادثة"
-              : "تم كتم المحادثة"
-            : isMuted
-              ? "Conversation unmuted"
-              : "Conversation muted",
+        title: isMuted
+          ? m?.notifications?.unmuted || "Unmuted"
+          : m?.notifications?.muted || "Muted",
+        description: isMuted
+          ? m?.notifications?.unmuted_success || "Conversation unmuted"
+          : m?.notifications?.muted_success || "Conversation muted",
       })
     } else {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
+        title: m?.notifications?.error || "Error",
         description: result.error,
       })
     }
@@ -380,14 +363,14 @@ export function MessagingClient({
           activeConversation
             ? isSidebarOpen
               ? "translate-x-0"
-              : "-translate-x-full md:translate-x-0"
+              : "-translate-x-full md:translate-x-0 rtl:translate-x-full"
             : "translate-x-0",
           // Tablet: slide in from left when open
           "transition-transform duration-300 ease-in-out"
         )}
       >
         {/* Close button for mobile/tablet overlay */}
-        <div className="absolute top-4 right-4 z-10 md:hidden">
+        <div className="absolute end-4 top-4 z-10 md:hidden">
           <Button
             variant="ghost"
             size="icon"
@@ -438,9 +421,12 @@ export function MessagingClient({
                 {activeConversation.type === "direct"
                   ? activeConversation.participants?.find(
                       (p) => p.userId !== currentUserId
-                    )?.user?.username || (locale === "ar" ? "مستخدم" : "User")
+                    )?.user?.username ||
+                    m?.ui?.user_fallback ||
+                    "User"
                   : activeConversation.title ||
-                    (locale === "ar" ? "محادثة" : "Conversation")}
+                    m?.ui?.conversation_fallback ||
+                    "Conversation"}
               </h2>
             </div>
           </div>

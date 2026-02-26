@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Attendance Seed
  * Creates 60 days of attendance records with realistic MENA patterns
@@ -160,8 +163,33 @@ export async function seedAttendance(
   // Map students to year levels and classes
   const classByLevel = new Map<string, ClassRef>()
   for (const c of classes) {
-    if (!classByLevel.has(c.yearLevelId)) {
+    if (c.yearLevelId && !classByLevel.has(c.yearLevelId)) {
       classByLevel.set(c.yearLevelId, c)
+    }
+  }
+
+  // Fallback: if no classes have yearLevelId (gradeId is null),
+  // match class names to year level names. Class names contain the level name
+  // e.g. "اللغة الإنجليزية - الصف الأول" contains "الصف الأول"
+  if (classByLevel.size === 0) {
+    // Get year levels to build name→id map
+    const yearLevels = await prisma.yearLevel.findMany({
+      where: { schoolId },
+      select: { id: true, levelName: true },
+    })
+    const levelNameToId = new Map<string, string>()
+    for (const yl of yearLevels) {
+      levelNameToId.set(yl.levelName, yl.id)
+    }
+
+    // Match each class to a year level by checking if class name contains level name
+    for (const c of classes) {
+      for (const [levelName, levelId] of levelNameToId) {
+        if (c.name.includes(levelName) && !classByLevel.has(levelId)) {
+          classByLevel.set(levelId, { ...c, yearLevelId: levelId })
+          break
+        }
+      }
     }
   }
 

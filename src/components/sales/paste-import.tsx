@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Paste Import component for leads
  * Allows users to paste text data to extract leads
@@ -318,7 +321,7 @@ Example: John Doe - CEO - john@example.com`
               <Button
                 size="sm"
                 variant="ghost"
-                className="absolute top-2 right-2"
+                className="absolute end-2 top-2"
                 onClick={() => {
                   setRawData("")
                   setDetectedFields([])
@@ -455,7 +458,7 @@ Example: John Doe - CEO - john@example.com`
               <>
                 <Upload className="h-4 w-4" />
                 {d?.importLeads || "Import Leads"}
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </>
             )}
           </Button>

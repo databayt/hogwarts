@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Exams Dashboard Content - Server Component
  *
@@ -39,6 +42,7 @@ import {
   Zap,
 } from "lucide-react"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { cn } from "@/lib/utils"
@@ -55,6 +59,7 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 import { ExamCardFlip } from "./exam-card-flip"
 
@@ -82,8 +87,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     title: string
     examDate: Date
     duration: number
-    subject: { subjectName: string }
-    class: { name: string }
+    subject: { subjectName: string; lang: string | null }
+    class: { name: string; lang: string | null }
   } | null = null
 
   if (schoolId) {
@@ -162,10 +167,30 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         title: true,
         examDate: true,
         duration: true,
-        subject: { select: { subjectName: true } },
-        class: { select: { name: true } },
+        subject: { select: { subjectName: true, lang: true } },
+        class: { select: { name: true, lang: true } },
       },
     })
+
+    // Translate nextExam relation fields
+    if (nextExam) {
+      if (nextExam.subject?.subjectName) {
+        nextExam.subject.subjectName = await getDisplayText(
+          nextExam.subject.subjectName,
+          (nextExam.subject.lang || "ar") as SupportedLanguage,
+          lang,
+          schoolId!
+        )
+      }
+      if (nextExam.class?.name) {
+        nextExam.class.name = await getDisplayText(
+          nextExam.class.name,
+          (nextExam.class.lang || "ar") as SupportedLanguage,
+          lang,
+          schoolId!
+        )
+      }
+    }
   }
 
   // Format next exam details for the card
@@ -326,7 +351,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         <div className="grid grid-cols-2 gap-4">
           {/* Total Exams */}
           <Card className="relative overflow-hidden">
-            <div className="bg-primary/10 absolute top-0 right-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full" />
+            <div className="bg-primary/10 absolute end-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full rtl:-translate-x-6" />
             <CardContent className="p-5">
               <div className="text-muted-foreground flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
@@ -362,7 +387,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
 
           {/* Upcoming */}
           <Card className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-blue-500/10" />
+            <div className="absolute end-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-blue-500/10 rtl:-translate-x-6" />
             <CardContent className="p-5">
               <div className="text-muted-foreground flex items-center gap-2">
                 <Clock className="h-4 w-4" />
@@ -387,7 +412,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
 
           {/* Question Bank */}
           <Card className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-purple-500/10" />
+            <div className="absolute end-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-purple-500/10 rtl:-translate-x-6" />
             <CardContent className="p-5">
               <div className="text-muted-foreground flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
@@ -423,7 +448,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
 
           {/* Students */}
           <Card className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-emerald-500/10" />
+            <div className="absolute end-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-emerald-500/10 rtl:-translate-x-6" />
             <CardContent className="p-5">
               <div className="text-muted-foreground flex items-center gap-2">
                 <Users className="h-4 w-4" />
@@ -587,7 +612,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Button asChild className="flex-1">
                 <Link href={`/${lang}/exams/qbank`}>
                   {d?.dashboard?.blocks?.qbank?.browse || "Browse"}
-                  <ArrowRight className="ms-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button variant="outline" asChild size="icon">
@@ -632,7 +657,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Button asChild variant="secondary" className="flex-1">
                 <Link href={`/${lang}/exams/generate`}>
                   {d?.dashboard?.blocks?.generate?.dashboard || "Generate"}
-                  <ArrowRight className="ms-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button variant="outline" asChild>
@@ -675,7 +700,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Button asChild variant="secondary" className="flex-1">
                 <Link href={`/${lang}/exams/mark`}>
                   {d?.dashboard?.blocks?.mark?.dashboard || "Mark"}
-                  <ArrowRight className="ms-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button variant="outline" asChild>
@@ -730,7 +755,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Button asChild className="flex-1">
                 <Link href={`/${lang}/exams/result`}>
                   {d?.dashboard?.blocks?.results?.view || "View Results"}
-                  <ArrowRight className="ms-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button variant="outline" asChild>
@@ -881,7 +906,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   </div>
                 </div>
                 {index < 4 && (
-                  <ArrowRight className="text-muted-foreground hidden h-4 w-4 shrink-0 lg:block" />
+                  <ArrowRight className="text-muted-foreground hidden h-4 w-4 shrink-0 lg:block rtl:rotate-180" />
                 )}
               </div>
             ))}

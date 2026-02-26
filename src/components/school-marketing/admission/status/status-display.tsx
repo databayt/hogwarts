@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   AlertCircle,
   ArrowLeft,
@@ -24,6 +26,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type {
   ApplicationStatus,
@@ -34,6 +37,7 @@ import type {
 interface Props {
   status: ApplicationStatus
   lang: Locale
+  dictionary?: Dictionary
   onBack: () => void
 }
 
@@ -70,26 +74,48 @@ const getChecklistIcon = (type: ChecklistItem["type"]) => {
   }
 }
 
-export default function StatusDisplay({ status, lang, onBack }: Props) {
+export default function StatusDisplay({
+  status,
+  lang,
+  dictionary,
+  onBack,
+}: Props) {
   const isRTL = lang === "ar"
+
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { statusDisplay?: Record<string, string> } }
+      }
+    )?.school?.admission?.statusDisplay ?? {}
 
   const progress = (status.currentStep.current / status.currentStep.total) * 100
 
   const getStatusLabel = (statusValue: string) => {
-    const labels: Record<string, { en: string; ar: string }> = {
-      PENDING: { en: "Pending Review", ar: "قيد المراجعة" },
-      UNDER_REVIEW: { en: "Under Review", ar: "تحت المراجعة" },
-      INTERVIEW_SCHEDULED: {
-        en: "Interview Scheduled",
-        ar: "تم جدولة المقابلة",
-      },
-      DOCUMENTS_REQUESTED: { en: "Documents Requested", ar: "مطلوب مستندات" },
-      WAITLISTED: { en: "Waitlisted", ar: "في قائمة الانتظار" },
-      APPROVED: { en: "Approved", ar: "تمت الموافقة" },
-      REJECTED: { en: "Rejected", ar: "مرفوض" },
-      ENROLLED: { en: "Enrolled", ar: "مسجل" },
+    const dictKeys: Record<string, string> = {
+      PENDING: "pendingReview",
+      UNDER_REVIEW: "underReview",
+      INTERVIEW_SCHEDULED: "interviewScheduled",
+      DOCUMENTS_REQUESTED: "documentsRequested",
+      WAITLISTED: "waitlisted",
+      APPROVED: "approved",
+      REJECTED: "rejected",
+      ENROLLED: "enrolled",
     }
-    return labels[statusValue]?.[isRTL ? "ar" : "en"] || statusValue
+    const fallbacks: Record<string, string> = {
+      PENDING: "Pending Review",
+      UNDER_REVIEW: "Under Review",
+      INTERVIEW_SCHEDULED: "Interview Scheduled",
+      DOCUMENTS_REQUESTED: "Documents Requested",
+      WAITLISTED: "Waitlisted",
+      APPROVED: "Approved",
+      REJECTED: "Rejected",
+      ENROLLED: "Enrolled",
+    }
+    const key = dictKeys[statusValue]
+    return (
+      (key ? dict[key] : undefined) || fallbacks[statusValue] || statusValue
+    )
   }
 
   return (
@@ -98,7 +124,7 @@ export default function StatusDisplay({ status, lang, onBack }: Props) {
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-          {isRTL ? "رجوع" : "Back"}
+          {dict.back || "Back"}
         </Button>
       </div>
 
@@ -108,7 +134,7 @@ export default function StatusDisplay({ status, lang, onBack }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <CardDescription>
-                {isRTL ? "رقم الطلب" : "Application Number"}
+                {dict.applicationNumber || "Application Number"}
               </CardDescription>
               <CardTitle className="font-mono text-xl">
                 {status.applicationNumber}
@@ -127,7 +153,7 @@ export default function StatusDisplay({ status, lang, onBack }: Props) {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
-                {isRTL ? "التقدم" : "Progress"}
+                {dict.progress || "Progress"}
               </span>
               <span className="font-medium">
                 {status.currentStep.current} / {status.currentStep.total}
@@ -135,8 +161,7 @@ export default function StatusDisplay({ status, lang, onBack }: Props) {
             </div>
             <Progress value={progress} className="h-2" />
             <p className="text-muted-foreground text-sm">
-              {isRTL ? "الخطوة الحالية:" : "Current Step:"}{" "}
-              {status.currentStep.label}
+              {dict.currentStep || "Current Step:"} {status.currentStep.label}
             </p>
           </div>
         </CardContent>
@@ -146,7 +171,7 @@ export default function StatusDisplay({ status, lang, onBack }: Props) {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            {isRTL ? "مراحل الطلب" : "Application Timeline"}
+            {dict.applicationTimeline || "Application Timeline"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -167,18 +192,22 @@ export default function StatusDisplay({ status, lang, onBack }: Props) {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            {isRTL ? "قائمة المتطلبات" : "Requirements Checklist"}
+            {dict.requirementsChecklist || "Requirements Checklist"}
           </CardTitle>
           <CardDescription>
-            {isRTL
-              ? "أكمل جميع المتطلبات لإتمام طلبك"
-              : "Complete all requirements to finalize your application"}
+            {dict.checklistDesc ||
+              "Complete all requirements to finalize your application"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {status.checklist.map((item) => (
-              <ChecklistItemRow key={item.id} item={item} isRTL={isRTL} />
+              <ChecklistItemRow
+                key={item.id}
+                item={item}
+                isRTL={isRTL}
+                requiredLabel={dict.required || "Required"}
+              />
             ))}
           </div>
         </CardContent>
@@ -190,7 +219,7 @@ export default function StatusDisplay({ status, lang, onBack }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <AlertCircle className="text-primary h-5 w-5" />
-              {isRTL ? "الخطوات التالية" : "Next Steps"}
+              {dict.nextSteps || "Next Steps"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -210,9 +239,8 @@ export default function StatusDisplay({ status, lang, onBack }: Props) {
       <Card className="bg-muted/50">
         <CardContent className="pt-6">
           <p className="text-muted-foreground text-center text-sm">
-            {isRTL
-              ? "هل لديك أسئلة حول طلبك؟ تواصل مع مكتب القبول"
-              : "Have questions about your application? Contact the admissions office"}
+            {dict.helpText ||
+              "Have questions about your application? Contact the admissions office"}
           </p>
         </CardContent>
       </Card>
@@ -277,9 +305,14 @@ function TimelineItem({ entry, isLast, isRTL }: TimelineItemProps) {
 interface ChecklistItemRowProps {
   item: ChecklistItem
   isRTL: boolean
+  requiredLabel: string
 }
 
-function ChecklistItemRow({ item, isRTL }: ChecklistItemRowProps) {
+function ChecklistItemRow({
+  item,
+  isRTL,
+  requiredLabel,
+}: ChecklistItemRowProps) {
   const Icon = getChecklistIcon(item.type)
 
   return (
@@ -306,7 +339,7 @@ function ChecklistItemRow({ item, isRTL }: ChecklistItemRowProps) {
           </span>
           {item.required && !item.completed && (
             <Badge variant="destructive" className="ms-2 text-xs">
-              {isRTL ? "مطلوب" : "Required"}
+              {requiredLabel}
             </Badge>
           )}
         </div>

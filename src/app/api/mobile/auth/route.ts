@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { SignJWT } from "jose"
@@ -18,9 +21,10 @@ import { LoginSchema } from "@/components/auth/validation"
  * Returns: { access_token, refresh_token, expires_at, user }
  */
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "your-secret-key"
-)
+if (!process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET environment variable is required")
+}
+const JWT_SECRET = new TextEncoder().encode(process.env.AUTH_SECRET)
 
 // Token expiry times
 const ACCESS_TOKEN_EXPIRY = "24h" // 24 hours

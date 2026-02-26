@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { Suspense, useEffect, useMemo, useState, useTransition } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useParams, usePathname, useRouter } from "next/navigation"
 
 import {
@@ -11,6 +13,7 @@ import {
   WizardValidationProvider,
 } from "@/components/form/template/wizard-validation-context"
 import { useLocale } from "@/components/internationalization/use-locale"
+import { OnboardingErrorBoundary } from "@/components/onboarding/error-boundary"
 
 export default function StepLayout({
   children,
@@ -18,10 +21,12 @@ export default function StepLayout({
   children: React.ReactNode
 }) {
   return (
-    <WizardValidationProvider>
-      {children}
-      <StepFooter />
-    </WizardValidationProvider>
+    <OnboardingErrorBoundary>
+      <WizardValidationProvider>
+        {children}
+        <StepFooter />
+      </WizardValidationProvider>
+    </OnboardingErrorBoundary>
   )
 }
 

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import {
   AlertCircle,
@@ -33,6 +35,7 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 import {
@@ -58,6 +61,8 @@ interface AcademicContentProps {
 }
 
 export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
+  const { dictionary: fullDict } = useDictionary()
+  const t = fullDict?.messages?.toast
   const dict = useAcademicDictionary(dictionary)
 
   // Data states
@@ -145,7 +150,7 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
       }
     } catch (err) {
       console.error("Failed to fetch terms/periods:", err)
-      toast.error("Failed to load terms and periods")
+      toast.error(t?.error?.generic || "Failed to load terms and periods")
     } finally {
       setIsLoadingTerms(false)
     }
@@ -198,12 +203,14 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
     formData.append("id", termId)
     const result = await setActiveTerm(formData)
     if (result.success) {
-      toast.success("Active term updated")
+      toast.success(t?.success?.updated || "Active term updated")
       if (selectedYearId) {
         fetchTermsAndPeriods(selectedYearId)
       }
     } else {
-      toast.error(result.message || "Failed to set active term")
+      toast.error(
+        result.message || t?.error?.updateFailed || "Failed to set active term"
+      )
     }
   }
 
@@ -259,9 +266,13 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
     }
 
     if (result?.success) {
-      toast.success(result.message || "Deleted successfully")
+      toast.success(
+        result.message || t?.success?.deleted || "Deleted successfully"
+      )
     } else {
-      toast.error(result?.message || "Failed to delete")
+      toast.error(
+        result?.message || t?.error?.deleteFailed || "Failed to delete"
+      )
     }
 
     setDeleteDialog({ ...deleteDialog, open: false })

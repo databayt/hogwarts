@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -47,17 +49,21 @@ function mapSubscriptionToPlan(sub: SubscriptionWithTier) {
   return plans[0]
 }
 
-function formatDate(date: string | Date | null): string {
+function formatDate(date: string | Date | null, locale: string = "ar"): string {
   if (!date) return "N/A"
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "long",
     day: "numeric",
   }).format(new Date(date))
 }
 
-function formatAmount(amount: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
+function formatAmount(
+  amount: number,
+  currency = "USD",
+  locale: string = "ar"
+): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits: 0,

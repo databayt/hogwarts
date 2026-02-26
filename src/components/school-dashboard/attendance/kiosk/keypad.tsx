@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Kiosk Keypad
  *
@@ -8,6 +11,7 @@
 import { useState } from "react"
 
 import { cn } from "@/lib/utils"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface KioskKeypadProps {
   onSubmit: (value: string) => void
@@ -22,6 +26,8 @@ export function KioskKeypad({
   locale,
   maxLength = 10,
 }: KioskKeypadProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.kiosk
   const isRTL = locale === "ar"
   const [value, setValue] = useState("")
 
@@ -50,7 +56,7 @@ export function KioskKeypad({
   return (
     <div className="flex w-full max-w-sm flex-col items-center">
       <h2 className="mb-6 text-2xl font-bold">
-        {isRTL ? "أدخل رقم الطالب" : "Enter Student ID"}
+        {t?.enter_student_id || "Enter Student ID"}
       </h2>
 
       {/* Display */}
@@ -82,7 +88,7 @@ export function KioskKeypad({
           onClick={handleClear}
           className="bg-destructive/10 text-destructive hover:bg-destructive/20 h-16 rounded-xl text-lg font-medium transition-colors"
         >
-          {isRTL ? "مسح" : "Clear"}
+          {t?.clear || "Clear"}
         </button>
 
         <button
@@ -118,7 +124,7 @@ export function KioskKeypad({
           onClick={onCancel}
           className="bg-secondary text-secondary-foreground hover:bg-secondary/80 flex-1 rounded-xl py-4 text-lg font-medium transition-colors"
         >
-          {isRTL ? "إلغاء" : "Cancel"}
+          {t?.cancel || "Cancel"}
         </button>
 
         <button
@@ -131,7 +137,7 @@ export function KioskKeypad({
               : "bg-muted text-muted-foreground cursor-not-allowed"
           )}
         >
-          {isRTL ? "تأكيد" : "Confirm"}
+          {t?.confirm || "Confirm"}
         </button>
       </div>
     </div>

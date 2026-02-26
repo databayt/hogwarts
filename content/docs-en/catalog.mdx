@@ -12,9 +12,9 @@ The Catalog is the **universal shared backbone** of the platform. All curriculum
 |                    UNIVERSAL CATALOG                         |
 |  (Global, no schoolId -- the single source of truth)        |
 |                                                             |
-|  CatalogSubject (62 US K-12 + future: SD, GB, IB...)       |
-|    > CatalogChapter (201 topic groups)                      |
-|        > CatalogLesson (986 sub-topics)                     |
+|  CatalogSubject (~220 US K-12 + future: GB, IB...)         |
+|    > CatalogChapter (~800 topic groups)                     |
+|        > CatalogLesson (~4000 sub-topics)                   |
 |                                                             |
 |  Built-in at each level:                                    |
 |  +-- Exams (CatalogExam)                                    |
@@ -23,6 +23,7 @@ The Catalog is the **universal shared backbone** of the platform. All curriculum
 |  +-- Videos (LessonVideo -- multi-teacher LMS)              |
 |  +-- Attachments (LessonAttachment -- PDFs, worksheets)     |
 |  +-- Assignments (CatalogAssignment -- homework templates)  |
+|  +-- Books (CatalogBook -- global library, /docs/books-catalog)|
 |                                                             |
 |  Images: exact ClickView thumbnails + fallback colors       |
 +--------------------------+----------------------------------+
@@ -49,10 +50,10 @@ The Catalog is the **universal shared backbone** of the platform. All curriculum
 
 ### Why Shared Catalog (Not Per-School)
 
-| Approach                       | Data for 1,000 schools x 62 subjects                        | Content sharing                         |
-| ------------------------------ | ----------------------------------------------------------- | --------------------------------------- |
-| Per-school (clone)             | 62,000 subject records, 201,000 chapters, 986,000 lessons   | None -- each school is an island        |
-| **Shared catalog (reference)** | **62 subjects, 201 chapters, 986 lessons** + bridge records | Every contribution enriches all schools |
+| Approach                       | Data for 1,000 schools x ~220 subjects                           | Content sharing                         |
+| ------------------------------ | ---------------------------------------------------------------- | --------------------------------------- |
+| Per-school (clone)             | 220,000 subject records, 800,000 chapters, 4,000,000 lessons     | None -- each school is an island        |
+| **Shared catalog (reference)** | **~220 subjects, ~800 chapters, ~4000 lessons** + bridge records | Every contribution enriches all schools |
 
 **Benefits:**
 
@@ -67,9 +68,9 @@ The Catalog is the **universal shared backbone** of the platform. All curriculum
 ### 1. Global Catalog (no schoolId)
 
 ```
-CatalogSubject (62 subjects)
-  > CatalogChapter (201 chapters)
-    > CatalogLesson (986 lessons)
+CatalogSubject (~220 grade-specific subjects)
+  > CatalogChapter (~800 chapters)
+    > CatalogLesson (~4000 lessons)
 ```
 
 These define the curriculum structure. No school owns them -- they belong to the platform. Each entity carries `country` and `system` fields for multi-country support.
@@ -83,6 +84,7 @@ CatalogExam      -- exam at subject, chapter, or lesson level
 CatalogQuestion  -- global question bank at any level
 CatalogMaterial  -- books, syllabi, worksheets at any level
 CatalogAssignment -- homework/project templates at any level
+CatalogBook      -- global book metadata (see /docs/books-catalog)
 ```
 
 Content is uploaded BY users (teachers, schools) TO catalog entities. SaaS admin approves, then content becomes visible based on its visibility tier.
@@ -91,6 +93,7 @@ Content is uploaded BY users (teachers, schools) TO catalog entities. SaaS admin
 
 ```
 SchoolSubjectSelection  -- "our school teaches this subject in grade 7"
+SchoolBookSelection     -- "our school has this catalog book" (see /docs/books-catalog)
 SchoolContentOverride   -- "hide this chapter for our school"
 ```
 
@@ -103,60 +106,65 @@ Schools configure their curriculum profile in settings:
 | Config Field  | On School Model            | Examples                                 | Purpose          |
 | ------------- | -------------------------- | ---------------------------------------- | ---------------- |
 | `country`     | Already exists (`String?`) | "US", "SD", "GB", "AE"                   | Country code     |
-| `system`      | **NEW** (needs adding)     | "clickview", "national", "british", "ib" | Education system |
+| `system`      | Already exists (`String?`) | "clickview", "national", "british", "ib" | Education system |
 | `schoolLevel` | Already exists (`String?`) | "elementary", "middle", "high", "k12"    | Levels covered   |
 
 ### Auto-Assignment Flow (`setupCatalogForSchool()`)
 
 1. Read school's `country` + `system` + `schoolLevel`
-2. Query `CatalogSubject WHERE country AND system AND levels overlap`
-3. Create `SchoolSubjectSelection` bridge records for all matching subjects
-4. School dashboard immediately shows the right subjects
+2. Query `CatalogSubject WHERE country AND system`
+3. For each subject, check `subject.grades` array first (grade-specific subjects with explicit grade numbers)
+4. Fall back to level-based mapping only if `grades` array is empty
+5. Create `SchoolSubjectSelection` bridge records for all matching subjects mapped to the correct `AcademicGrade`
+6. School dashboard immediately shows the right subjects
+
+With grade-specific subjects (the new default), this produces a **1:1 mapping** between catalog subjects and academic grades -- "Math Grade 3" maps directly to the school's Grade 3. The old level-based subjects had N:1 mapping where "Elementary Math" would map to grades 1 through 6.
 
 ```typescript
 import { setupCatalogForSchool } from "@/lib/catalog-setup"
 
-// US K-12 school (ClickView curriculum)
+// US K-12 school (ClickView curriculum) -- default
 await setupCatalogForSchool(schoolId, { country: "US", system: "clickview" })
-
-// Sudanese public school (national curriculum)
-await setupCatalogForSchool(schoolId, { country: "SD", system: "national" })
 
 // International school in UAE (IB curriculum)
 await setupCatalogForSchool(schoolId, { country: "AE", system: "ib" })
+
+// British school
+await setupCatalogForSchool(schoolId, { country: "GB", system: "british" })
 ```
 
 **Example configurations:**
 
-| School Type         | Config                                 | Subjects Auto-Assigned    |
-| ------------------- | -------------------------------------- | ------------------------- |
-| US K-12 (demo)      | `country: "US"`, `system: "clickview"` | All 62 ClickView subjects |
-| Sudan public        | `country: "SD"`, `system: "national"`  | 19 Sudanese subjects      |
-| International (UAE) | `country: "AE"`, `system: "ib"`        | IB curriculum subjects    |
-| British school      | `country: "GB"`, `system: "british"`   | UK National Curriculum    |
+| School Type         | Config                                 | Subjects Auto-Assigned       |
+| ------------------- | -------------------------------------- | ---------------------------- |
+| US K-12 (demo)      | `country: "US"`, `system: "clickview"` | ~220 grade-specific subjects |
+| International (UAE) | `country: "AE"`, `system: "ib"`        | IB curriculum subjects       |
+| British school      | `country: "GB"`, `system: "british"`   | UK National Curriculum       |
 
-Schools can also **browse** the full catalog and add subjects from other systems.
+The function defaults to `system: "clickview"` when no system is specified. Schools can also **browse** the full catalog and add subjects from other systems.
 
 ## ClickView K-12 Hierarchy (First Curriculum Set)
 
-The first complete curriculum set replicates ClickView's exact US K-12 hierarchy. Each level has completely different topic trees -- they are independent entities.
+The first complete curriculum set replicates ClickView's exact US K-12 hierarchy, expanded into **grade-specific subjects**. Each of the original 62 level-based entries (e.g., "Elementary Math") is expanded into one subject per grade (e.g., "Math Grade 1", "Math Grade 2", ..., "Math Grade 6"), producing ~220 grade-specific subjects. Chapters and lessons are duplicated under each grade-specific subject. All subjects, chapters, and lessons include descriptions.
 
-### 62 Subjects Overview
+### Grade-Specific Subjects (~220 total)
 
-| Level      | Subjects | Chapters | Lessons | Videos     | Resources  |
-| ---------- | -------- | -------- | ------- | ---------- | ---------- |
-| Elementary | 18       | 49       | 346     | 8,130      | 17,233     |
-| Middle     | 21       | 73       | 276     | 5,490      | 10,754     |
-| High       | 23       | 79       | 364     | 8,669      | 15,088     |
-| **Total**  | **62**   | **201**  | **986** | **22,289** | **43,075** |
+| Level      | Original Entries | Grades | Grade-Specific Subjects | Chapters (approx) | Lessons (approx) |
+| ---------- | ---------------- | ------ | ----------------------- | ----------------- | ---------------- |
+| Elementary | 18               | 1-6    | ~108                    | ~294              | ~2,076           |
+| Middle     | 21               | 7-9    | ~63                     | ~219              | ~828             |
+| High       | 23               | 10-12  | ~69                     | ~237              | ~1,092           |
+| **Total**  | **62**           |        | **~220**                | **~800**          | **~4,000**       |
 
-All 62 subjects use `country: "US"`, `system: "clickview"`.
+All subjects use `country: "US"`, `system: "clickview"`. Each subject has `grades: [N]` (single grade number) instead of spanning multiple grades.
 
-**Slug convention:** `{level}-{subject-slug}` (e.g., `elementary-math`, `middle-math`, `high-math`)
+**Slug convention:** `us-{subject-slug}-grade-{N}` (e.g., `us-math-grade-3`, `us-chemistry-grade-11`)
+
+**Old slug convention (deprecated):** `{level}-{subject-slug}` (e.g., `elementary-math`, `high-chemistry`). Old level-based subjects are automatically deprecated when the new grade-specific seed runs.
 
 For per-subject breakdowns, see:
 
-- [ClickView Overview](/docs/clickview) -- all 62 subjects in one table
+- [ClickView Overview](/docs/clickview) -- all 62 original entries in one table
 - [Elementary](/docs/clickview-elementary) -- 18 subjects, 49 chapters, 346 lessons
 - [Middle](/docs/clickview-middle) -- 21 subjects, 73 chapters, 276 lessons
 - [High](/docs/clickview-high) -- 23 subjects, 79 chapters, 364 lessons
@@ -165,25 +173,25 @@ For per-subject breakdowns, see:
 
 Every Subject, Chapter, and Lesson gets the exact same image and fallback color as ClickView:
 
-| Entity        | Image Source                                                  | Fallback                                             |
-| ------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
-| Subject (62)  | ClickView hero banner (Banner ID)                             | `color` field (e.g., Math `#3b82f6`, Arts `#f43f5e`) |
-| Chapter (201) | First child lesson's thumbnail                                | Parent subject's `color`                             |
-| Lesson (986)  | ClickView cover image (Cover ID from `master-inventory.json`) | Parent subject's `color`                             |
+| Entity         | Image Source                                                  | Fallback                                             |
+| -------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
+| Subject (~220) | ClickView hero banner (Banner ID)                             | `color` field (e.g., Math `#3b82f6`, Arts `#f43f5e`) |
+| Chapter (~800) | First child lesson's thumbnail                                | Parent subject's `color`                             |
+| Lesson (~4000) | ClickView cover image (Cover ID from `master-inventory.json`) | Parent subject's `color`                             |
 
 **Pipeline:** Local `/public/clickview/` -> Sharp -> 4 WebP (sm/md/lg/original) -> S3 -> CloudFront
 
-**URL resolution:** `thumbnailKey` (CDN) -> `imageKey` (static) -> `color` (hex background)
+**URL resolution:** `thumbnailKey` (CDN) -> `imageKey` (direct path/URL) -> `color` (hex background)
 
 ## Content Attachment Matrix
 
 ### What Lives at Each Catalog Level
 
-| Catalog Level            | Content Types                                                                                                  | Assessment Types                                                                                       |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **CatalogSubject** (62)  | `CatalogMaterial` (textbooks, syllabi), Subject overview                                                       | `CatalogExam` (finals), Subject-level `CatalogQuestion` pool                                           |
-| **CatalogChapter** (201) | `CatalogMaterial` (chapter guides, references)                                                                 | `CatalogExam` (midterms, chapter tests), Chapter-level `CatalogQuestion` pool                          |
-| **CatalogLesson** (986)  | `LessonVideo` (multi-teacher LMS), `LessonAttachment` (worksheets, PDFs), `CatalogMaterial` (lesson resources) | `CatalogExam` (quizzes), Lesson-level `CatalogQuestion` pool, `CatalogAssignment` (homework templates) |
+| Catalog Level             | Content Types                                                                                                  | Assessment Types                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **CatalogSubject** (~220) | `CatalogMaterial` (textbooks, syllabi), Subject overview                                                       | `CatalogExam` (finals), Subject-level `CatalogQuestion` pool                                           |
+| **CatalogChapter** (~800) | `CatalogMaterial` (chapter guides, references)                                                                 | `CatalogExam` (midterms, chapter tests), Chapter-level `CatalogQuestion` pool                          |
+| **CatalogLesson** (~4000) | `LessonVideo` (multi-teacher LMS), `LessonAttachment` (worksheets, PDFs), `CatalogMaterial` (lesson resources) | `CatalogExam` (quizzes), Lesson-level `CatalogQuestion` pool, `CatalogAssignment` (homework templates) |
 
 ### Exam Type to Catalog Level Mapping
 
@@ -264,6 +272,47 @@ Content within the catalog is ranked by engagement, so the best rises to the top
 
 Schools see: platform default content + their own + other schools' approved public content, ranked by engagement.
 
+## Dual-Use Architecture
+
+The same CatalogSubject hierarchy serves **both** the physical classroom path and the LMS/e-learning path. Key linking fields make this possible:
+
+- **`CatalogBook.catalogSubjectId`** -- Links books in the global library to specific grade-level catalog subjects
+- **`Subject.catalogSubjectId`** -- The school-scoped Subject model links back to its CatalogSubject origin
+- **`SchoolBookSelection.gradeId`** -- Optional grade scope for book assignments within a school
+
+### Physical Classroom Path
+
+```
+CatalogSubject --> SchoolSubjectSelection --> Subject (school-scoped) --> Class --> Timetable
+CatalogSubject --> CatalogBook --> SchoolBookSelection --> Book (library)
+CatalogSubject --> CatalogExam --> School Exam (scheduled)
+CatalogSubject --> CatalogQuestion --> QuestionBank (school exams)
+```
+
+### LMS / E-Learning Path
+
+```
+CatalogSubject --> Enrollment --> LessonProgress --> SubjectCertificate
+CatalogLesson --> LessonVideo (multi-teacher)
+CatalogLesson --> LessonAttachment
+CatalogLesson --> CatalogQuestion (quizzes)
+```
+
+### Why This Matters
+
+A single grade-specific `CatalogSubject` (e.g., "Math Grade 3") feeds:
+
+1. **Classroom scheduling** -- The school selects it via `SchoolSubjectSelection`, creates a school-scoped `Subject`, assigns it to classes and the timetable
+2. **Library management** -- `CatalogBook` records link to the subject, schools pick books via `SchoolBookSelection`
+3. **Exam generation** -- `CatalogExam` and `CatalogQuestion` records at subject/chapter/lesson level feed the school's exam system
+4. **Online learning** -- Students enroll via `Enrollment`, watch `LessonVideo` content, track progress, earn certificates
+
+No duplication between paths -- both reference the same catalog hierarchy.
+
+### Grade Matching for Admission Placement
+
+When admission places a student into a class, the free-text `applyingForClass` field (e.g., "Grade 5", "الصف الخامس", "5th") must be matched to an `AcademicGrade` record. The `extractGradeNumber()` utility in `src/lib/grade-utils.ts` handles this parsing, supporting Arabic ordinals, English ordinals, numeric values, and mixed formats. This connects admission (Layer 5b) to the catalog's grade-specific subject structure -- ensuring the student lands in the correct grade's classes and sees the right catalog content.
+
 ## Schema
 
 ### Global Catalog Models
@@ -279,11 +328,12 @@ Schools see: platform default content + their own + other schools' approved publ
 | description   | String?       | Subject description                                           |
 | department    | String        | Grouping (e.g. "Sciences")                                    |
 | levels        | SchoolLevel[] | ELEMENTARY, MIDDLE, HIGH                                      |
+| grades        | Int[]         | Explicit grade numbers (e.g., `[3]` for grade-specific)       |
 | country       | String        | Country code (default "SD")                                   |
 | system        | String        | Curriculum system (default "national")                        |
 | clickviewId   | String?       | ClickView topic ID (e.g., "GxAzY0z")                          |
 | clickviewUrl  | String?       | Full ClickView URL for reference                              |
-| imageKey      | String?       | ClickView image key (static fallback)                         |
+| imageKey      | String?       | Local path or external URL (direct fallback when no CDN)      |
 | thumbnailKey  | String?       | S3 key prefix for processed WebP variants (sm/md/lg/original) |
 | color         | String?       | Hex background color                                          |
 | iconUrl       | String?       | Icon URL                                                      |
@@ -310,10 +360,11 @@ Schools see: platform default content + their own + other schools' approved publ
 | lang          | String        | Content language (default "ar")           |
 | description   | String?       | Chapter description                       |
 | sequenceOrder | Int           | Order within subject                      |
-| imageKey      | String?       | Static image fallback                     |
+| imageKey      | String?       | Local path or external URL fallback       |
 | thumbnailKey  | String?       | S3 key prefix for processed WebP variants |
 | color         | String?       | Background color                          |
 | gradeRange    | String?       | Grade applicability                       |
+| grades        | Int[]         | Explicit grade numbers                    |
 | levels        | SchoolLevel[] | Level applicability                       |
 | status        | ContentStatus | Publication status                        |
 | totalLessons  | Int           | Denormalized count                        |
@@ -333,12 +384,13 @@ Schools see: platform default content + their own + other schools' approved publ
 | lang             | String        | Content language (default "ar")           |
 | description      | String?       | Lesson description                        |
 | sequenceOrder    | Int           | Order within chapter                      |
-| imageKey         | String?       | Static image fallback                     |
+| imageKey         | String?       | Local path or external URL fallback       |
 | thumbnailKey     | String?       | S3 key prefix for processed WebP variants |
 | color            | String?       | Background color                          |
 | durationMinutes  | Int?          | Estimated duration                        |
 | objectives       | String?       | Learning objectives                       |
 | gradeRange       | String?       | Grade applicability                       |
+| grades           | Int[]         | Explicit grade numbers                    |
 | levels           | SchoolLevel[] | Level applicability                       |
 | clickviewCoverId | String?       | Cover ID for image (e.g., "0wrjm3")       |
 | videoCount       | Int           | ClickView video count                     |
@@ -868,17 +920,19 @@ Upload (Buffer) > Sharp > 4 WebP variants > S3 > CloudFront CDN
 ```typescript
 getCatalogImageUrl(thumbnailKey, imageKey, size)
 // 1. CloudFront CDN URL from thumbnailKey > "{CDN}/{thumbnailKey}-{size}.webp"
-// 2. Static fallback from imageKey > "/subjects/{imageKey}.png"
-// 3. null (no image available)
+// 2. imageKey returned directly (local path or external URL)
+//    - Local: "/clickview/illustrations/elementary-math.jpg"
+//    - External: "https://img.clickviewapp.com/v2/covers/{id}?width=2048"
+// 3. null (no image available -- UI falls back to color background)
 ```
 
 ### CatalogImage Component
 
 `src/components/ui/catalog-image.tsx` -- a Next.js `Image` wrapper for catalog entities:
 
-- Resolves URL from `thumbnailKey` (CDN WebP) or `imageKey` (static PNG fallback)
+- Resolves URL from `thumbnailKey` (CDN WebP) or `imageKey` (local path / external URL)
 - For CDN images, renders native `<img>` with responsive `srcSet` (200w/600w/1200w/3840w)
-- For static images, uses Next.js `<Image>` with optimization
+- For imageKey URLs, uses Next.js `<Image>` with `unoptimized` for external domains
 - Shows a "No image" placeholder when no URL is available
 - Size presets: sm (200px), md (600px), lg (1200px), original (1200px)
 
@@ -920,7 +974,7 @@ The school-facing subject detail page (`/subjects/[slug]`) renders a ClickView-s
 | Component              | File                        | Description                                    |
 | ---------------------- | --------------------------- | ---------------------------------------------- |
 | `CatalogDetailContent` | `catalog-detail.tsx`        | Full detail page with hero, carousel, chapters |
-| `CatalogSubjectsGrid`  | `catalog-subjects-grid.tsx` | Responsive grid of subject cards for browse    |
+| `CatalogSubjectsGrid`  | `catalog-subjects-grid.tsx` | Responsive grid with grade-composed names      |
 | `SubjectCard`          | `subject-card.tsx`          | Compact horizontal card for subject grid       |
 | `TopicCard`            | `topic-card.tsx`            | ClickView-style card with aspect-video ratio   |
 | `SubjectHero`          | `hero.tsx`                  | Compact hero banner with stats overlay         |
@@ -953,6 +1007,26 @@ The `src/components/stream/data/catalog/` directory provides adapter functions t
 4. `Enrollment` record created or reactivated (with optional `schoolId`)
 5. Enrollment confirmation email sent asynchronously
 6. User redirected to `/stream/dashboard/{slug}`
+
+### Auto-Sync from StudentClass
+
+When a student is enrolled in a `Class` (for timetable/attendance), the `syncStudentClassToEnrollment()` function in `src/lib/enrollment-sync.ts` automatically creates a corresponding `Enrollment` record for LMS access. This bridges the two previously disconnected systems:
+
+```
+StudentClass (classroom scheduling)
+    |
+    | syncStudentClassToEnrollment()
+    | follows: Class → Subject → catalogSubjectId → CatalogSubject
+    v
+Enrollment (LMS/catalog access, progress tracking)
+```
+
+Key behavior:
+
+- **Non-blocking**: logs failures but never throws -- class enrollment succeeds even if LMS sync fails
+- **Idempotent**: uses upsert on `[userId, catalogSubjectId]` -- safe to call multiple times
+- **Skips gracefully**: if the class's subject has no `catalogSubjectId`, no enrollment is created
+- **Wired into**: `placeStudentInClass()` (admission) and class enrollment actions
 
 ## Lesson Progress and Certificates
 
@@ -1053,40 +1127,47 @@ const questions = await db.catalogQuestion.findMany({
 
 ### Curriculum Sets
 
-Two curriculum sets coexist:
+The catalog currently ships with the ClickView US K-12 curriculum as the default. The Sudanese national curriculum has been removed and will be re-added in the future as a separate curriculum set.
 
-| Curriculum        | Country | System    | Subjects | Source                  |
-| ----------------- | ------- | --------- | -------- | ----------------------- |
-| Sudanese National | SD      | national  | 19       | `topic-constants.ts`    |
-| ClickView US K-12 | US      | clickview | 62       | `master-inventory.json` |
+| Curriculum        | Country | System    | Subjects | Source                  | Status                  |
+| ----------------- | ------- | --------- | -------- | ----------------------- | ----------------------- |
+| ClickView US K-12 | US      | clickview | ~220     | `master-inventory.json` | Active                  |
+| Sudanese National | SD      | national  | --       | `topic-constants.ts`    | Removed (future re-add) |
 
 ### Seed Commands
 
 ```bash
-# Sudanese curriculum (existing)
-pnpm db:seed:single catalog            # 19 subjects, 55 chapters, 475 lessons
-pnpm db:seed:single catalog-images     # Upload Sudanese thumbnails to S3/CDN
+# ClickView US K-12 (grade-specific subjects)
+pnpm db:seed:single catalog            # ~220 subjects + ~800 chapters + ~4000 lessons
+pnpm db:seed:single clickview-images   # Thumbnails > S3/CDN
 pnpm db:seed:single academic-catalog   # Bridge tables for demo school
-
-# ClickView US K-12 (new)
-pnpm db:seed:single clickview-catalog  # 62 subjects + 201 chapters + 986 lessons
-pnpm db:seed:single clickview-images   # 1,200+ thumbnails > S3/CDN
 ```
 
-### ClickView Seeding Flow
+### Seeding Flow
 
 ```
-1. Read master-inventory.json (62 subjects with full hierarchy)
-2. CatalogSubjects (62 records, country: "US", system: "clickview")
-3. CatalogChapters (201 topic groups with sequenceOrder)
-4. CatalogLessons (986 sub-topics with coverIds + video/resource counts)
-5. Images: local /public/clickview/ > Sharp > 4 WebP > S3/CDN
-6. SchoolSubjectSelections for demo school (if configured for US/clickview)
+1. Read master-inventory.json (62 level-based entries with full hierarchy)
+2. For each entry, expand into one CatalogSubject per grade:
+   - Elementary entry (grades 1-6) --> 6 grade-specific subjects
+   - Middle entry (grades 7-9) --> 3 grade-specific subjects
+   - High entry (grades 10-12) --> 3 grade-specific subjects
+3. CatalogSubjects (~220 records, country: "US", system: "clickview")
+   - Each has grades: [N] (single grade number)
+   - Each has a description
+4. CatalogChapters (~800 -- duplicated under each grade-specific subject)
+   - Each has a description and sequenceOrder
+5. CatalogLessons (~4000 -- duplicated under each grade-specific chapter)
+   - Each has a description, coverIds, and video/resource counts
+6. Old level-based subjects (if any exist) are automatically deprecated
+7. Images: local /public/clickview/ > Sharp > 4 WebP > S3/CDN
+8. SchoolSubjectSelections for demo school
 ```
 
-### Per-Level Breakdown
+### Per-Level Breakdown (Original ClickView Entries)
 
-**Elementary (18 subjects):**
+The 62 original ClickView entries below are each expanded into grade-specific subjects during seeding. For example, the "Math" entry under Elementary becomes "Math Grade 1" through "Math Grade 6" -- 6 separate CatalogSubject records sharing the same chapters and lessons.
+
+**Elementary (18 entries, expanded to ~108 grade-specific subjects for grades 1-6):**
 
 | Subject                                    | Chapters | Lessons |
 | ------------------------------------------ | -------- | ------- |
@@ -1109,7 +1190,7 @@ pnpm db:seed:single clickview-images   # 1,200+ thumbnails > S3/CDN
 | Teacher Professional Development           | 1        | 12      |
 | World Languages                            | 1        | 7       |
 
-**Middle (21 subjects):**
+**Middle (21 entries, expanded to ~63 grade-specific subjects for grades 7-9):**
 
 | Subject                           | Chapters | Lessons |
 | --------------------------------- | -------- | ------- |
@@ -1135,7 +1216,7 @@ pnpm db:seed:single clickview-images   # 1,200+ thumbnails > S3/CDN
 | World History                     | 6        | 20      |
 | World Languages                   | 1        | 7       |
 
-**High (23 subjects):**
+**High (23 entries, expanded to ~69 grade-specific subjects for grades 10-12):**
 
 | Subject                           | Chapters | Lessons |
 | --------------------------------- | -------- | ------- |
@@ -1178,16 +1259,15 @@ prisma/
     catalog-bridge.prisma       # SchoolSubjectSelection, SchoolContentOverride
     grading-scheme.prisma       # GradingScheme, GradingSchemeGrade
   seeds/
-    catalog.ts                  # Seed 19 Sudanese subjects (country: "SD", system: "national")
-    clickview-catalog.ts        # NEW: Seed 62 ClickView subjects from master-inventory.json
-    clickview-images.ts         # NEW: Upload 1,200+ thumbnails to S3/CDN
-    catalog-images.ts           # Upload Sudanese thumbnails to S3/CloudFront
+    catalog.ts                  # Seed ~220 grade-specific ClickView subjects from master-inventory.json
+    clickview-images.ts         # Upload thumbnails to S3/CDN (legacy slug fallback from imageKey)
+    catalog-images.ts           # Upload catalog thumbnails to S3/CloudFront
     academic-structure-catalog.ts # Seed levels, grades, streams, bridge records
-    topic-constants.ts          # Sudanese K-12 curriculum data (55 chapters, 475 lessons)
+    topic-constants.ts          # ClickView K-12 curriculum data (source entries)
 
 scripts/
   clickview-data/
-    master-inventory.json       # Source: 62 subjects with hierarchy + cover IDs
+    master-inventory.json       # Source: 62 level-based entries with hierarchy + cover IDs (expanded to ~220 grade-specific subjects)
 
 src/
   app/[lang]/(saas-dashboard)/

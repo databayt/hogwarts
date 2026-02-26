@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { AlertTriangle, CheckCircle2, ClipboardList, Star } from "lucide-react"
 
 import { db } from "@/lib/db"

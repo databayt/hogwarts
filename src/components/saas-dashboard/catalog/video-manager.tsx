@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState, useTransition } from "react"
 import { Loader2, Star, Trash2, Video } from "lucide-react"
 import { toast } from "sonner"
@@ -8,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   VideoInput,
   type VideoInputMetadata,
@@ -42,6 +45,8 @@ export function LessonVideoManager({
   lessonId,
   lessonName,
 }: LessonVideoManagerProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [videos, setVideos] = useState<LessonVideoItem[]>([])
   const [loading, setLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
@@ -59,7 +64,8 @@ export function LessonVideoManager({
         const result = await getLessonVideos(lessonId)
         if (!cancelled) setVideos(result)
       } catch {
-        if (!cancelled) toast.error("Failed to load videos")
+        if (!cancelled)
+          toast.error(t?.error?.generic || "Failed to load videos")
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -80,7 +86,9 @@ export function LessonVideoManager({
 
   const handleAddVideo = () => {
     if (!videoUrl || !videoTitle.trim()) {
-      toast.error("Title and video are required")
+      toast.error(
+        dictionary?.common?.failedToSave || "Title and video are required"
+      )
       return
     }
 
@@ -105,10 +113,10 @@ export function LessonVideoManager({
           setVideoUrl(null)
           setVideoTitle("")
           setVideoMeta(null)
-          toast.success("Video added")
+          toast.success(t?.success?.created || "Video added")
         }
       } catch {
-        toast.error("Failed to add video")
+        toast.error(t?.error?.createFailed || "Failed to add video")
       }
     })
   }
@@ -118,9 +126,9 @@ export function LessonVideoManager({
       try {
         await deleteLessonVideo(videoId)
         setVideos((prev) => prev.filter((v) => v.id !== videoId))
-        toast.success("Video deleted")
+        toast.success(t?.success?.deleted || "Video deleted")
       } catch {
-        toast.error("Failed to delete video")
+        toast.error(t?.error?.deleteFailed || "Failed to delete video")
       }
     })
   }
@@ -137,7 +145,7 @@ export function LessonVideoManager({
           )
         }
       } catch {
-        toast.error("Failed to toggle featured")
+        toast.error(t?.error?.updateFailed || "Failed to toggle featured")
       }
     })
   }

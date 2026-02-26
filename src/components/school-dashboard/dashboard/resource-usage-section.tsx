@@ -1,11 +1,14 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 
 import {
   DetailedUsageTable,
   type UsageResource,
 } from "@/components/billingsdk/detailed-usage-table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getResourceUsageByRole } from "./actions"
 import { SectionHeading } from "./section-heading"
@@ -34,7 +37,13 @@ export interface ResourceUsageSectionProps {
 // ROLE-SPECIFIC TITLES
 // ============================================================================
 
-function getResourceTitleByRole(role: DashboardRole): string {
+function getResourceTitleByRole(
+  role: DashboardRole,
+  dict?: Record<string, string>
+): string {
+  const roleKey = role.toLowerCase()
+  if (dict?.[roleKey]) return dict[roleKey]
+
   switch (role) {
     case "STUDENT":
       return "Academic Progress"
@@ -53,7 +62,7 @@ function getResourceTitleByRole(role: DashboardRole): string {
     case "DEVELOPER":
       return "Platform Metrics"
     default:
-      return "Resource Usage"
+      return dict?.default || "Resource Usage"
   }
 }
 
@@ -140,9 +149,13 @@ export function ResourceUsageSection({
     defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN
   )
   const [isLoading, setIsLoading] = useState(true)
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.resourceUsage as
+    | Record<string, string>
+    | undefined
 
   // Use provided title or derive from role
-  const title = sectionTitle || getResourceTitleByRole(role)
+  const title = sectionTitle || getResourceTitleByRole(role, dict)
 
   useEffect(() => {
     async function fetchData() {

@@ -1,10 +1,13 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { LogoutButton } from "@/components/auth/logout-button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ModeSwitcher } from "./mode-switcher"
 
@@ -14,11 +17,17 @@ interface RightActionsProps {
 }
 
 export function RightActions({ isAuthenticated, locale }: RightActionsProps) {
+  const { dictionary } = useDictionary()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nav = (dictionary as any)?.marketing?.site?.nav as
+    | Record<string, string>
+    | undefined
+
   return (
     <div className="flex items-center gap-2">
       {isAuthenticated ? (
         <Button variant="secondary" size="sm" className="muted px-4" asChild>
-          <LogoutButton>Logout</LogoutButton>
+          <LogoutButton>{nav?.logout || "Logout"}</LogoutButton>
         </Button>
       ) : (
         <Link
@@ -28,7 +37,7 @@ export function RightActions({ isAuthenticated, locale }: RightActionsProps) {
             "muted px-4"
           )}
         >
-          Login
+          {nav?.login || "Login"}
         </Link>
       )}
       <ModeSwitcher />

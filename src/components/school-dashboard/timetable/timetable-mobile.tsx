@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Clock, MapPin, User } from "lucide-react"
 
@@ -171,7 +173,7 @@ export function TimetableMobile({
           disabled={!canGoPrev}
           className="h-8 w-8"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
         </Button>
 
         <h3 className="text-lg font-semibold">{getDayLabel(selectedDay)}</h3>
@@ -183,7 +185,7 @@ export function TimetableMobile({
           disabled={!canGoNext}
           className="h-8 w-8"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-5 w-5 rtl:rotate-180" />
         </Button>
       </div>
 

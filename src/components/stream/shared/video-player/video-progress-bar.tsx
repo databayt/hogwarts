@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 
@@ -116,16 +118,16 @@ export function VideoProgressBar({
               left: `${isSeeking ? (seekPosition ?? hoverPosition) : hoverPosition}%`,
             }}
           >
-            <div className="bg-background border-border overflow-hidden rounded-lg border shadow-xl">
+            <div className="overflow-hidden rounded-lg border border-white/20 shadow-xl">
               {/* Thumbnail image (if available) */}
               {thumbnailUrl ? (
                 <img src={thumbnailUrl} alt="" className="h-auto w-40" />
               ) : (
-                <div className="bg-muted h-24 w-40" />
+                <div className="h-24 w-40 bg-black/60" />
               )}
               {/* Time label */}
-              <div className="bg-background/95 px-2 py-1 text-center">
-                <span className="text-foreground font-mono text-sm">
+              <div className="bg-black/80 px-2 py-1 text-center">
+                <span className="font-mono text-sm text-white">
                   {formatTime(displayTime)}
                 </span>
               </div>
@@ -139,7 +141,7 @@ export function VideoProgressBar({
         ref={progressRef}
         className={cn(
           "relative w-full cursor-pointer rounded-full",
-          "bg-muted/50"
+          "bg-white/30"
         )}
         animate={{
           height:
@@ -163,13 +165,13 @@ export function VideoProgressBar({
       >
         {/* Buffered progress */}
         <div
-          className="bg-muted absolute inset-y-0 left-0 rounded-full"
+          className="absolute inset-y-0 start-0 rounded-full bg-white/20"
           style={{ width: `${bufferedPercent}%` }}
         />
 
         {/* Current progress */}
         <motion.div
-          className="bg-primary absolute inset-y-0 left-0 rounded-full"
+          className="absolute inset-y-0 start-0 rounded-full bg-white"
           style={{ width: `${displayPosition}%` }}
         />
 
@@ -181,13 +183,14 @@ export function VideoProgressBar({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               className={cn(
-                "bg-primary absolute top-1/2 -translate-x-1/2 -translate-y-1/2",
-                "rounded-full shadow-md"
+                "absolute top-1/2 -translate-x-1/2 -translate-y-1/2",
+                "rounded-full bg-white"
               )}
               style={{
                 left: `${displayPosition}%`,
                 width: PROGRESS_BAR.thumbSize,
                 height: PROGRESS_BAR.thumbSize,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
               }}
             />
           )}

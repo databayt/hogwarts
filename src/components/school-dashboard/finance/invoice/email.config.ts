@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Resend } from "resend"
 
 export const resend = new Resend(process.env.RESEND_API_KEY)

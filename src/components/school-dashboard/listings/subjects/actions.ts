@@ -1,9 +1,12 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -36,12 +39,12 @@ export async function createSubject(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -88,12 +91,12 @@ export async function updateSubject(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -152,12 +155,12 @@ export async function deleteSubject(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -294,12 +297,12 @@ export async function getSubject(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -380,12 +383,12 @@ export async function getSubjects(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -464,12 +467,12 @@ export async function bulkDeleteSubjects(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -488,6 +491,37 @@ export async function bulkDeleteSubjects(input: {
       select: { id: true },
     })
     const validIds = existing.map((s: any) => s.id)
+
+    // Cascade validation: mirror single deleteSubject checks for bulk
+    const [expertiseCount, classCount, examCount, qbankCount] =
+      await Promise.all([
+        db.teacherSubjectExpertise.count({
+          where: { subjectId: { in: validIds }, schoolId },
+        }),
+        db.class.count({
+          where: { subjectId: { in: validIds }, schoolId },
+        }),
+        db.exam.count({
+          where: { subjectId: { in: validIds }, schoolId },
+        }),
+        db.questionBank.count({
+          where: { subjectId: { in: validIds }, schoolId },
+        }),
+      ])
+
+    const deps: string[] = []
+    if (expertiseCount > 0)
+      deps.push(`${expertiseCount} teacher expertise record(s)`)
+    if (classCount > 0) deps.push(`${classCount} class(es)`)
+    if (examCount > 0) deps.push(`${examCount} exam(s)`)
+    if (qbankCount > 0) deps.push(`${qbankCount} question bank(s)`)
+
+    if (deps.length > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${deps.join(", ")} depend on selected subjects. Remove dependencies first.`,
+      }
+    }
 
     const result = await subjectModel.deleteMany({
       where: { id: { in: validIds }, schoolId },
@@ -514,12 +548,12 @@ export async function getSubjectsCSV(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {

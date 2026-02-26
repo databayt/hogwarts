@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import {
   ArrowDown,
@@ -59,10 +61,11 @@ export function StreamAdminDashboardContent({
   stats,
 }: Props) {
   const isRTL = lang === "ar"
+  const d = dictionary?.stream?.adminDashboard
 
   // Format revenue
   const formatRevenue = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(lang, {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
@@ -80,13 +83,10 @@ export function StreamAdminDashboardContent({
   return (
     <div className="space-y-6">
       <div>
-        <h2>
-          {isRTL ? "لوحة تحكم المسؤول - Stream" : "Stream LMS Admin Dashboard"}
-        </h2>
+        <h2>{d?.title || "Stream LMS Admin Dashboard"}</h2>
         <p className="muted">
-          {isRTL
-            ? "إدارة الدورات، تتبع التسجيلات، ومراقبة الإيرادات"
-            : "Manage your courses, track enrollments, and monitor revenue"}
+          {d?.description ||
+            "Manage your courses, track enrollments, and monitor revenue"}
         </p>
       </div>
 
@@ -95,7 +95,7 @@ export function StreamAdminDashboardContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isRTL ? "إجمالي الدورات" : "Total Courses"}
+              {d?.totalCourses || "Total Courses"}
             </CardTitle>
             <BookOpen className="text-muted-foreground size-4" />
           </CardHeader>
@@ -103,12 +103,8 @@ export function StreamAdminDashboardContent({
             <div className="text-2xl font-bold">{stats?.totalCourses ?? 0}</div>
             <p className="text-muted-foreground text-xs">
               {stats?.totalCourses === 0
-                ? isRTL
-                  ? "لا توجد دورات بعد"
-                  : "No courses yet"
-                : isRTL
-                  ? "دورة متاحة"
-                  : "courses available"}
+                ? d?.noCoursesYet || "No courses yet"
+                : d?.coursesAvailable || "courses available"}
             </p>
           </CardContent>
         </Card>
@@ -116,7 +112,7 @@ export function StreamAdminDashboardContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isRTL ? "إجمالي التسجيلات" : "Total Enrollments"}
+              {d?.totalEnrollments || "Total Enrollments"}
             </CardTitle>
             <Users className="text-muted-foreground size-4" />
           </CardHeader>
@@ -126,12 +122,8 @@ export function StreamAdminDashboardContent({
             </div>
             <p className="text-muted-foreground text-xs">
               {stats?.totalEnrollments === 0
-                ? isRTL
-                  ? "لا توجد تسجيلات بعد"
-                  : "No enrollments yet"
-                : isRTL
-                  ? "طالب مسجل"
-                  : "active students"}
+                ? d?.noEnrollmentsYet || "No enrollments yet"
+                : d?.activeStudents || "active students"}
             </p>
           </CardContent>
         </Card>
@@ -139,7 +131,7 @@ export function StreamAdminDashboardContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isRTL ? "إجمالي الإيرادات" : "Total Revenue"}
+              {d?.totalRevenue || "Total Revenue"}
             </CardTitle>
             <DollarSign className="text-muted-foreground size-4" />
           </CardHeader>
@@ -149,12 +141,8 @@ export function StreamAdminDashboardContent({
             </div>
             <p className="text-muted-foreground text-xs">
               {stats?.totalRevenue === 0
-                ? isRTL
-                  ? "لا توجد إيرادات بعد"
-                  : "No revenue yet"
-                : isRTL
-                  ? "من الدورات المدفوعة"
-                  : "from course sales"}
+                ? d?.noRevenueYet || "No revenue yet"
+                : d?.fromCourseSales || "from course sales"}
             </p>
           </CardContent>
         </Card>
@@ -162,7 +150,7 @@ export function StreamAdminDashboardContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isRTL ? "النمو" : "Growth"}
+              {d?.growth || "Growth"}
             </CardTitle>
             <TrendingUp className="text-muted-foreground size-4" />
           </CardHeader>
@@ -177,7 +165,7 @@ export function StreamAdminDashboardContent({
               {stats?.growthPercent ?? 0}%
             </div>
             <p className="text-muted-foreground text-xs">
-              {isRTL ? "مقارنة بالشهر السابق" : "vs last month"}
+              {d?.vsLastMonth || "vs last month"}
             </p>
           </CardContent>
         </Card>
@@ -187,12 +175,11 @@ export function StreamAdminDashboardContent({
       <Card>
         <CardHeader>
           <CardTitle>
-            {isRTL ? "إحصائيات التسجيل" : "Enrollment Statistics"}
+            {d?.enrollmentStatistics || "Enrollment Statistics"}
           </CardTitle>
           <CardDescription>
-            {isRTL
-              ? "نظرة عامة على التسجيلات في الدورات"
-              : "Overview of course enrollments over time"}
+            {d?.overviewOfEnrollments ||
+              "Overview of course enrollments over time"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -200,14 +187,11 @@ export function StreamAdminDashboardContent({
             <div className="space-y-2 text-center">
               <TrendingUp className="text-muted-foreground mx-auto size-12" />
               <p className="muted">
-                {isRTL
-                  ? "الرسم البياني قريباً"
-                  : "Chart visualization coming soon"}
+                {d?.chartComingSoon || "Chart visualization coming soon"}
               </p>
               <p className="text-muted-foreground text-xs">
-                {isRTL
-                  ? "سيتم عرض بيانات التسجيل هنا"
-                  : "Enrollment data will be displayed here"}
+                {d?.enrollmentDataWillBeDisplayed ||
+                  "Enrollment data will be displayed here"}
               </p>
             </div>
           </div>
@@ -219,20 +203,16 @@ export function StreamAdminDashboardContent({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>
-                {isRTL ? "الدورات الأخيرة" : "Recent Courses"}
-              </CardTitle>
+              <CardTitle>{d?.recentCourses || "Recent Courses"}</CardTitle>
               <CardDescription>
-                {isRTL
-                  ? "آخر الدورات التي تم إنشاؤها"
-                  : "Your most recently created courses"}
+                {d?.mostRecentlyCreated || "Your most recently created courses"}
               </CardDescription>
             </div>
             <Link
               className={buttonVariants({ variant: "outline" })}
               href={`/${lang}/stream/admin/courses`}
             >
-              {isRTL ? "عرض جميع الدورات" : "View All Courses"}
+              {d?.viewAllCourses || "View All Courses"}
             </Link>
           </div>
         </CardHeader>
@@ -255,24 +235,19 @@ export function StreamAdminDashboardContent({
                         }`}
                       >
                         {course.isPublished
-                          ? isRTL
-                            ? "منشور"
-                            : "Published"
-                          : isRTL
-                            ? "مسودة"
-                            : "Draft"}
+                          ? d?.published || "Published"
+                          : d?.draft || "Draft"}
                       </span>
                     </div>
                     <div className="text-muted-foreground mt-1 flex gap-4 text-sm">
                       <span>
-                        {course.chapters.length} {isRTL ? "فصل" : "chapters"}
+                        {course.chapters.length} {d?.chapters || "chapters"}
                       </span>
                       <span>
-                        {getLessonCount(course)} {isRTL ? "درس" : "lessons"}
+                        {getLessonCount(course)} {d?.lessons || "lessons"}
                       </span>
                       <span>
-                        {course._count.enrollments}{" "}
-                        {isRTL ? "مسجل" : "enrolled"}
+                        {course._count.enrollments} {d?.enrolled || "enrolled"}
                       </span>
                     </div>
                   </div>
@@ -280,7 +255,7 @@ export function StreamAdminDashboardContent({
                     className={buttonVariants({ variant: "ghost", size: "sm" })}
                     href={`/${lang}/stream/admin/courses/${course.id}/edit`}
                   >
-                    {isRTL ? "تعديل" : "Edit"}
+                    {d?.edit || "Edit"}
                   </Link>
                 </div>
               ))}
@@ -288,17 +263,16 @@ export function StreamAdminDashboardContent({
           ) : (
             <div className="py-10 text-center">
               <BookOpen className="text-muted-foreground mx-auto mb-4 size-12" />
-              <h3>{isRTL ? "لا توجد دورات بعد" : "No courses yet"}</h3>
+              <h3>{d?.noCoursesCreated || "No courses yet"}</h3>
               <p className="muted mb-4">
-                {isRTL
-                  ? "أنشئ أول دورة للبدء"
-                  : "Create your first course to get started"}
+                {d?.createFirstCourse ||
+                  "Create your first course to get started"}
               </p>
               <Link
                 className={buttonVariants()}
                 href={`/${lang}/stream/admin/courses/create`}
               >
-                {isRTL ? "إنشاء دورة" : "Create Course"}
+                {d?.createCourse || "Create Course"}
               </Link>
             </div>
           )}

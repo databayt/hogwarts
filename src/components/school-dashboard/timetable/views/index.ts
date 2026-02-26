@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 export { default as RoleRouter } from "./role-router"
 export { default as AdminView } from "./admin-view"
 export { default as TeacherView } from "./teacher-view"

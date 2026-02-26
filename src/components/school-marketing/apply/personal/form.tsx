@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useEffect, useImperativeHandle } from "react"
 import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -106,15 +108,12 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.firstName || (isRTL ? "الاسم الأول" : "First Name")} *
-                  </FormLabel>
+                  <FormLabel>{dict.firstName || "First Name"} *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder={
-                        dict.firstNamePlaceholder ||
-                        (isRTL ? "أدخل الاسم الأول" : "Enter first name")
+                        dict.firstNamePlaceholder || "Enter first name"
                       }
                     />
                   </FormControl>
@@ -128,16 +127,12 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="middleName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.middleName ||
-                      (isRTL ? "الاسم الأوسط" : "Middle Name")}
-                  </FormLabel>
+                  <FormLabel>{dict.middleName || "Middle Name"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder={
-                        dict.middleNamePlaceholder ||
-                        (isRTL ? "أدخل الاسم الأوسط" : "Enter middle name")
+                        dict.middleNamePlaceholder || "Enter middle name"
                       }
                     />
                   </FormControl>
@@ -151,15 +146,12 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.lastName || (isRTL ? "اسم العائلة" : "Last Name")} *
-                  </FormLabel>
+                  <FormLabel>{dict.lastName || "Last Name"} *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder={
-                        dict.lastNamePlaceholder ||
-                        (isRTL ? "أدخل اسم العائلة" : "Enter last name")
+                        dict.lastNamePlaceholder || "Enter last name"
                       }
                     />
                   </FormControl>
@@ -176,11 +168,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="dateOfBirth"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.dateOfBirth ||
-                      (isRTL ? "تاريخ الميلاد" : "Date of Birth")}{" "}
-                    *
-                  </FormLabel>
+                  <FormLabel>{dict.dateOfBirth || "Date of Birth"} *</FormLabel>
                   <FormControl>
                     <Input {...field} type="date" />
                   </FormControl>
@@ -194,17 +182,12 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="gender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.gender || (isRTL ? "الجنس" : "Gender")} *
-                  </FormLabel>
+                  <FormLabel>{dict.gender || "Gender"} *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={
-                            dict.selectGender ||
-                            (isRTL ? "اختر الجنس" : "Select gender")
-                          }
+                          placeholder={dict.selectGender || "Select gender"}
                         />
                       </SelectTrigger>
                     </FormControl>
@@ -229,16 +212,13 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="nationality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.nationality || (isRTL ? "الجنسية" : "Nationality")} *
-                  </FormLabel>
+                  <FormLabel>{dict.nationality || "Nationality"} *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
                           placeholder={
-                            dict.selectNationality ||
-                            (isRTL ? "اختر الجنسية" : "Select nationality")
+                            dict.selectNationality || "Select nationality"
                           }
                         />
                       </SelectTrigger>
@@ -261,17 +241,12 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="religion"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.religion || (isRTL ? "الديانة" : "Religion")}
-                  </FormLabel>
+                  <FormLabel>{dict.religion || "Religion"}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={
-                            dict.selectReligion ||
-                            (isRTL ? "اختر الديانة" : "Select religion")
-                          }
+                          placeholder={dict.selectReligion || "Select religion"}
                         />
                       </SelectTrigger>
                     </FormControl>
@@ -295,17 +270,12 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
             name="category"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  {dict.category || (isRTL ? "الفئة" : "Category")}
-                </FormLabel>
+                <FormLabel>{dict.category || "Category"}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={
-                          dict.selectCategory ||
-                          (isRTL ? "اختر الفئة" : "Select category")
-                        }
+                        placeholder={dict.selectCategory || "Select category"}
                       />
                     </SelectTrigger>
                   </FormControl>

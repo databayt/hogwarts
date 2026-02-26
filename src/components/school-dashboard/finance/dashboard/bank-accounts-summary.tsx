@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { Building, CreditCard, PiggyBank, Wallet } from "lucide-react"
 
@@ -13,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 interface BankAccountsSummaryProps {
   accounts: {
@@ -27,6 +30,7 @@ export function BankAccountsSummary({
   accounts,
   className,
 }: BankAccountsSummaryProps) {
+  const { locale } = useLocale()
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0)
 
   const getIcon = (type: string) => {
@@ -64,7 +68,7 @@ export function BankAccountsSummary({
   }
 
   const formatBalance = (balance: number) => {
-    return new Intl.NumberFormat("en-SD", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "SDG",
       minimumFractionDigits: 0,

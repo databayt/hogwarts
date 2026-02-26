@@ -1,8 +1,12 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 
 import { db } from "@/lib/db"
+import { sendEmail } from "@/lib/email"
+import { normalizePhoneNumber, sendSMS } from "@/lib/notifications/sms"
 
 import type {
   AdminDetailsData,
@@ -119,29 +123,50 @@ export async function submitInternalOnboarding(
       return { success: false, error: "Missing schoolId" }
     }
 
-    // Verify the school exists
+    // Verify the school exists and get plan limits
     const school = await db.school.findUnique({
       where: { id: schoolId },
-      select: { id: true },
+      select: { id: true, name: true, maxStudents: true, maxTeachers: true },
     })
 
     if (!school) {
       return { success: false, error: "School not found" }
     }
 
-    // Check if email already registered in this school
-    const existingUser = await db.user.findFirst({
-      where: { email: data.contact.email, schoolId },
-    })
-
-    if (existingUser) {
-      return {
-        success: false,
-        error: "This email is already registered at this school",
+    // Check plan capacity limits
+    if (data.role === "student" && school.maxStudents) {
+      const studentCount = await db.student.count({ where: { schoolId } })
+      if (studentCount >= school.maxStudents) {
+        return {
+          success: false,
+          error:
+            "This school has reached its student capacity limit. Please contact the school administration.",
+        }
       }
     }
 
+    if (data.role === "teacher" && school.maxTeachers) {
+      const teacherCount = await db.teacher.count({ where: { schoolId } })
+      if (teacherCount >= school.maxTeachers) {
+        return {
+          success: false,
+          error:
+            "This school has reached its teacher capacity limit. Please contact the school administration.",
+        }
+      }
+    }
+
+    // Email uniqueness check + record creation inside a single transaction
     const result = await db.$transaction(async (tx) => {
+      // Check if email already registered in this school (inside tx for atomicity)
+      const existingUser = await tx.user.findFirst({
+        where: { email: data.contact.email, schoolId },
+      })
+
+      if (existingUser) {
+        throw new Error("This email is already registered at this school")
+      }
+
       // Create user
       const user = await tx.user.create({
         data: {
@@ -321,6 +346,59 @@ export async function submitInternalOnboarding(
 
     revalidatePath(`/admin/applications`)
 
+    // Send confirmation email (non-blocking)
+    try {
+      await sendEmail({
+        to: data.contact.email,
+        subject: `Welcome to ${school.name} - Application Received`,
+        template: "onboarding-confirmation",
+        data: {
+          message: `Thank you for registering as a <strong>${data.role}</strong> at <strong>${school.name}</strong>. Your application is currently <strong>pending approval</strong> by the school administration. You will be notified once your account has been reviewed.`,
+        },
+      })
+    } catch {
+      console.error("[InternalOnboarding] Failed to send confirmation email")
+    }
+
+    // Send SMS confirmation (non-blocking)
+    if (data.contact.phone) {
+      try {
+        const normalized = normalizePhoneNumber(data.contact.phone, "+249")
+        if (normalized) {
+          await sendSMS({
+            to: normalized,
+            message: `${school.name}: Your application as ${data.role} has been received. Reference: ${result.id.slice(-8).toUpperCase()}. Status: Pending approval.`,
+          })
+        }
+      } catch {
+        console.error("[InternalOnboarding] Failed to send SMS")
+      }
+    }
+
+    // Notify school admins (non-blocking)
+    try {
+      const admins = await db.user.findMany({
+        where: { schoolId, role: "ADMIN" },
+        select: { id: true },
+      })
+      if (admins.length > 0) {
+        await db.notification.createMany({
+          data: admins.map((admin) => ({
+            schoolId,
+            userId: admin.id,
+            type: "account_created" as const,
+            priority: "high" as const,
+            title: `New ${data.role} application`,
+            body: `${data.personal.givenName} ${data.personal.surname} has applied to join as ${data.role}. Review pending.`,
+            channels: ["in_app" as const],
+            read: false,
+          })),
+        })
+      }
+    } catch {
+      console.error("[InternalOnboarding] Failed to notify admins")
+    }
+
     return {
       success: true,
       data: {
@@ -330,6 +408,15 @@ export async function submitInternalOnboarding(
     }
   } catch (error) {
     console.error("[InternalOnboarding] Failed to submit:", error)
+
+    // Surface the specific duplicate email error
+    if (
+      error instanceof Error &&
+      error.message.includes("already registered")
+    ) {
+      return { success: false, error: error.message }
+    }
+
     return {
       success: false,
       error: "Failed to submit onboarding. Please try again.",

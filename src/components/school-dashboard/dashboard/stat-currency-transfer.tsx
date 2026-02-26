@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, Info } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"

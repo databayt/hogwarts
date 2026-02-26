@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import Link from "next/link"
 import { Check, ChevronsUpDown, Plus } from "lucide-react"
@@ -116,7 +118,7 @@ function ProjectList({
             {slug}
           </span>
           {selected.slug === slug && (
-            <span className="text-foreground absolute inset-y-0 right-0 flex items-center pe-3">
+            <span className="text-foreground absolute inset-y-0 end-0 flex items-center pe-3">
               <Check size={18} aria-hidden="true" />
             </span>
           )}
@@ -129,7 +131,7 @@ function ProjectList({
           setOpenPopover(false)
         }}
       >
-        <Plus size={18} className="absolute top-2 left-2.5" />
+        <Plus size={18} className="absolute start-2.5 top-2" />
         <span className="flex-1 truncate text-center">New Project</span>
       </Button>
     </div>

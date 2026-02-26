@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { forwardRef, useEffect, useImperativeHandle } from "react"
 
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -13,6 +15,7 @@ import { useChatbot } from "./use-chatbot"
 interface ChatbotContentProps extends ChatbotProps {
   dictionary?: Partial<ChatbotDictionary>
   promptType?: PromptType
+  subdomain?: string
 }
 
 export const ChatbotContent = forwardRef<
@@ -27,6 +30,7 @@ export const ChatbotContent = forwardRef<
       onChatClose,
       dictionary = {},
       promptType = "saasMarketing",
+      subdomain,
     },
     ref
   ) => {
@@ -43,6 +47,7 @@ export const ChatbotContent = forwardRef<
 
     const { state, toggleChat, openChat, closeChat, sendMessage } = useChatbot({
       promptType,
+      subdomain,
     })
 
     useImperativeHandle(
@@ -60,6 +65,12 @@ export const ChatbotContent = forwardRef<
         onChatClose()
       }
     }, [state.isOpen, onChatOpen, onChatClose])
+
+    useEffect(() => {
+      const handleOpenChatbot = () => openChat()
+      window.addEventListener("open-chatbot", handleOpenChatbot)
+      return () => window.removeEventListener("open-chatbot", handleOpenChatbot)
+    }, [openChat])
 
     const handleSendMessage = async (message: string) => {
       await sendMessage(message)
@@ -88,6 +99,7 @@ export const ChatbotContent = forwardRef<
           placeholder={chatbotConfig.placeholder}
           locale={chatbotConfig.locale}
           dictionary={fullDictionary}
+          promptType={promptType}
         />
       </>
     )

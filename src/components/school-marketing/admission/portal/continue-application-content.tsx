@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -59,6 +61,13 @@ export default function ContinueApplicationContent({
   const [isLoading, setIsLoading] = useState(false)
   const isRTL = lang === "ar"
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { continueApp?: Record<string, string> } }
+      }
+    )?.school?.admission?.continueApp ?? {}
+
   const form = useForm<ContinueFormData>({
     resolver: zodResolver(continueSchema),
     defaultValues: {
@@ -80,20 +89,15 @@ export default function ContinueApplicationContent({
         if (campaignId) {
           router.push(`/${lang}/apply/${campaignId}?token=${data.sessionToken}`)
         } else {
-          toast.error(isRTL ? "لم يتم العثور على الحملة" : "Campaign not found")
+          toast.error(dict.campaignNotFound || "Campaign not found")
         }
       } else {
         toast.error(
-          result.error ||
-            (isRTL
-              ? "لم يتم العثور على طلب محفوظ"
-              : "No saved application found")
+          result.error || dict.noSavedFound || "No saved application found"
         )
       }
     } catch (error) {
-      toast.error(
-        isRTL ? "فشل في استئناف الطلب" : "Failed to resume application"
-      )
+      toast.error(dict.failedToResume || "Failed to resume application")
     } finally {
       setIsLoading(false)
     }
@@ -106,12 +110,10 @@ export default function ContinueApplicationContent({
           <AnthropicIcons.Archive className="text-primary h-8 w-8" />
         </div>
         <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
-          {isRTL ? "استئناف طلبك" : "Continue Your Application"}
+          {dict.title || "Continue Your Application"}
         </h1>
         <p className="text-muted-foreground mx-auto mt-3 max-w-md leading-relaxed">
-          {isRTL
-            ? "أدخل بريدك الإلكتروني لاستئناف طلبك المحفوظ"
-            : "Enter your email to resume your saved application"}
+          {dict.subtitle || "Enter your email to resume your saved application"}
         </p>
       </div>
 
@@ -119,9 +121,8 @@ export default function ContinueApplicationContent({
         <CardHeader>
           <CardTitle className="text-lg">{school.name}</CardTitle>
           <CardDescription>
-            {isRTL
-              ? "يجب أن يكون البريد الإلكتروني مطابقاً للبريد المستخدم في الطلب الأصلي"
-              : "Email must match the one used in your original application"}
+            {dict.emailMustMatch ||
+              "Email must match the one used in your original application"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -133,7 +134,7 @@ export default function ContinueApplicationContent({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {isRTL ? "البريد الإلكتروني" : "Email Address"}
+                      {dict.emailAddress || "Email Address"}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -154,17 +155,14 @@ export default function ContinueApplicationContent({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {isRTL
-                          ? "رمز الجلسة (اختياري)"
-                          : "Session Token (Optional)"}
+                        {dict.sessionToken || "Session Token (Optional)"}
                       </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           placeholder={
-                            isRTL
-                              ? "أدخل رمز الجلسة إذا كان لديك"
-                              : "Enter session token if you have one"
+                            dict.sessionTokenPlaceholder ||
+                            "Enter session token if you have one"
                           }
                         />
                       </FormControl>
@@ -182,11 +180,11 @@ export default function ContinueApplicationContent({
                 {isLoading ? (
                   <>
                     <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                    {isRTL ? "جارٍ البحث..." : "Searching..."}
+                    {dict.searching || "Searching..."}
                   </>
                 ) : (
                   <>
-                    {isRTL ? "استئناف الطلب" : "Resume Application"}
+                    {dict.resumeApplication || "Resume Application"}
                     <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                   </>
                 )}
@@ -198,11 +196,11 @@ export default function ContinueApplicationContent({
 
       <div className="space-y-4 text-center">
         <p className="text-muted-foreground text-sm">
-          {isRTL ? "ليس لديك طلب محفوظ؟" : "Don't have a saved application?"}
+          {dict.noSavedApp || "Don't have a saved application?"}
         </p>
         <Link href={`/${lang}/apply`}>
           <Button variant="outline">
-            {isRTL ? "بدء طلب جديد" : "Start New Application"}
+            {dict.startNew || "Start New Application"}
           </Button>
         </Link>
       </div>
@@ -213,26 +211,22 @@ export default function ContinueApplicationContent({
             <AnthropicIcons.Checklist className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
             <div>
               <h3 className="mb-2 font-medium">
-                {isRTL ? "معلومات مهمة" : "Important Information"}
+                {dict.importantInfo || "Important Information"}
               </h3>
               <ul className="text-muted-foreground space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  {isRTL
-                    ? "يتم حفظ الطلبات تلقائياً كل 30 ثانية"
-                    : "Applications are auto-saved every 30 seconds"}
+                  {dict.autoSaveNote ||
+                    "Applications are auto-saved every 30 seconds"}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  {isRTL
-                    ? "تنتهي صلاحية الجلسات المحفوظة بعد 7 أيام"
-                    : "Saved sessions expire after 7 days"}
+                  {dict.sessionExpiry || "Saved sessions expire after 7 days"}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  {isRTL
-                    ? "يمكنك أيضاً استئناف من الرابط المرسل إلى بريدك الإلكتروني"
-                    : "You can also resume from the link sent to your email"}
+                  {dict.resumeFromEmail ||
+                    "You can also resume from the link sent to your email"}
                 </li>
               </ul>
             </div>

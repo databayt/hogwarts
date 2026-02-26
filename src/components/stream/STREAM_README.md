@@ -429,7 +429,7 @@ This is a standalone module designed for integration. For improvements:
 
 ## 📄 License
 
-MIT License - Use freely in commercial and personal projects.
+SSPL-1.0 - See LICENSE in the project root for details.
 
 ## 🆘 Support
 

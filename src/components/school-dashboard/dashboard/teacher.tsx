@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { format, isToday, isTomorrow } from "date-fns"
 import {
@@ -58,7 +61,7 @@ export async function TeacherDashboard({
     try {
       const [teacherData, qlData, weather] = await Promise.all([
         getTeacherDashboardData(),
-        getQuickLookData(),
+        getQuickLookData(locale),
         getWeatherData(),
       ])
       data = teacherData
@@ -323,7 +326,7 @@ export async function TeacherDashboard({
                 href={`/${locale}/s/${school?.domain}/assignments`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
-                View all <ChevronRight className="h-4 w-4" />
+                View all <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Resend } from "resend"
 
 import { env } from "@/env.mjs"
@@ -55,6 +58,7 @@ function generateEmailHtml(
 ): string {
   const code = data.code as string
   const expiresIn = data.expiresIn as string
+  const message = data.message as string
 
   return `
     <!DOCTYPE html>
@@ -84,7 +88,13 @@ function generateEmailHtml(
             This code expires in ${expiresIn || "15 minutes"}
           </p>
           `
-              : ""
+              : message
+                ? `
+          <p style="margin: 0 0 16px; color: #374151; font-size: 16px; line-height: 1.6;">
+            ${message}
+          </p>
+          `
+                : ""
           }
         </div>
         <p style="margin: 24px 0 0; text-align: center; color: #9ca3af; font-size: 12px;">

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Suspense } from "react"
 import { Building2 } from "lucide-react"
 import type { User } from "next-auth"
@@ -129,8 +132,8 @@ export default async function MyBanksContent(props: Props) {
 }
 
 // Utility functions
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+function formatCurrency(amount: number, locale: string = "ar"): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,

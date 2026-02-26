@@ -1,6 +1,9 @@
 "use client"
 
-import { useState, useTransition } from "react"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useCallback, useEffect, useState, useTransition } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookOpen, Loader2 } from "lucide-react"
 
@@ -12,6 +15,8 @@ import { SearchBar } from "@/components/stream/search-bar"
 
 import { CourseCard, CourseCardSkeleton } from "./course-card"
 
+const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
 interface Props {
   dictionary: any
   lang: string
@@ -20,6 +25,7 @@ interface Props {
   totalCount: number
   page: number
   perPage: number
+  activeGrade: string
 }
 
 export function StreamCoursesContent({
@@ -30,14 +36,35 @@ export function StreamCoursesContent({
   totalCount,
   page,
   perPage,
+  activeGrade,
 }: Props) {
   const isRTL = lang === "ar"
+  const df = dictionary?.stream?.coursesFilter
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const [allCourses, setAllCourses] = useState(courses)
   const [currentPage, setCurrentPage] = useState(page)
   const [isPending, startTransition] = useTransition()
 
+  useEffect(() => {
+    setAllCourses(courses)
+    setCurrentPage(page)
+  }, [courses, page])
+
   const hasMore = allCourses.length < totalCount
+
+  const handleGradeClick = useCallback(
+    (grade: string) => {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set("level", grade)
+      params.delete("page")
+      const qs = params.toString()
+      router.push(qs ? `${pathname}?${qs}` : pathname)
+    },
+    [router, pathname, searchParams]
+  )
 
   const loadMore = () => {
     startTransition(async () => {
@@ -45,6 +72,7 @@ export function StreamCoursesContent({
       const { rows } = await getAllCatalogCourses(schoolId, {
         page: nextPage,
         perPage,
+        grade: activeGrade ? parseInt(activeGrade) : undefined,
         lang,
       })
       setAllCourses((prev) => [...prev, ...rows])
@@ -80,16 +108,32 @@ export function StreamCoursesContent({
         <SearchBar lang={lang} dictionary={dictionary} />
       </section>
 
-      {courses.length === 0 ? (
+      {/* Grade Toggle Badges */}
+      <section className="flex flex-wrap gap-2">
+        {GRADES.map((g) => (
+          <button
+            key={g}
+            onClick={() => handleGradeClick(String(g))}
+            className={`cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+              activeGrade === String(g)
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {g}
+          </button>
+        ))}
+      </section>
+
+      {allCourses.length === 0 ? (
         <Card>
           <CardContent className="py-10">
             <div className="text-center">
               <BookOpen className="text-muted-foreground mx-auto mb-4 size-16" />
-              <h3>{isRTL ? "لا توجد دورات متاحة" : "No Courses Available"}</h3>
+              <h3>{df?.noCoursesAvailable || "No Courses Available"}</h3>
               <p className="muted mb-6">
-                {isRTL
-                  ? "لا توجد دورات متاحة حالياً. تفقد لاحقاً!"
-                  : "There are currently no courses available. Check back soon!"}
+                {df?.noCoursesAvailableDesc ||
+                  "There are currently no courses available. Check back soon!"}
               </p>
             </div>
           </CardContent>
@@ -138,9 +182,9 @@ export function StreamCoursesContent({
                 disabled={isPending}
               >
                 {isPending ? (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  <Loader2 className="me-2 size-4 animate-spin" />
                 ) : null}
-                {isRTL ? "عرض المزيد" : "See More"}
+                {df?.seeMore || "See More"}
               </Button>
             </div>
           )}

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Onboarding-specific authentication utilities
  * Provides flexible auth checks during the onboarding flow

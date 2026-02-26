@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Library Management System - Type Definitions
 
 export interface Book {
@@ -13,6 +16,12 @@ export interface Book {
   availableCopies: number
   videoUrl?: string | null
   summary: string
+  gradeLevel: string
+  isbn?: string | null
+  publisher?: string | null
+  publicationYear?: number | null
+  language?: string | null
+  pageCount?: number | null
   schoolId: string
   createdAt: Date
   updatedAt: Date
@@ -61,6 +70,12 @@ export interface BookFormData {
   totalCopies: number
   videoUrl?: string
   summary: string
+  gradeLevel?: string
+  isbn?: string
+  publisher?: string
+  publicationYear?: number
+  language?: string
+  pageCount?: number
 }
 
 // User profile for library

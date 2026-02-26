@@ -143,6 +143,10 @@ model Student {
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
 
+  // Academic grade (catalog integration)
+  academicGradeId String?
+  academicGrade   AcademicGrade? @relation(fields: [academicGradeId], references: [id], onDelete: SetNull)
+
   // Exam certificates
   examCertificates ExamCertificate[]
 
@@ -165,6 +169,7 @@ model Student {
   @@index([schoolId, status]) // Index for filtering by status
   @@index([schoolId, studentType]) // Index for filtering by type
   @@index([schoolId, category]) // Index for filtering by category
+  @@index([schoolId, academicGradeId]) // Index for grade-based filtering
   @@map("students")
 }
 

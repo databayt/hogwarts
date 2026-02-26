@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { Locale } from "@/components/internationalization/config"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { getMyContributions } from "@/components/school-dashboard/listings/subjects/catalog/contribution-actions"

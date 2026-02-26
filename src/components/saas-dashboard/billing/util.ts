@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Utility functions for Billing feature
  *
@@ -22,12 +25,13 @@ import type { BillingPeriod, InvoiceStatus, ReceiptStatus } from "./types"
  */
 export function formatCurrency(
   cents: number,
-  currency = DEFAULT_CURRENCY
+  currency = DEFAULT_CURRENCY,
+  locale = "ar"
 ): string {
   const amount = cents / 100
   const symbol = CURRENCY_SYMBOLS[currency] || "$"
 
-  return `${symbol}${amount.toLocaleString("en-US", {
+  return `${symbol}${amount.toLocaleString(locale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`
@@ -38,10 +42,11 @@ export function formatCurrency(
  */
 export function formatCurrencyFull(
   cents: number,
-  currency = DEFAULT_CURRENCY
+  currency = DEFAULT_CURRENCY,
+  locale = "ar"
 ): string {
   const amount = cents / 100
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
   }).format(amount)
@@ -139,12 +144,13 @@ export function formatDueStatus(
  */
 export function formatBillingPeriod(
   start: Date | string,
-  end: Date | string
+  end: Date | string,
+  locale = "ar"
 ): string {
   const startDate = typeof start === "string" ? new Date(start) : start
   const endDate = typeof end === "string" ? new Date(end) : end
 
-  const formatter = new Intl.DateTimeFormat("en-US", {
+  const formatter = new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "short",
   })
@@ -162,14 +168,14 @@ export function formatBillingPeriod(
 /**
  * Get billing period from date
  */
-export function getBillingPeriod(date: Date): BillingPeriod {
+export function getBillingPeriod(date: Date, locale = "ar"): BillingPeriod {
   const start = new Date(date.getFullYear(), date.getMonth(), 1)
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 0)
 
   return {
     start,
     end,
-    label: new Intl.DateTimeFormat("en-US", {
+    label: new Intl.DateTimeFormat(locale, {
       year: "numeric",
       month: "long",
     }).format(date),

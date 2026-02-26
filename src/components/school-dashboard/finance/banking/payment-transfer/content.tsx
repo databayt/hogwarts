@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Suspense } from "react"
 import Link from "next/link"
 import { CircleAlert, CreditCard } from "lucide-react"
@@ -133,8 +136,8 @@ function FormSkeleton() {
 }
 
 // Utility function
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+function formatCurrency(amount: number, locale: string = "ar"): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,

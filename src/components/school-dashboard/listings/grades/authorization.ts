@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Authorization middleware for grades/results feature
  * Implements role-based access control (RBAC) for result operations
@@ -6,6 +9,8 @@
  */
 
 import { UserRole } from "@prisma/client"
+
+import { db } from "@/lib/db"
 
 export type ResultAction =
   | "create"
@@ -27,6 +32,66 @@ export interface ResultContext {
   schoolId?: string
   classId?: string
   studentId?: string
+}
+
+/**
+ * Check if a student record's userId matches the auth user
+ */
+export async function isStudentOwner(
+  userId: string,
+  schoolId: string,
+  studentId?: string
+): Promise<boolean> {
+  if (!studentId) {
+    // Check if the user IS a student in this school
+    const student = await db.student.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+    return !!student
+  }
+
+  const student = await db.student.findFirst({
+    where: { id: studentId, schoolId, userId },
+    select: { id: true },
+  })
+  return !!student
+}
+
+/**
+ * Check if a guardian has a relationship with the student
+ */
+export async function isGuardianOfStudent(
+  userId: string,
+  schoolId: string,
+  studentId?: string
+): Promise<boolean> {
+  // Find the guardian record for this user
+  const guardian = await db.guardian.findFirst({
+    where: { userId, schoolId },
+    select: { id: true },
+  })
+  if (!guardian) return false
+
+  if (!studentId) {
+    // Guardian can see any of their children's results
+    const link = await db.studentGuardian.findFirst({
+      where: { schoolId, guardianId: guardian.id },
+      select: { id: true },
+    })
+    return !!link
+  }
+
+  // Check specific student-guardian relationship
+  const link = await db.studentGuardian.findFirst({
+    where: {
+      schoolId,
+      guardianId: guardian.id,
+      studentId,
+    },
+    select: { id: true },
+  })
+  return !!link
 }
 
 /**
@@ -108,22 +173,23 @@ export function checkResultPermission(
     return false
   }
 
-  // STUDENT can only read their own results
+  // STUDENT can read their own results
+  // Note: Actual ownership verification requires async call to isStudentOwner()
+  // which must be done in the server action. This returns true to allow the
+  // action to proceed to the ownership check.
   if (role === "STUDENT") {
     if (action === "read") {
-      // Would need student ID mapping to implement properly
-      // For now, deny access - proper implementation requires linking user to student record
-      return false
+      return true
     }
     return false
   }
 
   // GUARDIAN can read their children's results
+  // Note: Actual relationship verification requires async call to isGuardianOfStudent()
+  // which must be done in the server action.
   if (role === "GUARDIAN") {
     if (action === "read") {
-      // Would need guardian-student relationship to implement properly
-      // For now, deny access - proper implementation requires checking guardian-student link
-      return false
+      return true
     }
     return false
   }
@@ -223,9 +289,9 @@ export function getAllowedActions(role: UserRole): ResultAction[] {
     case "STAFF":
       return ["read"]
     case "STUDENT":
-      return ["read"] // Limited to own results
+      return ["read"] // Limited to own results (verified in action)
     case "GUARDIAN":
-      return ["read"] // Limited to children's results
+      return ["read"] // Limited to children's results (verified in action)
     default:
       return []
   }

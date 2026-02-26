@@ -426,4 +426,4 @@ Finance and billing team responsible for invoice features.
 
 ## License
 
-MIT
+SSPL-1.0

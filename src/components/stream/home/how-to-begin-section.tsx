@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 
 import { cn } from "@/lib/utils"
@@ -73,7 +75,7 @@ export function HowToBeginSection({
             >
               {dictionary?.howToBegin?.[`tab${index + 1}`] || step.title}
               {activeStep === index && (
-                <span className="bg-foreground absolute right-0 bottom-0 left-0 h-0.5" />
+                <span className="bg-foreground absolute start-0 end-0 bottom-0 h-0.5" />
               )}
             </button>
           ))}

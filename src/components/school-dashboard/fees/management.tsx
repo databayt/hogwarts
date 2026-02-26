@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import { addDays, differenceInDays, format, isFuture, isPast } from "date-fns"
@@ -90,6 +92,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Student {
   id: string
@@ -227,6 +230,8 @@ export function FeeManagement({
   onApplyDiscount,
   onExportReport,
 }: FeeManagementProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [selectedTab, setSelectedTab] = useState<
     "overview" | "payments" | "defaulters" | "reports"
   >("overview")
@@ -366,7 +371,7 @@ export function FeeManagement({
 
     const amount = parseFloat(paymentAmount)
     if (isNaN(amount) || amount <= 0 || amount > selectedPayment.balance) {
-      toast.error("Invalid payment amount")
+      toast.error(t?.error?.invalidData || "Invalid payment amount")
       return
     }
 
@@ -377,12 +382,14 @@ export function FeeManagement({
         paymentMethod,
         transactionId: transactionId || undefined,
       })
-      toast.success("Payment recorded successfully")
+      toast.success(
+        t?.success?.paymentProcessed || "Payment recorded successfully"
+      )
       setPaymentDialogOpen(false)
       setPaymentAmount("")
       setTransactionId("")
     } catch (error) {
-      toast.error("Failed to record payment")
+      toast.error(t?.error?.paymentFailed || "Failed to record payment")
     }
   }
 
@@ -391,7 +398,7 @@ export function FeeManagement({
 
     const value = parseFloat(discountValue)
     if (isNaN(value) || value <= 0) {
-      toast.error("Invalid discount value")
+      toast.error(t?.error?.invalidData || "Invalid discount value")
       return
     }
 
@@ -401,12 +408,12 @@ export function FeeManagement({
         value,
         reason: discountReason,
       })
-      toast.success("Discount applied successfully")
+      toast.success(t?.success?.updated || "Discount applied successfully")
       setDiscountDialogOpen(false)
       setDiscountValue("")
       setDiscountReason("")
     } catch (error) {
-      toast.error("Failed to apply discount")
+      toast.error(t?.error?.updateFailed || "Failed to apply discount")
     }
   }
 
@@ -416,15 +423,20 @@ export function FeeManagement({
       .map((fp) => fp.studentId)
 
     if (overdueStudentIds.length === 0) {
-      toast.error("No students with overdue payments")
+      toast.error(
+        dictionary?.common?.error || "No students with overdue payments"
+      )
       return
     }
 
     try {
       await onSendReminder(overdueStudentIds, "email")
-      toast.success(`Reminders sent to ${overdueStudentIds.length} parents`)
+      toast.success(
+        t?.success?.sent ||
+          `Reminders sent to ${overdueStudentIds.length} parents`
+      )
     } catch (error) {
-      toast.error("Failed to send reminders")
+      toast.error(t?.error?.sendFailed || "Failed to send reminders")
     }
   }
 

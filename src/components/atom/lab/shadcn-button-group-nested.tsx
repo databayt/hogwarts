@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -31,10 +33,10 @@ export function ShadcnButtonGroupNested() {
 
       <div className="flex gap-1">
         <Button variant="outline" size="icon" aria-label="Previous">
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4 rtl:rotate-180" />
         </Button>
         <Button variant="outline" size="icon" aria-label="Next">
-          <ArrowRight className="size-4" />
+          <ArrowRight className="size-4 rtl:rotate-180" />
         </Button>
       </div>
     </div>

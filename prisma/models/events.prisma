@@ -23,6 +23,7 @@ model Event {
   schoolId             String
   title                String
   description          String?     @db.Text
+  lang                 String      @default("ar")
   eventType            EventType   @default(OTHER)
   eventDate            DateTime
   startTime            String
@@ -36,9 +37,11 @@ model Event {
   registrationRequired Boolean     @default(false)
   notes                String?     @db.Text
   status               EventStatus @default(PLANNED)
+  createdById          String?
 
   // Relationships
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  registrations EventRegistration[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -49,4 +52,32 @@ model Event {
   @@index([schoolId, eventType])
   @@index([schoolId, status])
   @@map("events")
+}
+
+enum EventRegistrationStatus {
+  REGISTERED
+  CANCELLED
+  WAITLISTED
+  ATTENDED
+}
+
+model EventRegistration {
+  id        String                  @id @default(cuid())
+  schoolId  String
+  eventId   String
+  userId    String
+  status    EventRegistrationStatus @default(REGISTERED)
+
+  registeredAt DateTime  @default(now())
+  cancelledAt  DateTime?
+
+  // Relationships
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user   User   @relation("EventRegistrations", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([schoolId])
+  @@index([eventId, status])
+  @@map("event_registrations")
 }

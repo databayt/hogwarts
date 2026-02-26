@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import confetti from "canvas-confetti"
 import { motion } from "framer-motion"
@@ -144,9 +146,9 @@ export default function SuccessModal({
       <div className="from-primary/5 via-background to-secondary/5 relative h-screen w-full overflow-hidden bg-gradient-to-br">
         {/* Background decoration */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="bg-primary/10 absolute -top-40 -right-40 h-80 w-80 rounded-full blur-3xl" />
-          <div className="bg-secondary/10 absolute -bottom-40 -left-40 h-80 w-80 rounded-full blur-3xl" />
-          <div className="bg-primary/5 absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" />
+          <div className="bg-primary/10 absolute -end-40 -top-40 h-80 w-80 rounded-full blur-3xl" />
+          <div className="bg-secondary/10 absolute -start-40 -bottom-40 h-80 w-80 rounded-full blur-3xl" />
+          <div className="bg-primary/5 absolute start-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" />
         </div>
 
         {/* Content */}

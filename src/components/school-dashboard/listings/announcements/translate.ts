@@ -1,10 +1,11 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
-import { generateText } from "ai"
 
-import { providers } from "@/lib/ai/providers"
 import { getTenantContext } from "@/lib/tenant-context"
+import { translateWithCache } from "@/lib/translate"
 
 interface TranslateInput {
   title: string
@@ -22,8 +23,7 @@ interface TranslateResult {
 }
 
 /**
- * Translate announcement content using Groq AI (free, fast)
- * Uses llama-3.1-8b-instant for cost-effective translation
+ * Translate announcement content using Google Translate API with DB caching
  */
 export async function translateAnnouncement(
   input: TranslateInput
@@ -39,26 +39,28 @@ export async function translateAnnouncement(
   }
 
   const targetLanguage = input.sourceLanguage === "en" ? "ar" : "en"
-  const targetLangName = targetLanguage === "en" ? "English" : "Arabic"
 
   try {
-    // Translate title and body in parallel for speed
-    const [titleResult, bodyResult] = await Promise.all([
-      generateText({
-        model: providers.groq.fast, // llama-3.1-8b-instant (free tier)
-        prompt: `Translate the following text to ${targetLangName}. Return ONLY the translation, no explanations or additional text:\n\n${input.title}`,
-      }),
-      generateText({
-        model: providers.groq.fast,
-        prompt: `Translate the following text to ${targetLangName}. Return ONLY the translation, no explanations or additional text:\n\n${input.body}`,
-      }),
+    const [translatedTitle, translatedBody] = await Promise.all([
+      translateWithCache(
+        input.title,
+        input.sourceLanguage,
+        targetLanguage,
+        schoolId
+      ),
+      translateWithCache(
+        input.body,
+        input.sourceLanguage,
+        targetLanguage,
+        schoolId
+      ),
     ])
 
     return {
       success: true,
       data: {
-        translatedTitle: titleResult.text.trim(),
-        translatedBody: bodyResult.text.trim(),
+        translatedTitle,
+        translatedBody,
       },
     }
   } catch (error) {

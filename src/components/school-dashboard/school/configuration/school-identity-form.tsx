@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Pencil, Phone } from "lucide-react"
@@ -37,6 +39,8 @@ const schoolIdentitySchema = z.object({
   description: z.string().optional(),
   schoolType: z.string().optional(),
   schoolLevel: z.string().optional(),
+  system: z.string().optional(),
+  preferredLanguage: z.string().optional(),
 })
 
 const SCHOOL_TYPES = [
@@ -51,6 +55,18 @@ const SCHOOL_LEVELS = [
   { value: "primary", label: "Primary" },
   { value: "secondary", label: "Secondary" },
   { value: "both", label: "Both (K-12)" },
+]
+
+const SCHOOL_SYSTEMS = [
+  { value: "national", label: "National Curriculum" },
+  { value: "british", label: "British Curriculum" },
+  { value: "ib", label: "International Baccalaureate (IB)" },
+  { value: "clickview", label: "ClickView" },
+]
+
+const LANGUAGES = [
+  { value: "ar", label: "العربية (Arabic)" },
+  { value: "en", label: "English" },
 ]
 
 type SchoolIdentityFormData = z.infer<typeof schoolIdentitySchema>
@@ -217,6 +233,33 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
                         (l) => l.value === initialData.schoolLevel
                       )?.label || initialData.schoolLevel
                     : "Not set"}
+                </p>
+              </div>
+            </div>
+
+            {/* Curriculum & Language */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <Label className="text-muted-foreground text-xs">
+                  Curriculum System
+                </Label>
+                <p className="font-medium capitalize">
+                  {initialData.system
+                    ? SCHOOL_SYSTEMS.find((s) => s.value === initialData.system)
+                        ?.label || initialData.system
+                    : "Not set"}
+                </p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-xs">
+                  Preferred Language
+                </Label>
+                <p className="font-medium">
+                  {LANGUAGES.find(
+                    (l) => l.value === initialData.preferredLanguage
+                  )?.label ||
+                    initialData.preferredLanguage ||
+                    "Not set"}
                 </p>
               </div>
             </div>
@@ -388,6 +431,48 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
               {SCHOOL_LEVELS.map((level) => (
                 <SelectItem key={level.value} value={level.value}>
                   {level.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Curriculum & Language */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="system">Curriculum System</Label>
+          <Select
+            value={form.watch("system") || ""}
+            onValueChange={(value) => form.setValue("system", value)}
+            disabled={isPending}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select curriculum" />
+            </SelectTrigger>
+            <SelectContent>
+              {SCHOOL_SYSTEMS.map((sys) => (
+                <SelectItem key={sys.value} value={sys.value}>
+                  {sys.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="preferredLanguage">Preferred Language</Label>
+          <Select
+            value={form.watch("preferredLanguage") || "ar"}
+            onValueChange={(value) => form.setValue("preferredLanguage", value)}
+            disabled={isPending}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.map((lng) => (
+                <SelectItem key={lng.value} value={lng.value}>
+                  {lng.label}
                 </SelectItem>
               ))}
             </SelectContent>

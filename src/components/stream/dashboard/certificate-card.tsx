@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { Award, Download, ExternalLink, Share2 } from "lucide-react"
 
@@ -19,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface CertificateCardProps {
   certificate: {
@@ -41,6 +44,8 @@ export function CertificateCard({
 }: CertificateCardProps) {
   const [isDownloading, setIsDownloading] = useState(false)
   const isRTL = lang === "ar"
+  const { dictionary } = useDictionary()
+  const d = dictionary?.stream?.certificate
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString(
@@ -180,7 +185,7 @@ export function CertificateCard({
     } else {
       // Fallback: copy to clipboard
       await navigator.clipboard.writeText(shareUrl)
-      alert(isRTL ? "تم نسخ الرابط!" : "Link copied to clipboard!")
+      alert(d?.linkCopied || "Link copied to clipboard!")
     }
   }
 
@@ -193,7 +198,7 @@ export function CertificateCard({
           </div>
           <div>
             <CardTitle className="text-lg">
-              {isRTL ? "شهادة إتمام" : "Certificate of Completion"}
+              {d?.title || "Certificate of Completion"}
             </CardTitle>
             <CardDescription>{certificate.courseTitle}</CardDescription>
           </div>
@@ -202,11 +207,10 @@ export function CertificateCard({
       <CardContent className="space-y-4">
         <div className="text-muted-foreground text-sm">
           <p>
-            {isRTL ? "تاريخ الإتمام:" : "Completed:"}{" "}
-            {formatDate(certificate.completedAt)}
+            {d?.completed || "Completed:"} {formatDate(certificate.completedAt)}
           </p>
           <p className="font-mono text-xs">
-            {isRTL ? "رقم الشهادة:" : "Certificate #:"}{" "}
+            {d?.certificateNumber || "Certificate #:"}{" "}
             {certificate.certificateNumber}
           </p>
         </div>
@@ -216,13 +220,13 @@ export function CertificateCard({
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="flex-1">
                 <ExternalLink className="size-4" />
-                {isRTL ? "عرض" : "View"}
+                {d?.view || "View"}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl">
               <DialogHeader>
                 <DialogTitle>
-                  {isRTL ? "شهادة إتمام" : "Certificate of Completion"}
+                  {d?.title || "Certificate of Completion"}
                 </DialogTitle>
                 <DialogDescription>{certificate.courseTitle}</DialogDescription>
               </DialogHeader>
@@ -282,12 +286,8 @@ export function CertificateCard({
           >
             <Download className="size-4" />
             {isDownloading
-              ? isRTL
-                ? "جاري التحميل..."
-                : "Downloading..."
-              : isRTL
-                ? "تحميل"
-                : "Download"}
+              ? d?.downloading || "Downloading..."
+              : d?.download || "Download"}
           </Button>
 
           <Button variant="outline" size="sm" onClick={handleShare}>

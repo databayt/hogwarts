@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { createContext, Dispatch, ReactNode, SetStateAction } from "react"
 
 import { useSignInModal } from "@/components/saas-marketing/pricing/modals/sign-in-modal"

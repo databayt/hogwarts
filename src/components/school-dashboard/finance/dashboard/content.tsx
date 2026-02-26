@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { auth } from "@/auth"
 import {
   Building,
@@ -26,7 +29,9 @@ import { RevenueChart } from "./revenue-chart"
 import { TransactionList } from "./transaction-list"
 import type { FinancialKPI } from "./types"
 
-export async function FinanceDashboardContent() {
+export async function FinanceDashboardContent({
+  lang = "ar",
+}: { lang?: string } = {}) {
   const session = await auth()
   if (!session?.user) {
     return <div>Unauthorized</div>
@@ -218,7 +223,7 @@ export async function FinanceDashboardContent() {
 
       {/* Budget Overview - Only for Admin/Accountant */}
       {hasFullAccess && stats.budgetCategories.length > 0 && (
-        <BudgetOverview categories={stats.budgetCategories} />
+        <BudgetOverview categories={stats.budgetCategories} locale={lang} />
       )}
 
       {/* Footer Stats */}
@@ -278,6 +283,7 @@ function StatCard({
 
 function BudgetOverview({
   categories,
+  locale = "ar",
 }: {
   categories: {
     category: string
@@ -286,6 +292,7 @@ function BudgetOverview({
     remaining: number
     percentage: number
   }[]
+  locale?: string
 }) {
   return (
     <div className="rounded-lg border p-6">
@@ -296,8 +303,8 @@ function BudgetOverview({
             <div className="flex items-center justify-between text-sm">
               <span>{cat.category}</span>
               <span className="text-muted-foreground">
-                SDG {new Intl.NumberFormat("en-SD").format(cat.spent)} /{" "}
-                {new Intl.NumberFormat("en-SD").format(cat.allocated)}
+                SDG {new Intl.NumberFormat(locale).format(cat.spent)} /{" "}
+                {new Intl.NumberFormat(locale).format(cat.allocated)}
               </span>
             </div>
             <div className="bg-muted h-2 w-full rounded-full">

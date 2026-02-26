@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { format } from "date-fns"
 import { Calendar as CalendarIcon, School } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"

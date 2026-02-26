@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -25,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { enterMarks, getExamWithStudents } from "./actions"
 
@@ -60,6 +63,8 @@ const marksEntrySchema = z.object({
 })
 
 export function MarksEntryForm({ examId }: Props) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [exam, setExam] = useState<ExamInfo | null>(null)
@@ -98,7 +103,7 @@ export function MarksEntryForm({ examId }: Props) {
           )
         }
       } catch (error) {
-        toast.error("Failed to load exam data")
+        toast.error(t?.error?.generic || "Failed to load exam data")
         console.error(error)
       } finally {
         setLoading(false)
@@ -115,10 +120,12 @@ export function MarksEntryForm({ examId }: Props) {
         marks: data.marks,
       })
       if (result.success && result.data) {
-        toast.success(`Saved marks for ${result.data.count} students`)
+        toast.success(
+          t?.success?.saved || `Saved marks for ${result.data.count} students`
+        )
       }
     } catch (error) {
-      toast.error("Failed to save marks")
+      toast.error(t?.error?.saveFailed || "Failed to save marks")
       console.error(error)
     } finally {
       setSaving(false)
@@ -128,7 +135,7 @@ export function MarksEntryForm({ examId }: Props) {
   const handleMarksChange = (index: number, value: string) => {
     const numValue = value === "" ? null : parseFloat(value)
     if (numValue !== null && exam && numValue > exam.totalMarks) {
-      toast.error(`Marks cannot exceed ${exam.totalMarks}`)
+      toast.error(t?.error?.generic || `Marks cannot exceed ${exam.totalMarks}`)
       return
     }
     setValue(`marks.${index}.marksObtained`, numValue)

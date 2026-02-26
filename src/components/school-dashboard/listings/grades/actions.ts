@@ -1,15 +1,20 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath, revalidateTag } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertResultPermission,
   canCreateResult,
   getAuthContext,
+  isGuardianOfStudent,
+  isStudentOwner,
 } from "@/components/school-dashboard/listings/grades/authorization"
 import {
   calculateGrade,
@@ -83,13 +88,13 @@ export async function createResult(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -106,6 +111,20 @@ export async function createResult(
     // Calculate percentage
     const percentage = (parsed.score / parsed.maxScore) * 100
 
+    // Auto-populate yearLevelId from student's academic grade
+    let yearLevelId: string | null = null
+    const student = await db.student.findFirst({
+      where: { id: parsed.studentId, schoolId },
+      select: {
+        academicGrade: {
+          select: { yearLevelId: true },
+        },
+      },
+    })
+    if (student?.academicGrade?.yearLevelId) {
+      yearLevelId = student.academicGrade.yearLevelId
+    }
+
     // Create result with audit trail
     const row = await db.result.create({
       data: {
@@ -120,6 +139,7 @@ export async function createResult(
         feedback: parsed.feedback || null,
         gradedAt: new Date(),
         gradedBy: authContext.userId,
+        yearLevelId,
       },
     })
 
@@ -161,13 +181,13 @@ export async function updateResult(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -282,13 +302,13 @@ export async function deleteResult(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -366,13 +386,13 @@ export async function getResult(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -398,6 +418,31 @@ export async function getResult(input: {
           error instanceof Error
             ? error.message
             : "Unauthorized to read this result",
+      }
+    }
+
+    // Additional ownership check for STUDENT/GUARDIAN roles
+    if (authContext.role === "STUDENT" && authContext.schoolId) {
+      const isOwner = await isStudentOwner(
+        authContext.userId,
+        authContext.schoolId,
+        result.studentId
+      )
+      if (!isOwner) {
+        return { success: false, error: "You can only view your own results" }
+      }
+    }
+    if (authContext.role === "GUARDIAN" && authContext.schoolId) {
+      const isGuardian = await isGuardianOfStudent(
+        authContext.userId,
+        authContext.schoolId,
+        result.studentId
+      )
+      if (!isGuardian) {
+        return {
+          success: false,
+          error: "You can only view your children's results",
+        }
       }
     }
 
@@ -453,13 +498,13 @@ export async function getResults(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Parse and validate input
@@ -513,13 +558,13 @@ export async function getResultsCSV(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Check export permission
@@ -607,13 +652,13 @@ export async function bulkDeleteResults(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Check bulk action permission

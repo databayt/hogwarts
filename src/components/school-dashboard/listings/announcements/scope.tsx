@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { AlertCircle, AlertTriangle, Bell, BellRing, Info } from "lucide-react"
 import { type UseFormReturn } from "react-hook-form"
@@ -46,38 +48,38 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
   )
   const scope = form.watch("scope")
   const t = dictionary
-  const isRTL = lang === "ar"
+  const p = t?.priority as unknown as
+    | Record<string, Record<string, string>>
+    | undefined
 
   // Priority options with icons and descriptions
   const priorityOptions = [
     {
       value: "low",
-      label: isRTL ? "منخفض" : "Low",
-      description: isRTL ? "إشعار عادي" : "Regular notification",
+      label: p?.low?.label || "Low",
+      description: p?.low?.description || "Regular notification",
       icon: Bell,
       color: "bg-muted text-muted-foreground",
     },
     {
       value: "normal",
-      label: isRTL ? "عادي" : "Normal",
-      description: isRTL ? "إشعار قياسي" : "Standard notification",
+      label: p?.normal?.label || "Normal",
+      description: p?.normal?.description || "Standard notification",
       icon: Bell,
       color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
     },
     {
       value: "high",
-      label: isRTL ? "مرتفع" : "High",
-      description: isRTL ? "يظهر بشكل بارز" : "Shown prominently",
+      label: p?.high?.label || "High",
+      description: p?.high?.description || "Shown prominently",
       icon: AlertTriangle,
       color:
         "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
     },
     {
       value: "urgent",
-      label: isRTL ? "عاجل" : "Urgent",
-      description: isRTL
-        ? "إشعار فوري للجميع"
-        : "Immediate notification to all",
+      label: p?.urgent?.label || "Urgent",
+      description: p?.urgent?.description || "Immediate notification to all",
       icon: BellRing,
       color: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
     },
@@ -218,7 +220,7 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
           return (
             <FormItem>
               <div className="flex items-center gap-2">
-                <FormLabel>{isRTL ? "الأولوية" : "Priority"}</FormLabel>
+                <FormLabel>{t?.priorityLabel || "Priority"}</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-5 w-5">
@@ -228,7 +230,7 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
                   <PopoverContent className="w-72" align="start">
                     <div className="space-y-3">
                       <h4 className="font-medium">
-                        {isRTL ? "مستويات الأولوية" : "Priority Levels"}
+                        {t?.priorityLevelsHeading || "Priority Levels"}
                       </h4>
                       <div className="space-y-2">
                         {priorityOptions.map((option) => {

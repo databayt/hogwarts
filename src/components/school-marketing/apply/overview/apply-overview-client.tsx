@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -44,31 +46,38 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
   const overviewDict = applyDict?.overview ?? {}
 
   // 3 stages matching ADMISSION_CONFIG.groupLabels
+  const groupsDict =
+    (
+      dictionary as unknown as {
+        apply?: {
+          groups?: Record<string, string>
+        }
+      }
+    )?.apply?.groups ?? {}
+
   const stages: Stage[] = [
     {
       number: 1,
-      title: isRTL ? "المعلومات الأساسية" : "Basic Information",
-      description: isRTL
-        ? "أدخل بياناتك الشخصية ومعلومات الاتصال"
-        : "Provide your personal and contact details",
+      title: groupsDict.basicInfo || "Basic Information",
+      description:
+        overviewDict.stage1Desc || "Provide your personal and contact details",
       illustration:
         "https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg",
     },
     {
       number: 2,
-      title: isRTL ? "العائلة والتعليم" : "Family & Education",
-      description: isRTL
-        ? "أضف معلومات ولي الأمر والخلفية الأكاديمية"
-        : "Add guardian info and academic background",
+      title: groupsDict.familyEducation || "Family & Education",
+      description:
+        overviewDict.stage2Desc || "Add guardian info and academic background",
       illustration:
         "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg",
     },
     {
       number: 3,
-      title: isRTL ? "الإنهاء" : "Finalize",
-      description: isRTL
-        ? "ارفع المستندات وراجع طلبك"
-        : "Upload documents and review your application",
+      title: groupsDict.finalize || "Finalize",
+      description:
+        overviewDict.stage3Desc ||
+        "Upload documents and review your application",
       illustration:
         "https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf53535e93be1310ae1935157bcebdd-1000x1000.svg",
     },
@@ -99,14 +108,11 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
             {/* Left Side - Title */}
             <div>
               <h2 className="text-start text-4xl font-bold tracking-tight">
-                {overviewDict.title ||
-                  (isRTL ? "خطوات التقديم" : "Application Steps")}
+                {overviewDict.title || "Application Steps"}
               </h2>
               <p className="text-muted-foreground mt-4 text-start">
                 {overviewDict.subtitle ||
-                  (isRTL
-                    ? "اتبع هذه الخطوات لإكمال طلب التقديم"
-                    : "Follow these steps to complete your application")}
+                  "Follow these steps to complete your application"}
               </p>
             </div>
 
@@ -147,17 +153,16 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       </div>
 
       {/* Fixed footer - matches onboarding pattern */}
-      <footer className="bg-background fixed right-0 bottom-0 left-0 px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20">
+      <footer className="bg-background fixed start-0 end-0 bottom-0 px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20">
         <Separator className="mx-auto mb-3 w-full max-w-5xl sm:mb-4" />
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between rtl:flex-row-reverse">
           <Button variant="ghost" onClick={handleBack}>
-            {overviewDict.back || (isRTL ? "رجوع" : "Back")}
+            {overviewDict.back || "Back"}
           </Button>
           <Button onClick={handleGetStarted} disabled={isStarting || !id}>
             {isStarting
-              ? overviewDict.loading ||
-                (isRTL ? "جاري التحميل..." : "Loading...")
-              : overviewDict.getStarted || (isRTL ? "ابدأ" : "Get Started")}
+              ? overviewDict.loading || "Loading..."
+              : overviewDict.getStarted || "Get Started"}
           </Button>
         </div>
       </footer>

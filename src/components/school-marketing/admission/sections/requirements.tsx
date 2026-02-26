@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -9,35 +12,45 @@ interface AdmissionRequirementsProps {
   dictionary?: Dictionary
 }
 
-export function AdmissionRequirements({ lang }: AdmissionRequirementsProps) {
-  const isRTL = lang === "ar"
+export function AdmissionRequirements({
+  lang,
+  dictionary,
+}: AdmissionRequirementsProps) {
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: {
+          admission?: { sections?: { requirements?: Record<string, string> } }
+        }
+      }
+    )?.school?.admission?.sections?.requirements ?? {}
 
   const categories = [
     {
-      title: isRTL ? "السجلات الأكاديمية" : "Academic Records",
+      title: dict.academicRecords || "Academic Records",
       icon: AnthropicIcons.Archive,
       items: [
-        isRTL ? "الشهادات الرسمية" : "Official transcripts",
-        isRTL ? "درجات الاختبارات (إن وجدت)" : "Test scores (if applicable)",
-        isRTL ? "توصيات المعلمين" : "Teacher recommendations",
+        dict.officialTranscripts || "Official transcripts",
+        dict.testScores || "Test scores (if applicable)",
+        dict.teacherRecommendations || "Teacher recommendations",
       ],
     },
     {
-      title: isRTL ? "المعلومات الشخصية" : "Personal Information",
+      title: dict.personalInfo || "Personal Information",
       icon: AnthropicIcons.Checklist,
       items: [
-        isRTL ? "شهادة الميلاد" : "Birth certificate",
-        isRTL ? "سجلات التطعيم" : "Immunization records",
-        isRTL ? "جهات الاتصال للطوارئ" : "Emergency contacts",
+        dict.birthCertificate || "Birth certificate",
+        dict.immunizationRecords || "Immunization records",
+        dict.emergencyContacts || "Emergency contacts",
       ],
     },
     {
-      title: isRTL ? "نماذج الطلب" : "Application Forms",
+      title: dict.applicationForms || "Application Forms",
       icon: AnthropicIcons.Book,
       items: [
-        isRTL ? "استمارة التقديم المكتملة" : "Completed application form",
-        isRTL ? "استبيان الوالدين" : "Parent questionnaire",
-        isRTL ? "رسوم التقديم" : "Application fee",
+        dict.completedForm || "Completed application form",
+        dict.parentQuestionnaire || "Parent questionnaire",
+        dict.applicationFee || "Application fee",
       ],
     },
   ]
@@ -45,7 +58,7 @@ export function AdmissionRequirements({ lang }: AdmissionRequirementsProps) {
   return (
     <SectionContainer className="bg-muted/30">
       <h2 className="font-heading mb-16 text-3xl font-bold md:text-4xl">
-        {isRTL ? "متطلبات القبول" : "Admission Requirements"}
+        {dict.title || "Admission Requirements"}
       </h2>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">

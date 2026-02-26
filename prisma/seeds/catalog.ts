@@ -1,383 +1,41 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Catalog Seed
  *
- * Transforms existing SUBJECTS + ALL_TOPICS into global catalog models:
- *   CatalogSubject → CatalogChapter → CatalogLesson
+ * Seeds US K-12 subjects from the ClickView inventory.
+ * Sudanese national curriculum removed -- will be re-added as a separate
+ * curriculum set in the future.
  *
- * Then creates SchoolSubjectSelection bridge records for the demo school.
+ * Kept as a thin wrapper so existing `pnpm db:seed:single catalog`
+ * and `index.ts` calls still work.
  */
 
 import type { PrismaClient } from "@prisma/client"
 
-import { SUBJECTS } from "./constants"
-import { ALL_TOPICS } from "./topic-constants"
+import { seedClickViewCatalog } from "./clickview-catalog"
 import type { CatalogSubjectRef } from "./types"
 import { logSuccess } from "./utils"
-
-// ============================================================================
-// Slug generation from Arabic name
-// ============================================================================
-
-const ARABIC_TO_SLUG: Record<string, string> = {
-  "اللغة العربية": "arabic",
-  "اللغة الإنجليزية": "english",
-  "اللغة الفرنسية": "french",
-  الرياضيات: "mathematics",
-  العلوم: "science",
-  الفيزياء: "physics",
-  الكيمياء: "chemistry",
-  الأحياء: "biology",
-  "علوم الأرض والفضاء": "earth-space-sciences",
-  "علوم الحاسوب": "computer-science",
-  "العلوم والهندسة": "science-engineering",
-  التاريخ: "history",
-  "تاريخ السودان": "sudan-history",
-  "تاريخ العالم": "world-history",
-  الجغرافيا: "geography",
-  "الدراسات الاجتماعية": "social-studies",
-  "التربية الوطنية": "civics-citizenship",
-  "الاقتصاد والأعمال": "business-economics",
-  "علم النفس": "psychology",
-  "التربية الإسلامية": "islamic-education",
-  "القرآن الكريم": "quran",
-  الحاسوب: "ict",
-  "التربية الفنية": "the-arts",
-  الموسيقى: "music",
-  "التربية البدنية": "physical-education",
-  الصحة: "health",
-  "المهارات الحياتية": "life-skills",
-  "التعليم المهني": "career-education",
-  "الاحتفالات والمناسبات": "celebrations",
-  "التطوير المهني": "teacher-development",
-  "اللغات العالمية": "world-languages",
-  "علم الاجتماع": "sociology",
-  "التاريخ الأمريكي": "us-history",
-}
-
-function toSlug(name: string): string {
-  return ARABIC_TO_SLUG[name] ?? name.toLowerCase().replace(/\s+/g, "-")
-}
-
-// Map from levels array strings to SchoolLevel enum values
-function toLevels(levels: string[]): ("ELEMENTARY" | "MIDDLE" | "HIGH")[] {
-  const result = new Set<"ELEMENTARY" | "MIDDLE" | "HIGH">()
-  for (const level of levels) {
-    switch (level) {
-      case "all":
-        result.add("ELEMENTARY")
-        result.add("MIDDLE")
-        result.add("HIGH")
-        break
-      case "KG-6":
-      case "1-6":
-        result.add("ELEMENTARY")
-        break
-      case "7-12":
-        result.add("MIDDLE")
-        result.add("HIGH")
-        break
-      case "KG-9":
-        result.add("ELEMENTARY")
-        result.add("MIDDLE")
-        break
-      case "3-12":
-      case "4-12":
-        result.add("ELEMENTARY")
-        result.add("MIDDLE")
-        result.add("HIGH")
-        break
-      case "elementary":
-        result.add("ELEMENTARY")
-        break
-      case "middle":
-        result.add("MIDDLE")
-        break
-      case "high":
-        result.add("HIGH")
-        break
-    }
-  }
-  return Array.from(result)
-}
-
-// Convert legacy level strings → grade arrays (fallback for subjects without explicit grades)
-function toGrades(levels: string[]): number[] {
-  const result = new Set<number>()
-  for (const level of levels) {
-    switch (level) {
-      case "all":
-        for (let i = 1; i <= 12; i++) result.add(i)
-        break
-      case "elementary":
-      case "KG-6":
-      case "1-6":
-        for (let i = 1; i <= 6; i++) result.add(i)
-        break
-      case "middle":
-        for (let i = 7; i <= 9; i++) result.add(i)
-        break
-      case "high":
-        for (let i = 10; i <= 12; i++) result.add(i)
-        break
-      case "7-12":
-        for (let i = 7; i <= 12; i++) result.add(i)
-        break
-      case "3-12":
-        for (let i = 3; i <= 12; i++) result.add(i)
-        break
-      case "4-12":
-        for (let i = 4; i <= 12; i++) result.add(i)
-        break
-      case "KG-9":
-        for (let i = 1; i <= 9; i++) result.add(i)
-        break
-    }
-  }
-  return Array.from(result).sort((a, b) => a - b)
-}
-
-// Department Arabic → English slug for grouping
-const DEPT_MAP: Record<string, string> = {
-  اللغات: "languages",
-  العلوم: "sciences",
-  "العلوم الإنسانية": "humanities",
-  الدين: "religion",
-  "تقنية المعلومات": "ict",
-  "الفنون والرياضة": "arts-pe",
-}
-
-// Subject slug → vibrant hex color (derived from ClickView cover art)
-const SUBJECT_COLORS: Record<string, string> = {
-  // Languages
-  arabic: "#3b82f6", // blue
-  english: "#ec4899", // pink
-  french: "#8b5cf6", // violet
-  "world-languages": "#a855f7", // purple
-
-  // Sciences
-  mathematics: "#3b82f6", // blue
-  science: "#10b981", // emerald
-  physics: "#f59e0b", // amber
-  chemistry: "#ef4444", // red
-  biology: "#6366f1", // indigo
-  "earth-space-sciences": "#0ea5e9", // sky blue
-  "computer-science": "#6366f1", // indigo
-  "science-engineering": "#14b8a6", // teal
-
-  // Humanities
-  history: "#f59e0b", // amber
-  "sudan-history": "#f59e0b", // amber
-  "world-history": "#eab308", // yellow
-  "us-history": "#dc2626", // red
-  geography: "#14b8a6", // teal
-  "social-studies": "#8b5cf6", // violet
-  "civics-citizenship": "#ec4899", // pink
-  "business-economics": "#f97316", // orange
-  psychology: "#a855f7", // purple
-  sociology: "#ec4899", // pink
-
-  // Religion
-  "islamic-education": "#059669", // emerald
-  quran: "#059669", // emerald
-
-  // ICT
-  ict: "#06b6d4", // cyan
-
-  // Arts & PE
-  "the-arts": "#f43f5e", // rose
-  music: "#d946ef", // fuchsia
-  "physical-education": "#22c55e", // green
-  health: "#10b981", // emerald
-  "life-skills": "#8b5cf6", // violet
-  "career-education": "#0ea5e9", // sky blue
-  celebrations: "#eab308", // yellow
-  "teacher-development": "#6366f1", // indigo
-}
-
-// ============================================================================
-// Main seed function
-// ============================================================================
 
 export async function seedCatalog(
   prisma: PrismaClient
 ): Promise<CatalogSubjectRef[]> {
-  const catalogSubjects: CatalogSubjectRef[] = []
+  // US K-12 curriculum (ClickView-inspired)
+  await seedClickViewCatalog(prisma)
 
-  // ======================================================================
-  // Step 1: Create CatalogSubjects from SUBJECTS constant
-  // ======================================================================
+  // Return all published subjects for downstream consumers
+  const subjects = await prisma.catalogSubject.findMany({
+    where: { status: "PUBLISHED" },
+    select: { id: true, name: true, slug: true },
+    orderBy: { sortOrder: "asc" },
+  })
 
-  for (let i = 0; i < SUBJECTS.length; i++) {
-    const s = SUBJECTS[i]
-    const slug = toSlug(s.name)
-    const levels = toLevels(s.levels)
-    const grades = s.grades ?? toGrades(s.levels)
+  logSuccess("CatalogSubjects", subjects.length, "US K-12 catalog")
 
-    const subject = await prisma.catalogSubject.upsert({
-      where: { slug },
-      update: {
-        name: s.name,
-        department: s.department,
-        levels,
-        grades,
-        description: s.description,
-        imageKey: s.imageKey ?? null,
-        color: SUBJECT_COLORS[slug] ?? s.color ?? null,
-        sortOrder: i,
-        status: "PUBLISHED",
-      },
-      create: {
-        name: s.name,
-        slug,
-        lang: "ar",
-        department: s.department,
-        levels,
-        grades,
-        description: s.description,
-        country: "SD",
-        system: "national",
-        imageKey: s.imageKey ?? null,
-        color: SUBJECT_COLORS[slug] ?? s.color ?? null,
-        sortOrder: i,
-        status: "PUBLISHED",
-      },
-    })
-
-    catalogSubjects.push({
-      id: subject.id,
-      name: subject.name,
-      slug: subject.slug,
-    })
-  }
-
-  logSuccess("CatalogSubjects", catalogSubjects.length, "global catalog")
-
-  // ======================================================================
-  // Step 2: Create CatalogChapters + CatalogLessons from ALL_TOPICS
-  // ======================================================================
-
-  // Build subject name → CatalogSubject map
-  const subjectMap = new Map(catalogSubjects.map((s) => [s.name, s]))
-
-  // Separate top-level (chapters) and sub-topics (lessons)
-  const topLevel = ALL_TOPICS.filter((t) => !t.parentName)
-  const subTopics = ALL_TOPICS.filter((t) => !!t.parentName)
-
-  // Pass 1: Create CatalogChapters (top-level topics)
-  const chapterMap = new Map<string, string>() // "subjectName::topicName" → chapterId
-  let chapterCount = 0
-
-  for (const td of topLevel) {
-    const catalogSubject = subjectMap.get(td.subjectName)
-    if (!catalogSubject) continue
-
-    const chapter = await prisma.catalogChapter.upsert({
-      where: {
-        subjectId_slug: {
-          subjectId: catalogSubject.id,
-          slug: td.slug,
-        },
-      },
-      update: {
-        name: td.name,
-        sequenceOrder: td.sequenceOrder,
-        imageKey: td.imageKey ?? null,
-        color: td.color ?? null,
-      },
-      create: {
-        subjectId: catalogSubject.id,
-        name: td.name,
-        slug: td.slug,
-        lang: td.lang ?? "ar",
-        description: td.description ?? null,
-        sequenceOrder: td.sequenceOrder,
-        imageKey: td.imageKey ?? null,
-        color: td.color ?? null,
-        status: "PUBLISHED",
-      },
-    })
-
-    chapterMap.set(`${td.subjectName}::${td.name}`, chapter.id)
-    chapterCount++
-  }
-
-  logSuccess("CatalogChapters", chapterCount, "global catalog")
-
-  // Pass 2: Create CatalogLessons (sub-topics)
-  let lessonCount = 0
-
-  for (const td of subTopics) {
-    const catalogSubject = subjectMap.get(td.subjectName)
-    if (!catalogSubject) continue
-
-    const parentKey = `${td.subjectName}::${td.parentName}`
-    const chapterId = chapterMap.get(parentKey)
-    if (!chapterId) continue
-
-    await prisma.catalogLesson.upsert({
-      where: {
-        chapterId_slug: {
-          chapterId,
-          slug: td.slug,
-        },
-      },
-      update: {
-        name: td.name,
-        sequenceOrder: td.sequenceOrder,
-        imageKey: td.imageKey ?? null,
-        color: td.color ?? null,
-      },
-      create: {
-        chapterId,
-        name: td.name,
-        slug: td.slug,
-        lang: td.lang ?? "ar",
-        description: td.description ?? null,
-        sequenceOrder: td.sequenceOrder,
-        imageKey: td.imageKey ?? null,
-        color: td.color ?? null,
-        status: "PUBLISHED",
-      },
-    })
-
-    lessonCount++
-  }
-
-  logSuccess("CatalogLessons", lessonCount, "global catalog")
-
-  // ======================================================================
-  // Step 3: Update denormalized counts
-  // ======================================================================
-
-  for (const cs of catalogSubjects) {
-    const chapters = await prisma.catalogChapter.findMany({
-      where: { subjectId: cs.id },
-      select: { id: true },
-    })
-
-    const totalLessons = await prisma.catalogLesson.count({
-      where: { chapter: { subjectId: cs.id } },
-    })
-
-    await prisma.catalogSubject.update({
-      where: { id: cs.id },
-      data: {
-        totalChapters: chapters.length,
-        totalLessons,
-      },
-    })
-
-    // Update chapter lesson counts
-    for (const ch of chapters) {
-      const count = await prisma.catalogLesson.count({
-        where: { chapterId: ch.id },
-      })
-      await prisma.catalogChapter.update({
-        where: { id: ch.id },
-        data: { totalLessons: count },
-      })
-    }
-  }
-
-  return catalogSubjects
+  return subjects.map((s) => ({
+    id: s.id,
+    name: s.name,
+    slug: s.slug,
+  }))
 }

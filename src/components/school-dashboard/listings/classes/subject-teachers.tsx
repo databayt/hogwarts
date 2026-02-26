@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -46,6 +48,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
   assignSubjectTeacher,
@@ -60,12 +63,14 @@ interface SubjectTeachersProps {
   classId: string
   lang?: Locale
   initialTeachers?: ClassTeacherRow[]
+  dictionary?: Dictionary["school"]["classes"]["subjectTeachers"]
 }
 
 export function SubjectTeachers({
   classId,
   lang = "en",
   initialTeachers = [],
+  dictionary,
 }: SubjectTeachersProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -79,41 +84,34 @@ export function SubjectTeachers({
     useState<ClassTeacherRole>("ASSISTANT")
   const [isLoadingTeachers, setIsLoadingTeachers] = useState(false)
 
-  const isRTL = lang === "ar"
+  const d = dictionary
+  const roles = d?.roles as Record<string, string> | undefined
 
   const t = {
-    title: isRTL ? "معلمو المادة" : "Subject Teachers",
-    description: isRTL
-      ? "المعلمون المعينون لهذا الفصل"
-      : "Teachers assigned to this class",
-    addTeacher: isRTL ? "إضافة معلم" : "Add Teacher",
-    noTeachers: isRTL ? "لم يتم تعيين معلمين بعد" : "No teachers assigned yet",
-    selectTeacher: isRTL ? "اختر معلماً" : "Select a teacher",
-    selectRole: isRTL ? "اختر الدور" : "Select role",
-    role: isRTL ? "الدور" : "Role",
-    teacher: isRTL ? "المعلم" : "Teacher",
-    cancel: isRTL ? "إلغاء" : "Cancel",
-    assign: isRTL ? "تعيين" : "Assign",
-    assigning: isRTL ? "جاري التعيين..." : "Assigning...",
-    remove: isRTL ? "إزالة" : "Remove",
-    removing: isRTL ? "جاري الإزالة..." : "Removing...",
-    confirmRemove: isRTL ? "تأكيد الإزالة" : "Confirm Removal",
-    confirmRemoveDescription: isRTL
-      ? "هل أنت متأكد من إزالة هذا المعلم من الفصل؟"
-      : "Are you sure you want to remove this teacher from the class?",
-    assignSuccess: isRTL
-      ? "تم تعيين المعلم بنجاح"
-      : "Teacher assigned successfully",
-    removeSuccess: isRTL
-      ? "تم إزالة المعلم بنجاح"
-      : "Teacher removed successfully",
-    noAvailableTeachers: isRTL
-      ? "لا يوجد معلمون متاحون"
-      : "No available teachers",
+    title: d?.title || "Subject Teachers",
+    description: d?.description || "Teachers assigned to this class",
+    addTeacher: d?.addTeacher || "Add Teacher",
+    noTeachers: d?.noTeachers || "No teachers assigned yet",
+    selectTeacher: d?.selectTeacher || "Select a teacher",
+    selectRole: d?.selectRole || "Select role",
+    role: d?.role || "Role",
+    teacher: d?.teacher || "Teacher",
+    cancel: d?.cancel || "Cancel",
+    assign: d?.assign || "Assign",
+    assigning: d?.assigning || "Assigning...",
+    remove: d?.remove || "Remove",
+    removing: d?.removing || "Removing...",
+    confirmRemove: d?.confirmRemove || "Confirm Removal",
+    confirmRemoveDescription:
+      d?.confirmRemoveDescription ||
+      "Are you sure you want to remove this teacher from the class?",
+    assignSuccess: d?.assignSuccess || "Teacher assigned successfully",
+    removeSuccess: d?.removeSuccess || "Teacher removed successfully",
+    noAvailableTeachers: d?.noAvailableTeachers || "No available teachers",
     roles: {
-      PRIMARY: isRTL ? "أساسي" : "Primary",
-      CO_TEACHER: isRTL ? "معلم مساعد" : "Co-Teacher",
-      ASSISTANT: isRTL ? "مساعد" : "Assistant",
+      PRIMARY: roles?.PRIMARY || "Primary",
+      CO_TEACHER: roles?.CO_TEACHER || "Co-Teacher",
+      ASSISTANT: roles?.ASSISTANT || "Assistant",
     } as Record<ClassTeacherRole, string>,
   }
 

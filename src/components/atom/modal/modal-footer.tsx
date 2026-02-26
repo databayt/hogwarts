@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 
@@ -80,7 +82,7 @@ export function ModalFooter({
       : t.next
 
   return (
-    <footer className="bg-background fixed right-0 bottom-0 left-0">
+    <footer className="bg-background fixed start-0 end-0 bottom-0">
       {/* Progress bar */}
       <div className="px-4 py-3 sm:px-8 md:px-12">
         <Progress value={progressValue} className="h-1" />

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useState } from "react"
 
 import { cn } from "@/lib/utils"
@@ -94,7 +96,7 @@ export const InfiniteMovingCards = ({
             <blockquote>
               <div
                 aria-hidden="true"
-                className="user-select-none pointer-events-none absolute -top-0.5 -left-0.5 -z-1 h-[calc(100%_+_4px)] w-[calc(100%_+_4px)]"
+                className="user-select-none pointer-events-none absolute -start-0.5 -top-0.5 -z-1 h-[calc(100%_+_4px)] w-[calc(100%_+_4px)]"
               ></div>
               <span className="muted relative z-20 leading-[1.6] text-neutral-800 dark:text-gray-100">
                 {item.quote}

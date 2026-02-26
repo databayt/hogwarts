@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Accounts Module - Type Definitions
  * Core accounting system types for chart of accounts, journal entries, and ledger

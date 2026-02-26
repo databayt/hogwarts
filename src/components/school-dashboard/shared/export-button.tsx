@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Legacy Export Button - DEPRECATED
  * This component is deprecated. Use ExportButton from @/components/file instead.

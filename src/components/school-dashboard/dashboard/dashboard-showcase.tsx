@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // @ts-nocheck
 // TODO: Fix prop interface mismatches (36+ errors) - see admin-lab.tsx for details
 "use client"

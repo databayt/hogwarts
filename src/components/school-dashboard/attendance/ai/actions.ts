@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * AI Attendance Server Actions
  *
@@ -13,12 +16,9 @@ import {
   batchPredictRisk,
   type StudentAttendanceData,
 } from "@/lib/ai/attendance-predictor"
-import {
-  batchTranslate,
-  translateText,
-  type SupportedLanguage,
-} from "@/lib/ai/translator"
 import { db } from "@/lib/db"
+import { detectLanguage } from "@/lib/i18n-content"
+import { translateWithCache } from "@/lib/translate"
 
 import {
   getRiskLevelFromScore,
@@ -384,7 +384,7 @@ export async function getAtRiskStudents(): Promise<ActionResult> {
 }
 
 /**
- * Translate a message
+ * Translate a message using Google Translate with DB caching
  */
 export async function translateMessage(
   input: TranslateMessageInput
@@ -398,22 +398,33 @@ export async function translateMessage(
 
   try {
     const validated = translateMessageSchema.parse(input)
+    const sourceLang = detectLanguage(validated.message) as "en" | "ar"
+    const targetLang = validated.targetLanguage as "en" | "ar"
 
-    const result = await translateText(
+    if (sourceLang === targetLang) {
+      return {
+        success: true,
+        data: {
+          translatedText: validated.message,
+          sourceLanguage: sourceLang,
+          targetLanguage: targetLang,
+        },
+      }
+    }
+
+    const translatedText = await translateWithCache(
       validated.message,
-      validated.targetLanguage as SupportedLanguage,
-      validated.context
+      sourceLang,
+      targetLang,
+      schoolId
     )
 
     return {
-      success: result.success,
-      error: result.error,
+      success: true,
       data: {
-        translatedText: result.translatedText,
-        sourceLanguage: result.sourceLanguage,
-        targetLanguage: result.targetLanguage,
-        confidence: result.confidence,
-        usedCache: result.usedCache,
+        translatedText,
+        sourceLanguage: sourceLang,
+        targetLanguage: targetLang,
       },
     }
   } catch (error) {
@@ -423,12 +434,12 @@ export async function translateMessage(
 }
 
 /**
- * Batch translate messages
+ * Batch translate messages using Google Translate with DB caching
  */
 export async function batchTranslateMessages(
   messages: string[],
   targetLanguage: "ar" | "en",
-  context?: string
+  _context?: string
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
@@ -438,21 +449,34 @@ export async function batchTranslateMessages(
   }
 
   try {
-    const result = await batchTranslate(
-      messages,
-      targetLanguage as SupportedLanguage,
-      context
+    const results = await Promise.all(
+      messages.map(async (message) => {
+        const sourceLang = detectLanguage(message) as "en" | "ar"
+        try {
+          const translated = await translateWithCache(
+            message,
+            sourceLang,
+            targetLanguage,
+            schoolId
+          )
+          return { original: message, translated, success: true }
+        } catch {
+          return { original: message, translated: message, success: false }
+        }
+      })
     )
+
+    const successful = results.filter((r) => r.success).length
 
     return {
       success: true,
       data: {
-        translations: result.translations.map((t) => ({
-          original: messages[result.translations.indexOf(t)],
-          translated: t.translatedText,
-          success: t.success,
-        })),
-        stats: result.stats,
+        translations: results,
+        stats: {
+          total: messages.length,
+          successful,
+          failed: messages.length - successful,
+        },
       },
     }
   } catch (error) {

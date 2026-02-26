@@ -1,7 +1,12 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 import {
   CatalogSubjectsGrid,
@@ -38,13 +43,16 @@ export default async function SubjectsContent({ lang, level }: Props) {
         orderBy: { sortOrder: "asc" },
         select: {
           id: true,
+          clickviewId: true,
           name: true,
           slug: true,
           department: true,
           levels: true,
+          grades: true,
           color: true,
           imageKey: true,
           thumbnailKey: true,
+          lang: true,
           totalChapters: true,
           totalLessons: true,
           averageRating: true,
@@ -53,20 +61,51 @@ export default async function SubjectsContent({ lang, level }: Props) {
         },
       })
 
-      subjects = catalogRows.map((s) => ({
-        id: s.id,
-        slug: s.slug,
-        name: customNames.get(s.id) ?? s.name,
-        department: s.department,
-        levels: s.levels,
-        color: s.color,
-        imageUrl: getCatalogImageUrl(s.thumbnailKey, s.imageKey, "sm"),
-        totalChapters: s.totalChapters,
-        totalLessons: s.totalLessons,
-        averageRating: s.averageRating,
-        usageCount: s.usageCount,
-        ratingCount: s.ratingCount,
-      }))
+      // Group by clickviewId → ~62 groups (one per original inventory entry)
+      const groupMap = new Map<string, typeof catalogRows>()
+      for (const s of catalogRows) {
+        const key = s.clickviewId ?? s.id
+        if (!groupMap.has(key)) groupMap.set(key, [])
+        groupMap.get(key)!.push(s)
+      }
+
+      // For each group, pick the first (lowest grade) as the representative
+      subjects = await Promise.all(
+        Array.from(groupMap.values()).map(async (group) => {
+          const sorted = group.sort(
+            (a, b) => (a.grades[0] ?? 0) - (b.grades[0] ?? 0)
+          )
+          const rep = sorted[0]
+          return {
+            id: rep.id,
+            slug: rep.slug,
+            name: await getDisplayText(
+              customNames.get(rep.id) ?? rep.name,
+              (rep.lang || "ar") as SupportedLanguage,
+              lang,
+              schoolId!
+            ),
+            department: rep.department
+              ? await getDisplayText(
+                  rep.department,
+                  (rep.lang || "ar") as SupportedLanguage,
+                  lang,
+                  schoolId!
+                )
+              : "",
+            level: rep.levels[0] ?? "ELEMENTARY",
+            levels: rep.levels,
+            grades: sorted.flatMap((s) => s.grades).sort((a, b) => a - b),
+            color: rep.color,
+            imageUrl: getCatalogImageUrl(rep.thumbnailKey, rep.imageKey, "sm"),
+            totalChapters: rep.totalChapters,
+            totalLessons: rep.totalLessons,
+            averageRating: rep.averageRating,
+            usageCount: rep.usageCount,
+            ratingCount: rep.ratingCount,
+          }
+        })
+      )
 
       if (level) {
         subjects = subjects.filter((s) => s.levels.includes(level))

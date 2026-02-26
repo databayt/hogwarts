@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Video Player Types
 
 export interface VideoPlayerProps {
@@ -13,6 +16,9 @@ export interface VideoPlayerProps {
   onNextLesson?: () => void
   className?: string
   autoPlay?: boolean
+  chapterNumber?: number
+  lessonNumber?: number
+  courseTitle?: string
 }
 
 export interface NextLesson {

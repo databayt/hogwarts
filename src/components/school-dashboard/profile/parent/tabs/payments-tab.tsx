@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Parent Profile Payments Tab
  * Fee management, payment history, and financial records
@@ -681,7 +684,7 @@ export function PaymentsTab({
                         </Button>
                       )}
                       <Button variant="ghost" size="sm">
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                       </Button>
                     </div>
                   </div>

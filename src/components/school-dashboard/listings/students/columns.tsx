@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { CalendarCheck, Ellipsis, GraduationCap, School } from "lucide-react"
@@ -46,22 +48,21 @@ export const getStudentColumns = (
   options?: ColumnOptions
 ): ColumnDef<StudentRow>[] => {
   const t = {
-    name: dictionary?.fullName || (lang === "ar" ? "الاسم" : "Name"),
-    class: dictionary?.class || (lang === "ar" ? "الفصل" : "Class"),
-    classes: lang === "ar" ? "الفصول" : "Classes",
-    grades: lang === "ar" ? "الدرجات" : "Grades",
-    status: dictionary?.status || (lang === "ar" ? "الحالة" : "Status"),
-    created:
-      dictionary?.created || (lang === "ar" ? "تاريخ الإنشاء" : "Created"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
-    active: dictionary?.active || (lang === "ar" ? "نشط" : "Active"),
-    inactive: dictionary?.inactive || (lang === "ar" ? "غير نشط" : "Inactive"),
-    viewGrades: lang === "ar" ? "عرض الدرجات" : "View Grades",
-    viewAttendance: lang === "ar" ? "عرض الحضور" : "View Attendance",
-    viewClasses: lang === "ar" ? "عرض الفصول" : "View Classes",
+    name: dictionary?.fullName || "Name",
+    class: dictionary?.class || "Class",
+    classes: dictionary?.classes || "Classes",
+    grades: dictionary?.grades || "Grades",
+    status: dictionary?.status || "Status",
+    created: dictionary?.created || "Created",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
+    active: dictionary?.active || "Active",
+    inactive: dictionary?.inactive || "Inactive",
+    viewGrades: dictionary?.viewGrades || "View Grades",
+    viewAttendance: dictionary?.viewAttendance || "View Attendance",
+    viewClasses: dictionary?.viewClasses || "View Classes",
   }
 
   return [
@@ -150,8 +151,7 @@ export const getStudentColumns = (
         const onEdit = () => openModal(student.id)
         const onDelete = async () => {
           try {
-            const deleteMsg =
-              lang === "ar" ? `حذف ${student.name}؟` : `Delete ${student.name}?`
+            const deleteMsg = `${t.delete} ${student.name}?`
             const ok = await confirmDeleteDialog(deleteMsg)
             if (!ok) return
             const result = await deleteStudent({ id: student.id })
@@ -161,16 +161,14 @@ export const getStudentColumns = (
               options?.onDeleteSuccess?.(student.id)
             } else {
               ErrorToast(
-                lang === "ar" ? "فشل حذف الطالب" : "Failed to delete student"
+                dictionary?.failedToDeleteStudent || "Failed to delete student"
               )
             }
           } catch (e) {
             ErrorToast(
               e instanceof Error
                 ? e.message
-                : lang === "ar"
-                  ? "فشل الحذف"
-                  : "Failed to delete"
+                : dictionary?.failedToDeleteStudent || "Failed to delete"
             )
           }
         }

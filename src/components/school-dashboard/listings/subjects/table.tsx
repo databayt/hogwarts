@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -85,22 +87,18 @@ function SubjectsTableInner({
 
   // Translations with fallbacks
   const translations = {
-    allSubjects:
-      t?.allSubjects || (lang === "ar" ? "جميع المواد" : "All Subjects"),
-    addNewSubject:
-      t?.addNewSubject ||
-      (lang === "ar" ? "أضف مادة جديدة" : "Add a new subject to your school"),
-    search:
-      t?.search || (lang === "ar" ? "بحث في المواد..." : "Search subjects..."),
-    create: t?.create || (lang === "ar" ? "إنشاء" : "Create"),
-    export: t?.export || (lang === "ar" ? "تصدير" : "Export"),
-    reset: t?.reset || (lang === "ar" ? "إعادة تعيين" : "Reset"),
-    department: t?.department || (lang === "ar" ? "القسم" : "Department"),
-    created: t?.created || (lang === "ar" ? "تاريخ الإنشاء" : "Created"),
-    view: t?.view || (lang === "ar" ? "عرض" : "View"),
-    edit: t?.edit || (lang === "ar" ? "تعديل" : "Edit"),
-    delete: t?.delete || (lang === "ar" ? "حذف" : "Delete"),
-    actions: t?.actions || (lang === "ar" ? "إجراءات" : "Actions"),
+    allSubjects: t?.allSubjects || "All Subjects",
+    addNewSubject: t?.addNewSubject || "Add a new subject to your school",
+    search: t?.search || "Search subjects...",
+    create: t?.create || "Create",
+    export: t?.export || "Export",
+    reset: t?.reset || "Reset",
+    department: t?.department || "Department",
+    created: t?.created || "Created",
+    view: t?.view || "View",
+    edit: t?.edit || "Edit",
+    delete: t?.delete || "Delete",
+    actions: t?.actions || "Actions",
   }
 
   // View mode (table/grid) - default to grid for visual subject cards
@@ -220,8 +218,8 @@ function SubjectsTableInner({
     create: translations.create,
     reset: translations.reset,
     export: translations.export,
-    exportCSV: lang === "ar" ? "تصدير CSV" : "Export CSV",
-    exporting: lang === "ar" ? "جاري التصدير..." : "Exporting...",
+    exportCSV: t?.exportCSV || "Export CSV",
+    exporting: t?.exporting || "Exporting...",
   }
 
   return (
@@ -276,7 +274,9 @@ function SubjectsTableInner({
                 disabled={isLoading}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading
+                  ? t?.loading || "Loading..."
+                  : t?.loadMore || "Load More"}
               </button>
             </div>
           )}

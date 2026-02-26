@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { ArrowLeft, XIcon } from "lucide-react"
 
@@ -22,7 +25,7 @@ export default function PaymentCancelContent() {
               href="/"
               className={buttonVariants({ className: "mt-5 w-full" })}
             >
-              <ArrowLeft className="size-4" />
+              <ArrowLeft className="size-4 rtl:rotate-180" />
               Go back to Homepage
             </Link>
           </div>

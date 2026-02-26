@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import type React from "react"
 import { useState } from "react"
 import {
@@ -440,7 +442,7 @@ export function PaymentMethodSelector({
                       e.stopPropagation()
                       handleClose()
                     }}
-                    className="bg-background/80 hover:bg-background border-border/50 absolute top-3 right-3 z-20 rounded-full border p-1.5 shadow-sm transition-all duration-200 hover:shadow-md"
+                    className="bg-background/80 hover:bg-background border-border/50 absolute end-3 top-3 z-20 rounded-full border p-1.5 shadow-sm transition-all duration-200 hover:shadow-md"
                     initial={{ scale: 0, rotate: -45 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -66,13 +68,13 @@ export function AWSHeader({
             {/* Search Bar */}
             <div className="hidden items-center md:flex">
               <div className="relative">
-                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search"
                   className="h-8 w-64 rounded border border-[#5f6b7a] bg-[#0f1b2a] ps-10 pe-16 text-sm text-white placeholder:text-gray-400 focus:border-[#539fe5] focus:ring-1 focus:ring-[#539fe5] focus:outline-none lg:w-80"
                 />
-                <kbd className="absolute top-1/2 right-2 -translate-y-1/2 rounded border border-[#5f6b7a] bg-[#232f3e] px-1.5 py-0.5 text-xs text-gray-400">
+                <kbd className="absolute end-2 top-1/2 -translate-y-1/2 rounded border border-[#5f6b7a] bg-[#232f3e] px-1.5 py-0.5 text-xs text-gray-400">
                   [Option+S]
                 </kbd>
               </div>

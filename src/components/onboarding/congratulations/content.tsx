@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -416,7 +418,7 @@ export default function CongratulationsContent(props: Props) {
               <div className="flex items-start gap-4">
                 <div className="bg-chart-1/10 rounded-lg p-2">
                   <ArrowRight
-                    className="text-chart-1 h-6 w-6"
+                    className="text-chart-1 h-6 w-6 rtl:rotate-180"
                     aria-hidden="true"
                   />
                 </div>
@@ -464,7 +466,7 @@ export default function CongratulationsContent(props: Props) {
           </Button>
           <Button size="lg" onClick={handleGoToDashboard} className="gap-2">
             {t.goToSchoolDashboard}
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
           </Button>
         </div>
       </div>

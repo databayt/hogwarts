@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Year Levels Management Content
  *
@@ -126,34 +129,31 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
   const [isPending, startTransition] = useTransition()
 
   // Translations
+  const d = dictionary?.students?.yearLevels
+  const c = dictionary?.common
   const t = {
-    title: lang === "ar" ? "إدارة المراحل الدراسية" : "Year Level Management",
-    subtitle:
-      lang === "ar"
-        ? "إدارة المراحل والصفوف الدراسية"
-        : "Manage grade levels and academic years",
-    search: lang === "ar" ? "البحث في المراحل..." : "Search year levels...",
-    addLevel: lang === "ar" ? "إضافة مرحلة" : "Add Year Level",
-    editLevel: lang === "ar" ? "تعديل المرحلة" : "Edit Year Level",
-    deleteLevel: lang === "ar" ? "حذف المرحلة" : "Delete Year Level",
-    levelName: lang === "ar" ? "اسم المرحلة" : "Level Name",
-    language: lang === "ar" ? "اللغة" : "Language",
-    levelOrder: lang === "ar" ? "ترتيب المرحلة" : "Level Order",
-    students: lang === "ar" ? "الطلاب" : "Students",
-    batches: lang === "ar" ? "الدفعات" : "Batches",
-    save: lang === "ar" ? "حفظ" : "Save",
-    cancel: lang === "ar" ? "إلغاء" : "Cancel",
-    delete: lang === "ar" ? "حذف" : "Delete",
-    noLevels: lang === "ar" ? "لا توجد مراحل دراسية" : "No year levels found",
-    totalLevels: lang === "ar" ? "إجمالي المراحل" : "Total Levels",
-    totalStudents: lang === "ar" ? "إجمالي الطلاب" : "Total Students",
-    totalBatches: lang === "ar" ? "إجمالي الدفعات" : "Total Batches",
-    retry: lang === "ar" ? "إعادة المحاولة" : "Retry",
-    order: lang === "ar" ? "الترتيب" : "Order",
+    title: d?.management || "Year Level Management",
+    subtitle: d?.subtitle || "Manage grade levels and academic years",
+    search: d?.searchPlaceholder || "Search year levels...",
+    addLevel: d?.addLevel || "Add Year Level",
+    editLevel: d?.editLevel || "Edit Year Level",
+    deleteLevel: d?.deleteLevel || "Delete Year Level",
+    levelName: d?.levelName || "Level Name",
+    language: c?.language || "Language",
+    levelOrder: d?.levelOrder || "Level Order",
+    students: d?.students || "Students",
+    batches: d?.batches || "Batches",
+    save: c?.save || "Save",
+    cancel: c?.cancel || "Cancel",
+    delete: c?.delete || "Delete",
+    noLevels: d?.noLevels || "No year levels found",
+    totalLevels: d?.totalLevels || "Total Levels",
+    totalStudents: d?.totalStudents || "Total Students",
+    totalBatches: d?.totalBatches || "Total Batches",
+    retry: c?.retry || "Retry",
+    order: d?.order || "Order",
     levelOrderHint:
-      lang === "ar"
-        ? "رقم يحدد ترتيب المرحلة (1، 2، 3...)"
-        : "Number that determines level order (1, 2, 3...)",
+      d?.levelOrderHint || "Number that determines level order (1, 2, 3...)",
   }
 
   // Fetch year levels on mount
@@ -384,9 +384,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
             <DialogHeader>
               <DialogTitle>{t.addLevel}</DialogTitle>
               <DialogDescription>
-                {lang === "ar"
-                  ? "أضف مرحلة دراسية جديدة"
-                  : "Add a new year level to the school"}
+                {d?.addDescription || "Add a new year level to the school"}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -396,9 +394,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
                   id="name"
                   value={newLevelName}
                   onChange={(e) => setNewLevelName(e.target.value)}
-                  placeholder={
-                    lang === "ar" ? "مثال: الصف الأول" : "e.g., Grade 1"
-                  }
+                  placeholder={d?.placeholder || "e.g., Grade 1"}
                 />
               </div>
               <div className="space-y-2">
@@ -409,12 +405,8 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
                   onChange={(e) => setNewLevelLang(e.target.value)}
                   className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
                 >
-                  <option value="ar">
-                    {lang === "ar" ? "عربي" : "Arabic"}
-                  </option>
-                  <option value="en">
-                    {lang === "ar" ? "إنجليزي" : "English"}
-                  </option>
+                  <option value="ar">{c?.arabic || "Arabic"}</option>
+                  <option value="en">{c?.english || "English"}</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -634,10 +626,8 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
                 onChange={(e) => setNewLevelLang(e.target.value)}
                 className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
               >
-                <option value="ar">{lang === "ar" ? "عربي" : "Arabic"}</option>
-                <option value="en">
-                  {lang === "ar" ? "إنجليزي" : "English"}
-                </option>
+                <option value="ar">{c?.arabic || "Arabic"}</option>
+                <option value="en">{c?.english || "English"}</option>
               </select>
             </div>
             <div className="space-y-2">
@@ -693,9 +683,10 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
               {t.deleteLevel}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {lang === "ar"
-                ? `هل أنت متأكد أنك تريد حذف "${deleteDialog.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`
-                : `Are you sure you want to delete "${deleteDialog.name}"? This action cannot be undone.`}
+              {(
+                c?.confirmDeleteMessage ||
+                'Are you sure you want to delete "{name}"? This action cannot be undone.'
+              ).replace("{name}", deleteDialog.name)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

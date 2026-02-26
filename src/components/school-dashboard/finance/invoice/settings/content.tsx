@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -162,7 +164,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6"
+                      className="absolute -end-2 -top-2 h-6 w-6"
                       onClick={() => setLogo("")}
                     >
                       <Trash2 className="h-3 w-3" />
@@ -223,7 +225,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6"
+                      className="absolute -end-2 -top-2 h-6 w-6"
                       onClick={() =>
                         setSignatureData((prev) => ({ ...prev, image: "" }))
                       }

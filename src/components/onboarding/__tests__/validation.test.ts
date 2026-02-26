@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Onboarding Validation Schema Tests
  *
@@ -641,18 +644,18 @@ describe("capacityStepValidation", () => {
     expect(result.success).toBe(false)
   })
 
-  it("should accept maximum maxTeachers (1000)", () => {
+  it("should accept maximum maxTeachers (500)", () => {
     const result = capacityStepValidation.safeParse({
       maxStudents: 100,
-      maxTeachers: 1000,
+      maxTeachers: 500,
     })
     expect(result.success).toBe(true)
   })
 
-  it("should reject maxTeachers greater than 1000", () => {
+  it("should reject maxTeachers greater than 500", () => {
     const result = capacityStepValidation.safeParse({
       maxStudents: 100,
-      maxTeachers: 1001,
+      maxTeachers: 501,
     })
     expect(result.success).toBe(false)
   })

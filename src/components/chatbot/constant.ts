@@ -1,21 +1,24 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { ChatbotConfig, ChatbotDictionary, ChatbotTheme } from "./type"
 
 export const CHATBOT_POSITIONS = {
-  "bottom-right": "fixed bottom-1 right-1 sm:bottom-2 sm:right-2",
-  "bottom-left": "fixed bottom-1 left-1 sm:bottom-2 sm:left-2",
-  "top-right": "fixed top-1 right-1 sm:top-2 sm:right-2",
-  "top-left": "fixed top-1 left-1 sm:top-2 sm:left-2",
+  "bottom-right": "fixed bottom-1 end-1 sm:bottom-2 sm:end-2",
+  "bottom-left": "fixed bottom-1 start-1 sm:bottom-2 sm:start-2",
+  "top-right": "fixed top-1 end-1 sm:top-2 sm:end-2",
+  "top-left": "fixed top-1 start-1 sm:top-2 sm:start-2",
 } as const
 
 export const CHAT_WINDOW_POSITIONS = {
   "bottom-right":
-    "fixed inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:translate-y-0 sm:bottom-4 sm:right-2 sm:top-auto",
+    "fixed inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:translate-y-0 sm:bottom-4 sm:end-2 sm:top-auto",
   "bottom-left":
-    "fixed inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:translate-y-0 sm:bottom-4 sm:left-2 sm:top-auto",
+    "fixed inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:translate-y-0 sm:bottom-4 sm:start-2 sm:top-auto",
   "top-right":
-    "fixed inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:translate-y-0 sm:top-20 sm:right-2",
+    "fixed inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:translate-y-0 sm:top-20 sm:end-2",
   "top-left":
-    "fixed inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:translate-y-0 sm:top-20 sm:left-2",
+    "fixed inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:translate-y-0 sm:top-20 sm:start-2",
 } as const
 
 export const CHAT_WINDOW_SIZE = {
@@ -34,6 +37,40 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   typing: "Typing...",
   send: "Send",
   retry: "Retry",
+  chooseQuestion: "Choose a question or type your message",
+  grades: "Grades",
+  gradesQuestion: "How do I check grades?",
+  attendance: "Attendance",
+  attendanceQuestion: "How do I mark attendance?",
+  timetable: "Timetable",
+  timetableQuestion: "Where is the timetable?",
+  finance: "Finance",
+  financeQuestion: "How do I pay fees?",
+  sendMessage: "Send message",
+  voiceInput: "Voice input",
+  speechNotSupported: "Speech recognition is not supported in your browser.",
+  speechError: "Speech recognition error. Please try again.",
+  ttsEnabled: "Text-to-speech enabled",
+  ttsDisabled: "Text-to-speech disabled",
+  listening: "Listening...",
+  // SaaS marketing quick-ask
+  saasFeatures: "Features",
+  saasFeaturesQuestion: "What features does Databayt offer?",
+  saasPricing: "Pricing",
+  saasPricingQuestion: "What are the pricing plans?",
+  saasGetStarted: "Get Started",
+  saasGetStartedQuestion: "How do I get started with Databayt?",
+  saasOpenSource: "Open Source",
+  saasOpenSourceQuestion: "Is Databayt open source?",
+  // School site quick-ask
+  schoolAdmission: "Admission",
+  schoolAdmissionQuestion: "How do I apply to this school?",
+  schoolFees: "Fees",
+  schoolFeesQuestion: "What are the school fees?",
+  schoolContact: "Contact",
+  schoolContactQuestion: "How can I contact the school?",
+  schoolPrograms: "Programs",
+  schoolProgramsQuestion: "What programs does the school offer?",
 }
 
 export const DEFAULT_THEME: ChatbotTheme = {

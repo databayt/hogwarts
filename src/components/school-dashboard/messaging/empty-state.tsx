@@ -1,9 +1,12 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { ArrowRight, MessageSquare, Plus, Search, Users } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface EmptyStateProps {
   type: "no-conversations" | "no-messages" | "no-active"
@@ -18,6 +21,8 @@ export function EmptyState({
   onNewConversation,
   className,
 }: EmptyStateProps) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const isRTL = locale === "ar"
 
   if (type === "no-conversations") {
@@ -49,23 +54,22 @@ export function EmptyState({
 
           {/* Floating decorative elements */}
           <div
-            className="bg-chart-2 absolute -top-2 -right-2 h-4 w-4 animate-bounce rounded-full"
+            className="bg-chart-2 absolute -end-2 -top-2 h-4 w-4 animate-bounce rounded-full"
             style={{ animationDelay: "0.5s" }}
           />
           <div
-            className="bg-chart-3 absolute -bottom-1 -left-3 h-3 w-3 animate-bounce rounded-full"
+            className="bg-chart-3 absolute -start-3 -bottom-1 h-3 w-3 animate-bounce rounded-full"
             style={{ animationDelay: "1s" }}
           />
         </div>
 
         {/* Content */}
         <h3 className="text-foreground mb-2 text-xl font-semibold">
-          {locale === "ar" ? "مرحباً بك في الرسائل" : "Welcome to Messages"}
+          {m?.ui?.welcome_title || "Welcome to Messages"}
         </h3>
         <p className="text-muted-foreground mb-6 max-w-xs">
-          {locale === "ar"
-            ? "ابدأ محادثة مع زملائك ومعلميك. ابق على اتصال مع مجتمعك المدرسي."
-            : "Start a conversation with your colleagues and teachers. Stay connected with your school community."}
+          {m?.ui?.welcome_description ||
+            "Start a conversation with your colleagues and teachers. Stay connected with your school community."}
         </p>
 
         {/* CTA Button */}
@@ -76,7 +80,7 @@ export function EmptyState({
             className="gap-2 shadow-lg transition-all hover:shadow-xl"
           >
             <Plus className="h-5 w-5" />
-            {locale === "ar" ? "محادثة جديدة" : "New Conversation"}
+            {m?.ui?.new_conversation || "New Conversation"}
           </Button>
         )}
 
@@ -85,19 +89,13 @@ export function EmptyState({
           <QuickTip
             icon={<Users className="h-4 w-4" />}
             text={
-              locale === "ar"
-                ? "أنشئ مجموعة لفصلك أو فريقك"
-                : "Create a group for your class or team"
+              m?.ui?.create_group_tip || "Create a group for your class or team"
             }
             locale={locale}
           />
           <QuickTip
             icon={<MessageSquare className="h-4 w-4" />}
-            text={
-              locale === "ar"
-                ? "أرسل رسالة مباشرة إلى أي مستخدم"
-                : "Send a direct message to any user"
-            }
+            text={m?.ui?.send_direct_tip || "Send a direct message to any user"}
             locale={locale}
           />
         </div>
@@ -125,12 +123,11 @@ export function EmptyState({
         </div>
 
         <h3 className="text-foreground mb-2 text-lg font-semibold">
-          {locale === "ar" ? "لا توجد رسائل بعد" : "No messages yet"}
+          {m?.ui?.no_messages || "No messages yet"}
         </h3>
         <p className="text-muted-foreground max-w-xs text-sm">
-          {locale === "ar"
-            ? "ابدأ المحادثة بإرسال رسالة. يمكنك إرفاق صور ومستندات أيضاً!"
-            : "Start the conversation by sending a message. You can attach photos and documents too!"}
+          {m?.ui?.no_messages_description ||
+            "Start the conversation by sending a message. You can attach photos and documents too!"}
         </p>
 
         {/* Animated typing indicator preview */}
@@ -165,20 +162,20 @@ export function EmptyState({
         <div className="relative mb-8">
           {/* Chat bubbles illustration */}
           <div className="relative flex items-end gap-2">
-            <div className="bg-muted h-12 w-20 animate-pulse rounded-2xl rounded-bl-md" />
+            <div className="bg-muted h-12 w-20 animate-pulse rounded-2xl rounded-es-md" />
             <div
-              className="bg-primary/30 h-10 w-16 animate-pulse rounded-2xl rounded-br-md"
+              className="bg-primary/30 h-10 w-16 animate-pulse rounded-2xl rounded-ee-md"
               style={{ animationDelay: "0.5s" }}
             />
           </div>
           <div
             className={cn(
               "absolute -top-3 flex items-end gap-2",
-              isRTL ? "-right-4" : "-left-4"
+              isRTL ? "-end-4" : "-start-4"
             )}
           >
             <div
-              className="bg-muted/50 h-8 w-14 animate-pulse rounded-2xl rounded-bl-md"
+              className="bg-muted/50 h-8 w-14 animate-pulse rounded-2xl rounded-es-md"
               style={{ animationDelay: "1s" }}
             />
           </div>
@@ -186,12 +183,11 @@ export function EmptyState({
 
         {/* Content */}
         <h3 className="text-foreground mb-2 text-lg font-semibold">
-          {locale === "ar" ? "اختر محادثة" : "Select a Conversation"}
+          {m?.ui?.select_conversation_title || "Select a Conversation"}
         </h3>
         <p className="text-muted-foreground mb-6 max-w-xs text-sm">
-          {locale === "ar"
-            ? "اختر محادثة من القائمة أو ابدأ محادثة جديدة للتواصل."
-            : "Choose a conversation from the list or start a new one to connect."}
+          {m?.ui?.select_conversation_description ||
+            "Choose a conversation from the list or start a new one to connect."}
         </p>
 
         {/* CTA */}
@@ -202,7 +198,7 @@ export function EmptyState({
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
-            {locale === "ar" ? "محادثة جديدة" : "New Conversation"}
+            {m?.ui?.new_conversation || "New Conversation"}
           </Button>
         )}
       </div>
@@ -232,7 +228,7 @@ function QuickTip({
         {icon}
       </div>
       <span className="flex-1 text-start">{text}</span>
-      <ArrowRight className="h-4 w-4 flex-shrink-0" />
+      <ArrowRight className="h-4 w-4 flex-shrink-0 rtl:rotate-180" />
     </div>
   )
 }

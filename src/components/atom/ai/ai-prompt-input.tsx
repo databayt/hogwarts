@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useRef, useState } from "react"
 import { Send, Sparkles, X } from "lucide-react"
 
@@ -134,7 +136,7 @@ export function AiPromptInput({
 
         {/* Character count */}
         {maxLength && (
-          <div className="text-muted-foreground absolute bottom-2 left-2 text-xs">
+          <div className="text-muted-foreground absolute start-2 bottom-2 text-xs">
             {prompt.length}/{maxLength}
           </div>
         )}
@@ -144,7 +146,7 @@ export function AiPromptInput({
           type="submit"
           size="icon"
           disabled={!prompt.trim() || loading || disabled}
-          className="absolute right-2 bottom-2 h-8 w-8"
+          className="absolute end-2 bottom-2 h-8 w-8"
         >
           {loading ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

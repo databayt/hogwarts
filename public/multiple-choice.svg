@@ -1,0 +1,23 @@
+<svg width="458" height="458" viewBox="0 0 458 458" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_31_3224)">
+<rect x="238" y="238" width="220" height="220" fill="white" fill-opacity="0.35"/>
+<circle cx="348" cy="348" r="81" fill="white"/>
+<rect y="238" width="220" height="220" fill="white" fill-opacity="0.35"/>
+<circle cx="81" cy="319" r="81" fill="white" fill-opacity="0.35"/>
+<circle cx="139" cy="377" r="81" fill="white" fill-opacity="0.35"/>
+<rect x="238" width="220" height="220" fill="white" fill-opacity="0.35"/>
+<circle cx="348" cy="81" r="81" fill="white" fill-opacity="0.35"/>
+<circle cx="377" cy="139" r="81" fill="white" fill-opacity="0.35"/>
+<circle cx="81" cy="81" r="81" transform="matrix(-1 0 0 1 400 58)" fill="white" fill-opacity="0.35"/>
+<rect width="220" height="220" fill="white" fill-opacity="0.35"/>
+<circle cx="81" cy="81" r="81" transform="matrix(-1 0 0 1 162 0)" fill="white" fill-opacity="0.35"/>
+<circle cx="81" cy="81" r="81" transform="matrix(-1 0 0 1 162 58)" fill="white" fill-opacity="0.35"/>
+<circle cx="81" cy="81" r="81" transform="matrix(-1 0 0 1 220 0)" fill="white" fill-opacity="0.35"/>
+<circle cx="81" cy="81" r="81" transform="matrix(-1 0 0 1 220 58)" fill="white" fill-opacity="0.35"/>
+</g>
+<defs>
+<clipPath id="clip0_31_3224">
+<rect width="458" height="458" fill="white"/>
+</clipPath>
+</defs>
+</svg>

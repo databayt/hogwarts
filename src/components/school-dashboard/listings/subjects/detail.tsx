@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo } from "react"
 import { BookOpen, CircleAlert } from "lucide-react"
 
@@ -51,12 +53,14 @@ export function SubjectDetailContent({
   dictionary,
   lang,
 }: SubjectDetailContentProps) {
-  const isRTL = lang === "ar"
+  const sd = dictionary?.school?.subjects as unknown as
+    | Record<string, string>
+    | undefined
 
   const t = {
-    errorTitle: isRTL ? "خطأ" : "Error",
-    notFound: isRTL ? "المادة غير موجودة" : "Subject not found",
-    noTopics: isRTL ? "لا توجد مواضيع متاحة" : "No topics available",
+    errorTitle: sd?.errorTitle || "Error",
+    notFound: sd?.notFound || "Subject not found",
+    noTopics: sd?.noTopics || "No topics available",
   }
 
   // Error state

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Announcements Seed
  * Creates 25-30 announcements with temporal spread and MENA content

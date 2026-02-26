@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { type ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 
@@ -10,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export type ClassroomRow = {
   id: string
@@ -27,29 +30,37 @@ export function getClassroomColumns(
   callbacks: {
     onEdit?: (id: string) => void
     onDelete?: (row: ClassroomRow) => void
-  }
+  },
+  dictionary?: Record<string, string>
 ): ColumnDef<ClassroomRow>[] {
-  const isAr = lang === "ar"
+  const t = {
+    roomName: dictionary?.roomName || "Room Name",
+    type: dictionary?.type || "Type",
+    capacity: dictionary?.capacity || "Capacity",
+    classes: dictionary?.classes || "Classes",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
+  }
 
   return [
     {
       accessorKey: "roomName",
-      header: isAr ? "اسم الغرفة" : "Room Name",
+      header: t.roomName,
       cell: ({ row }) => (
         <span className="font-medium">{row.original.roomName}</span>
       ),
     },
     {
       accessorKey: "typeName",
-      header: isAr ? "النوع" : "Type",
+      header: t.type,
     },
     {
       accessorKey: "capacity",
-      header: isAr ? "السعة" : "Capacity",
+      header: t.capacity,
     },
     {
       accessorKey: "classCount",
-      header: isAr ? "الفصول" : "Classes",
+      header: t.classes,
     },
     {
       id: "actions",
@@ -65,15 +76,15 @@ export function getClassroomColumns(
             <DropdownMenuItem
               onClick={() => callbacks.onEdit?.(row.original.id)}
             >
-              <Pencil className="mr-2 h-4 w-4" />
-              {isAr ? "تعديل" : "Edit"}
+              <Pencil className="me-2 h-4 w-4" />
+              {t.edit}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => callbacks.onDelete?.(row.original)}
               className="text-destructive"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              {isAr ? "حذف" : "Delete"}
+              <Trash2 className="me-2 h-4 w-4" />
+              {t.delete}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

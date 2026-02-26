@@ -1,6 +1,9 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import AllFeatures from "@/components/saas-marketing/features/all"
+import Content from "@/components/saas-marketing/features/content"
 
 export const metadata = {
   title: "Features",
@@ -14,5 +17,5 @@ export default async function Features({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <AllFeatures dictionary={dictionary} lang={lang} />
+  return <Content dictionary={dictionary} params={{ lang }} />
 }

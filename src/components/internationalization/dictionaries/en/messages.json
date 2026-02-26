@@ -31,7 +31,7 @@
     "pastDate": "Date must be in the past",
     "invalidRange": "Invalid range",
     "startBeforeEnd": "Start date must be before end date",
-    "required field": "Required field",
+    "requiredField": "Required field",
     "twoFactorCodeRequired": "Two factor code is required",
     "invalidCode": "Invalid code",
     "codeExpired": "Code expired",

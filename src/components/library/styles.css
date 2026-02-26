@@ -39,7 +39,7 @@
 }
 
 .book-card-status {
-  @apply absolute top-2 right-2 rounded-md px-2 py-1 text-xs font-semibold;
+  @apply absolute end-2 top-2 rounded-md px-2 py-1 text-xs font-semibold;
 }
 
 .book-card-status.available {
@@ -138,7 +138,7 @@
 }
 
 .library-table-header-cell {
-  @apply px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400;
+  @apply px-6 py-3 text-start text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400;
 }
 
 .library-table-body {

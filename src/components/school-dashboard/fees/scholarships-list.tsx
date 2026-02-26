@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { format } from "date-fns"
 import { Pencil, Plus, Users } from "lucide-react"
 
@@ -21,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 interface Scholarship {
   id: string
@@ -41,6 +44,7 @@ interface Props {
 }
 
 export function ScholarshipsList({ scholarships, dictionary }: Props) {
+  const { locale } = useLocale()
   const formatCoverage = (type: string, amount: any) => {
     const value = typeof amount === "object" ? amount.toNumber() : amount
 
@@ -48,7 +52,7 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
       case "PERCENTAGE":
         return `${value}%`
       case "FIXED_AMOUNT":
-        return new Intl.NumberFormat("en-IN", {
+        return new Intl.NumberFormat(locale, {
           style: "currency",
           currency: "INR",
           minimumFractionDigits: 0,

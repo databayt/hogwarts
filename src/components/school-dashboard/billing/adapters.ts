@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Data Adapters for BillingSDK Components
  *
@@ -236,10 +239,13 @@ export function calculateTotal(charges: ChargeItem[]): string {
 /**
  * Format date for display
  */
-export function formatDate(date: Date | string | null): string {
+export function formatDate(
+  date: Date | string | null,
+  locale: string = "ar"
+): string {
   if (!date) return "N/A"
   const d = typeof date === "string" ? new Date(date) : date
-  return d.toLocaleDateString("en-US", {
+  return d.toLocaleDateString(locale, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -249,9 +255,12 @@ export function formatDate(date: Date | string | null): string {
 /**
  * Format currency (amount in cents to display string)
  */
-export function formatCurrency(amountInCents: number): string {
+export function formatCurrency(
+  amountInCents: number,
+  locale: string = "ar"
+): string {
   const amount = amountInCents / 100
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
   }).format(amount)
@@ -260,8 +269,8 @@ export function formatCurrency(amountInCents: number): string {
 /**
  * Format currency from dollars
  */
-export function formatDollars(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatDollars(amount: number, locale: string = "ar"): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
   }).format(amount)

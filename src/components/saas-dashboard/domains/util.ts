@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Utility functions for Domains feature
  *
@@ -188,12 +191,13 @@ export function getDNSPropagationEstimate(): string {
  */
 export function formatDomainStatus(
   status: DomainStatus,
-  verifiedAt: Date | string | null
+  verifiedAt: Date | string | null,
+  locale = "ar"
 ): string {
   if (status === "verified" && verifiedAt) {
     const date =
       typeof verifiedAt === "string" ? new Date(verifiedAt) : verifiedAt
-    return `Verified on ${new Intl.DateTimeFormat("en-US", {
+    return `Verified on ${new Intl.DateTimeFormat(locale, {
       year: "numeric",
       month: "short",
       day: "numeric",

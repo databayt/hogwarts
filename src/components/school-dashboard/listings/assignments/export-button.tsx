@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Assignment Export Button
  * Uses unified File Block ExportButton for multi-format exports
@@ -98,9 +101,7 @@ export function ExportButton({
         filename: "assignments",
         columns: ASSIGNMENT_EXPORT_COLUMNS,
         locale,
-        title:
-          dictionary?.export ||
-          (locale === "ar" ? "قائمة الواجبات" : "Assignment List"),
+        title: dictionary?.export || "Assignment List",
       }}
       data={data}
       formats={formats}
@@ -110,15 +111,12 @@ export function ExportButton({
       showColumnSelector={showColumnSelector}
       disabled={isLoading || data.length === 0}
       dictionary={{
-        export: dictionary?.export || (locale === "ar" ? "تصدير" : "Export"),
-        exportAs:
-          dictionary?.exportAs || (locale === "ar" ? "تصدير كـ" : "Export as"),
+        export: dictionary?.export || "Export",
+        exportAs: dictionary?.exportAs || "Export as",
         csv: dictionary?.csv || "CSV",
         excel: dictionary?.excel || "Excel",
         pdf: dictionary?.pdf || "PDF",
-        exporting:
-          dictionary?.exporting ||
-          (locale === "ar" ? "جاري التصدير..." : "Exporting..."),
+        exporting: dictionary?.exporting || "Exporting...",
       }}
       onExportError={(err) => {
         console.error("Export failed:", err)

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Image from "next/image"
 import Link from "next/link"
 
@@ -23,11 +26,11 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
   ]
 
   return (
-    <section className="grid h-[calc(100vh-3.5rem)] w-full grid-cols-1 py-8 lg:grid-cols-2">
+    <section className="grid h-[calc(100vh-3.5rem)] w-full grid-cols-1 lg:grid-cols-2 lg:py-8">
       {/* Image Half */}
-      <div className="relative h-full lg:order-last">
+      <div className="relative -mx-[var(--marketing-px)] h-full lg:order-last lg:mx-0">
         <div
-          className="absolute inset-0 overflow-hidden rounded-none md:inset-y-8 lg:rounded-sm"
+          className="absolute inset-0 overflow-hidden rounded-none lg:inset-y-8 lg:rounded-sm"
           style={{
             backgroundImage: "url('/site/harry-potter.png')",
             backgroundSize: "cover",
@@ -58,13 +61,16 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
               {t?.subtitle ||
                 "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
             </p>
-            <div className="flex flex-col gap-4 sm:flex-row rtl:sm:flex-row-reverse">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <Link
                 href={
                   subdomain ? `/${lang}/s/${subdomain}/tour` : `/${lang}/tour`
                 }
               >
-                <AnimatedButton size="lg" className="w-full sm:w-auto">
+                <AnimatedButton
+                  size="lg"
+                  className="w-full max-w-[200px] sm:w-auto sm:max-w-none"
+                >
                   {t?.scheduleVisit || "Schedule a Visit"}
                 </AnimatedButton>
               </Link>
@@ -78,7 +84,7 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full border-white bg-transparent text-white hover:bg-white/10 sm:w-auto"
+                  className="w-full max-w-[200px] border-white bg-transparent text-white hover:bg-white/10 sm:w-auto sm:max-w-none"
                 >
                   {t?.learnMore || "Learn More"}
                 </Button>
@@ -109,7 +115,7 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
             {t?.subtitle ||
               "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
           </p>
-          <div className="flex flex-row gap-4 rtl:flex-row-reverse">
+          <div className="flex flex-row gap-4">
             <Link
               href={
                 subdomain ? `/${lang}/s/${subdomain}/tour` : `/${lang}/tour`

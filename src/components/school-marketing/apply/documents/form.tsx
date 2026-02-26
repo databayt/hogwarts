@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
   forwardRef,
   useCallback,
@@ -172,7 +174,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
           <Card>
             <CardContent className="pt-6">
               <Label className="mb-4 block">
-                {dict.photo || (isRTL ? "الصورة الشخصية" : "Passport Photo")}
+                {dict.photo || "Passport Photo"}
               </Label>
               <div className="flex flex-col items-center gap-4">
                 {photoUrl ? (
@@ -210,7 +212,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
           <Card>
             <CardContent className="pt-6">
               <Label className="mb-4 block">
-                {dict.signature || (isRTL ? "التوقيع" : "Signature")}
+                {dict.signature || "Signature"}
               </Label>
               <div className="flex flex-col items-center gap-4">
                 {signatureUrl ? (
@@ -248,8 +250,7 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
         {/* Other Documents */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">
-            {dict.otherDocuments ||
-              (isRTL ? "المستندات الأخرى" : "Other Documents")}
+            {dict.otherDocuments || "Other Documents"}
           </h3>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {DOCUMENT_TYPES.map((docType) => {

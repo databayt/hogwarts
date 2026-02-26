@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { type DialogProps } from "@radix-ui/react-dialog"
@@ -238,7 +240,9 @@ export function GenericCommandMenu({
             <span className="text-muted-foreground flex items-center gap-1 text-xs">
               {item.breadcrumb.map((crumb, idx) => (
                 <React.Fragment key={idx}>
-                  {idx > 0 && <ChevronRight className="size-3" />}
+                  {idx > 0 && (
+                    <ChevronRight className="size-3 rtl:rotate-180" />
+                  )}
                   {crumb}
                 </React.Fragment>
               ))}
@@ -289,7 +293,7 @@ export function GenericCommandMenu({
           <span className="inline-flex lg:hidden">
             {commandMenuDict?.searchShort || "Search..."}
           </span>
-          <kbd className="bg-muted pointer-events-none absolute top-[0.3rem] right-[0.3rem] hidden h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none sm:flex">
+          <kbd className="bg-muted pointer-events-none absolute end-[0.3rem] top-[0.3rem] hidden h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none sm:flex">
             <span className="text-xs">⌘</span>K
           </kbd>
         </Button>

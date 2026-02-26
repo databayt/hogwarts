@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { auth } from "@/auth"
 import { Award, Plus, Settings } from "lucide-react"
 
@@ -34,7 +37,7 @@ export async function CertificateContent() {
         {canManage && (
           <Button asChild>
             <a href="certificates/configs/new">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               New Template
             </a>
           </Button>

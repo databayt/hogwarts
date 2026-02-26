@@ -1,5 +1,9 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -105,32 +109,41 @@ export default async function TeachersContent({
     ])
 
     // Transform to enhanced row format
-    data = rows.map((t: any) => {
-      const primaryDept = t.teacherDepartments?.[0]?.department
-      const departmentName = primaryDept ? primaryDept.departmentName : null
+    data = await Promise.all(
+      rows.map(async (t: any) => {
+        const primaryDept = t.teacherDepartments?.[0]?.department
+        const departmentName = primaryDept
+          ? await getDisplayText(
+              primaryDept.departmentName,
+              primaryDept.lang || "ar",
+              lang,
+              schoolId!
+            )
+          : null
 
-      return {
-        id: t.id,
-        name: getDisplayName(t.givenName, t.surname, lang),
-        givenName: t.givenName || "",
-        surname: t.surname || "",
-        emailAddress: t.emailAddress || "-",
-        phone: t.phoneNumbers?.[0]?.phoneNumber || null,
-        department: departmentName,
-        departmentId: primaryDept?.id || null,
-        subjectCount: t.subjectExpertise?.length || 0,
-        classCount: t.classes?.length || 0,
-        employmentStatus: t.employmentStatus || "ACTIVE",
-        employmentType: t.employmentType || "FULL_TIME",
-        hasAccount: !!t.userId,
-        userId: t.userId || null,
-        profilePhotoUrl: t.profilePhotoUrl || null,
-        joiningDate: t.joiningDate
-          ? (t.joiningDate as Date).toISOString()
-          : null,
-        createdAt: (t.createdAt as Date).toISOString(),
-      }
-    })
+        return {
+          id: t.id,
+          name: getDisplayName(t.givenName, t.surname, lang),
+          givenName: t.givenName || "",
+          surname: t.surname || "",
+          emailAddress: t.emailAddress || "-",
+          phone: t.phoneNumbers?.[0]?.phoneNumber || null,
+          department: departmentName,
+          departmentId: primaryDept?.id || null,
+          subjectCount: t.subjectExpertise?.length || 0,
+          classCount: t.classes?.length || 0,
+          employmentStatus: t.employmentStatus || "ACTIVE",
+          employmentType: t.employmentType || "FULL_TIME",
+          hasAccount: !!t.userId,
+          userId: t.userId || null,
+          profilePhotoUrl: t.profilePhotoUrl || null,
+          joiningDate: t.joiningDate
+            ? (t.joiningDate as Date).toISOString()
+            : null,
+          createdAt: (t.createdAt as Date).toISOString(),
+        }
+      })
+    )
     total = count as number
   }
 

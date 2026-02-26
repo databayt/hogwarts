@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Messaging Data Serialization Utilities
  *
@@ -38,11 +41,8 @@ export function serializeParticipant(participant: any) {
 
   return {
     ...participant,
-    joinedAt: safeSerializeDate(participant.joinedAt),
+    createdAt: safeSerializeDate(participant.createdAt),
     lastReadAt: safeSerializeDate(participant.lastReadAt),
-    mutedUntil: participant.mutedUntil
-      ? safeSerializeDate(participant.mutedUntil)
-      : null,
     user: participant.user
       ? {
           ...participant.user,

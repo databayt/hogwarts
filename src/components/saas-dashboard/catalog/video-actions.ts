@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3"

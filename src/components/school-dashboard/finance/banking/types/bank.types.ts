@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Banking Domain Type Definitions
  * Following TypeScript 5.x best practices with strict typing

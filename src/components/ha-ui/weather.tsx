@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useState } from "react"
 import {
   mdiAlertCircleCheckOutline,
@@ -25,6 +27,7 @@ import type { EntityId } from "@/types/entity-types"
 import { haWebSocket } from "@/lib/haWebsocket"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 export type OptionalWeatherFeatures =
   | "rain_chance"
@@ -124,6 +127,7 @@ export function Weather({
   maximumForecastShown = 7,
   OptionalFeatures,
 }: WeatherProps) {
+  const { locale } = useLocale()
   const [forecasts, setForecasts] = useState<any[] | null>(null)
 
   useEffect(() => {
@@ -151,7 +155,7 @@ export function Weather({
           <div className="flex-col">
             <div className="flex w-full gap-2">
               <p>
-                {Intl.DateTimeFormat("en-US", { weekday: "long" }).format(
+                {Intl.DateTimeFormat(locale, { weekday: "long" }).format(
                   new Date(forecasts[0].datetime)
                 )}
               </p>
@@ -214,14 +218,14 @@ export function Weather({
               >
                 {forecastType == "daily" && (
                   <p>
-                    {Intl.DateTimeFormat("en-US", { weekday: "short" }).format(
+                    {Intl.DateTimeFormat(locale, { weekday: "short" }).format(
                       new Date(forecast.datetime)
                     )}
                   </p>
                 )}
                 {forecastType == "hourly" && (
                   <p>
-                    {new Intl.DateTimeFormat("en-US", {
+                    {new Intl.DateTimeFormat(locale, {
                       hour: "2-digit",
                       minute: "2-digit",
                       hour12: true,

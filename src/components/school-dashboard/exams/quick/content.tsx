@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { auth } from "@/auth"
 import { Activity, CheckCircle2, Clock, Plus, TrendingUp } from "lucide-react"
 
@@ -38,7 +41,7 @@ export async function QuickAssessmentContent() {
         {canCreate && (
           <Button asChild>
             <a href="quick/new">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               New Assessment
             </a>
           </Button>

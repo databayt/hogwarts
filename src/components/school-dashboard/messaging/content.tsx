@@ -1,7 +1,11 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Suspense } from "react"
 import { auth } from "@/auth"
 
 import { getTenantContext } from "@/lib/tenant-context"
+import { getMessagingDictionary } from "@/components/internationalization/dictionaries"
 
 import { MessagingClient } from "./messaging-client"
 import {
@@ -25,11 +29,16 @@ export async function MessagingContent({
   conversationId,
 }: MessagingContentProps) {
   const session = await auth()
+  const dict = await getMessagingDictionary(locale)
+  const m = dict?.messaging as
+    | Record<string, Record<string, string>>
+    | undefined
+
   if (!session?.user?.id) {
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-muted-foreground">
-          {locale === "ar" ? "يجب تسجيل الدخول" : "Please sign in"}
+          {m?.ui?.sign_in_required || "Please sign in"}
         </p>
       </div>
     )

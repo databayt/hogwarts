@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Run Lighthouse performance audits
  * Run: npx tsx scripts/perf-lighthouse.ts --url https://portsudan.databayt.org

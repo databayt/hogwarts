@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Library Management System - Zod Validation Schemas
 
 import { z } from "zod"
@@ -20,6 +23,11 @@ export const bookSchema = z.object({
   totalCopies: z.number().min(1, "Must have at least 1 copy"),
   videoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   summary: z.string().min(10, "Summary must be at least 10 characters"),
+  isbn: z.string().max(17).optional().or(z.literal("")),
+  publisher: z.string().max(255).optional().or(z.literal("")),
+  publicationYear: z.number().min(1000).max(2100).optional(),
+  language: z.string().max(50).optional().or(z.literal("")),
+  pageCount: z.number().min(1).optional(),
 })
 
 export type BookSchema = z.infer<typeof bookSchema>

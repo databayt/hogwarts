@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useEffect, useImperativeHandle } from "react"
 import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -90,8 +92,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
           {/* Father's Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">
-              {dict.fatherInfo ||
-                (isRTL ? "معلومات الأب" : "Father's Information")}
+              {dict.fatherInfo || "Father's Information"}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
@@ -100,17 +101,12 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.fatherName ||
-                        (isRTL ? "اسم الأب" : "Father's Name")}{" "}
-                      *
+                      {dict.fatherName || "Father's Name"} *
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder={
-                          dict.namePlaceholder ||
-                          (isRTL ? "أدخل الاسم" : "Enter name")
-                        }
+                        placeholder={dict.namePlaceholder || "Enter name"}
                       />
                     </FormControl>
                     <FormMessage />
@@ -122,15 +118,12 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="fatherOccupation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.occupation || (isRTL ? "المهنة" : "Occupation")}
-                    </FormLabel>
+                    <FormLabel>{dict.occupation || "Occupation"}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder={
-                          dict.occupationPlaceholder ||
-                          (isRTL ? "أدخل المهنة" : "Enter occupation")
+                          dict.occupationPlaceholder || "Enter occupation"
                         }
                       />
                     </FormControl>
@@ -143,9 +136,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="fatherPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.phone || (isRTL ? "رقم الهاتف" : "Phone")}
-                    </FormLabel>
+                    <FormLabel>{dict.phone || "Phone"}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -162,9 +153,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="fatherEmail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.email || (isRTL ? "البريد الإلكتروني" : "Email")}
-                    </FormLabel>
+                    <FormLabel>{dict.email || "Email"}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -182,8 +171,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
           {/* Mother's Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">
-              {dict.motherInfo ||
-                (isRTL ? "معلومات الأم" : "Mother's Information")}
+              {dict.motherInfo || "Mother's Information"}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
@@ -192,17 +180,12 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.motherName ||
-                        (isRTL ? "اسم الأم" : "Mother's Name")}{" "}
-                      *
+                      {dict.motherName || "Mother's Name"} *
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder={
-                          dict.namePlaceholder ||
-                          (isRTL ? "أدخل الاسم" : "Enter name")
-                        }
+                        placeholder={dict.namePlaceholder || "Enter name"}
                       />
                     </FormControl>
                     <FormMessage />
@@ -214,15 +197,12 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="motherOccupation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.occupation || (isRTL ? "المهنة" : "Occupation")}
-                    </FormLabel>
+                    <FormLabel>{dict.occupation || "Occupation"}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder={
-                          dict.occupationPlaceholder ||
-                          (isRTL ? "أدخل المهنة" : "Enter occupation")
+                          dict.occupationPlaceholder || "Enter occupation"
                         }
                       />
                     </FormControl>
@@ -235,9 +215,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="motherPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.phone || (isRTL ? "رقم الهاتف" : "Phone")}
-                    </FormLabel>
+                    <FormLabel>{dict.phone || "Phone"}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -254,9 +232,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="motherEmail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.email || (isRTL ? "البريد الإلكتروني" : "Email")}
-                    </FormLabel>
+                    <FormLabel>{dict.email || "Email"}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -274,8 +250,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
           {/* Other Guardian Information (Optional) */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">
-              {dict.guardianInfo ||
-                (isRTL ? "ولي أمر آخر (اختياري)" : "Other Guardian (Optional)")}
+              {dict.guardianInfo || "Other Guardian (Optional)"}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
@@ -284,16 +259,12 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.guardianName ||
-                        (isRTL ? "اسم ولي الأمر" : "Guardian's Name")}
+                      {dict.guardianName || "Guardian's Name"}
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder={
-                          dict.namePlaceholder ||
-                          (isRTL ? "أدخل الاسم" : "Enter name")
-                        }
+                        placeholder={dict.namePlaceholder || "Enter name"}
                       />
                     </FormControl>
                     <FormMessage />
@@ -305,16 +276,13 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="guardianRelation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.relation || (isRTL ? "صلة القرابة" : "Relation")}
-                    </FormLabel>
+                    <FormLabel>{dict.relation || "Relation"}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue
                             placeholder={
-                              dict.selectRelation ||
-                              (isRTL ? "اختر صلة القرابة" : "Select relation")
+                              dict.selectRelation || "Select relation"
                             }
                           />
                         </SelectTrigger>
@@ -336,9 +304,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="guardianPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.phone || (isRTL ? "رقم الهاتف" : "Phone")}
-                    </FormLabel>
+                    <FormLabel>{dict.phone || "Phone"}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -355,9 +321,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="guardianEmail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.email || (isRTL ? "البريد الإلكتروني" : "Email")}
-                    </FormLabel>
+                    <FormLabel>{dict.email || "Email"}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}

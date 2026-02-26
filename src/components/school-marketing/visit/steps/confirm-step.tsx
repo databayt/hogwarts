@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { format } from "date-fns"
 import { Calendar, Clock, FileText, Mail, Phone, Users } from "lucide-react"
 import { useFormContext } from "react-hook-form"

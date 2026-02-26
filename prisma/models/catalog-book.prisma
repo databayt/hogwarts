@@ -1,0 +1,94 @@
+// Global Catalog Books (NO schoolId — platform-wide)
+// Reuses enums from catalog-question.prisma: ApprovalStatus, ContentVisibility
+// Reuses enum from catalog-subject.prisma: ContentStatus
+
+model CatalogBook {
+  id               String  @id @default(cuid())
+  title            String
+  slug             String  @unique
+  lang             String  @default("ar")
+  author           String
+  isbn             String? @unique
+  genre            String
+  description      String? @db.Text
+  summary          String? @db.Text
+  catalogSubjectId String? // Links book to a specific catalog subject (grade-specific)
+
+  catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id])
+
+  coverUrl    String?
+  coverKey    String?
+  coverColor  String  @default("#000000")
+
+  publisher       String?
+  publicationYear Int?
+  language        String   @default("ar")
+  pageCount       Int?
+  tags            String[] @default([])
+
+  digitalFileUrl  String?
+  digitalFileKey  String?
+  digitalFileSize Int?
+  digitalMimeType String?
+
+  videoUrl   String?
+  gradeLevel String  @default("GENERAL")
+
+  rating      Float @default(0)
+  ratingCount Int   @default(0)
+
+  // Community contribution
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  status ContentStatus @default(DRAFT)
+
+  usageCount    Int @default(0)
+  downloadCount Int @default(0)
+
+  schoolSelections SchoolBookSelection[]
+  books            Book[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([genre])
+  @@index([gradeLevel])
+  @@index([approvalStatus, visibility])
+  @@index([author])
+  @@index([contributedBy])
+  @@index([status])
+  @@index([catalogSubjectId])
+  @@map("catalog_books")
+}
+
+model SchoolBookSelection {
+  id            String  @id @default(cuid())
+  schoolId      String
+  catalogBookId String
+  gradeId       String? // Optional grade scope for grade-specific book assignments
+
+  totalCopies     Int     @default(1)
+  availableCopies Int     @default(1)
+  shelfLocation   String?
+  customName      String?
+  isActive        Boolean @default(true)
+
+  school      School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  catalogBook CatalogBook    @relation(fields: [catalogBookId], references: [id], onDelete: Cascade)
+  grade       AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, catalogBookId])
+  @@index([schoolId])
+  @@index([catalogBookId])
+  @@index([gradeId])
+  @@map("school_book_selections")
+}

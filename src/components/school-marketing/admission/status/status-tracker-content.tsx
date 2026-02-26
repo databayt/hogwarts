@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
@@ -74,6 +76,13 @@ export default function StatusTrackerContent({
   const [status, setStatus] = useState<ApplicationStatus | null>(null)
   const isRTL = lang === "ar"
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { statusTracker?: Record<string, string> } }
+      }
+    )?.school?.admission?.statusTracker ?? {}
+
   const requestForm = useForm({
     resolver: zodResolver(requestSchema),
     defaultValues: {
@@ -105,14 +114,13 @@ export default function StatusTrackerContent({
         setStep("display")
       } else {
         toast.error(
-          result.error ||
-            (isRTL ? "فشل في جلب الحالة" : "Failed to fetch status")
+          result.error || dict.failedToFetch || "Failed to fetch status"
         )
         setAccessToken(null)
         setStep("request")
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في جلب الحالة" : "Failed to fetch status")
+      toast.error(dict.failedToFetch || "Failed to fetch status")
       setAccessToken(null)
       setStep("request")
     } finally {
@@ -134,17 +142,13 @@ export default function StatusTrackerContent({
         setEmail(data.email)
         setStep("verify")
         toast.success(
-          isRTL
-            ? "تم إرسال رمز التحقق إلى بريدك الإلكتروني"
-            : "Verification code sent to your email"
+          dict.codeSentSuccess || "Verification code sent to your email"
         )
       } else {
-        toast.error(
-          result.error || (isRTL ? "فشل في إرسال الرمز" : "Failed to send code")
-        )
+        toast.error(result.error || dict.failedToSend || "Failed to send code")
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في إرسال الرمز" : "Failed to send code")
+      toast.error(dict.failedToSend || "Failed to send code")
     } finally {
       setIsLoading(false)
     }
@@ -164,12 +168,11 @@ export default function StatusTrackerContent({
         await fetchStatus(result.data.accessToken)
       } else {
         toast.error(
-          result.error ||
-            (isRTL ? "رمز التحقق غير صحيح" : "Invalid verification code")
+          result.error || dict.invalidCode || "Invalid verification code"
         )
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في التحقق" : "Verification failed")
+      toast.error(dict.verificationFailed || "Verification failed")
     } finally {
       setIsLoading(false)
     }
@@ -181,14 +184,12 @@ export default function StatusTrackerContent({
       const result = await requestStatusOTP(subdomain, applicationNumber, email)
 
       if (result.success) {
-        toast.success(isRTL ? "تم إرسال رمز جديد" : "New code sent")
+        toast.success(dict.newCodeSent || "New code sent")
       } else {
-        toast.error(
-          result.error || (isRTL ? "فشل في إعادة الإرسال" : "Failed to resend")
-        )
+        toast.error(result.error || dict.failedToResend || "Failed to resend")
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في إعادة الإرسال" : "Failed to resend")
+      toast.error(dict.failedToResend || "Failed to resend")
     } finally {
       setIsLoading(false)
     }
@@ -207,6 +208,7 @@ export default function StatusTrackerContent({
       <StatusDisplay
         status={status}
         lang={lang}
+        dictionary={dictionary}
         onBack={() => {
           setStep("request")
           setAccessToken(null)
@@ -223,12 +225,12 @@ export default function StatusTrackerContent({
           <AnthropicIcons.Checklist className="text-primary h-8 w-8" />
         </div>
         <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
-          {isRTL ? "تتبع حالة الطلب" : "Track Application Status"}
+          {dict.title || "Track Application Status"}
         </h1>
         <p className="text-muted-foreground mx-auto mt-3 max-w-md leading-relaxed">
-          {isRTL
-            ? `تحقق من حالة طلبك في ${school.name}`
-            : `Check your application status at ${school.name}`}
+          {(
+            dict.subtitle || "Check your application status at {schoolName}"
+          ).replace("{schoolName}", school.name)}
         </p>
       </div>
 
@@ -236,12 +238,11 @@ export default function StatusTrackerContent({
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
-              {isRTL ? "أدخل معلومات الطلب" : "Enter Application Details"}
+              {dict.enterDetails || "Enter Application Details"}
             </CardTitle>
             <CardDescription>
-              {isRTL
-                ? "أدخل رقم الطلب والبريد الإلكتروني المسجل"
-                : "Enter your application number and registered email"}
+              {dict.enterDetailsDesc ||
+                "Enter your application number and registered email"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -256,7 +257,7 @@ export default function StatusTrackerContent({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {isRTL ? "رقم الطلب" : "Application Number"}
+                        {dict.applicationNumber || "Application Number"}
                       </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="APP-2024-XXXXX" />
@@ -272,7 +273,7 @@ export default function StatusTrackerContent({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {isRTL ? "البريد الإلكتروني" : "Email Address"}
+                        {dict.emailAddress || "Email Address"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -282,9 +283,8 @@ export default function StatusTrackerContent({
                         />
                       </FormControl>
                       <FormDescription>
-                        {isRTL
-                          ? "سيتم إرسال رمز التحقق إلى هذا البريد"
-                          : "A verification code will be sent to this email"}
+                        {dict.verificationCodeSent ||
+                          "A verification code will be sent to this email"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -299,12 +299,12 @@ export default function StatusTrackerContent({
                   {isLoading ? (
                     <>
                       <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                      {isRTL ? "جارٍ الإرسال..." : "Sending..."}
+                      {dict.sending || "Sending..."}
                     </>
                   ) : (
                     <>
                       <AnthropicIcons.Lightning className="me-2 h-4 w-4" />
-                      {isRTL ? "إرسال رمز التحقق" : "Send Verification Code"}
+                      {dict.sendVerificationCode || "Send Verification Code"}
                     </>
                   )}
                 </Button>
@@ -316,12 +316,12 @@ export default function StatusTrackerContent({
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
-              {isRTL ? "أدخل رمز التحقق" : "Enter Verification Code"}
+              {dict.enterVerificationCode || "Enter Verification Code"}
             </CardTitle>
             <CardDescription>
-              {isRTL
-                ? `تم إرسال رمز مكون من 6 أرقام إلى ${email}`
-                : `A 6-digit code has been sent to ${email}`}
+              {(
+                dict.codeSentTo || "A 6-digit code has been sent to {email}"
+              ).replace("{email}", email)}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -336,7 +336,7 @@ export default function StatusTrackerContent({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {isRTL ? "رمز التحقق" : "Verification Code"}
+                        {dict.verificationCode || "Verification Code"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -357,12 +357,10 @@ export default function StatusTrackerContent({
                   {isLoading ? (
                     <>
                       <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                      {isRTL ? "جارٍ التحقق..." : "Verifying..."}
+                      {dict.verifying || "Verifying..."}
                     </>
-                  ) : isRTL ? (
-                    "تحقق"
                   ) : (
-                    "Verify"
+                    dict.verify || "Verify"
                   )}
                 </Button>
 
@@ -373,7 +371,7 @@ export default function StatusTrackerContent({
                     className="px-0"
                     onClick={() => setStep("request")}
                   >
-                    {isRTL ? "تغيير البريد" : "Change email"}
+                    {dict.changeEmail || "Change email"}
                   </Button>
                   <Button
                     type="button"
@@ -382,7 +380,7 @@ export default function StatusTrackerContent({
                     onClick={handleResendOTP}
                     disabled={isLoading}
                   >
-                    {isRTL ? "إعادة إرسال الرمز" : "Resend code"}
+                    {dict.resendCode || "Resend code"}
                   </Button>
                 </div>
               </form>
@@ -396,25 +394,22 @@ export default function StatusTrackerContent({
           <div className="flex items-start gap-3">
             <AnthropicIcons.Book className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
             <div>
-              <h3 className="mb-2 font-medium">{isRTL ? "نصائح" : "Tips"}</h3>
+              <h3 className="mb-2 font-medium">{dict.tips || "Tips"}</h3>
               <ul className="text-muted-foreground space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  {isRTL
-                    ? "رقم الطلب موجود في بريد التأكيد"
-                    : "Your application number is in the confirmation email"}
+                  {dict.tipAppNumber ||
+                    "Your application number is in the confirmation email"}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  {isRTL
-                    ? "رمز التحقق صالح لمدة 10 دقائق"
-                    : "The verification code is valid for 10 minutes"}
+                  {dict.tipCodeValid ||
+                    "The verification code is valid for 10 minutes"}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  {isRTL
-                    ? "تحقق من مجلد الرسائل غير المرغوب فيها"
-                    : "Check your spam folder if you don't see the email"}
+                  {dict.tipSpamFolder ||
+                    "Check your spam folder if you don't see the email"}
                 </li>
               </ul>
             </div>

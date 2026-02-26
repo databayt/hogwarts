@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Staff Members Seed
  * Creates 25-30 non-teaching staff with MENA positions

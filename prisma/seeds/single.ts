@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Single Seed Runner
  *
@@ -29,6 +32,7 @@ import { seedAllUsers } from "./auth"
 import { backfillClassGrades } from "./backfill-class-grades"
 import { seedBanking } from "./banking"
 import { seedCatalog } from "./catalog"
+import { seedCatalogBooks } from "./catalog-books"
 import { seedCatalogContent } from "./catalog-content"
 import { seedCatalogImages } from "./catalog-images"
 import { seedCatalogVideos } from "./catalog-videos"
@@ -150,6 +154,11 @@ async function resolveStudents(
       grNumber: true,
       givenName: true,
       surname: true,
+      studentYearLevels: {
+        select: { levelId: true },
+        take: 1,
+        orderBy: { createdAt: "desc" },
+      },
     },
   })
   return students.map((s) => ({
@@ -158,6 +167,7 @@ async function resolveStudents(
     grNumber: s.grNumber ?? "",
     givenName: s.givenName,
     surname: s.surname,
+    yearLevelId: s.studentYearLevels[0]?.levelId ?? undefined,
   }))
 }
 
@@ -240,6 +250,9 @@ async function resolveClasses(
       name: true,
       lang: true,
       subjectId: true,
+      grade: {
+        select: { yearLevelId: true },
+      },
     },
   })
   return classes.map((c) => ({
@@ -247,7 +260,7 @@ async function resolveClasses(
     name: c.name,
     lang: c.lang ?? "ar",
     subjectId: c.subjectId,
-    yearLevelId: "",
+    yearLevelId: c.grade?.yearLevelId ?? "",
   }))
 }
 
@@ -321,7 +334,7 @@ const SEEDS: Record<string, SeedEntry> = {
   },
   "clickview-catalog": {
     description:
-      "ClickView US catalog (62 subjects, 201 chapters, 986 lessons)",
+      "ClickView US K-12 catalog (~220 grade-specific subjects, ~800 chapters, ~4000 lessons)",
     global: true,
     run: async (prisma) => {
       await seedClickViewCatalog(prisma)
@@ -355,6 +368,17 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedCatalogVideos(prisma)
+    },
+  },
+  "catalog-books": {
+    description: "Global catalog books (90 books, approved + published)",
+    global: true,
+    run: async (prisma) => {
+      const school = await prisma.school.findFirst({
+        where: { domain: "demo" },
+        select: { id: true },
+      })
+      await seedCatalogBooks(prisma, school?.id)
     },
   },
   school: {

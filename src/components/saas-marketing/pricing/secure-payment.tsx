@@ -1,4 +1,9 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Image from "next/image"
+
+import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 const paymentMethods = [
   { name: "Visa", icon: "/payment/visa.svg" },
@@ -12,7 +17,13 @@ const paymentMethods = [
   { name: "Fawry", icon: "/payment/fawry.svg" },
 ]
 
-export function SecurePayment() {
+interface SecurePaymentProps {
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
+}
+
+export function SecurePayment({ dictionary }: SecurePaymentProps) {
+  const securePayment = dictionary?.marketing?.pricing?.securePayment
+
   return (
     <section className="w-full py-16">
       <div className="flex flex-col items-center gap-8 md:flex-row">
@@ -21,7 +32,7 @@ export function SecurePayment() {
           <div className="flex h-56 w-56 items-center justify-center rounded-3xl bg-[#6A9BCC]">
             <Image
               src="/anthropic/category-08.svg"
-              alt="Secure Payment"
+              alt={securePayment?.title || "Secure Payment"}
               width={180}
               height={180}
               className="object-contain"
@@ -33,12 +44,11 @@ export function SecurePayment() {
         <div className="flex w-full flex-col gap-4 md:w-[70%]">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">
-              Secure Payment
+              {securePayment?.title || "Secure Payment"}
             </h2>
             <p className="text-muted-foreground mt-2 max-w-xl">
-              Your security is our priority. We use industry-leading encryption
-              and security protocols to ensure your payment information is
-              always protected.
+              {securePayment?.description ||
+                "Your security is our priority. We use industry-leading encryption and security protocols to ensure your payment information is always protected."}
             </p>
           </div>
 
@@ -62,7 +72,9 @@ export function SecurePayment() {
 
           {/* Powered by Stripe */}
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">Powered by</span>
+            <span className="text-muted-foreground text-sm">
+              {securePayment?.poweredBy || "Powered by"}
+            </span>
             <span className="font-semibold">Stripe</span>
           </div>
         </div>

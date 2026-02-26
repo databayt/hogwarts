@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Cron Job: Auto-Publish Scheduled Announcements
  *
@@ -43,6 +46,7 @@ import { revalidateTag } from "next/cache"
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 
 // Verify cron secret to prevent unauthorized access
 function verifyCronSecret(request: NextRequest): boolean {
@@ -127,6 +131,28 @@ export async function GET(request: NextRequest) {
         scheduledFor: a.scheduledFor,
       }))
     )
+
+    // Dispatch notifications for newly published announcements
+    for (const a of scheduledAnnouncements) {
+      dispatchNotificationsToAudience({
+        schoolId: a.schoolId,
+        type: "announcement",
+        title: a.title || "New Announcement",
+        body: (a.title || "New announcement published").slice(0, 200),
+        priority: "normal",
+        channels: ["in_app"],
+        metadata: {
+          announcementId: a.id,
+          url: `/announcements/${a.id}`,
+        },
+        targetScope: "school",
+      }).catch((err) =>
+        console.error(
+          "[publish-announcements] Notification dispatch failed:",
+          err
+        )
+      )
+    }
 
     return NextResponse.json({
       success: true,

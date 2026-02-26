@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Awesome shadcn ecosystem data (title, description, link) with background tags for search/sort
 
 export type AwesomeShadcnItem = {

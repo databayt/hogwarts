@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * AI-Powered Receipt Data Extraction
  * Uses Vercel AI SDK with Claude 3.5 Sonnet for OCR

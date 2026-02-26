@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useActionState, useEffect, useRef, useState } from "react"
 import { Paperclip, Send, Smile, X } from "lucide-react"
 import { useFormStatus } from "react-dom"
@@ -19,6 +21,7 @@ import {
   FileUploader,
   type UploadedFileResult,
 } from "@/components/file"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { sendMessageFromForm, type MessageFormState } from "./actions"
 import type { MessageDTO } from "./types"
@@ -71,6 +74,8 @@ export function MessageInput({
   onOptimisticSend,
   className,
 }: MessageInputProps) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const formRef = useRef<HTMLFormElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -95,8 +100,7 @@ export function MessageInput({
     return formAction(formData)
   }
 
-  const defaultPlaceholder =
-    locale === "ar" ? "اكتب رسالة..." : "Type a message..."
+  const defaultPlaceholder = m?.form?.message_placeholder || "Type a message..."
 
   // Auto-reset form on successful send
   useEffect(() => {
@@ -122,7 +126,7 @@ export function MessageInput({
   useEffect(() => {
     if (!state.success && state.error) {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
+        title: m?.notifications?.error || "Error",
         description: state.error,
       })
     }
@@ -173,17 +177,16 @@ export function MessageInput({
     onFileUpload?.(files)
     setShowFileUpload(false)
     toast({
-      title: locale === "ar" ? "نجح" : "Success",
-      description:
-        locale === "ar"
-          ? `تم رفع ${files.length} ملف`
-          : `Uploaded ${files.length} file(s)`,
+      title: m?.notifications?.success || "Success",
+      description: (
+        m?.notifications?.upload_success || "Uploaded {count} file(s)"
+      ).replace("{count}", String(files.length)),
     })
   }
 
   const handleUploadError = (error: string) => {
     toast({
-      title: locale === "ar" ? "خطأ" : "Error",
+      title: m?.notifications?.error || "Error",
       description: error,
     })
   }
@@ -277,14 +280,12 @@ export function MessageInput({
         <div className="bg-muted/50 border-border flex items-center justify-between border-b px-4 py-2">
           <div className="min-w-0 flex-1">
             <p className="text-foreground text-sm font-medium">
-              {locale === "ar" ? "الرد على" : "Replying to"}{" "}
+              {m?.ui?.replying_to || "Replying to"}{" "}
               {replyTo.sender.username || replyTo.sender.email}
             </p>
             <p className="text-muted-foreground truncate text-sm">
               {replyTo.isDeleted
-                ? locale === "ar"
-                  ? "تم حذف الرسالة"
-                  : "Message deleted"
+                ? m?.ui?.message_deleted || "Message deleted"
                 : replyTo.content}
             </p>
           </div>
@@ -347,9 +348,7 @@ export function MessageInput({
       <Dialog open={showFileUpload} onOpenChange={setShowFileUpload}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
-              {locale === "ar" ? "رفع الملفات" : "Upload Files"}
-            </DialogTitle>
+            <DialogTitle>{m?.ui?.upload_files || "Upload Files"}</DialogTitle>
           </DialogHeader>
           <FileUploader
             category="OTHER"
@@ -431,7 +430,7 @@ function EmojiPickerButton({
             onClick={() => setShowPicker(false)}
           />
           {/* Picker */}
-          <div className="bg-background border-border absolute right-0 bottom-full z-20 mb-2 w-64 rounded-lg border p-2 shadow-lg">
+          <div className="bg-background border-border absolute end-0 bottom-full z-20 mb-2 w-64 rounded-lg border p-2 shadow-lg">
             <div className="grid max-h-48 grid-cols-8 gap-1 overflow-y-auto">
               {emojis.map((emoji) => (
                 <button

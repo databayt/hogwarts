@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Exam Paper Templates
  * Registry of available paper templates
@@ -7,6 +10,9 @@ import type { ExamPaperTemplate } from "@prisma/client"
 
 import type { ExamPaperData } from "../types"
 import { ClassicTemplate } from "./classic"
+import { CustomTemplate } from "./custom"
+import { FormalTemplate } from "./formal"
+import { ModernTemplate } from "./modern"
 
 // ============================================================================
 // Template Registry
@@ -25,17 +31,17 @@ export const TEMPLATE_REGISTRY: Record<ExamPaperTemplate, TemplateComponent> = {
     description: "تنسيق الاختبار التقليدي مع رأس المدرسة والأسئلة المرقمة",
   },
   MODERN: {
-    component: ClassicTemplate, // TODO: Create Modern template
+    component: ModernTemplate,
     name: "حديث بسيط",
     description: "تخطيط نظيف وواسع مع زخارف قليلة",
   },
   FORMAL: {
-    component: ClassicTemplate, // TODO: Create Formal template
+    component: FormalTemplate,
     name: "رسمي",
     description: "نمط الاختبار الحكومي مع تنسيق صارم وعلامات مائية",
   },
   CUSTOM: {
-    component: ClassicTemplate, // Uses school branding
+    component: CustomTemplate,
     name: "مخصص",
     description: "يستخدم ألوان العلامة التجارية للمدرسة والتنسيق المخصص",
   },
@@ -73,4 +79,7 @@ export function getAllTemplates(): Array<{
 // ============================================================================
 
 export { ClassicTemplate } from "./classic"
+export { CustomTemplate } from "./custom"
+export { FormalTemplate } from "./formal"
+export { ModernTemplate } from "./modern"
 export * from "./components"

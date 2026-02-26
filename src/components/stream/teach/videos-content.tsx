@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { format } from "date-fns"
 import { Eye, Film } from "lucide-react"
 
@@ -72,7 +74,7 @@ export function TeachVideosContent({ videos }: Props) {
                 <TableHead>Lesson</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Visibility</TableHead>
-                <TableHead className="text-right">Views</TableHead>
+                <TableHead className="text-end">Views</TableHead>
                 <TableHead>Date</TableHead>
               </TableRow>
             </TableHeader>
@@ -108,7 +110,7 @@ export function TeachVideosContent({ videos }: Props) {
                   <TableCell>
                     <Badge variant="outline">{video.visibility}</Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-end">
                     <span className="flex items-center justify-end gap-1">
                       <Eye className="size-3" />
                       {video.viewCount}

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Key, Shield, Users } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -37,7 +40,7 @@ export default async function AccessContent({ lang }: Props) {
             <CardContent>
               <div className="flex items-center justify-between">
                 <span className="text-2xl font-bold">{stats.count}</span>
-                <div className="text-right">
+                <div className="text-end">
                   <div className="flex items-center gap-1 text-xs">
                     <Key className="h-3 w-3" />
                     {stats.twoFactorCount} with 2FA

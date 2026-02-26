@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -94,17 +96,17 @@ export function ApplyHeader({
             <div className="text-muted-foreground hidden items-center gap-1 text-xs sm:flex rtl:flex-row-reverse">
               <Check className="h-3 w-3 text-green-500" />
               <span>
-                {(
-                  dict.lastSaved ||
-                  (isRTL ? "آخر حفظ {time}" : "Last saved {time}")
-                ).replace("{time}", formatRelativeTime(lastSaved))}
+                {(dict.lastSaved || "Last saved {time}").replace(
+                  "{time}",
+                  formatRelativeTime(lastSaved)
+                )}
               </span>
             </div>
           )}
           {isSaving && (
             <span className="text-muted-foreground hidden items-center gap-1 text-xs sm:flex">
               <Loader2 className="h-3 w-3 animate-spin" />
-              {dict.saving || (isRTL ? "جاري الحفظ..." : "Saving...")}
+              {dict.saving || "Saving..."}
             </span>
           )}
 

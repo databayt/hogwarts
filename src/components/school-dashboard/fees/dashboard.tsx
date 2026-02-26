@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   AlertCircle,
   Clock,
@@ -14,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { FeeStats } from "./types"
 
@@ -23,8 +26,9 @@ interface Props {
 }
 
 export function FeeDashboard({ stats, dictionary }: Props) {
+  const { locale } = useLocale()
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 0,

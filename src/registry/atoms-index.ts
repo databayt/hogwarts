@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Atoms Index Registry
  * Maps atom names to their file paths for ComponentPreview code display

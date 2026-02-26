@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
@@ -241,16 +243,10 @@ export const resultColumns = (
             <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href={`/${locale}/grades/${result.id}`}>
-                {locale === "ar" ? "عرض" : "View"}
-              </Link>
+              <Link href={`/${locale}/grades/${result.id}`}>{t.view}</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>
-              {locale === "ar" ? "تعديل" : "Edit"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>
-              {locale === "ar" ? "حذف" : "Delete"}
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

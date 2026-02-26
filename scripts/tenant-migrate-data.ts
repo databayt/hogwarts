@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Bulk import data from CSV/JSON for a school
  * Run: npx tsx scripts/tenant-migrate-data.ts --school portsudan --type students --file data.csv

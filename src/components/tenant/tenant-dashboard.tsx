@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 import Link from "next/link"
 import {
@@ -18,6 +20,7 @@ import { getCurrentTimeInTimezone } from "@/lib/timezone"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useLocale } from "@/components/internationalization/use-locale"
 import { getTimezoneDisplayName } from "@/components/school-dashboard/settings/validation"
 
 interface School {
@@ -47,6 +50,7 @@ export default function TenantDashboard({
   school,
   subdomain,
 }: TenantDashboardProps) {
+  const { locale } = useLocale()
   const [currentTime, setCurrentTime] = React.useState("")
 
   // Update current time in school timezone
@@ -132,7 +136,7 @@ export default function TenantDashboard({
 
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" asChild>
-                <Link href="/settings">
+                <Link href={`/${locale}/settings`}>
                   <Settings className="me-2 h-4 w-4" />
                   Settings
                 </Link>
@@ -228,7 +232,7 @@ export default function TenantDashboard({
                     {action.description}
                   </p>
                   <Button size="sm" className="w-full" asChild>
-                    <Link href={action.href}>
+                    <Link href={`/${locale}${action.href}`}>
                       <Plus className="me-2 h-4 w-4" />
                       {action.title}
                     </Link>
@@ -319,13 +323,13 @@ export default function TenantDashboard({
               className="h-auto justify-start p-4"
               asChild
             >
-              <Link href="/students">
+              <Link href={`/${locale}/students`}>
                 <Users className="me-3 h-5 w-5" />
                 <div className="text-start">
                   <h5>Students</h5>
                   <p className="muted text-gray-500">Manage student records</p>
                 </div>
-                <ArrowRight className="ms-auto h-4 w-4" />
+                <ArrowRight className="ms-auto h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
 
@@ -334,13 +338,13 @@ export default function TenantDashboard({
               className="h-auto justify-start p-4"
               asChild
             >
-              <Link href="/teachers">
+              <Link href={`/${locale}/teachers`}>
                 <BookOpen className="me-3 h-5 w-5" />
                 <div className="text-start">
                   <h5>Teachers</h5>
                   <p className="muted text-gray-500">Manage teacher accounts</p>
                 </div>
-                <ArrowRight className="ms-auto h-4 w-4" />
+                <ArrowRight className="ms-auto h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
 
@@ -349,13 +353,13 @@ export default function TenantDashboard({
               className="h-auto justify-start p-4"
               asChild
             >
-              <Link href="/classrooms">
+              <Link href={`/${locale}/classrooms`}>
                 <GraduationCap className="me-3 h-5 w-5" />
                 <div className="text-start">
                   <h5>Classrooms</h5>
                   <p className="muted text-gray-500">Manage class schedules</p>
                 </div>
-                <ArrowRight className="ms-auto h-4 w-4" />
+                <ArrowRight className="ms-auto h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
           </div>

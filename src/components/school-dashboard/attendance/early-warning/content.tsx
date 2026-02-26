@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useTransition } from "react"
 import { format } from "date-fns"
 import {
@@ -394,7 +396,7 @@ export function EarlyWarningContent({
                     />
                   </div>
                   <Button variant="ghost" size="sm">
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                   </Button>
                 </div>
               ))}

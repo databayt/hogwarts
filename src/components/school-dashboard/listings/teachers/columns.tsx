@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import {
@@ -74,30 +76,30 @@ export const getTeacherColumns = (
   const isRtl = lang === "ar"
 
   const t = {
-    name: dictionary?.fullName || (isRtl ? "الاسم" : "Name"),
-    email: dictionary?.email || (isRtl ? "البريد الإلكتروني" : "Email"),
-    phone: isRtl ? "الهاتف" : "Phone",
-    department: isRtl ? "القسم" : "Department",
-    subjects: isRtl ? "المواد" : "Subjects",
-    classes: isRtl ? "الفصول" : "Classes",
-    status: dictionary?.status || (isRtl ? "الحالة" : "Status"),
-    account: isRtl ? "الحساب" : "Account",
-    joined: isRtl ? "تاريخ الانضمام" : "Joined",
-    created: dictionary?.created || (isRtl ? "تاريخ الإنشاء" : "Created"),
-    actions: isRtl ? "إجراءات" : "Actions",
-    view: isRtl ? "عرض الملف" : "View Profile",
-    edit: isRtl ? "تعديل" : "Edit",
-    delete: isRtl ? "حذف" : "Delete",
-    activate: isRtl ? "تفعيل" : "Activate",
-    deactivate: isRtl ? "إلغاء التفعيل" : "Deactivate",
-    active: dictionary?.active || (isRtl ? "نشط" : "Active"),
-    inactive: dictionary?.inactive || (isRtl ? "غير نشط" : "Inactive"),
-    fullTime: isRtl ? "دوام كامل" : "Full-time",
-    partTime: isRtl ? "دوام جزئي" : "Part-time",
-    contract: isRtl ? "عقد" : "Contract",
-    hasAccount: isRtl ? "لديه حساب" : "Has Account",
-    noAccount: isRtl ? "بدون حساب" : "No Account",
-    noDepartment: isRtl ? "غير معين" : "Unassigned",
+    name: dictionary?.fullName || "Name",
+    email: dictionary?.email || "Email",
+    phone: dictionary?.phone || "Phone",
+    department: dictionary?.department || "Department",
+    subjects: dictionary?.subjects || "Subjects",
+    classes: dictionary?.classes || "Classes",
+    status: dictionary?.status || "Status",
+    account: dictionary?.account || "Account",
+    joined: dictionary?.joined || "Joined",
+    created: dictionary?.created || "Created",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View Profile",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
+    activate: dictionary?.activate || "Activate",
+    deactivate: dictionary?.deactivate || "Deactivate",
+    active: dictionary?.active || "Active",
+    inactive: dictionary?.inactive || "Inactive",
+    fullTime: dictionary?.fullTime || "Full-time",
+    partTime: dictionary?.partTime || "Part-time",
+    contract: dictionary?.contract || "Contract",
+    hasAccount: dictionary?.hasAccount || "Has Account",
+    noAccount: dictionary?.noAccount || "No Account",
+    noDepartment: dictionary?.noDepartment || "Unassigned",
   }
 
   const getInitials = (name: string) => {

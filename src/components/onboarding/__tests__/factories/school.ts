@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * School Mock Factories
  *
@@ -110,7 +113,7 @@ export function createMockSchool(
     // Capacity
     maxStudents: faker.number.int({ min: 100, max: 5000 }),
     maxTeachers: faker.number.int({ min: 10, max: 500 }),
-    maxClasses: faker.number.int({ min: 5, max: 200 }),
+    maxClasses: faker.number.int({ min: 5, max: 100 }),
 
     // School details
     schoolLevel: randomFrom(SCHOOL_TYPES),
@@ -262,7 +265,7 @@ export function createCapacityStepData(
       overrides.maxStudents ?? faker.number.int({ min: 100, max: 5000 }),
     maxTeachers:
       overrides.maxTeachers ?? faker.number.int({ min: 10, max: 500 }),
-    maxClasses: overrides.maxClasses ?? faker.number.int({ min: 5, max: 200 }),
+    maxClasses: overrides.maxClasses ?? faker.number.int({ min: 5, max: 100 }),
   }
 }
 

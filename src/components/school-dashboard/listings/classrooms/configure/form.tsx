@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -20,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   generateSections,
@@ -43,6 +46,8 @@ type GradeRow = {
 }
 
 export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [isPending, startTransition] = useTransition()
   const defaultRoomType = roomTypes[0]?.id ?? ""
 
@@ -87,7 +92,10 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
       : rows.filter((r) => r.sections > r.existingSections)
 
     if (targetRows.length === 0) {
-      toast.info("All grades already have the configured number of sections")
+      toast.info(
+        t?.info?.noChanges ||
+          "All grades already have the configured number of sections"
+      )
       return
     }
 
@@ -103,7 +111,8 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
 
       if (result.success) {
         toast.success(
-          `Created ${result.data.created} section${result.data.created !== 1 ? "s" : ""} with rooms`
+          t?.success?.created ||
+            `Created ${result.data.created} section${result.data.created !== 1 ? "s" : ""} with rooms`
         )
         result.data.details.forEach((d) => toast.info(d))
         // Update existing counts

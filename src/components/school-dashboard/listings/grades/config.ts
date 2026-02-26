@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Steps are now translated via dictionary.school.grades.studentAssignmentInfo and dictionary.school.grades.gradingInfo
 // Kept here for reference but should use dictionary in components
 export const STEPS = {

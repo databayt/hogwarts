@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -64,13 +66,14 @@ export function StreamDashboardContent({
   availableCourses,
 }: Props) {
   const isRTL = lang === "ar"
+  const d = dictionary?.stream?.studentDashboard
 
   // Format price
   const formatPrice = (price: number | null) => {
     if (!price || price === 0) {
-      return isRTL ? "مجاني" : "Free"
+      return d?.free || dictionary?.stream?.courses?.free || "Free"
     }
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(lang, {
       style: "currency",
       currency: "USD",
     }).format(price)
@@ -88,11 +91,10 @@ export function StreamDashboardContent({
       {/* Enrolled Courses Section */}
       <div>
         <div className="mb-6 flex flex-col gap-2">
-          <h2>{isRTL ? "دوراتي" : "My Courses"}</h2>
+          <h2>{d?.myCourses || "My Courses"}</h2>
           <p className="muted">
-            {isRTL
-              ? "تابع التعلم من حيث توقفت"
-              : "Continue learning where you left off"}
+            {d?.continueFromWhereYouLeftOff ||
+              "Continue learning where you left off"}
           </p>
         </div>
 
@@ -101,17 +103,16 @@ export function StreamDashboardContent({
             <CardContent className="py-10">
               <div className="text-center">
                 <GraduationCap className="text-muted-foreground mx-auto mb-4 size-16" />
-                <h3>{isRTL ? "لا توجد دورات مسجلة" : "No Courses Enrolled"}</h3>
+                <h3>{d?.noCoursesEnrolled || "No Courses Enrolled"}</h3>
                 <p className="muted mb-6">
-                  {isRTL
-                    ? "لم تسجل في أي دورة بعد."
-                    : "You haven't enrolled in any courses yet."}
+                  {d?.notEnrolledYet ||
+                    "You haven't enrolled in any courses yet."}
                 </p>
                 <Link
                   className={buttonVariants()}
                   href={`/${lang}/stream/courses`}
                 >
-                  {isRTL ? "تصفح الدورات" : "Browse Courses"}
+                  {d?.browseCourses || "Browse Courses"}
                 </Link>
               </div>
             </CardContent>
@@ -137,9 +138,9 @@ export function StreamDashboardContent({
                   )}
                   {/* Progress Badge */}
                   {course.progressPercent === 100 && (
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute end-2 top-2">
                       <Badge className="bg-green-500">
-                        {isRTL ? "مكتمل" : "Completed"}
+                        {d?.completed || "Completed"}
                       </Badge>
                     </div>
                   )}
@@ -154,7 +155,7 @@ export function StreamDashboardContent({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">
-                        {isRTL ? "التقدم" : "Progress"}
+                        {d?.progress || "Progress"}
                       </span>
                       <span className="font-medium">
                         {course.progressPercent}%
@@ -162,9 +163,7 @@ export function StreamDashboardContent({
                     </div>
                     <Progress value={course.progressPercent} className="h-2" />
                     <p className="text-muted-foreground text-xs">
-                      {isRTL
-                        ? `${course.completedLessons} من ${course.totalLessons} درس مكتمل`
-                        : `${course.completedLessons} of ${course.totalLessons} lessons completed`}
+                      {`${course.completedLessons} / ${course.totalLessons} ${d?.lessonsCompleted || "lessons completed"}`}
                     </p>
                   </div>
                 </CardContent>
@@ -176,12 +175,8 @@ export function StreamDashboardContent({
                   >
                     <PlayCircle className="size-4" />
                     {course.progressPercent > 0
-                      ? isRTL
-                        ? "متابعة التعلم"
-                        : "Continue Learning"
-                      : isRTL
-                        ? "ابدأ التعلم"
-                        : "Start Learning"}
+                      ? d?.continueLearning || "Continue Learning"
+                      : d?.startLearning || "Start Learning"}
                   </Link>
                 </CardFooter>
               </Card>
@@ -195,19 +190,18 @@ export function StreamDashboardContent({
         <div>
           <div className="mb-6 flex items-center justify-between">
             <div className="flex flex-col gap-2">
-              <h2>{isRTL ? "دورات متاحة" : "Available Courses"}</h2>
+              <h2>{d?.availableCourses || "Available Courses"}</h2>
               <p className="muted">
-                {isRTL
-                  ? "اكتشف دورات جديدة لتطوير مهاراتك"
-                  : "Discover new courses to level up your skills"}
+                {d?.discoverNewCourses ||
+                  "Discover new courses to level up your skills"}
               </p>
             </div>
             <Link
               href={`/${lang}/stream/courses`}
               className={buttonVariants({ variant: "outline" })}
             >
-              {isRTL ? "عرض الكل" : "View All"}
-              <ArrowRight className="size-4" />
+              {d?.viewAll || "View All"}
+              <ArrowRight className="size-4 rtl:rotate-180" />
             </Link>
           </div>
 
@@ -236,17 +230,16 @@ export function StreamDashboardContent({
                     {course.title}
                   </h4>
                   <p className="text-muted-foreground line-clamp-2 text-sm">
-                    {course.description ||
-                      (isRTL ? "لا يوجد وصف" : "No description")}
+                    {course.description || d?.noDescription || "No description"}
                   </p>
 
                   <div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
                     <span>
-                      {course.chapters.length} {isRTL ? "فصل" : "chapters"}
+                      {course.chapters.length} {d?.chapters || "chapters"}
                     </span>
                     <span>
                       {getLessonCount(course.chapters)}{" "}
-                      {isRTL ? "درس" : "lessons"}
+                      {d?.lessons || "lessons"}
                     </span>
                   </div>
                 </CardContent>
@@ -255,7 +248,7 @@ export function StreamDashboardContent({
                   <div className="text-muted-foreground flex items-center gap-1 text-sm">
                     <Users className="size-4" />
                     <span>
-                      {course._count.enrollments} {isRTL ? "مسجل" : "enrolled"}
+                      {course._count.enrollments} {d?.enrolled || "enrolled"}
                     </span>
                   </div>
                   <Link

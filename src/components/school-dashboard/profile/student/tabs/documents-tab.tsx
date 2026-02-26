@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Student Profile Documents Tab
  * Document management, uploads, and downloads
@@ -364,7 +367,7 @@ export function DocumentsTab({
         <CardContent className="p-4">
           <div className="flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
+              <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
               <Input
                 placeholder="Search documents..."
                 value={searchQuery}

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { CheckCircle, Clock, Loader2 } from "lucide-react"
 
@@ -174,7 +176,10 @@ export function QuickAssessmentTake({
                   }
                 >
                   {(q.options || []).map((opt, oi) => (
-                    <div key={oi} className="flex items-center space-x-2">
+                    <div
+                      key={oi}
+                      className="flex items-center space-x-2 rtl:space-x-reverse"
+                    >
                       <RadioGroupItem
                         value={String(oi)}
                         id={`q${q.id}-o${oi}`}
@@ -202,7 +207,7 @@ export function QuickAssessmentTake({
         <Button onClick={handleSubmit} disabled={submitting}>
           {submitting ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="me-2 h-4 w-4 animate-spin" />
               Submitting...
             </>
           ) : (

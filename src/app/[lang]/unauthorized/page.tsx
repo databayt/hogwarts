@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { ArrowLeft, Home, ShieldX } from "lucide-react"
 
@@ -47,7 +50,7 @@ export default async function UnauthorizedPage({
       <div className="flex gap-4">
         <Button variant="outline" className="gap-2" asChild>
           <Link href={`/${lang}/dashboard`}>
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             {dictionary?.common?.back || "Back"}{" "}
             {lang === "ar" ? "للوحة التحكم" : "to Dashboard"}
           </Link>

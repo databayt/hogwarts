@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Timetable Conflict Detection for Exam Scheduling
  */
@@ -318,6 +321,70 @@ export async function checkExamConflicts(
             conflictTime: `${exam.startTime} - ${exam.endTime}`,
             severity: "medium",
           })
+        }
+      }
+    }
+
+    // 5. Check student cross-class conflicts
+    // Find students enrolled in this class, check their other class enrollments for overlapping exams
+    const studentClasses = await db.studentClass.findMany({
+      where: {
+        schoolId,
+        classId,
+      },
+      select: { studentId: true },
+    })
+
+    if (studentClasses.length > 0) {
+      const studentIds = studentClasses.map((sc) => sc.studentId)
+
+      // Find other classes these students are in
+      const otherEnrollments = await db.studentClass.findMany({
+        where: {
+          schoolId,
+          studentId: { in: studentIds },
+          classId: { not: classId },
+        },
+        select: { classId: true, studentId: true },
+      })
+
+      if (otherEnrollments.length > 0) {
+        const otherClassIds = [
+          ...new Set(otherEnrollments.map((e) => e.classId)),
+        ]
+
+        // Check for exams in those other classes on the same date
+        const otherExams = await db.exam.findMany({
+          where: {
+            schoolId,
+            classId: { in: otherClassIds },
+            examDate,
+            ...(examId ? { NOT: { id: examId } } : {}),
+          },
+          include: {
+            class: true,
+            subject: true,
+          },
+        })
+
+        for (const exam of otherExams) {
+          if (
+            timeRangesOverlap(startTime, endTime, exam.startTime, exam.endTime)
+          ) {
+            // Count affected students
+            const affectedStudents = otherEnrollments.filter(
+              (e) => e.classId === exam.classId
+            ).length
+
+            conflicts.push({
+              type: "student",
+              entityId: exam.classId,
+              entityName: `${affectedStudents} student(s) in ${exam.class.name}`,
+              conflictingEvent: `${exam.subject.subjectName}: ${exam.title}`,
+              conflictTime: `${exam.startTime} - ${exam.endTime}`,
+              severity: "low",
+            })
+          }
         }
       }
     }

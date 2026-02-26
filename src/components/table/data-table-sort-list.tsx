@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import type { ColumnSort, SortDirection, Table } from "@tanstack/react-table"
 import { ArrowDownUp, ChevronsUpDown, GripVertical, Trash2 } from "lucide-react"

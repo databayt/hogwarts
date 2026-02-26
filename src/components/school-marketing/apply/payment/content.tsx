@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import {
@@ -35,40 +37,13 @@ interface PaymentContentProps {
   currency: string
   methods: string[]
   locale: string
+  dictionary?: Record<string, unknown>
 }
 
-const GATEWAY_CONFIG: Record<
-  string,
-  {
-    icon: React.ElementType
-    label: { ar: string; en: string }
-    description: { ar: string; en: string }
-  }
-> = {
-  stripe: {
-    icon: CreditCard,
-    label: { ar: "الدفع بالبطاقة", en: "Pay with Card" },
-    description: {
-      ar: "ادفع بأمان ببطاقة الائتمان أو الخصم",
-      en: "Pay securely with credit or debit card",
-    },
-  },
-  cash: {
-    icon: Banknote,
-    label: { ar: "الدفع في المدرسة", en: "Pay at School" },
-    description: {
-      ar: "ادفع نقداً في مقر المدرسة",
-      en: "Pay in cash at the school office",
-    },
-  },
-  bank_transfer: {
-    icon: Building2,
-    label: { ar: "تحويل بنكي", en: "Bank Transfer" },
-    description: {
-      ar: "حوّل المبلغ إلى حساب المدرسة البنكي",
-      en: "Transfer to the school bank account",
-    },
-  },
+const GATEWAY_ICONS: Record<string, React.ElementType> = {
+  stripe: CreditCard,
+  cash: Banknote,
+  bank_transfer: Building2,
 }
 
 export default function PaymentContent({
@@ -78,11 +53,38 @@ export default function PaymentContent({
   currency,
   methods,
   locale,
+  dictionary,
 }: PaymentContentProps) {
   const params = useParams()
   const router = useRouter()
-  const isRTL = locale === "ar"
   const subdomain = params.subdomain as string
+
+  const paymentDict =
+    (
+      dictionary as unknown as {
+        school?: {
+          admission?: { payment?: Record<string, string> }
+        }
+      }
+    )?.school?.admission?.payment ?? {}
+
+  const gatewayLabels: Record<string, { label: string; description: string }> =
+    {
+      stripe: {
+        label: paymentDict.stripeLabel || "Pay with Card",
+        description:
+          paymentDict.stripeDesc || "Pay securely with credit or debit card",
+      },
+      cash: {
+        label: paymentDict.cashLabel || "Pay at School",
+        description: paymentDict.cashDesc || "Pay in cash at the school office",
+      },
+      bank_transfer: {
+        label: paymentDict.bankTransferLabel || "Bank Transfer",
+        description:
+          paymentDict.bankTransferDesc || "Transfer to the school bank account",
+      },
+    }
 
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -139,9 +141,7 @@ export default function PaymentContent({
         })
       }
     } catch {
-      setError(
-        isRTL ? "حدث خطأ أثناء معالجة الدفع" : "Error processing payment"
-      )
+      setError(paymentDict.errorProcessing || "Error processing payment")
     } finally {
       setLoading(null)
     }
@@ -157,7 +157,7 @@ export default function PaymentContent({
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold">
-              {isRTL ? "تم تسجيل طريقة الدفع" : "Payment Method Recorded"}
+              {paymentDict.methodRecorded || "Payment Method Recorded"}
             </h1>
           </div>
 
@@ -165,7 +165,7 @@ export default function PaymentContent({
             <CardContent className="space-y-4 pt-6">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  {isRTL ? "رقم الطلب" : "Application"}
+                  {paymentDict.application || "Application"}
                 </span>
                 <span className="font-mono font-medium">
                   {applicationNumber}
@@ -174,7 +174,7 @@ export default function PaymentContent({
               {resultData.referenceNumber && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    {isRTL ? "رقم المرجع" : "Reference"}
+                    {paymentDict.reference || "Reference"}
                   </span>
                   <span className="font-mono font-medium">
                     {resultData.referenceNumber}
@@ -183,7 +183,7 @@ export default function PaymentContent({
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  {isRTL ? "المبلغ" : "Amount"}
+                  {paymentDict.amount || "Amount"}
                 </span>
                 <span className="font-medium">
                   {fee} {currency}
@@ -195,9 +195,8 @@ export default function PaymentContent({
                   <Separator />
                   <div>
                     <p className="font-medium">
-                      {isRTL
-                        ? "يرجى الدفع في مقر المدرسة"
-                        : "Please pay at the school office"}
+                      {paymentDict.payAtSchool ||
+                        "Please pay at the school office"}
                     </p>
                     {resultData.cashInstructions && (
                       <p className="text-muted-foreground mt-2 text-sm">
@@ -205,9 +204,8 @@ export default function PaymentContent({
                       </p>
                     )}
                     <p className="text-muted-foreground mt-2 text-sm">
-                      {isRTL
-                        ? "أحضر رقم المرجع عند الدفع"
-                        : "Bring the reference number when paying"}
+                      {paymentDict.bringReference ||
+                        "Bring the reference number when paying"}
                     </p>
                   </div>
                 </>
@@ -219,26 +217,25 @@ export default function PaymentContent({
                     <Separator />
                     <div className="space-y-2">
                       <p className="font-medium">
-                        {isRTL
-                          ? "تفاصيل الحساب البنكي"
-                          : "Bank Account Details"}
+                        {paymentDict.bankAccountDetails ||
+                          "Bank Account Details"}
                       </p>
                       <div className="bg-muted space-y-2 rounded-lg p-4 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">
-                            {isRTL ? "البنك" : "Bank"}
+                            {paymentDict.bank || "Bank"}
                           </span>
                           <span>{resultData.bankDetails.bankName}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">
-                            {isRTL ? "اسم الحساب" : "Account Name"}
+                            {paymentDict.accountName || "Account Name"}
                           </span>
                           <span>{resultData.bankDetails.accountName}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">
-                            {isRTL ? "رقم الحساب" : "Account Number"}
+                            {paymentDict.accountNumber || "Account Number"}
                           </span>
                           <span className="font-mono">
                             {resultData.bankDetails.accountNumber}
@@ -262,9 +259,10 @@ export default function PaymentContent({
                         )}
                       </div>
                       <p className="text-muted-foreground text-sm">
-                        {isRTL
-                          ? `استخدم رقم المرجع "${resultData.referenceNumber}" في وصف التحويل`
-                          : `Use reference "${resultData.referenceNumber}" in the transfer description`}
+                        {(
+                          paymentDict.useReference ||
+                          'Use reference "{ref}" in the transfer description'
+                        ).replace("{ref}", resultData.referenceNumber || "")}
                       </p>
                     </div>
                   </>
@@ -280,7 +278,7 @@ export default function PaymentContent({
                 )
               }
             >
-              {isRTL ? "متابعة" : "Continue"}
+              {paymentDict.continueBtn || "Continue"}
             </Button>
           </div>
         </div>
@@ -293,10 +291,10 @@ export default function PaymentContent({
       <div className="container mx-auto max-w-2xl px-4">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold">
-            {isRTL ? "دفع رسوم التقديم" : "Application Fee Payment"}
+            {paymentDict.title || "Application Fee Payment"}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {isRTL ? "رقم الطلب: " : "Application: "}
+            {paymentDict.applicationLabel || "Application: "}
             <span className="font-mono font-medium">{applicationNumber}</span>
           </p>
         </div>
@@ -304,7 +302,7 @@ export default function PaymentContent({
         <Card className="mb-6">
           <CardHeader className="text-center">
             <CardDescription>
-              {isRTL ? "المبلغ المطلوب" : "Amount Due"}
+              {paymentDict.amountDue || "Amount Due"}
             </CardDescription>
             <CardTitle className="text-3xl">
               {fee} {currency}
@@ -320,13 +318,13 @@ export default function PaymentContent({
 
         <div className="space-y-4">
           <p className="text-muted-foreground text-sm">
-            {isRTL ? "اختر طريقة الدفع:" : "Choose a payment method:"}
+            {paymentDict.chooseMethod || "Choose a payment method:"}
           </p>
 
           {methods.map((method) => {
-            const config = GATEWAY_CONFIG[method]
-            if (!config) return null
-            const Icon = config.icon
+            const Icon = GATEWAY_ICONS[method]
+            const labels = gatewayLabels[method]
+            if (!Icon || !labels) return null
             const isLoading = loading === method
 
             return (
@@ -340,11 +338,9 @@ export default function PaymentContent({
                     <Icon className="text-primary h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium">
-                      {isRTL ? config.label.ar : config.label.en}
-                    </h3>
+                    <h3 className="font-medium">{labels.label}</h3>
                     <p className="text-muted-foreground text-sm">
-                      {isRTL ? config.description.ar : config.description.en}
+                      {labels.description}
                     </p>
                   </div>
                   {isLoading && (

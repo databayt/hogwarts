@@ -1,0 +1,372 @@
+---
+title: "Books Catalog"
+description: "Global shared book metadata across all schools -- CatalogBook entries, school selection bridge, contribution workflow, and approval integration"
+---
+
+## The Big Picture
+
+The Books Catalog extends the [universal catalog](/docs/catalog) with a dedicated `CatalogBook` model. Like subjects, books live globally (no `schoolId`) and schools reference them via a bridge table. Teachers can contribute books that flow through SaaS approval before becoming visible platform-wide.
+
+```
++-------------------------------------------------------------+
+|                    GLOBAL CATALOG                            |
+|  (No schoolId -- platform-wide)                             |
+|                                                             |
+|  CatalogBook (90 seed entries, 8 genres)                    |
+|    - title, author, genre, isbn, description                |
+|    - coverUrl, coverColor, digitalFileUrl                   |
+|    - rating, ratingCount, usageCount                        |
+|    - approvalStatus (PENDING / APPROVED / REJECTED)         |
+|    - contributedBy, contributedSchoolId                     |
+|                                                             |
++--------------------------+----------------------------------+
+                           |
+                   Bridge Layer (schoolId-scoped)
+                           |
++--------------------------+----------------------------------+
+|  SchoolBookSelection                                        |
+|    - schoolId + catalogBookId (unique pair)                  |
+|    - totalCopies, availableCopies, shelfLocation            |
+|                                                             |
+|  Book (school-scoped inventory)                             |
+|    - catalogBookId FK (nullable -- survives deselection)    |
+|    - schoolId, title, author, copies                        |
+|    - BorrowRecord[] (student lending history)               |
++-------------------------------------------------------------+
+```
+
+## Why Shared Catalog
+
+| Approach                       | Data for 100 schools x 90 books          | Content sharing                         |
+| ------------------------------ | ---------------------------------------- | --------------------------------------- |
+| Per-school (clone)             | 9,000 book records, duplicate metadata   | None -- each school is an island        |
+| **Shared catalog (reference)** | **90 CatalogBooks** + 100 bridge records | Every contribution enriches all schools |
+
+**Benefits:**
+
+- **No duplication** -- one CatalogBook record serves all schools
+- **Community contributions** -- teachers submit books, SaaS approves, all schools see them
+- **Usage ranking** -- `usageCount` tracks how many schools selected a book
+- **Consistent metadata** -- title, author, ISBN, cover maintained centrally
+- **Safe deselection** -- removing a book preserves borrow history (sets `catalogBookId = null` on `Book`)
+
+## Data Models
+
+### CatalogBook (Global)
+
+```prisma
+model CatalogBook {
+  id          String  @id @default(cuid())
+  title       String
+  slug        String  @unique
+  lang        String  @default("ar")
+  author      String
+  isbn        String? @unique
+  genre       String
+  description String? @db.Text
+  summary     String? @db.Text
+
+  coverUrl    String?
+  coverKey    String?
+  coverColor  String  @default("#000000")
+
+  publisher       String?
+  publicationYear Int?
+  language        String   @default("ar")
+  pageCount       Int?
+  tags            String[] @default([])
+
+  digitalFileUrl  String?
+  digitalFileKey  String?
+  digitalFileSize Int?
+  digitalMimeType String?
+
+  videoUrl String?
+
+  rating      Float @default(0)
+  ratingCount Int   @default(0)
+
+  // Community contribution
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  status ContentStatus @default(DRAFT)
+
+  usageCount    Int @default(0)
+  downloadCount Int @default(0)
+
+  schoolSelections SchoolBookSelection[]
+  books            Book[]
+
+  @@index([genre])
+  @@index([approvalStatus, visibility])
+  @@index([author])
+  @@index([contributedBy])
+  @@index([status])
+  @@map("catalog_books")
+}
+```
+
+### SchoolBookSelection (Bridge)
+
+```prisma
+model SchoolBookSelection {
+  id            String  @id @default(cuid())
+  schoolId      String
+  catalogBookId String
+
+  totalCopies     Int     @default(1)
+  availableCopies Int     @default(1)
+  shelfLocation   String?
+  customName      String?
+  isActive        Boolean @default(true)
+
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  catalogBook CatalogBook @relation(fields: [catalogBookId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, catalogBookId])
+  @@index([schoolId])
+  @@index([catalogBookId])
+  @@map("school_book_selections")
+}
+```
+
+### Book (School-Scoped Inventory)
+
+The existing `Book` model gains an optional `catalogBookId` FK:
+
+```prisma
+model Book {
+  // ... existing fields (title, author, genre, schoolId, etc.)
+
+  catalogBookId String?
+  catalogBook   CatalogBook? @relation(fields: [catalogBookId], references: [id], onDelete: SetNull)
+
+  borrowRecords BorrowRecord[]
+
+  @@index([schoolId, catalogBookId])
+}
+```
+
+When a school selects a CatalogBook, a `Book` record is created with the catalog data copied in. If the school later deselects, `catalogBookId` is set to `null` but the `Book` and its `BorrowRecord[]` are preserved.
+
+## Data Flows
+
+### 1. Contribution Flow
+
+```
+Teacher / Admin (school dashboard)
+  |
+  v
+/library/contribute  -->  contributeBook()
+  |                         - auth + tenant context
+  |                         - creates CatalogBook with PENDING status
+  |                         - sets contributedBy + contributedSchoolId
+  v
+SaaS Approval Queue (/catalog/approvals)
+  |
+  |-- approveContent("CatalogBook", id) --> status = APPROVED
+  |-- rejectContent("CatalogBook", id)  --> status = REJECTED + reason
+  v
+Global catalog (visible to all schools)
+```
+
+### 2. Selection Flow
+
+```
+School Admin (school dashboard)
+  |
+  v
+/library/catalog  -->  Browse approved CatalogBooks
+  |
+  v
+selectCatalogBook(catalogBookId, copies, location)
+  |
+  |-- $transaction:
+  |     1. Create SchoolBookSelection (bridge)
+  |     2. Create Book (school-scoped, with catalog data)
+  |-- Update CatalogBook.usageCount
+  v
+Book appears in school's /library/books
+```
+
+### 3. Deselection Flow
+
+```
+School Admin
+  |
+  v
+deselectCatalogBook(catalogBookId)
+  |
+  |-- $transaction:
+  |     1. Delete SchoolBookSelection
+  |     2. Set Book.catalogBookId = null (NOT delete)
+  |-- Update CatalogBook.usageCount
+  v
+Book remains in school (preserves BorrowRecord history)
+but is no longer linked to the catalog entry
+```
+
+## File Structure
+
+```
+prisma/
+  models/
+    catalog-book.prisma          # CatalogBook + SchoolBookSelection
+    library.prisma               # Book model (with catalogBookId FK)
+  seeds/
+    catalog-books.ts             # 90 books, 8 genres
+
+src/app/[lang]/
+  (saas-dashboard)/(catalog)/catalog/books/
+    page.tsx                     # SaaS book list
+    loading.tsx                  # Skeleton
+    [bookId]/page.tsx            # SaaS book detail
+  s/[subdomain]/(school-dashboard)/library/
+    catalog/                     # School browse/select
+    contribute/                  # School contribution form
+
+src/components/
+  saas-dashboard/catalog/
+    book-actions.ts              # CRUD (DEVELOPER only)
+    book-validation.ts           # Zod schema
+    book-content.tsx             # List view
+    book-table.tsx               # DataTable
+    book-columns.tsx             # Column definitions
+    book-detail.tsx              # Detail view
+    approval-actions.ts          # Unified approval (5 content types)
+  library/
+    catalog/
+      actions.ts                 # selectCatalogBook, deselectCatalogBook, updateBookSelection
+      content.tsx                # Browse catalog UI
+      book-picker.tsx            # Selection component
+    contribute/
+      actions.ts                 # contributeBook
+      content.tsx                # Contribution form
+```
+
+## SaaS Dashboard (DEVELOPER)
+
+Route: `/catalog/books`
+
+The SaaS dashboard provides full CRUD for CatalogBook entries. Only the `DEVELOPER` role has access -- no `schoolId` scoping since these are global records.
+
+### Actions
+
+| Action | Function                                | Authorization |
+| ------ | --------------------------------------- | ------------- |
+| Create | `createCatalogBook(data: FormData)`     | DEVELOPER     |
+| Update | `updateCatalogBook(id, data: FormData)` | DEVELOPER     |
+| Delete | `deleteCatalogBook(id)`                 | DEVELOPER     |
+
+### Detail View
+
+Route: `/catalog/books/[bookId]`
+
+Displays full book metadata, cover image, digital file info, contribution details, and a list of schools that selected the book.
+
+## School Dashboard
+
+### Browse Catalog
+
+Route: `/library/catalog`
+
+School admins browse the global catalog of approved books. The UI shows which books are already selected by the school (via `SchoolBookSelection`).
+
+### Select / Deselect
+
+| Action   | Function                                              | Authorization     | Scoping                      |
+| -------- | ----------------------------------------------------- | ----------------- | ---------------------------- |
+| Select   | `selectCatalogBook(catalogBookId, copies, location?)` | ADMIN / DEVELOPER | schoolId from tenant context |
+| Deselect | `deselectCatalogBook(catalogBookId)`                  | ADMIN / DEVELOPER | schoolId from tenant context |
+| Update   | `updateBookSelection(selectionId, data)`              | ADMIN / DEVELOPER | schoolId from tenant context |
+
+Selection creates both a `SchoolBookSelection` bridge record AND a `Book` inventory record in a single transaction.
+
+### Contribute Books
+
+Route: `/library/contribute`
+
+Teachers and admins can submit new books to the global catalog:
+
+| Action     | Function                | Authorization               | Scoping                      |
+| ---------- | ----------------------- | --------------------------- | ---------------------------- |
+| Contribute | `contributeBook(input)` | ADMIN / TEACHER / DEVELOPER | schoolId from tenant context |
+
+Contributed books start as `PENDING` + `DRAFT` and flow through the SaaS approval queue.
+
+## Approval Integration
+
+CatalogBook is one of **5 content types** in the unified approval system:
+
+| Content Type | Model               | Approval Route           |
+| ------------ | ------------------- | ------------------------ |
+| Questions    | `CatalogQuestion`   | `/catalog/approvals`     |
+| Materials    | `CatalogMaterial`   | `/catalog/approvals`     |
+| Assignments  | `CatalogAssignment` | `/catalog/approvals`     |
+| **Books**    | **`CatalogBook`**   | **`/catalog/approvals`** |
+| Videos       | `LessonVideo`       | `/catalog/approvals`     |
+
+All five types share the same `approveContent()` and `rejectContent()` actions in `approval-actions.ts`, switching on the `contentType` parameter.
+
+### Approval Fields (on CatalogBook)
+
+```prisma
+approvalStatus  ApprovalStatus    @default(PENDING)   // PENDING | APPROVED | REJECTED
+approvedBy      String?                                // userId of approver
+approvedAt      DateTime?                              // when approved/rejected
+rejectionReason String?                                // required on rejection
+visibility      ContentVisibility @default(PUBLIC)     // PRIVATE | SCHOOL | PUBLIC
+status          ContentStatus     @default(DRAFT)      // DRAFT | REVIEW | PUBLISHED | ...
+```
+
+## Seed Data
+
+Run the books seed to populate the global catalog and demo school selections:
+
+```bash
+pnpm db:seed:single catalog-books
+```
+
+### What It Creates
+
+| Entity              | Count | Details                           |
+| ------------------- | ----- | --------------------------------- |
+| CatalogBook         | 90    | All APPROVED + PUBLISHED + PUBLIC |
+| SchoolBookSelection | 90    | All linked to demo school         |
+
+### Genres (8)
+
+| Genre                        | Books | Cover Color           |
+| ---------------------------- | ----- | --------------------- |
+| Arabic Literature            | 15    | `#3B82F6`             |
+| Islamic Studies              | 12    | `#059669`             |
+| Sciences                     | 12    | `#8B5CF6`             |
+| Mathematics                  | 10    | `#F59E0B`             |
+| Quran Sciences               | 9     | `#14B8A6`             |
+| History & Geography          | 8     | `#EC4899`             |
+| Children's                   | 8     | `#F472B6`             |
+| English                      | 8     | `#10B981`             |
+| Computer Science & Reference | 8     | `#6366F1` / `#78716C` |
+
+Each book gets a random rating (3-5) and a picsum.photos placeholder cover. The seed is idempotent -- re-running skips existing entries.
+
+## Key Patterns Reused
+
+| Pattern                            | Source                     | Usage in Books Catalog                         |
+| ---------------------------------- | -------------------------- | ---------------------------------------------- |
+| `ApprovalStatus` enum              | `catalog-question.prisma`  | PENDING / APPROVED / REJECTED workflow         |
+| `ContentVisibility` enum           | `catalog-question.prisma`  | PRIVATE / SCHOOL / PUBLIC tiers                |
+| `ContentStatus` enum               | `catalog-subject.prisma`   | DRAFT / REVIEW / PUBLISHED lifecycle           |
+| Bridge table                       | `SchoolSubjectSelection`   | `SchoolBookSelection` (same pattern)           |
+| `catalogBookId` FK on school model | `Subject.catalogSubjectId` | `Book.catalogBookId` (same pattern)            |
+| Unified approval actions           | `approval-actions.ts`      | `CatalogBook` as 5th content type              |
+| Contribution flow                  | Questions/Materials        | Same auth + PENDING + SaaS review              |
+| `usageCount` tracking              | `CatalogSubject`           | Incremented on select, decremented on deselect |
+| `requireDeveloper()` guard         | SaaS actions pattern       | No schoolId for global CRUD                    |
+| `requireSchoolAdmin()` guard       | School actions pattern     | schoolId from tenant context                   |

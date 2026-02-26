@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import {
   Award,
@@ -137,7 +139,7 @@ export function CertificateList({
             <TableCell>
               {cert.score.toFixed(1)}%
               {cert.grade && (
-                <Badge variant="outline" className="ml-2">
+                <Badge variant="outline" className="ms-2">
                   {cert.grade}
                 </Badge>
               )}
@@ -169,7 +171,7 @@ export function CertificateList({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleShare(cert.id)}>
-                      <Share2 className="mr-2 h-4 w-4" />
+                      <Share2 className="me-2 h-4 w-4" />
                       Share
                     </DropdownMenuItem>
                     {cert.isPublic && (
@@ -179,7 +181,7 @@ export function CertificateList({
                           target="_blank"
                           rel="noreferrer"
                         >
-                          <ExternalLink className="mr-2 h-4 w-4" />
+                          <ExternalLink className="me-2 h-4 w-4" />
                           View Public
                         </a>
                       </DropdownMenuItem>
@@ -189,7 +191,7 @@ export function CertificateList({
                         className="text-destructive"
                         onClick={() => handleRevoke(cert.id)}
                       >
-                        <XCircle className="mr-2 h-4 w-4" />
+                        <XCircle className="me-2 h-4 w-4" />
                         Revoke
                       </DropdownMenuItem>
                     )}

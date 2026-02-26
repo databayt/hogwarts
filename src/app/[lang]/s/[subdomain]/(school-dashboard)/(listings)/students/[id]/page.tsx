@@ -1,6 +1,10 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
+import { db } from "@/lib/db"
 import { getModel } from "@/lib/prisma-guards"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -28,6 +32,23 @@ export default async function StudentDetail({ params }: Props) {
   const student = await studentModel.findFirst({
     where: { id, schoolId },
     include: {
+      // Academic grade (catalog integration)
+      academicGrade: {
+        include: {
+          level: true,
+          subjectSelections: {
+            include: {
+              subject: {
+                select: {
+                  id: true,
+                  subjectName: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+        },
+      },
       // Classes & Academic enrollment
       studentClasses: {
         include: {
@@ -104,6 +125,13 @@ export default async function StudentDetail({ params }: Props) {
 
   if (!student) return notFound()
 
+  // Fetch grade boundaries for the school's grading scheme
+  const gradeBoundaries = await db.gradeBoundary.findMany({
+    where: { schoolId },
+    orderBy: { minScore: "desc" },
+    select: { grade: true, minScore: true, maxScore: true, gpaValue: true },
+  })
+
   // Check if current user is the owner of this profile
   const isOwner = session?.user?.id === student.userId
 
@@ -114,6 +142,12 @@ export default async function StudentDetail({ params }: Props) {
         dictionary={dictionary}
         isOwner={isOwner}
         userId={student.userId || undefined}
+        gradeBoundaries={gradeBoundaries.map((b) => ({
+          grade: b.grade,
+          minScore: Number(b.minScore),
+          maxScore: Number(b.maxScore),
+          gpaValue: b.gpaValue ? Number(b.gpaValue) : null,
+        }))}
       />
     </div>
   )

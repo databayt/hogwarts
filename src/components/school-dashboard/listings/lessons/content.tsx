@@ -1,5 +1,9 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -54,8 +58,9 @@ export default async function LessonsContent({
           class: {
             select: {
               name: true,
+              lang: true,
               subject: {
-                select: { subjectName: true },
+                select: { subjectName: true, lang: true },
               },
               teacher: {
                 select: {
@@ -70,20 +75,36 @@ export default async function LessonsContent({
       db.lesson.count({ where }),
     ])
 
-    data = rows.map((l: any) => ({
-      id: l.id,
-      title: l.title,
-      className: l.class?.name || "Unknown",
-      teacherName: l.class?.teacher
-        ? `${l.class.teacher.givenName} ${l.class.teacher.surname}`
-        : "Unknown",
-      subjectName: l.class?.subject?.subjectName || "Unknown",
-      lessonDate: (l.lessonDate as Date).toISOString(),
-      startTime: l.startTime,
-      endTime: l.endTime,
-      status: l.status,
-      createdAt: (l.createdAt as Date).toISOString(),
-    }))
+    data = await Promise.all(
+      rows.map(async (l: any) => ({
+        id: l.id,
+        title: l.title,
+        className: l.class?.name
+          ? await getDisplayText(
+              l.class.name,
+              l.class.lang || "ar",
+              lang,
+              schoolId!
+            )
+          : "Unknown",
+        teacherName: l.class?.teacher
+          ? `${l.class.teacher.givenName} ${l.class.teacher.surname}`
+          : "Unknown",
+        subjectName: l.class?.subject?.subjectName
+          ? await getDisplayText(
+              l.class.subject.subjectName,
+              l.class.subject.lang || "ar",
+              lang,
+              schoolId!
+            )
+          : "Unknown",
+        lessonDate: (l.lessonDate as Date).toISOString(),
+        startTime: l.startTime,
+        endTime: l.endTime,
+        status: l.status,
+        createdAt: (l.createdAt as Date).toISOString(),
+      }))
+    )
     total = count as number
   }
 

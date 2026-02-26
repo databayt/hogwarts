@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState, useTransition } from "react"
 import useSWR from "swr"
 
@@ -158,9 +160,9 @@ function generateMockData(
 // Helpers
 // ============================================================================
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, locale: string = "ar"): string {
   const date = new Date(dateStr)
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale, {
     weekday: "long",
     month: "short",
     day: "numeric",

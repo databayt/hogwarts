@@ -1,119 +1,131 @@
+"use client"
+
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
+
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import SectionHeading from "../atom/section-heading"
 
-export default function EventCard() {
-  // Type definitions
-  interface Event {
-    date: string
-    month: string
-    title: string
-    time: string
-    location: string
-    isHighlighted: boolean
-    isDisabled?: boolean
-  }
+const eventDates = ["01", "15", "31", "25"]
+const eventHighlights = [true, false, false, false]
+const eventDisabled = [false, false, false, true]
 
-  // Event data array
-  const events: Event[] = [
+export default function EventCard() {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.marketing?.site?.events
+
+  const fallbackEvents = [
     {
-      date: "01",
       month: "September",
       title: "Hogwarts Welcome Feast",
-      time: "7PM — 10PM",
+      time: "7PM \u2014 10PM",
       location: "@ Great Hall, Hogwarts Castle",
-      isHighlighted: true,
     },
     {
-      date: "15",
       month: "October",
       title: "Defense Against Dark Arts Seminar",
-      time: "2PM — 5PM",
+      time: "2PM \u2014 5PM",
       location: "@ Defense, Hogwarts",
-      isHighlighted: false,
     },
     {
-      date: "31",
       month: "October",
       title: "Halloween Feast & Celebration",
-      time: "6PM — 11PM",
+      time: "6PM \u2014 11PM",
       location: "@ Great Hall, Hogwarts Castle",
-      isHighlighted: false,
     },
     {
-      date: "25",
       month: "December",
       title: "Christmas Holiday Feast",
-      time: "5PM — 9PM",
+      time: "5PM \u2014 9PM",
       location: "@ Great Hall, Hogwarts Castle",
-      isHighlighted: false,
-      isDisabled: true,
     },
   ]
 
+  const events = (t?.items as Array<Record<string, unknown>>) || fallbackEvents
+
   return (
     <section className="py-16 md:py-24">
-      <SectionHeading title="Events" description="what's happening" />
+      <SectionHeading
+        title={t?.title || "Events"}
+        description={t?.description || "what's happening"}
+      />
       {/* Events Grid */}
       <div className="grid grid-cols-1 gap-1 py-14 md:grid-cols-4">
-        {events.map((event, index) => (
-          <div
-            key={index}
-            className={`${
-              event.isHighlighted ? "bg-[#6A9BCC] text-white" : "bg-muted"
-            } flex h-full flex-col p-8`}
-          >
-            <div
-              className={`mb-1 text-5xl font-light ${
-                !event.isHighlighted
-                  ? event.isDisabled
-                    ? "text-muted-foreground/50"
-                    : "text-foreground"
-                  : ""
-              }`}
-            >
-              {event.date}
-            </div>
-            <div
-              className={`pb-10 text-sm tracking-wider ${
-                !event.isHighlighted
-                  ? event.isDisabled
-                    ? "text-muted-foreground/50"
-                    : "text-foreground"
-                  : ""
-              }`}
-            >
-              {event.month}
-            </div>
+        {events.map((event, index) => {
+          const isHighlighted = eventHighlights[index]
+          const isDisabled = eventDisabled[index]
 
-            <h2
-              className={`pb-4 text-xl font-light ${
-                !event.isHighlighted
-                  ? event.isDisabled
-                    ? "text-muted-foreground/50"
-                    : "text-foreground"
-                  : ""
-              }`}
-            >
-              {event.title.split(" ").slice(0, 2).join(" ")}
-              <br />
-              {event.title.split(" ").slice(2).join(" ")}
-            </h2>
-
+          return (
             <div
-              className={`mt-auto ${
-                !event.isHighlighted
-                  ? event.isDisabled
-                    ? "text-muted-foreground/50"
-                    : "text-foreground"
-                  : ""
-              }`}
+              key={index}
+              className={`${
+                isHighlighted ? "bg-[#6A9BCC] text-white" : "bg-muted"
+              } flex h-full flex-col p-8`}
             >
-              <div className="pb-1 text-sm font-medium">{event.time}</div>
-              <div className="text-sm font-medium">{event.location}</div>
+              <div
+                className={`mb-1 text-5xl font-light ${
+                  !isHighlighted
+                    ? isDisabled
+                      ? "text-muted-foreground/50"
+                      : "text-foreground"
+                    : ""
+                }`}
+              >
+                {eventDates[index]}
+              </div>
+              <div
+                className={`pb-10 text-sm tracking-wider ${
+                  !isHighlighted
+                    ? isDisabled
+                      ? "text-muted-foreground/50"
+                      : "text-foreground"
+                    : ""
+                }`}
+              >
+                {String(event.month || fallbackEvents[index]?.month)}
+              </div>
+
+              <h2
+                className={`pb-4 text-xl font-light ${
+                  !isHighlighted
+                    ? isDisabled
+                      ? "text-muted-foreground/50"
+                      : "text-foreground"
+                    : ""
+                }`}
+              >
+                {String(event.title || fallbackEvents[index]?.title)
+                  .split(" ")
+                  .slice(0, 2)
+                  .join(" ")}
+                <br />
+                {String(event.title || fallbackEvents[index]?.title)
+                  .split(" ")
+                  .slice(2)
+                  .join(" ")}
+              </h2>
+
+              <div
+                className={`mt-auto ${
+                  !isHighlighted
+                    ? isDisabled
+                      ? "text-muted-foreground/50"
+                      : "text-foreground"
+                    : ""
+                }`}
+              >
+                <div className="pb-1 text-sm font-medium">
+                  {String(event.time || fallbackEvents[index]?.time)}
+                </div>
+                <div className="text-sm font-medium">
+                  {String(event.location || fallbackEvents[index]?.location)}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Feed Section */}
@@ -130,17 +142,19 @@ export default function EventCard() {
           />
           <div className="flex-1">
             <div className="mb-1 flex items-center gap-2">
-              <span className="text-foreground font-semibold">@hogwarts</span>
-              <span className="text-muted-foreground text-sm">
-                4 minutes ago in
+              <span className="text-foreground font-semibold">
+                {t?.feedHandle || "@hogwarts"}
               </span>
-              <span className="text-primary">#events</span>
+              <span className="text-muted-foreground text-sm">
+                {t?.feedTimeAgo || "4 minutes ago in"}
+              </span>
+              <span className="text-primary">
+                {t?.feedChannel || "#events"}
+              </span>
             </div>
             <p className="text-foreground mb-2">
-              Hogwarts School of Witchcraft and Wizardry invites you to attend
-              our Welcome Feast - where we&apos;ll present our magical
-              curriculum, discuss the challenges ahead, and open dialogue about
-              our shared journey in the wizarding world.
+              {t?.feedText ||
+                "Hogwarts School of Witchcraft and Wizardry invites you to attend our Welcome Feast - where we'll present our magical curriculum, discuss the challenges ahead, and open dialogue about our shared journey in the wizarding world."}
             </p>
           </div>
         </div>

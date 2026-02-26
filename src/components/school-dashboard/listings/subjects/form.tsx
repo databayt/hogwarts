@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -11,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createSubject,
   getSubject,
@@ -26,6 +29,8 @@ interface SubjectCreateFormProps {
 }
 
 export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
+  const { dictionary: fullDict } = useDictionary()
+  const t = fullDict?.messages?.toast
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
@@ -65,7 +70,11 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
         ? await updateSubject({ id: currentId, ...values })
         : await createSubject(values)
       if (res?.success) {
-        toast.success(currentId ? "Subject updated" : "Subject created")
+        toast.success(
+          currentId
+            ? t?.success?.subjectUpdated || "Subject updated"
+            : t?.success?.subjectCreated || "Subject created"
+        )
         closeModal()
         // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
@@ -77,13 +86,15 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
         toast.error(
           res?.error ||
             (currentId
-              ? "Failed to update subject"
-              : "Failed to create subject")
+              ? t?.error?.subjectUpdateFailed || "Failed to update subject"
+              : t?.error?.subjectCreateFailed || "Failed to create subject")
         )
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      toast.error("An unexpected error occurred")
+      toast.error(
+        fullDict?.common?.unexpectedError || "An unexpected error occurred"
+      )
     }
   }
 

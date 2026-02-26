@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { CheckCircle2, Clock, Layers, XCircle } from "lucide-react"
 
 import { db } from "@/lib/db"
@@ -20,6 +23,7 @@ export interface PendingItem {
     | "CatalogQuestion"
     | "CatalogMaterial"
     | "CatalogAssignment"
+    | "CatalogBook"
     | "LessonVideo"
   title: string
   description: string | null
@@ -37,6 +41,7 @@ export async function ApprovalContent({ lang }: Props) {
     pendingQuestions,
     pendingMaterials,
     pendingAssignments,
+    pendingBooks,
     pendingVideos,
   ] = await Promise.all([
     db.catalogQuestion.findMany({
@@ -61,6 +66,17 @@ export async function ApprovalContent({ lang }: Props) {
       },
     }),
     db.catalogAssignment.findMany({
+      where: { approvalStatus: "PENDING" },
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        contributedBy: true,
+        createdAt: true,
+      },
+    }),
+    db.catalogBook.findMany({
       where: { approvalStatus: "PENDING" },
       orderBy: { createdAt: "asc" },
       select: {
@@ -112,6 +128,14 @@ export async function ApprovalContent({ lang }: Props) {
       contributedBy: a.contributedBy,
       createdAt: a.createdAt,
     })),
+    ...pendingBooks.map((b) => ({
+      id: b.id,
+      contentType: "CatalogBook" as const,
+      title: b.title,
+      description: b.description,
+      contributedBy: b.contributedBy,
+      createdAt: b.createdAt,
+    })),
     ...pendingVideos.map((v) => ({
       id: v.id,
       contentType: "LessonVideo" as const,
@@ -126,11 +150,12 @@ export async function ApprovalContent({ lang }: Props) {
   const questionCount = pendingQuestions.length
   const materialCount = pendingMaterials.length
   const assignmentCount = pendingAssignments.length
+  const bookCount = pendingBooks.length
   const videoCount = pendingVideos.length
 
   return (
     <PageContainer>
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pending</CardTitle>
@@ -165,6 +190,16 @@ export async function ApprovalContent({ lang }: Props) {
             <CardDescription>
               {materialCount} materials, {assignmentCount} assignments
             </CardDescription>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Books</CardTitle>
+            <CheckCircle2 className="text-muted-foreground h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{bookCount}</p>
+            <CardDescription>Pending books</CardDescription>
           </CardContent>
         </Card>
         <Card>

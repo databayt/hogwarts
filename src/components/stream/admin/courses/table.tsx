@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -51,11 +53,15 @@ function AdminCoursesTableInner({
 
   const columns = useMemo(
     () =>
-      getCourseColumns(lang, {
-        onEdit: handleEdit,
-        onDelete: handleDelete,
-      }),
-    [lang, handleEdit, handleDelete]
+      getCourseColumns(
+        lang,
+        {
+          onEdit: handleEdit,
+          onDelete: handleDelete,
+        },
+        dictionary
+      ),
+    [lang, handleEdit, handleDelete, dictionary]
   )
 
   const { table } = useDataTable<CourseRow>({
@@ -77,14 +83,17 @@ function AdminCoursesTableInner({
         <CardContent className="py-10">
           <div className="text-center">
             <BookOpen className="text-muted-foreground mx-auto mb-4 size-12" />
-            <h3>{isRTL ? "لا توجد دورات بعد" : "No courses yet"}</h3>
+            <h3>
+              {dictionary?.stream?.adminCourses?.noCoursesYet ||
+                "No courses yet"}
+            </h3>
             <p className="muted mb-4">
-              {isRTL
-                ? "أنشئ أول دورة لتبدأ مع Stream LMS"
-                : "Create your first course to get started with Stream LMS"}
+              {dictionary?.stream?.adminCourses?.createFirstCourse ||
+                "Create your first course to get started with Stream LMS"}
             </p>
             <Button onClick={() => openModal()}>
-              {isRTL ? "إنشاء دورة" : "Create Course"}
+              {dictionary?.stream?.adminCourses?.createCourse ||
+                "Create Course"}
             </Button>
           </div>
         </CardContent>

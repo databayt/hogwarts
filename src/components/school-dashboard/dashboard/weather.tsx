@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState } from "react"
 import {
   mdiWeatherCloudy,
@@ -16,6 +18,8 @@ import Icon from "@mdi/react"
 import { Droplets, Thermometer, Wind } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 // ============================================================================
 // TYPES
@@ -103,15 +107,17 @@ function WeatherIcon({
 // DEFAULT/MOCK DATA
 // ============================================================================
 
-const defaultCurrentWeather: WeatherCondition = {
-  day: new Date().toLocaleDateString("en-US", { weekday: "long" }),
-  condition: "sunny",
-  conditionLabel: "Sunny",
-  temperature: 24,
-  tempLow: 18,
-  humidity: 45,
-  rainChance: 10,
-  windSpeed: 12,
+function getDefaultCurrentWeather(locale: string): WeatherCondition {
+  return {
+    day: new Date().toLocaleDateString(locale, { weekday: "long" }),
+    condition: "sunny",
+    conditionLabel: "Sunny",
+    temperature: 24,
+    tempLow: 18,
+    humidity: 45,
+    rainChance: 10,
+    windSpeed: 12,
+  }
 }
 
 const defaultForecast: ForecastDay[] = [
@@ -154,9 +160,12 @@ export function Weather({
   className,
 }: WeatherProps) {
   const [refreshing, setRefreshing] = useState(false)
+  const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.weather
 
   // Use provided data or fall back to defaults
-  const currentWeather = current || defaultCurrentWeather
+  const currentWeather = current || getDefaultCurrentWeather(locale)
   const forecastData = forecast || defaultForecast
 
   const handleRefresh = useCallback(async () => {
@@ -182,20 +191,20 @@ export function Weather({
         )}
       >
         <p className="text-muted-foreground text-sm">
-          Unable to load weather data
+          {dict?.unableToLoad || "Unable to load weather data"}
         </p>
       </div>
     )
   }
 
-  // Get current time and date
+  // Get current time and date using dynamic locale
   const now = new Date()
-  const currentTime = now.toLocaleTimeString("en-US", {
+  const currentTime = now.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   })
-  const currentDate = now.toLocaleDateString("en-US", {
+  const currentDate = now.toLocaleDateString(locale, {
     weekday: "long",
     month: "short",
     day: "numeric",
@@ -224,11 +233,13 @@ export function Weather({
           <div className="mt-2 space-y-1">
             <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <Droplets className="size-4" />
-              <span>Humidity: {currentWeather.humidity}%</span>
+              <span>
+                {dict?.humidity || "Humidity"}: {currentWeather.humidity}%
+              </span>
             </div>
             <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <span className="text-primary">
-                Rain: {currentWeather.rainChance}%
+                {dict?.rain || "Rain"}: {currentWeather.rainChance}%
               </span>
             </div>
             <div className="text-muted-foreground flex items-center gap-2 text-sm">

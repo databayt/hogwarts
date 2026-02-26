@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { ArrowLeft, ShieldX } from "lucide-react"
 
@@ -38,7 +41,7 @@ export function StreamNotAdminContent({ dictionary, lang, subdomain }: Props) {
               className: "w-full",
             })}
           >
-            <ArrowLeft className="me-1 size-4" />
+            <ArrowLeft className="me-1 size-4 rtl:rotate-180" />
             Back to home
           </Link>
         </CardContent>

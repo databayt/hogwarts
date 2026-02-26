@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -9,31 +12,38 @@ interface AdmissionValuesProps {
   dictionary?: Dictionary
 }
 
-export function AdmissionValues({ lang }: AdmissionValuesProps) {
-  const isRTL = lang === "ar"
+export function AdmissionValues({ lang, dictionary }: AdmissionValuesProps) {
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: {
+          admission?: { sections?: { values?: Record<string, string> } }
+        }
+      }
+    )?.school?.admission?.sections?.values ?? {}
 
   const values = [
     {
       number: "01",
-      title: isRTL ? "التميز الأكاديمي" : "Academic Excellence",
+      title: dict.academicExcellence || "Academic Excellence",
       borderColor: "border-blue-500",
       strokeColor: "#3b82f6",
     },
     {
       number: "02",
-      title: isRTL ? "منظور عالمي" : "Global Perspective",
+      title: dict.globalPerspective || "Global Perspective",
       borderColor: "border-cyan-500",
       strokeColor: "#06b6d4",
     },
     {
       number: "03",
-      title: isRTL ? "بيئة رعاية" : "Nurturing Environment",
+      title: dict.nurturingEnvironment || "Nurturing Environment",
       borderColor: "border-teal-500",
       strokeColor: "#14b8a6",
     },
     {
       number: "04",
-      title: isRTL ? "بناء الشخصية" : "Character Development",
+      title: dict.characterDevelopment || "Character Development",
       borderColor: "border-emerald-500",
       strokeColor: "#10b981",
     },
@@ -42,7 +52,7 @@ export function AdmissionValues({ lang }: AdmissionValuesProps) {
   return (
     <SectionContainer>
       <h2 className="font-heading mb-16 text-3xl font-bold md:text-4xl">
-        {isRTL ? "لماذا تختارنا" : "Why Choose Us"}
+        {dict.title || "Why Choose Us"}
       </h2>
 
       <div className="grid grid-cols-2 items-center gap-6 md:grid-cols-2 lg:grid-cols-4">

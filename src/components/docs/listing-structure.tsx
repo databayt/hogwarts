@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { File, Folder } from "lucide-react"
 
 interface DirectoryNode {
@@ -313,21 +315,21 @@ export function ListingStructure({ className }: ListingStructureProps) {
                   <div
                     key={idx}
                     className="absolute h-full border-s"
-                    style={{ left: `${(idx + 1) * 24 - 20}px` }}
+                    style={{ insetInlineStart: `${(idx + 1) * 24 - 20}px` }}
                   />
                 )
             )}
           {!isLast && (
             <div
               className="absolute h-full border-s"
-              style={{ left: `${level * 24 - 20}px` }}
+              style={{ insetInlineStart: `${level * 24 - 20}px` }}
             />
           )}
         </>
       )}
       <div
         className="flex items-center gap-2 py-1"
-        style={{ paddingLeft: `${level * 24}px` }}
+        style={{ paddingInlineStart: `${level * 24}px` }}
       >
         <FileIcon type={item.type} />
         <div className="flex min-w-0 flex-1 items-center gap-2">

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useMemo, useState } from "react"
 import {
@@ -336,7 +338,7 @@ export function TeacherDashboard({
               <CardTitle>Today's Schedule</CardTitle>
               <Button variant="outline" size="sm">
                 View Full Timetable
-                <ChevronRight className="ms-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
               </Button>
             </div>
           </CardHeader>
@@ -502,7 +504,7 @@ export function TeacherDashboard({
           <CardFooter>
             <Button variant="outline" className="w-full">
               View All Assignments
-              <ChevronRight className="ms-2 h-4 w-4" />
+              <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
           </CardFooter>
         </Card>

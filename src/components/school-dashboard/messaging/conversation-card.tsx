@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { format, formatDistanceToNow } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import {
@@ -27,6 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import type { ConversationDTO } from "./types"
@@ -56,6 +59,8 @@ export function ConversationCard({
   onMute,
   className,
 }: ConversationCardProps) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const dateLocale = locale === "ar" ? ar : enUS
   const config = CONVERSATION_TYPE_CONFIG[conversation.type]
   const Icon = config.icon
@@ -76,9 +81,7 @@ export function ConversationCard({
   // Determine display name and avatar
   const displayName =
     conversation.type === "direct" && otherUser
-      ? otherUser.username || otherUser.email || locale === "ar"
-        ? "مستخدم"
-        : "User"
+      ? otherUser.username || otherUser.email || m?.ui?.user_fallback || "User"
       : conversation.title || config.label
 
   const avatarUrl =
@@ -99,13 +102,9 @@ export function ConversationCard({
   // Get last message preview
   const lastMessagePreview = conversation.lastMessage
     ? conversation.lastMessage.isDeleted
-      ? locale === "ar"
-        ? "تم حذف الرسالة"
-        : "Message deleted"
+      ? m?.ui?.message_deleted || "Message deleted"
       : conversation.lastMessage.content
-    : locale === "ar"
-      ? "لا توجد رسائل"
-      : "No messages"
+    : m?.ui?.no_messages || "No messages"
 
   const hasUnread = (conversation.unreadCount ?? 0) > 0
 
@@ -124,7 +123,7 @@ export function ConversationCard({
     >
       {/* iMessage-style unread indicator (purple dot on left) */}
       {hasUnread && (
-        <div className="absolute top-1/2 left-2 -translate-y-1/2">
+        <div className="absolute start-2 top-1/2 -translate-y-1/2">
           <div className="bg-chart-5 h-2 w-2 animate-pulse rounded-full" />
         </div>
       )}
@@ -149,7 +148,7 @@ export function ConversationCard({
         {conversation.type !== "direct" && (
           <div
             className={cn(
-              "absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full",
+              "absolute -end-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full",
               "bg-background border-border border"
             )}
           >
@@ -204,7 +203,7 @@ export function ConversationCard({
                   hasUnread ? "text-foreground/70" : "text-muted-foreground"
                 )}
               >
-                {locale === "ar" ? "أنت: " : "You: "}
+                {m?.ui?.you_prefix || "You: "}
               </span>
             )}
             {lastMessagePreview}
@@ -218,14 +217,14 @@ export function ConversationCard({
               <Users className="text-muted-foreground h-3 w-3" />
               <span className="text-muted-foreground text-xs">
                 {conversation.participantCount}{" "}
-                {locale === "ar" ? "عضو" : "members"}
+                {m?.ui?.members_label || "members"}
               </span>
             </div>
           )}
       </div>
 
       {/* Actions menu */}
-      <div className="absolute top-3 right-3 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute end-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <Button
@@ -245,12 +244,8 @@ export function ConversationCard({
             >
               <Pin className="me-2 h-4 w-4" />
               {isPinned
-                ? locale === "ar"
-                  ? "إلغاء التثبيت"
-                  : "Unpin"
-                : locale === "ar"
-                  ? "تثبيت"
-                  : "Pin"}
+                ? m?.actions?.unpin || "Unpin"
+                : m?.actions?.pin || "Pin"}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={(e) => {
@@ -261,12 +256,12 @@ export function ConversationCard({
               {isMuted ? (
                 <>
                   <Volume2 className="me-2 h-4 w-4" />
-                  {locale === "ar" ? "إلغاء الكتم" : "Unmute"}
+                  {m?.actions?.unmute || "Unmute"}
                 </>
               ) : (
                 <>
                   <VolumeX className="me-2 h-4 w-4" />
-                  {locale === "ar" ? "كتم" : "Mute"}
+                  {m?.actions?.mute || "Mute"}
                 </>
               )}
             </DropdownMenuItem>
@@ -278,7 +273,7 @@ export function ConversationCard({
               }}
             >
               <Archive className="me-2 h-4 w-4" />
-              {locale === "ar" ? "أرشفة" : "Archive"}
+              {m?.actions?.archive || "Archive"}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={(e) => {
@@ -288,7 +283,7 @@ export function ConversationCard({
               className="text-destructive focus:text-destructive"
             >
               <Trash2 className="me-2 h-4 w-4" />
-              {locale === "ar" ? "حذف" : "Delete"}
+              {m?.actions?.delete || "Delete"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

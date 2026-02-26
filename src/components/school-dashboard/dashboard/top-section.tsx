@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import Link from "next/link"
 import {
@@ -23,6 +25,8 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 // ============================================================================
 // WEATHER HELPERS
@@ -95,16 +99,19 @@ function UpcomingClassCard({
   data?: UpcomingClassData | null
 }) {
   const [isFlipped, setIsFlipped] = useState(false)
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.topSection
 
   const upcomingClass = data || {
-    title: "No timetable configured",
-    subtitle: "Set up your timetable to see upcoming classes",
-    description: "Configure your school timetable",
+    title: dict?.noTimetable || "No timetable configured",
+    subtitle:
+      dict?.setupTimetable || "Set up your timetable to see upcoming classes",
+    description: dict?.configureTimetable || "Configure your school timetable",
     details: [
-      { label: "Time", value: "--:--" },
-      { label: "Room", value: "N/A" },
-      { label: "Duration", value: "N/A" },
-      { label: "Students", value: "0" },
+      { label: dict?.time || "Time", value: "--:--" },
+      { label: dict?.room || "Room", value: "N/A" },
+      { label: dict?.duration || "Duration", value: "N/A" },
+      { label: dict?.students || "Students", value: "0" },
     ],
   }
 
@@ -161,7 +168,7 @@ function UpcomingClassCard({
             </div>
           </div>
 
-          <div className="absolute right-0 bottom-0 left-0 p-4">
+          <div className="absolute start-0 end-0 bottom-0 p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-1">
                 <h3 className="text-foreground text-base leading-snug font-semibold tracking-tighter">
@@ -220,8 +227,10 @@ function UpcomingClassCard({
               href={`/${locale}/s/${subdomain}/timetable`}
               className="bg-muted/50 hover:bg-primary/10 flex items-center justify-between rounded-lg p-2 transition-colors"
             >
-              <span className="text-sm font-medium">View Timetable</span>
-              <ArrowRight className="text-primary h-4 w-4" />
+              <span className="text-sm font-medium">
+                {dict?.viewTimetable || "View Timetable"}
+              </span>
+              <ArrowRight className="text-primary h-4 w-4 rtl:rotate-180" />
             </Link>
           </div>
         </div>
@@ -245,6 +254,9 @@ export function TopSection({
   subdomain,
   upcomingClass,
 }: TopSectionProps) {
+  const { dictionary } = useDictionary()
+  const weatherDict = dictionary?.school?.dashboard?.weather
+
   return (
     <section>
       <div className="flex flex-wrap items-start gap-8">
@@ -276,11 +288,15 @@ export function TopSection({
                 <div className="mt-3 space-y-2">
                   <div className="text-muted-foreground flex items-center gap-2 text-sm">
                     <Droplets className="size-4" />
-                    <span>Humidity: {currentWeather.humidity}%</span>
+                    <span>
+                      {weatherDict?.humidity || "Humidity"}:{" "}
+                      {currentWeather.humidity}%
+                    </span>
                   </div>
                   <div className="text-muted-foreground flex items-center gap-2 text-sm">
                     <span className="text-primary">
-                      Rain: {currentWeather.rainChance}%
+                      {weatherDict?.rain || "Rain"}: {currentWeather.rainChance}
+                      %
                     </span>
                   </div>
                   <div className="text-muted-foreground flex items-center gap-2 text-sm">

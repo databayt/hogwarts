@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { Minus, TrendingDown, TrendingUp } from "lucide-react"
 
@@ -11,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { FinancialKPI } from "./types"
 
@@ -25,6 +28,8 @@ export const KPICard = React.memo(function KPICard({
   className,
   onClick,
 }: KPICardProps) {
+  const { locale } = useLocale()
+
   const getColorClass = (color?: string) => {
     switch (color) {
       case "blue":
@@ -54,7 +59,7 @@ export const KPICard = React.memo(function KPICard({
         kpi.id.includes("cash") ||
         kpi.id.includes("amount")
       ) {
-        return new Intl.NumberFormat("en-SD", {
+        return new Intl.NumberFormat(locale, {
           style: "currency",
           currency: "SDG",
           minimumFractionDigits: 0,
@@ -70,7 +75,7 @@ export const KPICard = React.memo(function KPICard({
         return `${value.toFixed(1)}%`
       }
       // Format as number with commas
-      return new Intl.NumberFormat("en-SD").format(value)
+      return new Intl.NumberFormat(locale).format(value)
     }
     return value
   }
@@ -187,7 +192,7 @@ export const KPICard = React.memo(function KPICard({
       {/* Background decoration */}
       <div
         className={cn(
-          "absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 transform opacity-5",
+          "absolute end-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 transform opacity-5 rtl:-translate-x-8",
           getColorClass(kpi.color)
         )}
         style={{

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -8,44 +11,47 @@ interface AdmissionDatesProps {
   dictionary?: Dictionary
 }
 
-export function AdmissionDates({ lang }: AdmissionDatesProps) {
-  const isRTL = lang === "ar"
+export function AdmissionDates({ lang, dictionary }: AdmissionDatesProps) {
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: {
+          admission?: { sections?: { dates?: Record<string, string> } }
+        }
+      }
+    )?.school?.admission?.sections?.dates ?? {}
 
   const dates = [
     {
-      date: isRTL ? "1 سبتمبر" : "Sept 1",
-      title: isRTL ? "بدء التقديم" : "Applications Open",
-      description: isRTL
-        ? "ابدأ طلبك عبر الإنترنت"
-        : "Begin your online application",
+      date: dict.sept1 || "Sept 1",
+      title: dict.applicationsOpen || "Applications Open",
+      description: dict.applicationsOpenDesc || "Begin your online application",
     },
     {
-      date: isRTL ? "15 نوفمبر" : "Nov 15",
-      title: isRTL ? "الموعد النهائي المبكر" : "Early Deadline",
-      description: isRTL
-        ? "آخر موعد للقرار المبكر"
-        : "Last date for early decision applications",
+      date: dict.nov15 || "Nov 15",
+      title: dict.earlyDeadline || "Early Deadline",
+      description:
+        dict.earlyDeadlineDesc || "Last date for early decision applications",
     },
     {
-      date: isRTL ? "15 يناير" : "Jan 15",
-      title: isRTL ? "الموعد النهائي العادي" : "Regular Deadline",
-      description: isRTL
-        ? "آخر موعد للتقديم العادي"
-        : "Final deadline for regular admission",
+      date: dict.jan15 || "Jan 15",
+      title: dict.regularDeadline || "Regular Deadline",
+      description:
+        dict.regularDeadlineDesc || "Final deadline for regular admission",
     },
     {
-      date: isRTL ? "1 مارس" : "Mar 1",
-      title: isRTL ? "إعلان القرارات" : "Decisions Released",
-      description: isRTL
-        ? "إرسال إشعارات القبول"
-        : "Admission notifications sent to applicants",
+      date: dict.mar1 || "Mar 1",
+      title: dict.decisionsReleased || "Decisions Released",
+      description:
+        dict.decisionsReleasedDesc ||
+        "Admission notifications sent to applicants",
     },
   ]
 
   return (
     <SectionContainer>
       <h2 className="font-heading mb-16 text-3xl font-bold md:text-4xl">
-        {isRTL ? "التواريخ المهمة" : "Key Dates"}
+        {dict.title || "Key Dates"}
       </h2>
 
       <div className="relative">

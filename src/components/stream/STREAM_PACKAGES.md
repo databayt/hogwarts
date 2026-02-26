@@ -456,11 +456,12 @@ If you prefer different packages, here are alternatives:
 
 ## License Considerations
 
-All packages used are MIT or similar permissive licenses. No GPL or restrictive licenses.
+The Hogwarts platform is licensed under SSPL-1.0. All third-party packages listed here are MIT or similar permissive licenses compatible with SSPL.
 
-**Commercial Use**: ✅ All packages allow commercial use
-**Attribution Required**: ❌ None require attribution
-**Open Source**: ✅ All are open source
+**Platform License**: SSPL-1.0 (see LICENSE in project root)
+**Dependency Licenses**: MIT, Apache-2.0, ISC (all permissive)
+**Commercial Use**: ✅ All dependencies allow commercial use
+**Open Source**: ✅ All dependencies are open source
 
 ---
 

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Helper function to determine if a pathname is a subdomain route
  * Subdomain routes follow the pattern: /[lang]/s/[subdomain]/...

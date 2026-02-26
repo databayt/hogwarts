@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 export type InformationSharing = "full-transparency" | "limited-sharing"
 export type VisibilityLevel = "public" | "private" | "unlisted"
 export type AccessLevel = "all" | "registered" | "approved"

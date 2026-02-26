@@ -29,11 +29,11 @@
   }
 
   th {
-    @apply text-muted-foreground h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0;
+    @apply text-muted-foreground h-12 px-4 text-start align-middle font-medium [&:has([role=checkbox])]:pe-0;
   }
 
   td {
-    @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
+    @apply p-4 align-middle [&:has([role=checkbox])]:pe-0;
   }
 }
 

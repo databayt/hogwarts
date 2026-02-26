@@ -1,223 +1,506 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import {
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  GraduationCap,
-  Loader2,
-  MapPin,
-  Users,
-} from "lucide-react"
+import { useMemo } from "react"
+import { Building2, Clock, GraduationCap, UserCheck, Users } from "lucide-react"
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  checkExamConflicts,
-  findAvailableExamSlots,
-  type AvailableSlot,
-  type ConflictDetail,
-} from "./actions/conflict-detection"
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+
+import type { ConflictDetail } from "./actions/conflict-detection"
 
 // ---------------------------------------------------------------------------
-// ConflictDisplay
+// Types
 // ---------------------------------------------------------------------------
 
 interface ConflictDisplayProps {
-  classId: string
-  examDate: Date | null
-  startTime: string
-  endTime: string
-  classroomId?: string
-  teacherId?: string
-  examId?: string
+  conflicts: ConflictDetail[]
+  examDate: Date
+  startTime: string // "HH:MM"
+  endTime: string // "HH:MM"
+  onSlotSelect?: (startTime: string, endTime: string) => void
+  locale: "en" | "ar"
 }
 
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const DAY_START_HOUR = 7
+const DAY_END_HOUR = 17
+const SLOT_MINUTES = 30
+const ROW_HEIGHT_PX = 36
+
+const TOTAL_SLOTS = ((DAY_END_HOUR - DAY_START_HOUR) * 60) / SLOT_MINUTES
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number)
+  return hours * 60 + minutes
+}
+
+function minutesToTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`
+}
+
+function formatTimeLabel(
+  hour: number,
+  minute: number,
+  locale: "en" | "ar"
+): string {
+  const m = minute.toString().padStart(2, "0")
+  const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+  if (locale === "ar") {
+    const period = hour < 12 ? "ص" : "م"
+    return `${h12}:${m} ${period}`
+  }
+  const period = hour < 12 ? "AM" : "PM"
+  return `${h12}:${m} ${period}`
+}
+
+/** Convert a time range to grid row positions (1-indexed for CSS grid). */
+function timeRangeToGridRows(
+  start: string,
+  end: string
+): { rowStart: number; rowEnd: number } {
+  const startMins = timeToMinutes(start)
+  const endMins = timeToMinutes(end)
+  const gridStart = Math.max(0, startMins - DAY_START_HOUR * 60)
+  const gridEnd = Math.min(
+    TOTAL_SLOTS * SLOT_MINUTES,
+    endMins - DAY_START_HOUR * 60
+  )
+  // Each row = SLOT_MINUTES, CSS grid rows are 1-indexed
+  const rowStart = Math.floor(gridStart / SLOT_MINUTES) + 1
+  const rowEnd = Math.ceil(gridEnd / SLOT_MINUTES) + 1
+  return { rowStart, rowEnd }
+}
+
+// ---------------------------------------------------------------------------
+// Conflict type icon mapping
+// ---------------------------------------------------------------------------
+
+const CONFLICT_TYPE_ICONS: Record<ConflictDetail["type"], typeof Users> = {
+  class: GraduationCap,
+  teacher: UserCheck,
+  classroom: Building2,
+  student: Users,
+}
+
+const CONFLICT_TYPE_LABELS: Record<
+  ConflictDetail["type"],
+  Record<"en" | "ar", string>
+> = {
+  class: { en: "Class", ar: "الفصل" },
+  teacher: { en: "Teacher", ar: "المعلم" },
+  classroom: { en: "Classroom", ar: "الغرفة" },
+  student: { en: "Student", ar: "الطالب" },
+}
+
+// ---------------------------------------------------------------------------
+// Severity helpers
+// ---------------------------------------------------------------------------
+
+function severityBadgeClassName(severity: ConflictDetail["severity"]): string {
+  switch (severity) {
+    case "high":
+      return ""
+    case "medium":
+      return "border-transparent bg-amber-500 text-white"
+    case "low":
+      return "border-transparent bg-blue-500 text-white"
+  }
+}
+
+function severityLabel(
+  severity: ConflictDetail["severity"],
+  locale: "en" | "ar"
+): string {
+  const labels: Record<
+    ConflictDetail["severity"],
+    Record<"en" | "ar", string>
+  > = {
+    high: { en: "High", ar: "عالي" },
+    medium: { en: "Medium", ar: "متوسط" },
+    low: { en: "Low", ar: "منخفض" },
+  }
+  return labels[severity][locale]
+}
+
+// ---------------------------------------------------------------------------
+// Compute available slots (gaps between conflicts and proposed exam)
+// ---------------------------------------------------------------------------
+
+interface AvailableGap {
+  startTime: string
+  endTime: string
+}
+
+function computeAvailableGaps(
+  conflicts: ConflictDetail[],
+  proposedStart: string,
+  proposedEnd: string
+): AvailableGap[] {
+  // Collect all occupied ranges
+  const occupied: { start: number; end: number }[] = []
+
+  for (const c of conflicts) {
+    const parts = c.conflictTime.split(" - ")
+    if (parts.length === 2) {
+      occupied.push({
+        start: timeToMinutes(parts[0].trim()),
+        end: timeToMinutes(parts[1].trim()),
+      })
+    }
+  }
+
+  // Add the proposed exam time as occupied
+  occupied.push({
+    start: timeToMinutes(proposedStart),
+    end: timeToMinutes(proposedEnd),
+  })
+
+  // Sort by start time
+  occupied.sort((a, b) => a.start - b.start)
+
+  // Merge overlapping ranges
+  const merged: { start: number; end: number }[] = []
+  for (const range of occupied) {
+    if (merged.length === 0 || range.start > merged[merged.length - 1].end) {
+      merged.push({ ...range })
+    } else {
+      merged[merged.length - 1].end = Math.max(
+        merged[merged.length - 1].end,
+        range.end
+      )
+    }
+  }
+
+  // Find gaps within the day
+  const dayStart = DAY_START_HOUR * 60
+  const dayEnd = DAY_END_HOUR * 60
+  const gaps: AvailableGap[] = []
+
+  let cursor = dayStart
+  for (const range of merged) {
+    const clampedStart = Math.max(dayStart, range.start)
+    if (cursor < clampedStart) {
+      gaps.push({
+        startTime: minutesToTime(cursor),
+        endTime: minutesToTime(clampedStart),
+      })
+    }
+    cursor = Math.max(cursor, Math.min(dayEnd, range.end))
+  }
+  if (cursor < dayEnd) {
+    gaps.push({
+      startTime: minutesToTime(cursor),
+      endTime: minutesToTime(dayEnd),
+    })
+  }
+
+  // Filter out tiny gaps (less than 30 minutes)
+  return gaps.filter((g) => {
+    const duration = timeToMinutes(g.endTime) - timeToMinutes(g.startTime)
+    return duration >= SLOT_MINUTES
+  })
+}
+
+// ---------------------------------------------------------------------------
+// ConflictDisplay (main export)
+// ---------------------------------------------------------------------------
+
 export function ConflictDisplay({
-  classId,
+  conflicts,
   examDate,
   startTime,
   endTime,
-  classroomId,
-  teacherId,
-  examId,
+  onSlotSelect,
+  locale,
 }: ConflictDisplayProps) {
-  const [conflicts, setConflicts] = useState<ConflictDetail[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [checked, setChecked] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { dictionary } = useDictionary()
+  const tc = dictionary?.generate?.paper?.conflict
+  const isRTL = locale === "ar"
 
-  const canCheck = Boolean(classId && examDate && startTime && endTime)
+  const timeSlots = useMemo(() => {
+    const slots: { hour: number; minute: number; label: string }[] = []
+    for (let h = DAY_START_HOUR; h < DAY_END_HOUR; h++) {
+      for (let m = 0; m < 60; m += SLOT_MINUTES) {
+        slots.push({ hour: h, minute: m, label: formatTimeLabel(h, m, locale) })
+      }
+    }
+    return slots
+  }, [locale])
 
-  const runCheck = useCallback(async () => {
-    if (!classId || !examDate || !startTime || !endTime) return
+  const proposedRows = useMemo(
+    () => timeRangeToGridRows(startTime, endTime),
+    [startTime, endTime]
+  )
 
-    setLoading(true)
-    setError(null)
-
-    try {
-      const result = await checkExamConflicts({
-        classId,
-        examDate,
-        startTime,
-        endTime,
-        classroomId,
-        teacherId,
-        examId,
+  const conflictBlocks = useMemo(() => {
+    return conflicts
+      .map((c) => {
+        const parts = c.conflictTime.split(" - ")
+        if (parts.length !== 2) return null
+        const cStart = parts[0].trim()
+        const cEnd = parts[1].trim()
+        // Only show if within the visible day range
+        if (
+          timeToMinutes(cEnd) <= DAY_START_HOUR * 60 ||
+          timeToMinutes(cStart) >= DAY_END_HOUR * 60
+        ) {
+          return null
+        }
+        const rows = timeRangeToGridRows(cStart, cEnd)
+        return { conflict: c, rows, startTime: cStart, endTime: cEnd }
       })
+      .filter(Boolean) as {
+      conflict: ConflictDetail
+      rows: { rowStart: number; rowEnd: number }
+      startTime: string
+      endTime: string
+    }[]
+  }, [conflicts])
 
-      if (result.success && result.data) {
-        setConflicts(result.data.conflicts)
-      } else if (!result.success) {
-        setError(result.error)
-        setConflicts([])
-      }
-    } catch {
-      setError("Failed to check conflicts")
-      setConflicts([])
-    } finally {
-      setLoading(false)
-      setChecked(true)
-    }
-  }, [classId, examDate, startTime, endTime, classroomId, teacherId, examId])
+  const availableGaps = useMemo(
+    () => computeAvailableGaps(conflicts, startTime, endTime),
+    [conflicts, startTime, endTime]
+  )
 
-  // Debounced auto-check when props change
-  useEffect(() => {
-    if (!canCheck) {
-      setConflicts([])
-      setChecked(false)
-      return
-    }
+  const availableBlocks = useMemo(() => {
+    return availableGaps.map((gap) => ({
+      ...gap,
+      rows: timeRangeToGridRows(gap.startTime, gap.endTime),
+    }))
+  }, [availableGaps])
 
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current)
-    }
+  const dateLabel = useMemo(() => {
+    return examDate.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }, [examDate, locale])
 
-    debounceRef.current = setTimeout(() => {
-      void runCheck()
-    }, 500)
+  return (
+    <div className="space-y-4" dir={isRTL ? "rtl" : "ltr"}>
+      {/* Day view calendar */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <Clock className="size-4" />
+            {dateLabel}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 pb-3">
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: "auto 1fr",
+              gridTemplateRows: `repeat(${TOTAL_SLOTS}, ${ROW_HEIGHT_PX}px)`,
+            }}
+          >
+            {/* Time labels */}
+            {timeSlots.map((slot, idx) => (
+              <div
+                key={`label-${slot.hour}-${slot.minute}`}
+                className="text-muted-foreground flex items-start pe-3 text-xs"
+                style={{
+                  gridRow: idx + 1,
+                  gridColumn: 1,
+                }}
+              >
+                {slot.minute === 0 && (
+                  <span className="leading-none">{slot.label}</span>
+                )}
+              </div>
+            ))}
 
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
-      }
-    }
-  }, [canCheck, runCheck])
+            {/* Grid lines */}
+            {timeSlots.map((slot, idx) => (
+              <div
+                key={`grid-${slot.hour}-${slot.minute}`}
+                className={`border-border/40 border-b ${
+                  slot.minute === 0
+                    ? "border-border"
+                    : "border-border/20 border-dashed"
+                }`}
+                style={{
+                  gridRow: idx + 1,
+                  gridColumn: 2,
+                }}
+              />
+            ))}
 
-  // Nothing to show if inputs are incomplete
-  if (!canCheck) return null
+            {/* Available slots (green, clickable) */}
+            {availableBlocks.map((block) => (
+              <Tooltip key={`avail-${block.startTime}`}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="z-10 cursor-pointer rounded border border-green-300 bg-green-50 opacity-60 transition-opacity hover:opacity-100 dark:border-green-700 dark:bg-green-950/30"
+                    style={{
+                      gridRow: `${block.rows.rowStart} / ${block.rows.rowEnd}`,
+                      gridColumn: 2,
+                    }}
+                    onClick={() =>
+                      onSlotSelect?.(block.startTime, block.endTime)
+                    }
+                    aria-label={`${tc?.available || "Available"}: ${block.startTime} - ${block.endTime}`}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {tc?.available || "Available"}: {block.startTime} -{" "}
+                    {block.endTime}
+                  </p>
+                  <p className="text-xs opacity-70">
+                    {tc?.click_to_select || "Click to select this time"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="text-muted-foreground flex items-center gap-2 py-2">
-        <Loader2 className="size-4 animate-spin" />
-        <span className="text-sm">Checking for scheduling conflicts...</span>
-      </div>
-    )
-  }
+            {/* Proposed exam block (blue) */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="z-20 rounded border-2 border-blue-500 bg-blue-100 dark:bg-blue-950/40"
+                  style={{
+                    gridRow: `${proposedRows.rowStart} / ${proposedRows.rowEnd}`,
+                    gridColumn: 2,
+                  }}
+                >
+                  <div className="flex h-full items-center px-2">
+                    <span className="truncate text-xs font-medium text-blue-700 dark:text-blue-300">
+                      {tc?.proposed_exam || "Proposed Exam"}
+                    </span>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-medium">
+                  {tc?.proposed_exam || "Proposed Exam"}
+                </p>
+                <p className="text-xs">
+                  {startTime} - {endTime}
+                </p>
+              </TooltipContent>
+            </Tooltip>
 
-  // Error state
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertTriangle className="size-4" />
-        <AlertTitle>Conflict check failed</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    )
-  }
+            {/* Conflict blocks (red) */}
+            {conflictBlocks.map((block, idx) => {
+              const Icon = CONFLICT_TYPE_ICONS[block.conflict.type]
+              return (
+                <Tooltip key={`conflict-${block.conflict.entityId}-${idx}`}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="z-20 ms-8 rounded border-2 border-red-500 bg-red-100 dark:bg-red-950/40"
+                      style={{
+                        gridRow: `${block.rows.rowStart} / ${block.rows.rowEnd}`,
+                        gridColumn: 2,
+                      }}
+                    >
+                      <div className="flex h-full items-center gap-1.5 px-2">
+                        <Icon className="size-3 shrink-0 text-red-600 dark:text-red-400" />
+                        <span className="truncate text-xs font-medium text-red-700 dark:text-red-300">
+                          {block.conflict.entityName}
+                        </span>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="space-y-1">
+                      <p className="font-medium">{block.conflict.entityName}</p>
+                      <p className="text-xs">
+                        {block.conflict.conflictingEvent}
+                      </p>
+                      <p className="text-xs opacity-70">
+                        {block.startTime} - {block.endTime}
+                      </p>
+                      <SeverityBadge
+                        severity={block.conflict.severity}
+                        locale={locale}
+                      />
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
-  // No conflicts found
-  if (checked && conflicts.length === 0) {
-    return (
-      <div className="text-muted-foreground flex items-center gap-2 py-2 text-sm">
-        <CheckCircle className="size-4 text-emerald-500" />
-        <span>No scheduling conflicts detected</span>
-      </div>
-    )
-  }
-
-  // Conflicts found
-  if (conflicts.length > 0) {
-    const highCount = conflicts.filter((c) => c.severity === "high").length
-    const mediumCount = conflicts.filter((c) => c.severity === "medium").length
-    const lowCount = conflicts.filter((c) => c.severity === "low").length
-
-    return (
-      <div className="space-y-3">
-        <Alert variant="destructive">
-          <AlertTriangle className="size-4" />
-          <AlertTitle>
-            {conflicts.length} conflict{conflicts.length > 1 ? "s" : ""}{" "}
-            detected
-          </AlertTitle>
-          <AlertDescription>
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {highCount > 0 && (
-                <Badge variant="destructive">{highCount} high severity</Badge>
-              )}
-              {mediumCount > 0 && (
-                <Badge className="border-transparent bg-amber-500 text-white">
-                  {mediumCount} medium
-                </Badge>
-              )}
-              {lowCount > 0 && (
-                <Badge variant="secondary">{lowCount} low</Badge>
-              )}
-            </div>
-          </AlertDescription>
-        </Alert>
-
-        <div className="space-y-2">
-          {conflicts.map((conflict, index) => (
-            <ConflictItem
-              key={`${conflict.entityId}-${index}`}
-              conflict={conflict}
-            />
-          ))}
-        </div>
-
-        <AvailableSlotsPanel
-          classId={classId}
-          examDate={examDate!}
-          startTime={startTime}
-          endTime={endTime}
-        />
-      </div>
-    )
-  }
-
-  return null
+      {/* Conflict list cards */}
+      {conflicts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">
+              {(tc?.conflicts_detected || "{count} Conflict{s} Detected")
+                .replace("{count}", String(conflicts.length))
+                .replace("{s}", conflicts.length > 1 ? "s" : "")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 px-3 pb-3">
+            {conflicts.map((conflict, idx) => (
+              <ConflictCard
+                key={`${conflict.entityId}-${idx}`}
+                conflict={conflict}
+                locale={locale}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
 }
 
 // ---------------------------------------------------------------------------
-// ConflictItem
+// ConflictCard
 // ---------------------------------------------------------------------------
 
-function ConflictItem({ conflict }: { conflict: ConflictDetail }) {
+function ConflictCard({
+  conflict,
+  locale,
+}: {
+  conflict: ConflictDetail
+  locale: "en" | "ar"
+}) {
+  const Icon = CONFLICT_TYPE_ICONS[conflict.type]
+
   const severityStyles: Record<ConflictDetail["severity"], string> = {
     high: "border-destructive/50 bg-destructive/5",
     medium: "border-amber-500/50 bg-amber-500/5",
     low: "border-blue-500/50 bg-blue-500/5",
   }
 
-  const TypeIcon = conflictTypeIcon(conflict.type)
-
   return (
     <div
       className={`flex items-start gap-3 rounded-lg border p-3 ${severityStyles[conflict.severity]}`}
     >
-      <TypeIcon className="mt-0.5 size-4 shrink-0" />
+      <Icon className="mt-0.5 size-4 shrink-0" />
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{conflict.entityName}</span>
-          <SeverityBadge severity={conflict.severity} />
+          <SeverityBadge severity={conflict.severity} locale={locale} />
+          <Badge variant="outline" className="text-xs">
+            {CONFLICT_TYPE_LABELS[conflict.type][locale]}
+          </Badge>
         </div>
         <p className="text-muted-foreground text-sm">
           {conflict.conflictingEvent}
@@ -235,193 +518,21 @@ function ConflictItem({ conflict }: { conflict: ConflictDetail }) {
 // SeverityBadge
 // ---------------------------------------------------------------------------
 
-function SeverityBadge({ severity }: { severity: ConflictDetail["severity"] }) {
+function SeverityBadge({
+  severity,
+  locale,
+}: {
+  severity: ConflictDetail["severity"]
+  locale: "en" | "ar"
+}) {
+  const label = severityLabel(severity, locale)
+
   switch (severity) {
     case "high":
-      return <Badge variant="destructive">High</Badge>
+      return <Badge variant="destructive">{label}</Badge>
     case "medium":
-      return (
-        <Badge className="border-transparent bg-amber-500 text-white">
-          Medium
-        </Badge>
-      )
+      return <Badge className={severityBadgeClassName("medium")}>{label}</Badge>
     case "low":
-      return <Badge variant="secondary">Low</Badge>
+      return <Badge className={severityBadgeClassName("low")}>{label}</Badge>
   }
-}
-
-// ---------------------------------------------------------------------------
-// conflictTypeIcon
-// ---------------------------------------------------------------------------
-
-function conflictTypeIcon(type: ConflictDetail["type"]) {
-  switch (type) {
-    case "class":
-      return Users
-    case "teacher":
-      return GraduationCap
-    case "classroom":
-      return MapPin
-    case "student":
-      return Users
-  }
-}
-
-// ---------------------------------------------------------------------------
-// AvailableSlotsPanel
-// ---------------------------------------------------------------------------
-
-interface AvailableSlotsPanelProps {
-  classId: string
-  examDate: Date
-  startTime: string
-  endTime: string
-  onSelectSlot?: (startTime: string, endTime: string) => void
-}
-
-export function AvailableSlotsPanel({
-  classId,
-  examDate,
-  startTime,
-  endTime,
-  onSelectSlot,
-}: AvailableSlotsPanelProps) {
-  const [open, setOpen] = useState(false)
-  const [slots, setSlots] = useState<AvailableSlot[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Calculate duration from start/end times
-  const durationMinutes = (() => {
-    const [sh, sm] = startTime.split(":").map(Number)
-    const [eh, em] = endTime.split(":").map(Number)
-    return eh * 60 + em - (sh * 60 + sm)
-  })()
-
-  const fetchSlots = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const result = await findAvailableExamSlots({
-        classId,
-        date: examDate,
-        duration: durationMinutes > 0 ? durationMinutes : 60,
-      })
-
-      if (result.success && result.data) {
-        setSlots(result.data)
-      } else if (!result.success) {
-        setError(result.error)
-        setSlots([])
-      }
-    } catch {
-      setError("Failed to find available slots")
-      setSlots([])
-    } finally {
-      setLoading(false)
-    }
-  }, [classId, examDate, durationMinutes])
-
-  const handleToggle = () => {
-    if (!open) {
-      void fetchSlots()
-    }
-    setOpen((prev) => !prev)
-  }
-
-  return (
-    <div className="space-y-2">
-      <Button type="button" variant="outline" size="sm" onClick={handleToggle}>
-        <Clock className="me-2 size-4" />
-        {open ? "Hide available slots" : "See available slots"}
-      </Button>
-
-      {open && (
-        <Card>
-          <CardContent className="p-4">
-            {loading && (
-              <div className="text-muted-foreground flex items-center gap-2 py-4">
-                <Loader2 className="size-4 animate-spin" />
-                <span className="text-sm">Finding available slots...</span>
-              </div>
-            )}
-
-            {error && <p className="text-destructive py-2 text-sm">{error}</p>}
-
-            {!loading && !error && slots.length === 0 && (
-              <p className="text-muted-foreground py-2 text-sm">
-                No available slots found for this date.
-              </p>
-            )}
-
-            {!loading && !error && slots.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">
-                  {slots.length} available slot{slots.length > 1 ? "s" : ""}{" "}
-                  found
-                </p>
-                <div className="space-y-2">
-                  {slots.map((slot) => (
-                    <SlotItem
-                      key={`${slot.startTime}-${slot.endTime}`}
-                      slot={slot}
-                      onSelect={onSelectSlot}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// SlotItem
-// ---------------------------------------------------------------------------
-
-function SlotItem({
-  slot,
-  onSelect,
-}: {
-  slot: AvailableSlot
-  onSelect?: (startTime: string, endTime: string) => void
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
-      <div className="min-w-0 flex-1 space-y-1">
-        <div className="flex items-center gap-2">
-          <Clock className="text-muted-foreground size-4" />
-          <span className="text-sm font-medium">
-            {slot.startTime} - {slot.endTime}
-          </span>
-          <Badge variant="outline" className="text-xs">
-            Score: {slot.score}
-          </Badge>
-        </div>
-        {slot.reasons.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {slot.reasons.map((reason) => (
-              <Badge key={reason} variant="secondary" className="text-xs">
-                {reason}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
-      {onSelect && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => onSelect(slot.startTime, slot.endTime)}
-        >
-          Use this slot
-        </Button>
-      )}
-    </div>
-  )
 }

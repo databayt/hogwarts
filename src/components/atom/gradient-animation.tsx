@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
@@ -93,7 +95,7 @@ export const GradientAnimation = ({
   return (
     <div
       className={cn(
-        "relative top-0 left-0 w-screen overflow-hidden bg-[linear-gradient(40deg,var(--gradient-background-start),var(--gradient-background-end))]",
+        "relative start-0 top-0 w-screen overflow-hidden bg-[linear-gradient(40deg,var(--gradient-background-start),var(--gradient-background-end))]",
         height,
         containerClassName
       )}
@@ -175,7 +177,7 @@ export const GradientAnimation = ({
             onMouseMove={handleMouseMove}
             className={cn(
               `absolute [background:radial-gradient(circle_at_center,_rgba(var(--pointer-color),_0.8)_0,_rgba(var(--pointer-color),_0)_50%)_no-repeat]`,
-              `-top-1/2 -left-1/2 h-full w-full [mix-blend-mode:var(--blending-value)]`,
+              `-start-1/2 -top-1/2 h-full w-full [mix-blend-mode:var(--blending-value)]`,
               `opacity-70`
             )}
           ></div>

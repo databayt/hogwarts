@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { format, isToday, isYesterday } from "date-fns"
@@ -8,6 +10,7 @@ import { ArrowDown, LoaderCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { AutoScroller, useIsAtBottom } from "./auto-scroller"
 import { ChatEmpty } from "./empty-state"
@@ -56,6 +59,8 @@ export function MessageList({
   className,
   enableVirtualization = true, // Default to enabled for performance
 }: MessageListProps) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const isAtBottom = useIsAtBottom(
     scrollContainerRef as React.RefObject<HTMLDivElement>,
@@ -84,10 +89,10 @@ export function MessageList({
   const getDateLabel = (dateString: string): string => {
     const date = new Date(dateString)
     if (isToday(date)) {
-      return locale === "ar" ? "اليوم" : "Today"
+      return m?.ui?.today || "Today"
     }
     if (isYesterday(date)) {
-      return locale === "ar" ? "أمس" : "Yesterday"
+      return m?.ui?.yesterday || "Yesterday"
     }
     return format(date, "PPP", { locale: dateLocale })
   }
@@ -257,7 +262,7 @@ export function MessageList({
 
         {/* Scroll to bottom button - appears when user scrolls up */}
         {!isAtBottom && messages.length > 0 && (
-          <div className="absolute right-4 bottom-4 z-10">
+          <div className="absolute end-4 bottom-4 z-10">
             <Button
               variant="secondary"
               size="icon"
@@ -334,7 +339,7 @@ export function MessageList({
 
       {/* Scroll to bottom button - appears when user scrolls up */}
       {!isAtBottom && messages.length > 0 && (
-        <div className="absolute right-4 bottom-4 z-10">
+        <div className="absolute end-4 bottom-4 z-10">
           <Button
             variant="secondary"
             size="icon"
@@ -397,8 +402,8 @@ export function MessageListSkeleton({
                     className={cn(
                       "bg-muted animate-pulse rounded-[18px]",
                       groupIndex % 2 === 0
-                        ? "rounded-tr-[4px]"
-                        : "rounded-tl-[4px]",
+                        ? "rounded-se-[4px]"
+                        : "rounded-ss-[4px]",
                       msgIndex % 3 === 0
                         ? "h-16 w-48"
                         : msgIndex % 3 === 1

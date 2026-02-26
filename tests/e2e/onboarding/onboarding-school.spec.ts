@@ -473,6 +473,7 @@ test.describe("School Onboarding - Complete Flow", () => {
       "location",
       "stand-out",
       "capacity",
+      "schedule",
       "branding",
       "import",
       "finish-setup",

@@ -1,16 +1,26 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 
 import {
   createActionResponse,
   type ActionResponse,
 } from "@/lib/action-response"
-import { setupCatalogForSchool } from "@/lib/catalog-setup"
+import {
+  applyTimetableStructureForNewSchool,
+  setupCatalogForSchool,
+} from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
 
 import { requireSchoolOwnership } from "../auth-helpers"
 
+/**
+ * Admin-only fallback: manually publish a school and trigger catalog setup.
+ * Primary provisioning now happens in completeOnboarding() (legal/actions.ts).
+ * This remains for manual re-provisioning from admin dashboard if needed.
+ */
 export async function publishSchool(schoolId: string): Promise<ActionResponse> {
   try {
     await requireSchoolOwnership(schoolId)
@@ -22,7 +32,13 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
         onboardingCompletedAt: new Date(),
         onboardingStep: "completed",
       },
-      select: { id: true, name: true, domain: true, country: true },
+      select: {
+        id: true,
+        name: true,
+        domain: true,
+        country: true,
+        system: true,
+      },
     })
 
     // Auto-setup academic structure (grades, levels, subject selections)
@@ -36,6 +52,19 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
         `[publishSchool] Catalog setup failed for school ${schoolId}:`,
         catalogError
       )
+    }
+
+    // Auto-setup timetable structure (school year, terms, periods)
+    // Non-blocking: timetable setup failure should NOT prevent publishing
+    if (school.system) {
+      try {
+        await applyTimetableStructureForNewSchool(schoolId, school.system)
+      } catch (timetableError) {
+        console.error(
+          `[publishSchool] Timetable setup failed for school ${schoolId}:`,
+          timetableError
+        )
+      }
     }
 
     revalidatePath(`/onboarding/${schoolId}`)

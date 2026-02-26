@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { Award, FileCheck, GraduationCap, Plus, Trash } from "lucide-react"
 import { useFieldArray, type UseFormReturn } from "react-hook-form"
 

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import type { AnnouncementTemplate } from "@prisma/client"
 import {
@@ -22,6 +24,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getTemplates } from "./template-actions"
 import type { AnnouncementFormData } from "./validation"
@@ -119,7 +122,10 @@ export function TemplatesStep({
   lang,
   onTemplateSelect,
 }: TemplatesStepProps) {
-  const isRTL = lang === "ar"
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.announcements?.templates as
+    | Record<string, string>
+    | undefined
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(
     "scratch"
   )
@@ -209,7 +215,7 @@ export function TemplatesStep({
       {/* Start from Scratch */}
       <div>
         <h4 className="mb-3 text-sm font-medium">
-          {isRTL ? "البدء من الصفر" : "Start Fresh"}
+          {d?.startFresh || "Start Fresh"}
         </h4>
         <Card
           className={cn(
@@ -225,15 +231,15 @@ export function TemplatesStep({
             </div>
             <div className="flex-1">
               <h5 className="font-medium">
-                {isRTL ? "إعلان جديد" : "New Announcement"}
+                {d?.newAnnouncement || "New Announcement"}
               </h5>
               <p className="text-muted-foreground text-sm">
-                {isRTL ? "ابدأ بإعلان فارغ" : "Start with a blank announcement"}
+                {d?.blankAnnouncement || "Start with a blank announcement"}
               </p>
             </div>
             {selectedTemplate === "scratch" && (
               <Badge variant="default" className="shrink-0">
-                {isRTL ? "محدد" : "Selected"}
+                {d?.selected || "Selected"}
               </Badge>
             )}
           </CardContent>
@@ -243,7 +249,7 @@ export function TemplatesStep({
       {/* Quick Presets */}
       <div>
         <h4 className="mb-3 text-sm font-medium">
-          {isRTL ? "إعدادات سريعة" : "Quick Presets"}
+          {d?.quickPresets || "Quick Presets"}
         </h4>
         <div className="grid grid-cols-2 gap-3">
           {QUICK_PRESETS.map((preset) => {
@@ -277,7 +283,7 @@ export function TemplatesStep({
       {/* System Templates */}
       <div>
         <h4 className="mb-3 text-sm font-medium">
-          {isRTL ? "أنواع الإعلانات" : "Announcement Types"}
+          {d?.announcementTypes || "Announcement Types"}
         </h4>
         <div className="flex flex-wrap gap-2">
           {SYSTEM_TEMPLATES.map((template) => {
@@ -306,7 +312,7 @@ export function TemplatesStep({
       {(isLoading || userTemplates.length > 0) && (
         <div>
           <h4 className="mb-3 text-sm font-medium">
-            {isRTL ? "قوالبي المحفوظة" : "My Saved Templates"}
+            {d?.mySavedTemplates || "My Saved Templates"}
           </h4>
           {isLoading ? (
             <div className="space-y-2">

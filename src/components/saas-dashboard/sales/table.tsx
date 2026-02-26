@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"

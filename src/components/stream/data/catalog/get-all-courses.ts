@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { Prisma } from "@prisma/client"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
@@ -18,6 +20,7 @@ export async function getAllCatalogCourses(
     perPage?: number
     title?: string
     category?: string
+    grade?: number
     lang?: string
   } = {}
 ) {
@@ -66,6 +69,7 @@ export async function getAllCatalogCourses(
         }
       : {}),
     ...(params.category ? { department: params.category } : {}),
+    ...(params.grade ? { grades: { has: params.grade } } : {}),
   }
 
   const [subjects, count] = await Promise.all([
@@ -96,6 +100,7 @@ const subjectSelect = {
   lang: true,
   department: true,
   levels: true,
+  grades: true,
   totalChapters: true,
   totalLessons: true,
   usageCount: true,
@@ -118,6 +123,7 @@ function toCourseShape(
     lang: string
     department: string
     levels: string[]
+    grades: number[]
     totalChapters: number
     totalLessons: number
     usageCount: number
@@ -152,6 +158,7 @@ function toCourseShape(
       totalLessons: subject.totalLessons,
       averageRating: subject.averageRating,
       levels: subject.levels,
+      grades: subject.grades,
     },
   }
 }

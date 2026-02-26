@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Analyze database queries for N+1 problems, missing indexes, slow queries
  * Run: npx tsx scripts/db-analyze.ts [--threshold 100]

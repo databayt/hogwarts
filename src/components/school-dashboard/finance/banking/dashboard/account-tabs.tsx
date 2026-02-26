@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { memo, useCallback, useMemo, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LoaderCircle } from "lucide-react"

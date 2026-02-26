@@ -572,4 +572,4 @@ When adding features:
 
 ## 📄 License
 
-Part of the Hogwarts School Management System - MIT License
+Part of the Hogwarts School Management System - SSPL-1.0

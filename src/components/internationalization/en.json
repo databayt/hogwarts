@@ -15,7 +15,39 @@
     "errorMessage": "Something went wrong. Please try again.",
     "typing": "Typing...",
     "send": "Send",
-    "retry": "Retry"
+    "retry": "Retry",
+    "chooseQuestion": "Choose a question or type your message",
+    "grades": "Grades",
+    "gradesQuestion": "How do I check grades?",
+    "attendance": "Attendance",
+    "attendanceQuestion": "How do I mark attendance?",
+    "timetable": "Timetable",
+    "timetableQuestion": "Where is the timetable?",
+    "finance": "Finance",
+    "financeQuestion": "How do I pay fees?",
+    "sendMessage": "Send message",
+    "voiceInput": "Voice input",
+    "speechNotSupported": "Speech recognition is not supported in your browser.",
+    "speechError": "Speech recognition error. Please try again.",
+    "ttsEnabled": "Text-to-speech enabled",
+    "ttsDisabled": "Text-to-speech disabled",
+    "listening": "Listening...",
+    "saasFeatures": "Features",
+    "saasFeaturesQuestion": "What features does Databayt offer?",
+    "saasPricing": "Pricing",
+    "saasPricingQuestion": "What are the pricing plans?",
+    "saasGetStarted": "Get Started",
+    "saasGetStartedQuestion": "How do I get started with Databayt?",
+    "saasOpenSource": "Open Source",
+    "saasOpenSourceQuestion": "Is Databayt open source?",
+    "schoolAdmission": "Admission",
+    "schoolAdmissionQuestion": "How do I apply to this school?",
+    "schoolFees": "Fees",
+    "schoolFeesQuestion": "What are the school fees?",
+    "schoolContact": "Contact",
+    "schoolContactQuestion": "How can I contact the school?",
+    "schoolPrograms": "Programs",
+    "schoolProgramsQuestion": "What programs does the school offer?"
   },
   "common": {
     "loading": "Loading...",
@@ -48,7 +80,48 @@
     "platform": "Platform",
     "brandName": "Hogwarts",
     "unauthorized": "Unauthorized access",
-    "switchLanguage": "Switch language"
+    "switchLanguage": "Switch language",
+    "create": "Create",
+    "saving": "Saving...",
+    "select": "Select",
+    "noItemsFound": "No items found",
+    "tryAdjusting": "Try adjusting your search or filters",
+    "noResults": "No results found.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {current} of {total}",
+    "rowsSelected": "{selected} of {total} row(s) selected.",
+    "areYouSure": "Are you sure?",
+    "deleteItem": "Delete item",
+    "cannotBeUndone": "This action cannot be undone.",
+    "stepOf": "Step {current} of {total}",
+    "actions": "Actions",
+    "goToFirstPage": "Go to first page",
+    "goToPreviousPage": "Go to previous page",
+    "goToNextPage": "Go to next page",
+    "goToLastPage": "Go to last page",
+    "savedSuccessfully": "Saved successfully",
+    "failedToSave": "Failed to save",
+    "deletedSuccessfully": "Deleted successfully",
+    "copiedToClipboard": "Copied to clipboard",
+    "failedToDelete": "Failed to delete",
+    "failedToLoad": "Failed to load",
+    "updatedSuccessfully": "Updated successfully",
+    "createdSuccessfully": "Created successfully",
+    "failedToCreate": "Failed to create",
+    "failedToUpdate": "Failed to update",
+    "unexpectedError": "An unexpected error occurred",
+    "operationSuccessful": "Operation completed successfully",
+    "operationFailed": "Operation failed",
+    "errors": {
+      "NOT_AUTHENTICATED": "Not authenticated",
+      "MISSING_SCHOOL": "Missing school context",
+      "UNAUTHORIZED": "You don't have permission to perform this action",
+      "NOT_FOUND": "Item not found",
+      "VALIDATION_ERROR": "Invalid input",
+      "ALREADY_EXISTS": "This item already exists",
+      "RATE_LIMITED": "Too many requests. Please try again later.",
+      "UNKNOWN": "Something went wrong"
+    }
   },
   "navigation": {
     "menu": "Menu",
@@ -92,8 +165,24 @@
       "services": "GitHub"
     },
     "features": {
-      "title": "Features",
-      "subtitle": "Everything you need to build your next project"
+      "badge": "48 Features, 14 Categories",
+      "title": "Everything your school needs",
+      "subtitle": "A complete school management platform that automates administration, enhances learning, and connects your entire school community.",
+      "searchPlaceholder": "Search features...",
+      "allCategories": "All",
+      "noResults": "No features match your search. Try a different keyword.",
+      "statsFeatures": "Features",
+      "statsCategories": "Categories",
+      "statsRoles": "User Roles",
+      "impactTitle": "Measurable Impact",
+      "ctaTitle": "Ready to transform your school?",
+      "ctaSubtitle": "Join schools that have automated their operations and improved learning outcomes.",
+      "ctaGetStarted": "Get Started",
+      "ctaViewPricing": "View Pricing",
+      "backToFeatures": "Back to Features",
+      "keyBenefits": "Key Benefits",
+      "useCases": "Use Cases",
+      "relatedFeatures": "Related Features"
     },
     "pricing": {
       "title": "Pricing",
@@ -192,106 +281,100 @@
       ],
       "items": [
         {
-          "question": "What services do you offer?",
-          "answer": "We automate repetitive business processes, streamline workflows, and build custom solutions that save you time and reduce manual work.",
+          "question": "How much does it cost?",
+          "answer": "We offer a free tier for small schools with essential features. Paid plans scale based on the number of students and modules you need. All pricing is transparent with no hidden fees or long-term contracts.",
           "list": [
-            "Data processing and analysis automation",
-            "Workflow optimization and task automation",
-            "Custom enterprise applications and integrations"
+            "Free tier for schools under 100 students",
+            "Pay-per-student pricing for larger schools",
+            "No setup fees or long-term contracts",
+            "Volume discounts for school networks"
           ]
         },
         {
-          "question": "How much do you charge?",
-          "answer": "Our pricing is transparent and based on the complexity and scope of your project. We offer competitive rates and flexible payment terms."
-        },
-        {
-          "question": "How long does it take to complete a project?",
-          "answer": "Project timelines vary based on complexity. Simple automations can be completed in days, while complex enterprise solutions may take weeks or months."
-        },
-        {
-          "question": "Do you provide ongoing support?",
-          "answer": "Yes, we offer comprehensive support and maintenance packages to ensure your solutions continue to work optimally."
-        },
-        {
-          "question": "Can you work with my existing systems?",
-          "answer": "Absolutely! We specialize in integrating with existing systems and can work with your current infrastructure."
-        },
-        {
-          "question": "I'm busy with other commitments. Can I still contribute?",
-          "answer": "Perfect! Most contributors work part-time:",
+          "question": "Is my school's data secure?",
+          "answer": "Security is our top priority. We implement industry-standard practices to protect student and staff data at every level.",
           "list": [
-            "No minimum time commitment required",
-            "Contribute when your schedule allows",
-            "Start with small tasks and grow your involvement",
-            "Earn proportional to your contribution level"
+            "End-to-end encryption for all data in transit and at rest",
+            "Role-based access control with 8 distinct permission levels",
+            "Automatic daily backups with point-in-time recovery",
+            "Full audit logging of all administrative actions"
           ]
         },
         {
-          "question": "How do I start contributing?",
-          "answer": "",
+          "question": "How do we migrate from our current system?",
+          "answer": "We provide a guided migration process with dedicated support to ensure a smooth transition with zero data loss.",
           "list": [
-            "Explore the codebase at our GitHub repository",
-            "Join our community discussions to introduce yourself",
-            "Pick a first issue - we have 'good first issue' labels for newcomers",
-            "Submit a pull request - start small and build up",
-            "Earn your first revenue share as your contributions are used"
+            "Bulk import from Excel, CSV, or existing SIS platforms",
+            "Dedicated migration specialist assigned to your school",
+            "Parallel running period to verify data accuracy",
+            "Typical migration completes in 1-2 weeks"
           ]
         },
         {
-          "question": "How do I get started?",
-          "answer": "Contact us for a consultation where we'll discuss your specific needs, challenges, and goals. We'll recommend the best approach and provide a detailed proposal."
-        },
-        {
-          "question": "Can I use Hogwarts components in my own projects?",
-          "answer": "Yes! All components are open source and can be used in your projects according to their respective licenses. We encourage reuse and building upon our work."
-        },
-        {
-          "question": "Can I include Hogwarts projects in my portfolio?",
-          "answer": "Absolutely! Working with us provides multiple portfolio benefits:",
+          "question": "Does it integrate with tools we already use?",
+          "answer": "Yes. We integrate with the most popular tools schools already rely on, and our open API allows custom integrations.",
           "list": [
-            "Add real-world enterprise projects to your portfolio",
-            "Showcase your contributions to open-source",
-            "Demonstrate experience with modern tech stack",
-            "Build a public contribution history on GitHub"
+            "Google Workspace and Microsoft 365 for single sign-on",
+            "Popular LMS platforms like Google Classroom and Moodle",
+            "Payment gateways for tuition and fee collection",
+            "Open API for custom integrations with any system"
           ]
         },
         {
-          "question": "How does the earning model work for real-world projects?",
-          "answer": "Our earning model has multiple streams:",
+          "question": "Can it be customized for our curriculum?",
+          "answer": "Absolutely. The platform supports multiple curricula and can be tailored to your country's specific educational requirements.",
           "list": [
-            "Revenue share from components used in client projects",
-            "Direct earnings from client project implementations",
-            "Ongoing maintenance and support revenue",
-            "Bonus rewards for high-impact contributions",
-            "Ownership stake in projects you help build"
+            "Support for national, international, and custom curricula",
+            "Configurable grading scales and assessment types",
+            "Localized report cards and transcripts",
+            "Arabic and English interface with full RTL support"
+          ]
+        },
+        {
+          "question": "Can we manage multiple schools from one system?",
+          "answer": "Yes. Our multi-tenant architecture is designed for school networks and districts, giving you centralized oversight with per-school customization.",
+          "list": [
+            "Single dashboard to manage all your schools",
+            "Per-school configuration for branding, curriculum, and policies",
+            "Consolidated reporting across the entire network",
+            "Centralized user management with school-level permissions"
+          ]
+        },
+        {
+          "question": "What support and training do you provide?",
+          "answer": "We offer multiple support channels to help your team get up and running quickly and stay productive.",
+          "list": [
+            "Comprehensive documentation and video tutorials",
+            "Community support via Discord and GitHub Discussions",
+            "Onboarding workshops for administrators and teachers",
+            "Premium support packages with dedicated account managers"
           ]
         },
         {
           "question": "Still have questions?",
           "answer": "",
           "list": [
-            "Join our community discussions on GitHub",
+            "Browse our documentation",
             "Join our Discord community",
-            "Contact us for a free consultation",
-            "Check our documentation",
-            "Email us at hello@hogwarts.edu"
+            "Start a discussion on GitHub",
+            "Email us at hello@databayt.org"
           ],
           "links": [
             {
-              "text": "Join our community discussions on GitHub",
-              "href": "https://github.com/hogwarts/discussions"
-            },
-            {
-              "text": "Join our Discord community",
-              "href": "https://discord.gg/hogwarts"
-            },
-            {
-              "text": "Check our documentation at hogwarts.edu/docs",
+              "text": "Browse our documentation",
               "href": "/docs"
             },
             {
-              "text": "Email us at hello@hogwarts.edu",
-              "href": "mailto:hello@hogwarts.edu"
+              "text": "Join our Discord community",
+              "href": "https://discord.gg/uPa4gGG62c"
+            },
+            {
+              "text": "Start a discussion on GitHub",
+              "href": "https://github.com/databayt/hogwarts/discussions"
+            },
+            {
+              "text": "Email us at hello@databayt.org",
+              "href": "mailto:hello@databayt.org"
             }
           ]
         }
@@ -300,7 +383,13 @@
     "footer": {
       "inspiredBy": "Inspired by",
       "builtBy": "Built by",
-      "sourceCode": "The source code is available on"
+      "sourceCode": "The source code is available on",
+      "product": "Product",
+      "company": "Company",
+      "services": "Services",
+      "support": "Support",
+      "readyToBuild": "Ready to build?",
+      "getStarted": "Get started"
     },
     "parallax": {
       "design": "Design",
@@ -325,14 +414,6 @@
       "quote": "This platform transformed how we manage client relationships. The intuitive design and powerful features helped us scale from a small agency to serving Fortune 500 companies.",
       "author": "Ahmed Elardi",
       "position": "CEO, Pixel Studios"
-    },
-    "footer": {
-      "product": "Product",
-      "company": "Company",
-      "services": "Services",
-      "support": "Support",
-      "readyToBuild": "Ready to build?",
-      "getStarted": "Get started"
     },
     "stack": {
       "title": "Stack",
@@ -572,7 +653,11 @@
         "monthly": "Monthly",
         "yearly": "Yearly (save 20%)",
         "perMonth": "/mo",
-        "moreInfo": "More info"
+        "moreInfo": "More info",
+        "loading": "Loading...",
+        "unavailable": "Unavailable",
+        "manageSubscription": "Manage Subscription",
+        "getPlan": "Get plan"
       },
       "planNames": {
         "hobby": "Hobby",
@@ -688,6 +773,11 @@
             "answer": "Absolutely! For enterprise needs, we offer custom solutions with dedicated teams, SLAs, and specialized support. Contact us for a tailored quote."
           }
         ]
+      },
+      "securePayment": {
+        "title": "Secure Payment",
+        "description": "Your security is our priority. We use industry-leading encryption and security protocols to ensure your payment information is always protected.",
+        "poweredBy": "Powered by"
       }
     },
     "services": {
@@ -714,6 +804,15 @@
       }
     },
     "site": {
+      "nav": {
+        "about": "About",
+        "admissions": "Admissions",
+        "academic": "Academic",
+        "platform": "Platform",
+        "login": "Login",
+        "logout": "Logout",
+        "search": "Search"
+      },
       "hero": {
         "title": "Beautiful Mind,\nCurious. Wonder.",
         "subtitle": "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school",
@@ -949,6 +1048,348 @@
             "answer": "You can send an owl to Hogwarts School, or use the Floo Network to speak with our admissions office. Muggle post is also accepted but may take longer to reach us."
           }
         ]
+      },
+      "houses": {
+        "title": "Houses",
+        "description": "Find where your passion belongs.",
+        "sortingQuiz": "Take Sorting Quiz",
+        "items": [
+          {
+            "name": "Gryffindor Academy",
+            "description": "Leadership & Social",
+            "longDescription": "Develop courage and leadership skills through history, government, and community service programs.",
+            "features": [
+              "History & Government",
+              "Leadership Training",
+              "Community Service",
+              "Public Speaking"
+            ]
+          },
+          {
+            "name": "Ravenclaw Institute",
+            "description": "Sciences & Innovation",
+            "longDescription": "Pursue wisdom through cutting-edge STEM programs and innovative problem-solving challenges.",
+            "features": [
+              "Advanced Sciences",
+              "Research Projects",
+              "Technology Integration",
+              "Innovation Labs"
+            ]
+          },
+          {
+            "name": "Hufflepuff College",
+            "description": "Arts & Humanities",
+            "longDescription": "Cultivate creativity and empathy through comprehensive arts, literature, and humanities programs.",
+            "features": [
+              "Visual & Performing Arts",
+              "Literature Studies",
+              "Cultural Diversity",
+              "Creative Writing"
+            ]
+          },
+          {
+            "name": "Slytherin School",
+            "description": "Business & Mathematics",
+            "longDescription": "Foster determination and strategic reasoning through finance, business studies, and innovation programs.",
+            "features": [
+              "Advanced Mathematics",
+              "Economics",
+              "Entrepreneurship",
+              "Financial Literacy"
+            ]
+          }
+        ]
+      },
+      "features": {
+        "title": "Features",
+        "description": "What makes us special",
+        "numbersTitle": "Numbers",
+        "numbersDescription": "Numbers that reflect our commitment to excellence and the magical transformations happening in our classrooms every day.",
+        "items": [
+          {
+            "title": "Immersive Learning",
+            "description": "Interactive and immersive education that transforms traditional learning into an enchanting adventure."
+          },
+          {
+            "title": "Dynamic Programs",
+            "description": "Carefully crafted programs that blend core academics with creative thinking and real-world applications."
+          },
+          {
+            "title": "House Community",
+            "description": "Close-knit learning communities that foster friendship, collaboration, and mutual support among students."
+          },
+          {
+            "title": "Champions League",
+            "description": "Academic competitions, sports tournaments, and creative challenges that celebrate every student's unique talents."
+          },
+          {
+            "title": "Worldwide Adventures",
+            "description": "Global exchange programs and virtual international collaborations that expand horizons beyond our castle walls."
+          },
+          {
+            "title": "Innovation Potions",
+            "description": "STEAM laboratories and maker spaces where students concoct creative solutions to real-world challenges."
+          }
+        ],
+        "stats": [
+          { "number": "98%", "label": "Graduation Rate" },
+          { "number": "15:1", "label": "Student-Teacher Ratio" },
+          { "number": "40+", "label": "Magical Programs" },
+          { "number": "25", "label": "Years of Excellence" }
+        ]
+      },
+      "core": {
+        "title": "Core",
+        "description": "These values guide everything we do at our school.",
+        "items": [
+          {
+            "title": "Courage",
+            "description": "Be brave, take risks, and stand up for what's right."
+          },
+          {
+            "title": "Wisdom",
+            "description": "Reflect deeply and pursue understanding beyond facts."
+          },
+          {
+            "title": "Loyalty",
+            "description": "Support each other and stay committed to shared goals."
+          },
+          {
+            "title": "Ambition",
+            "description": "Excel, innovate, and make positive changes in the world."
+          }
+        ]
+      },
+      "faculty": {
+        "title": "Faculty",
+        "description": "Meet the wizards who make learning magical",
+        "stats": [
+          { "label": "Average Experience", "value": "15+ Years" },
+          { "label": "Advanced Degrees", "value": "100%" },
+          { "label": "Published Researchers", "value": "85%" },
+          { "label": "Student Satisfaction", "value": "98%" }
+        ],
+        "professors": [
+          {
+            "name": "Albus Dumbledore",
+            "title": "Headmaster & Chief Warlock",
+            "subject": "Transfiguration & Ancient Magic",
+            "description": "Leading our school with wisdom and extraordinary magical knowledge, Professor Dumbledore guides students through the most complex magical arts.",
+            "specialties": ["Ancient Magic", "Transfiguration", "Leadership"],
+            "experience": "50+ years",
+            "education": "Order of Merlin, First Class",
+            "quote": "It is our choices that show what we truly are, far more than our abilities."
+          },
+          {
+            "name": "Severus Snape",
+            "title": "Potions Master & Head of Slytherin",
+            "subject": "Potions & Dark Arts Defense",
+            "description": "With precision and dedication, Professor Snape guides students through the intricate art of potion-making and magical defense.",
+            "specialties": ["Potions", "Dark Arts Defense", "Occlumency"],
+            "experience": "20+ years",
+            "education": "Master of Potions, Hogwarts",
+            "quote": "Attention to detail separates the exceptional from the merely adequate."
+          },
+          {
+            "name": "Minerva McGonagall",
+            "title": "Deputy & Head of Gryffindor",
+            "subject": "Transfiguration",
+            "description": "Professor McGonagall transforms students' understanding of magic through her mastery of Transfiguration and unwavering dedication to excellence.",
+            "specialties": ["Transfiguration", "Animagus Studies", "Quidditch"],
+            "experience": "40+ years",
+            "education": "Transfiguration Mistress, Hogwarts",
+            "quote": "We teachers are rather good at magic, you know."
+          },
+          {
+            "name": "Rubeus Hagrid",
+            "title": "Keeper of Keys & Grounds",
+            "subject": "Care of Magical Creatures",
+            "description": "Hagrid nurtures both magical creatures and students with his boundless enthusiasm and deep knowledge of the magical world.",
+            "specialties": [
+              "Magical Creatures",
+              "Groundskeeping",
+              "Dragon Studies"
+            ],
+            "experience": "30+ years",
+            "education": "Hogwarts School (Expelled, later cleared)",
+            "quote": "What's comin' will come, and we'll meet it when it does."
+          }
+        ]
+      },
+      "testimonials": {
+        "title": "Testimonials",
+        "description": "Hear from our students, alumni, and parents about the transformative power of education and the magical moments that happen within our school community every day.",
+        "stats": [
+          { "value": "4.9/5", "label": "Parent Satisfaction" },
+          { "value": "98%", "label": "College Acceptance" },
+          { "value": "500+", "label": "Happy Families" },
+          { "value": "25+", "label": "Years of Trust" }
+        ],
+        "items": [
+          {
+            "quote": "This school didn't just teach me subjects—it taught me to believe in magic, both in learning and in myself. The teachers here don't just educate; they inspire and transform.",
+            "name": "Emily Harrison",
+            "title": "Class of 2023, Gryffindor Academy"
+          },
+          {
+            "quote": "The innovation labs here are incredible! I've been able to work on real research projects and even present at science fairs. It's like having access to a magical laboratory.",
+            "name": "Michael Chen",
+            "title": "Current Student, Ravenclaw Institute"
+          },
+          {
+            "quote": "Watching my daughter flourish here has been magical. She's gained confidence, made lifelong friends, and discovered passions I never knew she had. The community feeling is extraordinary.",
+            "name": "Sarah Martinez",
+            "title": "Parent of Sofia Martinez"
+          },
+          {
+            "quote": "The arts program here is phenomenal. I discovered my love for theater and creative writing, and the teachers supported every creative endeavor. It truly felt like Hogwarts for artists.",
+            "name": "James Wilson",
+            "title": "Class of 2022, Hufflepuff College"
+          },
+          {
+            "quote": "As an educator myself, I was impressed by the innovative teaching methods and genuine care for each student's individual growth. The house system creates such meaningful connections.",
+            "name": "Dr. Patricia Kumar",
+            "title": "Parent of Arjun Kumar"
+          },
+          {
+            "quote": "The business and entrepreneurship program opened my eyes to possibilities I never imagined. I've already started my own small venture with guidance from our amazing teachers!",
+            "name": "Olivia Thompson",
+            "title": "Current Student, Slytherin School"
+          }
+        ]
+      },
+      "process": {
+        "title": "Process",
+        "description": "Starting your journey is easier than casting a spell.",
+        "steps": [
+          {
+            "title": "Submit Application",
+            "description": "Complete our application form online with all required documents and personal information."
+          },
+          {
+            "title": "Campus Tour",
+            "description": "Experience our enchanting campus firsthand with a guided tour to all facilities and departments."
+          },
+          {
+            "title": "Meet & Greet",
+            "description": "Get in touch with faculty members and current students in a welcoming environment."
+          },
+          {
+            "title": "Join Family",
+            "description": "Complete your enrollment process and officially join our educational family to begin your journey."
+          }
+        ]
+      },
+      "offers": {
+        "title": "Benefits",
+        "description": "Financial support options designed to make your wizarding journey more affordable.",
+        "items": [
+          {
+            "title": "Early Bird Special",
+            "description": "Apply before Jul 1st, to receive a 10% tuition discount",
+            "badge": "Limited Time"
+          },
+          {
+            "title": "Sibling Discount",
+            "description": "Families with multiple students receive additional savings",
+            "badge": "Family Benefit"
+          },
+          {
+            "title": "Merit Scholarships",
+            "description": "Outstanding students may qualify for academic scholarships",
+            "badge": "Academic Excellence"
+          }
+        ]
+      },
+      "logoCloud": {
+        "trustedBy": "Trusted by magical institutions",
+        "items": [
+          "Ministry of Magic",
+          "Diagon Alley",
+          "Gringotts Bank",
+          "St. Mungo's Hospital",
+          "Quidditch League",
+          "Ollivanders",
+          "Daily Prophet",
+          "Beauxbatons Academy"
+        ]
+      },
+      "events": {
+        "title": "Events",
+        "description": "what's happening",
+        "feedTimeAgo": "4 minutes ago in",
+        "feedChannel": "#events",
+        "feedHandle": "@hogwarts",
+        "feedText": "Hogwarts School of Witchcraft and Wizardry invites you to attend our Welcome Feast - where we'll present our magical curriculum, discuss the challenges ahead, and open dialogue about our shared journey in the wizarding world.",
+        "items": [
+          {
+            "month": "September",
+            "title": "Hogwarts Welcome Feast",
+            "time": "7PM — 10PM",
+            "location": "@ Great Hall, Hogwarts Castle"
+          },
+          {
+            "month": "October",
+            "title": "Defense Against Dark Arts Seminar",
+            "time": "2PM — 5PM",
+            "location": "@ Defense, Hogwarts"
+          },
+          {
+            "month": "October",
+            "title": "Halloween Feast & Celebration",
+            "time": "6PM — 11PM",
+            "location": "@ Great Hall, Hogwarts Castle"
+          },
+          {
+            "month": "December",
+            "title": "Christmas Holiday Feast",
+            "time": "5PM — 9PM",
+            "location": "@ Great Hall, Hogwarts Castle"
+          }
+        ]
+      },
+      "newComers": {
+        "internal": "Internal",
+        "title": "New Comers",
+        "subtitle": "Welcome on board",
+        "button": "Onboarding"
+      },
+      "footer": {
+        "getDirections": "Get Directions",
+        "address": "123 Magical Learning Lane,\nEducation City, EC 12345",
+        "academics": "Academics",
+        "campus": "Campus",
+        "activities": "Activities",
+        "support": "Support",
+        "links": {
+          "houses": "Houses",
+          "curriculum": "Curriculum",
+          "faculty": "Faculty",
+          "library": "Library",
+          "subjects": "Subjects",
+          "exams": "Exams",
+          "admissions": "Admissions",
+          "dormitories": "Dormitories",
+          "greatHall": "Great Hall",
+          "quidditch": "Quidditch",
+          "grounds": "Grounds",
+          "clubs": "Clubs",
+          "events": "Events",
+          "sports": "Sports",
+          "competitions": "Competitions",
+          "tournaments": "Tournaments",
+          "ceremonies": "Ceremonies",
+          "traditions": "Traditions",
+          "about": "About",
+          "contact": "Contact",
+          "helpCenter": "Help Center",
+          "alumni": "Alumni",
+          "careers": "Careers"
+        },
+        "buildBy": "Build by",
+        "sourceCode": ", source code available on",
+        "terms": "Terms",
+        "privacy": "Privacy"
       }
     },
     "onboarding": {
@@ -1087,6 +1528,18 @@
       "company": ["About", "Careers", "Blog", "Case Studies"],
       "services": ["Startups", "Agencies"],
       "support": ["Help Center", "Contact", "Documentation", "Service Status"]
+    },
+    "links": {
+      "product": "Product",
+      "company": "Company",
+      "support": "Support",
+      "legal": "Legal"
+    },
+    "sections": {
+      "product": ["Features", "Pricing", "Updates", "Roadmap"],
+      "company": ["About", "Blog", "Careers", "Partners"],
+      "support": ["Help Center", "Contact", "Documentation", "Service Status"],
+      "legal": ["Privacy", "Terms", "License"]
     }
   },
   "errors": {
@@ -1119,7 +1572,12 @@
       "Timetable": "Timetable",
       "Library": "Library",
       "Stream": "Stream",
-      "Profile": "Profile"
+      "Profile": "Profile",
+      "School": "School",
+      "Sales": "Sales",
+      "Classrooms": "Classrooms",
+      "Stats": "Stats",
+      "Staff": "Staff"
     },
     "breadcrumb": {
       "dashboard": "Dashboard",
@@ -1135,6 +1593,7 @@
       "students": "Students",
       "teachers": "Teachers",
       "classes": "Classrooms",
+      "classrooms": "Classrooms",
       "lessons": "Lessons",
       "exams": "Exams",
       "events": "Events",
@@ -1143,7 +1602,11 @@
       "timetable": "Timetable",
       "library": "Library",
       "stream": "Stream",
-      "profile": "Profile"
+      "profile": "Profile",
+      "school": "School",
+      "sales": "Sales",
+      "stats": "Stats",
+      "staff": "Staff"
     }
   },
   "saas": {
@@ -1155,7 +1618,8 @@
       "Billing": "Billing",
       "Observability": "Observability",
       "Tenants": "Tenants",
-      "Profile": "Profile"
+      "Profile": "Profile",
+      "Sales": "Sales"
     },
     "breadcrumb": {
       "dashboard": "Dashboard",
@@ -1165,7 +1629,8 @@
       "billing": "Billing",
       "observability": "Observability",
       "tenants": "Tenants",
-      "profile": "Profile"
+      "profile": "Profile",
+      "sales": "Sales"
     }
   },
   "commandMenu": {

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ChevronRight, TrendingDown, TrendingUp } from "lucide-react"
 import { motion } from "motion/react"
@@ -123,8 +125,8 @@ export function MetricCard({
           )}
         </div>
         {href && (
-          <div className="absolute right-4 bottom-4 opacity-0 transition-opacity group-hover:opacity-100">
-            <ChevronRight className="text-muted-foreground h-5 w-5" />
+          <div className="absolute end-4 bottom-4 opacity-0 transition-opacity group-hover:opacity-100">
+            <ChevronRight className="text-muted-foreground h-5 w-5 rtl:rotate-180" />
           </div>
         )}
       </CardContent>
@@ -269,8 +271,8 @@ function MetricCardDetailed({
           )}
         </div>
         {href && (
-          <div className="absolute right-4 bottom-4 opacity-0 transition-opacity group-hover:opacity-100">
-            <ChevronRight className="text-muted-foreground h-5 w-5" />
+          <div className="absolute end-4 bottom-4 opacity-0 transition-opacity group-hover:opacity-100">
+            <ChevronRight className="text-muted-foreground h-5 w-5 rtl:rotate-180" />
           </div>
         )}
       </CardContent>

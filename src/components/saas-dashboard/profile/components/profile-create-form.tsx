@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // import { useParams, useRouter } from 'next/navigation';
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -385,13 +388,13 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({ initialData }) => {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="absolute right-8"
+                          className="absolute end-8"
                           onClick={() => remove(index)}
                         >
                           <IconTrash className="h-4 w-4" />
                         </Button>
                         {errors?.jobs?.[index] && (
-                          <span className="alert absolute right-8">
+                          <span className="alert absolute end-8">
                             <IconAlertTriangle className="h-4 w-4 text-red-700" />
                           </span>
                         )}

@@ -1,40 +1,25 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/ui/star-rating"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { CatalogSubjectSummary } from "./catalog-detail"
 
 // ---------------------------------------------------------------------------
-// Grade label helpers
+// Grade label helper
 // ---------------------------------------------------------------------------
 
 function gradeLabel(g: number, lang: "en" | "ar"): string {
-  if (lang === "ar")
-    return `\u0627\u0644\u0635\u0641 ${g.toLocaleString("ar-EG")}`
+  if (lang === "ar") return `\u0627\u0644\u0635\u0641 ${g.toLocaleString(lang)}`
   return `Grade ${g}`
-}
-
-function levelsToGrades(levels: string[]): number[] {
-  const result = new Set<number>()
-  for (const level of levels) {
-    switch (level) {
-      case "ELEMENTARY":
-        for (let i = 1; i <= 6; i++) result.add(i)
-        break
-      case "MIDDLE":
-        for (let i = 7; i <= 9; i++) result.add(i)
-        break
-      case "HIGH":
-        for (let i = 10; i <= 12; i++) result.add(i)
-        break
-    }
-  }
-  return Array.from(result).sort((a, b) => a - b)
 }
 
 // ---------------------------------------------------------------------------
@@ -43,26 +28,27 @@ function levelsToGrades(levels: string[]): number[] {
 
 interface Props {
   subject: CatalogSubjectSummary
+  gradeSiblings?: { grade: number; slug: string }[]
   lang: Locale
 }
 
-export function CatalogHero({ subject, lang }: Props) {
-  const isRTL = lang === "ar"
+export function CatalogHero({ subject, gradeSiblings = [], lang }: Props) {
+  const { dictionary } = useDictionary()
+  const cat = dictionary?.school?.subjects?.catalog as
+    | Record<string, string>
+    | undefined
   const [heroFailed, setHeroFailed] = useState(false)
   const onHeroError = useCallback(() => setHeroFailed(true), [])
 
   const t = useMemo(
     () => ({
-      topics: isRTL
-        ? "\u0627\u0644\u0645\u0648\u0627\u0636\u064a\u0639"
-        : "Topics",
-      lessons: isRTL ? "\u062f\u0631\u0648\u0633" : "lessons",
+      chapters: cat?.chapters || "Chapters",
+      lessons: cat?.lessons || "lessons",
     }),
-    [isRTL]
+    [cat]
   )
 
-  const grades =
-    subject.grades.length > 0 ? subject.grades : levelsToGrades(subject.levels)
+  const langCode = lang === "ar" ? "ar" : "en"
 
   return (
     <>
@@ -93,7 +79,7 @@ export function CatalogHero({ subject, lang }: Props) {
           </h1>
           <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-white/80">
             <span>
-              {subject.totalChapters} {t.topics} &bull; {subject.totalLessons}{" "}
+              {subject.totalChapters} {t.chapters} &bull; {subject.totalLessons}{" "}
               {t.lessons}
             </span>
             {subject.averageRating > 0 && (
@@ -109,18 +95,26 @@ export function CatalogHero({ subject, lang }: Props) {
         </div>
       </div>
 
-      {/* Grade Badges */}
-      {grades.length > 0 && (
+      {/* Grade Toggle */}
+      {gradeSiblings.length > 1 && (
         <div className="flex flex-wrap gap-2">
-          {grades.map((g) => (
-            <Badge
-              key={g}
-              variant="secondary"
-              className="text-muted-foreground"
-            >
-              {gradeLabel(g, isRTL ? "ar" : "en")}
-            </Badge>
-          ))}
+          {gradeSiblings.map(({ grade, slug: siblingSlug }) => {
+            const isActive = siblingSlug === subject.slug
+            return isActive ? (
+              <Badge key={grade} variant="default">
+                {gradeLabel(grade, langCode)}
+              </Badge>
+            ) : (
+              <Link key={grade} href={`/${lang}/subjects/${siblingSlug}`}>
+                <Badge
+                  variant="secondary"
+                  className="hover:bg-muted cursor-pointer"
+                >
+                  {gradeLabel(grade, langCode)}
+                </Badge>
+              </Link>
+            )
+          })}
         </div>
       )}
 

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useRouter } from "next/navigation"
 import {
   BookOpen,
@@ -39,6 +41,13 @@ export default function CampaignSelectorContent({
   const isRTL = lang === "ar"
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { portal?: Record<string, string> } }
+      }
+    )?.school?.admission?.portal ?? {}
+
   const handleStartNew = (campaignId: string) => {
     router.push(`/${lang}/apply/overview?id=${campaignId}`)
   }
@@ -55,7 +64,7 @@ export default function CampaignSelectorContent({
       {/* Welcome Header */}
       <div>
         <h3 className="mb-3 text-lg sm:mb-4 sm:text-xl lg:text-2xl">
-          {lang === "ar" ? "مرحباً" : "Welcome"}
+          {dict.welcome || "Welcome"}
         </h3>
       </div>
 
@@ -67,9 +76,9 @@ export default function CampaignSelectorContent({
           isRTL={isRTL}
           dictionary={{
             completeYourApplication:
-              lang === "ar" ? "أكمل طلبك" : "Complete your application",
-            draft: lang === "ar" ? "مسودة" : "Draft",
-            step: lang === "ar" ? "الخطوة" : "Step",
+              dict.completeYourApplication || "Complete your application",
+            draft: dict.draft || "Draft",
+            step: dict.stepLabel || "Step",
           }}
         />
       )}
@@ -77,7 +86,7 @@ export default function CampaignSelectorContent({
       {/* Start a new application section */}
       <div className="space-y-2 sm:space-y-3">
         <p className="text-sm font-medium">
-          {lang === "ar" ? "ابدأ طلباً جديداً" : "Start a new application"}
+          {dict.startNewApplication || "Start a new application"}
         </p>
 
         <div className="space-y-2">
@@ -93,12 +102,11 @@ export default function CampaignSelectorContent({
               </div>
               <div className="min-w-0 flex-1 text-start">
                 <p className="text-sm font-medium">
-                  {lang === "ar" ? "ابدأ من الصفر" : "Start from scratch"}
+                  {dict.startFromScratch || "Start from scratch"}
                 </p>
                 <p className="text-muted-foreground mt-0.5 text-xs">
-                  {lang === "ar"
-                    ? "ابدأ طلباً جديداً بالإعدادات الأساسية"
-                    : "Begin a new application with basic setup"}
+                  {dict.startFromScratchDesc ||
+                    "Begin a new application with basic setup"}
                 </p>
               </div>
             </div>
@@ -122,14 +130,11 @@ export default function CampaignSelectorContent({
               </div>
               <div className="min-w-0 flex-1 text-start">
                 <p className="text-sm font-medium">
-                  {lang === "ar"
-                    ? "استيراد من ملف شخصي"
-                    : "Import from profile"}
+                  {dict.importFromProfile || "Import from profile"}
                 </p>
                 <p className="text-muted-foreground mt-0.5 text-xs">
-                  {lang === "ar"
-                    ? "استخرج البيانات من المستندات أو LinkedIn"
-                    : "Auto-fill from documents or LinkedIn"}
+                  {dict.importFromProfileDesc ||
+                    "Auto-fill from documents or LinkedIn"}
                 </p>
               </div>
             </div>

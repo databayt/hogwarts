@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Utility functions for Invoice components
  *
@@ -60,8 +63,12 @@ export function calculateTotal(
 /**
  * Format currency
  */
-export function formatCurrency(amount: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatCurrency(
+  amount: number,
+  currency = "USD",
+  locale = "ar"
+): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
   }).format(amount)

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { MarketingConfig, SiteConfig } from "./types"
 
 export const siteConfig: SiteConfig = {

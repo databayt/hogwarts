@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * @author: @dorian_baffier
  * @description: Card Flip
@@ -81,7 +84,7 @@ export default function CardFlip({
             </div>
           </div>
 
-          <div className="absolute right-0 bottom-0 left-0 p-5">
+          <div className="absolute start-0 end-0 bottom-0 p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-1.5">
                 <h3 className="ease-out-expo text-lg leading-snug font-semibold tracking-tighter text-zinc-900 transition-all duration-500 group-hover:translate-y-[-4px] dark:text-white">
@@ -174,7 +177,7 @@ export default function CardFlip({
                     "scale-90 opacity-0 group-hover/start:scale-100 group-hover/start:opacity-100"
                   )}
                 />
-                <ArrowRight className="relative z-10 h-4 w-4 text-orange-500 transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" />
+                <ArrowRight className="relative z-10 h-4 w-4 text-orange-500 transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110 rtl:rotate-180 rtl:group-hover/start:-translate-x-0.5" />
               </div>
             </div>
           </div>

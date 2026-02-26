@@ -1,12 +1,18 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * ClickView Catalog Seed
  *
- * Imports 62 US/ClickView subjects from master-inventory.json into the global catalog:
- *   62 CatalogSubjects → 201 CatalogChapters → 986 CatalogLessons
+ * Creates grade-specific US K-12 subjects from ClickView master-inventory.json.
+ * Each ClickView level-based entry (e.g., "Elementary Math") is expanded into
+ * one CatalogSubject per grade (e.g., "Math Grade 1" through "Math Grade 6"),
+ * with chapters and lessons duplicated under each grade-specific subject.
+ *
+ *   ~220 CatalogSubjects → ~800 CatalogChapters → ~4000 CatalogLessons
  *
  * Uses upsert with slug for idempotency. Updates denormalized counts.
- * Subject imageKey uses illustration cover images from complete-subjects.json.
- * Lesson imageKey uses high-res ?width=2048 URLs.
+ * Slug convention: us-{subject}-grade-{N} (e.g., us-math-grade-3)
  *
  * Usage: pnpm db:seed:single clickview-catalog
  */
@@ -116,6 +122,51 @@ function rgbToHex(rgb: string): string | null {
   if (!match) return null
   const [, r, g, b] = match.map(Number)
   return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`
+}
+
+/** Generate grade-specific subject slug: us-math-grade-3 */
+function toGradeSubjectSlug(name: string, grade: number): string {
+  const nameSlug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+  return `us-${nameSlug}-grade-${grade}`
+}
+
+/** Generate grade-specific subject name: "Math Grade 3" */
+/** @deprecated Display name "Arts Grade 1" should be composed in UI as `${name} Grade ${grades[0]}` */
+function toGradeSubjectName(name: string, grade: number): string {
+  return `${name} Grade ${grade}`
+}
+
+/** Generate grade-specific subject description */
+function getGradeSubjectDescription(
+  subjectName: string,
+  grade: number,
+  level: string
+): string {
+  const baseDesc = SUBJECT_DESCRIPTIONS[subjectName] ?? ""
+  const levelName =
+    level === "elementary"
+      ? "elementary"
+      : level === "middle"
+        ? "middle school"
+        : "high school"
+  return `Grade ${grade} ${subjectName} for ${levelName} students. ${baseDesc}`.trim()
+}
+
+/** Generate chapter description */
+function getChapterDescription(
+  chapterName: string,
+  subjectName: string,
+  grade: number
+): string {
+  return `${chapterName} — core topics in ${subjectName} for Grade ${grade} students.`
+}
+
+/** Generate lesson description */
+function getLessonDescription(lessonName: string): string {
+  return `Explore ${lessonName} through video instruction and guided activities.`
 }
 
 // Descriptions keyed by subject name (shared across elementary/middle/high)
@@ -877,6 +928,7 @@ const FALLBACK_COLORS: Record<string, string> = {
 export async function seedClickViewCatalog(
   prisma: PrismaClient
 ): Promise<void> {
+  console.log("  Loading master-inventory.json...")
   const inventoryPath = path.resolve(
     __dirname,
     "../../scripts/clickview-data/master-inventory.json"
@@ -889,6 +941,7 @@ export async function seedClickViewCatalog(
 
   const raw = fs.readFileSync(inventoryPath, "utf-8")
   const entries: ClickViewEntry[] = JSON.parse(raw)
+  console.log(`  Loaded ${entries.length} ClickView entries`)
 
   // Load scraped subject data for illustration images and accurate colors
   const completeSubjectsPath = path.resolve(
@@ -918,28 +971,44 @@ export async function seedClickViewCatalog(
     }
   }
 
+  // Deprecate old level-based subjects from previous seeds
+  console.log("  Deprecating old level-based subjects...")
+  await prisma.catalogSubject.updateMany({
+    where: {
+      system: "clickview",
+      status: "PUBLISHED",
+      OR: [
+        { slug: { startsWith: "elementary-" } },
+        { slug: { startsWith: "middle-" } },
+        { slug: { startsWith: "high-" } },
+      ],
+    },
+    data: { status: "DEPRECATED" },
+  })
+
+  console.log("  Starting grade-specific subject creation...")
   let subjectCount = 0
   let chapterCount = 0
   let lessonCount = 0
+  let sortIdx = 0
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i]
-    const slug = toSubjectSlug(entry.level, entry.subjectName)
+    const legacySlug = toSubjectSlug(entry.level, entry.subjectName)
     const schoolLevel = levelToSchoolLevel(entry.level)
-    const grades = levelToGrades(entry.level)
+    const allGrades = levelToGrades(entry.level)
     const clickviewId = extractClickViewId(entry.url)
 
-    // Use illustration image if available locally, else fall back to cover URL or first topic
-    const illustrationFile = `clickview/illustrations/${slug}.jpg`
+    // Resolve illustration image and color using legacy slug
+    const illustrationFile = `clickview/illustrations/${legacySlug}.jpg`
     const illustrationAbsPath = path.join(
       __dirname,
       "../../public",
       illustrationFile
     )
     const illustrationExists = fs.existsSync(illustrationAbsPath)
-    const scraped = scrapedLookup[slug]
+    const scraped = scrapedLookup[legacySlug]
 
-    // Prefer scraped ClickView RGB color, fall back to hardcoded
     const scrapedHex = scraped?.bgColor ? rgbToHex(scraped.bgColor) : null
     const color = scrapedHex ?? FALLBACK_COLORS[entry.subjectName] ?? "#6366f1"
 
@@ -947,142 +1016,177 @@ export async function seedClickViewCatalog(
       ? `/${illustrationFile}`
       : (scraped?.coverUrl ?? entry.groups[0]?.topics[0]?.imgSrc ?? null)
 
-    // Create/update CatalogSubject
-    // Note: bannerUrl is set to null here; the clickview-images seed uploads
-    // banners to S3 and sets bannerUrl to the S3 key.
-    const subject = await prisma.catalogSubject.upsert({
-      where: { slug },
-      update: {
-        name: entry.subjectName,
-        description: SUBJECT_DESCRIPTIONS[entry.subjectName] ?? null,
-        objectives: SLUG_OBJECTIVES[slug] ?? [],
-        prerequisites: SLUG_PREREQUISITES[slug] ?? null,
-        targetAudience: SLUG_TARGET_AUDIENCE[slug] ?? null,
-        levels: [schoolLevel],
-        grades,
-        clickviewId,
-        clickviewUrl: entry.url
-          ? `https://www.clickview.net${entry.url}`
-          : null,
-        color,
-        imageKey,
-        sortOrder: 100 + i, // Offset from Sudanese subjects
-      },
-      create: {
-        name: entry.subjectName,
-        slug,
-        description: SUBJECT_DESCRIPTIONS[entry.subjectName] ?? null,
-        objectives: SLUG_OBJECTIVES[slug] ?? [],
-        prerequisites: SLUG_PREREQUISITES[slug] ?? null,
-        targetAudience: SLUG_TARGET_AUDIENCE[slug] ?? null,
-        lang: "en",
-        department: entry.subjectName,
-        levels: [schoolLevel],
-        grades,
-        country: "US",
-        system: "clickview",
-        clickviewId,
-        clickviewUrl: entry.url
-          ? `https://www.clickview.net${entry.url}`
-          : null,
-        color,
-        imageKey,
-        sortOrder: 100 + i,
-        status: "PUBLISHED",
-      },
-    })
-    subjectCount++
+    // Create one CatalogSubject per grade, with chapters/lessons duplicated
+    // name = "Arts" (not "Arts Grade 1") — compose display name in UI as `${name} Grade ${grades[0]}`
+    for (const grade of allGrades) {
+      const gradeSlug = toGradeSubjectSlug(entry.subjectName, grade)
+      const gradeDesc = getGradeSubjectDescription(
+        entry.subjectName,
+        grade,
+        entry.level
+      )
+      const currentSort = sortIdx++
 
-    // Create CatalogChapters (groups)
-    for (let g = 0; g < entry.groups.length; g++) {
-      const group = entry.groups[g]
-      const chapterSlug = toChapterSlug(group.parent)
-      const firstTopicImgSrc = group.topics[0]?.imgSrc ?? null
-
-      const chapter = await prisma.catalogChapter.upsert({
-        where: {
-          subjectId_slug: {
-            subjectId: subject.id,
-            slug: chapterSlug,
-          },
-        },
+      const subject = await prisma.catalogSubject.upsert({
+        where: { slug: gradeSlug },
         update: {
-          name: group.parent,
-          sequenceOrder: g + 1,
+          name: entry.subjectName,
+          description: gradeDesc,
+          objectives: SLUG_OBJECTIVES[legacySlug] ?? [],
+          prerequisites: SLUG_PREREQUISITES[legacySlug] ?? null,
+          targetAudience: SLUG_TARGET_AUDIENCE[legacySlug] ?? null,
+          levels: [schoolLevel],
+          grades: [grade],
+          gradeRange: String(grade),
+          clickviewId,
+          clickviewUrl: entry.url
+            ? `https://www.clickview.net${entry.url}`
+            : null,
           color,
-          imageKey: firstTopicImgSrc,
-          grades,
+          imageKey,
+          sortOrder: currentSort,
         },
         create: {
-          subjectId: subject.id,
-          name: group.parent,
-          slug: chapterSlug,
+          name: entry.subjectName,
+          slug: gradeSlug,
+          description: gradeDesc,
+          objectives: SLUG_OBJECTIVES[legacySlug] ?? [],
+          prerequisites: SLUG_PREREQUISITES[legacySlug] ?? null,
+          targetAudience: SLUG_TARGET_AUDIENCE[legacySlug] ?? null,
           lang: "en",
-          sequenceOrder: g + 1,
-          color,
-          imageKey: firstTopicImgSrc,
-          grades,
+          department: entry.subjectName,
           levels: [schoolLevel],
+          grades: [grade],
+          gradeRange: String(grade),
+          country: "US",
+          system: "clickview",
+          clickviewId,
+          clickviewUrl: entry.url
+            ? `https://www.clickview.net${entry.url}`
+            : null,
+          color,
+          imageKey,
+          sortOrder: currentSort,
           status: "PUBLISHED",
         },
       })
-      chapterCount++
+      subjectCount++
+      if (subjectCount % 20 === 0) {
+        console.log(`  ... ${subjectCount} subjects created`)
+      }
 
-      // Create CatalogLessons (topics)
-      for (let t = 0; t < group.topics.length; t++) {
-        const topic = group.topics[t]
-        const { videoCount, resourceCount } = parseStats(topic.stats)
-        const coverId = extractCoverId(topic.imgSrc)
-        // Store high-res cover URL as lesson imageKey
-        const lessonImageKey = topic.imgSrc || null
+      // Duplicate chapters and lessons under each grade-specific subject
+      for (let g = 0; g < entry.groups.length; g++) {
+        const group = entry.groups[g]
+        const chapterSlug = toChapterSlug(group.parent)
+        const firstTopicImgSrc = group.topics[0]?.imgSrc ?? null
+        const chapterDesc = getChapterDescription(
+          group.parent,
+          entry.subjectName,
+          grade
+        )
 
-        await prisma.catalogLesson.upsert({
+        const chapter = await prisma.catalogChapter.upsert({
           where: {
-            chapterId_slug: {
-              chapterId: chapter.id,
-              slug: topic.slug,
+            subjectId_slug: {
+              subjectId: subject.id,
+              slug: chapterSlug,
             },
           },
           update: {
-            name: topic.name,
-            sequenceOrder: t + 1,
-            clickviewCoverId: coverId,
-            imageKey: lessonImageKey,
-            videoCount,
-            resourceCount,
+            name: group.parent,
+            description: chapterDesc,
+            sequenceOrder: g + 1,
             color,
-            grades,
+            imageKey: firstTopicImgSrc,
+            grades: [grade],
           },
           create: {
-            chapterId: chapter.id,
-            name: topic.name,
-            slug: topic.slug,
+            subjectId: subject.id,
+            name: group.parent,
+            slug: chapterSlug,
+            description: chapterDesc,
             lang: "en",
-            sequenceOrder: t + 1,
-            clickviewCoverId: coverId,
-            imageKey: lessonImageKey,
-            videoCount,
-            resourceCount,
+            sequenceOrder: g + 1,
             color,
-            grades,
+            imageKey: firstTopicImgSrc,
+            grades: [grade],
             levels: [schoolLevel],
             status: "PUBLISHED",
           },
         })
-        lessonCount++
+        chapterCount++
+
+        // Create CatalogLessons (topics)
+        for (let t = 0; t < group.topics.length; t++) {
+          const topic = group.topics[t]
+          const { videoCount, resourceCount } = parseStats(topic.stats)
+          const coverId = extractCoverId(topic.imgSrc)
+          const lessonImageKey = topic.imgSrc || null
+          const lessonDesc = getLessonDescription(topic.name)
+
+          await prisma.catalogLesson.upsert({
+            where: {
+              chapterId_slug: {
+                chapterId: chapter.id,
+                slug: topic.slug,
+              },
+            },
+            update: {
+              name: topic.name,
+              description: lessonDesc,
+              sequenceOrder: t + 1,
+              clickviewCoverId: coverId,
+              imageKey: lessonImageKey,
+              videoCount,
+              resourceCount,
+              color,
+              grades: [grade],
+            },
+            create: {
+              chapterId: chapter.id,
+              name: topic.name,
+              slug: topic.slug,
+              description: lessonDesc,
+              lang: "en",
+              sequenceOrder: t + 1,
+              clickviewCoverId: coverId,
+              imageKey: lessonImageKey,
+              videoCount,
+              resourceCount,
+              color,
+              grades: [grade],
+              levels: [schoolLevel],
+              status: "PUBLISHED",
+            },
+          })
+          lessonCount++
+        }
       }
     }
+
+    console.log(
+      `  [${i + 1}/${entries.length}] ${entry.subjectName} (${entry.level}): ${allGrades.length} grades done`
+    )
   }
 
-  logSuccess("ClickView CatalogSubjects", subjectCount, "US curriculum")
-  logSuccess("ClickView CatalogChapters", chapterCount, "US curriculum")
-  logSuccess("ClickView CatalogLessons", lessonCount, "US curriculum")
+  logSuccess(
+    "ClickView CatalogSubjects",
+    subjectCount,
+    "grade-specific US K-12"
+  )
+  logSuccess(
+    "ClickView CatalogChapters",
+    chapterCount,
+    "grade-specific US K-12"
+  )
+  logSuccess("ClickView CatalogLessons", lessonCount, "grade-specific US K-12")
 
   // Update denormalized counts
   console.log("  Updating denormalized counts...")
 
   const allSubjects = await prisma.catalogSubject.findMany({
-    where: { system: "clickview" },
+    where: { system: "clickview", status: "PUBLISHED" },
     select: { id: true },
   })
 

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 
 import { db } from "@/lib/db"
@@ -39,11 +42,19 @@ export default async function LibraryAdminBooksContent({
         <h2 className="library-admin-books-title">
           {t.library.admin.allBooks}
         </h2>
-        <Button asChild>
-          <Link href="/library/admin/books/new">
-            + {t.library.admin.createNewBook}
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/library/catalog">Browse Global Catalog</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/library/contribute">Contribute Book</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/library/admin/books/new">
+              + {t.library.admin.createNewBook}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="library-admin-books-table-wrapper">

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -9,37 +12,44 @@ interface AdmissionProcessProps {
   dictionary?: Dictionary
 }
 
-export function AdmissionProcess({ lang }: AdmissionProcessProps) {
-  const isRTL = lang === "ar"
+export function AdmissionProcess({ lang, dictionary }: AdmissionProcessProps) {
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: {
+          admission?: { sections?: { process?: Record<string, string> } }
+        }
+      }
+    )?.school?.admission?.sections?.process ?? {}
 
   const steps = [
     {
       icon: AnthropicIcons.Book,
-      title: isRTL ? "تقديم الطلب" : "Submit Application",
-      description: isRTL
-        ? "أكمل استمارة التقديم عبر الإنترنت مع جميع المستندات المطلوبة"
-        : "Complete our online application form with all required documents",
+      title: dict.submitApplication || "Submit Application",
+      description:
+        dict.submitApplicationDesc ||
+        "Complete our online application form with all required documents",
     },
     {
       icon: AnthropicIcons.Checklist,
-      title: isRTL ? "جولة في الحرم" : "Campus Tour",
-      description: isRTL
-        ? "استكشف مرافقنا المذهلة في جولة إرشادية شاملة"
-        : "Experience our amazing facilities with a guided tour",
+      title: dict.campusTour || "Campus Tour",
+      description:
+        dict.campusTourDesc ||
+        "Experience our amazing facilities with a guided tour",
     },
     {
       icon: AnthropicIcons.Chat,
-      title: isRTL ? "لقاء التعارف" : "Meet & Greet",
-      description: isRTL
-        ? "تواصل مع فريق القبول وأعضاء هيئة التدريس"
-        : "Connect with our admissions team and faculty members",
+      title: dict.meetGreet || "Meet & Greet",
+      description:
+        dict.meetGreetDesc ||
+        "Connect with our admissions team and faculty members",
     },
     {
       icon: AnthropicIcons.Sparkle,
-      title: isRTL ? "انضم للعائلة" : "Join Family",
-      description: isRTL
-        ? "أكمل التسجيل وابدأ رحلتك التعليمية معنا"
-        : "Complete enrollment and begin your educational journey with us",
+      title: dict.joinFamily || "Join Family",
+      description:
+        dict.joinFamilyDesc ||
+        "Complete enrollment and begin your educational journey with us",
     },
   ]
 
@@ -47,12 +57,11 @@ export function AdmissionProcess({ lang }: AdmissionProcessProps) {
     <SectionContainer>
       <div className="mb-16">
         <h2 className="font-heading mb-4 text-3xl font-bold md:text-4xl">
-          {isRTL ? "عملية القبول" : "Admission Process"}
+          {dict.title || "Admission Process"}
         </h2>
         <p className="text-muted-foreground max-w-2xl text-lg">
-          {isRTL
-            ? "أربع خطوات بسيطة للانضمام إلى مجتمعنا التعليمي"
-            : "Four simple steps to join our educational community"}
+          {dict.subtitle ||
+            "Four simple steps to join our educational community"}
         </p>
       </div>
 

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
@@ -328,7 +330,7 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
             size="sm"
             onClick={addSignature}
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             Add Signature
           </Button>
         </div>
@@ -361,7 +363,7 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <Switch
             id="useSchoolLogo"
             name="useSchoolLogo"
@@ -369,7 +371,7 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
           />
           <Label htmlFor="useSchoolLogo">Use School Logo</Label>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <Switch
             id="enableVerification"
             name="enableVerification"

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Public Certificate View Page
  * STUB: Certificate features temporarily disabled due to build issues

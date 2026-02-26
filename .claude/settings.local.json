@@ -54,13 +54,14 @@
     "deny": [],
     "ask": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
+    "browser",
     "vercel",
     "sentry",
     "figma",
     "linear",
     "github",
-    "browser",
     "stripe",
     "postgres-dev",
     "ref",
@@ -73,6 +74,5 @@
     "storybook",
     "design-system-analyzer",
     "svg-tools"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

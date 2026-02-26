@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Exam Export Button
  * Uses unified File Block ExportButton for multi-format exports
@@ -10,6 +13,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { ExportButton as UnifiedExportButton } from "@/components/file"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getExamsExportData } from "./actions"
 import { EXAM_EXPORT_COLUMNS, type ExamExportData } from "./columns/export"
@@ -65,6 +69,8 @@ export function ExportButton({
   showColumnSelector = false,
   dictionary,
 }: ExportButtonProps) {
+  const { dictionary: dict } = useDictionary()
+  const te = dict?.generate?.paper?.export
   const [data, setData] = useState<ExamExportData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -98,9 +104,7 @@ export function ExportButton({
         filename: "exams",
         columns: EXAM_EXPORT_COLUMNS,
         locale,
-        title:
-          dictionary?.export ||
-          (locale === "ar" ? "قائمة الاختبارات" : "Exam List"),
+        title: dictionary?.export || te?.exam_list || "Exam List",
       }}
       data={data}
       formats={formats}
@@ -110,15 +114,12 @@ export function ExportButton({
       showColumnSelector={showColumnSelector}
       disabled={isLoading || data.length === 0}
       dictionary={{
-        export: dictionary?.export || (locale === "ar" ? "تصدير" : "Export"),
-        exportAs:
-          dictionary?.exportAs || (locale === "ar" ? "تصدير كـ" : "Export as"),
+        export: dictionary?.export || te?.export_label || "Export",
+        exportAs: dictionary?.exportAs || te?.export_as || "Export as",
         csv: dictionary?.csv || "CSV",
         excel: dictionary?.excel || "Excel",
         pdf: dictionary?.pdf || "PDF",
-        exporting:
-          dictionary?.exporting ||
-          (locale === "ar" ? "جاري التصدير..." : "Exporting..."),
+        exporting: dictionary?.exporting || te?.exporting || "Exporting...",
       }}
       onExportError={(err) => {
         console.error("Export failed:", err)

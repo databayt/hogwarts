@@ -1,8 +1,11 @@
 "use client"
 
-import React, { useEffect } from "react"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { Checkbox } from "@/components/ui/checkbox"
@@ -33,6 +36,11 @@ import {
   STEP_META,
   STUDENT_TYPES,
 } from "../config"
+import {
+  getSchoolDepartments,
+  getSchoolGrades,
+  getSchoolSubjects,
+} from "../queries"
 import type {
   AdminDetailsData,
   StaffDetailsData,
@@ -48,12 +56,7 @@ import {
 } from "../validation"
 
 export function RoleDetailsStep() {
-  const router = useRouter()
-  const params = useParams()
-  const { locale } = useLocale()
-  const subdomain = params.subdomain as string
-
-  const { state, updateStepData } = useOnboarding()
+  const { state } = useOnboarding()
   const role = state.role
 
   if (!role) {
@@ -87,10 +90,29 @@ function TeacherFields() {
   const params = useParams()
   const { locale } = useLocale()
   const subdomain = params.subdomain as string
-  const { state, updateStepData } = useOnboarding()
+  const { state, updateStepData, schoolId } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
 
   const existing = state.formData.roleDetails as TeacherDetailsData | undefined
+
+  // Fetch school subjects
+  const [schoolSubjects, setSchoolSubjects] = useState<
+    { id: string; name: string }[]
+  >([])
+  const [loadingSubjects, setLoadingSubjects] = useState(true)
+
+  useEffect(() => {
+    getSchoolSubjects(schoolId)
+      .then((s) => setSchoolSubjects(s))
+      .catch(() => {})
+      .finally(() => setLoadingSubjects(false))
+  }, [schoolId])
+
+  // Use school subjects if available, fall back to hardcoded list
+  const subjectOptions =
+    schoolSubjects.length > 0
+      ? schoolSubjects.map((s) => ({ value: s.id, label: s.name }))
+      : TEACHER_SUBJECTS
 
   const form = useForm({
     resolver: zodResolver(teacherDetailsSchema),
@@ -157,37 +179,46 @@ function TeacherFields() {
           render={() => (
             <FormItem>
               <FormLabel>Subjects *</FormLabel>
-              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                {TEACHER_SUBJECTS.map((subject) => (
-                  <FormField
-                    key={subject.value}
-                    control={form.control}
-                    name="subjects"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center gap-2 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(subject.value)}
-                            onCheckedChange={(checked) => {
-                              const current = field.value || []
-                              field.onChange(
-                                checked
-                                  ? [...current, subject.value]
-                                  : current.filter(
-                                      (v: string) => v !== subject.value
-                                    )
-                              )
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="text-sm font-normal">
-                          {subject.label}
-                        </FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
+              {loadingSubjects ? (
+                <div className="flex items-center gap-2 py-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-muted-foreground text-sm">
+                    Loading subjects...
+                  </span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                  {subjectOptions.map((subject) => (
+                    <FormField
+                      key={subject.value}
+                      control={form.control}
+                      name="subjects"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(subject.value)}
+                              onCheckedChange={(checked) => {
+                                const current = field.value || []
+                                field.onChange(
+                                  checked
+                                    ? [...current, subject.value]
+                                    : current.filter(
+                                        (v: string) => v !== subject.value
+                                      )
+                                )
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm font-normal">
+                            {subject.label}
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -300,10 +331,23 @@ function StaffFields() {
   const params = useParams()
   const { locale } = useLocale()
   const subdomain = params.subdomain as string
-  const { state, updateStepData } = useOnboarding()
+  const { state, updateStepData, schoolId } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
 
   const existing = state.formData.roleDetails as StaffDetailsData | undefined
+
+  // Fetch school departments
+  const [departments, setDepartments] = useState<
+    { id: string; departmentName: string }[]
+  >([])
+  const [loadingDepartments, setLoadingDepartments] = useState(true)
+
+  useEffect(() => {
+    getSchoolDepartments(schoolId)
+      .then((d) => setDepartments(d))
+      .catch(() => {})
+      .finally(() => setLoadingDepartments(false))
+  }, [schoolId])
 
   const form = useForm({
     resolver: zodResolver(staffDetailsSchema),
@@ -402,6 +446,37 @@ function StaffFields() {
           />
         </div>
 
+        {/* Department (only shown if school has departments) */}
+        {!loadingDepartments && departments.length > 0 && (
+          <FormField
+            control={form.control}
+            name="departmentId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Department</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value || ""}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {departments.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.departmentName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         {/* Qualification */}
         <div>
           <h3 className="mb-4 font-medium">Qualification</h3>
@@ -458,10 +533,23 @@ function AdminFields() {
   const params = useParams()
   const { locale } = useLocale()
   const subdomain = params.subdomain as string
-  const { state, updateStepData } = useOnboarding()
+  const { state, updateStepData, schoolId } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
 
   const existing = state.formData.roleDetails as AdminDetailsData | undefined
+
+  // Fetch school departments
+  const [departments, setDepartments] = useState<
+    { id: string; departmentName: string }[]
+  >([])
+  const [loadingDepartments, setLoadingDepartments] = useState(true)
+
+  useEffect(() => {
+    getSchoolDepartments(schoolId)
+      .then((d) => setDepartments(d))
+      .catch(() => {})
+      .finally(() => setLoadingDepartments(false))
+  }, [schoolId])
 
   const form = useForm({
     resolver: zodResolver(adminDetailsSchema),
@@ -556,6 +644,37 @@ function AdminFields() {
             )}
           />
         </div>
+
+        {/* Department (only shown if school has departments) */}
+        {!loadingDepartments && departments.length > 0 && (
+          <FormField
+            control={form.control}
+            name="departmentId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Department</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value || ""}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {departments.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.departmentName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </form>
     </Form>
   )
@@ -570,11 +689,24 @@ function StudentFields() {
   const params = useParams()
   const { locale } = useLocale()
   const subdomain = params.subdomain as string
-  const { state, updateStepData } = useOnboarding()
+  const { state, updateStepData, schoolId } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
 
   const existing = state.formData.roleDetails as StudentDetailsData | undefined
   const autoFill = state.applicationData
+
+  // Fetch school grades
+  const [grades, setGrades] = useState<
+    { id: string; name: string; gradeNumber: number }[]
+  >([])
+  const [loadingGrades, setLoadingGrades] = useState(true)
+
+  useEffect(() => {
+    getSchoolGrades(schoolId)
+      .then((g) => setGrades(g))
+      .catch(() => {})
+      .finally(() => setLoadingGrades(false))
+  }, [schoolId])
 
   const form = useForm({
     resolver: zodResolver(studentDetailsSchema),
@@ -639,9 +771,33 @@ function StudentFields() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Grade Level *</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="e.g. Grade 10" />
-                </FormControl>
+                {loadingGrades ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-muted-foreground text-sm">
+                      Loading grades...
+                    </span>
+                  </div>
+                ) : grades.length > 0 ? (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select grade" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {grades.map((g) => (
+                        <SelectItem key={g.id} value={g.name}>
+                          {g.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. Grade 10" />
+                  </FormControl>
+                )}
                 <FormMessage />
               </FormItem>
             )}

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { env } from "@/env.mjs"
 
 import { SidebarNavItem, SiteConfig } from "../types"

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Docs sidebar links configuration
 // Shared between desktop sidebar (client) and mobile menu (server)
 export const DOCS_LINKS = [

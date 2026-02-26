@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Cloudflare R2 Storage Provider
  * Cold storage for archival, S3-compatible API

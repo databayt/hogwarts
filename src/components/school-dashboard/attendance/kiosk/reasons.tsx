@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Kiosk Reasons
  *
@@ -8,6 +11,7 @@
 import { useState } from "react"
 
 import { cn } from "@/lib/utils"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { KioskAction } from "./validation"
 import { earlyDepartureReasonCodes, lateReasonCodes } from "./validation"
@@ -49,6 +53,8 @@ export function KioskReasons({
   onCancel,
   locale,
 }: KioskReasonsProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.kiosk
   const isRTL = locale === "ar"
   const [selectedReason, setSelectedReason] = useState<string>("")
   const [customNote, setCustomNote] = useState("")
@@ -64,12 +70,8 @@ export function KioskReasons({
 
   const title =
     action === "CHECK_IN"
-      ? isRTL
-        ? "سبب التأخير"
-        : "Reason for Late Arrival"
-      : isRTL
-        ? "سبب المغادرة المبكرة"
-        : "Reason for Early Departure"
+      ? t?.late_arrival_reason || "Reason for Late Arrival"
+      : t?.early_departure_reason || "Reason for Early Departure"
 
   return (
     <div className="flex w-full max-w-lg flex-col items-center text-center">
@@ -97,7 +99,7 @@ export function KioskReasons({
           <textarea
             value={customNote}
             onChange={(e) => setCustomNote(e.target.value)}
-            placeholder={isRTL ? "أدخل السبب هنا..." : "Enter reason here..."}
+            placeholder={t?.enter_reason || "Enter reason here..."}
             className="border-input bg-background w-full rounded-lg border p-3 text-lg"
             rows={3}
           />
@@ -109,13 +111,13 @@ export function KioskReasons({
           onClick={onCancel}
           className="bg-secondary text-secondary-foreground hover:bg-secondary/80 flex-1 rounded-xl py-4 text-lg font-medium transition-colors"
         >
-          {isRTL ? "إلغاء" : "Cancel"}
+          {t?.cancel || "Cancel"}
         </button>
         <button
           onClick={onSkip}
           className="text-muted-foreground hover:text-foreground flex-1 rounded-xl py-4 text-lg font-medium transition-colors"
         >
-          {isRTL ? "تخطي" : "Skip"}
+          {t?.skip || "Skip"}
         </button>
         <button
           onClick={() =>
@@ -124,7 +126,7 @@ export function KioskReasons({
           disabled={!selectedReason}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground flex-1 rounded-xl py-4 text-lg font-medium transition-colors"
         >
-          {isRTL ? "تأكيد" : "Confirm"}
+          {t?.confirm || "Confirm"}
         </button>
       </div>
     </div>

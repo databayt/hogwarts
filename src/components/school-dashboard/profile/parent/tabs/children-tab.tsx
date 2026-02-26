@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Parent Profile Children Tab
  * Detailed view of each child's academic progress and activities
@@ -358,7 +361,7 @@ export function ChildrenTab({
                       </div>
                       <Button variant="outline">
                         View Full Profile
-                        <ChevronRight className="ms-1 h-4 w-4" />
+                        <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
                       </Button>
                     </div>
 

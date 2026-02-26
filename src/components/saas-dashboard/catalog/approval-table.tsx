@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState, useTransition } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Check, MoreHorizontal, X } from "lucide-react"
@@ -37,6 +39,8 @@ function getContentTypeBadge(
       return "secondary"
     case "CatalogAssignment":
       return "outline"
+    case "CatalogBook":
+      return "secondary"
     case "LessonVideo":
       return "destructive"
     default:
@@ -52,6 +56,8 @@ function getContentTypeLabel(contentType: string): string {
       return "Material"
     case "CatalogAssignment":
       return "Assignment"
+    case "CatalogBook":
+      return "Book"
     case "LessonVideo":
       return "Video"
     default:
@@ -89,7 +95,7 @@ function ApprovalActions({ item }: { item: PendingItem }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleApprove} disabled={isPending}>
-            <Check className="mr-2 h-4 w-4" />
+            <Check className="me-2 h-4 w-4" />
             Approve
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -97,7 +103,7 @@ function ApprovalActions({ item }: { item: PendingItem }) {
             disabled={isPending}
             className="text-destructive"
           >
-            <X className="mr-2 h-4 w-4" />
+            <X className="me-2 h-4 w-4" />
             Reject
           </DropdownMenuItem>
         </DropdownMenuContent>

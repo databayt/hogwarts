@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
@@ -281,7 +283,7 @@ export function ExcuseForm({
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return isArabic
-      ? date.toLocaleDateString("ar-SA", {
+      ? date.toLocaleDateString(locale, {
           weekday: "long",
           year: "numeric",
           month: "long",
@@ -559,7 +561,7 @@ export function UnexcusedAbsenceCard({
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return isArabic
-      ? date.toLocaleDateString("ar-SA", { month: "short", day: "numeric" })
+      ? date.toLocaleDateString(locale, { month: "short", day: "numeric" })
       : format(date, "MMM d, yyyy")
   }
 

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { Check, GraduationCap, Layers, Search } from "lucide-react"
@@ -18,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { toggleSubjectSelection } from "./actions"
 
@@ -69,7 +72,10 @@ const LEVEL_LABELS: Record<string, Record<string, string>> = {
 }
 
 export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
-  const isRTL = lang === "ar"
+  const { dictionary } = useDictionary()
+  const cat = dictionary?.school?.subjects?.catalog as
+    | Record<string, string>
+    | undefined
   const [search, setSearch] = useState("")
   const [levelFilter, setLevelFilter] = useState<string>("all")
   const [selectedGradeId, setSelectedGradeId] = useState<string>(
@@ -87,18 +93,18 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
   )
 
   const t = {
-    search: isRTL ? "بحث في المواد..." : "Search subjects...",
-    allLevels: isRTL ? "كل المراحل" : "All Levels",
-    selectGrade: isRTL ? "اختر الصف" : "Select Grade",
-    selected: isRTL ? "مختار" : "Selected",
-    add: isRTL ? "إضافة" : "Add",
-    chapters: isRTL ? "فصل" : "ch",
-    lessons: isRTL ? "درس" : "lessons",
-    schools: isRTL ? "مدارس" : "schools",
-    noResults: isRTL ? "لا توجد نتائج" : "No subjects found",
-    catalogDescription: isRTL
-      ? "اختر المواد من الكتالوج العالمي لإضافتها إلى مدرستك"
-      : "Select subjects from the global catalog to add to your school",
+    search: cat?.searchSubjects || "Search subjects...",
+    allLevels: cat?.allLevels || "All Levels",
+    selectGrade: cat?.selectGrade || "Select Grade",
+    selected: cat?.selected || "Selected",
+    add: cat?.add || "Add",
+    chapters: cat?.chapters || "ch",
+    lessons: cat?.lessons || "lessons",
+    schools: cat?.schools || "schools",
+    noResults: cat?.noResults || "No subjects found",
+    catalogDescription:
+      cat?.catalogDescription ||
+      "Select subjects from the global catalog to add to your school",
   }
 
   const filteredSubjects = useMemo(() => {
@@ -155,12 +161,12 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-[200px] flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder={t.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="ps-9"
           />
         </div>
 
@@ -237,13 +243,13 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
 
                       {/* Selected badge */}
                       {selected && (
-                        <div className="bg-primary absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full">
+                        <div className="bg-primary absolute end-2 top-2 flex h-6 w-6 items-center justify-center rounded-full">
                           <Check className="h-4 w-4 text-white" />
                         </div>
                       )}
 
                       {/* Level badges */}
-                      <div className="absolute bottom-2 left-2 flex gap-1">
+                      <div className="absolute start-2 bottom-2 flex gap-1">
                         {subject.levels.map((level) => (
                           <Badge
                             key={level}

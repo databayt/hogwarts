@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Teachers Server Actions Module
  *
@@ -68,6 +71,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -110,19 +114,19 @@ export async function createTeacher(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
       assertTeacherPermission(authContext, "create", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Parse and validate input
@@ -247,13 +251,13 @@ export async function updateTeacher(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -392,13 +396,13 @@ export async function deleteTeacher(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -410,9 +414,38 @@ export async function deleteTeacher(input: {
     // Parse and validate input
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    // Delete teacher (using deleteMany for tenant safety)
+    // Cascade validation: check for dependencies before deletion
+    const [classCount, classTeacherCount, timetableCount] = await Promise.all([
+      db.class.count({ where: { teacherId: id, schoolId } }),
+      db.classTeacher.count({ where: { teacherId: id, schoolId } }),
+      db.timetable.count({ where: { teacherId: id, schoolId } }),
+    ])
+
+    if (classCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${classCount} class(es) assigned. Reassign classes first.`,
+      }
+    }
+    if (timetableCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${timetableCount} timetable slot(s) exist. Remove from timetable first.`,
+      }
+    }
+
+    // Auto-clean ClassTeacher (co-teaching) records in the same transaction
     const teacherModel = getModelOrThrow("teacher")
-    await teacherModel.deleteMany({ where: { id, schoolId } })
+    if (classTeacherCount > 0) {
+      await db.$transaction(async (tx) => {
+        await tx.classTeacher.deleteMany({
+          where: { teacherId: id, schoolId },
+        })
+        await teacherModel.deleteMany({ where: { id, schoolId } })
+      })
+    } else {
+      await teacherModel.deleteMany({ where: { id, schoolId } })
+    }
 
     // Revalidate cache
     revalidatePath(TEACHERS_PATH)
@@ -455,13 +488,13 @@ export async function getTeacher(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -605,12 +638,12 @@ export async function getTeacherWorkload(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -710,12 +743,12 @@ export async function getTeachers(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -810,12 +843,12 @@ export async function getTeachersCSV(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -971,12 +1004,12 @@ export async function getSubjectsForExpertise(): Promise<
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -1080,12 +1113,12 @@ export async function getTeachersExportData(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -1206,12 +1239,12 @@ export async function bulkDeleteTeachers(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -1230,6 +1263,25 @@ export async function bulkDeleteTeachers(input: {
       select: { id: true },
     })
     const validIds = existing.map((t: any) => t.id)
+
+    // Cascade validation: check for dependencies before bulk deletion
+    const [classCount, timetableCount] = await Promise.all([
+      db.class.count({ where: { teacherId: { in: validIds }, schoolId } }),
+      db.timetable.count({
+        where: { teacherId: { in: validIds }, schoolId },
+      }),
+    ])
+    if (classCount > 0 || timetableCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${classCount} class(es) and ${timetableCount} timetable slot(s) depend on selected teachers. Reassign them first.`,
+      }
+    }
+
+    // Auto-clean ClassTeacher records
+    await db.classTeacher.deleteMany({
+      where: { teacherId: { in: validIds }, schoolId },
+    })
 
     const result = await teacherModel.deleteMany({
       where: { id: { in: validIds }, schoolId },

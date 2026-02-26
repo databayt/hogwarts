@@ -1,7 +1,10 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { Badge } from "@/components/ui/badge"
 import { CardDescription, CardTitle } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import SectionHeading from "../atom/section-heading"
 
@@ -50,67 +53,77 @@ const StarShieldIcon = () => (
   </svg>
 )
 
+const offerIcons = [
+  <GiftIcon key="gift" />,
+  <UsersIcon key="users" />,
+  <StarShieldIcon key="star" />,
+]
+const offerTextColors = ["text-red-700", "text-blue-800", "text-green-700"]
+const badgeColors = [
+  "bg-red-100 text-red-800",
+  "bg-blue-100 text-blue-900",
+  "bg-green-100 text-green-800",
+]
+
 export function SpecialOffers() {
-  const specialOffers = [
+  const { dictionary } = useDictionary()
+  const t = dictionary?.marketing?.site?.offers
+
+  const fallbackOffers = [
     {
       title: "Early Bird Special",
       description: "Apply before Jul 1st, to receive a 10% tuition discount",
       badge: "Limited Time",
-      badgeColor: "bg-red-100 text-red-800",
-      icon: <GiftIcon />,
     },
     {
       title: "Sibling Discount",
       description: "Families with multiple students receive additional savings",
       badge: "Family Benefit",
-      badgeColor: "bg-blue-100 text-blue-900",
-      icon: <UsersIcon />,
     },
     {
       title: "Merit Scholarships",
       description: "Outstanding students may qualify for academic scholarships",
       badge: "Academic Excellence",
-      badgeColor: "bg-green-100 text-green-800",
-      icon: <StarShieldIcon />,
     },
   ]
+
+  const items = t?.items || fallbackOffers
 
   return (
     <section className="py-16 md:py-24">
       <SectionHeading
-        title="Benefits"
-        description="Financial support options designed to make your wizarding journey more affordable."
+        title={t?.title || "Benefits"}
+        description={
+          t?.description ||
+          "Financial support options designed to make your wizarding journey more affordable."
+        }
       />
 
       <div className="grid grid-cols-1 gap-8 py-14 md:grid-cols-3">
-        {specialOffers.map((offer, index) => (
-          <div key={index} className="text-center">
-            <div className="flex justify-center pb-6">
-              <div
-                className={`${
-                  index === 0
-                    ? "text-red-700"
-                    : index === 1
-                      ? "text-blue-800"
-                      : "text-green-700"
-                }`}
-              >
-                {offer.icon}
+        {(items as Array<Record<string, unknown>>).map(
+          (offer: Record<string, unknown>, index: number) => (
+            <div key={index} className="text-center">
+              <div className="flex justify-center pb-6">
+                <div className={offerTextColors[index]}>
+                  {offerIcons[index]}
+                </div>
               </div>
+              <CardTitle className="pb-2 text-xl font-bold">
+                {String(offer.title || fallbackOffers[index]?.title)}
+              </CardTitle>
+              <div className="flex justify-center pb-2">
+                <Badge className={`${badgeColors[index]} px-3 py-1`}>
+                  {String(offer.badge || fallbackOffers[index]?.badge)}
+                </Badge>
+              </div>
+              <CardDescription className="mx-auto max-w-xs leading-relaxed">
+                {String(
+                  offer.description || fallbackOffers[index]?.description
+                )}
+              </CardDescription>
             </div>
-            <CardTitle className="pb-2 text-xl font-bold">
-              {offer.title}
-            </CardTitle>
-            <div className="flex justify-center pb-2">
-              <Badge className={`${offer.badgeColor} px-3 py-1`}>
-                {offer.badge}
-              </Badge>
-            </div>
-            <CardDescription className="mx-auto max-w-xs leading-relaxed">
-              {offer.description}
-            </CardDescription>
-          </div>
-        ))}
+          )
+        )}
       </div>
     </section>
   )

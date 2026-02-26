@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState, useTransition } from "react"
 import Image from "next/image"
 import { IconPhoto, IconTrash, IconUpload } from "@tabler/icons-react"
@@ -156,7 +158,7 @@ export function CatalogImageUpload({
           disabled={isPending}
           className="text-destructive hover:text-destructive"
         >
-          <IconTrash className="mr-1.5 h-4 w-4" />
+          <IconTrash className="me-1.5 h-4 w-4" />
           Remove CDN thumbnail
         </Button>
       )}

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Script to set up PostGIS spatial indexes for geofence performance
  * Run with: npx tsx scripts/setup-geo-indexes.ts

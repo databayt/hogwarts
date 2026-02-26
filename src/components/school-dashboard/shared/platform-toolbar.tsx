@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import type { Column, Table } from "@tanstack/react-table"
 
@@ -116,7 +118,7 @@ export function PlatformToolbar<TData>({
         {/* Search input */}
         {onSearchChange && (
           <div className="relative">
-            <Icons.search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+            <Icons.search className="text-muted-foreground absolute start-2.5 top-2.5 h-4 w-4" />
             <Input
               placeholder={searchPlaceholder || t.search}
               value={searchValue}

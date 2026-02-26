@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Calendar, Clock, FileText, Pencil, Users } from "lucide-react"

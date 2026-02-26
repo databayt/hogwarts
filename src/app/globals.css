@@ -359,7 +359,7 @@ body {
 
 .mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder--icon-search {
   top: 10px;
-  left: 12px;
+  inset-inline-start: 12px;
   width: 20px;
   height: 20px;
 }
@@ -367,7 +367,7 @@ body {
 .mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder--button {
   background: transparent;
   top: 8px;
-  right: 8px;
+  inset-inline-end: 8px;
 }
 
 .mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder--icon-close {

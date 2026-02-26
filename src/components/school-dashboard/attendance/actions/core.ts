@@ -1,10 +1,13 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { AttendanceMethod, AttendanceStatus, Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { isChannelAvailable, sendAttendanceSMS } from "@/lib/notifications/sms"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -181,7 +184,7 @@ export async function markAttendance(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
@@ -307,7 +310,7 @@ export async function markSingleAttendance(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
@@ -410,7 +413,7 @@ export async function getAttendanceList(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const parsed = z
@@ -498,7 +501,7 @@ export async function getClassesForSelection(): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const classes = await db.class.findMany({
@@ -557,7 +560,7 @@ export async function quickMarkAllPresent(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
@@ -673,7 +676,7 @@ export async function checkOutStudent(input: {
 }): Promise<{ success: boolean; error?: string }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-    return { success: false, error: "Missing school context" }
+    return actionError(ACTION_ERRORS.MISSING_SCHOOL)
   }
 
   const attendance = await db.attendance.findFirst({
@@ -745,12 +748,12 @@ export async function deleteAttendance(attendanceId: string): Promise<{
 }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-    return { success: false, error: "Missing school context" }
+    return actionError(ACTION_ERRORS.MISSING_SCHOOL)
   }
 
   const session = await auth()
   if (!session?.user) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -802,12 +805,12 @@ export async function bulkDeleteAttendance(attendanceIds: string[]): Promise<{
 }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-    return { success: false, deleted: 0, error: "Missing school context" }
+    return { success: false, deleted: 0, error: ACTION_ERRORS.MISSING_SCHOOL }
   }
 
   const session = await auth()
   if (!session?.user) {
-    return { success: false, deleted: 0, error: "Unauthorized" }
+    return { success: false, deleted: 0, error: ACTION_ERRORS.UNAUTHORIZED }
   }
 
   try {
@@ -849,12 +852,12 @@ export async function restoreAttendance(attendanceId: string): Promise<{
 }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-    return { success: false, error: "Missing school context" }
+    return actionError(ACTION_ERRORS.MISSING_SCHOOL)
   }
 
   const session = await auth()
   if (!session?.user) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {

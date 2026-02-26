@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Client-safe catalog image URL helpers.
  *
@@ -14,11 +17,17 @@ export type CatalogImageSize = "sm" | "md" | "lg" | "original"
  */
 export function getCatalogImageUrl(
   thumbnailKey: string | null | undefined,
-  _imageKey: string | null | undefined,
+  imageKey: string | null | undefined,
   size: CatalogImageSize = "original"
 ): string | null {
+  // Priority 1: CDN thumbnail (S3/CloudFront)
   if (thumbnailKey && isCloudFrontConfigured()) {
     return getCloudFrontUrl(`${thumbnailKey}-${size}.webp`)
+  }
+
+  // Priority 2: imageKey (local path or external URL)
+  if (imageKey) {
+    return imageKey
   }
 
   return null

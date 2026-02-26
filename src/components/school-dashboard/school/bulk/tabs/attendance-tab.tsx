@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { ClipboardList, Download, Upload } from "lucide-react"
 
 import { Button } from "@/components/ui/button"

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { X } from "lucide-react"
 
@@ -110,7 +112,7 @@ export function ActionCard({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-4 right-4 h-8 w-8 shrink-0"
+              className="absolute end-4 top-4 h-8 w-8 shrink-0"
               onClick={handleDismiss}
               aria-label="Dismiss"
             >

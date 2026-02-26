@@ -1,10 +1,13 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Multiple Choice Question Renderer
- * Displays MCQ with options A-D and optional bubble markers
+ * Print-scannable bubbles with option letter inside bordered circle
  */
 
 import React from "react"
-import { StyleSheet, Text, View } from "@react-pdf/renderer"
+import { Image, StyleSheet, Text, View } from "@react-pdf/renderer"
 
 import { MCQ_CONFIG } from "../../config"
 import type { QuestionForPaper } from "../../types"
@@ -63,25 +66,27 @@ const createStyles = (locale: "en" | "ar", fontFamily: string) => {
     },
     optionRow: {
       flexDirection: isRTL ? "row-reverse" : "row",
-      alignItems: "flex-start",
+      alignItems: "center",
       marginBottom: 6,
     },
+    // Print-scannable bubble: 2pt border, 14pt diameter, with letter inside
     optionBubble: {
       width: 14,
       height: 14,
       borderRadius: 7,
-      borderWidth: 1.5,
+      borderWidth: 2,
       borderColor: "#374151",
       marginRight: isRTL ? 0 : 8,
       marginLeft: isRTL ? 8 : 0,
-      marginTop: 1,
+      alignItems: "center",
+      justifyContent: "center",
     },
-    optionLabel: {
-      width: 20,
-      fontSize: 10,
+    bubbleLetter: {
+      fontSize: 8,
       fontWeight: "bold",
       color: "#374151",
       fontFamily,
+      textAlign: "center",
     },
     optionText: {
       flex: 1,
@@ -146,19 +151,20 @@ export function MCQQuestion({
         </View>
       </View>
 
-      {/* Question Image (if any) */}
+      {/* Question Image */}
       {question.imageUrl && (
         <View style={styles.imageContainer}>
-          {/* Note: Images would be rendered here in actual implementation */}
+          <Image src={question.imageUrl} style={styles.questionImage} />
         </View>
       )}
 
-      {/* Options */}
+      {/* Options with scannable bubbles */}
       <View style={styles.optionsContainer}>
         {options.map((option, index) => (
           <View key={index} style={styles.optionRow}>
-            <View style={styles.optionBubble} />
-            <Text style={styles.optionLabel}>{labels[index]}.</Text>
+            <View style={styles.optionBubble}>
+              <Text style={styles.bubbleLetter}>{labels[index]}</Text>
+            </View>
             <Text style={styles.optionText}>{option.text}</Text>
           </View>
         ))}

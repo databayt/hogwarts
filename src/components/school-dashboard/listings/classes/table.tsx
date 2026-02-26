@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
@@ -56,35 +58,23 @@ function ClassesTableInner({
 
   // Translations with fallbacks
   const t = {
-    className:
-      dictionary?.className || (lang === "ar" ? "اسم الفصل" : "Class Name"),
-    subject: dictionary?.subject || (lang === "ar" ? "المادة" : "Subject"),
-    teacher: dictionary?.teacher || (lang === "ar" ? "المعلم" : "Teacher"),
-    term: dictionary?.term || (lang === "ar" ? "الفصل الدراسي" : "Term"),
-    enrolled: dictionary?.enrolled || (lang === "ar" ? "المسجلين" : "Enrolled"),
-    actions: dictionary?.actions || (lang === "ar" ? "إجراءات" : "Actions"),
-    editClass:
-      dictionary?.editClass || (lang === "ar" ? "تعديل الفصل" : "Edit Class"),
-    deleteClass:
-      dictionary?.deleteClass || (lang === "ar" ? "حذف الفصل" : "Delete Class"),
-    viewClass:
-      dictionary?.viewClass || (lang === "ar" ? "عرض الفصل" : "View Class"),
-    createClass:
-      dictionary?.createClass || (lang === "ar" ? "إنشاء فصل" : "Create Class"),
-    allClasses:
-      dictionary?.allClasses || (lang === "ar" ? "جميع الفصول" : "All Classes"),
-    noClasses:
-      dictionary?.noClasses ||
-      (lang === "ar" ? "لا توجد فصول" : "No classes found"),
-    addNewClass:
-      dictionary?.addNewClass ||
-      (lang === "ar" ? "أضف فصلاً جديداً" : "Add a new class to your school"),
-    search:
-      dictionary?.search ||
-      (lang === "ar" ? "بحث في الفصول..." : "Search classes..."),
-    create: dictionary?.create || (lang === "ar" ? "إنشاء" : "Create"),
-    export: dictionary?.export || (lang === "ar" ? "تصدير" : "Export"),
-    reset: dictionary?.reset || (lang === "ar" ? "إعادة تعيين" : "Reset"),
+    className: dictionary?.className || "Class Name",
+    subject: dictionary?.subject || "Subject",
+    teacher: dictionary?.teacher || "Teacher",
+    term: dictionary?.term || "Term",
+    enrolled: dictionary?.enrolled || "Enrolled",
+    actions: dictionary?.actions || "Actions",
+    editClass: dictionary?.editClass || "Edit Class",
+    deleteClass: dictionary?.deleteClass || "Delete Class",
+    viewClass: dictionary?.viewClass || "View Class",
+    createClass: dictionary?.createClass || "Create Class",
+    allClasses: dictionary?.allClasses || "All Classes",
+    noClasses: dictionary?.noClasses || "No classes found",
+    addNewClass: dictionary?.addNewClass || "Add a new class to your school",
+    search: dictionary?.search || "Search classes...",
+    create: dictionary?.create || "Create",
+    export: dictionary?.export || "Export",
+    reset: dictionary?.reset || "Reset",
   }
 
   // View mode (table/grid)
@@ -133,11 +123,15 @@ function ClassesTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast("Failed to delete class")
+          ErrorToast(dictionary?.failedToDelete || "Failed to delete class")
         }
       } catch (e) {
         refresh()
-        ErrorToast(e instanceof Error ? e.message : "Failed to delete")
+        ErrorToast(
+          e instanceof Error
+            ? e.message
+            : dictionary?.failedToDelete || "Failed to delete"
+        )
       }
     },
     [optimisticRemove, refresh, lang, t.deleteClass]
@@ -215,8 +209,8 @@ function ClassesTableInner({
     create: typeof t.create === "string" ? t.create : t.createClass,
     reset: t.reset,
     export: t.export,
-    exportCSV: lang === "ar" ? "تصدير CSV" : "Export CSV",
-    exporting: lang === "ar" ? "جاري التصدير..." : "Exporting...",
+    exportCSV: dictionary?.exportCSV || "Export CSV",
+    exporting: dictionary?.exporting || "Exporting...",
   }
 
   return (
@@ -269,7 +263,7 @@ function ClassesTableInner({
                     icon="/anthropic/book-open.svg"
                     title={displayName}
                     description={displaySubject}
-                    subtitle={`${classItem.enrolledStudents} ${lang === "ar" ? "طالب" : "students"}`}
+                    subtitle={`${classItem.enrolledStudents} ${dictionary?.studentCount || "students"}`}
                     onClick={() => handleView(classItem.id)}
                   />
                 )
@@ -285,7 +279,9 @@ function ClassesTableInner({
                 disabled={isLoading}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading
+                  ? dictionary?.loading || "Loading..."
+                  : dictionary?.loadMore || "Load More"}
               </button>
             </div>
           )}

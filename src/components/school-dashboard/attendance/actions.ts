@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Attendance Server Actions - Barrel Export
  *
@@ -56,6 +59,7 @@ export {
   addStudentIdentifier,
   getStudentIdentifiers,
   findStudentByIdentifier,
+  deleteStudentIdentifier,
 } from "./actions/identifiers"
 
 // Excuse management

@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * All logs view component with filtering
  */
@@ -84,7 +87,7 @@ export function AllLogs({ logs, showFilters = true, onExport }: AllLogsProps) {
       {showFilters && (
         <div className="grid gap-4 md:grid-cols-3">
           <div className="relative md:col-span-2">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+            <Search className="text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2" />
             <Input
               placeholder="Search logs..."
               value={filters.search}

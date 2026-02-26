@@ -545,6 +545,9 @@ importers:
       "@testing-library/dom":
         specifier: ^10.4.0
         version: 10.4.1
+      "@testing-library/jest-dom":
+        specifier: ^6.9.1
+        version: 6.9.1
       "@testing-library/react":
         specifier: ^16.0.1
         version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -665,6 +668,12 @@ packages:
     resolution:
       {
         integrity: sha512-5YjgMmAiT2rjJZU7XK1SNI7iqTy92DpaYVgG6x63FxkJ11UpYfLndHJATtinWJClAXiOlW9XWaUyAQf8pMrQPg==,
+      }
+
+  "@adobe/css-tools@4.4.4":
+    resolution:
+      {
+        integrity: sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg==,
       }
 
   "@ai-sdk/anthropic@2.0.37":
@@ -6410,6 +6419,13 @@ packages:
       }
     engines: { node: ">=18" }
 
+  "@testing-library/jest-dom@6.9.1":
+    resolution:
+      {
+        integrity: sha512-zIcONa+hVtVSSep9UT3jZ5rizo2BsxgyDYU7WFD5eICBE7no3881HGeb/QkGfsJs6JTkY1aQhT7rIPC7e+0nnA==,
+      }
+    engines: { node: ">=14", npm: ">=6", yarn: ">=1" }
+
   "@testing-library/react@16.3.0":
     resolution:
       {
@@ -8812,6 +8828,12 @@ packages:
       }
     engines: { node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0 }
 
+  css.escape@1.5.1:
+    resolution:
+      {
+        integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==,
+      }
+
   csscolorparser@1.0.3:
     resolution:
       {
@@ -9488,6 +9510,12 @@ packages:
     resolution:
       {
         integrity: sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg==,
+      }
+
+  dom-accessibility-api@0.6.3:
+    resolution:
+      {
+        integrity: sha512-7ZgogeTnjuHbo+ct10G9Ffp0mif17idi0IyWNVA/wcwcm7NPOD/WEHVP3n7n3MhXqxoIYm8d6MuZohYWIZ4T3w==,
       }
 
   dom-helpers@5.2.1:
@@ -16887,6 +16915,8 @@ packages:
 snapshots:
   "@acemir/cssom@0.9.24": {}
 
+  "@adobe/css-tools@4.4.4": {}
+
   "@ai-sdk/anthropic@2.0.37(zod@4.0.14)":
     dependencies:
       "@ai-sdk/provider": 2.0.0
@@ -21395,6 +21425,15 @@ snapshots:
       picocolors: 1.1.1
       pretty-format: 27.5.1
 
+  "@testing-library/jest-dom@6.9.1":
+    dependencies:
+      "@adobe/css-tools": 4.4.4
+      aria-query: 5.3.2
+      css.escape: 1.5.1
+      dom-accessibility-api: 0.6.3
+      picocolors: 1.1.1
+      redent: 3.0.0
+
   "@testing-library/react@16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)":
     dependencies:
       "@babel/runtime": 7.28.2
@@ -22852,6 +22891,8 @@ snapshots:
       mdn-data: 2.12.2
       source-map-js: 1.2.1
 
+  css.escape@1.5.1: {}
+
   csscolorparser@1.0.3: {}
 
   cssesc@3.0.0: {}
@@ -23231,6 +23272,8 @@ snapshots:
       esutils: 2.0.3
 
   dom-accessibility-api@0.5.16: {}
+
+  dom-accessibility-api@0.6.3: {}
 
   dom-helpers@5.2.1:
     dependencies:

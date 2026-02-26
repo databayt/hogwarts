@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Utility functions for Marketing Blog
  *
@@ -193,9 +196,9 @@ export function getPostsByAuthor(
 /**
  * Format publish date
  */
-export function formatPublishDate(date: Date | string): string {
+export function formatPublishDate(date: Date | string, locale = "ar"): string {
   const d = typeof date === "string" ? new Date(date) : date
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "long",
     day: "numeric",

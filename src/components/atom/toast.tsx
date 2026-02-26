@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -196,7 +198,15 @@ function ensurePortalMounted() {
   portalMounted = true
 }
 
-export function confirmDeleteDialog(message?: string): Promise<boolean> {
+export function confirmDeleteDialog(
+  message?: string,
+  labels?: {
+    title?: string
+    description?: string
+    confirmText?: string
+    cancelText?: string
+  }
+): Promise<boolean> {
   return new Promise((resolve) => {
     ensurePortalMounted()
 
@@ -205,10 +215,11 @@ export function confirmDeleteDialog(message?: string): Promise<boolean> {
       if (setConfirmState) {
         setConfirmState({
           open: true,
-          title: "Delete item",
-          description: message ?? "This action cannot be undone.",
-          confirmText: "Delete",
-          cancelText: "Cancel",
+          title: labels?.title ?? "Delete item",
+          description:
+            labels?.description ?? message ?? "This action cannot be undone.",
+          confirmText: labels?.confirmText ?? "Delete",
+          cancelText: labels?.cancelText ?? "Cancel",
           resolve,
         })
       } else {

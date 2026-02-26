@@ -1,11 +1,17 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 
 import {
   createActionResponse,
   type ActionResponse,
 } from "@/lib/action-response"
+import {
+  applyTimetableStructureForNewSchool,
+  setupCatalogForSchool,
+} from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
 
 import { requireSchoolOwnership } from "../auth-helpers"
@@ -24,15 +30,49 @@ export async function completeOnboarding(
       where: { id: schoolId },
       data: {
         isActive: true,
-        onboardingStep: "legal",
+        isPublished: true,
+        onboardingCompletedAt: new Date(),
+        onboardingStep: "completed",
       },
-      select: { id: true, name: true, domain: true },
+      select: {
+        id: true,
+        name: true,
+        domain: true,
+        country: true,
+        system: true,
+      },
     })
 
     if (!school.domain) {
       throw new Error(
         "School subdomain not configured. Please complete the subdomain step."
       )
+    }
+
+    // Auto-setup academic structure (grades, levels, subject selections)
+    // Non-blocking: catalog setup failure should NOT prevent onboarding completion
+    try {
+      await setupCatalogForSchool(schoolId, {
+        country: school.country || undefined,
+      })
+    } catch (catalogError) {
+      console.error(
+        `[completeOnboarding] Catalog setup failed for school ${schoolId}:`,
+        catalogError
+      )
+    }
+
+    // Apply timetable structure if the school selected one during onboarding
+    // Non-blocking: timetable setup failure should NOT prevent onboarding completion
+    if (school.system) {
+      try {
+        await applyTimetableStructureForNewSchool(schoolId, school.system)
+      } catch (timetableError) {
+        console.error(
+          `[completeOnboarding] Timetable setup failed for school ${schoolId}:`,
+          timetableError
+        )
+      }
     }
 
     revalidatePath(`/onboarding/${schoolId}`)

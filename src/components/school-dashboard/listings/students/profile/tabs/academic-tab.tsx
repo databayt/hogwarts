@@ -1,8 +1,12 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { format } from "date-fns"
 import {
   BookOpen,
   Calendar,
   GraduationCap,
+  Layers,
   TrendingUp,
   Trophy,
 } from "lucide-react"
@@ -20,61 +24,90 @@ import {
 } from "@/components/ui/table"
 
 import type { Student } from "../../registration/types"
+import type { GradeBoundaryData } from "../student-profile"
 
 interface AcademicTabProps {
   student: Student
+  gradeBoundaries?: GradeBoundaryData[]
 }
 
-// Helper to calculate grade from score
-const getGradeFromScore = (score: number, maxScore: number): string => {
-  const percentage = (score / maxScore) * 100
-  if (percentage >= 95) return "A+"
-  if (percentage >= 90) return "A"
-  if (percentage >= 85) return "A-"
+/**
+ * Calculate grade from percentage using school's grading scheme.
+ * Falls back to a standard scale when no scheme is provided.
+ */
+function getGradeFromPercentage(
+  percentage: number,
+  gradeBoundaries?: Array<{
+    grade: string
+    minScore: number
+    maxScore: number
+  }>
+): string {
+  if (gradeBoundaries && gradeBoundaries.length > 0) {
+    const boundary = gradeBoundaries.find(
+      (b) => percentage >= b.minScore && percentage <= b.maxScore
+    )
+    return boundary?.grade ?? "F"
+  }
+
+  // Default fallback scale
+  if (percentage >= 90) return "A+"
+  if (percentage >= 85) return "A"
   if (percentage >= 80) return "B+"
   if (percentage >= 75) return "B"
-  if (percentage >= 70) return "B-"
-  if (percentage >= 65) return "C+"
-  if (percentage >= 60) return "C"
-  if (percentage >= 55) return "C-"
+  if (percentage >= 70) return "C+"
+  if (percentage >= 65) return "C"
+  if (percentage >= 60) return "D+"
   if (percentage >= 50) return "D"
   return "F"
 }
 
-// Calculate GPA from exam results
-const calculateGPA = (examResults: any[]): number => {
+// Default GPA mapping when no school scheme exists
+const DEFAULT_GPA: Record<string, number> = {
+  "A+": 4.0,
+  A: 4.0,
+  "A-": 3.7,
+  "B+": 3.3,
+  B: 3.0,
+  "B-": 2.7,
+  "C+": 2.3,
+  C: 2.0,
+  "C-": 1.7,
+  "D+": 1.3,
+  D: 1.0,
+  F: 0,
+}
+
+// Calculate GPA from exam results using school's grading scheme
+const calculateGPA = (
+  examResults: any[],
+  boundaries?: GradeBoundaryData[]
+): number => {
   if (!examResults || examResults.length === 0) return 0
-  const gradePoints: Record<string, number> = {
-    "A+": 4.0,
-    A: 4.0,
-    "A-": 3.7,
-    "B+": 3.3,
-    B: 3.0,
-    "B-": 2.7,
-    "C+": 2.3,
-    C: 2.0,
-    "C-": 1.7,
-    D: 1.0,
-    F: 0,
-  }
   let totalPoints = 0
   let count = 0
   examResults.forEach((result) => {
-    const grade = getGradeFromScore(result.score || 0, result.maxScore || 100)
-    if (gradePoints[grade] !== undefined) {
-      totalPoints += gradePoints[grade]
+    const percentage =
+      result.maxScore > 0 ? ((result.score || 0) / result.maxScore) * 100 : 0
+    const grade = getGradeFromPercentage(percentage, boundaries)
+    // Use gpaValue from boundaries if available, else fall back to default map
+    const boundary = boundaries?.find((b) => b.grade === grade)
+    const gpa =
+      boundary?.gpaValue != null ? boundary.gpaValue : DEFAULT_GPA[grade]
+    if (gpa !== undefined) {
+      totalPoints += gpa
       count++
     }
   })
   return count > 0 ? totalPoints / count : 0
 }
 
-export function AcademicTab({ student }: AcademicTabProps) {
-  // Use real data from student object
+export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
   const studentClasses = student.studentClasses || []
   const examResults = student.examResults || []
   const submissions = student.submissions || []
   const yearLevels = student.studentYearLevels || []
+  const academicGrade = (student as any).academicGrade
 
   // Get current class info
   const currentClass =
@@ -89,17 +122,18 @@ export function AcademicTab({ student }: AcademicTabProps) {
             teacher: sc.class?.teacher
               ? `${sc.class.teacher.givenName} ${sc.class.teacher.surname}`
               : "Not Assigned",
-            // Calculate grade from exam results for this subject
             grade: examResults.find(
               (er: any) => er.subjectId === sc.class?.subject?.id
             )
-              ? getGradeFromScore(
-                  examResults.find(
+              ? getGradeFromPercentage(
+                  ((examResults.find(
                     (er: any) => er.subjectId === sc.class?.subject?.id
-                  )?.score || 0,
-                  examResults.find(
-                    (er: any) => er.subjectId === sc.class?.subject?.id
-                  )?.maxScore || 100
+                  )?.score || 0) /
+                    (examResults.find(
+                      (er: any) => er.subjectId === sc.class?.subject?.id
+                    )?.maxScore || 100)) *
+                    100,
+                  gradeBoundaries
                 )
               : "-",
             score: examResults.find(
@@ -119,8 +153,7 @@ export function AcademicTab({ student }: AcademicTabProps) {
         }
       : null
 
-  // Calculate GPA
-  const gpa = calculateGPA(examResults)
+  const gpa = calculateGPA(examResults, gradeBoundaries)
 
   const getGradeColor = (grade: string) => {
     if (grade.startsWith("A")) return "text-green-600"
@@ -147,13 +180,82 @@ export function AcademicTab({ student }: AcademicTabProps) {
     }
   }
 
+  // Get catalog subjects from academic grade
+  const catalogSubjects = academicGrade?.subjectSelections || []
+
   return (
     <div className="grid gap-6">
+      {/* Current Grade (from catalog) */}
+      {academicGrade && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5" />
+              Current Grade
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <p className="text-muted-foreground text-sm">Grade</p>
+                <p className="text-xl font-semibold">{academicGrade.name}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">Level</p>
+                <p className="font-medium">
+                  {academicGrade.level?.name || "-"}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">
+                  Catalog Subjects
+                </p>
+                <p className="font-medium">{catalogSubjects.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Catalog Subjects (from academic grade) */}
+      {catalogSubjects.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Catalog Subjects
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {catalogSubjects.map((selection: any) => (
+                  <TableRow key={selection.id}>
+                    <TableCell className="font-medium">
+                      {selection.subject?.subjectName || "Unknown"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">Available</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Current Class Info */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
+            <GraduationCap className="h-5 w-5" />
             Current Academic Information
           </CardTitle>
         </CardHeader>
@@ -276,9 +378,9 @@ export function AcademicTab({ student }: AcademicTabProps) {
                     result.maxScore > 0
                       ? Math.round((result.score / result.maxScore) * 100)
                       : 0
-                  const grade = getGradeFromScore(
-                    result.score || 0,
-                    result.maxScore || 100
+                  const grade = getGradeFromPercentage(
+                    percentage,
+                    gradeBoundaries
                   )
                   return (
                     <TableRow key={result.id || index}>

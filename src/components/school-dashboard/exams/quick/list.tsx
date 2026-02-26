@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { MoreHorizontal, Play, Square } from "lucide-react"
@@ -171,7 +173,7 @@ export function QuickAssessmentList({
                         onClick={() => handleLaunch(assessment.id)}
                         disabled={isLoading === assessment.id}
                       >
-                        <Play className="mr-2 h-4 w-4" />
+                        <Play className="me-2 h-4 w-4" />
                         Launch
                       </DropdownMenuItem>
                     )}
@@ -180,7 +182,7 @@ export function QuickAssessmentList({
                         onClick={() => handleClose(assessment.id)}
                         disabled={isLoading === assessment.id}
                       >
-                        <Square className="mr-2 h-4 w-4" />
+                        <Square className="me-2 h-4 w-4" />
                         Close
                       </DropdownMenuItem>
                     )}

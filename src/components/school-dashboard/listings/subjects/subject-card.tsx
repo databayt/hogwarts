@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -69,7 +71,7 @@ function SubjectCardInner({
 
         {/* Badge overlay (optional) */}
         {badge && (
-          <div className="absolute -top-1 -right-1">
+          <div className="absolute -end-1 -top-1">
             <Badge
               variant="secondary"
               className="bg-background/90 h-4 px-1 text-[10px]"

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { CalendarCheck, Ellipsis, GraduationCap, Users } from "lucide-react"
@@ -57,27 +59,23 @@ export const getClassColumns = (
   callbacks?: ClassColumnCallbacks
 ): ColumnDef<ClassRow>[] => {
   const t = {
-    className:
-      dictionary?.className || (lang === "ar" ? "اسم الفصل" : "Class Name"),
-    courseCode:
-      dictionary?.courseCode || (lang === "ar" ? "رمز المقرر" : "Course Code"),
-    subject: dictionary?.subject || (lang === "ar" ? "المادة" : "Subject"),
-    teacher: dictionary?.teacher || (lang === "ar" ? "المعلم" : "Teacher"),
-    grade: lang === "ar" ? "الصف" : "Grade",
-    credits: dictionary?.credits || (lang === "ar" ? "الساعات" : "Credits"),
-    evaluation:
-      dictionary?.evaluation || (lang === "ar" ? "التقييم" : "Evaluation"),
-    enrolled: dictionary?.enrolled || (lang === "ar" ? "المسجلين" : "Enrolled"),
-    term: dictionary?.term || (lang === "ar" ? "الفصل الدراسي" : "Term"),
-    created:
-      dictionary?.created || (lang === "ar" ? "تاريخ الإنشاء" : "Created"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
-    viewStudents: lang === "ar" ? "عرض الطلاب" : "View Students",
-    viewGrades: lang === "ar" ? "عرض الدرجات" : "View Grades",
-    viewAttendance: lang === "ar" ? "عرض الحضور" : "View Attendance",
+    className: dictionary?.className || "Class Name",
+    courseCode: dictionary?.courseCode || "Course Code",
+    subject: dictionary?.subject || "Subject",
+    teacher: dictionary?.teacher || "Teacher",
+    grade: dictionary?.grade || "Grade",
+    credits: dictionary?.credits || "Credits",
+    evaluation: dictionary?.evaluation || "Evaluation",
+    enrolled: dictionary?.enrolled || "Enrolled",
+    term: dictionary?.term || "Term",
+    created: dictionary?.created || "Created",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.viewClass || "View",
+    edit: dictionary?.editClass || "Edit",
+    delete: dictionary?.deleteClass || "Delete",
+    viewStudents: dictionary?.viewStudents || "View Students",
+    viewGrades: dictionary?.viewGrades || "View Grades",
+    viewAttendance: dictionary?.viewAttendance || "View Attendance",
   }
 
   return [

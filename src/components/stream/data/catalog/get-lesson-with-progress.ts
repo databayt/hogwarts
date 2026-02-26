@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
@@ -44,6 +46,12 @@ export interface CatalogLessonWithProgress {
       id: string
       title: string
       slug: string
+      levels: string[]
+      grades: number[]
+      description: string | null
+      objectives: string[]
+      prerequisites: string | null
+      targetAudience: string | null
     }
   }
   attachments: Array<{
@@ -56,6 +64,7 @@ export interface CatalogLessonWithProgress {
     watchedSeconds: number
     totalSeconds: number | null
   } | null
+  year: number | null
   color: string | null
   previousLesson: { id: string; title: string } | null
   nextLesson: { id: string; title: string; videoUrl?: string | null } | null
@@ -100,6 +109,12 @@ export async function getCatalogLessonWithProgress(
               name: true,
               slug: true,
               color: true,
+              levels: true,
+              grades: true,
+              description: true,
+              objectives: true,
+              prerequisites: true,
+              targetAudience: true,
             },
           },
         },
@@ -291,7 +306,9 @@ export async function getCatalogLessonWithProgress(
     thumbnailUrl:
       getCatalogImageUrl(lesson.thumbnailKey, lesson.imageKey, "original") ??
       null,
-    duration: lesson.durationMinutes,
+    duration:
+      lesson.durationMinutes ??
+      (lesson.videoCount > 0 ? lesson.videoCount * 5 : null),
     videoDuration: video?.durationSeconds ?? null,
     position: lesson.sequenceOrder,
     isPublished: true,
@@ -304,8 +321,15 @@ export async function getCatalogLessonWithProgress(
         id: lesson.chapter.subject.id,
         title: lesson.chapter.subject.name,
         slug: lesson.chapter.subject.slug,
+        levels: lesson.chapter.subject.levels as string[],
+        grades: lesson.chapter.subject.grades as number[],
+        description: lesson.chapter.subject.description,
+        objectives: lesson.chapter.subject.objectives,
+        prerequisites: lesson.chapter.subject.prerequisites,
+        targetAudience: lesson.chapter.subject.targetAudience,
       },
     },
+    year: lesson.createdAt ? new Date(lesson.createdAt).getFullYear() : null,
     color:
       lesson.color ??
       lesson.chapter.color ??

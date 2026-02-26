@@ -1,8 +1,11 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import { assertStaffPermission, getAuthContext } from "./authorization"
@@ -23,12 +26,12 @@ export async function createStaff(
     const authContext = getAuthContext(session)
 
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const schoolId = authContext.schoolId
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -36,7 +39,8 @@ export async function createStaff(
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -74,12 +78,12 @@ export async function updateStaff(
     const authContext = getAuthContext(session)
 
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const schoolId = authContext.schoolId
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Get existing staff member
@@ -97,7 +101,8 @@ export async function updateStaff(
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -131,12 +136,12 @@ export async function deleteStaff(id: string): Promise<ActionResponse<void>> {
     const authContext = getAuthContext(session)
 
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const schoolId = authContext.schoolId
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Get existing staff member
@@ -154,7 +159,8 @@ export async function deleteStaff(id: string): Promise<ActionResponse<void>> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -185,7 +191,7 @@ export async function bulkDeleteStaff(
     const authContext = getAuthContext(session)
 
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     try {
@@ -193,13 +199,14 @@ export async function bulkDeleteStaff(
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
     const schoolId = authContext.schoolId
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Verify ownership
@@ -242,7 +249,7 @@ export async function getStaffForExport(): Promise<ActionResponse<any[]>> {
     const authContext = getAuthContext(session)
 
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     try {
@@ -250,13 +257,14 @@ export async function getStaffForExport(): Promise<ActionResponse<any[]>> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
     const schoolId = authContext.schoolId
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const staff = await db.staffMember.findMany({

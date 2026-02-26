@@ -20,18 +20,38 @@ function Progress({
       )}
       {...props}
     >
-      <motion.div
-        data-slot="progress-indicator"
-        className="bg-primary origin-start h-full w-full flex-1"
-        initial={{ transform: "translateX(-100%)" }}
-        animate={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-        transition={{
-          type: "tween",
-          duration: 0.8,
-          ease: [0.4, 0.0, 0.2, 1], // Material Design easing for steady movement
-        }}
-      />
+      <ProgressIndicator value={value} />
     </ProgressPrimitive.Root>
+  )
+}
+
+function ProgressIndicator({ value }: { value?: number | null }) {
+  const percentage = 100 - (value || 0)
+  const [dir, setDir] = React.useState<string>("ltr")
+
+  React.useEffect(() => {
+    const htmlDir = document.documentElement.dir || "ltr"
+    setDir(htmlDir)
+  }, [])
+
+  const translateValue =
+    dir === "rtl" ? `translateX(${percentage}%)` : `translateX(-${percentage}%)`
+
+  return (
+    <motion.div
+      data-slot="progress-indicator"
+      className="bg-primary h-full w-full flex-1"
+      style={{ transformOrigin: dir === "rtl" ? "right" : "left" }}
+      initial={{
+        transform: dir === "rtl" ? "translateX(100%)" : "translateX(-100%)",
+      }}
+      animate={{ transform: translateValue }}
+      transition={{
+        type: "tween",
+        duration: 0.8,
+        ease: [0.4, 0.0, 0.2, 1],
+      }}
+    />
   )
 }
 

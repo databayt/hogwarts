@@ -1,11 +1,16 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { ExamStatus, ExamType, type Prisma } from "@prisma/client"
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 import { type ExamRow } from "./columns"
 import { examsSearchParams } from "./list-params"
@@ -55,30 +60,46 @@ export default async function ExamsContent({
         take,
         include: {
           class: {
-            select: { name: true },
+            select: { name: true, lang: true },
           },
           subject: {
-            select: { subjectName: true },
+            select: { subjectName: true, lang: true },
           },
         },
       }),
       db.exam.count({ where }),
     ])
 
-    data = rows.map((e) => ({
-      id: e.id,
-      title: e.title,
-      className: e.class?.name || "Unknown",
-      subjectName: e.subject?.subjectName || "Unknown",
-      examDate: e.examDate.toISOString(),
-      startTime: e.startTime,
-      endTime: e.endTime,
-      duration: e.duration,
-      totalMarks: e.totalMarks,
-      examType: e.examType,
-      status: e.status,
-      createdAt: e.createdAt.toISOString(),
-    }))
+    data = await Promise.all(
+      rows.map(async (e) => ({
+        id: e.id,
+        title: e.title,
+        className: e.class?.name
+          ? await getDisplayText(
+              e.class.name,
+              (e.class.lang || "ar") as SupportedLanguage,
+              lang,
+              schoolId!
+            )
+          : "Unknown",
+        subjectName: e.subject?.subjectName
+          ? await getDisplayText(
+              e.subject.subjectName,
+              (e.subject.lang || "ar") as SupportedLanguage,
+              lang,
+              schoolId!
+            )
+          : "Unknown",
+        examDate: e.examDate.toISOString(),
+        startTime: e.startTime,
+        endTime: e.endTime,
+        duration: e.duration,
+        totalMarks: e.totalMarks,
+        examType: e.examType,
+        status: e.status,
+        createdAt: e.createdAt.toISOString(),
+      }))
+    )
     total = count
   }
 

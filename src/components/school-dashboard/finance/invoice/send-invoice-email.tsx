@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import * as React from "react"
 
 interface EmailTemplateProps {
@@ -63,17 +66,21 @@ export const SendInvoiceEmail = ({
       >
         <div style={{ marginBottom: "12px" }}>
           <strong style={{ color: "#374151" }}>Invoice No:</strong>
-          <span style={{ color: "#6b7280", marginLeft: "8px" }}>
+          <span style={{ color: "#6b7280", marginInlineStart: "8px" }}>
             {invoiceNo}
           </span>
         </div>
         <div style={{ marginBottom: "12px" }}>
           <strong style={{ color: "#374151" }}>Due Date:</strong>
-          <span style={{ color: "#6b7280", marginLeft: "8px" }}>{dueDate}</span>
+          <span style={{ color: "#6b7280", marginInlineStart: "8px" }}>
+            {dueDate}
+          </span>
         </div>
         <div>
           <strong style={{ color: "#374151" }}>Total Amount:</strong>
-          <span style={{ color: "#6b7280", marginLeft: "8px" }}>{total}</span>
+          <span style={{ color: "#6b7280", marginInlineStart: "8px" }}>
+            {total}
+          </span>
         </div>
       </div>
 

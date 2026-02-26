@@ -1,6 +1,9 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Answer Sheet Component
- * Separate page for answers (regular or bubble/OMR style)
+ * Separate page with OMR alignment markers, timing marks, and bubble/line answer areas
  */
 
 import React from "react"
@@ -93,6 +96,37 @@ const createStyles = (locale: "en" | "ar", fontFamily: string) => {
       flexDirection: "row",
       flexWrap: "wrap",
     },
+    // OMR alignment markers - corner squares for scanner calibration
+    omrCorner: {
+      width: 10,
+      height: 10,
+      backgroundColor: "#000000",
+      position: "absolute",
+    },
+    omrTopLeft: {
+      top: -15,
+      left: -15,
+    },
+    omrTopRight: {
+      top: -15,
+      right: -15,
+    },
+    omrBottomLeft: {
+      bottom: -15,
+      left: -15,
+    },
+    omrBottomRight: {
+      bottom: -15,
+      right: -15,
+    },
+    // Edge timing marks for scanners
+    timingMark: {
+      width: 6,
+      height: 2,
+      backgroundColor: "#000000",
+      position: "absolute",
+      left: -20,
+    },
     // Regular answer sheet styles
     answerRow: {
       width: "25%",
@@ -143,7 +177,7 @@ const createStyles = (locale: "en" | "ar", fontFamily: string) => {
       width: 12,
       height: 12,
       borderRadius: 6,
-      borderWidth: 1.5,
+      borderWidth: 2,
       borderColor: "#374151",
     },
     bubbleLabel: {
@@ -155,6 +189,13 @@ const createStyles = (locale: "en" | "ar", fontFamily: string) => {
     },
     bubbleOption: {
       alignItems: "center",
+    },
+    // Guide line between rows for alignment
+    guideLine: {
+      width: "100%",
+      borderBottomWidth: 0.5,
+      borderBottomColor: "#E5E7EB",
+      marginBottom: 5,
     },
     // Written answer section
     writtenSection: {
@@ -194,6 +235,33 @@ const createStyles = (locale: "en" | "ar", fontFamily: string) => {
       height: 18,
     },
   })
+}
+
+function OMRMarkers({ styles }: { styles: ReturnType<typeof createStyles> }) {
+  return (
+    <>
+      <View style={[styles.omrCorner, styles.omrTopLeft]} />
+      <View style={[styles.omrCorner, styles.omrTopRight]} />
+      <View style={[styles.omrCorner, styles.omrBottomLeft]} />
+      <View style={[styles.omrCorner, styles.omrBottomRight]} />
+    </>
+  )
+}
+
+function TimingMarks({
+  count,
+  styles,
+}: {
+  count: number
+  styles: ReturnType<typeof createStyles>
+}) {
+  return (
+    <>
+      {Array.from({ length: Math.min(count, 30) }).map((_, idx) => (
+        <View key={idx} style={[styles.timingMark, { top: 40 + idx * 22 }]} />
+      ))}
+    </>
+  )
 }
 
 export function AnswerSheet({
@@ -240,6 +308,12 @@ export function AnswerSheet({
 
   return (
     <View style={styles.container}>
+      {/* OMR alignment markers for bubble sheets */}
+      {isBubbleSheet && <OMRMarkers styles={styles} />}
+      {isBubbleSheet && (
+        <TimingMarks count={objectiveQuestions.length} styles={styles} />
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{labels.title}</Text>
@@ -274,22 +348,32 @@ export function AnswerSheet({
       {objectiveQuestions.length > 0 && (
         <View style={styles.answersGrid}>
           {isBubbleSheet
-            ? // Bubble Sheet Style
-              objectiveQuestions.map((q) => (
-                <View key={q.id} style={styles.bubbleRow}>
-                  <Text style={styles.bubbleNumber}>{q.order}</Text>
-                  <View style={styles.bubblesContainer}>
-                    {(q.questionType === "MULTIPLE_CHOICE"
-                      ? MCQ_CONFIG.optionLabels.slice(0, q.options?.length || 4)
-                      : [isRTL ? "ص" : "T", isRTL ? "خ" : "F"]
-                    ).map((label, idx) => (
-                      <View key={idx} style={styles.bubbleOption}>
-                        <View style={styles.bubble} />
-                        <Text style={styles.bubbleLabel}>{label}</Text>
-                      </View>
-                    ))}
+            ? // Bubble Sheet Style with guide lines
+              objectiveQuestions.map((q, idx) => (
+                <React.Fragment key={q.id}>
+                  <View style={styles.bubbleRow}>
+                    <Text style={styles.bubbleNumber}>{q.order}</Text>
+                    <View style={styles.bubblesContainer}>
+                      {(q.questionType === "MULTIPLE_CHOICE"
+                        ? MCQ_CONFIG.optionLabels.slice(
+                            0,
+                            q.options?.length || 4
+                          )
+                        : [isRTL ? "ص" : "T", isRTL ? "خ" : "F"]
+                      ).map((label, labelIdx) => (
+                        <View key={labelIdx} style={styles.bubbleOption}>
+                          <View style={styles.bubble} />
+                          <Text style={styles.bubbleLabel}>{label}</Text>
+                        </View>
+                      ))}
+                    </View>
                   </View>
-                </View>
+                  {/* Guide line every 5 rows */}
+                  {(idx + 1) % 5 === 0 &&
+                    idx < objectiveQuestions.length - 1 && (
+                      <View style={styles.guideLine} />
+                    )}
+                </React.Fragment>
               ))
             : // Regular Answer Lines
               objectiveQuestions.map((q) => (

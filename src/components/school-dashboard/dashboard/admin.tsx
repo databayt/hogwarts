@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -31,7 +34,7 @@ export async function AdminDashboard({
     try {
       // Fetch quick look and weather data in parallel
       const [qlData, weather] = await Promise.all([
-        getQuickLookData(),
+        getQuickLookData(locale),
         getWeatherData(),
       ])
       quickLookData = qlData

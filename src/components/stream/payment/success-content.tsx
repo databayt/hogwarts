@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight, CheckIcon, XCircle } from "lucide-react"
@@ -35,6 +37,7 @@ export function StreamPaymentSuccessContent({
   const triggerConfetti = useConfetti()
   const isRTL = lang === "ar"
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight
+  const d = dictionary?.stream?.paymentSuccess
 
   useEffect(() => {
     // Only trigger confetti if payment was successful
@@ -54,12 +57,11 @@ export function StreamPaymentSuccessContent({
             </div>
             <div className="mt-3 w-full text-center sm:mt-5">
               <h2 className="text-xl font-semibold">
-                {isRTL ? "جلسة غير صالحة" : "Invalid Session"}
+                {d?.invalidSession || "Invalid Session"}
               </h2>
               <p className="text-muted-foreground mt-2 text-sm tracking-tight text-balance">
-                {isRTL
-                  ? "لم يتم العثور على معرف جلسة الدفع. يرجى المحاولة مرة أخرى."
-                  : "No payment session ID found. Please try again."}
+                {d?.noSessionFound ||
+                  "No payment session ID found. Please try again."}
               </p>
 
               <Link
@@ -70,7 +72,7 @@ export function StreamPaymentSuccessContent({
                 })}
               >
                 <ArrowIcon className="size-4" />
-                {isRTL ? "تصفح الدورات" : "Browse Courses"}
+                {d?.browseCourses || "Browse Courses"}
               </Link>
             </div>
           </CardContent>
@@ -90,13 +92,12 @@ export function StreamPaymentSuccessContent({
             </div>
             <div className="mt-3 w-full text-center sm:mt-5">
               <h2 className="text-xl font-semibold">
-                {isRTL ? "فشل التحقق من الدفع" : "Payment Verification Failed"}
+                {d?.paymentVerificationFailed || "Payment Verification Failed"}
               </h2>
               <p className="text-muted-foreground mt-2 text-sm tracking-tight text-balance">
                 {verificationResult?.error ||
-                  (isRTL
-                    ? "تعذر التحقق من الدفع. يرجى الاتصال بالدعم."
-                    : "Could not verify your payment. Please contact support.")}
+                  d?.couldNotVerify ||
+                  "Could not verify your payment. Please contact support."}
               </p>
 
               <div className="mt-5 space-y-2">
@@ -105,7 +106,7 @@ export function StreamPaymentSuccessContent({
                   className={buttonVariants({ className: "w-full" })}
                 >
                   <ArrowIcon className="size-4" />
-                  {isRTL ? "تصفح الدورات" : "Browse Courses"}
+                  {d?.browseCourses || "Browse Courses"}
                 </Link>
               </div>
             </div>
@@ -125,12 +126,13 @@ export function StreamPaymentSuccessContent({
           </div>
           <div className="mt-3 w-full text-center sm:mt-5">
             <h2 className="text-xl font-semibold">
-              {isRTL ? "تم الدفع بنجاح!" : "Payment Successful!"}
+              {d?.paymentSuccessful || "Payment Successful!"}
             </h2>
             <p className="text-muted-foreground mt-2 text-sm tracking-tight text-balance">
-              {isRTL
-                ? `تهانينا! تم تفعيل اشتراكك في "${verificationResult.courseTitle}". يمكنك البدء بالتعلم الآن.`
-                : `Congratulations! You are now enrolled in "${verificationResult.courseTitle}". You can start learning now.`}
+              {(
+                d?.congratulations ||
+                'Congratulations! You are now enrolled in "{title}". You can start learning now.'
+              ).replace("{title}", verificationResult.courseTitle || "")}
             </p>
 
             <div className="mt-5 space-y-2">
@@ -140,7 +142,7 @@ export function StreamPaymentSuccessContent({
                   className={buttonVariants({ className: "w-full" })}
                 >
                   <ArrowIcon className="size-4" />
-                  {isRTL ? "ابدأ التعلم" : "Start Learning"}
+                  {d?.startLearning || "Start Learning"}
                 </Link>
               )}
               <Link
@@ -150,7 +152,7 @@ export function StreamPaymentSuccessContent({
                   className: "w-full",
                 })}
               >
-                {isRTL ? "لوحة التحكم" : "Go to Dashboard"}
+                {d?.goToDashboard || "Go to Dashboard"}
               </Link>
             </div>
           </div>

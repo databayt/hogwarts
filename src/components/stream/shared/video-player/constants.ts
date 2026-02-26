@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Video Player Constants
 
 // Playback speeds
@@ -90,7 +93,7 @@ export const ANIMATION_DURATION = {
 
 // Progress bar dimensions
 export const PROGRESS_BAR = {
-  heightRest: 4,
+  heightRest: 5,
   heightHover: 8,
-  thumbSize: 12,
+  thumbSize: 14,
 } as const

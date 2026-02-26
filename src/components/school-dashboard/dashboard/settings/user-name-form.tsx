@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 // Avoid tight coupling to Prisma User type; accept minimal shape
@@ -10,6 +12,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   updateUserName,
   type FormData,
@@ -24,6 +27,8 @@ interface UserNameFormProps {
 }
 
 export function UserNameForm({ user }: UserNameFormProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const { update } = useSession()
   const [updated, setUpdated] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -47,13 +52,13 @@ export function UserNameForm({ user }: UserNameFormProps) {
       const { status } = await updateUserNameWithId(data)
 
       if (status !== "success") {
-        toast.error("Something went wrong.", {
+        toast.error(t?.error?.updateFailed || "Something went wrong.", {
           description: "Your name was not updated. Please try again.",
         })
       } else {
         await update()
         setUpdated(false)
-        toast.success("Your name has been updated.")
+        toast.success(t?.success?.updated || "Your name has been updated.")
       }
     })
   })

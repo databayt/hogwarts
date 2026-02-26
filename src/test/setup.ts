@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Global Test Setup
  *
@@ -6,6 +9,8 @@
  *
  * @see https://vitest.dev/config/#setupfiles
  */
+
+import "@testing-library/jest-dom/vitest"
 
 import { cleanup } from "@testing-library/react"
 import { afterEach, beforeAll, expect, vi } from "vitest"

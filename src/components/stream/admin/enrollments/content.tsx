@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { format } from "date-fns"
 
 import { Badge } from "@/components/ui/badge"
@@ -62,7 +64,7 @@ export function EnrollmentsContent({ enrollments }: Props) {
                   <TableHead>Email</TableHead>
                   <TableHead>Subject</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Completed</TableHead>
+                  <TableHead className="text-end">Completed</TableHead>
                   <TableHead>Enrolled</TableHead>
                 </TableRow>
               </TableHeader>
@@ -83,7 +85,7 @@ export function EnrollmentsContent({ enrollments }: Props) {
                         {enrollment.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       {enrollment.completedLessons} lessons
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">

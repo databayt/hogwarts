@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Compliance Letters Content
  *
@@ -27,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   bulkGenerateLetters,
@@ -73,6 +77,8 @@ interface LettersContentProps {
 }
 
 export function LettersContent({ locale }: LettersContentProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.letters
   const isRTL = locale === "ar"
   const [isLoading, setIsLoading] = useState(false)
   const [selectedLetterType, setSelectedLetterType] = useState<LetterType | "">(
@@ -182,12 +188,10 @@ export function LettersContent({ locale }: LettersContentProps) {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">
-          {isRTL ? "رسائل الحضور" : "Attendance Letters"}
+          {t?.title || "Attendance Letters"}
         </h1>
         <p className="text-muted-foreground">
-          {isRTL
-            ? "إنشاء وإرسال رسائل الامتثال للحضور"
-            : "Generate and send attendance compliance letters"}
+          {t?.subtitle || "Generate and send attendance compliance letters"}
         </p>
       </div>
 
@@ -195,7 +199,7 @@ export function LettersContent({ locale }: LettersContentProps) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {isRTL ? "اختر نوع الرسالة" : "Select Letter Type"}
+            {t?.select_letter_type || "Select Letter Type"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -205,9 +209,7 @@ export function LettersContent({ locale }: LettersContentProps) {
           >
             <SelectTrigger>
               <SelectValue
-                placeholder={
-                  isRTL ? "اختر نوع الرسالة..." : "Choose letter type..."
-                }
+                placeholder={t?.choose_letter_type || "Choose letter type..."}
               />
             </SelectTrigger>
             <SelectContent>
@@ -230,9 +232,14 @@ export function LettersContent({ locale }: LettersContentProps) {
           {template && (
             <div className={cn("rounded-lg p-4", tierColors[template.tier])}>
               <p className="text-sm">
-                {isRTL
-                  ? `هذه الرسالة للطلاب بنسبة غياب ${template.tier === "TIER_1" ? "أقل من 10%" : template.tier === "TIER_2" ? "10-19%" : "20% أو أكثر"}`
-                  : `This letter is for students with ${template.tier === "TIER_1" ? "<10%" : template.tier === "TIER_2" ? "10-19%" : "20%+"} absence rate`}
+                {template.tier === "TIER_1"
+                  ? t?.tier_desc_1 ||
+                    "This letter is for students with <10% absence rate"
+                  : template.tier === "TIER_2"
+                    ? t?.tier_desc_2 ||
+                      "This letter is for students with 10-19% absence rate"
+                    : t?.tier_desc_3 ||
+                      "This letter is for students with 20%+ absence rate"}
               </p>
             </div>
           )}
@@ -244,7 +251,7 @@ export function LettersContent({ locale }: LettersContentProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">
-              {isRTL ? "الطلاب المؤهلون" : "Eligible Students"}
+              {t?.eligible_students || "Eligible Students"}
               <Badge variant="secondary" className="ms-2">
                 {students.length}
               </Badge>
@@ -258,14 +265,10 @@ export function LettersContent({ locale }: LettersContentProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EMAIL">
-                    {isRTL ? "بريد إلكتروني" : "Email"}
-                  </SelectItem>
-                  <SelectItem value="PRINT">
-                    {isRTL ? "طباعة" : "Print"}
-                  </SelectItem>
+                  <SelectItem value="EMAIL">{t?.email || "Email"}</SelectItem>
+                  <SelectItem value="PRINT">{t?.print || "Print"}</SelectItem>
                   <SelectItem value="PORTAL">
-                    {isRTL ? "البوابة" : "Portal"}
+                    {t?.portal || "Portal"}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -274,12 +277,11 @@ export function LettersContent({ locale }: LettersContentProps) {
                 disabled={selectedStudents.size === 0 || isSending}
               >
                 {isSending
-                  ? isRTL
-                    ? "جاري الإرسال..."
-                    : "Sending..."
-                  : isRTL
-                    ? `إرسال (${selectedStudents.size})`
-                    : `Send (${selectedStudents.size})`}
+                  ? t?.sending || "Sending..."
+                  : (t?.send_count || "Send ({count})").replace(
+                      "{count}",
+                      String(selectedStudents.size)
+                    )}
               </Button>
             </div>
           </CardHeader>
@@ -290,9 +292,7 @@ export function LettersContent({ locale }: LettersContentProps) {
               </div>
             ) : students.length === 0 ? (
               <p className="text-muted-foreground py-8 text-center">
-                {isRTL
-                  ? "لا يوجد طلاب يحتاجون هذه الرسالة"
-                  : "No students need this letter"}
+                {t?.no_students_need_letter || "No students need this letter"}
               </p>
             ) : (
               <div className="space-y-2">
@@ -303,7 +303,7 @@ export function LettersContent({ locale }: LettersContentProps) {
                     onCheckedChange={toggleAll}
                   />
                   <span className="text-muted-foreground text-sm">
-                    {isRTL ? "تحديد الكل" : "Select all"}
+                    {t?.select_all || "Select all"}
                   </span>
                 </div>
 
@@ -327,7 +327,7 @@ export function LettersContent({ locale }: LettersContentProps) {
                           {student.grNumber} • {student.yearLevel}
                           {!student.hasGuardianEmail && (
                             <span className="text-destructive ms-2">
-                              {isRTL ? "(لا يوجد بريد)" : "(No email)"}
+                              {t?.no_email || "(No email)"}
                             </span>
                           )}
                         </p>
@@ -347,7 +347,7 @@ export function LettersContent({ locale }: LettersContentProps) {
                         size="sm"
                         onClick={() => handlePreview(student)}
                       >
-                        {isRTL ? "معاينة" : "Preview"}
+                        {t?.preview || "Preview"}
                       </Button>
                     </div>
                   </div>
@@ -364,12 +364,12 @@ export function LettersContent({ locale }: LettersContentProps) {
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <p>
-                {isRTL
-                  ? `تم إرسال ${sendResult.succeeded} رسالة بنجاح`
-                  : `Successfully sent ${sendResult.succeeded} letters`}
+                {(
+                  t?.sent_success || "Successfully sent {count} letters"
+                ).replace("{count}", String(sendResult.succeeded))}
                 {sendResult.failed > 0 && (
                   <span className="text-destructive ms-2">
-                    ({sendResult.failed} {isRTL ? "فشل" : "failed"})
+                    ({sendResult.failed} {t?.failed || "failed"})
                   </span>
                 )}
               </p>
@@ -378,7 +378,7 @@ export function LettersContent({ locale }: LettersContentProps) {
                 size="sm"
                 onClick={() => setSendResult(null)}
               >
-                {isRTL ? "إغلاق" : "Dismiss"}
+                {t?.dismiss || "Dismiss"}
               </Button>
             </div>
           </CardContent>
@@ -389,22 +389,20 @@ export function LettersContent({ locale }: LettersContentProps) {
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {isRTL ? "معاينة الرسالة" : "Letter Preview"}
-            </DialogTitle>
+            <DialogTitle>{t?.letter_preview || "Letter Preview"}</DialogTitle>
             <DialogDescription>{previewStudent?.name}</DialogDescription>
           </DialogHeader>
           {previewContent && (
             <div className="space-y-4">
               <div className="bg-muted rounded-lg p-4">
                 <p className="text-muted-foreground mb-1 text-sm">
-                  {isRTL ? "الموضوع:" : "Subject:"}
+                  {t?.subject || "Subject:"}
                 </p>
                 <p className="font-medium">{previewContent.subject}</p>
               </div>
               <div className="bg-muted rounded-lg p-4">
                 <p className="text-muted-foreground mb-2 text-sm">
-                  {isRTL ? "المحتوى:" : "Body:"}
+                  {t?.body || "Body:"}
                 </p>
                 <pre className="font-sans text-sm whitespace-pre-wrap">
                   {previewContent.body}
@@ -414,7 +412,7 @@ export function LettersContent({ locale }: LettersContentProps) {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-              {isRTL ? "إغلاق" : "Close"}
+              {t?.close || "Close"}
             </Button>
           </DialogFooter>
         </DialogContent>

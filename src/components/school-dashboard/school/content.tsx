@@ -1,35 +1,23 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import {
   Activity,
-  AlertTriangle,
-  BarChart3,
   Bell,
   Building,
   CheckCircle2,
   CircleAlert,
-  CircleCheck,
-  Clock,
   Cloud,
-  CreditCard,
   Database,
   FileText,
-  Globe,
-  HardDrive,
-  Key,
-  Link2,
-  Lock,
   Mail,
-  MessageSquare,
   School,
   Server,
   Settings,
-  Shield,
-  TrendingUp,
   UserCheck,
   UserCog,
   Users,
-  Webhook,
-  Zap,
 } from "lucide-react"
 
 import { db } from "@/lib/db"
@@ -54,21 +42,14 @@ interface Props {
 export default async function AdminContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
 
-  // Get comprehensive admin stats
   let totalUsers = 0
   let activeUsers = 0
   let totalTeachers = 0
   let totalStudents = 0
-  let totalGuardians = 0
   let totalDepartments = 0
   let totalClassrooms = 0
-  let activeSessions = 0
-  let failedLogins = 0
-  const systemHealthScore = 95 // Mock value for now
   let pendingApprovals = 0
-  let activeIntegrations = 0
-  let totalAnnouncements = 0
-  let activeSubscriptions = 0
+  const systemHealthScore = 95
 
   if (schoolId) {
     try {
@@ -77,32 +58,23 @@ export default async function AdminContent({ dictionary, lang }: Props) {
         activeUsers,
         totalTeachers,
         totalStudents,
-        totalGuardians,
         totalDepartments,
         totalClassrooms,
-        activeSessions,
-        failedLogins,
         pendingApprovals,
-        activeIntegrations,
-        totalAnnouncements,
-        activeSubscriptions,
       ] = await Promise.all([
         db.user.count({ where: { schoolId } }).catch(() => 0),
         db.user
           .count({
             where: {
               schoolId,
-              emailVerified: { not: null }, // Verified users as proxy for active
+              emailVerified: { not: null },
             },
           })
           .catch(() => 0),
         db.teacher.count({ where: { schoolId } }).catch(() => 0),
         db.student.count({ where: { schoolId } }).catch(() => 0),
-        db.guardian.count({ where: { schoolId } }).catch(() => 0),
         db.department.count({ where: { schoolId } }).catch(() => 0),
         db.classroom.count({ where: { schoolId } }).catch(() => 0),
-        Promise.resolve(0), // JWT-based auth, no session table
-        Promise.resolve(0), // No loginAttempts field in User model
         db.user
           .count({
             where: {
@@ -111,28 +83,9 @@ export default async function AdminContent({ dictionary, lang }: Props) {
             },
           })
           .catch(() => 0),
-        // Count OAuth accounts as integrations
-        db.account
-          .count({
-            where: {
-              user: { schoolId },
-              provider: { in: ["google", "facebook"] },
-            },
-          })
-          .catch(() => 0),
-        db.announcement.count({ where: { schoolId } }).catch(() => 0),
-        db.subscription
-          .count({
-            where: {
-              schoolId,
-              status: "ACTIVE",
-            },
-          })
-          .catch(() => 0),
       ])
     } catch (error) {
       console.error("Error fetching admin data:", error)
-      // Continue with zero values if database queries fail
     }
   }
 
@@ -141,161 +94,154 @@ export default async function AdminContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       {/* Overview Stats */}
-      <div className="flex gap-4">
-        {/* Left: 2x2 grid of stats */}
-        <div className="grid flex-1 grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.users || "Users"}
-              </CardTitle>
-              <Users className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {totalUsers.toLocaleString()}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {d?.stats?.users || "Users"}
+            </CardTitle>
+            <Users className="text-muted-foreground h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {totalUsers.toLocaleString()}
+            </div>
+            <p className="text-muted-foreground text-xs">
+              {activeUsers}{" "}
+              {d?.stats?.activeInLast30Days || "active in last 30 days"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {d?.stats?.teachers || "Teachers"}
+            </CardTitle>
+            <Users className="text-muted-foreground h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalTeachers}</div>
+            <p className="text-muted-foreground text-xs">
+              {d?.stats?.activeTeachers || "Active teachers"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {d?.stats?.students || "Students"}
+            </CardTitle>
+            <School className="text-muted-foreground h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalStudents}</div>
+            <p className="text-muted-foreground text-xs">
+              {d?.stats?.enrolledStudents || "Enrolled students"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {d?.stats?.health || "Health"}
+            </CardTitle>
+            <Activity className="text-muted-foreground h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{systemHealthScore}%</div>
+            <p className="text-muted-foreground text-xs">
+              {d?.stats?.allSystemsOperational || "All systems operational"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Organization & Operation */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              {d?.stats?.organization || "Organization"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-6 py-2">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="text-muted-foreground h-4 w-4" />
+                  <span className="text-muted-foreground text-xs">
+                    {d?.stats?.pendingActions || "Pending Approvals"}
+                  </span>
+                </div>
+                <div className="ps-6 text-2xl font-bold">
+                  {pendingApprovals.toLocaleString()}
+                </div>
+                <p className="text-muted-foreground ps-6 text-xs">
+                  {d?.stats?.requiresAttention || "Requires attention"}
+                </p>
               </div>
-              <p className="text-muted-foreground text-xs">
-                {activeUsers}{" "}
-                {d?.stats?.activeInLast30Days || "active in last 30 days"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.health || "Health"}
-              </CardTitle>
-              <Activity className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{systemHealthScore}%</div>
-              <p className="text-muted-foreground text-xs">
-                {d?.stats?.allSystemsOperational || "All systems operational"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.teachers || "Teachers"}
-              </CardTitle>
-              <Users className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalTeachers}</div>
-              <p className="text-muted-foreground text-xs">
-                {d?.stats?.activeTeachers || "Active teachers"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.students || "Students"}
-              </CardTitle>
-              <School className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalStudents}</div>
-              <p className="text-muted-foreground text-xs">
-                {d?.stats?.enrolledStudents || "Enrolled students"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right: Organization + Operation in a row */}
-        <div className="flex flex-1 flex-row gap-4">
-          <Card className="flex-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.organization || "Organization"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-6 py-2">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="text-muted-foreground h-4 w-4" />
-                    <span className="text-muted-foreground text-xs">
-                      {d?.stats?.activeSessions || "Active Sessions"}
-                    </span>
-                  </div>
-                  <div className="ps-6 text-2xl font-bold">
-                    {activeSessions.toLocaleString()}
-                  </div>
-                  <p className="text-muted-foreground ps-6 text-xs">
-                    {d?.stats?.currentlyLoggedIn || "Currently logged in"}
-                  </p>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Building className="text-muted-foreground h-4 w-4" />
+                  <span className="text-muted-foreground text-xs">
+                    {d?.stats?.departments || "Departments"}
+                  </span>
                 </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Building className="text-muted-foreground h-4 w-4" />
-                    <span className="text-muted-foreground text-xs">
-                      {d?.stats?.departments || "Departments"}
-                    </span>
-                  </div>
-                  <div className="ps-6 text-2xl font-bold">
-                    {totalDepartments}
-                  </div>
-                  <p className="text-muted-foreground ps-6 text-xs">
-                    {d?.stats?.activeDepartments || "Active departments"}
-                  </p>
+                <div className="ps-6 text-2xl font-bold">
+                  {totalDepartments}
                 </div>
+                <p className="text-muted-foreground ps-6 text-xs">
+                  {d?.stats?.activeDepartments || "Active departments"}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="flex-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.operation || "Operation"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-6 py-2">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <CircleAlert className="text-muted-foreground h-4 w-4" />
-                    <span className="text-muted-foreground text-xs">
-                      {d?.stats?.pendingActions || "Pending Actions"}
-                    </span>
-                  </div>
-                  <div className="ps-6 text-2xl font-bold">
-                    {pendingApprovals + failedLogins}
-                  </div>
-                  <p className="text-muted-foreground ps-6 text-xs">
-                    {d?.stats?.requiresAttention || "Requires attention"}
-                  </p>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              {d?.stats?.operation || "Operation"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-6 py-2">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <CircleAlert className="text-muted-foreground h-4 w-4" />
+                  <span className="text-muted-foreground text-xs">
+                    {d?.stats?.classrooms || "Classrooms"}
+                  </span>
                 </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Building className="text-muted-foreground h-4 w-4" />
-                    <span className="text-muted-foreground text-xs">
-                      {d?.stats?.classrooms || "Classrooms"}
-                    </span>
-                  </div>
-                  <div className="ps-6 text-2xl font-bold">
-                    {totalClassrooms}
-                  </div>
-                  <p className="text-muted-foreground ps-6 text-xs">
-                    {d?.stats?.totalClassrooms || "Total classrooms"}
-                  </p>
-                </div>
+                <div className="ps-6 text-2xl font-bold">{totalClassrooms}</div>
+                <p className="text-muted-foreground ps-6 text-xs">
+                  {d?.stats?.totalClassrooms || "Total classrooms"}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Building className="text-muted-foreground h-4 w-4" />
+                  <span className="text-muted-foreground text-xs">
+                    {d?.stats?.classrooms || "Active Users"}
+                  </span>
+                </div>
+                <div className="ps-6 text-2xl font-bold">{activeUsers}</div>
+                <p className="text-muted-foreground ps-6 text-xs">
+                  {d?.stats?.currentlyLoggedIn || "Verified accounts"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Button asChild variant="outline" className="h-auto justify-start py-3">
-          <Link href={`/${lang}/admin/membership?action=new`}>
+          <Link href={`/${lang}/school/membership`}>
             <UserCog className="me-2 h-4 w-4" />
             <span className="flex flex-col items-start">
               <span className="font-medium">
@@ -308,7 +254,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           </Link>
         </Button>
         <Button asChild variant="outline" className="h-auto justify-start py-3">
-          <Link href={`/${lang}/admin/communication?action=new`}>
+          <Link href={`/${lang}/school/communication`}>
             <Bell className="me-2 h-4 w-4" />
             <span className="flex flex-col items-start">
               <span className="font-medium">
@@ -321,7 +267,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           </Link>
         </Button>
         <Button asChild variant="outline" className="h-auto justify-start py-3">
-          <Link href={`/${lang}/admin/system/audit`}>
+          <Link href={`/${lang}/school/security`}>
             <FileText className="me-2 h-4 w-4" />
             <span className="flex flex-col items-start">
               <span className="font-medium">
@@ -334,7 +280,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           </Link>
         </Button>
         <Button asChild variant="outline" className="h-auto justify-start py-3">
-          <Link href={`/${lang}/admin/reports/export`}>
+          <Link href={`/${lang}/school/reports`}>
             <Database className="me-2 h-4 w-4" />
             <span className="flex flex-col items-start">
               <span className="font-medium">
@@ -349,14 +295,11 @@ export default async function AdminContent({ dictionary, lang }: Props) {
       </div>
 
       {/* Trial & System Status Row */}
-      <div className="flex gap-4">
-        {/* Trial Expiry Card */}
-        <div className="flex-1">
-          <TrialExpiryCardDemo />
-        </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <TrialExpiryCardDemo />
 
         {/* System Status Card */}
-        <Card className="flex-1">
+        <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-medium">
@@ -368,8 +311,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
               </span>
             </div>
             <CardDescription>
-              {d?.systemStatus?.description ||
-                "Current school-dashboard health"}
+              {d?.systemStatus?.description || "Current system health"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -436,7 +378,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           </CardTitle>
           <CardDescription>
             {d?.workflow?.description ||
-              "Step-by-step guide to managing your school school-dashboard"}
+              "Step-by-step guide to managing your school"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -444,16 +386,16 @@ export default async function AdminContent({ dictionary, lang }: Props) {
             {d?.cards?.configuration?.details ||
               "Manage school profile, academic years, departments, grading scales, and classroom settings."}
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button asChild>
-              <Link href={`/${lang}/admin/configuration`}>
+              <Link href={`/${lang}/school/configuration`}>
                 <Settings className="me-2 h-4 w-4" />
                 {d?.cards?.configuration?.viewSettings || "View Settings"}
               </Link>
             </Button>
-            <Button variant="outline" asChild size="sm">
-              <Link href={`/${lang}/admin/configuration/school`}>
-                {d?.cards?.configuration?.schoolProfile || "School Profile"}
+            <Button variant="outline" asChild>
+              <Link href={`/${lang}/school/bulk`}>
+                {d?.cards?.configuration?.schoolProfile || "Academic Setup"}
               </Link>
             </Button>
           </div>

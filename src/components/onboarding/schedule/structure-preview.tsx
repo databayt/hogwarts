@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { cn } from "@/lib/utils"
 import type { TimetableStructure } from "@/components/school-dashboard/timetable/structures"
 import { formatWorkingDays } from "@/components/school-dashboard/timetable/structures"

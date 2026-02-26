@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useFormContext } from "react-hook-form"
 
 import {
@@ -44,6 +46,13 @@ export default function StepPersonal({ dictionary, lang }: Props) {
   const { control } = useFormContext<ApplicationFormData>()
   const isRTL = lang === "ar"
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { formSteps?: Record<string, string> } }
+      }
+    )?.school?.admission?.formSteps ?? {}
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -54,13 +63,13 @@ export default function StepPersonal({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "الاسم الأول" : "First Name"}{" "}
+                {dict.firstName || "First Name"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder={isRTL ? "أدخل الاسم الأول" : "Enter first name"}
+                  placeholder={dict.enterFirstName || "Enter first name"}
                 />
               </FormControl>
               <FormMessage />
@@ -74,13 +83,11 @@ export default function StepPersonal({ dictionary, lang }: Props) {
           name="middleName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{isRTL ? "الاسم الأوسط" : "Middle Name"}</FormLabel>
+              <FormLabel>{dict.middleName || "Middle Name"}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder={
-                    isRTL ? "أدخل الاسم الأوسط" : "Enter middle name"
-                  }
+                  placeholder={dict.enterMiddleName || "Enter middle name"}
                 />
               </FormControl>
               <FormMessage />
@@ -95,13 +102,13 @@ export default function StepPersonal({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "اسم العائلة" : "Last Name"}{" "}
+                {dict.lastName || "Last Name"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder={isRTL ? "أدخل اسم العائلة" : "Enter last name"}
+                  placeholder={dict.enterLastName || "Enter last name"}
                 />
               </FormControl>
               <FormMessage />
@@ -118,7 +125,7 @@ export default function StepPersonal({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "تاريخ الميلاد" : "Date of Birth"}{" "}
+                {dict.dateOfBirth || "Date of Birth"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
@@ -140,14 +147,14 @@ export default function StepPersonal({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "الجنس" : "Gender"}{" "}
+                {dict.gender || "Gender"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue
-                      placeholder={isRTL ? "اختر الجنس" : "Select gender"}
+                      placeholder={dict.selectGender || "Select gender"}
                     />
                   </SelectTrigger>
                 </FormControl>
@@ -173,7 +180,7 @@ export default function StepPersonal({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "الجنسية" : "Nationality"}{" "}
+                {dict.nationality || "Nationality"}{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
@@ -181,7 +188,7 @@ export default function StepPersonal({ dictionary, lang }: Props) {
                   <SelectTrigger>
                     <SelectValue
                       placeholder={
-                        isRTL ? "اختر الجنسية" : "Select nationality"
+                        dict.selectNationality || "Select nationality"
                       }
                     />
                   </SelectTrigger>
@@ -205,11 +212,11 @@ export default function StepPersonal({ dictionary, lang }: Props) {
           name="religion"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{isRTL ? "الديانة" : "Religion"}</FormLabel>
+              <FormLabel>{dict.religion || "Religion"}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder={isRTL ? "أدخل الديانة" : "Enter religion"}
+                  placeholder={dict.enterReligion || "Enter religion"}
                 />
               </FormControl>
               <FormMessage />
@@ -224,11 +231,13 @@ export default function StepPersonal({ dictionary, lang }: Props) {
         name="category"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{isRTL ? "الفئة" : "Category"}</FormLabel>
+            <FormLabel>{dict.category || "Category"}</FormLabel>
             <FormControl>
               <Input
                 {...field}
-                placeholder={isRTL ? "مثل: عام، خاص" : "e.g., General, Special"}
+                placeholder={
+                  dict.categoryPlaceholder || "e.g., General, Special"
+                }
               />
             </FormControl>
             <FormMessage />

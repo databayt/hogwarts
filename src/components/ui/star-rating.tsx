@@ -72,7 +72,7 @@ export function StarRating({
         )
       })}
       {showCount && count !== undefined && (
-        <span className="text-muted-foreground ml-1 text-xs">({count})</span>
+        <span className="text-muted-foreground ms-1 text-xs">({count})</span>
       )}
     </div>
   )

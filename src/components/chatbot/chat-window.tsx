@@ -1,6 +1,8 @@
 "use client"
 
-import { memo, useCallback, useEffect, useRef, useState } from "react"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -15,6 +17,8 @@ import {
   ServicesIcon,
   TimeIcon,
   VoiceIcon,
+  VolumeIcon,
+  VolumeOffIcon,
 } from "./icons"
 import type { ChatWindowProps } from "./type"
 
@@ -26,20 +30,178 @@ export const ChatWindow = memo(function ChatWindow({
   isLoading,
   error,
   locale,
+  dictionary,
+  promptType = "saasMarketing",
 }: ChatWindowProps) {
   const [input, setInput] = useState("")
   const [isListening, setIsListening] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [keyboardOpen, setKeyboardOpen] = useState(false)
+  const [transcript, setTranscript] = useState("")
+  const [ttsEnabled, setTtsEnabled] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const chatWindowRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
+  const prevMessagesLengthRef = useRef(messages.length)
   const isRTL = locale === "ar"
+
+  const quickAskButtons = useMemo(() => {
+    if (promptType === "schoolSite") {
+      return [
+        {
+          label: dictionary.schoolAdmission,
+          question: dictionary.schoolAdmissionQuestion,
+          icon: ServicesIcon,
+        },
+        {
+          label: dictionary.schoolFees,
+          question: dictionary.schoolFeesQuestion,
+          icon: PriceIcon,
+        },
+        {
+          label: dictionary.schoolContact,
+          question: dictionary.schoolContactQuestion,
+          icon: InfoIcon,
+        },
+        {
+          label: dictionary.schoolPrograms,
+          question: dictionary.schoolProgramsQuestion,
+          icon: TimeIcon,
+        },
+      ]
+    }
+    return [
+      {
+        label: dictionary.saasFeatures,
+        question: dictionary.saasFeaturesQuestion,
+        icon: ServicesIcon,
+      },
+      {
+        label: dictionary.saasPricing,
+        question: dictionary.saasPricingQuestion,
+        icon: PriceIcon,
+      },
+      {
+        label: dictionary.saasGetStarted,
+        question: dictionary.saasGetStartedQuestion,
+        icon: TimeIcon,
+      },
+      {
+        label: dictionary.saasOpenSource,
+        question: dictionary.saasOpenSourceQuestion,
+        icon: InfoIcon,
+      },
+    ]
+  }, [promptType, dictionary])
+
+  // Initialize SpeechRecognition once, re-init on locale change
+  useEffect(() => {
+    if (
+      !("webkitSpeechRecognition" in window) &&
+      !("SpeechRecognition" in window)
+    ) {
+      return
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognition =
+      (window as unknown as any).webkitSpeechRecognition ||
+      (window as unknown as any).SpeechRecognition
+    const recognition = new SpeechRecognition()
+
+    recognition.lang = locale === "ar" ? "ar-SA" : "en-US"
+    recognition.interimResults = true
+    recognition.continuous = false
+    recognition.maxAlternatives = 1
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (event: any) => {
+      let interimTranscript = ""
+      let finalTranscript = ""
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i]
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript
+        } else {
+          interimTranscript += result[0].transcript
+        }
+      }
+
+      if (finalTranscript) {
+        setTranscript("")
+        setIsListening(false)
+        onSendMessage(finalTranscript.trim())
+      } else if (interimTranscript) {
+        setTranscript(interimTranscript)
+      }
+    }
+
+    recognition.onerror = () => {
+      setIsListening(false)
+      setTranscript("")
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+      setTranscript("")
+    }
+
+    recognitionRef.current = recognition
+
+    return () => {
+      try {
+        recognition.stop()
+      } catch {
+        // ignore if not started
+      }
+      recognitionRef.current = null
+    }
+  }, [locale, onSendMessage])
+
+  // Speak new assistant messages when TTS is enabled
+  useEffect(() => {
+    if (
+      !ttsEnabled ||
+      messages.length <= prevMessagesLengthRef.current ||
+      !("speechSynthesis" in window)
+    ) {
+      prevMessagesLengthRef.current = messages.length
+      return
+    }
+
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage?.role === "assistant" && lastMessage.content) {
+      const utterance = new SpeechSynthesisUtterance(lastMessage.content)
+      utterance.lang = locale === "ar" ? "ar-SA" : "en-US"
+
+      // Try to find a matching voice
+      const voices = window.speechSynthesis.getVoices()
+      const langPrefix = locale === "ar" ? "ar" : "en"
+      const matchingVoice = voices.find((v) => v.lang.startsWith(langPrefix))
+      if (matchingVoice) {
+        utterance.voice = matchingVoice
+      }
+
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.speak(utterance)
+    }
+
+    prevMessagesLengthRef.current = messages.length
+  }, [messages, ttsEnabled, locale])
+
+  // Cancel TTS when disabled
+  useEffect(() => {
+    if (!ttsEnabled && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel()
+    }
+  }, [ttsEnabled])
 
   // Auto focus input when chat opens on desktop
   useEffect(() => {
     if (isOpen && !isMobile && inputRef.current) {
-      // Small delay to ensure the window is fully rendered
       setTimeout(() => {
         inputRef.current?.focus()
       }, 100)
@@ -105,7 +267,6 @@ export const ChatWindow = memo(function ChatWindow({
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      // Use smooth scrolling for better UX
       const scrollElement = scrollAreaRef.current.querySelector(
         "[data-radix-scroll-area-viewport]"
       )
@@ -150,49 +311,36 @@ export const ChatWindow = memo(function ChatWindow({
   )
 
   const handleVoiceInput = useCallback(() => {
-    if (
-      !("webkitSpeechRecognition" in window) &&
-      !("SpeechRecognition" in window)
-    ) {
-      alert("Speech recognition is not supported in your browser.")
+    if (!recognitionRef.current) {
+      alert(dictionary.speechNotSupported)
       return
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognition =
-      (window as unknown as any).webkitSpeechRecognition ||
-      (window as unknown as any).SpeechRecognition
-    const recognition = new SpeechRecognition()
-
-    recognition.lang = locale === "ar" ? "ar-SA" : "en-US"
-    recognition.interimResults = false
-    recognition.maxAlternatives = 1
+    if (isLoading) return
 
     if (isListening) {
-      recognition.stop()
+      try {
+        recognitionRef.current.stop()
+      } catch {
+        // ignore
+      }
       setIsListening(false)
+      setTranscript("")
       return
     }
 
-    recognition.start()
-    setIsListening(true)
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (event: any) => {
-      const speechResult = event.results[0][0].transcript
-      setInput(speechResult)
+    try {
+      recognitionRef.current.start()
+      setIsListening(true)
+    } catch {
       setIsListening(false)
+      setTranscript("")
     }
+  }, [isListening, isLoading, dictionary.speechNotSupported])
 
-    recognition.onerror = () => {
-      setIsListening(false)
-      alert("Speech recognition error. Please try again.")
-    }
-
-    recognition.onend = () => {
-      setIsListening(false)
-    }
-  }, [isListening, locale])
+  const handleTtsToggle = useCallback(() => {
+    setTtsEnabled((prev) => !prev)
+  }, [])
 
   return (
     <div
@@ -209,13 +357,17 @@ export const ChatWindow = memo(function ChatWindow({
               "max-h-[80vh]"
             ),
         "transform transition-all duration-700 ease-in-out",
-        "sm:origin-bottom-right",
+        isRTL ? "sm:origin-bottom-left" : "sm:origin-bottom-right",
         isOpen
           ? "visible scale-100 opacity-100"
           : "pointer-events-none invisible scale-0 opacity-0"
       )}
       style={{
-        transformOrigin: isMobile ? "center" : "bottom right",
+        transformOrigin: isMobile
+          ? "center"
+          : isRTL
+            ? "bottom left"
+            : "bottom right",
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
         ...(isMobile && isOpen
           ? {
@@ -264,45 +416,21 @@ export const ChatWindow = memo(function ChatWindow({
               {isMobile ? (
                 <div className="flex flex-1 flex-col items-center justify-center">
                   <p className="text-muted-foreground mb-6 text-center text-sm font-medium">
-                    <span>Choose a question or type your message</span>
+                    <span>{dictionary.chooseQuestion}</span>
                   </p>
                   <div className="grid w-full max-w-sm grid-cols-2 gap-2 px-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => onSendMessage("How do I check grades?")}
-                      className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2.5 text-xs"
-                    >
-                      <PriceIcon size={16} />
-                      <span>Grades</span>
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => onSendMessage("How do I mark attendance?")}
-                      className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2.5 text-xs"
-                    >
-                      <ServicesIcon size={16} />
-                      <span>Attendance</span>
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => onSendMessage("Where is the timetable?")}
-                      className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2.5 text-xs"
-                    >
-                      <TimeIcon size={16} />
-                      <span>Timetable</span>
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => onSendMessage("How do I pay fees?")}
-                      className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2.5 text-xs"
-                    >
-                      <InfoIcon size={16} />
-                      <span>Finance</span>
-                    </Button>
+                    {quickAskButtons.map((btn, i) => (
+                      <Button
+                        key={i}
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => onSendMessage(btn.question)}
+                        className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2.5 text-xs"
+                      >
+                        <btn.icon size={16} />
+                        <span>{btn.label}</span>
+                      </Button>
+                    ))}
                   </div>
                 </div>
               ) : (
@@ -354,6 +482,13 @@ export const ChatWindow = memo(function ChatWindow({
         </div>
       </ScrollArea>
 
+      {/* Interim transcript display */}
+      {transcript && (
+        <div className="text-muted-foreground bg-muted/50 px-4 py-2 text-sm italic">
+          {transcript}
+        </div>
+      )}
+
       {error && (
         <div className="bg-destructive/10 text-destructive px-4 py-2 text-sm">
           {error}
@@ -382,42 +517,18 @@ export const ChatWindow = memo(function ChatWindow({
         {!isMobile && messages.length === 0 && (
           <div className="mb-3">
             <div className="grid w-full grid-cols-2 gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onSendMessage("How do I check grades?")}
-                className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2 text-xs"
-              >
-                <PriceIcon size={14} />
-                <span>Grades</span>
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onSendMessage("How do I mark attendance?")}
-                className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2 text-xs"
-              >
-                <ServicesIcon size={14} />
-                <span>Attendance</span>
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onSendMessage("Where is the timetable?")}
-                className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2 text-xs"
-              >
-                <TimeIcon size={14} />
-                <span>Timetable</span>
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onSendMessage("How do I pay fees?")}
-                className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2 text-xs"
-              >
-                <InfoIcon size={14} />
-                <span>Finance</span>
-              </Button>
+              {quickAskButtons.map((btn, i) => (
+                <Button
+                  key={i}
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onSendMessage(btn.question)}
+                  className="bg-muted hover:bg-muted/80 flex h-auto items-center gap-2 border-0 px-3 py-2 text-xs"
+                >
+                  <btn.icon size={14} />
+                  <span>{btn.label}</span>
+                </Button>
+              ))}
             </div>
           </div>
         )}
@@ -425,8 +536,7 @@ export const ChatWindow = memo(function ChatWindow({
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <div
             className={cn(
-              "border-muted-foreground bg-background relative flex items-center rounded-lg border px-3",
-              isMobile ? "flex-[0.8]" : "w-[70%]"
+              "border-muted-foreground bg-background relative flex flex-1 items-center rounded-lg border px-3"
             )}
           >
             <input
@@ -448,7 +558,7 @@ export const ChatWindow = memo(function ChatWindow({
             />
           </div>
 
-          <div className="flex w-[30%] items-center justify-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
@@ -456,7 +566,7 @@ export const ChatWindow = memo(function ChatWindow({
                 "shrink-0 transition-transform hover:scale-110 disabled:opacity-50 disabled:hover:scale-100",
                 isMobile ? "h-12 w-12" : "h-10 w-10"
               )}
-              title="Send message"
+              title={dictionary.sendMessage}
             >
               <SendIcon
                 size={isMobile ? 32 : 20}
@@ -467,14 +577,34 @@ export const ChatWindow = memo(function ChatWindow({
             <button
               type="button"
               onClick={handleVoiceInput}
+              disabled={isLoading}
               className={cn(
-                "shrink-0 transition-transform hover:scale-110",
+                "shrink-0 transition-transform hover:scale-110 disabled:opacity-50",
                 isMobile ? "h-12 w-12" : "h-10 w-10",
                 isListening && "animate-pulse text-red-500"
               )}
-              title="Voice input"
+              title={isListening ? dictionary.listening : dictionary.voiceInput}
             >
               <VoiceIcon size={isMobile ? 32 : 20} />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleTtsToggle}
+              className={cn(
+                "shrink-0 transition-transform hover:scale-110",
+                isMobile ? "h-12 w-12" : "h-10 w-10",
+                ttsEnabled && "text-primary"
+              )}
+              title={
+                ttsEnabled ? dictionary.ttsEnabled : dictionary.ttsDisabled
+              }
+            >
+              {ttsEnabled ? (
+                <VolumeIcon size={isMobile ? 32 : 20} />
+              ) : (
+                <VolumeOffIcon size={isMobile ? 32 : 20} />
+              )}
             </button>
           </div>
         </form>

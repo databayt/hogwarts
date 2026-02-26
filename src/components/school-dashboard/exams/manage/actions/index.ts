@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Central export file for all exam management actions
  * Split from original 506-line actions.ts into focused modules
@@ -52,6 +55,9 @@ export {
   getExamForTaking,
   submitExamAnswers,
 } from "./status"
+
+// Quick Paper Generation
+export { createGeneratedExamForPaper } from "./quick-paper"
 
 // Type Exports
 export type {

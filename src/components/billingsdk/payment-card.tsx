@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { ArrowRight, Check } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
@@ -189,7 +191,7 @@ export function PaymentCard({
             <div className="space-y-2">
               <Label htmlFor="cardNumber">Card number</Label>
               <div className="relative">
-                <div className="absolute top-1/2 left-3 z-10 flex h-6 w-8 -translate-y-1/2 items-center justify-center overflow-hidden">
+                <div className="absolute start-3 top-1/2 z-10 flex h-6 w-8 -translate-y-1/2 items-center justify-center overflow-hidden">
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={index}
@@ -276,7 +278,7 @@ export function PaymentCard({
             {/* Pay Button */}
             <Button className="mt-2 w-full" onClick={handlePay}>
               Pay ${price || "320"}.00
-              <ArrowRight className="ms-2 h-4 w-4" />
+              <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
           </CardContent>
         </Card>

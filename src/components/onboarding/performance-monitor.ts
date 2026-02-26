@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Performance monitoring utilities for onboarding flow
  * Tracks user interactions, load times, and error rates for optimization

@@ -1,8 +1,12 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import PaymentContent from "@/components/school-marketing/apply/payment/content"
 
 export const metadata = {
@@ -62,6 +66,8 @@ export default async function PaymentPage({ params, searchParams }: Props) {
     ? (settings.paymentMethods as string[])
     : defaultMethods
 
+  const dictionary = await getDictionary(lang)
+
   return (
     <PaymentContent
       applicationNumber={resolvedSearch.number ?? application.applicationNumber}
@@ -70,6 +76,7 @@ export default async function PaymentPage({ params, searchParams }: Props) {
       currency={currency}
       methods={methods}
       locale={lang}
+      dictionary={dictionary}
     />
   )
 }

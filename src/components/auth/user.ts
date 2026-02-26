@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { User as PrismaUser } from "@prisma/client"
@@ -14,7 +17,8 @@ export const getUserByEmail = async (email: string) => {
     })
 
     return users[0] || null // Return the first user or null
-  } catch {
+  } catch (error) {
+    console.error("[getUserByEmail] Database lookup failed:", error)
     return null
   }
 }
@@ -29,7 +33,8 @@ export const getUserById = async (id: string): Promise<ExtendedUser | null> => {
   try {
     const user = await db.user.findUnique({ where: { id } })
     return (user as unknown as ExtendedUser) ?? null
-  } catch {
+  } catch (error) {
+    console.error("[getUserById] Database lookup failed:", error)
     return null
   }
 }

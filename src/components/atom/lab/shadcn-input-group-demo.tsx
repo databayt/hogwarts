@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { ArrowUpIcon, Check, InfoIcon, Plus, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -40,7 +42,7 @@ export function ShadcnInputGroupDemo() {
         {/* Search Input with Results */}
         <div className="relative">
           <Input placeholder="Search..." className="pe-24" />
-          <div className="absolute inset-y-0 right-0 flex items-center gap-2 pe-3">
+          <div className="absolute inset-y-0 end-0 flex items-center gap-2 pe-3">
             <Search className="text-muted-foreground size-4" />
             <span className="text-muted-foreground text-sm">12 results</span>
           </div>
@@ -49,10 +51,10 @@ export function ShadcnInputGroupDemo() {
         {/* URL Input with Protocol */}
         <div className="relative">
           <Input placeholder="example.com" className="ps-20 pe-10" />
-          <div className="absolute inset-y-0 left-0 flex items-center ps-3">
+          <div className="absolute inset-y-0 start-0 flex items-center ps-3">
             <span className="text-muted-foreground text-sm">https://</span>
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pe-2">
+          <div className="absolute inset-y-0 end-0 flex items-center pe-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -75,7 +77,7 @@ export function ShadcnInputGroupDemo() {
             placeholder="Ask, Search or Chat..."
             className="min-h-[100px] pe-3 pb-12"
           />
-          <div className="border-border bg-background absolute right-0 bottom-0 left-0 flex items-center gap-2 border-t p-2">
+          <div className="border-border bg-background absolute start-0 end-0 bottom-0 flex items-center gap-2 border-t p-2">
             <Button
               size="icon"
               variant="outline"
@@ -110,7 +112,7 @@ export function ShadcnInputGroupDemo() {
         {/* Verified Input */}
         <div className="relative">
           <Input placeholder="@shadcn" className="pe-10" />
-          <div className="absolute inset-y-0 right-0 flex items-center pe-3">
+          <div className="absolute inset-y-0 end-0 flex items-center pe-3">
             <div className="bg-primary flex size-4 items-center justify-center rounded-full">
               <Check className="text-primary-foreground size-3" />
             </div>

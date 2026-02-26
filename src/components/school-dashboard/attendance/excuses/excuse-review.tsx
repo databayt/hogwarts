@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useTransition } from "react"
 import { format } from "date-fns"
 import {
@@ -138,7 +140,7 @@ export function ExcuseReviewList({
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return isArabic
-      ? date.toLocaleDateString("ar-SA", {
+      ? date.toLocaleDateString(locale, {
           year: "numeric",
           month: "long",
           day: "numeric",
@@ -426,7 +428,7 @@ export function PendingExcusesBadge({
       <FileText className="h-5 w-5" />
       <Badge
         variant="destructive"
-        className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center p-0 text-xs"
+        className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center p-0 text-xs"
       >
         {count > 9 ? "9+" : count}
       </Badge>

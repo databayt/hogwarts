@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -39,7 +41,7 @@ interface CatalogQuestionContribution {
   questionType: string
   difficulty: string
   approvalStatus: "PENDING" | "APPROVED" | "REJECTED"
-  visibility: "PRIVATE" | "SCHOOL" | "PUBLIC"
+  visibility: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
   createdAt: Date | string
   catalogSubject: SubjectRef | null
 }
@@ -49,7 +51,7 @@ interface CatalogMaterialContribution {
   title: string
   type: string
   approvalStatus: "PENDING" | "APPROVED" | "REJECTED"
-  visibility: "PRIVATE" | "SCHOOL" | "PUBLIC"
+  visibility: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
   createdAt: Date | string
   catalogSubject: SubjectRef | null
 }
@@ -59,7 +61,7 @@ interface CatalogAssignmentContribution {
   title: string
   assignmentType: string | null
   approvalStatus: "PENDING" | "APPROVED" | "REJECTED"
-  visibility: "PRIVATE" | "SCHOOL" | "PUBLIC"
+  visibility: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
   createdAt: Date | string
   catalogSubject: SubjectRef | null
 }
@@ -112,7 +114,7 @@ function VisibilityToggle({
   const [isPending, startTransition] = useTransition()
 
   const handleChange = useCallback(
-    (visibility: "PRIVATE" | "SCHOOL" | "PUBLIC") => {
+    (visibility: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID") => {
       if (visibility === current) return
       startTransition(async () => {
         try {

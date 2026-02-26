@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -86,7 +88,7 @@ export function SubdomainForm({
         })
       }
     } catch (error) {
-      console.error("Failed to check availability:", error)
+      // Availability check failed silently - user can retry
     } finally {
       setIsChecking(false)
     }
@@ -102,7 +104,7 @@ export function SubdomainForm({
         setSuggestions(response.data.suggestions)
       }
     } catch (error) {
-      console.error("Failed to load suggestions:", error)
+      // Suggestions failed silently - not critical
     }
   }, [schoolName])
 

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
 import Link from "next/link"
 import { Check } from "lucide-react"
@@ -262,7 +264,7 @@ export function StreamCourseDetailContent({
             >
               <span>
                 <strong
-                  className="mr-0.5 text-[13px]"
+                  className="me-0.5 text-[13px]"
                   style={{ color: colors.text }}
                 >
                   {totalLessons}
@@ -271,7 +273,7 @@ export function StreamCourseDetailContent({
               </span>
               <span>
                 <strong
-                  className="mr-0.5 text-[13px]"
+                  className="me-0.5 text-[13px]"
                   style={{ color: colors.text }}
                 >
                   {totalHours > 0
@@ -290,7 +292,7 @@ export function StreamCourseDetailContent({
               </span>
               <span>
                 <strong
-                  className="mr-0.5 text-[13px]"
+                  className="me-0.5 text-[13px]"
                   style={{ color: colors.text }}
                 >
                   {quizCount}
@@ -343,7 +345,7 @@ export function StreamCourseDetailContent({
                 {dict?.stream?.courseDetail?.byTheEnd ??
                   "By the end of this course, you'll be able to:"}
               </p>
-              <ul className="mt-3 list-disc space-y-1.5 pl-5">
+              <ul className="mt-3 list-disc space-y-1.5 ps-5">
                 {(course.objectives.length > 0
                   ? course.objectives
                   : course.chapters.map((ch) => ch.title)
@@ -368,7 +370,7 @@ export function StreamCourseDetailContent({
             >
               {dict?.stream?.courseDetail?.prerequisites ?? "Prerequisites"}
             </h3>
-            <ul className="mt-3 list-disc space-y-1.5 pl-5">
+            <ul className="mt-3 list-disc space-y-1.5 ps-5">
               <li className="text-sm" style={{ color: colors.muted }}>
                 {course.prerequisites ??
                   "No specific prerequisites. This course is designed for all skill levels."}

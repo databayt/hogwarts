@@ -1,26 +1,16 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import {
-  ArrowLeftRight,
-  BookOpen,
-  CheckCheck,
-  CheckSquare,
-  Clock,
-  Download,
-  FileText,
-  ListOrdered,
-  PenLine,
-  Play,
-  TextCursorInput,
-  ToggleLeft,
-} from "lucide-react"
+import { BookOpen, Clock, Download, FileText, Play } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -110,18 +100,50 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-const QUESTION_TYPE_ICONS: Record<
+const QUESTION_TYPE_CONFIG: Record<
   string,
-  React.ComponentType<{ className?: string }>
+  { svg: string; description: string; color: string }
 > = {
-  MULTIPLE_CHOICE: CheckSquare,
-  TRUE_FALSE: ToggleLeft,
-  SHORT_ANSWER: PenLine,
-  ESSAY: FileText,
-  FILL_BLANK: TextCursorInput,
-  MATCHING: ArrowLeftRight,
-  ORDERING: ListOrdered,
-  MULTI_SELECT: CheckCheck,
+  MULTIPLE_CHOICE: {
+    svg: "/multiple-choice.svg",
+    description: "Pick the best answer from multiple options provided",
+    color: "#4B976A",
+  },
+  TRUE_FALSE: {
+    svg: "/true-false.svg",
+    description: "Decide whether each given statement is true or false",
+    color: "#CF6E30",
+  },
+  SHORT_ANSWER: {
+    svg: "/short-answer.svg",
+    description: "Write a brief response in one or two sentences",
+    color: "#D25E8C",
+  },
+  ESSAY: {
+    svg: "/essay.svg",
+    description: "Compose a detailed long-form answer with full explanation",
+    color: "#2C70B2",
+  },
+  FILL_BLANK: {
+    svg: "/fill-in-blank.svg",
+    description: "Complete the sentence by filling in the missing words",
+    color: "#825BA3",
+  },
+  MATCHING: {
+    svg: "/matching.svg",
+    description: "Connect related items by pairing them from two columns",
+    color: "#57908C",
+  },
+  ORDERING: {
+    svg: "/ordering.svg",
+    description: "Arrange the given items into their correct logical sequence",
+    color: "#D85E4C",
+  },
+  MULTI_SELECT: {
+    svg: "/multi-select.svg",
+    description: "Choose all the correct answers from the options given",
+    color: "#A14B46",
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -136,104 +158,66 @@ export function CatalogContentSections({
   subjectSlug,
   catalogSubjectId,
 }: Props) {
-  const isRTL = lang === "ar"
+  // This component needs dictionary passed as prop - for now use useDictionary
+  // since it's a client component that doesn't receive dictionary prop
+  const { dictionary } = useDictionary()
+  const cat = dictionary?.school?.subjects?.catalog
 
   const t = useMemo(
     () => ({
-      videos: isRTL
-        ? "\u0641\u064a\u062f\u064a\u0648\u0647\u0627\u062a"
-        : "Videos",
-      materials: isRTL
-        ? "\u0645\u0648\u0627\u062f \u062a\u0639\u0644\u064a\u0645\u064a\u0629"
-        : "Materials",
-      exams: isRTL
-        ? "\u0627\u062e\u062a\u0628\u0627\u0631\u0627\u062a"
-        : "Exams",
-      qbank: isRTL
-        ? "\u0628\u0646\u0643 \u0627\u0644\u0623\u0633\u0626\u0644\u0629"
-        : "QBank",
-      assignments: isRTL
-        ? "\u0648\u0627\u062c\u0628\u0627\u062a"
-        : "Assignments",
-      continueWatching: isRTL
-        ? "\u062a\u0627\u0628\u0639 \u0627\u0644\u0645\u0634\u0627\u0647\u062f\u0629"
-        : "Continue to watch",
-      views: isRTL ? "\u0645\u0634\u0627\u0647\u062f\u0629" : "views",
-      downloads: isRTL ? "\u062a\u062d\u0645\u064a\u0644" : "downloads",
-      min: isRTL ? "\u062f\u0642\u064a\u0642\u0629" : "min",
-      marks: isRTL ? "\u062f\u0631\u062c\u0629" : "marks",
-      questions: isRTL ? "\u0633\u0624\u0627\u0644" : "questions",
-      pts: isRTL ? "\u0646\u0642\u0637\u0629" : "pts",
-      totalQuestions: isRTL
-        ? "\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0623\u0633\u0626\u0644\u0629"
-        : "Total Questions",
-      byType: isRTL
-        ? "\u062d\u0633\u0628 \u0627\u0644\u0646\u0648\u0639"
-        : "By Type",
-      byDifficulty: isRTL
-        ? "\u062d\u0633\u0628 \u0627\u0644\u0635\u0639\u0648\u0628\u0629"
-        : "By Difficulty",
+      videos: cat?.videos || "Videos",
+      materials: cat?.materials || "Materials",
+      exams: cat?.exams || "Exams",
+      qbank: cat?.qbank || "QBank",
+      assignments: cat?.assignments || "Assignments",
+      continueWatching: cat?.continueWatching || "Continue to watch",
+      views: cat?.views || "views",
+      downloads: cat?.downloads || "downloads",
+      min: cat?.min || "min",
+      marks: cat?.marks || "marks",
+      questions: cat?.questions || "questions",
+      pts: cat?.pts || "pts",
+      totalQuestions: cat?.totalQuestions || "Total Questions",
+      byType: cat?.byType || "By Type",
+      byDifficulty: cat?.byDifficulty || "By Difficulty",
       // Question types
-      MULTIPLE_CHOICE: isRTL
-        ? "\u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u062a\u0639\u062f\u062f"
-        : "Multiple Choice",
-      TRUE_FALSE: isRTL ? "\u0635\u062d / \u062e\u0637\u0623" : "True/False",
-      SHORT_ANSWER: isRTL
-        ? "\u0625\u062c\u0627\u0628\u0629 \u0642\u0635\u064a\u0631\u0629"
-        : "Short Answer",
-      ESSAY: isRTL ? "\u0645\u0642\u0627\u0644\u064a" : "Essay",
-      FILL_BLANK: isRTL
-        ? "\u0625\u0643\u0645\u0627\u0644 \u0627\u0644\u0641\u0631\u0627\u063a"
-        : "Fill in Blank",
-      MATCHING: isRTL ? "\u0645\u0637\u0627\u0628\u0642\u0629" : "Matching",
-      ORDERING: isRTL ? "\u062a\u0631\u062a\u064a\u0628" : "Ordering",
-      MULTI_SELECT: isRTL
-        ? "\u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u062a\u0639\u062f\u062f"
-        : "Multi Select",
+      MULTIPLE_CHOICE: cat?.questionTypes?.MULTIPLE_CHOICE || "Multiple Choice",
+      TRUE_FALSE: cat?.questionTypes?.TRUE_FALSE || "True/False",
+      SHORT_ANSWER: cat?.questionTypes?.SHORT_ANSWER || "Short Answer",
+      ESSAY: cat?.questionTypes?.ESSAY || "Essay",
+      FILL_BLANK: cat?.questionTypes?.FILL_BLANK || "Fill in Blank",
+      MATCHING: cat?.questionTypes?.MATCHING || "Matching",
+      ORDERING: cat?.questionTypes?.ORDERING || "Ordering",
+      MULTI_SELECT: cat?.questionTypes?.MULTI_SELECT || "Multi Select",
       // Difficulty levels
-      EASY: isRTL ? "\u0633\u0647\u0644" : "Easy",
-      MEDIUM: isRTL ? "\u0645\u062a\u0648\u0633\u0637" : "Medium",
-      HARD: isRTL ? "\u0635\u0639\u0628" : "Hard",
+      EASY: cat?.difficulty?.EASY || "Easy",
+      MEDIUM: cat?.difficulty?.MEDIUM || "Medium",
+      HARD: cat?.difficulty?.HARD || "Hard",
       // Exam types
-      midterm: isRTL ? "\u0646\u0635\u0641\u064a" : "Midterm",
-      final: isRTL ? "\u0646\u0647\u0627\u0626\u064a" : "Final",
-      chapter_test: isRTL
-        ? "\u0627\u062e\u062a\u0628\u0627\u0631 \u0641\u0635\u0644"
-        : "Chapter Test",
-      practice: isRTL ? "\u062a\u062f\u0631\u064a\u0628\u064a" : "Practice",
-      quiz: isRTL
-        ? "\u0627\u062e\u062a\u0628\u0627\u0631 \u0642\u0635\u064a\u0631"
-        : "Quiz",
+      midterm: cat?.examTypes?.midterm || "Midterm",
+      final: cat?.examTypes?.final || "Final",
+      chapter_test: cat?.examTypes?.chapter_test || "Chapter Test",
+      practice: cat?.examTypes?.practice || "Practice",
+      quiz: cat?.examTypes?.quiz || "Quiz",
       // Material types
-      TEXTBOOK: isRTL ? "\u0643\u062a\u0627\u0628" : "Textbook",
-      SYLLABUS: isRTL ? "\u0645\u0646\u0647\u062c" : "Syllabus",
-      WORKSHEET: isRTL
-        ? "\u0648\u0631\u0642\u0629 \u0639\u0645\u0644"
-        : "Worksheet",
-      STUDY_GUIDE: isRTL
-        ? "\u062f\u0644\u064a\u0644 \u062f\u0631\u0627\u0633\u064a"
-        : "Study Guide",
-      REFERENCE: isRTL ? "\u0645\u0631\u062c\u0639" : "Reference",
-      VIDEO_GUIDE: isRTL
-        ? "\u062f\u0644\u064a\u0644 \u0641\u064a\u062f\u064a\u0648"
-        : "Video Guide",
-      LAB_MANUAL: isRTL
-        ? "\u062f\u0644\u064a\u0644 \u0645\u062e\u062a\u0628\u0631"
-        : "Lab Manual",
-      OTHER: isRTL ? "\u0623\u062e\u0631\u0649" : "Other",
+      TEXTBOOK: cat?.materialTypes?.TEXTBOOK || "Textbook",
+      SYLLABUS: cat?.materialTypes?.SYLLABUS || "Syllabus",
+      WORKSHEET: cat?.materialTypes?.WORKSHEET || "Worksheet",
+      STUDY_GUIDE: cat?.materialTypes?.STUDY_GUIDE || "Study Guide",
+      REFERENCE: cat?.materialTypes?.REFERENCE || "Reference",
+      VIDEO_GUIDE: cat?.materialTypes?.VIDEO_GUIDE || "Video Guide",
+      LAB_MANUAL: cat?.materialTypes?.LAB_MANUAL || "Lab Manual",
+      OTHER: cat?.materialTypes?.OTHER || "Other",
       // Assignment types
-      homework: isRTL
-        ? "\u0648\u0627\u062c\u0628 \u0645\u0646\u0632\u0644\u064a"
-        : "Homework",
-      project: isRTL ? "\u0645\u0634\u0631\u0648\u0639" : "Project",
-      lab: isRTL ? "\u0645\u062e\u062a\u0628\u0631" : "Lab",
-      essay: isRTL ? "\u0645\u0642\u0627\u0644" : "Essay",
-      presentation: isRTL
-        ? "\u0639\u0631\u0636 \u062a\u0642\u062f\u064a\u0645\u064a"
-        : "Presentation",
-      seeAll: isRTL ? "\u0639\u0631\u0636 \u0627\u0644\u0643\u0644" : "See all",
+      homework: cat?.assignmentTypes?.homework || "Homework",
+      project: cat?.assignmentTypes?.project || "Project",
+      lab: cat?.assignmentTypes?.lab || "Lab",
+      essay: cat?.assignmentTypes?.essay || "Essay",
+      presentation: cat?.assignmentTypes?.presentation || "Presentation",
+      seeAll: cat?.seeAll || "See all",
+      exploreQBank: cat?.exploreQBank || "Explore QBank",
     }),
-    [isRTL]
+    [cat]
   )
 
   const hasVideos = data.videos.length > 0
@@ -415,59 +399,50 @@ export function CatalogContentSections({
           title={t.qbank}
           accentColor={accentColor}
           actionHref={`/${lang}/s/${subdomain}/exams/qbank?catalogSubjectId=${catalogSubjectId}`}
-          actionLabel={t.seeAll}
+          actionLabel={t.exploreQBank}
         >
-          <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1">
+          <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
             {data.questionStats.cards.map((card) => {
-              const TypeIcon = QUESTION_TYPE_ICONS[card.type] ?? CheckSquare
+              const config = QUESTION_TYPE_CONFIG[card.type]
+              const cardColor = config?.color ?? accentColor
+              const typeName = t[card.type as keyof typeof t] ?? card.type
               return (
-                <Card key={card.type} className="w-52 shrink-0">
-                  <CardContent className="p-3">
-                    <div className="mb-2 flex items-center gap-2">
-                      <div
-                        className="flex size-8 items-center justify-center rounded-md text-white"
-                        style={{ backgroundColor: accentColor }}
-                      >
-                        <TypeIcon className="size-4" />
-                      </div>
-                      <p className="text-sm font-medium">
-                        {t[card.type as keyof typeof t] ?? card.type}
+                <div
+                  key={card.type}
+                  className="shrink-0 overflow-hidden rounded-xl"
+                  style={{ width: 245 }}
+                >
+                  {/* Name */}
+                  <div className="bg-[#F4F1D0] px-3.5 py-2.5">
+                    <p
+                      className="font-mono text-sm font-bold tracking-tight"
+                      style={{ color: "#212222" }}
+                    >
+                      {typeName}
+                    </p>
+                  </div>
+                  {/* Frame with SVG filling entire area */}
+                  <div
+                    className="relative"
+                    style={{ backgroundColor: cardColor, height: 250 }}
+                  >
+                    {config?.svg && (
+                      <Image
+                        src={config.svg}
+                        alt=""
+                        fill
+                        className="object-cover opacity-30"
+                      />
+                    )}
+                    {/* Divider + description overlaid at bottom */}
+                    <div className="absolute inset-x-0 bottom-0 px-3.5 pb-6">
+                      <div className="mb-2.5 h-[1.5px] w-8 bg-[#F4F1D0]" />
+                      <p className="font-mono text-xs leading-relaxed text-[#F4F1D0]">
+                        {config?.description}
                       </p>
                     </div>
-                    <p className="text-lg font-bold">
-                      {card.count.toLocaleString()}{" "}
-                      <span className="text-muted-foreground text-xs font-normal">
-                        {t.questions}
-                      </span>
-                    </p>
-                    {Object.keys(card.byDifficulty).length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {Object.entries(card.byDifficulty).map(
-                          ([difficulty, count]) => (
-                            <Badge
-                              key={difficulty}
-                              variant="outline"
-                              className="gap-1 text-[10px]"
-                              style={{
-                                borderColor:
-                                  difficulty === "EASY"
-                                    ? "#22c55e"
-                                    : difficulty === "MEDIUM"
-                                      ? "#eab308"
-                                      : "#ef4444",
-                              }}
-                            >
-                              {t[difficulty as keyof typeof t] ?? difficulty}
-                              <span className="text-muted-foreground">
-                                {count}
-                              </span>
-                            </Badge>
-                          )
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               )
             })}
           </div>

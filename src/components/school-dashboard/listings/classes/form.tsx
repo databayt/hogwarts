@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -11,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createClass,
   getClass,
@@ -28,6 +31,8 @@ interface ClassCreateFormProps {
 }
 
 export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
+  const { dictionary: fullDict } = useDictionary()
+  const t = fullDict?.messages?.toast
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
@@ -92,7 +97,11 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
         ? await updateClass({ id: currentId, ...values })
         : await createClass(values)
       if (res?.success) {
-        toast.success(currentId ? "Class updated" : "Class created")
+        toast.success(
+          currentId
+            ? t?.success?.classUpdated || "Class updated"
+            : t?.success?.classCreated || "Class created"
+        )
         closeModal()
         if (onSuccess) {
           onSuccess()
@@ -102,12 +111,16 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
       } else {
         toast.error(
           res?.error ||
-            (currentId ? "Failed to update class" : "Failed to create class")
+            (currentId
+              ? t?.error?.classUpdateFailed || "Failed to update class"
+              : t?.error?.classCreateFailed || "Failed to create class")
         )
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      toast.error("An unexpected error occurred")
+      toast.error(
+        fullDict?.common?.unexpectedError || "An unexpected error occurred"
+      )
     }
   }
 

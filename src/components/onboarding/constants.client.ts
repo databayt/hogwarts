@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Client-safe onboarding constants (no Prisma imports)
 
 // Form field limits
@@ -28,18 +31,3 @@ export const ERROR_MESSAGES = {
   TOO_MANY_PHOTOS: `You can upload a maximum of ${FORM_LIMITS.MAX_PHOTOS} photos`,
   INVALID_NUMBER: "Please enter a valid number",
 } as const
-
-// Step navigation mapping
-export const STEP_NAVIGATION: Record<
-  string,
-  { next?: string; previous?: string }
-> = {
-  "about-school": { next: "title" },
-  title: { next: "subdomain", previous: "about-school" },
-  subdomain: { next: "admin-account", previous: "title" },
-  "admin-account": { next: "school-info", previous: "subdomain" },
-  "school-info": { next: "academic-setup", previous: "admin-account" },
-  "academic-setup": { next: "review", previous: "school-info" },
-  review: { next: "tour", previous: "academic-setup" },
-  tour: { previous: "review" },
-}

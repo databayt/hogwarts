@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { z } from "zod"
 
 // Base schema for school year - without refinement for extend compatibility

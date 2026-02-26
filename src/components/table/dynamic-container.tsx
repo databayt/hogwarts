@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * @see https://github.com/dubinc/dub/blob/main/packages/ui/src/animated-size-container.tsx
  */

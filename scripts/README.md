@@ -623,7 +623,7 @@ When adding new scripts:
 
 ## 📝 **License**
 
-MIT License - Part of Hogwarts Platform
+SSPL-1.0 - Part of Hogwarts Platform
 
 ---
 

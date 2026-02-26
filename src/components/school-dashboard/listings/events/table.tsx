@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
@@ -52,30 +54,23 @@ function EventsTableInner({
 
   // Translations with fallbacks
   const t = {
-    title: dictionary?.title || (lang === "ar" ? "العنوان" : "Title"),
-    type: dictionary?.type || (lang === "ar" ? "النوع" : "Type"),
-    date: dictionary?.date || (lang === "ar" ? "التاريخ" : "Date"),
-    location: dictionary?.location || (lang === "ar" ? "الموقع" : "Location"),
-    organizer:
-      dictionary?.organizer || (lang === "ar" ? "المنظم" : "Organizer"),
-    attendees:
-      dictionary?.attendees || (lang === "ar" ? "الحضور" : "Attendees"),
-    status: dictionary?.status || (lang === "ar" ? "الحالة" : "Status"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
-    allEvents:
-      dictionary?.allEvents || (lang === "ar" ? "جميع الأحداث" : "All Events"),
-    addNewEvent:
-      dictionary?.addNewEvent ||
-      (lang === "ar" ? "جدولة حدث مدرسي جديد" : "Schedule a new school event"),
-    search:
-      dictionary?.search ||
-      (lang === "ar" ? "بحث في الأحداث..." : "Search events..."),
-    create: dictionary?.create || (lang === "ar" ? "إنشاء" : "Create"),
-    export: dictionary?.export || (lang === "ar" ? "تصدير" : "Export"),
-    reset: dictionary?.reset || (lang === "ar" ? "إعادة تعيين" : "Reset"),
+    title: dictionary?.title || "Title",
+    type: dictionary?.type || "Type",
+    date: dictionary?.date || "Date",
+    location: dictionary?.location || "Location",
+    organizer: dictionary?.organizer || "Organizer",
+    attendees: dictionary?.attendees || "Attendees",
+    status: dictionary?.status || "Status",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
+    allEvents: dictionary?.allEvents || "All Events",
+    addNewEvent: dictionary?.addNewEvent || "Schedule a new school event",
+    search: dictionary?.search || "Search events...",
+    create: dictionary?.create || "Create",
+    export: dictionary?.export || "Export",
+    reset: dictionary?.reset || "Reset",
   }
 
   // View mode (table/grid)
@@ -122,8 +117,7 @@ function EventsTableInner({
   const handleDelete = useCallback(
     async (event: EventRow) => {
       try {
-        const deleteMsg =
-          lang === "ar" ? `حذف "${event.title}"؟` : `Delete "${event.title}"?`
+        const deleteMsg = `${dictionary?.delete || "Delete"} "${event.title}"?`
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
 
@@ -136,16 +130,16 @@ function EventsTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast(lang === "ar" ? "فشل حذف الحدث" : "Failed to delete event")
+          ErrorToast(
+            dictionary?.failedToDeleteEvent || "Failed to delete event"
+          )
         }
       } catch (e) {
         refresh()
         ErrorToast(
           e instanceof Error
             ? e.message
-            : lang === "ar"
-              ? "فشل الحذف"
-              : "Failed to delete"
+            : dictionary?.failedToDeleteEvent || "Failed to delete"
         )
       }
     },
@@ -233,8 +227,8 @@ function EventsTableInner({
     create: typeof t.create === "string" ? t.create : t.addNewEvent,
     reset: t.reset,
     export: t.export,
-    exportCSV: lang === "ar" ? "تصدير CSV" : "Export CSV",
-    exporting: lang === "ar" ? "جاري التصدير..." : "Exporting...",
+    exportCSV: dictionary?.exportCSV || "Export CSV",
+    exporting: dictionary?.exporting || "Exporting...",
   }
 
   return (
@@ -298,14 +292,24 @@ function EventsTableInner({
                 disabled={isLoading}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading
+                  ? dictionary?.loading || "Loading..."
+                  : dictionary?.loadMore || "Load More"}
               </button>
             </div>
           )}
         </>
       )}
 
-      <Modal content={<EventCreateForm onSuccess={refresh} />} />
+      <Modal
+        content={
+          <EventCreateForm
+            onSuccess={refresh}
+            lang={lang}
+            dictionary={dictionary}
+          />
+        }
+      />
     </>
   )
 }

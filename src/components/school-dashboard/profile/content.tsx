@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Main Profile Router Component
  * Dynamically loads the appropriate profile component based on user role

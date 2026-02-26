@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Results Calculator - Mark Summation and Grade Calculation
 
 import type { GradeBoundary } from "@prisma/client"

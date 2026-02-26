@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import {
   BookOpen,
@@ -153,7 +155,7 @@ export default function StudentView({
 
     await exportToPDF(
       {
-        title: isRTL ? "الجدول الدراسي" : "Class Schedule",
+        title: d?.studentView?.classSchedule || "Class Schedule",
         subtitle: `${studentInfo.name} - ${gradeName}`,
         termLabel: termInfo.label,
         schoolName: schoolName || "School",
@@ -258,7 +260,7 @@ export default function StudentView({
                     ) : (
                       <Download className="me-2 h-4 w-4" />
                     )}
-                    {isRTL ? "تحميل" : "Download"}
+                    {d?.studentView?.download || "Download"}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -267,12 +269,12 @@ export default function StudentView({
                     disabled={isExporting || slots.length === 0}
                   >
                     <FileText className="me-2 h-4 w-4" />
-                    {isRTL ? "تحميل PDF" : "Download PDF"}
+                    {d?.studentView?.downloadPDF || "Download PDF"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handlePrint}>
                     <Printer className="me-2 h-4 w-4" />
-                    {isRTL ? "طباعة" : "Print"}
+                    {d?.studentView?.print || "Print"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -286,14 +288,14 @@ export default function StudentView({
               <BookOpen className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
                 <strong>{subjectCount || uniqueSubjects.size}</strong>{" "}
-                {isRTL ? "مواد" : "subjects"}
+                {d?.studentView?.subjects || "subjects"}
               </span>
             </div>
             <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
               <Clock className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
                 <strong>{slots.length}</strong>{" "}
-                {isRTL ? "حصص/أسبوع" : "periods/week"}
+                {d?.studentView?.periodsPerWeek || "periods/week"}
               </span>
             </div>
           </div>
@@ -360,11 +362,11 @@ export default function StudentView({
         <TabsList className="print:hidden">
           <TabsTrigger value="today" className="gap-2">
             <Clock className="h-4 w-4" />
-            {isRTL ? "اليوم" : "Today"} ({DAY_NAMES[currentDay]})
+            {d?.studentView?.today || "Today"} ({DAY_NAMES[currentDay]})
           </TabsTrigger>
           <TabsTrigger value="week" className="gap-2">
             <Calendar className="h-4 w-4" />
-            {isRTL ? "عرض الأسبوع" : "Week View"}
+            {d?.studentView?.weekView || "Week View"}
           </TabsTrigger>
         </TabsList>
 

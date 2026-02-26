@@ -28,6 +28,8 @@ Fixes #XXXX
 <!-- Mark completed items with an "x" -->
 
 - [ ] I have read the [Contributing Guide](https://ed.databayt.org/docs/contributing)
+- [ ] I agree to the [Contributor License Agreement](./CONTRIBUTING.md#contributor-license-agreement) (SSPL-1.0 + commercial license grant to databayt)
+- [ ] My contributions do not include code under licenses incompatible with SSPL-1.0
 - [ ] My code follows the project's style guidelines
 - [ ] I have performed a self-review of my code
 - [ ] I have commented my code in hard-to-understand areas
@@ -36,6 +38,7 @@ Fixes #XXXX
 - [ ] TypeScript compiles without errors (`pnpm tsc --noEmit`)
 - [ ] I have updated documentation if needed
 - [ ] My changes include `schoolId` in all database queries (multi-tenant safety)
+- [ ] No secrets, API keys, or credentials are included in this PR
 
 ## How to Test
 

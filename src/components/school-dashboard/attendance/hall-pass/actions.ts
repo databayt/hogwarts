@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Hall Pass Server Actions
  *
@@ -10,6 +13,7 @@ import { auth } from "@/auth"
 import type { HallPassDestination } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import type { CreateHallPassInput, ReturnHallPassInput } from "./validation"
 
@@ -25,8 +29,8 @@ interface ActionResult {
 export async function createHallPass(
   input: CreateHallPassInput
 ): Promise<ActionResult> {
+  const { schoolId } = await getTenantContext()
   const session = await auth()
-  const schoolId = session?.user?.schoolId
   const userId = session?.user?.id
 
   if (!schoolId || !userId) {
@@ -125,8 +129,7 @@ export async function createHallPass(
 export async function returnHallPass(
   input: ReturnHallPassInput
 ): Promise<ActionResult> {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return { success: false, error: "Unauthorized" }
@@ -183,8 +186,7 @@ export async function returnHallPass(
  * Cancel a hall pass
  */
 export async function cancelHallPass(passId: string): Promise<ActionResult> {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return { success: false, error: "Unauthorized" }
@@ -221,8 +223,7 @@ export async function cancelHallPass(passId: string): Promise<ActionResult> {
  * Get all active hall passes for a school
  */
 export async function getActiveHallPasses(): Promise<ActionResult> {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return { success: false, error: "Unauthorized" }
@@ -297,8 +298,7 @@ export async function getStudentHallPassHistory(
   studentId: string,
   limit = 10
 ): Promise<ActionResult> {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return { success: false, error: "Unauthorized" }
@@ -346,8 +346,7 @@ export async function getStudentHallPassHistory(
 export async function getHallPassStats(
   classId?: string
 ): Promise<ActionResult> {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return { success: false, error: "Unauthorized" }

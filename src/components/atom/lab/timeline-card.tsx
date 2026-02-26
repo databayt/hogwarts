@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -96,7 +98,7 @@ export function TimelineCard({
               {icon || <div className="bg-primary h-2 w-2 rounded-full" />}
             </div>
             {showConnector && (
-              <div className="bg-border absolute top-10 left-1/2 h-full w-px -translate-x-1/2" />
+              <div className="bg-border absolute start-1/2 top-10 h-full w-px -translate-x-1/2" />
             )}
           </div>
 

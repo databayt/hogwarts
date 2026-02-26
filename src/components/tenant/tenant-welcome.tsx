@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 import Link from "next/link"
 import {
@@ -16,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 interface School {
   id: string
@@ -44,6 +47,8 @@ export default function TenantWelcome({
   school,
   subdomain,
 }: TenantWelcomeProps) {
+  const { locale } = useLocale()
+
   const getPlanBadge = (planType?: string) => {
     if (!planType) return null
 
@@ -162,9 +167,9 @@ export default function TenantWelcome({
                 create classes, and view reports.
               </p>
               <Button className="w-full" asChild>
-                <Link href="/login">
+                <Link href={`/${locale}/login`}>
                   Login to Portal
-                  <ArrowRight className="ms-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
             </CardContent>
@@ -183,9 +188,9 @@ export default function TenantWelcome({
                 students, and configure your classes.
               </p>
               <Button variant="outline" className="w-full" asChild>
-                <Link href="/onboarding">
+                <Link href={`/${locale}/onboarding`}>
                   Complete Setup
-                  <ArrowRight className="ms-2 h-4 w-4" />
+                  <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
             </CardContent>

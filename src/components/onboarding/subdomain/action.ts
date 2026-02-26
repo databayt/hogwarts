@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 
 import { db } from "@/lib/db"
@@ -80,6 +82,10 @@ export async function checkSubdomainAvailability(
   subdomain: string
 ): Promise<ActionResponse> {
   try {
+    const { auth } = await import("@/auth")
+    const session = await auth()
+    if (!session?.user) throw new Error("Not authenticated")
+
     const existingSchool = await db.school.findFirst({
       where: { domain: subdomain },
       select: { id: true },
@@ -104,6 +110,10 @@ export async function generateSubdomainSuggestions(
   schoolName: string
 ): Promise<ActionResponse> {
   try {
+    const { auth } = await import("@/auth")
+    const session = await auth()
+    if (!session?.user) throw new Error("Not authenticated")
+
     // Generate suggestions based on school name
     const baseName = schoolName
       .toLowerCase()

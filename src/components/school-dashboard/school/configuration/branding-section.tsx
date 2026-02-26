@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Check, Loader2, Pencil, Upload, X } from "lucide-react"

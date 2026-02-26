@@ -1,8 +1,12 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,6 +21,8 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+
+import { updateApplicationStatus } from "./actions"
 
 export type MeritRow = {
   id: string
@@ -210,15 +216,35 @@ export const getMeritColumns = (
       cell: ({ row }) => {
         const merit = row.original
         const router = useRouter()
+        const [isPending, startTransition] = useTransition()
 
         const onView = () => {
           router.push(`/admission/applications/${merit.id}`)
         }
 
+        const onStatusChange = (status: string) => {
+          startTransition(async () => {
+            const result = await updateApplicationStatus({
+              id: merit.id,
+              status,
+            })
+            if (result.success) {
+              toast.success("Status updated successfully")
+              router.refresh()
+            } else {
+              toast.error(result.error || "Failed to update status")
+            }
+          })
+        }
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0"
+                disabled={isPending}
+              >
                 <Ellipsis className="h-4 w-4" />
                 <span className="sr-only">Open menu</span>
               </Button>
@@ -231,13 +257,16 @@ export const getMeritColumns = (
               <DropdownMenuItem onClick={onView}>
                 {t?.meritList?.viewApplication || "View Application"}
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onStatusChange("SELECTED")}>
                 {t?.meritList?.markSelected || "Mark as Selected"}
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onStatusChange("WAITLISTED")}>
                 {t?.meritList?.markWaitlisted || "Mark as Waitlisted"}
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => onStatusChange("REJECTED")}
+              >
                 {t?.meritList?.markRejected || "Mark as Rejected"}
               </DropdownMenuItem>
             </DropdownMenuContent>

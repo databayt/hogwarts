@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { CreditCard } from "lucide-react"
 import { toast, Toaster } from "sonner"
@@ -205,7 +207,7 @@ export default function BillingSettingsDemo() {
                   className="pe-10"
                   maxLength={19}
                 />
-                <CreditCard className="text-muted-foreground absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+                <CreditCard className="text-muted-foreground absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

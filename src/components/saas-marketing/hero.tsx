@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import React from "react"
 import Link from "next/link"
 
@@ -62,7 +65,7 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
         </div>
 
         {/* Content */}
-        <div className="flex flex-col items-start space-y-6 text-start lg:order-1 lg:flex-1">
+        <div className="flex flex-col items-start space-y-10 text-start lg:order-1 lg:flex-1">
           <h1 className="font-heading text-6xl font-black tracking-tight md:text-7xl lg:text-7xl xl:text-8xl">
             {titleLines.map((line, index) => (
               <span key={index} className="block">

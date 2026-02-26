@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Clone a school structure for demos/testing
  * Run: npx tsx scripts/tenant-clone.ts --source portsudan --target demo-school --data structure

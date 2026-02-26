@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Paper Generation Panel
  * Controls for generating exam papers and answer keys
@@ -17,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   generateAnswerKey,
@@ -37,6 +41,9 @@ export function GenerationPanel({
   config,
   locale,
 }: GenerationPanelProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.generate?.paper?.generation
+  const tp = dictionary?.generate?.paper
   const isRTL = locale === "ar"
   const [isPending, startTransition] = useTransition()
   const [progress, setProgress] = useState(0)
@@ -45,7 +52,10 @@ export function GenerationPanel({
   const handleGenerateSingle = (versionIndex: number) => {
     const versionCode = getVersionCode(versionIndex)
     setCurrentTask(
-      isRTL ? `إنشاء نسخة ${versionCode}` : `Generating version ${versionCode}`
+      (t?.generating_version || "Generating version {code}").replace(
+        "{code}",
+        versionCode
+      )
     )
     setProgress(0)
 
@@ -61,22 +71,22 @@ export function GenerationPanel({
 
         if (result.success) {
           toast({
-            title: isRTL ? "تم بنجاح" : "Success",
-            description: isRTL
-              ? `تم إنشاء نسخة ${versionCode}`
-              : `Version ${versionCode} generated successfully`,
+            title: t?.success || "Success",
+            description: (
+              t?.version_generated || "Version {code} generated successfully"
+            ).replace("{code}", versionCode),
           })
         } else {
           toast({
-            title: isRTL ? "خطأ" : "Error",
+            title: tp?.error || "Error",
             description: result.error,
             variant: "destructive",
           })
         }
       } catch {
         toast({
-          title: isRTL ? "خطأ" : "Error",
-          description: isRTL ? "فشل في الإنشاء" : "Generation failed",
+          title: tp?.error || "Error",
+          description: t?.generation_failed || "Generation failed",
           variant: "destructive",
         })
       } finally {
@@ -87,7 +97,7 @@ export function GenerationPanel({
   }
 
   const handleGenerateAll = () => {
-    setCurrentTask(isRTL ? "إنشاء جميع النسخ" : "Generating all versions")
+    setCurrentTask(t?.generating_all || "Generating all versions")
     setProgress(0)
 
     startTransition(async () => {
@@ -102,22 +112,22 @@ export function GenerationPanel({
 
         if (result.success) {
           toast({
-            title: isRTL ? "تم بنجاح" : "Success",
-            description: isRTL
-              ? `تم إنشاء ${result.data.papers.length} نسخة`
-              : `${result.data.papers.length} versions generated successfully`,
+            title: t?.success || "Success",
+            description: (
+              t?.versions_generated || "{count} versions generated successfully"
+            ).replace("{count}", String(result.data.papers.length)),
           })
         } else {
           toast({
-            title: isRTL ? "خطأ" : "Error",
+            title: tp?.error || "Error",
             description: result.error,
             variant: "destructive",
           })
         }
       } catch {
         toast({
-          title: isRTL ? "خطأ" : "Error",
-          description: isRTL ? "فشل في الإنشاء" : "Generation failed",
+          title: tp?.error || "Error",
+          description: t?.generation_failed || "Generation failed",
           variant: "destructive",
         })
       } finally {
@@ -128,7 +138,7 @@ export function GenerationPanel({
   }
 
   const handleGenerateAnswerKey = () => {
-    setCurrentTask(isRTL ? "إنشاء مفتاح الإجابة" : "Generating answer key")
+    setCurrentTask(t?.generating_answer_key || "Generating answer key")
     setProgress(0)
 
     startTransition(async () => {
@@ -142,22 +152,21 @@ export function GenerationPanel({
 
         if (result.success) {
           toast({
-            title: isRTL ? "تم بنجاح" : "Success",
-            description: isRTL
-              ? "تم إنشاء مفتاح الإجابة"
-              : "Answer key generated successfully",
+            title: t?.success || "Success",
+            description:
+              t?.answer_key_generated || "Answer key generated successfully",
           })
         } else {
           toast({
-            title: isRTL ? "خطأ" : "Error",
+            title: tp?.error || "Error",
             description: result.error,
             variant: "destructive",
           })
         }
       } catch {
         toast({
-          title: isRTL ? "خطأ" : "Error",
-          description: isRTL ? "فشل في الإنشاء" : "Generation failed",
+          title: tp?.error || "Error",
+          description: t?.generation_failed || "Generation failed",
           variant: "destructive",
         })
       } finally {
@@ -188,12 +197,11 @@ export function GenerationPanel({
       <Card>
         <CardHeader>
           <CardTitle>
-            {isRTL ? "إنشاء نسخة واحدة" : "Generate Single Version"}
+            {t?.generate_single || "Generate Single Version"}
           </CardTitle>
           <CardDescription>
-            {isRTL
-              ? "إنشاء نسخة واحدة من ورقة الاختبار"
-              : "Generate a single version of the exam paper"}
+            {t?.generate_single_desc ||
+              "Generate a single version of the exam paper"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -213,11 +221,14 @@ export function GenerationPanel({
                 >
                   <FileText className="h-4 w-4" />
                   <span className="ms-2">
-                    {isRTL ? `نسخة ${versionCode}` : `Version ${versionCode}`}
+                    {(t?.version || "Version {code}").replace(
+                      "{code}",
+                      versionCode
+                    )}
                   </span>
                   {existingPaper && (
                     <span className="text-muted-foreground ms-1 text-xs">
-                      ({isRTL ? "موجود" : "exists"})
+                      ({t?.exists || "exists"})
                     </span>
                   )}
                 </Button>
@@ -230,20 +241,22 @@ export function GenerationPanel({
       {/* Batch Generation */}
       <Card>
         <CardHeader>
-          <CardTitle>{isRTL ? "إنشاء جماعي" : "Batch Generation"}</CardTitle>
+          <CardTitle>{t?.batch || "Batch Generation"}</CardTitle>
           <CardDescription>
-            {isRTL
-              ? `إنشاء ${config.versionCount} نسخة دفعة واحدة مع مفتاح الإجابة`
-              : `Generate all ${config.versionCount} versions at once with answer key`}
+            {(
+              t?.batch_desc ||
+              "Generate all {count} versions at once with answer key"
+            ).replace("{count}", String(config.versionCount))}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <Button onClick={handleGenerateAll} disabled={isPending}>
             <Printer className="h-4 w-4" />
             <span className="ms-2">
-              {isRTL
-                ? `إنشاء ${config.versionCount} نسخ`
-                : `Generate ${config.versionCount} Versions`}
+              {(t?.generate_versions || "Generate {count} Versions").replace(
+                "{count}",
+                String(config.versionCount)
+              )}
             </span>
           </Button>
 
@@ -253,9 +266,7 @@ export function GenerationPanel({
             disabled={isPending}
           >
             <Key className="h-4 w-4" />
-            <span className="ms-2">
-              {isRTL ? "مفتاح الإجابة" : "Answer Key"}
-            </span>
+            <span className="ms-2">{t?.answer_key || "Answer Key"}</span>
           </Button>
         </CardContent>
       </Card>
@@ -263,15 +274,15 @@ export function GenerationPanel({
       {/* Download Section */}
       <Card>
         <CardHeader>
-          <CardTitle>{isRTL ? "التحميل" : "Download"}</CardTitle>
+          <CardTitle>{t?.download || "Download"}</CardTitle>
           <CardDescription>
-            {isRTL ? "تحميل الأوراق المولدة" : "Download generated papers"}
+            {t?.download_desc || "Download generated papers"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {config.papers.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              {isRTL ? "لم يتم إنشاء أي أوراق بعد" : "No papers generated yet"}
+              {t?.no_papers || "No papers generated yet"}
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -288,19 +299,18 @@ export function GenerationPanel({
                       <Download className="h-4 w-4" />
                       <span className="ms-2">
                         {paper.versionCode
-                          ? isRTL
-                            ? `نسخة ${paper.versionCode}`
-                            : `Version ${paper.versionCode}`
-                          : isRTL
-                            ? "ورقة"
-                            : "Paper"}
+                          ? (t?.version || "Version {code}").replace(
+                              "{code}",
+                              paper.versionCode
+                            )
+                          : t?.paper_label || "Paper"}
                       </span>
                     </a>
                   ) : (
                     <>
                       <Download className="h-4 w-4" />
                       <span className="ms-2">
-                        {paper.versionCode || (isRTL ? "ورقة" : "Paper")}
+                        {paper.versionCode || t?.paper_label || "Paper"}
                       </span>
                     </>
                   )}

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState } from "react"
 
 export type CrudMode = "create" | "edit" | "view" | "delete"

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useFormContext } from "react-hook-form"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,13 +27,20 @@ export default function StepGuardian({ dictionary, lang }: Props) {
   const { control } = useFormContext<ApplicationFormData>()
   const isRTL = lang === "ar"
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { formSteps?: Record<string, string> } }
+      }
+    )?.school?.admission?.formSteps ?? {}
+
   return (
     <div className="space-y-6">
       {/* Father's Information */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
-            {isRTL ? "معلومات الأب" : "Father's Information"}
+            {dict.fatherInfo || "Father's Information"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -42,14 +51,14 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {isRTL ? "اسم الأب" : "Father's Name"}{" "}
+                    {dict.fatherName || "Father's Name"}{" "}
                     <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder={
-                        isRTL ? "أدخل اسم الأب" : "Enter father's name"
+                        dict.enterFatherName || "Enter father's name"
                       }
                     />
                   </FormControl>
@@ -62,11 +71,11 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="fatherOccupation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "المهنة" : "Occupation"}</FormLabel>
+                  <FormLabel>{dict.occupation || "Occupation"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={isRTL ? "أدخل المهنة" : "Enter occupation"}
+                      placeholder={dict.enterOccupation || "Enter occupation"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -80,7 +89,7 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="fatherPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "رقم الهاتف" : "Phone Number"}</FormLabel>
+                  <FormLabel>{dict.phoneNumber || "Phone Number"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -97,7 +106,7 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="fatherEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "البريد الإلكتروني" : "Email"}</FormLabel>
+                  <FormLabel>{dict.emailAddress || "Email"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -117,7 +126,7 @@ export default function StepGuardian({ dictionary, lang }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
-            {isRTL ? "معلومات الأم" : "Mother's Information"}
+            {dict.motherInfo || "Mother's Information"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -128,14 +137,14 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {isRTL ? "اسم الأم" : "Mother's Name"}{" "}
+                    {dict.motherName || "Mother's Name"}{" "}
                     <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder={
-                        isRTL ? "أدخل اسم الأم" : "Enter mother's name"
+                        dict.enterMotherName || "Enter mother's name"
                       }
                     />
                   </FormControl>
@@ -148,11 +157,11 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="motherOccupation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "المهنة" : "Occupation"}</FormLabel>
+                  <FormLabel>{dict.occupation || "Occupation"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={isRTL ? "أدخل المهنة" : "Enter occupation"}
+                      placeholder={dict.enterOccupation || "Enter occupation"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -166,7 +175,7 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="motherPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "رقم الهاتف" : "Phone Number"}</FormLabel>
+                  <FormLabel>{dict.phoneNumber || "Phone Number"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -183,7 +192,7 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="motherEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "البريد الإلكتروني" : "Email"}</FormLabel>
+                  <FormLabel>{dict.emailAddress || "Email"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -203,16 +212,13 @@ export default function StepGuardian({ dictionary, lang }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
-            {isRTL
-              ? "معلومات ولي الأمر (اختياري)"
-              : "Guardian Information (Optional)"}
+            {dict.guardianInfoOptional || "Guardian Information (Optional)"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground mb-4 text-sm">
-            {isRTL
-              ? "أكمل هذا القسم فقط إذا كان ولي الأمر مختلفًا عن الوالدين"
-              : "Complete this section only if the guardian is different from parents"}
+            {dict.guardianNote ||
+              "Complete this section only if the guardian is different from parents"}
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField
@@ -220,13 +226,11 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="guardianName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {isRTL ? "اسم ولي الأمر" : "Guardian Name"}
-                  </FormLabel>
+                  <FormLabel>{dict.guardianName || "Guardian Name"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={isRTL ? "أدخل الاسم" : "Enter name"}
+                      placeholder={dict.enterName || "Enter name"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -238,13 +242,13 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="guardianRelation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {isRTL ? "صلة القرابة" : "Relationship"}
-                  </FormLabel>
+                  <FormLabel>{dict.relationship || "Relationship"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={isRTL ? "مثل: عم، خال" : "e.g., Uncle, Aunt"}
+                      placeholder={
+                        dict.relationshipPlaceholder || "e.g., Uncle, Aunt"
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -258,7 +262,7 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="guardianPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "رقم الهاتف" : "Phone Number"}</FormLabel>
+                  <FormLabel>{dict.phoneNumber || "Phone Number"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -275,7 +279,7 @@ export default function StepGuardian({ dictionary, lang }: Props) {
               name="guardianEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "البريد الإلكتروني" : "Email"}</FormLabel>
+                  <FormLabel>{dict.emailAddress || "Email"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}

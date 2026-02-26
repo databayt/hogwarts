@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import React from "react"
 import Link from "next/link"
 
@@ -18,7 +21,7 @@ const ExpandButton = ({
   ...props
 }: ExpandButtonProps) => {
   const baseClasses =
-    "rounded-2xl w-72 md:w-auto px-6 py-3 md:py-2 font-semibold transition-all duration-300 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-3xl hover:shadow-[4px_4px_0px_theme(colors.muted.foreground)] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none"
+    "rounded-2xl w-72 md:w-auto px-6 py-3 md:py-2 font-semibold transition-all duration-300 hover:translate-x-[-4px] rtl:hover:translate-x-[4px] hover:translate-y-[-4px] hover:rounded-3xl hover:shadow-[4px_4px_0px_theme(colors.muted.foreground)] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none"
 
   const variantClasses = {
     default: "bg-emerald-700 text-background",

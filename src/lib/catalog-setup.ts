@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
 
 /**
@@ -104,7 +106,7 @@ export async function setupCatalogForSchool(
     skipIfExists?: boolean
   }
 ) {
-  const { system = "national", skipIfExists = true } = options ?? {}
+  const { skipIfExists = true } = options ?? {}
 
   // Skip if school already has academic structure
   if (skipIfExists) {
@@ -123,7 +125,9 @@ export async function setupCatalogForSchool(
   })
 
   // Use school's country (ISO code), then options override, then fallback
-  const country = school?.country || options?.country || "SD"
+  const country = school?.country || options?.country || "US"
+  // Default to ClickView US K-12 curriculum; other curricula can be specified via options
+  const system = options?.system || "clickview"
   const allowedLevels =
     SCHOOL_LEVEL_TO_CATALOG[school?.schoolLevel ?? "both"] ??
     SCHOOL_LEVEL_TO_CATALOG.both
@@ -142,6 +146,7 @@ export async function setupCatalogForSchool(
       id: true,
       name: true,
       levels: true,
+      grades: true,
     },
   })
 
@@ -237,22 +242,35 @@ export async function setupCatalogForSchool(
     let selectionCount = 0
 
     for (const subject of catalogSubjects) {
-      // Map catalog levels to grade ranges, filtered by school's allowed levels
-      const levelToGrades = (level: string): number[] => {
-        if (!allowedLevels.includes(level)) return []
-        switch (level) {
-          case "ELEMENTARY":
-            return [1, 2, 3, 4, 5, 6]
-          case "MIDDLE":
-            return [7, 8, 9]
-          case "HIGH":
-            return [10, 11, 12]
-          default:
-            return []
-        }
-      }
+      // Grade-specific subjects have explicit grades (e.g., [3] for "Math Grade 3")
+      // Level-based subjects use levels to derive grade ranges
+      let applicableGrades: number[]
 
-      const applicableGrades = subject.levels.flatMap(levelToGrades)
+      if (subject.grades.length > 0) {
+        // Grade-specific: use exact grades, filtered by school's allowed levels
+        const allowedGradeNumbers = new Set(
+          gradeRecords.map((g) => g.gradeNumber)
+        )
+        applicableGrades = subject.grades.filter((g) =>
+          allowedGradeNumbers.has(g)
+        )
+      } else {
+        // Level-based fallback: map levels to grade ranges
+        const levelToGrades = (level: string): number[] => {
+          if (!allowedLevels.includes(level)) return []
+          switch (level) {
+            case "ELEMENTARY":
+              return [1, 2, 3, 4, 5, 6]
+            case "MIDDLE":
+              return [7, 8, 9]
+            case "HIGH":
+              return [10, 11, 12]
+            default:
+              return []
+          }
+        }
+        applicableGrades = subject.levels.flatMap(levelToGrades)
+      }
 
       for (const gradeNumber of applicableGrades) {
         const gradeRecord = gradeRecords.find(
@@ -312,6 +330,121 @@ export async function teardownCatalogForSchool(schoolId: string) {
   })
 
   return { success: true }
+}
+
+/**
+ * Create default school year + periods, then apply timetable structure for a newly onboarded school.
+ * Called during onboarding completion when the school selected a schedule structure.
+ */
+export async function applyTimetableStructureForNewSchool(
+  schoolId: string,
+  structureSlug: string
+) {
+  // Create default school year if none exists
+  const existingYear = await db.schoolYear.findFirst({
+    where: { schoolId },
+    select: { id: true },
+  })
+
+  let yearId: string
+
+  if (existingYear) {
+    yearId = existingYear.id
+  } else {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const startMonth = now.getMonth() >= 8 ? currentYear : currentYear - 1
+
+    const year = await db.schoolYear.create({
+      data: {
+        schoolId,
+        yearName: `${startMonth}/${startMonth + 1}`,
+        startDate: new Date(startMonth, 8, 1), // September 1
+        endDate: new Date(startMonth + 1, 5, 30), // June 30
+      },
+    })
+    yearId = year.id
+  }
+
+  // Import and call the timetable structure applier
+  // This creates Period records from the structure definition
+  const { getStructureBySlug, LEGACY_TEMPLATE_MAP } =
+    await import("@/components/school-dashboard/timetable/structures")
+
+  const slug = LEGACY_TEMPLATE_MAP[structureSlug] || structureSlug
+  const structure = getStructureBySlug(slug)
+  if (!structure)
+    return { skipped: true, message: `Unknown structure: ${slug}` }
+
+  // Create periods
+  let createdCount = 0
+  for (const period of structure.periods) {
+    const [startHour, startMin] = period.startTime.split(":").map(Number)
+    const [endHour, endMin] = period.endTime.split(":").map(Number)
+
+    await db.period.create({
+      data: {
+        schoolId,
+        yearId,
+        name: period.name,
+        startTime: new Date(Date.UTC(1970, 0, 1, startHour, startMin)),
+        endTime: new Date(Date.UTC(1970, 0, 1, endHour, endMin)),
+      },
+    })
+    createdCount++
+  }
+
+  // Create 2 default terms within the school year
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const yearStart = now.getMonth() >= 8 ? currentYear : currentYear - 1
+
+  const existingTerms = await db.term.count({ where: { schoolId, yearId } })
+  let termId: string | undefined
+
+  if (existingTerms === 0) {
+    const term1 = await db.term.create({
+      data: {
+        schoolId,
+        yearId,
+        termNumber: 1,
+        startDate: new Date(yearStart, 8, 1), // Sep 1
+        endDate: new Date(yearStart + 1, 0, 31), // Jan 31
+        isActive: true,
+      },
+    })
+    termId = term1.id
+
+    await db.term.create({
+      data: {
+        schoolId,
+        yearId,
+        termNumber: 2,
+        startDate: new Date(yearStart + 1, 1, 1), // Feb 1
+        endDate: new Date(yearStart + 1, 5, 30), // Jun 30
+        isActive: false,
+      },
+    })
+  }
+
+  // Persist working days from structure definition
+  if (termId) {
+    const existingConfig = await db.schoolWeekConfig.findFirst({
+      where: { schoolId },
+    })
+    if (!existingConfig) {
+      await db.schoolWeekConfig.create({
+        data: {
+          schoolId,
+          termId,
+          workingDays: structure.workingDays,
+          defaultLunchAfterPeriod: structure.lunchAfterPeriod,
+        },
+      })
+    }
+  }
+
+  return { skipped: false, periods: createdCount, yearId, termId }
 }
 
 /**

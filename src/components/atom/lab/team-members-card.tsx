@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -227,7 +229,7 @@ export function TeamMembersCard({
                   {showStatus && member.status && (
                     <span
                       className={cn(
-                        "border-background absolute right-0 bottom-0 h-3 w-3 rounded-full border-2",
+                        "border-background absolute end-0 bottom-0 h-3 w-3 rounded-full border-2",
                         statusColors[member.status]
                       )}
                       title={statusLabels[member.status]}

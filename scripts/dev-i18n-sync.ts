@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Sync i18n translation keys between Arabic and English
  * Run: npx tsx scripts/dev-i18n-sync.ts [--auto-translate]
@@ -64,21 +67,89 @@ async function syncDictionaries() {
   const spinner = ora("Scanning dictionary files...").start()
 
   try {
-    const dictionariesPath = join(
+    const i18nPath = join(
       process.cwd(),
       "src",
       "components",
-      "internationalization",
-      "dictionaries"
+      "internationalization"
     )
+    const dictionariesPath = join(i18nPath, "dictionaries")
     const arPath = join(dictionariesPath, "ar")
     const enPath = join(dictionariesPath, "en")
 
-    // Get all dictionary files
+    // Check top-level dictionary pairs first
+    const topLevelPairs = [
+      { ar: "ar.json", en: "en.json", label: "General" },
+      { ar: "school-ar.json", en: "school-en.json", label: "School" },
+      { ar: "stream-ar.json", en: "stream-en.json", label: "Stream" },
+      { ar: "operator-ar.json", en: "operator-en.json", label: "Operator" },
+    ]
+
+    for (const pair of topLevelPairs) {
+      try {
+        const arContent = JSON.parse(
+          readFileSync(join(i18nPath, pair.ar), "utf-8")
+        )
+        const enContent = JSON.parse(
+          readFileSync(join(i18nPath, pair.en), "utf-8")
+        )
+
+        const arKeys = getAllKeys(arContent)
+        const enKeys = getAllKeys(enContent)
+
+        for (const key of arKeys) {
+          if (!enKeys.includes(key)) {
+            missingKeys.push({
+              file: `[top-level] ${pair.en}`,
+              key,
+              language: "en",
+            })
+          }
+        }
+
+        for (const key of enKeys) {
+          if (!arKeys.includes(key)) {
+            missingKeys.push({
+              file: `[top-level] ${pair.ar}`,
+              key,
+              language: "ar",
+            })
+          }
+        }
+
+        const fileMissing = missingKeys.filter(
+          (m) => m.file.includes(pair.ar) || m.file.includes(pair.en)
+        )
+        if (fileMissing.length > 0) {
+          console.log(
+            chalk.yellow(`\n${pair.label} (${pair.ar} / ${pair.en}):`)
+          )
+          fileMissing.forEach((m) => {
+            console.log(
+              `  ${m.language === "ar" ? "🇸🇦" : "🇬🇧"} Missing: ${chalk.gray(m.key)}`
+            )
+          })
+        } else {
+          console.log(
+            chalk.green(
+              `\n✓ ${pair.label} (${pair.ar} / ${pair.en}): All keys synced`
+            )
+          )
+        }
+      } catch {
+        // Skip pairs where files don't exist
+      }
+    }
+
+    // Get all module dictionary files
     const arFiles = readdirSync(arPath).filter((f) => f.endsWith(".json"))
     const enFiles = readdirSync(enPath).filter((f) => f.endsWith(".json"))
 
-    spinner.succeed(chalk.green(`Found ${arFiles.length} dictionary files`))
+    spinner.succeed(
+      chalk.green(
+        `Found ${topLevelPairs.length} top-level pairs + ${arFiles.length} module dictionaries`
+      )
+    )
 
     console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
     console.log(chalk.bold("📝 i18n Synchronization"))

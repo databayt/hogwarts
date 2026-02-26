@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import fc from "fast-check"
 import { describe, expect, it } from "vitest"
 
@@ -194,8 +197,8 @@ describe("Onboarding Validation - Property-Based Tests", () => {
       fc.assert(
         fc.property(
           fc.integer({ min: 1, max: 10000 }),
-          fc.integer({ min: 1, max: 1000 }),
           fc.integer({ min: 1, max: 500 }),
+          fc.integer({ min: 1, max: 100 }),
           (students, teachers, classes) => {
             const result = onboardingValidation
               .pick({

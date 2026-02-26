@@ -683,7 +683,7 @@ When contributing to the theme system:
 
 ## License
 
-MIT License - See project root LICENSE file.
+SSPL-1.0 - See project root LICENSE file.
 
 ---
 

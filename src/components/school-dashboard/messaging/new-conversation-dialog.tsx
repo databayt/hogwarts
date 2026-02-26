@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Check, Loader2, MessageSquare, Search, Users, X } from "lucide-react"
@@ -21,6 +23,7 @@ import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createConversation } from "./actions"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
@@ -50,6 +53,8 @@ export function NewConversationDialog({
   onConversationCreated,
 }: NewConversationDialogProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const [isPending, startTransition] = useTransition()
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<UserResult[]>([])
@@ -115,22 +120,17 @@ export function NewConversationDialog({
   const handleCreate = async () => {
     if (selectedUsers.length === 0) {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
+        title: m?.notifications?.error || "Error",
         description:
-          locale === "ar"
-            ? "الرجاء اختيار مستخدم واحد على الأقل"
-            : "Please select at least one user",
+          m?.errors?.select_one_user || "Please select at least one user",
       })
       return
     }
 
     if (conversationType === "group" && !groupName.trim()) {
       toast({
-        title: locale === "ar" ? "خطأ" : "Error",
-        description:
-          locale === "ar"
-            ? "الرجاء إدخال اسم المجموعة"
-            : "Please enter a group name",
+        title: m?.notifications?.error || "Error",
+        description: m?.errors?.enter_group_name || "Please enter a group name",
       })
       return
     }
@@ -145,15 +145,12 @@ export function NewConversationDialog({
 
         if (result.success) {
           toast({
-            title: locale === "ar" ? "تم بنجاح" : "Success",
+            title: m?.notifications?.success || "Success",
             description:
-              locale === "ar"
-                ? conversationType === "direct"
-                  ? "تم إنشاء المحادثة"
-                  : "تم إنشاء المجموعة"
-                : conversationType === "direct"
-                  ? "Conversation created"
-                  : "Group created",
+              conversationType === "direct"
+                ? m?.notifications?.conversation_created ||
+                  "Conversation created"
+                : m?.notifications?.group_created || "Group created",
           })
 
           onOpenChange(false)
@@ -166,15 +163,14 @@ export function NewConversationDialog({
           }
         } else {
           toast({
-            title: locale === "ar" ? "خطأ" : "Error",
+            title: m?.notifications?.error || "Error",
             description: result.error,
           })
         }
       } catch (error) {
         toast({
-          title: locale === "ar" ? "خطأ" : "Error",
-          description:
-            locale === "ar" ? "حدث خطأ أثناء الإنشاء" : "An error occurred",
+          title: m?.notifications?.error || "Error",
+          description: m?.errors?.create_error || "An error occurred",
         })
       }
     })
@@ -200,12 +196,11 @@ export function NewConversationDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {locale === "ar" ? "محادثة جديدة" : "New Conversation"}
+            {m?.ui?.new_conversation || "New Conversation"}
           </DialogTitle>
           <DialogDescription>
-            {locale === "ar"
-              ? "ابدأ محادثة مباشرة أو أنشئ مجموعة"
-              : "Start a direct message or create a group"}
+            {m?.form?.start_direct_description ||
+              "Start a direct message or create a group"}
           </DialogDescription>
         </DialogHeader>
 
@@ -221,11 +216,11 @@ export function NewConversationDialog({
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="direct" className="gap-2">
                 <MessageSquare className="h-4 w-4" />
-                {locale === "ar" ? "مباشر" : "Direct"}
+                {m?.types?.direct_short || "Direct"}
               </TabsTrigger>
               <TabsTrigger value="group" className="gap-2">
                 <Users className="h-4 w-4" />
-                {locale === "ar" ? "مجموعة" : "Group"}
+                {m?.types?.group_short || "Group"}
               </TabsTrigger>
             </TabsList>
 
@@ -233,16 +228,14 @@ export function NewConversationDialog({
             <TabsContent value="group" className="mt-4">
               <div className="space-y-2">
                 <Label htmlFor="groupName">
-                  {locale === "ar" ? "اسم المجموعة" : "Group Name"}
+                  {m?.form?.group_name || "Group Name"}
                 </Label>
                 <Input
                   id="groupName"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                   placeholder={
-                    locale === "ar"
-                      ? "أدخل اسم المجموعة..."
-                      : "Enter group name..."
+                    m?.form?.group_name_placeholder || "Enter group name..."
                   }
                 />
               </div>
@@ -283,12 +276,12 @@ export function NewConversationDialog({
 
           {/* Search Input */}
           <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={
-                locale === "ar" ? "ابحث عن مستخدم..." : "Search for a user..."
+                m?.form?.search_user_placeholder || "Search for a user..."
               }
               className="ps-9"
               disabled={
@@ -296,7 +289,7 @@ export function NewConversationDialog({
               }
             />
             {isSearching && (
-              <Loader2 className="text-muted-foreground absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 animate-spin" />
+              <Loader2 className="text-muted-foreground absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin" />
             )}
           </div>
 
@@ -344,9 +337,7 @@ export function NewConversationDialog({
           {/* Empty Search State */}
           {searchQuery && !isSearching && searchResults.length === 0 && (
             <div className="text-muted-foreground py-4 text-center text-sm">
-              {locale === "ar"
-                ? "لم يتم العثور على مستخدمين"
-                : "No users found"}
+              {m?.form?.no_users_found || "No users found"}
             </div>
           )}
 
@@ -354,13 +345,11 @@ export function NewConversationDialog({
           {!searchQuery && selectedUsers.length === 0 && (
             <div className="text-muted-foreground py-6 text-center text-sm">
               <Search className="mx-auto mb-2 h-8 w-8 opacity-50" />
-              {locale === "ar"
-                ? conversationType === "direct"
-                  ? "ابحث عن شخص لبدء محادثة"
-                  : "ابحث عن أشخاص لإضافتهم إلى المجموعة"
-                : conversationType === "direct"
-                  ? "Search for someone to start a conversation"
-                  : "Search for people to add to the group"}
+              {conversationType === "direct"
+                ? m?.form?.search_direct_help ||
+                  "Search for someone to start a conversation"
+                : m?.form?.search_group_help ||
+                  "Search for people to add to the group"}
             </div>
           )}
         </div>
@@ -368,7 +357,7 @@ export function NewConversationDialog({
         {/* Actions */}
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            {locale === "ar" ? "إلغاء" : "Cancel"}
+            {m?.actions?.cancel || "Cancel"}
           </Button>
           <Button
             onClick={handleCreate}
@@ -385,13 +374,9 @@ export function NewConversationDialog({
             ) : (
               <Users className="me-2 h-4 w-4" />
             )}
-            {locale === "ar"
-              ? conversationType === "direct"
-                ? "بدء المحادثة"
-                : "إنشاء المجموعة"
-              : conversationType === "direct"
-                ? "Start Chat"
-                : "Create Group"}
+            {conversationType === "direct"
+              ? m?.actions?.start_chat || "Start Chat"
+              : m?.actions?.create_group || "Create Group"}
           </Button>
         </div>
       </DialogContent>

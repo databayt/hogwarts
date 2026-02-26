@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Receipts List Page
  * Follows Hogwarts page pattern - server component that fetches data and passes to content component

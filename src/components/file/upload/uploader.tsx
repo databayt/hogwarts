@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Unified File Block - Uploader Component
  * Drag-and-drop file uploader with preview and progress

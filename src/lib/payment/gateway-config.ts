@@ -1,16 +1,19 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { PaymentGateway } from "./types"
 
 // Country → preferred gateways (ordered by preference)
 const COUNTRY_GATEWAYS: Record<string, PaymentGateway[]> = {
-  SD: ["cash", "bank_transfer"],
+  SD: ["mobile_money", "cash", "bank_transfer"],
   EG: ["stripe", "cash", "bank_transfer"],
-  SA: ["stripe", "cash", "bank_transfer"],
-  AE: ["stripe", "cash", "bank_transfer"],
+  SA: ["tap", "stripe", "cash", "bank_transfer"],
+  AE: ["tap", "stripe", "cash", "bank_transfer"],
   JO: ["stripe", "cash", "bank_transfer"],
-  KW: ["stripe", "cash", "bank_transfer"],
-  QA: ["stripe", "cash", "bank_transfer"],
-  BH: ["stripe", "cash", "bank_transfer"],
-  OM: ["stripe", "cash", "bank_transfer"],
+  KW: ["tap", "cash", "bank_transfer"],
+  QA: ["tap", "stripe", "cash", "bank_transfer"],
+  BH: ["tap", "stripe", "cash", "bank_transfer"],
+  OM: ["tap", "cash", "bank_transfer"],
 }
 
 const DEFAULT_GATEWAYS: PaymentGateway[] = ["stripe", "cash"]

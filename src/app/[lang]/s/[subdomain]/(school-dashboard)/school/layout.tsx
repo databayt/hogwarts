@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { AdminAuthGuard } from "@/components/auth/admin-auth-guard"
 import { type Locale } from "@/components/internationalization/config"

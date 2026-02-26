@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Query builders for Students module
  * Pattern follows grades module for consistency
@@ -21,6 +24,7 @@ export type StudentListFilters = {
   status?: "active" | "inactive"
   classId?: string
   yearLevel?: string
+  academicGradeId?: string
 }
 
 export type PaginationParams = {
@@ -51,6 +55,7 @@ export const studentListSelect = {
   gender: true,
   userId: true,
   enrollmentDate: true,
+  academicGradeId: true,
   createdAt: true,
   studentClasses: {
     select: {
@@ -62,6 +67,19 @@ export const studentListSelect = {
       },
     },
     take: 1,
+  },
+  academicGrade: {
+    select: {
+      id: true,
+      name: true,
+      gradeNumber: true,
+      level: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
   },
 } as const
 
@@ -75,6 +93,7 @@ export const studentDetailSelect = {
   dateOfBirth: true,
   gender: true,
   enrollmentDate: true,
+  academicGradeId: true,
   userId: true,
   createdAt: true,
   updatedAt: true,
@@ -83,6 +102,33 @@ export const studentDetailSelect = {
       id: true,
       email: true,
       image: true,
+    },
+  },
+  academicGrade: {
+    select: {
+      id: true,
+      name: true,
+      gradeNumber: true,
+      yearLevelId: true,
+      level: {
+        select: {
+          id: true,
+          name: true,
+          level: true,
+        },
+      },
+      subjectSelections: {
+        select: {
+          id: true,
+          subject: {
+            select: {
+              id: true,
+              subjectName: true,
+              slug: true,
+            },
+          },
+        },
+      },
     },
   },
   studentClasses: {
@@ -174,6 +220,16 @@ export function buildStudentWhere(
         classId: filters.classId,
       },
     }
+  }
+
+  // Year level filter (via academicGrade -> yearLevel)
+  if (filters.yearLevel) {
+    where.academicGrade = { yearLevelId: filters.yearLevel }
+  }
+
+  // Direct academic grade filter
+  if (filters.academicGradeId) {
+    where.academicGradeId = filters.academicGradeId
   }
 
   return where
@@ -324,6 +380,33 @@ export async function getStudentStats(schoolId: string) {
     ),
     recentEnrollments,
   }
+}
+
+// ============================================================================
+// Academic Grade Queries
+// ============================================================================
+
+/**
+ * Get academic grades for a school (for grade selector dropdowns)
+ */
+export async function getSchoolAcademicGrades(schoolId: string) {
+  return db.academicGrade.findMany({
+    where: { schoolId },
+    orderBy: { gradeNumber: "asc" },
+    select: {
+      id: true,
+      name: true,
+      gradeNumber: true,
+      yearLevelId: true,
+      level: {
+        select: {
+          id: true,
+          name: true,
+          level: true,
+        },
+      },
+    },
+  })
 }
 
 // ============================================================================

@@ -1,80 +1,14 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { memo, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
+import { getSubjectTailwind } from "./config"
 import { SubjectSelector } from "./subject-selector"
 import { TeacherInfoPopup } from "./teacher-info-popup"
-
-// Subject color mapping for visual distinction (following reference pattern)
-const SUBJECT_COLORS: Record<string, string> = {
-  Math: "bg-purple-100 border-purple-300 dark:bg-purple-900/50 dark:border-purple-800",
-  English:
-    "bg-green-100 border-green-300 dark:bg-green-900/50 dark:border-green-800",
-  Science:
-    "bg-pink-100 border-pink-300 dark:bg-pink-900/50 dark:border-pink-800",
-  Arabic:
-    "bg-blue-100 border-blue-300 dark:bg-blue-900/50 dark:border-blue-800",
-  PE: "bg-orange-100 border-orange-300 dark:bg-orange-900/50 dark:border-orange-800",
-  Music:
-    "bg-yellow-100 border-yellow-300 dark:bg-yellow-900/50 dark:border-yellow-800",
-  Art: "bg-rose-100 border-rose-300 dark:bg-rose-900/50 dark:border-rose-800",
-  History:
-    "bg-amber-100 border-amber-300 dark:bg-amber-900/50 dark:border-amber-800",
-  Geography:
-    "bg-teal-100 border-teal-300 dark:bg-teal-900/50 dark:border-teal-800",
-  Islamic:
-    "bg-emerald-100 border-emerald-300 dark:bg-emerald-900/50 dark:border-emerald-800",
-  Computer:
-    "bg-cyan-100 border-cyan-300 dark:bg-cyan-900/50 dark:border-cyan-800",
-  Physics:
-    "bg-indigo-100 border-indigo-300 dark:bg-indigo-900/50 dark:border-indigo-800",
-  Chemistry:
-    "bg-violet-100 border-violet-300 dark:bg-violet-900/50 dark:border-violet-800",
-  Biology:
-    "bg-lime-100 border-lime-300 dark:bg-lime-900/50 dark:border-lime-800",
-  Social: "bg-sky-100 border-sky-300 dark:bg-sky-900/50 dark:border-sky-800",
-  Reading:
-    "bg-indigo-100 border-indigo-300 dark:bg-indigo-900/50 dark:border-indigo-800",
-  Korean:
-    "bg-violet-100 border-violet-300 dark:bg-violet-900/50 dark:border-violet-800",
-  Chinese: "bg-red-100 border-red-300 dark:bg-red-900/50 dark:border-red-800",
-  Sports:
-    "bg-teal-100 border-teal-300 dark:bg-teal-900/50 dark:border-teal-800",
-  Club: "bg-cyan-100 border-cyan-300 dark:bg-cyan-900/50 dark:border-cyan-800",
-}
-
-// Fallback colors for unknown subjects
-const FALLBACK_COLORS = [
-  "bg-red-100 border-red-300 dark:bg-red-900/50 dark:border-red-800",
-  "bg-orange-100 border-orange-300 dark:bg-orange-900/50 dark:border-orange-800",
-  "bg-yellow-100 border-yellow-300 dark:bg-yellow-900/50 dark:border-yellow-800",
-  "bg-green-100 border-green-300 dark:bg-green-900/50 dark:border-green-800",
-  "bg-blue-100 border-blue-300 dark:bg-blue-900/50 dark:border-blue-800",
-]
-
-function getSubjectColor(subject: string): string {
-  if (!subject) return "bg-muted border-border"
-
-  // Check direct mapping first
-  if (SUBJECT_COLORS[subject]) {
-    return SUBJECT_COLORS[subject]
-  }
-
-  // Check partial matches
-  for (const [key, color] of Object.entries(SUBJECT_COLORS)) {
-    if (subject.toLowerCase().includes(key.toLowerCase())) {
-      return color
-    }
-  }
-
-  // Fallback based on hash
-  const hash = subject
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return FALLBACK_COLORS[hash % FALLBACK_COLORS.length]
-}
 
 interface TimetableCellProps {
   subject: string
@@ -149,7 +83,7 @@ function TimetableCellComponent({
       <div
         className={cn(
           "flex flex-col items-center justify-center px-8 py-5 transition-all duration-200",
-          getSubjectColor(subject),
+          getSubjectTailwind(subject),
           !isLastColumn && "border-border border-e",
           "cursor-pointer hover:shadow-inner",
           "print:py-4"

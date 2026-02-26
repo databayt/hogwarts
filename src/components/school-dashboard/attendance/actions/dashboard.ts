@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
@@ -8,8 +10,6 @@ import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResponse } from "./core"
 import type { AttendanceRiskLevel } from "./interventions"
-
-export type { AttendanceRiskLevel }
 
 interface StudentRiskData {
   studentId: string

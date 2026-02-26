@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import {
   createSearchParamsCache,
   parseAsInteger,
@@ -11,7 +14,7 @@ export const streamCoursesSearchParams = createSearchParamsCache({
   perPage: parseAsInteger.withDefault(12),
   title: parseAsString.withDefault(""),
   category: parseAsString.withDefault(""),
-  level: parseAsString.withDefault(""),
+  level: parseAsString.withDefault("1"),
   isPublished: parseAsString.withDefault(""),
   sort: getSortingStateParser().withDefault([]),
 })

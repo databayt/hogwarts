@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { useMemo } from "react"
 import { useDndContext, type UniqueIdentifier } from "@dnd-kit/core"
 import { SortableContext, useSortable } from "@dnd-kit/sortable"

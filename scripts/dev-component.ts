@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Generate React component with full boilerplate (types, tests, i18n, etc.)
  * Run: npx tsx scripts/dev-component.ts --name StudentCard --type page [--i18n] [--tests]

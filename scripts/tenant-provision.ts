@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Provision a new school with complete setup
  * Run: npx tsx scripts/tenant-provision.ts --domain portsudan --name "Port Sudan School" --admin admin@school.com

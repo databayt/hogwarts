@@ -1,18 +1,24 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 
+import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/ui/star-rating"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export interface CatalogSubjectItem {
   id: string
   slug: string
   name: string
   department: string
+  level: string
   levels: string[]
+  grades: number[]
   color: string | null
   imageUrl: string | null
   totalChapters: number
@@ -22,21 +28,33 @@ export interface CatalogSubjectItem {
   ratingCount: number
 }
 
+function levelLabel(level: string, lang: Locale): string {
+  const labels: Record<string, Record<string, string>> = {
+    ELEMENTARY: { en: "Elementary", ar: "ابتدائي" },
+    MIDDLE: { en: "Middle", ar: "متوسط" },
+    HIGH: { en: "High", ar: "ثانوي" },
+  }
+  return labels[level]?.[lang] ?? level
+}
+
 interface Props {
   subjects: CatalogSubjectItem[]
   lang: Locale
 }
 
 export function CatalogSubjectsGrid({ subjects, lang }: Props) {
-  const isRTL = lang === "ar"
+  const { dictionary } = useDictionary()
+  const cat = dictionary?.school?.subjects?.catalog as
+    | Record<string, string>
+    | undefined
 
-  const noResults = isRTL ? "لا توجد مواد" : "No subjects found"
+  const noResults = cat?.noSubjectsFound || "No subjects found"
 
   const sorted = useMemo(() => {
     return [...subjects].sort((a, b) =>
-      a.name.localeCompare(b.name, isRTL ? "ar" : "en")
+      a.name.localeCompare(b.name, lang === "ar" ? "ar" : "en")
     )
-  }, [subjects, isRTL])
+  }, [subjects, lang])
 
   if (sorted.length === 0) {
     return (
@@ -62,11 +80,19 @@ export function CatalogSubjectsGrid({ subjects, lang }: Props) {
                 color={subject.color}
               />
 
-              {/* Name + Rating */}
+              {/* Name + Level + Rating */}
               <div className="min-w-0 pe-3">
                 <p className="line-clamp-2 text-sm leading-snug font-medium">
                   {subject.name}
                 </p>
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <Badge
+                    variant="secondary"
+                    className="px-1.5 py-0 text-[10px]"
+                  >
+                    {levelLabel(subject.level, lang)}
+                  </Badge>
+                </div>
                 {subject.averageRating > 0 && (
                   <StarRating
                     rating={subject.averageRating}
@@ -100,7 +126,7 @@ function SubjectThumb({
 
   return (
     <div
-      className="relative h-16 w-16 shrink-0 overflow-hidden rounded-s-lg"
+      className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg"
       style={{ backgroundColor: color ?? "#6b7280" }}
     >
       {showImage && (

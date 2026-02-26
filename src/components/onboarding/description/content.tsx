@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
@@ -26,8 +28,6 @@ export default function DescriptionContent({ dictionary }: Props) {
   // Enable/disable next button based on school type selection
   useEffect(() => {
     // Default to 'private' if no data exists
-    const currentType = selectedType || descriptionData?.schoolType || "private"
-    console.log("🟢 Enabling Next button - School type:", currentType)
     enableNext()
 
     // Set selectedType to 'private' if no data exists
@@ -39,7 +39,6 @@ export default function DescriptionContent({ dictionary }: Props) {
   // Set up custom navigation to handle the Next button
   useEffect(() => {
     const handleNext = () => {
-      console.log("🔵 Description handleNext called - navigating to location")
       router.push(`/onboarding/${schoolId}/location`)
     }
 

@@ -56,20 +56,28 @@ export class SaasHomePage extends BasePage {
    * Check if Get Started button is visible
    */
   async hasGetStartedButton(): Promise<boolean> {
-    return this.getStartedButton
-      .first()
-      .isVisible()
-      .catch(() => false)
+    try {
+      await this.getStartedButton
+        .first()
+        .waitFor({ state: "visible", timeout: 10_000 })
+      return true
+    } catch {
+      return false
+    }
   }
 
   /**
    * Check if Live Demo button is visible
    */
   async hasLiveDemoButton(): Promise<boolean> {
-    return this.liveDemoButton
-      .first()
-      .isVisible()
-      .catch(() => false)
+    try {
+      await this.liveDemoButton
+        .first()
+        .waitFor({ state: "visible", timeout: 10_000 })
+      return true
+    } catch {
+      return false
+    }
   }
 
   /**

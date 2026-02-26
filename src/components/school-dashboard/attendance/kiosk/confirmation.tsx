@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Kiosk Confirmation
  *
@@ -8,6 +11,7 @@
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { KioskAction } from "./validation"
 
@@ -34,6 +38,8 @@ export function KioskConfirmation({
   onCancel,
   locale,
 }: KioskConfirmationProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.kiosk
   const isRTL = locale === "ar"
   const isCheckIn = action === "CHECK_IN"
 
@@ -73,13 +79,13 @@ export function KioskConfirmation({
 
       {student.grNumber && (
         <p className="text-muted-foreground mb-1 text-lg">
-          {isRTL ? "رقم التسجيل:" : "ID:"} {student.grNumber}
+          {t?.registration_id || "ID:"} {student.grNumber}
         </p>
       )}
 
       {student.yearLevel && (
         <p className="text-muted-foreground mb-6 text-lg">
-          {isRTL ? "المستوى:" : "Level:"} {student.yearLevel}
+          {t?.level || "Level:"} {student.yearLevel}
         </p>
       )}
 
@@ -93,13 +99,7 @@ export function KioskConfirmation({
         )}
       >
         <span className="text-xl font-semibold">
-          {isCheckIn
-            ? isRTL
-              ? "تسجيل حضور"
-              : "Check In"
-            : isRTL
-              ? "تسجيل انصراف"
-              : "Check Out"}
+          {isCheckIn ? t?.check_in || "Check In" : t?.check_out || "Check Out"}
         </span>
       </div>
 
@@ -109,7 +109,7 @@ export function KioskConfirmation({
           onClick={onCancel}
           className="bg-secondary text-secondary-foreground hover:bg-secondary/80 flex-1 rounded-xl py-4 text-lg font-medium transition-colors"
         >
-          {isRTL ? "إلغاء" : "Cancel"}
+          {t?.cancel || "Cancel"}
         </button>
 
         <button
@@ -121,7 +121,7 @@ export function KioskConfirmation({
               : "bg-orange-600 text-white hover:bg-orange-700"
           )}
         >
-          {isRTL ? "تأكيد" : "Confirm"}
+          {t?.confirm || "Confirm"}
         </button>
       </div>
 
@@ -130,7 +130,7 @@ export function KioskConfirmation({
         onClick={onCancel}
         className="text-muted-foreground hover:text-foreground mt-6 text-sm underline transition-colors"
       >
-        {isRTL ? "لست أنت؟ أعد المسح" : "Not you? Scan again"}
+        {t?.not_you || "Not you? Scan again"}
       </button>
     </div>
   )

@@ -68,8 +68,10 @@ model CatalogSubject {
   catalogQuestions    CatalogQuestion[]
   catalogMaterials    CatalogMaterial[]
   catalogAssignments  CatalogAssignment[]
+  catalogBooks        CatalogBook[]
 
   // School-scoped reverse relations (FK bridges)
+  schoolSubjects      Subject[]
   schoolQuestionBanks QuestionBank[]
   schoolExams         Exam[]
 

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState } from "react"
 import {
   BookOpen,
@@ -18,6 +20,7 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { ProfileRole } from "./types"
 
@@ -53,7 +56,8 @@ interface ActivityItem {
 // Generate activity items based on role
 function generateActivityForRole(
   role: ProfileRole,
-  year: number
+  year: number,
+  locale: string = "ar"
 ): Map<string, ActivityItem[]> {
   const activities = new Map<string, ActivityItem[]>()
   const currentDate = new Date()
@@ -64,7 +68,7 @@ function generateActivityForRole(
     const date = new Date(year, month, 1)
     if (date > currentDate) continue
 
-    const monthKey = date.toLocaleDateString("en-US", {
+    const monthKey = date.toLocaleDateString(locale, {
       month: "long",
       year: "numeric",
     })
@@ -262,6 +266,7 @@ export default function ContributionActivity({
   role,
   data,
 }: ContributionActivityProps) {
+  const { locale } = useLocale()
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
@@ -269,8 +274,8 @@ export default function ContributionActivity({
   const years = Array.from({ length: 6 }, (_, i) => currentYear - i)
 
   const activities = useMemo(() => {
-    return generateActivityForRole(role, selectedYear)
-  }, [role, selectedYear])
+    return generateActivityForRole(role, selectedYear, locale)
+  }, [role, selectedYear, locale])
 
   const toggleExpand = (id: string) => {
     setExpandedItems((prev) => {

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 
 import { buttonVariants } from "@/components/ui/button"
@@ -25,7 +28,7 @@ interface Props {
 }
 
 export default async function PricingContent(props: Props) {
-  const { lang } = props
+  const { lang, dictionary } = props
 
   // Safely get user and subscription - don't crash if auth/db fails
   let user = null
@@ -43,18 +46,19 @@ export default async function PricingContent(props: Props) {
 
   return (
     <div className="flex w-full flex-col items-center py-14">
-      <PricingHeader />
+      <PricingHeader dictionary={dictionary} />
       <PricingCards
         userId={user?.id}
         subscriptionPlan={subscriptionPlan}
         userRole={user?.role}
         lang={lang}
+        dictionary={dictionary}
       />
-      <ComparePlans />
-      <SecurePayment />
+      <ComparePlans dictionary={dictionary} />
+      <SecurePayment dictionary={dictionary} />
       {/* <PricingFaq /> */}
-      <PricingFAQs />
-      <EnterpriseSection lang={lang} />
+      <PricingFAQs dictionary={dictionary} />
+      <EnterpriseSection lang={lang} dictionary={dictionary} />
     </div>
   )
 }

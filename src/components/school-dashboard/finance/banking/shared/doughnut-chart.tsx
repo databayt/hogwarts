@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from "chart.js"
 import { Doughnut } from "react-chartjs-2"
 

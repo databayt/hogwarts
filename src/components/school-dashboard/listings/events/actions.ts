@@ -1,10 +1,14 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { type Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import { getDisplayFields } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
@@ -30,6 +34,7 @@ type EventSelectResult = {
   schoolId: string
   title: string
   description: string | null
+  lang: string
   eventType: string
   eventDate: Date
   startTime: string
@@ -77,12 +82,12 @@ export async function createEvent(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -90,7 +95,8 @@ export async function createEvent(
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -101,6 +107,7 @@ export async function createEvent(
         schoolId,
         title: parsed.title,
         description: parsed.description || null,
+        lang: (parsed as any).lang || "ar",
         eventType: parsed.eventType,
         eventDate: parsed.eventDate,
         startTime: parsed.startTime,
@@ -143,12 +150,12 @@ export async function updateEvent(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -156,7 +163,8 @@ export async function updateEvent(
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -177,6 +185,8 @@ export async function updateEvent(
     if (typeof rest.title !== "undefined") data.title = rest.title
     if (typeof rest.description !== "undefined")
       data.description = rest.description || null
+    if (typeof (rest as any).lang !== "undefined")
+      data.lang = (rest as any).lang
     if (typeof rest.eventType !== "undefined") data.eventType = rest.eventType
     if (typeof rest.eventDate !== "undefined") data.eventDate = rest.eventDate
     if (typeof rest.startTime !== "undefined") data.startTime = rest.startTime
@@ -222,12 +232,12 @@ export async function deleteEvent(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -235,7 +245,8 @@ export async function deleteEvent(input: {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -278,17 +289,18 @@ export async function deleteEvent(input: {
 
 export async function getEvent(input: {
   id: string
+  displayLang?: "ar" | "en"
 }): Promise<ActionResponse<EventSelectResult | null>> {
   try {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -296,7 +308,8 @@ export async function getEvent(input: {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -309,6 +322,7 @@ export async function getEvent(input: {
         schoolId: true,
         title: true,
         description: true,
+        lang: true,
         eventType: true,
         eventDate: true,
         startTime: true,
@@ -327,7 +341,30 @@ export async function getEvent(input: {
       },
     })
 
-    return { success: true, data: event as EventSelectResult | null }
+    if (!event) {
+      return { success: true, data: null }
+    }
+
+    // On-demand translation if displayLang differs from stored lang
+    if (input.displayLang && schoolId) {
+      const translated = await getDisplayFields(
+        event,
+        ["title", "description"],
+        (event.lang as "ar" | "en") || "ar",
+        input.displayLang,
+        schoolId
+      )
+      return {
+        success: true,
+        data: {
+          ...event,
+          title: translated.title || event.title,
+          description: translated.description || event.description,
+        } as EventSelectResult,
+      }
+    }
+
+    return { success: true, data: event as EventSelectResult }
   } catch (error) {
     console.error("[getEvent] Error:", error)
 
@@ -352,12 +389,12 @@ export async function getEvents(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -365,7 +402,8 @@ export async function getEvents(
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -451,12 +489,12 @@ export async function getEventsCSV(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -535,12 +573,12 @@ export async function bulkDeleteEvents(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -571,6 +609,316 @@ export async function bulkDeleteEvents(input: {
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to bulk delete events",
+    }
+  }
+}
+
+// ============================================================================
+// Event Registration (RSVP)
+// ============================================================================
+
+export async function registerForEvent(input: {
+  eventId: string
+}): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    const { eventId } = z.object({ eventId: z.string().min(1) }).parse(input)
+
+    // Verify event exists and registration is open
+    const event = await db.event.findFirst({
+      where: { id: eventId, schoolId },
+      select: {
+        id: true,
+        registrationRequired: true,
+        maxAttendees: true,
+        currentAttendees: true,
+        status: true,
+      },
+    })
+
+    if (!event) {
+      return { success: false, error: "Event not found" }
+    }
+
+    if (event.status === "CANCELLED") {
+      return { success: false, error: "Event is cancelled" }
+    }
+
+    // Check capacity
+    const isFull =
+      event.maxAttendees !== null &&
+      event.currentAttendees >= event.maxAttendees
+
+    // Check existing registration
+    const existing = await db.eventRegistration.findUnique({
+      where: {
+        eventId_userId: {
+          eventId,
+          userId: session.user.id,
+        },
+      },
+    })
+
+    if (existing && existing.status === "REGISTERED") {
+      return { success: false, error: "Already registered" }
+    }
+
+    const status = isFull ? "WAITLISTED" : "REGISTERED"
+
+    const registration = await db.eventRegistration.upsert({
+      where: {
+        eventId_userId: {
+          eventId,
+          userId: session.user.id,
+        },
+      },
+      create: {
+        schoolId,
+        eventId,
+        userId: session.user.id,
+        status,
+        registeredAt: new Date(),
+      },
+      update: {
+        status,
+        registeredAt: new Date(),
+        cancelledAt: null,
+      },
+    })
+
+    // Increment counter if registered (not waitlisted)
+    if (status === "REGISTERED") {
+      await db.event.update({
+        where: { id: eventId },
+        data: { currentAttendees: { increment: 1 } },
+      })
+    }
+
+    revalidatePath(EVENTS_PATH)
+    return { success: true, data: { id: registration.id } }
+  } catch (error) {
+    console.error("[registerForEvent] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to register for event",
+    }
+  }
+}
+
+export async function cancelEventRegistration(input: {
+  eventId: string
+}): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    const { eventId } = z.object({ eventId: z.string().min(1) }).parse(input)
+
+    const existing = await db.eventRegistration.findUnique({
+      where: {
+        eventId_userId: {
+          eventId,
+          userId: session.user.id,
+        },
+      },
+    })
+
+    if (!existing || existing.status === "CANCELLED") {
+      return { success: false, error: "No active registration found" }
+    }
+
+    const wasRegistered = existing.status === "REGISTERED"
+
+    await db.eventRegistration.update({
+      where: { id: existing.id },
+      data: {
+        status: "CANCELLED",
+        cancelledAt: new Date(),
+      },
+    })
+
+    // Decrement counter only if was registered (not waitlisted)
+    if (wasRegistered) {
+      await db.event.update({
+        where: { id: eventId },
+        data: { currentAttendees: { decrement: 1 } },
+      })
+    }
+
+    revalidatePath(EVENTS_PATH)
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[cancelEventRegistration] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to cancel registration",
+    }
+  }
+}
+
+export async function getEventRegistrations(input: {
+  eventId: string
+}): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      userId: string
+      username: string | null
+      email: string | null
+      status: string
+      registeredAt: string
+    }>
+  >
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    // Only admin/staff can view registrations
+    if (!["ADMIN", "DEVELOPER", "STAFF"].includes(authContext.role)) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const { eventId } = z.object({ eventId: z.string().min(1) }).parse(input)
+
+    const registrations = await db.eventRegistration.findMany({
+      where: { eventId, schoolId },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        registeredAt: true,
+        user: {
+          select: {
+            username: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { registeredAt: "asc" },
+    })
+
+    return {
+      success: true,
+      data: registrations.map((r) => ({
+        id: r.id,
+        userId: r.userId,
+        username: r.user.username,
+        email: r.user.email,
+        status: r.status,
+        registeredAt: r.registeredAt.toISOString(),
+      })),
+    }
+  } catch (error) {
+    console.error("[getEventRegistrations] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to get registrations",
+    }
+  }
+}
+
+/**
+ * Get previous events for autocomplete suggestions
+ * Returns recent events with titles and descriptions
+ */
+export async function getPreviousEvents(options?: {
+  displayLang?: "ar" | "en"
+}): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      title: string | null
+      description: string | null
+      lang: string
+    }>
+  >
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    // Fetch recent events for suggestions (limit to 20 most recent)
+    const events = await db.event.findMany({
+      where: { schoolId },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        lang: true,
+      },
+    })
+
+    // Translate suggestions if displayLang differs from stored lang
+    const displayLang = options?.displayLang
+    if (displayLang) {
+      const translated = await Promise.all(
+        events.map(async (e) => {
+          const storedLang = (e.lang as "ar" | "en") || "ar"
+          if (storedLang === displayLang) return e
+          const fields = await getDisplayFields(
+            e,
+            ["title", "description"],
+            storedLang,
+            displayLang,
+            schoolId
+          )
+          return {
+            ...e,
+            title: fields.title || e.title,
+            description: fields.description || e.description,
+          }
+        })
+      )
+      return { success: true, data: translated }
+    }
+
+    return { success: true, data: events }
+  } catch (error) {
+    console.error("[getPreviousEvents] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch suggestions",
     }
   }
 }

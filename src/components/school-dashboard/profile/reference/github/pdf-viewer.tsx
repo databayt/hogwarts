@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useState } from "react"
 
 interface PDFViewerProps {
@@ -224,7 +226,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
                       style={{ backgroundColor: "white" }}
                     >
                       {/* Overlay to block PDF header interactions */}
-                      <div className="absolute top-0 right-0 left-0 z-10 h-[36px] bg-transparent" />
+                      <div className="absolute start-0 end-0 top-0 z-10 h-[36px] bg-transparent" />
 
                       <object
                         data={

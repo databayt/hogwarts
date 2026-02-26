@@ -1,11 +1,15 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { assertClassroomPermission, getAuthContext } from "./authorization"
 import {
   classroomCreateSchema,
   classroomUpdateSchema,
@@ -27,6 +31,16 @@ export async function getClassrooms(
 ) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return { success: false as const, error: "Missing school" }
+
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext)
+    return { success: false as const, error: "Not authenticated" }
+  try {
+    assertClassroomPermission(authContext, "read", { schoolId })
+  } catch {
+    return { success: false as const, error: "Unauthorized" }
+  }
 
   const parsed = getClassroomsSchema.parse(input)
   const { page, perPage, name, typeId, building } = parsed
@@ -86,6 +100,15 @@ export async function getClassroomTypes() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return []
 
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext) return []
+  try {
+    assertClassroomPermission(authContext, "read", { schoolId })
+  } catch {
+    return []
+  }
+
   return db.classroomType.findMany({
     where: { schoolId },
     select: { id: true, name: true },
@@ -96,6 +119,15 @@ export async function getClassroomTypes() {
 export async function getClassroom(input: { id: string }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return null
+
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext) return null
+  try {
+    assertClassroomPermission(authContext, "read", { schoolId })
+  } catch {
+    return null
+  }
 
   return db.classroom.findFirst({
     where: { id: input.id, schoolId },
@@ -119,6 +151,15 @@ export async function createClassroom(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school" }
+
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return { success: false, error: "Not authenticated" }
+    try {
+      assertClassroomPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to create classrooms" }
+    }
 
     const parsed = classroomCreateSchema.parse(input)
 
@@ -150,6 +191,15 @@ export async function updateClassroom(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school" }
+
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return { success: false, error: "Not authenticated" }
+    try {
+      assertClassroomPermission(authContext, "update", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to update classrooms" }
+    }
 
     const parsed = classroomUpdateSchema.parse(input)
     const { id, ...rest } = parsed
@@ -185,6 +235,15 @@ export async function deleteClassroom(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school" }
+
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return { success: false, error: "Not authenticated" }
+    try {
+      assertClassroomPermission(authContext, "delete", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to delete classrooms" }
+    }
 
     // Check for references
     const refs = await db.class.count({

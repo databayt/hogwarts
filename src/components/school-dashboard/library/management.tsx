@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import { addDays, differenceInDays, format, isPast } from "date-fns"
@@ -68,6 +70,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Book {
   id: string
@@ -152,6 +155,8 @@ export function LibraryManagement({
   currentUserId,
   userRole,
 }: LibraryManagementProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [selectedTab, setSelectedTab] = useState<
     "catalog" | "transactions" | "reservations"
   >("catalog")
@@ -237,41 +242,41 @@ export function LibraryManagement({
     const dueDate = addDays(new Date(), 14) // 2 weeks loan period
     try {
       await onCheckout(bookId, currentUserId, dueDate)
-      toast.success("Book checked out successfully")
+      toast.success(t?.success?.updated || "Book checked out successfully")
       setCheckoutDialogOpen(false)
     } catch (error) {
-      toast.error("Failed to checkout book")
+      toast.error(t?.error?.updateFailed || "Failed to checkout book")
     }
   }
 
   const handleReturn = async (transactionId: string) => {
     try {
       await onReturn(transactionId)
-      toast.success("Book returned successfully")
+      toast.success(t?.success?.updated || "Book returned successfully")
     } catch (error) {
-      toast.error("Failed to return book")
+      toast.error(t?.error?.updateFailed || "Failed to return book")
     }
   }
 
   const handleRenew = async (transactionId: string) => {
-    const transaction = transactions.find((t) => t.id === transactionId)
+    const transaction = transactions.find((tx) => tx.id === transactionId)
     if (!transaction) return
 
     const newDueDate = addDays(transaction.dueDate, 7) // Extend by 1 week
     try {
       await onRenew(transactionId, newDueDate)
-      toast.success("Book renewed successfully")
+      toast.success(t?.success?.updated || "Book renewed successfully")
     } catch (error) {
-      toast.error("Failed to renew book")
+      toast.error(t?.error?.updateFailed || "Failed to renew book")
     }
   }
 
   const handleReserve = async (bookId: string) => {
     try {
       await onReserve(bookId, currentUserId)
-      toast.success("Book reserved successfully")
+      toast.success(t?.success?.created || "Book reserved successfully")
     } catch (error) {
-      toast.error("Failed to reserve book")
+      toast.error(t?.error?.createFailed || "Failed to reserve book")
     }
   }
 

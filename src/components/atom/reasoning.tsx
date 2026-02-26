@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import type { ComponentProps } from "react"
 import { createContext, memo, useContext, useEffect, useState } from "react"
 import { useControllableState } from "@radix-ui/react-use-controllable-state"

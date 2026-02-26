@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { CheckCircle, Loader2 } from "lucide-react"
@@ -59,12 +61,12 @@ export default function ReviewContent({ dictionary }: Props) {
           number: result.applicationNumber,
         })
         router.push(
-          `/${locale}/apply/${result.applicationId}/payment?${searchParams.toString()}`
+          `/${locale}/s/${subdomain}/apply/${result.applicationId}/payment?${searchParams.toString()}`
         )
       } else {
         // No fee required — go straight to success
         router.push(
-          `/${locale}/apply/${id}/success?number=${result.applicationNumber}`
+          `/${locale}/s/${subdomain}/apply/${id}/success?number=${result.applicationNumber}`
         )
       }
     },
@@ -137,9 +139,7 @@ export default function ReviewContent({ dictionary }: Props) {
         <div className="bg-muted mt-8 rounded-lg p-4">
           <p className="text-muted-foreground text-sm">
             {dict.submitNotice ||
-              (isRTL
-                ? 'بالنقر على "تقديم الطلب"، أقر بأن جميع المعلومات المقدمة صحيحة ودقيقة.'
-                : 'By clicking "Submit Application", I confirm that all information provided is true and accurate.')}
+              'By clicking "Submit Application", I confirm that all information provided is true and accurate.'}
           </p>
         </div>
       </div>

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { memo, useActionState, useEffect, useMemo, useState } from "react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -22,8 +24,8 @@ import type { BankAccount } from "../types"
 import { createTransfer } from "./actions"
 
 // Utility function to format currency
-function formatAmount(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+function formatAmount(amount: number, locale: string = "ar"): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
@@ -250,7 +252,7 @@ function PaymentTransferForm(props: Props) {
       <div className="space-y-2">
         <Label htmlFor="amount">{props.dictionary.amount}</Label>
         <div className="relative">
-          <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
+          <span className="text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2">
             $
           </span>
           <Input
@@ -310,8 +312,8 @@ function PaymentTransferForm(props: Props) {
 }
 
 // Utility function
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+function formatCurrency(amount: number, locale: string = "ar"): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,

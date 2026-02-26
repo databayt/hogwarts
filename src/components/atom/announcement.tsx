@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // @ts-nocheck
 import Link from "next/link"
 import { ArrowLeft, ArrowRight } from "lucide-react"

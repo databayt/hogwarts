@@ -1,10 +1,11 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Type definitions for Marketing Features
  *
  * Types for feature showcase, comparison, and presentation.
  */
-
-import { LucideIcon } from "lucide-react"
 
 /**
  * Feature item
@@ -13,7 +14,7 @@ export interface Feature {
   id: string
   title: string
   description: string
-  icon: LucideIcon
+  icon: string
   category: FeatureCategory
   isNew?: boolean
   isPremium?: boolean
@@ -23,14 +24,20 @@ export interface Feature {
  * Feature category
  */
 export type FeatureCategory =
-  | "student-management"
-  | "attendance"
-  | "grading"
-  | "communication"
-  | "analytics"
+  | "core"
+  | "academic"
   | "scheduling"
-  | "billing"
-  | "reporting"
+  | "finance"
+  | "facilities"
+  | "hr"
+  | "operations"
+  | "analytics"
+  | "communication"
+  | "enrollment"
+  | "community"
+  | "welfare"
+  | "e-learning"
+  | "documents"
 
 /**
  * Feature comparison item
@@ -76,6 +83,15 @@ export interface FeatureCategoryInfo {
   id: FeatureCategory
   label: string
   description: string
-  icon: LucideIcon
+  icon: string
   color: string
+}
+
+/**
+ * Impact metric
+ */
+export interface ImpactMetric {
+  value: string
+  label: string
+  description: string
 }

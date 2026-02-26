@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import {
   BookOpen,
@@ -45,7 +47,7 @@ export function AcademicSection({
   lang,
 }: Props) {
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString(lang, {
       month: "short",
       day: "numeric",
       year: "numeric",

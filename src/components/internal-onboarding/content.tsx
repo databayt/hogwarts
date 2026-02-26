@@ -1,9 +1,11 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useState } from "react"
 import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
-import { GraduationCap, Loader2, Settings, Shield, Users } from "lucide-react"
+import { GraduationCap, Loader2, Shield, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,7 +22,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 import { checkExistingApplication } from "./actions"
 import type { OnboardingRole } from "./config"
 import { ONBOARDING_ROLES } from "./config"
-import { OnboardingProvider, useOnboarding } from "./use-onboarding"
+import { useOnboarding } from "./use-onboarding"
 
 // =============================================================================
 // ROLE ICONS
@@ -34,50 +36,22 @@ const ROLE_ICONS = {
 } as const
 
 // =============================================================================
-// LANDING CONTENT (with provider)
+// LANDING CONTENT (provider comes from layout)
 // =============================================================================
 
 interface JoinLandingContentProps {
-  schoolId: string
   schoolName: string
   schoolLogo?: string | null
-  subdomain: string
 }
 
 export function JoinLandingContent({
-  schoolId,
   schoolName,
   schoolLogo,
-  subdomain,
 }: JoinLandingContentProps) {
-  return (
-    <OnboardingProvider schoolId={schoolId} subdomain={subdomain}>
-      <JoinLandingInner
-        schoolName={schoolName}
-        schoolLogo={schoolLogo}
-        subdomain={subdomain}
-      />
-    </OnboardingProvider>
-  )
-}
-
-// =============================================================================
-// INNER COMPONENT (uses context)
-// =============================================================================
-
-interface JoinLandingInnerProps {
-  schoolName: string
-  schoolLogo?: string | null
-  subdomain: string
-}
-
-function JoinLandingInner({
-  schoolName,
-  schoolLogo,
-  subdomain,
-}: JoinLandingInnerProps) {
   const router = useRouter()
+  const params = useParams()
   const { locale } = useLocale()
+  const subdomain = params.subdomain as string
   const { setRole, setAutoFillData, schoolId } = useOnboarding()
 
   const [selectedRole, setSelectedRole] = useState<OnboardingRole | null>(null)

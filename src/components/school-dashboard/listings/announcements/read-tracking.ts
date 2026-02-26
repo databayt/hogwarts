@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Read tracking system for announcements
  * Tracks user engagement and provides analytics
@@ -324,11 +327,44 @@ export async function getAnnouncementReadStatistics(
     const uniqueReaders = new Set(reads.map((r) => r.userId)).size
     const lastReadAt = reads.length > 0 ? reads[0].readAt : null
 
-    // TODO: Calculate read percentage based on target audience
-    // For school-wide: total users in school
-    // For class: students in class
-    // For role: users with that role
-    const readPercentage = 0
+    // Calculate audience size based on scope
+    let audienceSize = 0
+    switch (announcement.scope) {
+      case "school": {
+        audienceSize = await db.user.count({
+          where: { schoolId: announcement.schoolId },
+        })
+        break
+      }
+      case "class": {
+        if (announcement.classId) {
+          const classData = await db.class.findUnique({
+            where: { id: announcement.classId },
+            select: {
+              teacherId: true,
+              _count: { select: { studentClasses: true } },
+            },
+          })
+          audienceSize =
+            (classData?._count.studentClasses ?? 0) +
+            (classData?.teacherId ? 1 : 0)
+        }
+        break
+      }
+      case "role": {
+        if (announcement.role) {
+          audienceSize = await db.user.count({
+            where: {
+              schoolId: announcement.schoolId,
+              role: announcement.role as any,
+            },
+          })
+        }
+        break
+      }
+    }
+    const readPercentage =
+      audienceSize > 0 ? Math.round((uniqueReaders / audienceSize) * 100) : 0
 
     return {
       success: true,

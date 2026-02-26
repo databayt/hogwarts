@@ -380,4 +380,4 @@ pnpm test src/components/icons/**/*.test.ts
 
 ## 📄 License
 
-MIT License - Icons from Anthropic artifacts and custom-generated icons.
+SSPL-1.0 - Icons from Anthropic artifacts and custom-generated icons.

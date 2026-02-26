@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -53,49 +55,37 @@ export function LeadsTable({
   const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
 
-  const isRTL = lang === "ar"
-
   // Translations with fallbacks
   const t = {
-    leads: dictionary?.leads ?? (isRTL ? "العملاء المحتملين" : "Leads"),
-    addNewLead:
-      dictionary?.addNewLead ??
-      (isRTL ? "أضف عميلاً محتملاً جديداً" : "Add a new lead to track"),
-    search:
-      dictionary?.search ??
-      (isRTL ? "بحث في العملاء المحتملين..." : "Search leads..."),
-    create: dictionary?.create ?? (isRTL ? "إنشاء" : "Create"),
-    export: dictionary?.export ?? (isRTL ? "تصدير" : "Export"),
-    reset: dictionary?.reset ?? (isRTL ? "إعادة تعيين" : "Reset"),
-    actions: dictionary?.actions ?? (isRTL ? "إجراءات" : "Actions"),
-    view: dictionary?.view ?? (isRTL ? "عرض" : "View"),
-    edit: dictionary?.edit ?? (isRTL ? "تعديل" : "Edit"),
-    delete: dictionary?.delete ?? (isRTL ? "حذف" : "Delete"),
-    status: dictionary?.table?.status ?? (isRTL ? "الحالة" : "Status"),
-    priority: dictionary?.table?.priority ?? (isRTL ? "الأولوية" : "Priority"),
-    score: dictionary?.table?.score ?? (isRTL ? "النتيجة" : "Score"),
-    loadMore: dictionary?.loadMore ?? (isRTL ? "تحميل المزيد" : "Load More"),
-    loading: dictionary?.loading ?? (isRTL ? "جاري التحميل..." : "Loading..."),
+    leads: dictionary?.leads || "Leads",
+    addNewLead: dictionary?.addNewLead || "Add a new lead to track",
+    search: dictionary?.search || "Search leads...",
+    create: dictionary?.create || "Create",
+    export: dictionary?.export || "Export",
+    reset: dictionary?.reset || "Reset",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
+    status: dictionary?.table?.status || "Status",
+    priority: dictionary?.table?.priority || "Priority",
+    score: dictionary?.table?.score || "Score",
+    loadMore: dictionary?.loadMore || "Load More",
+    loading: dictionary?.loading || "Loading...",
     // Status translations
-    NEW: dictionary?.status?.NEW ?? (isRTL ? "جديد" : "New"),
-    CONTACTED:
-      dictionary?.status?.CONTACTED ?? (isRTL ? "تم التواصل" : "Contacted"),
-    QUALIFIED: dictionary?.status?.QUALIFIED ?? (isRTL ? "مؤهل" : "Qualified"),
-    PROPOSAL: dictionary?.status?.PROPOSAL ?? (isRTL ? "عرض" : "Proposal"),
-    NEGOTIATION:
-      dictionary?.status?.NEGOTIATION ?? (isRTL ? "تفاوض" : "Negotiation"),
-    CLOSED_WON:
-      dictionary?.status?.CLOSED_WON ??
-      (isRTL ? "تم الإغلاق (ربح)" : "Closed Won"),
-    CLOSED_LOST:
-      dictionary?.status?.CLOSED_LOST ??
-      (isRTL ? "تم الإغلاق (خسارة)" : "Closed Lost"),
-    ARCHIVED: dictionary?.status?.ARCHIVED ?? (isRTL ? "مؤرشف" : "Archived"),
+    NEW: dictionary?.status?.NEW || "New",
+    CONTACTED: dictionary?.status?.CONTACTED || "Contacted",
+    QUALIFIED: dictionary?.status?.QUALIFIED || "Qualified",
+    PROPOSAL: dictionary?.status?.PROPOSAL || "Proposal",
+    NEGOTIATION: dictionary?.status?.NEGOTIATION || "Negotiation",
+    CLOSED_WON: dictionary?.status?.CLOSED_WON || "Closed Won",
+    CLOSED_LOST: dictionary?.status?.CLOSED_LOST || "Closed Lost",
+    ARCHIVED: dictionary?.status?.ARCHIVED || "Archived",
     // Priority translations
-    LOW: dictionary?.priority?.LOW ?? (isRTL ? "منخفض" : "Low"),
-    MEDIUM: dictionary?.priority?.MEDIUM ?? (isRTL ? "متوسط" : "Medium"),
-    HIGH: dictionary?.priority?.HIGH ?? (isRTL ? "عالي" : "High"),
-    URGENT: dictionary?.priority?.URGENT ?? (isRTL ? "عاجل" : "Urgent"),
+    LOW: dictionary?.priority?.LOW || "Low",
+    MEDIUM: dictionary?.priority?.MEDIUM || "Medium",
+    HIGH: dictionary?.priority?.HIGH || "High",
+    URGENT: dictionary?.priority?.URGENT || "Urgent",
   }
 
   // View mode (table/grid)
@@ -200,8 +190,7 @@ export function LeadsTable({
     async (lead: LeadRow) => {
       try {
         const deleteMsg = (
-          dictionary?.deleteConfirm ??
-          (isRTL ? "حذف {name}؟" : "Delete {name}?")
+          dictionary?.deleteConfirm || "Delete {name}?"
         ).replace("{name}", lead.name)
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
@@ -213,22 +202,18 @@ export function LeadsTable({
           DeleteToast()
         } else {
           refresh()
-          ErrorToast(
-            dictionary?.deleteFailed ??
-              (isRTL ? "فشل حذف العميل المحتمل" : "Failed to delete lead")
-          )
+          ErrorToast(dictionary?.deleteFailed || "Failed to delete lead")
         }
       } catch (e) {
         refresh()
         ErrorToast(
           e instanceof Error
             ? e.message
-            : (dictionary?.deleteFailedGeneric ??
-                (isRTL ? "فشل الحذف" : "Failed to delete"))
+            : dictionary?.deleteFailedGeneric || "Failed to delete"
         )
       }
     },
-    [optimisticRemove, refresh, isRTL, dictionary]
+    [optimisticRemove, refresh, dictionary]
   )
 
   // Handle edit
@@ -259,9 +244,8 @@ export function LeadsTable({
     create: t.create,
     reset: t.reset,
     export: t.export,
-    exportCSV: dictionary?.exportCSV ?? (isRTL ? "تصدير CSV" : "Export CSV"),
-    exporting:
-      dictionary?.exporting ?? (isRTL ? "جاري التصدير..." : "Exporting..."),
+    exportCSV: dictionary?.exportCSV || "Export CSV",
+    exporting: dictionary?.exporting || "Exporting...",
   }
 
   // Get score color

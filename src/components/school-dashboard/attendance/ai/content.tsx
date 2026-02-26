@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * AI Attendance Content
  *
@@ -15,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   createInterventionFromRecommendation,
@@ -33,6 +37,8 @@ interface AIContentProps {
 }
 
 export function AIContent({ locale }: AIContentProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.ai
   const isRTL = locale === "ar"
   const [isLoading, setIsLoading] = useState(true)
   const [isRunningPredictions, setIsRunningPredictions] = useState(false)
@@ -141,23 +147,15 @@ export function AIContent({ locale }: AIContentProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">
-            {isRTL ? "تحليلات الذكاء الاصطناعي" : "AI Analytics"}
-          </h1>
+          <h1 className="text-2xl font-bold">{t?.title || "AI Analytics"}</h1>
           <p className="text-muted-foreground">
-            {isRTL
-              ? "التنبؤ بالمخاطر والترجمة التلقائية"
-              : "Risk predictions and auto-translation"}
+            {t?.subtitle || "Risk predictions and auto-translation"}
           </p>
         </div>
         <Button onClick={handleRunPredictions} disabled={isRunningPredictions}>
           {isRunningPredictions
-            ? isRTL
-              ? "جاري التحليل..."
-              : "Analyzing..."
-            : isRTL
-              ? "تشغيل التنبؤات"
-              : "Run Predictions"}
+            ? t?.analyzing || "Analyzing..."
+            : t?.run_predictions || "Run Predictions"}
         </Button>
       </div>
 
@@ -167,7 +165,7 @@ export function AIContent({ locale }: AIContentProps) {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "إجمالي المعرضين للخطر" : "Total At-Risk"}
+                {t?.total_at_risk || "Total At-Risk"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -217,7 +215,7 @@ export function AIContent({ locale }: AIContentProps) {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "متوسط المخاطر" : "Avg. Risk Score"}
+                {t?.avg_risk_score || "Avg. Risk Score"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -233,10 +231,10 @@ export function AIContent({ locale }: AIContentProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="predictions">
-            {isRTL ? "تنبؤات المخاطر" : "Risk Predictions"}
+            {t?.risk_predictions || "Risk Predictions"}
           </TabsTrigger>
           <TabsTrigger value="translator">
-            {isRTL ? "الترجمة التلقائية" : "Auto-Translation"}
+            {t?.auto_translation || "Auto-Translation"}
           </TabsTrigger>
         </TabsList>
 
@@ -246,16 +244,14 @@ export function AIContent({ locale }: AIContentProps) {
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">
-                  {isRTL
-                    ? "لا يوجد طلاب معرضين للخطر حالياً"
-                    : "No at-risk students currently"}
+                  {t?.no_at_risk_students || "No at-risk students currently"}
                 </p>
                 <Button
                   variant="outline"
                   className="mt-4"
                   onClick={handleRunPredictions}
                 >
-                  {isRTL ? "تشغيل التنبؤات" : "Run Predictions"}
+                  {t?.run_predictions || "Run Predictions"}
                 </Button>
               </CardContent>
             </Card>
@@ -307,7 +303,7 @@ export function AIContent({ locale }: AIContentProps) {
                       <div className="flex items-center gap-4">
                         <div className="w-32">
                           <div className="mb-1 flex justify-between text-sm">
-                            <span>{isRTL ? "المخاطر" : "Risk"}</span>
+                            <span>{t?.risk || "Risk"}</span>
                             <span className="font-bold">
                               {student.riskScore}%
                             </span>
@@ -336,7 +332,7 @@ export function AIContent({ locale }: AIContentProps) {
 
                         {student.hasActiveIntervention && (
                           <Badge variant="outline">
-                            {isRTL ? "تدخل نشط" : "Active"}
+                            {t?.active_intervention || "Active"}
                           </Badge>
                         )}
                       </div>
@@ -349,7 +345,7 @@ export function AIContent({ locale }: AIContentProps) {
                         <div className="grid gap-4 md:grid-cols-3">
                           <div className="bg-muted rounded-lg p-3">
                             <p className="text-muted-foreground text-sm">
-                              {isRTL ? "نسبة الغياب" : "Absence Rate"}
+                              {t?.absence_rate || "Absence Rate"}
                             </p>
                             <p className="text-lg font-bold">
                               {student.absenceRate}%
@@ -357,18 +353,16 @@ export function AIContent({ locale }: AIContentProps) {
                           </div>
                           <div className="bg-muted rounded-lg p-3">
                             <p className="text-muted-foreground text-sm">
-                              {isRTL
-                                ? "الغياب المتوقع (30 يوم)"
-                                : "Predicted (30d)"}
+                              {t?.predicted_30d || "Predicted (30d)"}
                             </p>
                             <p className="text-lg font-bold">
                               {student.predictedAbsences30Days}{" "}
-                              {isRTL ? "يوم" : "days"}
+                              {dictionary?.attendance?.mtss?.days || "days"}
                             </p>
                           </div>
                           <div className="bg-muted rounded-lg p-3">
                             <p className="text-muted-foreground text-sm">
-                              {isRTL ? "الثقة" : "Confidence"}
+                              {t?.confidence || "Confidence"}
                             </p>
                             <p className="text-lg font-bold">
                               {(student.confidence * 100).toFixed(0)}%
@@ -380,7 +374,7 @@ export function AIContent({ locale }: AIContentProps) {
                         {student.factors.length > 0 && (
                           <div>
                             <p className="mb-2 text-sm font-medium">
-                              {isRTL ? "عوامل الخطر" : "Risk Factors"}
+                              {t?.risk_factors || "Risk Factors"}
                             </p>
                             <div className="space-y-2">
                               {student.factors.map((factor, i) => (
@@ -408,7 +402,8 @@ export function AIContent({ locale }: AIContentProps) {
                         {student.recommendations.length > 0 && (
                           <div>
                             <p className="mb-2 text-sm font-medium">
-                              {isRTL ? "التوصيات" : "Recommended Interventions"}
+                              {t?.recommended_interventions ||
+                                "Recommended Interventions"}
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {student.recommendations.map((rec, i) => (
@@ -441,21 +436,19 @@ export function AIContent({ locale }: AIContentProps) {
           <Card>
             <CardHeader>
               <CardTitle>
-                {isRTL ? "ترجمة الرسائل" : "Message Translation"}
+                {t?.message_translation || "Message Translation"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <label className="text-muted-foreground mb-2 block text-sm">
-                  {isRTL ? "النص المصدر" : "Source Text"}
+                  {t?.source_text || "Source Text"}
                 </label>
                 <Textarea
                   value={translateInput}
                   onChange={(e) => setTranslateInput(e.target.value)}
                   placeholder={
-                    isRTL
-                      ? "أدخل النص للترجمة..."
-                      : "Enter text to translate..."
+                    t?.enter_text_to_translate || "Enter text to translate..."
                   }
                   rows={4}
                 />
@@ -468,25 +461,22 @@ export function AIContent({ locale }: AIContentProps) {
                   }
                   variant="outline"
                 >
-                  {isRTL
-                    ? `ترجمة إلى: ${targetLang === "ar" ? "العربية" : "الإنجليزية"}`
-                    : `Translate to: ${targetLang === "ar" ? "Arabic" : "English"}`}
+                  {(t?.translate_to || "Translate to: ") +
+                    (targetLang === "ar"
+                      ? t?.arabic || "Arabic"
+                      : t?.english || "English")}
                 </Button>
                 <Button onClick={handleTranslate} disabled={isTranslating}>
                   {isTranslating
-                    ? isRTL
-                      ? "جاري الترجمة..."
-                      : "Translating..."
-                    : isRTL
-                      ? "ترجمة"
-                      : "Translate"}
+                    ? t?.translating || "Translating..."
+                    : t?.translate || "Translate"}
                 </Button>
               </div>
 
               {translateOutput && (
                 <div>
                   <label className="text-muted-foreground mb-2 block text-sm">
-                    {isRTL ? "الترجمة" : "Translation"}
+                    {t?.translation || "Translation"}
                   </label>
                   <Textarea
                     value={translateOutput}

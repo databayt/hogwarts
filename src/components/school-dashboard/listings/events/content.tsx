@@ -1,6 +1,10 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { type Prisma } from "@prisma/client"
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -61,23 +65,29 @@ export default async function EventsContent({
       db.event.count({ where }),
     ])
 
-    data = rows.map((e: any) => ({
-      id: e.id,
-      title: e.title,
-      eventType: e.eventType,
-      eventDate: (e.eventDate as Date).toISOString(),
-      startTime: e.startTime,
-      endTime: e.endTime,
-      location: e.location || dictionary?.events?.locationTBD || "TBD",
-      organizer: e.organizer || dictionary?.events?.organizerTBD || "TBD",
-      targetAudience:
-        e.targetAudience || dictionary?.events?.audienceTBD || "All",
-      maxAttendees: e.maxAttendees,
-      currentAttendees: e.currentAttendees,
-      status: e.status,
-      isPublic: e.isPublic,
-      createdAt: (e.createdAt as Date).toISOString(),
-    }))
+    data = await Promise.all(
+      rows.map(async (e: any) => ({
+        id: e.id,
+        title: await getDisplayText(e.title, e.lang || "ar", lang, schoolId!),
+        eventType: e.eventType,
+        eventDate: (e.eventDate as Date).toISOString(),
+        startTime: e.startTime,
+        endTime: e.endTime,
+        location: e.location
+          ? await getDisplayText(e.location, e.lang || "ar", lang, schoolId!)
+          : dictionary?.events?.locationTBD || "TBD",
+        organizer: e.organizer
+          ? await getDisplayText(e.organizer, e.lang || "ar", lang, schoolId!)
+          : dictionary?.events?.organizerTBD || "TBD",
+        targetAudience:
+          e.targetAudience || dictionary?.events?.audienceTBD || "All",
+        maxAttendees: e.maxAttendees,
+        currentAttendees: e.currentAttendees,
+        status: e.status,
+        isPublic: e.isPublic,
+        createdAt: (e.createdAt as Date).toISOString(),
+      }))
+    )
     total = count as number
   }
 

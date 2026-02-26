@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Seed Constants
  * All static data for seeding the Demo School
@@ -12,9 +15,7 @@
 import type {
   AnnouncementData,
   ClassroomData,
-  DepartmentData,
   EventData,
-  SubjectData,
   TeacherData,
   YearLevelData,
 } from "./types"
@@ -219,10 +220,10 @@ export const YEAR_LEVELS: YearLevelData[] = [
 ]
 
 // ============================================================================
-// DEPARTMENTS
+// DEPARTMENTS (school-level, for demo school Subject records)
 // ============================================================================
 
-export const DEPARTMENTS: DepartmentData[] = [
+export const DEPARTMENTS = [
   { name: "اللغات", description: "تدريس اللغة العربية والإنجليزية والفرنسية" },
   {
     name: "العلوم",
@@ -235,267 +236,6 @@ export const DEPARTMENTS: DepartmentData[] = [
   { name: "الدين", description: "التربية الإسلامية والقرآن الكريم" },
   { name: "تقنية المعلومات", description: "تقنية المعلومات والاتصالات" },
   { name: "الفنون والرياضة", description: "الفنون والموسيقى والتربية البدنية" },
-]
-
-// ============================================================================
-// SUBJECTS
-// ============================================================================
-
-/** Generate an inclusive integer range: range(1, 6) → [1, 2, 3, 4, 5, 6] */
-const range = (s: number, e: number) =>
-  Array.from({ length: e - s + 1 }, (_, i) => s + i)
-
-export const SUBJECTS: SubjectData[] = [
-  // Languages Department (اللغات)
-  {
-    name: "اللغة العربية", // EN: "Arabic"
-    department: "اللغات",
-    levels: [],
-    grades: range(1, 12),
-    description: "القراءة والكتابة والنحو والأدب", // EN: "Arabic Language - Reading, Writing, Grammar, Literature"
-  },
-  {
-    name: "اللغة الإنجليزية", // EN: "English"
-    department: "اللغات",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "اللغة الإنجليزية", // EN: "English Language"
-  },
-  {
-    name: "اللغة الفرنسية", // EN: "French"
-    department: "اللغات",
-    levels: [],
-    grades: range(1, 12),
-    description: "اللغة الفرنسية", // EN: "French Language"
-  },
-
-  // Sciences Department (العلوم)
-  {
-    name: "الرياضيات", // EN: "Mathematics"
-    department: "العلوم",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "الحساب والجبر والهندسة", // EN: "Mathematics - Arithmetic, Algebra, Geometry"
-  },
-  {
-    name: "العلوم", // EN: "Science"
-    department: "العلوم",
-    levels: [],
-    grades: range(1, 12),
-    description: "العلوم العامة", // EN: "General Science"
-  },
-  {
-    name: "الفيزياء", // EN: "Physics"
-    department: "العلوم",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "الفيزياء",
-  },
-  {
-    name: "الكيمياء", // EN: "Chemistry"
-    department: "العلوم",
-    levels: ["7-12"],
-    grades: range(7, 12),
-    description: "الكيمياء",
-  },
-  {
-    name: "الأحياء", // EN: "Biology"
-    department: "العلوم",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "الأحياء",
-  },
-  {
-    name: "علوم الحاسوب", // EN: "Computer Science"
-    department: "العلوم",
-    levels: [],
-    grades: range(1, 12),
-    description: "علوم الحاسوب",
-  },
-
-  // Humanities Department (العلوم الإنسانية)
-  {
-    name: "التاريخ", // EN: "History"
-    department: "العلوم الإنسانية",
-    levels: ["elementary"],
-    grades: range(1, 6),
-    description: "التاريخ",
-  },
-  {
-    name: "الجغرافيا", // EN: "Geography"
-    department: "العلوم الإنسانية",
-    levels: ["4-12"],
-    grades: range(4, 12),
-    description: "الجغرافيا",
-  },
-  {
-    name: "الدراسات الاجتماعية", // EN: "Social Studies"
-    department: "العلوم الإنسانية",
-    levels: [],
-    grades: range(1, 12),
-    description: "الدراسات الاجتماعية",
-  },
-  {
-    name: "التربية الوطنية", // EN: "Civics"
-    department: "العلوم الإنسانية",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "التربية الوطنية",
-  },
-
-  // Religion Department (الدين)
-  {
-    name: "التربية الإسلامية", // EN: "Islamic Studies"
-    department: "الدين",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "العقيدة والفقه والأخلاق", // EN: "Islamic Studies - Faith, Jurisprudence, Ethics"
-  },
-  {
-    name: "القرآن الكريم", // EN: "Quran"
-    department: "الدين",
-    levels: [],
-    grades: range(1, 12),
-    description: "حفظ وتلاوة القرآن الكريم", // EN: "Quran Memorization and Recitation"
-  },
-
-  // ICT Department (تقنية المعلومات)
-  {
-    name: "الحاسوب", // EN: "ICT"
-    department: "تقنية المعلومات",
-    levels: ["3-12"],
-    grades: range(3, 12),
-    description: "تقنية المعلومات", // EN: "Information and Communication Technology"
-  },
-
-  // Arts & PE Department (الفنون والرياضة)
-  {
-    name: "التربية الفنية", // EN: "Art"
-    department: "الفنون والرياضة",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "الفنون والرسم", // EN: "Art and Drawing"
-  },
-  {
-    name: "الموسيقى", // EN: "Music"
-    department: "الفنون والرياضة",
-    levels: [],
-    grades: range(1, 12),
-    description: "الموسيقى",
-  },
-  {
-    name: "التربية البدنية", // EN: "Physical Education"
-    department: "الفنون والرياضة",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "التربية البدنية",
-  },
-
-  // Additional Sciences (from ClickView, MENA-adapted)
-  {
-    name: "علوم الأرض والفضاء",
-    department: "العلوم",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "علوم الأرض والفضاء",
-  },
-  {
-    name: "العلوم والهندسة",
-    department: "العلوم",
-    levels: ["7-12"],
-    grades: range(7, 12),
-    description: "ممارسات العلوم والهندسة",
-  },
-
-  // Additional Humanities
-  {
-    name: "الاقتصاد والأعمال",
-    department: "العلوم الإنسانية",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "الاقتصاد وإدارة الأعمال",
-  },
-  {
-    name: "المهارات الحياتية",
-    department: "العلوم الإنسانية",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "المهارات الحياتية",
-  },
-  {
-    name: "علم النفس",
-    department: "العلوم الإنسانية",
-    levels: ["high"],
-    grades: range(10, 12),
-    description: "علم النفس",
-  },
-  {
-    name: "تاريخ السودان",
-    department: "العلوم الإنسانية",
-    levels: [],
-    grades: range(1, 12),
-    description: "تاريخ السودان",
-  },
-  {
-    name: "تاريخ العالم",
-    department: "العلوم الإنسانية",
-    levels: ["7-12"],
-    grades: range(7, 12),
-    description: "تاريخ العالم",
-  },
-
-  // Additional Arts & PE
-  {
-    name: "الصحة",
-    department: "الفنون والرياضة",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "الصحة والسلامة",
-  },
-  {
-    name: "التعليم المهني",
-    department: "الفنون والرياضة",
-    levels: ["7-12"],
-    grades: range(7, 12),
-    description: "التعليم والتدريب المهني",
-  },
-
-  // New ClickView US Curriculum Subjects
-  {
-    name: "الاحتفالات والمناسبات",
-    department: "العلوم الإنسانية",
-    levels: ["elementary"],
-    grades: range(1, 6),
-    description: "الاحتفالات والمناسبات والأعياد",
-  },
-  {
-    name: "التطوير المهني",
-    department: "العلوم الإنسانية",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "التطوير المهني للمعلمين",
-  },
-  {
-    name: "اللغات العالمية",
-    department: "اللغات",
-    levels: ["all"],
-    grades: range(1, 12),
-    description: "اللغات العالمية",
-  },
-  {
-    name: "علم الاجتماع",
-    department: "العلوم الإنسانية",
-    levels: ["high"],
-    grades: range(10, 12),
-    description: "علم الاجتماع",
-  },
-  {
-    name: "التاريخ الأمريكي",
-    department: "العلوم الإنسانية",
-    levels: ["7-12"],
-    grades: range(7, 12),
-    description: "التاريخ الأمريكي",
-  },
 ]
 
 // ============================================================================

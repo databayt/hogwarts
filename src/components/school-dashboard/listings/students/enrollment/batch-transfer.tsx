@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
@@ -66,6 +68,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { Batch, Student } from "../registration/types"
 import type { BatchTransferRequest } from "./types"
@@ -88,6 +91,8 @@ export function BatchTransfer({
   onApproveTransfer,
   onRejectTransfer,
 }: BatchTransferProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showTransferDialog, setShowTransferDialog] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
@@ -111,11 +116,13 @@ export function BatchTransfer({
     try {
       setIsSubmitting(true)
       await onTransferRequest(data)
-      toast.success("Transfer request submitted successfully")
+      toast.success(
+        t?.success?.created || "Transfer request submitted successfully"
+      )
       setShowTransferDialog(false)
       form.reset()
     } catch (error) {
-      toast.error("Failed to submit transfer request")
+      toast.error(t?.error?.createFailed || "Failed to submit transfer request")
       console.error(error)
     } finally {
       setIsSubmitting(false)
@@ -125,9 +132,9 @@ export function BatchTransfer({
   const handleApprove = async (transferId: string) => {
     try {
       await onApproveTransfer(transferId)
-      toast.success("Transfer approved successfully")
+      toast.success(t?.success?.updated || "Transfer approved successfully")
     } catch (error) {
-      toast.error("Failed to approve transfer")
+      toast.error(t?.error?.updateFailed || "Failed to approve transfer")
       console.error(error)
     }
   }
@@ -137,12 +144,12 @@ export function BatchTransfer({
 
     try {
       await onRejectTransfer(selectedTransfer.id, rejectionReason)
-      toast.success("Transfer rejected")
+      toast.success(t?.success?.updated || "Transfer rejected")
       setShowRejectDialog(false)
       setRejectionReason("")
       setSelectedTransfer(null)
     } catch (error) {
-      toast.error("Failed to reject transfer")
+      toast.error(t?.error?.updateFailed || "Failed to reject transfer")
       console.error(error)
     }
   }
@@ -278,7 +285,7 @@ export function BatchTransfer({
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {getBatchName(transfer.toBatchId)}
-                        <ArrowRight className="text-muted-foreground h-4 w-4" />
+                        <ArrowRight className="text-muted-foreground h-4 w-4 rtl:rotate-180" />
                       </div>
                     </TableCell>
                     <TableCell
@@ -369,7 +376,7 @@ export function BatchTransfer({
                       <span className="text-muted-foreground">
                         {getBatchName(transfer.fromBatchId)}
                       </span>
-                      <ArrowRight className="h-3 w-3" />
+                      <ArrowRight className="h-3 w-3 rtl:rotate-180" />
                       <span>{getBatchName(transfer.toBatchId)}</span>
                     </div>
                   </TableCell>

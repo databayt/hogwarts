@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import {
   BarChart3,
@@ -121,7 +123,7 @@ export function AttendanceEmptyState({
             <Link href={finalActionHref}>
               <Button size="sm">
                 {finalActionLabel}
-                <ChevronRight className="ms-2 h-4 w-4" />
+                <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
               </Button>
             </Link>
           ) : (
@@ -187,7 +189,7 @@ export function NoStudentsEmptyState({ dictionary }: { dictionary?: any }) {
           <Link href="/students">
             <Button size="sm">
               {dictionary?.manageStudents || "Manage Students"}
-              <ChevronRight className="ms-2 h-4 w-4" />
+              <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
           </Link>
         </div>

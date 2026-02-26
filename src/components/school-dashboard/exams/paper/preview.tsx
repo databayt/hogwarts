@@ -1,8 +1,11 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Paper Preview Component
- * Live PDF preview of the exam paper
+ * Live PDF preview using the correct template from the registry
  */
 import { useEffect, useState } from "react"
 import { PDFViewer } from "@react-pdf/renderer"
@@ -11,8 +14,9 @@ import { FileWarning, Loader2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { ClassicTemplate } from "./templates/classic"
+import { getTemplate } from "./templates"
 import type { ExamPaperData } from "./types"
 
 interface PreviewProps {
@@ -23,6 +27,8 @@ interface PreviewProps {
 }
 
 export function Preview({ data, isLoading, error, locale }: PreviewProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.generate?.paper
   const isRTL = locale === "ar"
   const [isMounted, setIsMounted] = useState(false)
 
@@ -35,14 +41,14 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{isRTL ? "معاينة" : "Preview"}</CardTitle>
+          <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[600px] items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
               <p className="text-muted-foreground text-sm">
-                {isRTL ? "جاري التحميل..." : "Loading preview..."}
+                {t?.loading_preview || "Loading preview..."}
               </p>
             </div>
           </div>
@@ -55,12 +61,12 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{isRTL ? "معاينة" : "Preview"}</CardTitle>
+          <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
         </CardHeader>
         <CardContent>
           <Alert variant="destructive">
             <FileWarning className="h-4 w-4" />
-            <AlertTitle>{isRTL ? "خطأ" : "Error"}</AlertTitle>
+            <AlertTitle>{t?.error || "Error"}</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         </CardContent>
@@ -72,14 +78,12 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{isRTL ? "معاينة" : "Preview"}</CardTitle>
+          <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[600px] items-center justify-center">
             <p className="text-muted-foreground text-sm">
-              {isRTL
-                ? "لا توجد بيانات للمعاينة"
-                : "No data available for preview"}
+              {t?.no_preview_data || "No data available for preview"}
             </p>
           </div>
         </CardContent>
@@ -91,7 +95,7 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{isRTL ? "معاينة" : "Preview"}</CardTitle>
+          <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-[600px] w-full" />
@@ -100,15 +104,19 @@ export function Preview({ data, isLoading, error, locale }: PreviewProps) {
     )
   }
 
+  // Use template registry to get the correct component
+  const templateEntry = getTemplate(data.config.template)
+  const TemplateComponent = templateEntry.component
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isRTL ? "معاينة" : "Preview"}</CardTitle>
+        <CardTitle>{t?.preview_title || "Preview"}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[600px] w-full overflow-hidden rounded-md border">
           <PDFViewer width="100%" height="100%" showToolbar={true}>
-            <ClassicTemplate data={data} />
+            <TemplateComponent data={data} />
           </PDFViewer>
         </div>
       </CardContent>

@@ -1,5 +1,9 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { BookOpen, GraduationCap, Layers } from "lucide-react"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import {
   Card,
@@ -11,6 +15,7 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 import type { CatalogSubjectRow } from "./columns"
 import { CatalogTable } from "./table"
@@ -35,16 +40,33 @@ export async function CatalogContent({ lang }: Props) {
       usageCount: true,
       color: true,
       imageKey: true,
+      lang: true,
     },
   })
 
   const totalChapters = subjects.reduce((s, sub) => s + sub.totalChapters, 0)
   const totalLessons = subjects.reduce((s, sub) => s + sub.totalLessons, 0)
 
-  const rows: CatalogSubjectRow[] = subjects.map((s) => ({
-    ...s,
-    levels: s.levels as string[],
-  }))
+  const rows: CatalogSubjectRow[] = await Promise.all(
+    subjects.map(async ({ lang: contentLang, ...s }) => ({
+      ...s,
+      name: await getDisplayText(
+        s.name,
+        (contentLang || "ar") as SupportedLanguage,
+        lang,
+        "global"
+      ),
+      department: s.department
+        ? await getDisplayText(
+            s.department,
+            (contentLang || "ar") as SupportedLanguage,
+            lang,
+            "global"
+          )
+        : s.department,
+      levels: s.levels as string[],
+    }))
+  )
 
   return (
     <PageContainer>

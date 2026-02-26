@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
@@ -19,13 +21,13 @@ interface Props {
 export default function AddTeacherContent({ dictionary, lang }: Props) {
   const router = useRouter()
 
+  const d = dictionary?.teachers
+
   const t = {
-    title: lang === "ar" ? "إضافة معلم جديد" : "Add New Teacher",
+    title: d?.addNewTeacher || "Add New Teacher",
     description:
-      lang === "ar"
-        ? "أدخل معلومات المعلم الجديد"
-        : "Enter the new teacher's information",
-    back: lang === "ar" ? "العودة" : "Back",
+      d?.addNewTeacherDescription || "Enter the new teacher's information",
+    back: d?.back || "Back",
   }
 
   const handleSuccess = () => {
@@ -39,7 +41,7 @@ export default function AddTeacherContent({ dictionary, lang }: Props) {
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href={`/${lang}/teachers`}>
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
           </Link>
         </Button>
         <div>

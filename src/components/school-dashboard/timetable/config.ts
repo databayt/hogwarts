@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 export const DAYS_OF_WEEK = [
   { id: 0, name: "Sunday", short: "Sun" },
   { id: 1, name: "Monday", short: "Mon" },
@@ -43,6 +46,98 @@ export const SUBJECT_COLORS = {
 
   // Default
   default: "#9CA3AF", // Gray
+}
+
+// -- Unified Grid Palette --------------------------------------------------
+// 5 pastel colors with Tailwind classes + hex values for PDF
+export const GRID_PALETTE = [
+  {
+    bg: "bg-red-100",
+    hover: "hover:bg-red-200",
+    border: "border-red-300",
+    darkBg: "dark:bg-red-900/50",
+    darkHover: "dark:hover:bg-red-900/70",
+    darkBorder: "dark:border-red-800",
+    hex: "#fee2e2",
+    hexBorder: "#fca5a5",
+  },
+  {
+    bg: "bg-orange-100",
+    hover: "hover:bg-orange-200",
+    border: "border-orange-300",
+    darkBg: "dark:bg-orange-900/50",
+    darkHover: "dark:hover:bg-orange-900/70",
+    darkBorder: "dark:border-orange-800",
+    hex: "#ffedd5",
+    hexBorder: "#fdba74",
+  },
+  {
+    bg: "bg-yellow-100",
+    hover: "hover:bg-yellow-200",
+    border: "border-yellow-300",
+    darkBg: "dark:bg-yellow-900/50",
+    darkHover: "dark:hover:bg-yellow-900/70",
+    darkBorder: "dark:border-yellow-800",
+    hex: "#fef9c3",
+    hexBorder: "#fde047",
+  },
+  {
+    bg: "bg-green-100",
+    hover: "hover:bg-green-200",
+    border: "border-green-300",
+    darkBg: "dark:bg-green-900/50",
+    darkHover: "dark:hover:bg-green-900/70",
+    darkBorder: "dark:border-green-800",
+    hex: "#dcfce7",
+    hexBorder: "#86efac",
+  },
+  {
+    bg: "bg-blue-100",
+    hover: "hover:bg-blue-200",
+    border: "border-blue-300",
+    darkBg: "dark:bg-blue-900/50",
+    darkHover: "dark:hover:bg-blue-900/70",
+    darkBorder: "dark:border-blue-800",
+    hex: "#dbeafe",
+    hexBorder: "#93c5fd",
+  },
+] as const
+
+export const LUNCH_STYLE =
+  "bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700"
+export const EMPTY_CELL_STYLE = "bg-neutral-50 dark:bg-neutral-800/30"
+
+export const DAY_LABELS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+export const DAY_LABELS_AR = [
+  "الأحد",
+  "الاثنين",
+  "الثلاثاء",
+  "الأربعاء",
+  "الخميس",
+  "الجمعة",
+  "السبت",
+]
+
+/** Get palette index for a subject string -- consistent charCodeAt(0) % 5 */
+export function getSubjectColorIndex(subject: string): number {
+  if (!subject) return 0
+  return subject.charCodeAt(0) % GRID_PALETTE.length
+}
+
+/** Get Tailwind class string for a subject (SimpleGrid + TimetableCell) */
+export function getSubjectTailwind(subject: string): string {
+  const p = GRID_PALETTE[getSubjectColorIndex(subject)]
+  return `${p.bg} ${p.hover} ${p.border} ${p.darkBg} ${p.darkHover} ${p.darkBorder}`
+}
+
+/** Get hex bg for PDF rendering */
+export function getSubjectHex(subject: string): string {
+  return GRID_PALETTE[getSubjectColorIndex(subject)].hex
+}
+
+/** Get hex border for PDF rendering */
+export function getSubjectHexBorder(subject: string): string {
+  return GRID_PALETTE[getSubjectColorIndex(subject)].hexBorder
 }
 
 export const CLASSROOM_TYPES = [

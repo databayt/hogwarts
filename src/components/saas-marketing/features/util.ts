@@ -1,7 +1,8 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Utility functions for Marketing Features
- *
- * Helper functions for feature management and display.
  */
 
 import type { Feature, FeatureCategory, FeatureComparison } from "./types"
@@ -75,14 +76,20 @@ export function groupFeaturesByCategory(
  */
 export function getCategoryLabel(category: FeatureCategory): string {
   const labels: Record<FeatureCategory, string> = {
-    "student-management": "Student Management",
-    attendance: "Attendance Tracking",
-    grading: "Grading & Assessment",
-    communication: "Communication",
-    analytics: "Analytics & Insights",
+    core: "Core",
+    academic: "Academic",
     scheduling: "Scheduling",
-    billing: "Billing & Payments",
-    reporting: "Reporting",
+    finance: "Finance",
+    facilities: "Facilities",
+    hr: "HR",
+    operations: "Operations",
+    analytics: "Analytics",
+    communication: "Communication",
+    enrollment: "Enrollment",
+    community: "Community",
+    welfare: "Welfare",
+    "e-learning": "E-Learning",
+    documents: "Documents",
   }
   return labels[category]
 }
@@ -92,7 +99,7 @@ export function getCategoryLabel(category: FeatureCategory): string {
  */
 export function formatFeatureAvailability(value: boolean | string): string {
   if (typeof value === "boolean") {
-    return value ? "✓" : "—"
+    return value ? "\u2713" : "\u2014"
   }
   return value
 }
@@ -105,7 +112,7 @@ export function isFeatureAvailableInPlan(
   plan: "starter" | "professional" | "enterprise"
 ): boolean {
   const value = comparison[plan]
-  return value === true || (typeof value === "string" && value !== "—")
+  return value === true || (typeof value === "string" && value !== "\u2014")
 }
 
 /**
@@ -141,14 +148,20 @@ export function sortFeaturesByPriority(features: Feature[]): Feature[] {
  */
 export function getFeatureIconColor(category: FeatureCategory): string {
   const colors: Record<FeatureCategory, string> = {
-    "student-management": "text-blue-600",
-    attendance: "text-green-600",
-    grading: "text-purple-600",
-    communication: "text-orange-600",
-    analytics: "text-indigo-600",
+    core: "text-blue-600",
+    academic: "text-purple-600",
     scheduling: "text-pink-600",
-    billing: "text-amber-600",
-    reporting: "text-teal-600",
+    finance: "text-amber-600",
+    facilities: "text-emerald-600",
+    hr: "text-indigo-600",
+    operations: "text-slate-600",
+    analytics: "text-cyan-600",
+    communication: "text-orange-600",
+    enrollment: "text-teal-600",
+    community: "text-rose-600",
+    welfare: "text-red-600",
+    "e-learning": "text-violet-600",
+    documents: "text-stone-600",
   }
   return colors[category] || "text-gray-600"
 }

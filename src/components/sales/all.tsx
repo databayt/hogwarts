@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * All leads list view component
  * Displays all leads in a table format with filtering and sorting
@@ -195,7 +198,7 @@ export function All({
         <div className="mb-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative w-48">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
+              <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
               <Input
                 placeholder="Search leads..."
                 value={filters.search || ""}

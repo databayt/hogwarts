@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Shared query builders and utilities for grades/results
  * Consolidates query logic to eliminate duplication and improve maintainability
@@ -23,6 +26,7 @@ export type ResultListFilters = {
   assignmentId?: string
   examId?: string
   subjectId?: string
+  yearLevelId?: string
   grade?: string
   search?: string // Search by student name or assignment title
 }
@@ -194,6 +198,10 @@ export function buildResultWhere(
 
   if (filters.subjectId) {
     where.subjectId = filters.subjectId
+  }
+
+  if (filters.yearLevelId) {
+    where.yearLevelId = filters.yearLevelId
   }
 
   // Grade filter
@@ -740,11 +748,58 @@ export function formatStudentName(result: {
 }
 
 /**
- * Calculate grade from percentage
+ * Get school's grading scheme (GradeBoundary records)
+ * @param schoolId - School ID
+ * @returns Array of grade boundaries sorted by minScore desc
+ */
+export async function getSchoolGradingScheme(schoolId: string) {
+  return db.gradeBoundary.findMany({
+    where: { schoolId },
+    orderBy: { minScore: "desc" },
+    select: {
+      grade: true,
+      minScore: true,
+      maxScore: true,
+      gpaValue: true,
+    },
+  })
+}
+
+type GradeBoundaryLike = {
+  grade: string
+  minScore: number | { toNumber?: () => number }
+  maxScore: number | { toNumber?: () => number }
+}
+
+/**
+ * Calculate grade from percentage using school's grading scheme.
+ * Falls back to default scale when no scheme exists.
  * @param percentage - Score percentage
+ * @param gradeBoundaries - Optional school-specific boundaries
  * @returns Letter grade
  */
-export function calculateGrade(percentage: number): string {
+export function calculateGrade(
+  percentage: number,
+  gradeBoundaries?: GradeBoundaryLike[]
+): string {
+  if (gradeBoundaries && gradeBoundaries.length > 0) {
+    for (const boundary of gradeBoundaries) {
+      const min =
+        typeof boundary.minScore === "object" && boundary.minScore?.toNumber
+          ? boundary.minScore.toNumber()
+          : Number(boundary.minScore)
+      const max =
+        typeof boundary.maxScore === "object" && boundary.maxScore?.toNumber
+          ? boundary.maxScore.toNumber()
+          : Number(boundary.maxScore)
+      if (percentage >= min && percentage <= max) {
+        return boundary.grade
+      }
+    }
+    return "F"
+  }
+
+  // Default fallback scale
   if (percentage >= 90) return "A+"
   if (percentage >= 85) return "A"
   if (percentage >= 80) return "B+"

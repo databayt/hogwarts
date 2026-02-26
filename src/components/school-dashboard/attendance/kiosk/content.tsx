@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Kiosk Content
  *
@@ -11,6 +14,7 @@ import Image from "next/image"
 import type { KioskSession } from "@prisma/client"
 
 import { cn } from "@/lib/utils"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { lookupStudent, processKioskCheck, registerKiosk } from "./actions"
 import { KioskConfirmation } from "./confirmation"
@@ -57,6 +61,8 @@ export function KioskContent({
   kioskSession,
   locale,
 }: KioskContentProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.kiosk
   const isRTL = locale === "ar"
 
   // Kiosk state
@@ -110,7 +116,6 @@ export function KioskContent({
       const result = await lookupStudent({
         identifierValue,
         method: lookupMethod,
-        schoolId,
       })
 
       if (!result.success || !result.student) {
@@ -167,7 +172,6 @@ export function KioskContent({
         method,
         reasonCode,
         reasonNote,
-        schoolId,
       })
 
       if (result.success) {
@@ -188,7 +192,6 @@ export function KioskContent({
       const result = await registerKiosk({
         kioskId: newKioskId,
         kioskName,
-        schoolId,
       })
 
       if (result.success) {
@@ -227,12 +230,10 @@ export function KioskContent({
         <div className="bg-card w-full max-w-md space-y-6 rounded-xl border p-8 shadow-lg">
           <div className="text-center">
             <h1 className="text-2xl font-bold">
-              {isRTL ? "تسجيل الكشك" : "Kiosk Registration"}
+              {t?.registration_title || "Kiosk Registration"}
             </h1>
             <p className="text-muted-foreground mt-2">
-              {isRTL
-                ? "أدخل معرف الكشك واسمه للبدء"
-                : "Enter kiosk ID and name to begin"}
+              {t?.registration_subtitle || "Enter kiosk ID and name to begin"}
             </p>
           </div>
           <form
@@ -251,28 +252,26 @@ export function KioskContent({
           >
             <div>
               <label className="text-sm font-medium">
-                {isRTL ? "معرف الكشك" : "Kiosk ID"}
+                {t?.kiosk_id_label || "Kiosk ID"}
               </label>
               <input
                 name="kioskId"
                 type="text"
                 required
                 className="border-input bg-background mt-1 w-full rounded-lg border p-3 text-lg"
-                placeholder={isRTL ? "مثال: KIOSK-001" : "e.g., KIOSK-001"}
+                placeholder={t?.kiosk_id_placeholder || "e.g., KIOSK-001"}
               />
             </div>
             <div>
               <label className="text-sm font-medium">
-                {isRTL ? "اسم الكشك" : "Kiosk Name"}
+                {t?.kiosk_name_label || "Kiosk Name"}
               </label>
               <input
                 name="kioskName"
                 type="text"
                 required
                 className="border-input bg-background mt-1 w-full rounded-lg border p-3 text-lg"
-                placeholder={
-                  isRTL ? "مثال: المدخل الرئيسي" : "e.g., Main Entrance"
-                }
+                placeholder={t?.kiosk_name_placeholder || "e.g., Main Entrance"}
               />
             </div>
             {errorMessage && (
@@ -282,7 +281,7 @@ export function KioskContent({
               type="submit"
               className="bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-lg p-4 text-lg font-medium transition-colors"
             >
-              {isRTL ? "تسجيل الكشك" : "Register Kiosk"}
+              {t?.register_kiosk || "Register Kiosk"}
             </button>
           </form>
         </div>
@@ -307,7 +306,7 @@ export function KioskContent({
           <div>
             <h1 className="text-xl font-bold">{schoolName}</h1>
             <p className="text-muted-foreground text-sm">
-              {isRTL ? "كشك الحضور الذاتي" : "Self-Service Attendance Kiosk"}
+              {t?.self_service_kiosk || "Self-Service Attendance Kiosk"}
             </p>
           </div>
         </div>
@@ -342,23 +341,23 @@ export function KioskContent({
               </svg>
             </div>
             <h2 className="mb-4 text-4xl font-bold">
-              {isRTL ? "امسح بطاقتك" : "Scan Your Card"}
+              {t?.scan_your_card || "Scan Your Card"}
             </h2>
             <p className="text-muted-foreground mb-8 text-xl">
-              {isRTL ? "أو اضغط للإدخال اليدوي" : "Or tap for manual entry"}
+              {t?.or_tap_manual || "Or tap for manual entry"}
             </p>
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setState("scanning")}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-8 py-4 text-lg font-medium transition-colors"
               >
-                {isRTL ? "مسح الباركود" : "Scan Barcode"}
+                {t?.scan_barcode || "Scan Barcode"}
               </button>
               <button
                 onClick={() => setState("manual_entry")}
                 className="bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-xl px-8 py-4 text-lg font-medium transition-colors"
               >
-                {isRTL ? "إدخال يدوي" : "Manual Entry"}
+                {t?.manual_entry || "Manual Entry"}
               </button>
             </div>
           </div>
@@ -413,7 +412,7 @@ export function KioskContent({
           <div className="text-center">
             <div className="border-primary mx-auto mb-8 h-24 w-24 animate-spin rounded-full border-4 border-t-transparent" />
             <h2 className="text-2xl font-bold">
-              {isRTL ? "جاري المعالجة..." : "Processing..."}
+              {t?.processing || "Processing..."}
             </h2>
           </div>
         )}
@@ -438,12 +437,8 @@ export function KioskContent({
             </div>
             <h2 className="mb-2 text-3xl font-bold text-green-600">
               {action === "CHECK_IN"
-                ? isRTL
-                  ? "تم تسجيل الحضور"
-                  : "Checked In"
-                : isRTL
-                  ? "تم تسجيل الانصراف"
-                  : "Checked Out"}
+                ? t?.checked_in || "Checked In"
+                : t?.checked_out || "Checked Out"}
             </h2>
             <p className="text-muted-foreground text-xl">{student.name}</p>
             <p className="text-muted-foreground mt-2">
@@ -471,17 +466,16 @@ export function KioskContent({
               </svg>
             </div>
             <h2 className="mb-2 text-3xl font-bold text-red-600">
-              {isRTL ? "حدث خطأ" : "Error"}
+              {t?.error_title || "Error"}
             </h2>
             <p className="text-muted-foreground text-xl">
-              {errorMessage ||
-                (isRTL ? "يرجى المحاولة مرة أخرى" : "Please try again")}
+              {errorMessage || t?.please_try_again || "Please try again"}
             </p>
             <button
               onClick={resetKiosk}
               className="bg-primary text-primary-foreground hover:bg-primary/90 mt-8 rounded-xl px-8 py-4 text-lg font-medium transition-colors"
             >
-              {isRTL ? "حاول مرة أخرى" : "Try Again"}
+              {t?.try_again || "Try Again"}
             </button>
           </div>
         )}
@@ -491,13 +485,9 @@ export function KioskContent({
       <footer className="border-t px-6 py-3">
         <div className="text-muted-foreground flex items-center justify-between text-sm">
           <span>
-            {isRTL ? "معرف الكشك:" : "Kiosk ID:"} {kioskId}
+            {t?.kiosk_id_footer || "Kiosk ID:"} {kioskId}
           </span>
-          <span>
-            {isRTL
-              ? "للمساعدة، تواصل مع الإدارة"
-              : "For help, contact administration"}
-          </span>
+          <span>{t?.contact_admin || "For help, contact administration"}</span>
         </div>
       </footer>
     </div>

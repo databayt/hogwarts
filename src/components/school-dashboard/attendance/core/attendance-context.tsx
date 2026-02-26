@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
   createContext,
   useCallback,
@@ -13,6 +15,8 @@ import { toast } from "@/components/ui/use-toast"
 
 import {
   addStudentIdentifier as addIdentifierAction,
+  deleteAttendance as deleteAttendanceAction,
+  deleteStudentIdentifier as deleteIdentifierAction,
   getAttendanceStats,
   getStudentIdentifiers as getIdentifiersAction,
   getRecentAttendance,
@@ -399,6 +403,37 @@ export function AttendanceProvider({
       setLoading(true)
       setError(null)
       try {
+        // Call server action to persist the update
+        if (updates.studentId && updates.classId && updates.status) {
+          type PrismaStatus =
+            | "PRESENT"
+            | "ABSENT"
+            | "LATE"
+            | "EXCUSED"
+            | "SICK"
+            | "HOLIDAY"
+          const statusMap: Record<string, PrismaStatus> = {
+            present: "PRESENT",
+            absent: "ABSENT",
+            late: "LATE",
+            excused: "EXCUSED",
+            sick: "SICK",
+            holiday: "HOLIDAY",
+          }
+
+          await markSingleAttendance({
+            studentId: updates.studentId,
+            classId: updates.classId,
+            date:
+              typeof updates.date === "string"
+                ? updates.date
+                : updates.date?.toISOString?.() || selectedDate,
+            status: statusMap[updates.status] || "PRESENT",
+            method: updates.method || currentMethod,
+            notes: updates.notes,
+          })
+        }
+
         setAttendance((prev) =>
           prev.map((record) =>
             record.id === id ? { ...record, ...updates } : record
@@ -422,7 +457,7 @@ export function AttendanceProvider({
         setLoading(false)
       }
     },
-    []
+    [currentMethod, selectedDate]
   )
 
   // Delete attendance record
@@ -430,6 +465,12 @@ export function AttendanceProvider({
     setLoading(true)
     setError(null)
     try {
+      // Call server action to soft-delete
+      const result = await deleteAttendanceAction(id)
+      if (!result.success) {
+        throw new Error(result.error || "Failed to delete attendance")
+      }
+
       setAttendance((prev) => prev.filter((record) => record.id !== id))
 
       toast({
@@ -614,6 +655,12 @@ export function AttendanceProvider({
     setLoading(true)
     setError(null)
     try {
+      // Call server action to delete
+      const result = await deleteIdentifierAction(id)
+      if ("success" in result && !result.success) {
+        throw new Error(result.error || "Failed to remove identifier")
+      }
+
       setStudentIdentifiers((prev) => prev.filter((i) => i.id !== id))
 
       toast({

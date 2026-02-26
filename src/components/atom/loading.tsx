@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import React from "react"
 
 import { cn } from "@/lib/utils"
@@ -260,7 +263,7 @@ function BarChartSkeleton() {
 function LineChartSkeleton() {
   return (
     <div className="relative h-full">
-      <div className="absolute top-0 bottom-8 left-0 flex flex-col justify-between">
+      <div className="absolute start-0 top-0 bottom-8 flex flex-col justify-between">
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-3 w-8" />
         ))}
@@ -301,7 +304,7 @@ function AreaChartSkeleton() {
           />
         ))}
       </div>
-      <div className="absolute right-0 bottom-0 left-0 flex justify-around pt-2">
+      <div className="absolute start-0 end-0 bottom-0 flex justify-around pt-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-3 w-8" />
         ))}

@@ -41,6 +41,16 @@ jobs:
       - name: TypeScript Check
         run: pnpm tsc --noEmit
 
+  license-headers:
+    name: License Headers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check SSPL License Headers
+        run: bash scripts/check-license-headers.sh
+
   lint:
     name: ESLint
     runs-on: ubuntu-latest
@@ -161,7 +171,7 @@ jobs:
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
-    needs: [typecheck, lint, test, build]
+    needs: [typecheck, lint, test, build, license-headers]
     if: always()
     steps:
       - name: Check Results
@@ -174,7 +184,8 @@ jobs:
           echo "| ESLint | ${{ needs.lint.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Tests | ${{ needs.test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build | ${{ needs.build.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License Headers | ${{ needs.license-headers.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Fail if any check failed
-        if: needs.typecheck.result != 'success' || needs.lint.result != 'success' || needs.test.result != 'success' || needs.build.result != 'success'
+        if: needs.typecheck.result != 'success' || needs.lint.result != 'success' || needs.test.result != 'success' || needs.build.result != 'success' || needs.license-headers.result != 'success'
         run: exit 1

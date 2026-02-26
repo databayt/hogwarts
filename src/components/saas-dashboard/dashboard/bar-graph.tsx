@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
@@ -16,6 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 export const description = "An interactive bar chart"
 
@@ -67,6 +70,7 @@ export function BarGraph({
   title = "Bar Chart - Interactive",
   description: descriptionProp = "Total for the last 3 months",
 }: BarGraphProps) {
+  const { locale } = useLocale()
   const [activeChart, setActiveChart] =
     React.useState<keyof typeof chartConfig>("desktop")
 
@@ -155,7 +159,7 @@ export function BarGraph({
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value)
-                return date.toLocaleDateString("en-US", {
+                return date.toLocaleDateString(locale, {
                   month: "short",
                   day: "numeric",
                 })
@@ -168,7 +172,7 @@ export function BarGraph({
                   className="w-[150px]"
                   nameKey="views"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    return new Date(value).toLocaleDateString(locale, {
                       month: "short",
                       day: "numeric",
                       year: "numeric",

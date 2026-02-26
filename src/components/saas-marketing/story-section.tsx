@@ -1,5 +1,9 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { Volume2, VolumeX } from "lucide-react"
+
 import { useVideoScrollControl } from "@/hooks/use-video-scroll-control"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
@@ -12,13 +16,19 @@ interface StorySectionProps {
 
 export default function StorySection({ dictionary, lang }: StorySectionProps) {
   const isRTL = lang === "ar"
-  const { containerRef, videoRef, visibilityRatio, isInView } =
-    useVideoScrollControl({
-      playThreshold: 0.2,
-      fullVolumeThreshold: 0.6,
-      targetVolume: 0.7,
-      progressiveVolume: true,
-    })
+  const {
+    containerRef,
+    videoRef,
+    visibilityRatio,
+    isInView,
+    isMuted,
+    toggleMute,
+  } = useVideoScrollControl({
+    playThreshold: 0.2,
+    fullVolumeThreshold: 0.6,
+    targetVolume: 0.7,
+    progressiveVolume: true,
+  })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dict = (dictionary?.marketing as any)?.storySection || {
@@ -46,6 +56,7 @@ export default function StorySection({ dictionary, lang }: StorySectionProps) {
             style={{
               transform: isInView ? "scale(1)" : "scale(1.02)",
             }}
+            autoPlay
             loop
             muted
             playsInline
@@ -54,6 +65,20 @@ export default function StorySection({ dictionary, lang }: StorySectionProps) {
             <source src="/story.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
+
+          {/* Mute/Unmute toggle */}
+          <button
+            type="button"
+            onClick={toggleMute}
+            className="absolute end-3 bottom-3 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition-opacity hover:bg-black/70"
+            aria-label={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? (
+              <VolumeX className="size-5" />
+            ) : (
+              <Volume2 className="size-5" />
+            )}
+          </button>
         </div>
 
         {/* Quote - Right side (1/3 width) */}

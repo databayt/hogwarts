@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Document Extraction Prompts
  * Step-specific AI prompts for Claude Vision API

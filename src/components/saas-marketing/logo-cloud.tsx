@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Image from "next/image"
 
 import { InfiniteSlider } from "@/components/atom/infinite-slider"
@@ -78,7 +81,7 @@ export default function LogoCloud({ dictionary, lang }: LogoCloudProps) {
           <div className="shrink-0 md:border-e md:pe-6">
             <p className="text-base font-medium whitespace-pre-line">{text}</p>
           </div>
-          <div className="relative flex-1 overflow-hidden py-6">
+          <div className="relative flex-1 overflow-hidden py-6" dir="ltr">
             <InfiniteSlider speedOnHover={20} speed={40} gap={112}>
               {sponsors.map((sponsor, index) => (
                 <div key={index} className="flex items-center justify-center">

@@ -1,6 +1,8 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
@@ -36,12 +38,15 @@ export function ReviewStep() {
   const [agreed, setAgreed] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const submittingRef = useRef(false)
 
   const { personal, contact, roleDetails } = state.formData
 
   const handleSubmit = useCallback(async () => {
     if (!personal || !contact || !roleDetails || !state.role) return
+    if (submittingRef.current) return
 
+    submittingRef.current = true
     setIsSubmitting(true)
     setError(null)
 
@@ -53,8 +58,6 @@ export function ReviewStep() {
       documents: state.formData.documents,
     })
 
-    setIsSubmitting(false)
-
     if (result.success) {
       // Clear localStorage draft
       try {
@@ -62,8 +65,18 @@ export function ReviewStep() {
       } catch {
         // Ignore
       }
-      router.push(`/${locale}/s/${subdomain}/join/welcome`)
+      const ref = result.data?.userId?.slice(-8).toUpperCase() || ""
+      const name = encodeURIComponent(
+        `${personal.givenName} ${personal.surname}`
+      )
+      const role = encodeURIComponent(state.role)
+      const phone = contact.phone ? encodeURIComponent(contact.phone) : ""
+      const params = new URLSearchParams({ ref, name, role })
+      if (phone) params.set("phone", phone)
+      router.push(`/${locale}/s/${subdomain}/join/welcome?${params.toString()}`)
     } else {
+      submittingRef.current = false
+      setIsSubmitting(false)
       setError(result.error || "Failed to submit. Please try again.")
     }
   }, [

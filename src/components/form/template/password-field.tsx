@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { Eye, EyeOff } from "lucide-react"
 import { useFormContext, useWatch } from "react-hook-form"

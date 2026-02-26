@@ -1,7 +1,8 @@
 "use client"
 
-import { type UseFormReturn } from "react-hook-form"
-import { z } from "zod"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useEffect, useMemo, useState } from "react"
 
 import {
   FormControl,
@@ -9,7 +10,6 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -17,13 +17,65 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { getPreviousEvents } from "./actions"
+import { EventAutocomplete } from "./autocomplete"
 import { EVENT_TYPES } from "./config"
 import { EventFormStepProps } from "./types"
-import { eventCreateSchema } from "./validation"
 
-export function BasicInformationStep({ form, isView }: EventFormStepProps) {
+interface SuggestionItem {
+  id: string
+  title: string
+  description: string
+}
+
+export function BasicInformationStep({
+  form,
+  isView,
+  lang,
+}: EventFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.events?.form as
+    | Record<string, string>
+    | undefined
+
+  // Previous events for autocomplete
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([])
+
+  // Load previous events on mount
+  useEffect(() => {
+    const loadSuggestions = async () => {
+      try {
+        const result = await getPreviousEvents({ displayLang: lang })
+        if (result.success && result.data) {
+          setSuggestions(
+            result.data.map((e) => ({
+              id: e.id,
+              title: e.title || "",
+              description: e.description || "",
+            }))
+          )
+        }
+      } catch (error) {
+        console.error("Failed to load suggestions:", error)
+      }
+    }
+    loadSuggestions()
+  }, [lang])
+
+  // Transform suggestions to options format for autocomplete
+  const titleOptions = useMemo(
+    () => suggestions.map((s) => ({ id: s.id, value: s.title })),
+    [suggestions]
+  )
+
+  const descriptionOptions = useMemo(
+    () => suggestions.map((s) => ({ id: s.id, value: s.description })),
+    [suggestions]
+  )
+
   return (
     <div className="w-full space-y-6">
       {/* Title */}
@@ -33,7 +85,17 @@ export function BasicInformationStep({ form, isView }: EventFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Input placeholder="Event title" disabled={isView} {...field} />
+              <EventAutocomplete
+                value={field.value ?? ""}
+                onValueChange={field.onChange}
+                options={titleOptions}
+                placeholder={d?.titlePlaceholder || "Event title"}
+                disabled={isView}
+                dir={lang === "ar" ? "rtl" : "ltr"}
+                autoFocus={!isView}
+                emptyMessage={d?.noSuggestions || "No suggestions"}
+                groupHeading={d?.previousTitles || "Previous titles"}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -47,11 +109,21 @@ export function BasicInformationStep({ form, isView }: EventFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Textarea
-                placeholder="Event description (optional)"
+              <EventAutocomplete
+                value={field.value ?? ""}
+                onValueChange={field.onChange}
+                options={descriptionOptions}
+                placeholder={
+                  d?.descriptionPlaceholder || "Event description (optional)"
+                }
                 disabled={isView}
-                {...field}
+                dir={lang === "ar" ? "rtl" : "ltr"}
+                isTextarea
                 rows={4}
+                emptyMessage={d?.noSuggestions || "No suggestions"}
+                groupHeading={
+                  d?.previousDescriptions || "Previous descriptions"
+                }
               />
             </FormControl>
             <FormMessage />

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import Link from "next/link"
 import {
@@ -61,6 +63,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { CatalogImageUpload } from "@/components/saas-dashboard/catalog/image-upload"
 import { LessonVideoManager } from "@/components/saas-dashboard/catalog/video-manager"
 import { Shell as PageContainer } from "@/components/table/shell"
@@ -152,6 +155,8 @@ function slugify(text: string): string {
 // ---------------------------------------------------------------------------
 
 export function CatalogDetail({ subject, lang }: Props) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [chapters, setChapters] = useState<Chapter[]>(subject.chapters)
   const [isPending, startTransition] = useTransition()
 
@@ -213,7 +218,9 @@ export function CatalogDetail({ subject, lang }: Props) {
 
   const handleSaveChapter = () => {
     if (!chapterName.trim()) {
-      toast.error("Chapter name is required")
+      toast.error(
+        dictionary?.common?.failedToSave || "Chapter name is required"
+      )
       return
     }
 
@@ -231,7 +238,7 @@ export function CatalogDetail({ subject, lang }: Props) {
         if (editingChapter) {
           const result = await updateCatalogChapter(editingChapter.id, formData)
           if (!result.success) {
-            toast.error("Failed to update chapter")
+            toast.error(t?.error?.updateFailed || "Failed to update chapter")
             return
           }
           setChapters((prev) =>
@@ -248,12 +255,12 @@ export function CatalogDetail({ subject, lang }: Props) {
                 : c
             )
           )
-          toast.success("Chapter updated")
+          toast.success(t?.success?.updated || "Chapter updated")
         } else {
           formData.set("subjectId", subject.id)
           const result = await createCatalogChapter(formData)
           if (!result.success) {
-            toast.error("Failed to create chapter")
+            toast.error(t?.error?.createFailed || "Failed to create chapter")
             return
           }
           setChapters((prev) => [
@@ -269,12 +276,12 @@ export function CatalogDetail({ subject, lang }: Props) {
               lessons: [],
             },
           ])
-          toast.success("Chapter created")
+          toast.success(t?.success?.created || "Chapter created")
         }
 
         setIsChapterDialogOpen(false)
       } catch {
-        toast.error("Failed to save chapter")
+        toast.error(t?.error?.saveFailed || "Failed to save chapter")
       }
     })
   }
@@ -284,9 +291,9 @@ export function CatalogDetail({ subject, lang }: Props) {
       try {
         await deleteCatalogChapter(chapterId)
         setChapters((prev) => prev.filter((c) => c.id !== chapterId))
-        toast.success("Chapter deleted")
+        toast.success(t?.success?.deleted || "Chapter deleted")
       } catch {
-        toast.error("Failed to delete chapter")
+        toast.error(t?.error?.deleteFailed || "Failed to delete chapter")
       }
     })
   }
@@ -328,11 +335,11 @@ export function CatalogDetail({ subject, lang }: Props) {
 
   const handleSaveLesson = () => {
     if (!lessonName.trim()) {
-      toast.error("Lesson name is required")
+      toast.error(dictionary?.common?.failedToSave || "Lesson name is required")
       return
     }
     if (!selectedChapterId) {
-      toast.error("Chapter not selected")
+      toast.error(dictionary?.common?.failedToSave || "Chapter not selected")
       return
     }
 
@@ -352,7 +359,7 @@ export function CatalogDetail({ subject, lang }: Props) {
         if (editingLesson) {
           const result = await updateCatalogLesson(editingLesson.id, formData)
           if (!result.success) {
-            toast.error("Failed to update lesson")
+            toast.error(t?.error?.updateFailed || "Failed to update lesson")
             return
           }
           setChapters((prev) =>
@@ -380,12 +387,12 @@ export function CatalogDetail({ subject, lang }: Props) {
                 : c
             )
           )
-          toast.success("Lesson updated")
+          toast.success(t?.success?.updated || "Lesson updated")
         } else {
           formData.set("chapterId", selectedChapterId)
           const result = await createCatalogLesson(formData)
           if (!result.success) {
-            toast.error("Failed to create lesson")
+            toast.error(t?.error?.createFailed || "Failed to create lesson")
             return
           }
           setChapters((prev) =>
@@ -413,12 +420,12 @@ export function CatalogDetail({ subject, lang }: Props) {
                 : c
             )
           )
-          toast.success("Lesson created")
+          toast.success(t?.success?.created || "Lesson created")
         }
 
         setIsLessonDialogOpen(false)
       } catch {
-        toast.error("Failed to save lesson")
+        toast.error(t?.error?.saveFailed || "Failed to save lesson")
       }
     })
   }
@@ -438,9 +445,9 @@ export function CatalogDetail({ subject, lang }: Props) {
               : c
           )
         )
-        toast.success("Lesson deleted")
+        toast.success(t?.success?.deleted || "Lesson deleted")
       } catch {
-        toast.error("Failed to delete lesson")
+        toast.error(t?.error?.deleteFailed || "Failed to delete lesson")
       }
     })
   }
@@ -860,7 +867,7 @@ function ChapterItem({
             <ChevronRight className="h-4 w-4 shrink-0" />
           )}
           <span className="font-medium">{chapter.name}</span>
-          <Badge variant="outline" className="ml-auto text-xs">
+          <Badge variant="outline" className="ms-auto text-xs">
             {chapter.lessons.length} lessons
           </Badge>
           <Badge
@@ -919,7 +926,7 @@ function ChapterItem({
         </div>
       </div>
       <CollapsibleContent>
-        <div className="ml-6 space-y-0.5 border-l py-1 pl-4">
+        <div className="ms-6 space-y-0.5 border-s py-1 ps-4">
           {chapter.lessons.map((lesson) => (
             <div
               key={lesson.id}
@@ -934,7 +941,7 @@ function ChapterItem({
                 variant={
                   lesson.status === "PUBLISHED" ? "default" : "secondary"
                 }
-                className="ml-auto text-xs"
+                className="ms-auto text-xs"
               >
                 {lesson.status}
               </Badge>
@@ -949,7 +956,7 @@ function ChapterItem({
                 >
                   <Video className="size-3" />
                   {(lesson._count?.videos ?? 0) > 0 && (
-                    <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-bold">
+                    <span className="bg-primary text-primary-foreground absolute -end-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-bold">
                       {lesson._count!.videos}
                     </span>
                   )}

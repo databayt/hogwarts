@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   useEffect,
   useLayoutEffect,
@@ -306,7 +308,10 @@ export function UsageBasedPricing({
 
         <div className="space-y-6">
           <div className="relative mb-6 h-0">
-            <div className="absolute -top-10" style={{ left: `${pct}%` }}>
+            <div
+              className="absolute -top-10"
+              style={{ insetInlineStart: `${pct}%` }}
+            >
               <div className="bg-background -translate-x-1/2 rounded-md border px-3 py-1 text-xs shadow-sm">
                 {formatNumber(value)}
               </div>
@@ -363,7 +368,7 @@ export function UsageBasedPricing({
                   <motion.div
                     key={i}
                     className={`absolute top-1/2 -translate-y-full ${widthClass} rounded-full ${color}`}
-                    style={{ left: `${left}%` }}
+                    style={{ insetInlineStart: `${left}%` }}
                     animate={{ height }}
                     transition={{ type: "spring", stiffness: 260, damping: 28 }}
                   />
@@ -397,7 +402,7 @@ export function UsageBasedPricing({
                       }}
                       className={`absolute rounded-full outline-none ${isActive ? "bg-primary" : "bg-muted-foreground/70"} focus:ring-primary/50 focus:ring-2`}
                       style={{
-                        left,
+                        insetInlineStart: left,
                         top: "calc(50% + 14px)",
                         transform: "translateX(-50%)",
                         width: "4px",
@@ -413,7 +418,7 @@ export function UsageBasedPricing({
 
             <div
               className="absolute top-1/2 -translate-y-1/2"
-              style={{ left: `${pct}%` }}
+              style={{ insetInlineStart: `${pct}%` }}
             >
               <div
                 role="slider"

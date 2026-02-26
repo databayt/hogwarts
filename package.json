@@ -2,6 +2,7 @@
   "name": "hogwarts",
   "version": "0.1.0",
   "private": true,
+  "license": "SSPL-1.0",
   "scripts": {
     "dev": "next dev",
     "dev:https": "next dev --turbopack --experimental-https --experimental-https-key ./certificates/localhost+2-key.pem --experimental-https-cert ./certificates/localhost+2.pem",
@@ -21,6 +22,7 @@
     "db:seed:single": "tsx prisma/seeds/single.ts",
     "db:reset-test-user": "tsx prisma/seeds/reset-test-user.ts",
     "seed:videos": "tsx scripts/seed-s3-videos.ts",
+    "cleanup:sudanese": "tsx scripts/cleanup-sudanese-catalog.ts",
     "test": "vitest",
     "test:integration": "vitest --config vitest.config.integration.mts --run",
     "test:e2e": "playwright test --project=chromium",
@@ -217,6 +219,7 @@
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.0.1",
     "@types/culori": "^4.0.1",
     "@types/leaflet": "^1.9.21",

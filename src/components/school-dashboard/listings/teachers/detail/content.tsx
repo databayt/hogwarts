@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Teacher Detail Content - Profile & Analytics View
  *
@@ -243,27 +246,27 @@ export function TeacherDetailContent({
   const [activeTab, setActiveTab] = useState("overview")
   const { openModal } = useModal()
 
+  const d = dictionary?.teachers?.detail
   const t = {
-    overview: lang === "ar" ? "نظرة عامة" : "Overview",
-    qualifications: lang === "ar" ? "المؤهلات" : "Qualifications",
-    experience: lang === "ar" ? "الخبرة" : "Experience",
-    classes: lang === "ar" ? "الفصول" : "Classes",
-    schedule: lang === "ar" ? "الجدول" : "Schedule",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    personalInfo: lang === "ar" ? "المعلومات الشخصية" : "Personal Information",
-    contactInfo: lang === "ar" ? "معلومات الاتصال" : "Contact Information",
-    employmentInfo:
-      lang === "ar" ? "معلومات التوظيف" : "Employment Information",
-    workload: lang === "ar" ? "عبء العمل" : "Workload",
-    totalExperience: lang === "ar" ? "إجمالي الخبرة" : "Total Experience",
-    primary: lang === "ar" ? "أساسي" : "Primary",
-    secondary: lang === "ar" ? "ثانوي" : "Secondary",
-    certified: lang === "ar" ? "معتمد" : "Certified",
-    current: lang === "ar" ? "حالي" : "Current",
-    noData: lang === "ar" ? "لا توجد بيانات" : "No data available",
-    periodsPerWeek: lang === "ar" ? "حصص في الأسبوع" : "periods/week",
-    subjects: lang === "ar" ? "المواد" : "Subjects",
-    departments: lang === "ar" ? "الأقسام" : "Departments",
+    overview: d?.overview || "Overview",
+    qualifications: d?.qualifications || "Qualifications",
+    experience: d?.experience || "Experience",
+    classes: d?.classes || "Classes",
+    schedule: d?.schedule || "Schedule",
+    edit: d?.edit || "Edit",
+    personalInfo: d?.personalInfo || "Personal Information",
+    contactInfo: d?.contactInfo || "Contact Information",
+    employmentInfo: d?.employmentInfo || "Employment Information",
+    workload: d?.workload || "Workload",
+    totalExperience: d?.totalExperience || "Total Experience",
+    primary: d?.primary || "Primary",
+    secondary: d?.secondary || "Secondary",
+    certified: d?.certified || "Certified",
+    current: d?.current || "Current",
+    noData: d?.noData || "No data available",
+    periodsPerWeek: d?.periodsPerWeek || "periods/week",
+    subjects: d?.subjects || "Subjects",
+    departments: d?.departments || "Departments",
   }
 
   const fullName = `${teacher.givenName} ${teacher.surname}`
@@ -329,7 +332,7 @@ export function TeacherDetailContent({
                   {teacher.userId && (
                     <Badge variant="secondary">
                       <User className="me-1 h-3 w-3" />
-                      {lang === "ar" ? "حساب نشط" : "Has Account"}
+                      {dictionary?.common?.hasAccount || "Has Account"}
                     </Badge>
                   )}
                 </div>
@@ -399,13 +402,13 @@ export function TeacherDetailContent({
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">
-                        {lang === "ar" ? "الجنس" : "Gender"}
+                        {dictionary?.common?.gender || "Gender"}
                       </p>
                       <p className="font-medium">{teacher.gender || "-"}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">
-                        {lang === "ar" ? "تاريخ الميلاد" : "Birth Date"}
+                        {dictionary?.common?.birthDate || "Birth Date"}
                       </p>
                       <p className="font-medium">
                         {formatDate(teacher.birthDate, lang)}
@@ -464,7 +467,7 @@ export function TeacherDetailContent({
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">
-                        {lang === "ar" ? "تاريخ الانضمام" : "Joining Date"}
+                        {dictionary?.common?.joiningDate || "Joining Date"}
                       </p>
                       <p className="font-medium">
                         {formatDate(teacher.joiningDate, lang)}
@@ -472,7 +475,8 @@ export function TeacherDetailContent({
                     </div>
                     <div>
                       <p className="text-muted-foreground">
-                        {lang === "ar" ? "نوع التوظيف" : "Employment Type"}
+                        {dictionary?.common?.employmentType ||
+                          "Employment Type"}
                       </p>
                       <p className="font-medium">
                         {teacher.employmentType?.replace("_", " ") || "-"}
@@ -482,7 +486,8 @@ export function TeacherDetailContent({
                       <>
                         <div>
                           <p className="text-muted-foreground">
-                            {lang === "ar" ? "بداية العقد" : "Contract Start"}
+                            {dictionary?.common?.contractStart ||
+                              "Contract Start"}
                           </p>
                           <p className="font-medium">
                             {formatDate(teacher.contractStartDate, lang)}
@@ -490,7 +495,7 @@ export function TeacherDetailContent({
                         </div>
                         <div>
                           <p className="text-muted-foreground">
-                            {lang === "ar" ? "نهاية العقد" : "Contract End"}
+                            {dictionary?.common?.contractEnd || "Contract End"}
                           </p>
                           <p className="font-medium">
                             {formatDate(teacher.contractEndDate, lang)}
@@ -623,14 +628,14 @@ export function TeacherDetailContent({
                     {qual.major && (
                       <p>
                         <span className="text-muted-foreground">
-                          {lang === "ar" ? "التخصص:" : "Major:"}
+                          {dictionary?.common?.major || "Major:"}
                         </span>{" "}
                         {qual.major}
                       </p>
                     )}
                     <p>
                       <span className="text-muted-foreground">
-                        {lang === "ar" ? "تاريخ الحصول:" : "Obtained:"}
+                        {dictionary?.common?.obtained || "Obtained:"}
                       </span>{" "}
                       {formatDate(qual.dateObtained, lang)}
                     </p>
@@ -643,7 +648,7 @@ export function TeacherDetailContent({
                         }
                       >
                         <span className="text-muted-foreground">
-                          {lang === "ar" ? "ينتهي:" : "Expires:"}
+                          {dictionary?.common?.expires || "Expires:"}
                         </span>{" "}
                         {formatDate(qual.expiryDate, lang)}
                       </p>
@@ -651,7 +656,7 @@ export function TeacherDetailContent({
                     {qual.licenseNumber && (
                       <p>
                         <span className="text-muted-foreground">
-                          {lang === "ar" ? "رقم الرخصة:" : "License #:"}
+                          {dictionary?.common?.licenseNumber || "License #:"}
                         </span>{" "}
                         {qual.licenseNumber}
                       </p>
@@ -700,9 +705,7 @@ export function TeacherDetailContent({
                       <Calendar className="h-3 w-3" />
                       {formatDate(exp.startDate, lang)} -{" "}
                       {exp.isCurrent
-                        ? lang === "ar"
-                          ? "حتى الآن"
-                          : "Present"
+                        ? dictionary?.common?.present || "Present"
                         : formatDate(exp.endDate, lang)}
                     </p>
                     {exp.description && (

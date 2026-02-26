@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import type { ChargeItem, InvoiceItem } from "@/lib/billingsdk-config"
 import { InvoiceHistory } from "@/components/billingsdk/invoice-history"
 import { UpcomingCharges } from "@/components/billingsdk/upcoming-charges"

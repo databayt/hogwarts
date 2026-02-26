@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Quick Assessments Page
  * Quick formative assessments (exit tickets, polls, warm-ups)

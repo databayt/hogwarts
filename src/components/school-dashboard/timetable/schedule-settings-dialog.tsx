@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useMemo, useState, useTransition } from "react"
 import { format, parseISO } from "date-fns"
 import { Calendar, CalendarPlus, Copy, Pencil, Trash2, X } from "lucide-react"
@@ -146,15 +148,10 @@ export function ScheduleSettingsDialog({
     exampleNationalDay: "e.g., National Day",
   }
 
-  const daysDict = dictionary?.timetable?.days || {
-    sun: "Sun",
-    mon: "Mon",
-    tue: "Tue",
-    wed: "Wed",
-    thu: "Thu",
-    fri: "Fri",
-    sat: "Sat",
-  }
+  const DEFAULT_DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  const daysArray = Array.isArray(dictionary?.timetable?.days)
+    ? dictionary.timetable.days
+    : DEFAULT_DAY_LABELS
 
   const exTypesDict = dictionary?.timetable?.exceptionTypes || {
     holiday: "Holiday",
@@ -163,19 +160,8 @@ export function ScheduleSettingsDialog({
     cancelled: "Cancelled",
   }
 
-  // Build day labels from dictionary
-  const dayLabels = useMemo(
-    () => [
-      daysDict.sun || "Sun",
-      daysDict.mon || "Mon",
-      daysDict.tue || "Tue",
-      daysDict.wed || "Wed",
-      daysDict.thu || "Thu",
-      daysDict.fri || "Fri",
-      daysDict.sat || "Sat",
-    ],
-    [daysDict]
-  )
+  // Build day labels from dictionary (array format: [Sun, Mon, ...Sat])
+  const dayLabels = useMemo(() => daysArray, [daysArray])
 
   // Build exception types with labels from dictionary
   const exceptionTypes = useMemo(

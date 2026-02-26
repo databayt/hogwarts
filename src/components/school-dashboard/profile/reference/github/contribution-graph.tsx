@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -9,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 // Map contribution level to color class based on project's color system
 const getColorClass = (level: number) => {
@@ -65,6 +68,8 @@ const arabicMonths = [
 const getMonthLabel = (date: Date) => arabicMonths[date.getMonth()]
 
 export default function GitHubContributionGraph() {
+  const { locale, isRTL } = useLocale()
+
   // Generate a sample contribution data (this would normally come from an API)
   const [contributionData] = useState(() => {
     // Create a 7x52 grid (7 days per week, 52 weeks - full year)
@@ -102,7 +107,7 @@ export default function GitHubContributionGraph() {
     const date = new Date()
     date.setDate(date.getDate() - ((51 - week) * 7 + (6 - day)))
     // Only day and month in Arabic
-    return date.toLocaleDateString("ar-SA", { month: "short", day: "numeric" })
+    return date.toLocaleDateString(locale, { month: "short", day: "numeric" })
   }
 
   // For month labels above the graph
@@ -127,21 +132,24 @@ export default function GitHubContributionGraph() {
   return (
     <Card className="w-full">
       <CardContent className="p-4">
-        <h3 className="mb-4 text-end text-sm font-medium" dir="rtl">
+        <h3
+          className="mb-4 text-end text-sm font-medium"
+          dir={isRTL ? "rtl" : "ltr"}
+        >
           {totalContributions} مساهمة في العام الماضي
         </h3>
         <div className="overflow-x-auto pb-2">
           <TooltipProvider>
             <div className="min-w-fit">
               {/* Month labels */}
-              <div className="mb-1 flex" style={{ marginRight: "24px" }}>
+              <div className="mb-1 flex" style={{ marginInlineEnd: "24px" }}>
                 {contributionData[0].map((_, week) => {
                   const labelObj = monthLabels.find((m) => m.week === week)
                   return (
                     <div
                       key={week}
                       className="flex h-3 w-3 items-center justify-center"
-                      style={{ width: 12, height: 12, marginLeft: 4 }}
+                      style={{ width: 12, height: 12, marginInlineStart: 4 }}
                     >
                       {labelObj ? (
                         <span
@@ -188,7 +196,10 @@ export default function GitHubContributionGraph() {
           <button className="text-muted-foreground order-2 text-xs hover:text-blue-600 sm:order-1">
             تعرّف على كيفية حساب المساهمات
           </button>
-          <div className="order-1 flex items-center sm:order-2" dir="rtl">
+          <div
+            className="order-1 flex items-center sm:order-2"
+            dir={isRTL ? "rtl" : "ltr"}
+          >
             <span className="ms-2">أقل</span>
             <div className="flex gap-1">
               <div className="h-3 w-3 rounded-sm bg-neutral-100" />

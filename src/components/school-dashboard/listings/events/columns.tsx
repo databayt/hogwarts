@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
@@ -84,23 +86,23 @@ export const getEventColumns = (
   lang?: Locale,
   callbacks?: EventColumnCallbacks
 ): ColumnDef<EventRow>[] => {
+  const statuses = dictionary?.statuses as Record<string, string> | undefined
+  const types = dictionary?.types as Record<string, string> | undefined
+
   const t = {
-    title: dictionary?.title || (lang === "ar" ? "العنوان" : "Title"),
-    type: dictionary?.type || (lang === "ar" ? "النوع" : "Type"),
-    date: dictionary?.date || (lang === "ar" ? "التاريخ" : "Date"),
-    startTime:
-      dictionary?.startTime || (lang === "ar" ? "وقت البدء" : "Start Time"),
-    location: dictionary?.location || (lang === "ar" ? "الموقع" : "Location"),
-    organizer:
-      dictionary?.organizer || (lang === "ar" ? "المنظم" : "Organizer"),
-    audience: dictionary?.audience || (lang === "ar" ? "الجمهور" : "Audience"),
-    attendees:
-      dictionary?.attendees || (lang === "ar" ? "الحضور" : "Attendees"),
-    status: dictionary?.status || (lang === "ar" ? "الحالة" : "Status"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
+    title: dictionary?.title || "Title",
+    type: dictionary?.type || "Type",
+    date: dictionary?.date || "Date",
+    startTime: dictionary?.startTime || "Start Time",
+    location: dictionary?.location || "Location",
+    organizer: dictionary?.organizer || "Organizer",
+    audience: dictionary?.audience || "Audience",
+    attendees: dictionary?.attendees || "Attendees",
+    status: dictionary?.status || "Status",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
   }
 
   return [
@@ -123,26 +125,18 @@ export const getEventColumns = (
       meta: {
         label: t.type,
         variant: "select",
-        options:
-          lang === "ar"
-            ? [
-                { label: "أكاديمي", value: "ACADEMIC" },
-                { label: "رياضي", value: "SPORTS" },
-                { label: "ثقافي", value: "CULTURAL" },
-                { label: "اجتماع أولياء الأمور", value: "PARENT_MEETING" },
-                { label: "احتفال", value: "CELEBRATION" },
-                { label: "ورشة عمل", value: "WORKSHOP" },
-                { label: "أخرى", value: "OTHER" },
-              ]
-            : [
-                { label: "Academic", value: "ACADEMIC" },
-                { label: "Sports", value: "SPORTS" },
-                { label: "Cultural", value: "CULTURAL" },
-                { label: "Parent Meeting", value: "PARENT_MEETING" },
-                { label: "Celebration", value: "CELEBRATION" },
-                { label: "Workshop", value: "WORKSHOP" },
-                { label: "Other", value: "OTHER" },
-              ],
+        options: [
+          { label: types?.ACADEMIC || "Academic", value: "ACADEMIC" },
+          { label: types?.SPORTS || "Sports", value: "SPORTS" },
+          { label: types?.CULTURAL || "Cultural", value: "CULTURAL" },
+          {
+            label: types?.PARENT_MEETING || "Parent Meeting",
+            value: "PARENT_MEETING",
+          },
+          { label: types?.CELEBRATION || "Celebration", value: "CELEBRATION" },
+          { label: types?.WORKSHOP || "Workshop", value: "WORKSHOP" },
+          { label: types?.OTHER || "Other", value: "OTHER" },
+        ],
       },
       enableColumnFilter: true,
     },
@@ -234,20 +228,15 @@ export const getEventColumns = (
       meta: {
         label: t.status,
         variant: "select",
-        options:
-          lang === "ar"
-            ? [
-                { label: "مخطط", value: "PLANNED" },
-                { label: "قيد التنفيذ", value: "IN_PROGRESS" },
-                { label: "مكتمل", value: "COMPLETED" },
-                { label: "ملغي", value: "CANCELLED" },
-              ]
-            : [
-                { label: "Planned", value: "PLANNED" },
-                { label: "In Progress", value: "IN_PROGRESS" },
-                { label: "Completed", value: "COMPLETED" },
-                { label: "Cancelled", value: "CANCELLED" },
-              ],
+        options: [
+          { label: statuses?.PLANNED || "Planned", value: "PLANNED" },
+          {
+            label: statuses?.IN_PROGRESS || "In Progress",
+            value: "IN_PROGRESS",
+          },
+          { label: statuses?.COMPLETED || "Completed", value: "COMPLETED" },
+          { label: statuses?.CANCELLED || "Cancelled", value: "CANCELLED" },
+        ],
       },
       enableColumnFilter: true,
     },

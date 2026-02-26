@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Generate usage analytics report for schools
  * Run: npx tsx scripts/analytics-usage.ts [--school portsudan] [--period month]

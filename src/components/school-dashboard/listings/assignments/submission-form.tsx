@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useRef, useState } from "react"
 import { format } from "date-fns"
@@ -23,6 +25,7 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Assignment {
   id: string

@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import type { SlotType } from "@prisma/client"
 import { nanoid } from "nanoid"
 import { Resend } from "resend"

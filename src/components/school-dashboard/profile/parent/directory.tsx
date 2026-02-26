@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Parent Directory Component
  * Browse and search all parent/guardian profiles
@@ -336,7 +339,7 @@ export function ParentDirectoryContent({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
+            <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
             <Input
               placeholder="Search by parent name, email, guardian ID, or child name..."
               value={searchQuery}
@@ -515,7 +518,7 @@ export function ParentDirectoryContent({
                   <Link href={`/profile/${parent.id}`}>
                     <Button size="sm" variant="ghost">
                       View
-                      <ChevronRight className="ms-1 h-4 w-4" />
+                      <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
                     </Button>
                   </Link>
                 </div>

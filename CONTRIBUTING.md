@@ -721,4 +721,25 @@ If you have a request for a new feature, please open a discussion on GitHub. We'
 
 ## License
 
-Licensed under the MIT license.
+This project is licensed under the [Server Side Public License v1 (SSPL-1.0)](./LICENSE).
+
+### Contributor License Agreement
+
+By submitting a pull request or otherwise contributing to this project, you agree to the following terms:
+
+1. Your contributions are licensed under SSPL-1.0, consistent with the project license.
+2. You grant databayt the right to distribute your contributions under both the SSPL-1.0 and any commercial license offered by databayt.
+3. You confirm that your contributions do not include code under licenses incompatible with SSPL-1.0 (e.g., GPL-2.0-only).
+4. You confirm that you have the right to make the contribution and grant the above rights.
+
+See [LICENSING.md](./LICENSING.md) for full licensing details.
+
+### Developer Certificate of Origin (DCO)
+
+By contributing, you certify that you wrote the code or have the right to submit it, per the [Developer Certificate of Origin](https://developercertificate.org/). We recommend signing your commits:
+
+```bash
+git commit -s -m "feat(module): description"
+```
+
+This adds a `Signed-off-by` trailer to your commit message, certifying your right to contribute.

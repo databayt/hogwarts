@@ -3,7 +3,7 @@
  * Story 5.4: Full Journey (Get Started -> School Dashboard)
  *
  * Tests the complete user journey from clicking "Get Started" on the
- * marketing landing page through all 15 onboarding steps, verifying the
+ * marketing landing page through all 16 onboarding steps, verifying the
  * congratulations page, and landing on the newly created school's dashboard.
  *
  * Tag: @onboarding @critical @e2e
@@ -122,7 +122,7 @@ test.describe("Story 5.4: Full Journey (Get Started -> Dashboard) @onboarding @c
     expect(schoolId, "Should get a schoolId after creating").toBeTruthy()
 
     // ====================================================================
-    // PHASE 4: Complete all 15 onboarding steps
+    // PHASE 4: Complete all 16 onboarding steps
     // ====================================================================
 
     // Step 1: About School (informational)
@@ -156,35 +156,39 @@ test.describe("Story 5.4: Full Journey (Get Started -> Dashboard) @onboarding @c
     await onboarding.expectOnStep("capacity")
     await onboarding.completeCapacity(JOURNEY_SCHOOL.capacity)
 
-    // Step 7: Branding (skip)
+    // Step 7: Schedule
+    await onboarding.expectOnStep("schedule")
+    await onboarding.completeSchedule()
+
+    // Step 8: Branding (skip)
     await onboarding.expectOnStep("branding")
     await onboarding.completeBranding()
 
-    // Step 8: Import (skip)
+    // Step 9: Import (skip)
     await onboarding.expectOnStep("import")
     await onboarding.completeImport()
 
-    // Step 9: Finish Setup
+    // Step 10: Finish Setup
     await onboarding.expectOnStep("finish-setup")
     await onboarding.completeFinishSetup()
 
-    // Step 10: Join
+    // Step 11: Join
     await onboarding.expectOnStep("join")
     await onboarding.completeJoin()
 
-    // Step 11: Visibility
+    // Step 12: Visibility
     await onboarding.expectOnStep("visibility")
     await onboarding.completeVisibility()
 
-    // Step 12: Price
+    // Step 13: Price
     await onboarding.expectOnStep("price")
     await onboarding.completePrice(JOURNEY_SCHOOL.pricing)
 
-    // Step 13: Discount (skip)
+    // Step 14: Discount (skip)
     await onboarding.expectOnStep("discount")
     await onboarding.completeDiscount()
 
-    // Step 14: Legal (triggers completeOnboarding)
+    // Step 15: Legal (triggers completeOnboarding)
     await onboarding.expectOnStep("legal")
     await onboarding.selectOperationalStatus("existing")
     await page.waitForTimeout(500)

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type {
   BloomLevel,
   DifficultyLevel,
@@ -7,13 +10,16 @@ import type {
 } from "@prisma/client"
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 import type { QuestionBankRow } from "./columns"
 import { questionBankSearchParams } from "./list-params"
+import { QBankTabbedLayout } from "./tabbed-layout"
 import { QuestionBankTable } from "./table"
 
 interface Props {
@@ -77,6 +83,7 @@ export default async function QuestionBankContent({
               select: {
                 id: true,
                 subjectName: true,
+                lang: true,
               },
             },
             analytics: {
@@ -91,21 +98,30 @@ export default async function QuestionBankContent({
       ])
 
       // CRITICAL FIX: Safe date serialization - handle null/undefined dates
-      data = rows.map((q) => ({
-        id: q.id,
-        questionText: q.questionText,
-        questionType: q.questionType,
-        difficulty: q.difficulty,
-        bloomLevel: q.bloomLevel,
-        subjectName: q.subject?.subjectName || "Unknown",
-        points: Number(q.points),
-        source: q.source,
-        timesUsed: q.analytics?.timesUsed || 0,
-        successRate: q.analytics?.successRate || null,
-        createdAt: q.createdAt
-          ? new Date(q.createdAt).toISOString()
-          : new Date().toISOString(),
-      }))
+      data = await Promise.all(
+        rows.map(async (q) => ({
+          id: q.id,
+          questionText: q.questionText,
+          questionType: q.questionType,
+          difficulty: q.difficulty,
+          bloomLevel: q.bloomLevel,
+          subjectName: q.subject?.subjectName
+            ? await getDisplayText(
+                q.subject.subjectName,
+                (q.subject.lang || "ar") as SupportedLanguage,
+                lang,
+                schoolId!
+              )
+            : "Unknown",
+          points: Number(q.points),
+          source: q.source,
+          timesUsed: q.analytics?.timesUsed || 0,
+          successRate: q.analytics?.successRate || null,
+          createdAt: q.createdAt
+            ? new Date(q.createdAt).toISOString()
+            : new Date().toISOString(),
+        }))
+      )
       total = count
     } catch (error) {
       // Log error for debugging but don't crash the page
@@ -120,11 +136,13 @@ export default async function QuestionBankContent({
   }
 
   return (
-    <QuestionBankTable
-      initialData={data}
-      total={total}
-      perPage={sp.perPage}
-      dictionary={dictionary}
-    />
+    <QBankTabbedLayout>
+      <QuestionBankTable
+        initialData={data}
+        total={total}
+        perPage={sp.perPage}
+        dictionary={dictionary}
+      />
+    </QBankTabbedLayout>
   )
 }

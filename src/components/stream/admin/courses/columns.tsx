@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
@@ -46,20 +48,19 @@ export interface ColumnCallbacks {
 
 export const getCourseColumns = (
   lang: string,
-  callbacks?: ColumnCallbacks
+  callbacks?: ColumnCallbacks,
+  dictionary?: any
 ): ColumnDef<CourseRow>[] => {
   const isRTL = lang === "ar"
+  const t = dictionary?.stream?.adminCoursesColumns
 
   return [
     {
       accessorKey: "title",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={isRTL ? "العنوان" : "Title"}
-        />
+        <DataTableColumnHeader column={column} title={t?.title || "Title"} />
       ),
-      meta: { label: isRTL ? "العنوان" : "Title", variant: "text" as const },
+      meta: { label: t?.title || "Title", variant: "text" as const },
       cell: ({ row }) => {
         const course = row.original
         return (
@@ -82,31 +83,22 @@ export const getCourseColumns = (
     {
       accessorKey: "isPublished",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={isRTL ? "الحالة" : "Status"}
-        />
+        <DataTableColumnHeader column={column} title={t?.status || "Status"} />
       ),
       cell: ({ getValue }) => {
         const published = getValue<boolean>()
         return (
           <Badge variant={published ? "default" : "outline"}>
-            {published
-              ? isRTL
-                ? "منشور"
-                : "Published"
-              : isRTL
-                ? "مسودة"
-                : "Draft"}
+            {published ? t?.published || "Published" : t?.draft || "Draft"}
           </Badge>
         )
       },
       meta: {
-        label: isRTL ? "الحالة" : "Status",
+        label: t?.status || "Status",
         variant: "select" as const,
         options: [
-          { label: isRTL ? "منشور" : "Published", value: "true" },
-          { label: isRTL ? "مسودة" : "Draft", value: "false" },
+          { label: t?.published || "Published", value: "true" },
+          { label: t?.draft || "Draft", value: "false" },
         ],
       },
       enableColumnFilter: true,
@@ -115,16 +107,13 @@ export const getCourseColumns = (
     {
       accessorKey: "price",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={isRTL ? "السعر" : "Price"}
-        />
+        <DataTableColumnHeader column={column} title={t?.price || "Price"} />
       ),
       cell: ({ getValue }) => {
         const price = getValue<number | null>()
         return (
           <span className="tabular-nums">
-            {price ? `$${price}` : isRTL ? "مجاني" : "Free"}
+            {price ? `$${price}` : t?.free || "Free"}
           </span>
         )
       },
@@ -135,7 +124,7 @@ export const getCourseColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={isRTL ? "المسجلين" : "Enrollments"}
+          title={t?.enrollments || "Enrollments"}
         />
       ),
       cell: ({ getValue }) => (
@@ -148,7 +137,7 @@ export const getCourseColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={isRTL ? "الفصول" : "Chapters"}
+          title={t?.chapters || "Chapters"}
         />
       ),
       cell: ({ row }) => {
@@ -169,7 +158,7 @@ export const getCourseColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={isRTL ? "التاريخ" : "Created"}
+          title={t?.created || "Created"}
         />
       ),
       cell: ({ getValue }) => (
@@ -180,9 +169,7 @@ export const getCourseColumns = (
     },
     {
       id: "actions",
-      header: () => (
-        <span className="sr-only">{isRTL ? "الإجراءات" : "Actions"}</span>
-      ),
+      header: () => <span className="sr-only">{t?.actions || "Actions"}</span>,
       cell: function ActionsCell({ row }) {
         const course = row.original
         const params = useParams()
@@ -194,29 +181,25 @@ export const getCourseColumns = (
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">
-                  {isRTL ? "فتح القائمة" : "Open menu"}
-                </span>
+                <span className="sr-only">{t?.openMenu || "Open menu"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>
-                {isRTL ? "الإجراءات" : "Actions"}
-              </DropdownMenuLabel>
+              <DropdownMenuLabel>{t?.actions || "Actions"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => callbacks?.onEdit?.(course)}>
-                {isRTL ? "تعديل المعلومات" : "Edit Info"}
+                {t?.editInfo || "Edit Info"}
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href={`/${currentLang}/s/${subdomain}/stream/admin/courses/${course.id}/edit`}
                 >
-                  {isRTL ? "إدارة الفصول" : "Manage Chapters"}
+                  {t?.manageChapters || "Manage Chapters"}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => callbacks?.onDelete?.(course)}>
-                {isRTL ? "حذف" : "Delete"}
+                {t?.delete || "Delete"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

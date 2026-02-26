@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Accounting Integration Utilities
  *
@@ -484,9 +487,10 @@ export async function calculateTrialBalance(
  */
 export function formatCurrency(
   amount: number,
-  currency: string = "USD"
+  currency: string = "USD",
+  locale: string = "ar"
 ): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
   }).format(amount / 100)

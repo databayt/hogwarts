@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
@@ -25,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 export const description = "An interactive area chart"
 
@@ -34,6 +37,7 @@ interface IChartInvoice {
 }
 
 export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
+  const { locale } = useLocale()
   const [timeRange, setTimeRange] = React.useState("90d")
 
   const filteredData = chartData?.filter((item: any) => {
@@ -96,7 +100,7 @@ export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value)
-                return date.toLocaleDateString("en-US", {
+                return date.toLocaleDateString(locale, {
                   month: "short",
                   day: "numeric",
                 })
@@ -107,7 +111,7 @@ export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    return new Date(value).toLocaleDateString(locale, {
                       month: "short",
                       day: "numeric",
                     })

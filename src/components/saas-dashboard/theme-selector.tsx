@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Removed custom theme hook; project uses ThemeProvider + ModeSwitcher already
 import { Label } from "@/components/ui/label"
 import {

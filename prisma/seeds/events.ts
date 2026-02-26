@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Events Seed
  * Creates 30+ MENA school year events spanning Sep 2025 - Jun 2026

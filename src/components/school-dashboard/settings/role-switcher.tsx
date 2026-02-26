@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -444,7 +446,7 @@ export function RoleSwitcher({
                   {dictionary?.settings?.roleSwitcher?.previewAs ||
                     "Preview as"}{" "}
                   {selectedConfig?.label}
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </>
               )}
             </Button>

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -261,7 +263,7 @@ export function GradeDetailContent({
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild>
               <Link href={`/${lang}/grades`}>
-                <ArrowLeft className="me-2 h-4 w-4" />
+                <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
                 {t.backToGrades}
               </Link>
             </Button>

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { z } from "zod"
 
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -18,6 +21,7 @@ export function createStudentBaseSchema(dictionary: Dictionary) {
     gender: z.enum(["male", "female"]).optional(),
     enrollmentDate: z.string().optional(), // ISO date YYYY-MM-DD
     userId: z.string().optional(),
+    academicGradeId: z.string().optional(),
   })
 }
 
@@ -47,6 +51,7 @@ export const studentBaseSchema = z.object({
   gender: z.enum(["male", "female"]).optional(),
   enrollmentDate: z.string().optional(), // ISO date YYYY-MM-DD
   userId: z.string().optional(),
+  academicGradeId: z.string().optional(),
 })
 
 export const studentCreateSchema = studentBaseSchema

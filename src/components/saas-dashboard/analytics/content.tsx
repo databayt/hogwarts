@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { DollarSign, TrendingDown, TrendingUp, Users } from "lucide-react"
 
 import { formatCurrency, formatPercentage } from "@/lib/i18n-format"

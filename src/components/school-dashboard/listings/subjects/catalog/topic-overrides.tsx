@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { BookOpen, ChevronDown, ChevronRight, Eye, EyeOff } from "lucide-react"
 
@@ -12,6 +14,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { toggleContentOverride } from "./actions"
 
@@ -34,15 +37,18 @@ interface Props {
 }
 
 export function TopicOverrides({ chapters, lang }: Props) {
-  const isRTL = lang === "ar"
+  const { dictionary } = useDictionary()
+  const cat = dictionary?.school?.subjects?.catalog as
+    | Record<string, string>
+    | undefined
   const [isPending, startTransition] = useTransition()
 
   const t = {
-    hide: isRTL ? "إخفاء" : "Hide",
-    show: isRTL ? "إظهار" : "Show",
-    hidden: isRTL ? "مخفي" : "Hidden",
-    lessons: isRTL ? "دروس" : "lessons",
-    noChapters: isRTL ? "لا توجد فصول" : "No chapters available",
+    hide: cat?.hide || "Hide",
+    show: cat?.show || "Show",
+    hidden: cat?.hidden || "Hidden",
+    lessons: cat?.lessons || "lessons",
+    noChapters: cat?.noChapters || "No chapters available",
   }
 
   function handleToggleChapter(chapterId: string, currentlyHidden: boolean) {
@@ -119,7 +125,7 @@ function ChapterRow({
           >
             {chapter.name}
           </span>
-          <Badge variant="outline" className="ml-auto text-xs">
+          <Badge variant="outline" className="ms-auto text-xs">
             {chapter.lessons.length} {t.lessons}
           </Badge>
           {chapter.isHidden && (
@@ -143,7 +149,7 @@ function ChapterRow({
         </Button>
       </div>
       <CollapsibleContent>
-        <div className="ml-6 space-y-0.5 border-l py-1 pl-4">
+        <div className="ms-6 space-y-0.5 border-s py-1 ps-4">
           {chapter.lessons.map((lesson) => (
             <div
               key={lesson.id}

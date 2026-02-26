@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { auth } from "@/auth"
 import { Calendar, FileText, Plus, Settings } from "lucide-react"
@@ -35,7 +38,7 @@ export async function ProgressReportContent() {
         {canManage && (
           <Button asChild>
             <Link href="progress/new">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               New Schedule
             </Link>
           </Button>

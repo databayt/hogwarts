@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useRouter } from "next/navigation"
 import {
   Activity,
@@ -58,8 +60,6 @@ export function LessonDetailContent({
   lang,
 }: LessonDetailContentProps) {
   const router = useRouter()
-  const isRTL = lang === "ar"
-
   const t = dictionary?.school?.lessons?.detail || {}
 
   // Get status badge variant
@@ -82,7 +82,7 @@ export function LessonDetailContent({
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="me-2 h-4 w-4" />
+          <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
           {t.back || "Back"}
         </Button>
         <Alert variant="destructive">
@@ -102,13 +102,13 @@ export function LessonDetailContent({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           </Button>
           <div>
             <h1 className="text-2xl font-semibold">{data.title}</h1>
             <p className="text-muted-foreground text-sm">
               {new Date(data.lessonDate).toLocaleDateString(
-                isRTL ? "ar-SA" : "en-US",
+                lang === "ar" ? "ar-SA" : "en-US",
                 {
                   year: "numeric",
                   month: "long",
@@ -165,7 +165,7 @@ export function LessonDetailContent({
               <CardContent>
                 <div className="text-lg font-semibold">
                   {new Date(data.lessonDate).toLocaleDateString(
-                    isRTL ? "ar-SA" : "en-US"
+                    lang === "ar" ? "ar-SA" : "en-US"
                   )}
                 </div>
               </CardContent>
@@ -197,7 +197,7 @@ export function LessonDetailContent({
               <CardContent>
                 <div className="text-lg font-semibold">
                   {new Date(data.createdAt).toLocaleDateString(
-                    isRTL ? "ar-SA" : "en-US"
+                    lang === "ar" ? "ar-SA" : "en-US"
                   )}
                 </div>
               </CardContent>
@@ -214,7 +214,7 @@ export function LessonDetailContent({
               <CardContent>
                 <div className="text-lg font-semibold">
                   {new Date(data.updatedAt).toLocaleDateString(
-                    isRTL ? "ar-SA" : "en-US"
+                    lang === "ar" ? "ar-SA" : "en-US"
                   )}
                 </div>
               </CardContent>

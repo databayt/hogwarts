@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * School Access Control and Management
  * Handles school creation, ownership, and access permissions
@@ -160,7 +163,8 @@ export async function canUserAccessSchool(
  * - Session refresh: Updates user.updatedAt to trigger NextAuth JWT refresh
  */
 export async function ensureUserSchool(
-  userId: string
+  userId: string,
+  templateData?: Record<string, unknown>
 ): Promise<SchoolCreationResult> {
   try {
     // 1. IDEMPOTENCY CHECK: Return existing school if user already has one
@@ -203,6 +207,30 @@ export async function ensureUserSchool(
       // Generate unique domain using userId suffix to prevent collisions
       const uniqueDomain = `school-${userId.slice(-8)}-${Date.now()}`
 
+      // Filter templateData to only safe fields
+      const SAFE_TEMPLATE_FIELDS = [
+        "name",
+        "maxStudents",
+        "maxTeachers",
+        "maxClasses",
+        "schoolLevel",
+        "schoolType",
+        "tuitionFee",
+        "registrationFee",
+        "applicationFee",
+        "currency",
+        "paymentSchedule",
+      ] as const
+
+      const safeTemplateData: Record<string, unknown> = {}
+      if (templateData) {
+        for (const key of SAFE_TEMPLATE_FIELDS) {
+          if (key in templateData && templateData[key] !== undefined) {
+            safeTemplateData[key] = templateData[key]
+          }
+        }
+      }
+
       // Create school within transaction
       // createdByUserId is set as @unique - prevents duplicate schools per user via DB constraint
       const school = await tx.school.create({
@@ -214,6 +242,7 @@ export async function ensureUserSchool(
           isActive: true,
           planType: "starter",
           createdByUserId: userId, // Track who created this school (immutable, prevents duplicates)
+          ...safeTemplateData,
         },
       })
 

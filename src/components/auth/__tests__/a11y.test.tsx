@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { render } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { axe } from "vitest-axe"

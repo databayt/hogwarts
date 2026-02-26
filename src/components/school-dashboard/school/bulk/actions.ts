@@ -1,5 +1,8 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Re-export academic CRUD actions from the actual implementations
 // Placeholder server actions for bulk import operations
 // TODO: Implement actual bulk import from CSV/Excel files

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 
 import { buttonVariants } from "@/components/ui/button"
@@ -18,10 +20,10 @@ export function LibraryHero({ lang = "en", dictionary }: LibraryHeroProps) {
         {/* Text Content */}
         <div className="flex flex-1 flex-col items-start space-y-6 text-start lg:items-start lg:text-start">
           <h1 className="text-5xl leading-none font-extrabold tracking-tighter md:text-6xl lg:text-7xl">
-            Revelio
+            {(dictionary as any)?.library?.hero?.title || "Revelio"}
             <br />
             <span className="mt-2 block text-3xl font-semibold md:text-4xl lg:text-5xl">
-              Unlock hidden.
+              {(dictionary as any)?.library?.hero?.subtitle || "Unlock hidden."}
             </span>
           </h1>
 
@@ -43,7 +45,7 @@ export function LibraryHero({ lang = "en", dictionary }: LibraryHeroProps) {
               })}
               href={`/${lang}/library/my-profile`}
             >
-              Favorite
+              {(dictionary as any)?.library?.navigation?.myBooks || "Favorite"}
             </Link>
           </div>
         </div>

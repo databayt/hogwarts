@@ -149,6 +149,9 @@ model User {
   catalogLessonProgress  LessonProgress[]
   catalogCertificates    SubjectCertificate[]
 
+  // Event Registration relations
+  eventRegistrations EventRegistration[] @relation("EventRegistrations")
+
   // Lesson Content relations
   lessonVideos      LessonVideo[]
   lessonAttachments LessonAttachment[]

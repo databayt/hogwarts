@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Unified File Block - Importer Component
  * File upload and column mapping for imports
@@ -259,7 +262,7 @@ export function Importer<T>({
                   <span className="hidden text-sm sm:inline">{s.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <ChevronRight className="text-muted-foreground h-4 w-4" />
+                  <ChevronRight className="text-muted-foreground h-4 w-4 rtl:rotate-180" />
                 )}
               </React.Fragment>
             ))}
@@ -559,7 +562,7 @@ export function Importer<T>({
               {isImporting ? (
                 <Loader2 className="me-2 h-4 w-4 animate-spin" />
               ) : (
-                <ArrowRight className="me-2 h-4 w-4" />
+                <ArrowRight className="me-2 h-4 w-4 rtl:rotate-180" />
               )}
               {dictionary?.next || "Validate & Continue"}
             </Button>

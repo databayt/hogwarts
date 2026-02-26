@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { z } from "zod"
 
 // Common timezones for schools, with emphasis on Sudan and MENA region
@@ -70,9 +73,12 @@ export function getTimezoneDisplayName(timezone: string): string {
 }
 
 // Helper function to get current time in a timezone
-export function getCurrentTimeInTimezone(timezone: string): string {
+export function getCurrentTimeInTimezone(
+  timezone: string,
+  locale = "ar"
+): string {
   try {
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(locale, {
       timeZone: timezone,
       hour: "2-digit",
       minute: "2-digit",

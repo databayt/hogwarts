@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useEffect, useState } from "react"
 import { Clock, Sparkles } from "lucide-react"
@@ -173,12 +175,43 @@ export function AttendanceContent({ dictionary }: Props) {
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "p")
+      // Skip keyboard shortcuts when typing in input fields
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return
+
+      if (e.key.toLowerCase() === "p") {
         setRows((r) => r.map((x) => ({ ...x, status: "present" })))
-      if (e.key.toLowerCase() === "a")
+        setChanged(() => {
+          const next: Record<string, AttendanceRow["status"]> = {}
+          rows.forEach((r) => {
+            next[r.studentId] = "present"
+          })
+          return next
+        })
+      }
+      if (e.key.toLowerCase() === "a") {
         setRows((r) => r.map((x) => ({ ...x, status: "absent" })))
-      if (e.key.toLowerCase() === "l")
+        setChanged(() => {
+          const next: Record<string, AttendanceRow["status"]> = {}
+          rows.forEach((r) => {
+            next[r.studentId] = "absent"
+          })
+          return next
+        })
+      }
+      if (e.key.toLowerCase() === "l") {
         setRows((r) => r.map((x) => ({ ...x, status: "late" })))
+        setChanged(() => {
+          const next: Record<string, AttendanceRow["status"]> = {}
+          rows.forEach((r) => {
+            next[r.studentId] = "late"
+          })
+          return next
+        })
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault()
         void onSubmit()
@@ -186,7 +219,7 @@ export function AttendanceContent({ dictionary }: Props) {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [onSubmit])
+  }, [onSubmit, rows])
   return (
     <AttendanceErrorBoundary>
       {isLoading && !rows.length ? (
@@ -256,9 +289,16 @@ export function AttendanceContent({ dictionary }: Props) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
+                  onClick={() => {
                     setRows((r) => r.map((x) => ({ ...x, status: "present" })))
-                  }
+                    setChanged(() => {
+                      const next: Record<string, AttendanceRow["status"]> = {}
+                      rows.forEach((r) => {
+                        next[r.studentId] = "present"
+                      })
+                      return next
+                    })
+                  }}
                   disabled={isLoading || rows.length === 0}
                 >
                   {dict.allPresent || "All Present"}
@@ -266,9 +306,16 @@ export function AttendanceContent({ dictionary }: Props) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
+                  onClick={() => {
                     setRows((r) => r.map((x) => ({ ...x, status: "absent" })))
-                  }
+                    setChanged(() => {
+                      const next: Record<string, AttendanceRow["status"]> = {}
+                      rows.forEach((r) => {
+                        next[r.studentId] = "absent"
+                      })
+                      return next
+                    })
+                  }}
                   disabled={isLoading || rows.length === 0}
                 >
                   {dict.allAbsent || "All Absent"}
@@ -276,9 +323,16 @@ export function AttendanceContent({ dictionary }: Props) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
+                  onClick={() => {
                     setRows((r) => r.map((x) => ({ ...x, status: "late" })))
-                  }
+                    setChanged(() => {
+                      const next: Record<string, AttendanceRow["status"]> = {}
+                      rows.forEach((r) => {
+                        next[r.studentId] = "late"
+                      })
+                      return next
+                    })
+                  }}
                   disabled={isLoading || rows.length === 0}
                 >
                   {dict.allLate || "All Late"}

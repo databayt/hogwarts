@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { AudioLines, Plus } from "lucide-react"
 
@@ -45,7 +47,7 @@ export function ShadcnButtonGroupInputGroup() {
             disabled={voiceEnabled}
             className="border-0 bg-transparent pe-10 focus-visible:ring-0"
           />
-          <div className="absolute inset-y-0 right-0 flex items-center pe-2">
+          <div className="absolute inset-y-0 end-0 flex items-center pe-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

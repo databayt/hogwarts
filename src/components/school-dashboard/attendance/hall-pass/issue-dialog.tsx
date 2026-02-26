@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Issue Pass Dialog
  *
@@ -26,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createHallPass } from "./actions"
 import { hallPassDestinations, type HallPassDestination } from "./validation"
@@ -66,6 +70,8 @@ export function IssuePassDialog({
   onSuccess,
   students = [],
 }: IssuePassDialogProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.hallPass
   const isRTL = locale === "ar"
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -91,7 +97,7 @@ export function IssuePassDialog({
 
   const handleSubmit = async () => {
     if (!studentId || !destination || !classId) {
-      setError(isRTL ? "جميع الحقول مطلوبة" : "All fields are required")
+      setError(t?.all_fields_required || "All fields are required")
       return
     }
 
@@ -112,13 +118,10 @@ export function IssuePassDialog({
         onOpenChange(false)
         onSuccess()
       } else {
-        setError(
-          result.error ||
-            (isRTL ? "فشل في إصدار التصريح" : "Failed to issue pass")
-        )
+        setError(result.error || t?.failed_issue || "Failed to issue pass")
       }
     } catch {
-      setError(isRTL ? "حدث خطأ" : "An error occurred")
+      setError(t?.error_occurred || "An error occurred")
     } finally {
       setIsSubmitting(false)
     }
@@ -128,24 +131,21 @@ export function IssuePassDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isRTL ? "إصدار تصريح مرور" : "Issue Hall Pass"}
-          </DialogTitle>
+          <DialogTitle>{t?.issue_pass_title || "Issue Hall Pass"}</DialogTitle>
           <DialogDescription>
-            {isRTL
-              ? "اختر الطالب والوجهة لإصدار تصريح"
-              : "Select a student and destination to issue a pass"}
+            {t?.issue_pass_desc ||
+              "Select a student and destination to issue a pass"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Student selection */}
           <div className="space-y-2">
-            <Label>{isRTL ? "الطالب" : "Student"}</Label>
+            <Label>{t?.student_label || "Student"}</Label>
             <Select value={studentId} onValueChange={setStudentId}>
               <SelectTrigger>
                 <SelectValue
-                  placeholder={isRTL ? "اختر الطالب" : "Select student"}
+                  placeholder={t?.select_student || "Select student"}
                 />
               </SelectTrigger>
               <SelectContent>
@@ -160,14 +160,14 @@ export function IssuePassDialog({
 
           {/* Destination selection */}
           <div className="space-y-2">
-            <Label>{isRTL ? "الوجهة" : "Destination"}</Label>
+            <Label>{t?.destination_label || "Destination"}</Label>
             <Select
               value={destination}
               onValueChange={(v) => setDestination(v as HallPassDestination)}
             >
               <SelectTrigger>
                 <SelectValue
-                  placeholder={isRTL ? "اختر الوجهة" : "Select destination"}
+                  placeholder={t?.select_destination || "Select destination"}
                 />
               </SelectTrigger>
               <SelectContent>
@@ -183,11 +183,11 @@ export function IssuePassDialog({
           {/* Custom destination note for "OTHER" */}
           {destination === "OTHER" && (
             <div className="space-y-2">
-              <Label>{isRTL ? "تفاصيل الوجهة" : "Destination details"}</Label>
+              <Label>{t?.destination_details || "Destination details"}</Label>
               <Input
                 value={destinationNote}
                 onChange={(e) => setDestinationNote(e.target.value)}
-                placeholder={isRTL ? "أدخل الوجهة..." : "Enter destination..."}
+                placeholder={t?.enter_destination || "Enter destination..."}
               />
             </div>
           )}
@@ -195,7 +195,7 @@ export function IssuePassDialog({
           {/* Duration */}
           <div className="space-y-2">
             <Label>
-              {isRTL ? "المدة المتوقعة (دقائق)" : "Expected duration (minutes)"}
+              {t?.expected_duration || "Expected duration (minutes)"}
             </Label>
             <div className="flex gap-2">
               {[3, 5, 10, 15].map((mins) => (
@@ -214,13 +214,11 @@ export function IssuePassDialog({
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label>{isRTL ? "ملاحظات (اختياري)" : "Notes (optional)"}</Label>
+            <Label>{t?.notes_optional || "Notes (optional)"}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={
-                isRTL ? "أي ملاحظات إضافية..." : "Any additional notes..."
-              }
+              placeholder={t?.additional_notes || "Any additional notes..."}
               rows={2}
             />
           </div>
@@ -231,16 +229,12 @@ export function IssuePassDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {isRTL ? "إلغاء" : "Cancel"}
+            {dictionary?.attendance?.form?.cancel || "Cancel"}
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting
-              ? isRTL
-                ? "جاري الإصدار..."
-                : "Issuing..."
-              : isRTL
-                ? "إصدار التصريح"
-                : "Issue Pass"}
+              ? t?.issuing || "Issuing..."
+              : t?.issue_pass || "Issue Pass"}
           </Button>
         </DialogFooter>
       </DialogContent>

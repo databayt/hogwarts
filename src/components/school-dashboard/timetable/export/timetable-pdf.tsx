@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   Document,
   Font,
@@ -8,6 +10,8 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer"
+
+import { DAY_LABELS_AR, DAY_LABELS_EN, getSubjectHex } from "../config"
 
 // Register fonts for Arabic support
 Font.register({
@@ -37,40 +41,6 @@ Font.register({
     },
   ],
 })
-
-// Subject colors for visual distinction
-const SUBJECT_COLORS: Record<string, string> = {
-  Math: "#f3e8ff",
-  Mathematics: "#f3e8ff",
-  English: "#dcfce7",
-  Science: "#fce7f3",
-  Arabic: "#dbeafe",
-  PE: "#fed7aa",
-  "Physical Education": "#fed7aa",
-  Music: "#fef3c7",
-  Art: "#ffe4e6",
-  History: "#fef3c7",
-  Geography: "#ccfbf1",
-  Islamic: "#d1fae5",
-  "Islamic Studies": "#d1fae5",
-  Computer: "#cffafe",
-  "Computer Science": "#cffafe",
-  Physics: "#e0e7ff",
-  Chemistry: "#ede9fe",
-  Biology: "#ecfccb",
-  Social: "#e0f2fe",
-}
-
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-const DAY_LABELS_AR = [
-  "الأحد",
-  "الاثنين",
-  "الثلاثاء",
-  "الأربعاء",
-  "الخميس",
-  "الجمعة",
-  "السبت",
-]
 
 interface TimetableSlot {
   id: string
@@ -109,7 +79,7 @@ interface TimetablePDFProps {
 const createStyles = (isRTL: boolean) =>
   StyleSheet.create({
     page: {
-      padding: 40,
+      padding: 42,
       fontFamily: isRTL ? "Rubik" : "Inter",
       fontSize: 10,
       backgroundColor: "#ffffff",
@@ -205,7 +175,7 @@ const createStyles = (isRTL: boolean) =>
     },
     slotCell: {
       flex: 1,
-      minHeight: 45,
+      minHeight: 50,
       padding: 4,
       borderRightWidth: 1,
       borderColor: "#e5e5e5",
@@ -268,29 +238,6 @@ const createStyles = (isRTL: boolean) =>
       color: "#a3a3a3",
     },
   })
-
-function getSubjectColor(subject: string): string {
-  if (!subject) return "#fafafa"
-
-  // Check direct mapping
-  if (SUBJECT_COLORS[subject]) {
-    return SUBJECT_COLORS[subject]
-  }
-
-  // Check partial matches
-  for (const [key, color] of Object.entries(SUBJECT_COLORS)) {
-    if (subject.toLowerCase().includes(key.toLowerCase())) {
-      return color
-    }
-  }
-
-  // Fallback colors based on hash
-  const colors = ["#fef3c7", "#dcfce7", "#dbeafe", "#f3e8ff", "#fce7f3"]
-  const hash = subject
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return colors[hash % colors.length]
-}
 
 function formatTime(date: Date | string): string {
   const d = new Date(date)
@@ -357,7 +304,7 @@ export function TimetablePDF({
                 }
               >
                 <Text style={styles.dayHeaderText}>
-                  {isRTL ? DAY_LABELS_AR[day] : DAY_LABELS[day]}
+                  {isRTL ? DAY_LABELS_AR[day] : DAY_LABELS_EN[day]}
                 </Text>
               </View>
             ))}
@@ -394,7 +341,7 @@ export function TimetablePDF({
                 {sortedDays.map((day, dayIdx) => {
                   const slot = slotMap.get(`${day}-${period.id}`)
                   const bgColor = slot?.subject
-                    ? getSubjectColor(slot.subject)
+                    ? getSubjectHex(slot.subject)
                     : "#fafafa"
                   const isLastCol = dayIdx === sortedDays.length - 1
 

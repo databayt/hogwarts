@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState } from "react"
 import { CheckCircle2, FileText, Image, Upload, X } from "lucide-react"
 import { useFormContext } from "react-hook-form"
@@ -78,6 +80,13 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
   const { control, setValue, watch } = useFormContext<ApplicationFormData>()
   const isRTL = lang === "ar"
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { formSteps?: Record<string, string> } }
+      }
+    )?.school?.admission?.formSteps ?? {}
+
   const documents = watch("documents") || []
   const photoUrl = watch("photoUrl")
   const signatureUrl = watch("signatureUrl")
@@ -94,16 +103,12 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
     ) => {
       // Validate file
       if (!ALLOWED_TYPES.includes(file.type)) {
-        toast.error(isRTL ? "نوع الملف غير مدعوم" : "File type not supported")
+        toast.error(dict.fileTypeNotSupported || "File type not supported")
         return
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        toast.error(
-          isRTL
-            ? "حجم الملف كبير جداً (الحد الأقصى 5 ميجابايت)"
-            : "File too large (max 5MB)"
-        )
+        toast.error(dict.fileTooLarge || "File too large (max 5MB)")
         return
       }
 
@@ -137,11 +142,9 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
           setValue("documents", [...updatedDocs, newDoc])
         }
 
-        toast.success(
-          isRTL ? "تم رفع الملف بنجاح" : "File uploaded successfully"
-        )
+        toast.success(dict.fileUploaded || "File uploaded successfully")
       } catch (error) {
-        toast.error(isRTL ? "فشل في رفع الملف" : "Failed to upload file")
+        toast.error(dict.failedToUpload || "Failed to upload file")
       } finally {
         setUploading(null)
       }
@@ -167,12 +170,11 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
-            {isRTL ? "الصورة والتوقيع" : "Photo & Signature"}
+            {dict.photoAndSignature || "Photo & Signature"}
           </CardTitle>
           <CardDescription>
-            {isRTL
-              ? "قم برفع صورة شخصية حديثة وتوقيع الطالب"
-              : "Upload a recent passport photo and student's signature"}
+            {dict.photoAndSignatureDesc ||
+              "Upload a recent passport photo and student's signature"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -180,7 +182,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
             {/* Photo Upload */}
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                {isRTL ? "صورة شخصية" : "Passport Photo"}{" "}
+                {dict.passportPhoto || "Passport Photo"}{" "}
                 <span className="text-destructive">*</span>
               </label>
               <div className="rounded-lg border-2 border-dashed p-4 text-center">
@@ -195,7 +197,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute top-0 right-0 h-6 w-6"
+                      className="absolute end-0 top-0 h-6 w-6"
                       onClick={() => setValue("photoUrl", undefined)}
                     >
                       <X className="h-4 w-4" />
@@ -219,7 +221,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
                         <>
                           <Image className="text-muted-foreground h-8 w-8" />
                           <span className="text-muted-foreground text-sm">
-                            {isRTL ? "انقر للرفع" : "Click to upload"}
+                            {dict.clickToUpload || "Click to upload"}
                           </span>
                         </>
                       )}
@@ -232,7 +234,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
             {/* Signature Upload */}
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                {isRTL ? "التوقيع" : "Signature"}
+                {dict.signature || "Signature"}
               </label>
               <div className="rounded-lg border-2 border-dashed p-4 text-center">
                 {signatureUrl ? (
@@ -246,7 +248,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute top-0 right-0 h-6 w-6"
+                      className="absolute end-0 top-0 h-6 w-6"
                       onClick={() => setValue("signatureUrl", undefined)}
                     >
                       <X className="h-4 w-4" />
@@ -271,7 +273,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
                         <>
                           <FileText className="text-muted-foreground h-8 w-8" />
                           <span className="text-muted-foreground text-sm">
-                            {isRTL ? "انقر للرفع" : "Click to upload"}
+                            {dict.clickToUpload || "Click to upload"}
                           </span>
                         </>
                       )}
@@ -288,12 +290,11 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
-            {isRTL ? "المستندات المطلوبة" : "Required Documents"}
+            {dict.requiredDocuments || "Required Documents"}
           </CardTitle>
           <CardDescription>
-            {isRTL
-              ? "قم برفع المستندات المطلوبة أدناه. الحد الأقصى للحجم 5 ميجابايت لكل ملف."
-              : "Upload the required documents below. Maximum file size is 5MB per file."}
+            {dict.requiredDocumentsDesc ||
+              "Upload the required documents below. Maximum file size is 5MB per file."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -318,7 +319,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
                         <span className="font-medium">{doc.name}</span>
                         {doc.required && (
                           <Badge variant="destructive" className="text-xs">
-                            {isRTL ? "مطلوب" : "Required"}
+                            {dict.required || "Required"}
                           </Badge>
                         )}
                       </div>
@@ -367,7 +368,7 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
                             ) : (
                               <>
                                 <Upload className="me-2 h-4 w-4" />
-                                {isRTL ? "رفع" : "Upload"}
+                                {dict.upload || "Upload"}
                               </>
                             )}
                           </span>
@@ -386,12 +387,11 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
-            {isRTL ? "مستندات إضافية" : "Additional Documents"}
+            {dict.additionalDocuments || "Additional Documents"}
           </CardTitle>
           <CardDescription>
-            {isRTL
-              ? "قم برفع أي مستندات إضافية قد تدعم طلبك"
-              : "Upload any additional documents that may support your application"}
+            {dict.additionalDocumentsDesc ||
+              "Upload any additional documents that may support your application"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -413,9 +413,8 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
             <div className="hover:bg-muted/25 rounded-lg border-2 border-dashed p-8 text-center transition-colors">
               <Upload className="text-muted-foreground mx-auto h-8 w-8" />
               <p className="text-muted-foreground mt-2 text-sm">
-                {isRTL
-                  ? "اسحب وأفلت الملفات هنا أو انقر للتحميل"
-                  : "Drag and drop files here or click to upload"}
+                {dict.dragAndDrop ||
+                  "Drag and drop files here or click to upload"}
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
                 PDF, JPG, PNG, WEBP (Max 5MB)

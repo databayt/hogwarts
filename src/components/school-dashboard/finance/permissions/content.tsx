@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Permission Management Content - Finance Module
  *
@@ -65,6 +68,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import type {
   FinanceAction,
   FinanceModule,
@@ -144,6 +148,8 @@ const ROLE_COLORS: Record<string, string> = {
 }
 
 export function PermissionManagementContent() {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [users, setUsers] = useState<UserPermissionSummary[]>([])
   const [modules, setModules] = useState<ModulePermissionSummary[]>([])
   const [loading, setLoading] = useState(true)
@@ -173,10 +179,16 @@ export function PermissionManagementContent() {
       if (modulesResult.success && modulesResult.data) {
         setModules(modulesResult.data)
       } else {
-        toast.error(modulesResult.error || "Failed to load modules")
+        toast.error(
+          modulesResult.error ||
+            dictionary?.common?.failedToLoad ||
+            "Failed to load modules"
+        )
       }
     } catch (error) {
-      toast.error("Failed to load permissions")
+      toast.error(
+        dictionary?.common?.failedToLoad || "Failed to load permissions"
+      )
     } finally {
       setLoading(false)
     }
@@ -228,7 +240,7 @@ export function PermissionManagementContent() {
             <div>
               <Label>Search Users</Label>
               <div className="relative">
-                <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+                <Search className="text-muted-foreground absolute start-2 top-2.5 h-4 w-4" />
                 <Input
                   placeholder="Name or email..."
                   value={searchTerm}
@@ -517,6 +529,8 @@ function EditPermissionsDialog({
   onClose: () => void
   onRefresh: () => void
 }) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [selectedPermissions, setSelectedPermissions] = useState<
     Map<FinanceModule, Set<FinanceAction>>
   >(() => {
@@ -597,29 +611,41 @@ function EditPermissionsDialog({
       if (toGrant.length > 0) {
         const result = await bulkGrantPermissions(user.userId, toGrant)
         if (!result.success) {
-          toast.error("Failed to grant some permissions")
+          toast.error(
+            t?.error?.permissionGrantFailed ||
+              "Failed to grant some permissions"
+          )
         } else {
-          toast.success(`Granted ${result.granted} permissions`)
+          toast.success(
+            t?.success?.permissionGranted ||
+              `Granted ${result.granted} permissions`
+          )
         }
       }
 
       if (toRevoke.length > 0) {
         const result = await bulkRevokePermissions(user.userId, toRevoke)
         if (!result.success) {
-          toast.error("Failed to revoke some permissions")
+          toast.error(
+            t?.error?.permissionRevokeFailed ||
+              "Failed to revoke some permissions"
+          )
         } else {
-          toast.success(`Revoked ${result.revoked} permissions`)
+          toast.success(
+            t?.success?.permissionRevoked ||
+              `Revoked ${result.revoked} permissions`
+          )
         }
       }
 
       if (toGrant.length === 0 && toRevoke.length === 0) {
-        toast.info("No changes to save")
+        toast.info(t?.info?.noChanges || "No changes to save")
       }
 
       onRefresh()
       onClose()
     } catch (error) {
-      toast.error("Failed to save permissions")
+      toast.error(t?.error?.saveFailed || "Failed to save permissions")
     } finally {
       setSaving(false)
     }
@@ -685,6 +711,8 @@ function CopyPermissionsDialog({
   onClose: () => void
   onRefresh: () => void
 }) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [users, setUsers] = useState<UserPermissionSummary[]>([])
   const [selectedUserId, setSelectedUserId] = useState<string>("")
   const [copying, setCopying] = useState(false)
@@ -702,7 +730,7 @@ function CopyPermissionsDialog({
 
   const handleCopy = async () => {
     if (!selectedUserId) {
-      toast.error("Please select a target user")
+      toast.error(dictionary?.common?.error || "Please select a target user")
       return
     }
 
@@ -710,14 +738,18 @@ function CopyPermissionsDialog({
     try {
       const result = await copyPermissions(fromUser.userId, selectedUserId)
       if (result.success) {
-        toast.success(`Copied ${result.copied} permissions`)
+        toast.success(
+          t?.success?.copied || `Copied ${result.copied} permissions`
+        )
         onRefresh()
         onClose()
       } else {
-        toast.error(result.error || "Failed to copy permissions")
+        toast.error(
+          result.error || t?.error?.copyFailed || "Failed to copy permissions"
+        )
       }
     } catch (error) {
-      toast.error("Failed to copy permissions")
+      toast.error(t?.error?.copyFailed || "Failed to copy permissions")
     } finally {
       setCopying(false)
     }

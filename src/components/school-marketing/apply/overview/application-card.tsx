@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 import { Clock, FileText, User } from "lucide-react"
 
@@ -17,53 +19,79 @@ export interface DraftApplication {
   expiresAt: Date
 }
 
+interface TimeDict {
+  today?: string
+  tomorrow?: string
+  daysFormat?: string
+  justNow?: string
+  hoursAgoFormat?: string
+  yesterday?: string
+  daysAgoFormat?: string
+}
+
 interface ApplicationCardProps {
   application: DraftApplication
   onClick?: (sessionToken: string) => void
   isRTL?: boolean
+  locale?: string
   dictionary?: {
     draft?: string
     step?: string
     lastUpdated?: string
     expiresIn?: string
-  }
+    applicationFallback?: string
+  } & TimeDict
 }
 
-function formatRelativeTime(date: Date, isRTL: boolean): string {
+function formatRelativeTime(
+  date: Date,
+  locale: string,
+  timeDict: TimeDict
+): string {
   const now = new Date()
   const diffMs = date.getTime() - now.getTime()
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
 
   if (diffDays <= 0) {
-    return isRTL ? "اليوم" : "Today"
+    return timeDict.today || "Today"
   } else if (diffDays === 1) {
-    return isRTL ? "غدا" : "Tomorrow"
+    return timeDict.tomorrow || "Tomorrow"
   } else if (diffDays <= 7) {
-    return isRTL ? `${diffDays} أيام` : `${diffDays} days`
+    return (timeDict.daysFormat || "{n} days").replace("{n}", String(diffDays))
   } else {
-    return date.toLocaleDateString(isRTL ? "ar" : "en", {
+    return date.toLocaleDateString(locale, {
       month: "short",
       day: "numeric",
     })
   }
 }
 
-function formatLastUpdated(date: Date, isRTL: boolean): string {
+function formatLastUpdated(
+  date: Date,
+  locale: string,
+  timeDict: TimeDict
+): string {
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
   if (diffHours < 1) {
-    return isRTL ? "منذ قليل" : "Just now"
+    return timeDict.justNow || "Just now"
   } else if (diffHours < 24) {
-    return isRTL ? `منذ ${diffHours} ساعة` : `${diffHours}h ago`
+    return (timeDict.hoursAgoFormat || "{n}h ago").replace(
+      "{n}",
+      String(diffHours)
+    )
   } else if (diffDays === 1) {
-    return isRTL ? "أمس" : "Yesterday"
+    return timeDict.yesterday || "Yesterday"
   } else if (diffDays <= 7) {
-    return isRTL ? `منذ ${diffDays} أيام` : `${diffDays}d ago`
+    return (timeDict.daysAgoFormat || "{n}d ago").replace(
+      "{n}",
+      String(diffDays)
+    )
   } else {
-    return date.toLocaleDateString(isRTL ? "ar" : "en", {
+    return date.toLocaleDateString(locale, {
       month: "short",
       day: "numeric",
     })
@@ -74,6 +102,7 @@ export function ApplicationCard({
   application,
   onClick,
   isRTL = false,
+  locale = isRTL ? "ar" : "en",
   dictionary,
 }: ApplicationCardProps) {
   const dict = dictionary || {}
@@ -96,13 +125,14 @@ export function ApplicationCard({
             <div className="flex items-center gap-2">
               <h5 className="truncate text-xs font-medium sm:text-sm">
                 {application.campaignName ||
-                  (isRTL ? "طلب القبول" : "Application")}
+                  dict.applicationFallback ||
+                  "Application"}
               </h5>
               <Badge
                 variant="secondary"
                 className="bg-blue-100 text-xs text-blue-800"
               >
-                {dict.draft || (isRTL ? "مسودة" : "Draft")}
+                {dict.draft || "Draft"}
               </Badge>
             </div>
             <div className="mt-0.5 flex flex-col sm:flex-row sm:items-center sm:gap-2 rtl:flex-row-reverse">
@@ -115,13 +145,15 @@ export function ApplicationCard({
                   </>
                 )}
                 <span>
-                  {dict.step || (isRTL ? "الخطوة" : "Step")}{" "}
-                  {application.currentStep}/{application.totalSteps}
+                  {dict.step || "Step"} {application.currentStep}/
+                  {application.totalSteps}
                 </span>
               </p>
               <p className="text-muted-foreground flex items-center gap-1 text-xs">
                 <Clock className="h-3 w-3" />
-                <span>{formatLastUpdated(application.updatedAt, isRTL)}</span>
+                <span>
+                  {formatLastUpdated(application.updatedAt, locale, dict)}
+                </span>
               </p>
             </div>
           </div>

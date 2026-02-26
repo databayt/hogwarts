@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import {
   CircleAlert,
@@ -177,7 +179,7 @@ export function DocumentUploadStep({
                   type="button"
                   variant="destructive"
                   size="sm"
-                  className="absolute -top-2 -right-2"
+                  className="absolute -end-2 -top-2"
                   onClick={() => {
                     form.setValue("profilePhotoUrl", "")
                     setProfilePhotoUrl("")

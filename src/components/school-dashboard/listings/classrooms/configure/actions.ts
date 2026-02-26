@@ -1,12 +1,16 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { assertClassroomPermission, getAuthContext } from "../authorization"
 import { generateSectionsSchema } from "./validation"
 
 type ActionResponse<T = void> =
@@ -38,12 +42,26 @@ export async function getGradeConfiguration(): Promise<
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    try {
+      assertClassroomPermission(authContext, "read", { schoolId })
+    } catch {
+      return {
+        success: false,
+        error: "Unauthorized to view classroom configuration",
+      }
     }
 
     const [grades, roomTypes] = await Promise.all([
@@ -121,12 +139,23 @@ export async function generateSections(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    try {
+      assertClassroomPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to generate sections" }
     }
 
     const parsed = generateSectionsSchema.parse(input)

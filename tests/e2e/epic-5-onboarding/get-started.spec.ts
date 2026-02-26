@@ -164,7 +164,7 @@ test.describe("Story 5.1: Onboarding Page Content @onboarding", () => {
 
     await expect(page.locator("body")).not.toBeEmpty()
     await expect(
-      page.locator("h1, h2, [data-testid='hero'], main").first()
+      page.locator("h1, h2, h3, [data-testid='hero'], main").first()
     ).toBeVisible({ timeout: TIMEOUTS.medium })
   })
 

@@ -363,7 +363,7 @@ pnpm test src/components/feature
 
 **Maintained by**: Hogwarts School Automation Platform Team
 **Last Updated**: [Auto-generated date]
-**License**: MIT
+**License**: SSPL-1.0
 
 ````
 

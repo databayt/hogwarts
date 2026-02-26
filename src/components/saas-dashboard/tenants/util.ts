@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Utility functions for Tenants (Schools) feature
  *
@@ -115,9 +118,13 @@ export function calculateUsagePercentage(current: number, max: number): number {
 /**
  * Format currency amount from cents
  */
-export function formatCurrency(cents: number, currency = "USD"): string {
+export function formatCurrency(
+  cents: number,
+  currency = "USD",
+  locale = "ar"
+): string {
   const amount = cents / 100
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
   }).format(amount)
@@ -126,10 +133,10 @@ export function formatCurrency(cents: number, currency = "USD"): string {
 /**
  * Format date for display
  */
-export function formatDate(date: Date | string | null): string {
+export function formatDate(date: Date | string | null, locale = "ar"): string {
   if (!date) return "-"
   const dateObj = typeof date === "string" ? new Date(date) : date
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -139,10 +146,13 @@ export function formatDate(date: Date | string | null): string {
 /**
  * Format date with time
  */
-export function formatDateTime(date: Date | string | null): string {
+export function formatDateTime(
+  date: Date | string | null,
+  locale = "ar"
+): string {
   if (!date) return "-"
   const dateObj = typeof date === "string" ? new Date(date) : date
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",

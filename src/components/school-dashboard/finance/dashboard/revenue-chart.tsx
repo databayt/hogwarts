@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { format } from "date-fns"
 import {
@@ -25,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 interface RevenueChartProps {
   revenueData: number[]
@@ -41,6 +44,7 @@ function RevenueChartInner({
   labels,
   className,
 }: RevenueChartProps) {
+  const { locale } = useLocale()
   // Generate labels if not provided (last 12 months)
   const monthLabels =
     labels ||
@@ -73,7 +77,7 @@ function RevenueChartInner({
             />
             <span className="capitalize">{entry.name}:</span>
             <span className="font-medium">
-              SDG {new Intl.NumberFormat("en-SD").format(entry.value)}
+              SDG {new Intl.NumberFormat(locale).format(entry.value)}
             </span>
           </div>
         ))}
@@ -245,7 +249,7 @@ function RevenueChartInner({
             <p className="text-muted-foreground text-sm">Avg Monthly Revenue</p>
             <p className="text-lg font-semibold text-green-600">
               SDG{" "}
-              {new Intl.NumberFormat("en-SD").format(
+              {new Intl.NumberFormat(locale).format(
                 revenueData.reduce((a, b) => a + b, 0) / revenueData.length
               )}
             </p>
@@ -256,7 +260,7 @@ function RevenueChartInner({
             </p>
             <p className="text-lg font-semibold text-red-600">
               SDG{" "}
-              {new Intl.NumberFormat("en-SD").format(
+              {new Intl.NumberFormat(locale).format(
                 expenseData.reduce((a, b) => a + b, 0) / expenseData.length
               )}
             </p>
@@ -265,7 +269,7 @@ function RevenueChartInner({
             <p className="text-muted-foreground text-sm">Avg Monthly Profit</p>
             <p className="text-lg font-semibold text-blue-600">
               SDG{" "}
-              {new Intl.NumberFormat("en-SD").format(
+              {new Intl.NumberFormat(locale).format(
                 profitData.reduce((a, b) => a + b, 0) / profitData.length
               )}
             </p>

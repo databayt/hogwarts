@@ -1,13 +1,8 @@
-import {
-  Bell,
-  Clock,
-  MapPin,
-  QrCode,
-  Save,
-  Settings,
-  Shield,
-  Users,
-} from "lucide-react"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+import { type Metadata } from "next"
+import { Bell, Clock, Save, Settings, Shield } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -28,20 +23,21 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
 
-export const metadata = { title: "Dashboard: Attendance Settings" }
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Attendance Settings",
+    description: "Configure attendance system settings",
+  }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
 export default async function Page({ params }: Props) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-
-  // Permission check removed - handled by middleware and AdminAuthGuard in layout
+  await params // Consume params to satisfy Next.js
 
   return (
     <AttendanceProvider>
@@ -49,12 +45,12 @@ export default async function Page({ params }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-gray-100 p-3">
-              <Settings className="h-6 w-6 text-gray-600" />
+            <div className="bg-muted rounded-lg p-3">
+              <Settings className="text-muted-foreground h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Attendance Settings</h1>
-              <p className="text-muted-foreground">
+              <h2>Attendance Settings</h2>
+              <p className="text-muted-foreground text-sm">
                 Configure global attendance system settings
               </p>
             </div>
@@ -70,7 +66,10 @@ export default async function Page({ params }: Props) {
           {/* General Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>General Settings</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                General Settings
+              </CardTitle>
               <CardDescription>Basic attendance configuration</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -156,25 +155,22 @@ export default async function Page({ params }: Props) {
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { method: "Manual Entry", icon: "✏️", enabled: true },
-                { method: "QR Code", icon: "📱", enabled: true },
-                { method: "Geofence", icon: "📍", enabled: true },
-                { method: "Barcode", icon: "📊", enabled: true },
-                { method: "RFID", icon: "💳", enabled: false },
-                { method: "NFC", icon: "📲", enabled: false },
-                { method: "Bluetooth", icon: "📶", enabled: false },
-                { method: "Fingerprint", icon: "👆", enabled: false },
-                { method: "Face Recognition", icon: "👤", enabled: false },
-                { method: "Bulk Upload", icon: "📁", enabled: true },
+                { method: "Manual Entry", enabled: true },
+                { method: "QR Code", enabled: true },
+                { method: "Geofence", enabled: true },
+                { method: "Barcode", enabled: true },
+                { method: "RFID", enabled: false },
+                { method: "NFC", enabled: false },
+                { method: "Bluetooth", enabled: false },
+                { method: "Fingerprint", enabled: false },
+                { method: "Face Recognition", enabled: false },
+                { method: "Bulk Upload", enabled: true },
               ].map((item) => (
                 <div
                   key={item.method}
                   className="flex items-center justify-between"
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{item.icon}</span>
-                    <span className="text-sm font-medium">{item.method}</span>
-                  </div>
+                  <span className="text-sm font-medium">{item.method}</span>
                   <Switch defaultChecked={item.enabled} />
                 </div>
               ))}
@@ -184,11 +180,9 @@ export default async function Page({ params }: Props) {
           {/* Security Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Security Settings
-                </div>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Security Settings
               </CardTitle>
               <CardDescription>
                 Anti-fraud and security measures
@@ -234,27 +228,15 @@ export default async function Page({ params }: Props) {
                 </div>
                 <Switch />
               </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Two-Factor Attendance</Label>
-                  <p className="text-muted-foreground text-xs">
-                    Require two methods for high-security
-                  </p>
-                </div>
-                <Switch />
-              </div>
             </CardContent>
           </Card>
 
           {/* Notification Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>
-                <div className="flex items-center gap-2">
-                  <Bell className="h-5 w-5" />
-                  Notifications
-                </div>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Notifications
               </CardTitle>
               <CardDescription>
                 Alert settings for attendance events
@@ -295,7 +277,7 @@ export default async function Page({ params }: Props) {
                 <div>
                   <Label>Low Attendance Warnings</Label>
                   <p className="text-muted-foreground text-xs">
-                    Alert when attendance drops below 80%
+                    Alert when attendance drops below threshold
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -358,34 +340,6 @@ export default async function Page({ params }: Props) {
                   <SelectItem value="VERBOSE">Verbose</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Session Timeout (minutes)</Label>
-              <div className="flex items-center gap-4">
-                <Slider
-                  defaultValue={[480]}
-                  min={60}
-                  max={1440}
-                  step={60}
-                  className="flex-1"
-                />
-                <span className="w-16 font-mono text-sm">8h</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Max Devices per Student</Label>
-              <div className="flex items-center gap-4">
-                <Slider
-                  defaultValue={[3]}
-                  min={1}
-                  max={10}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="w-12 font-mono text-sm">3</span>
-              </div>
             </div>
 
             <div className="flex items-center justify-between">

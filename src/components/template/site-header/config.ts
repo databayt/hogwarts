@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { DocsConfig, MarketingConfig, SiteConfig } from "./types"
 
 export const siteConfig: SiteConfig = {
@@ -152,21 +155,25 @@ export const marketingConfig: MarketingConfig = {
     {
       title: "About",
       href: "/about",
+      key: "about",
     },
 
     {
       title: "Admissions",
       href: "/admissions",
+      key: "admissions",
     },
 
     {
       title: "Academic",
       href: "/academic",
+      key: "academic",
     },
 
     {
       title: "Platform",
       href: "/dashboard",
+      key: "platform",
     },
   ],
 }

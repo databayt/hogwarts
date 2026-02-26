@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 export const i18n = {
   defaultLocale: "ar",
   locales: ["en", "ar"], // Add your supported locales

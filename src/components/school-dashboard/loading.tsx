@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -111,36 +114,60 @@ export function TimetableByRoomSkeleton() {
 export function LibrarySkeleton() {
   return (
     <div className="w-full min-w-0 space-y-12 overflow-hidden">
-      {/* LibraryHero */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-center">
-        <div className="flex-1 space-y-4">
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-4 w-80" />
-          <Skeleton className="h-4 w-64" />
-          <Skeleton className="h-10 w-32 rounded-md" />
+      {/* Hero — matches hero.tsx layout */}
+      <section className="relative">
+        <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-16">
+          {/* Text Content */}
+          <div className="flex flex-1 flex-col items-start space-y-6 text-start">
+            {/* h1 "Revelio" + subtitle "Unlock hidden." */}
+            <div className="space-y-2">
+              <Skeleton className="h-14 w-56 md:h-16 lg:h-20" />
+              <Skeleton className="h-8 w-44 md:h-10 lg:h-12" />
+            </div>
+            {/* Two buttons */}
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Skeleton className="h-11 w-36 rounded-md" />
+              <Skeleton className="h-11 w-28 rounded-md" />
+            </div>
+          </div>
+          {/* Animation */}
+          <div className="flex flex-1 justify-center">
+            <Skeleton className="h-56 w-full max-w-md rounded-xl md:h-72" />
+          </div>
         </div>
-        <Skeleton className="h-48 w-48 rounded-xl" />
-      </div>
+      </section>
 
-      {/* CollaborateSection */}
-      <div className="flex flex-col gap-6 md:flex-row">
-        <Skeleton className="h-40 flex-1 rounded-xl" />
-        <Skeleton className="h-40 flex-1 rounded-xl" />
-      </div>
+      {/* Collaborate — matches collaborate-section.tsx */}
+      <section className="w-full max-w-full overflow-hidden rounded-2xl">
+        <div className="flex flex-col lg:flex-row">
+          {/* Image left */}
+          <Skeleton className="aspect-[4/3] w-full lg:aspect-auto lg:h-80 lg:w-1/2" />
+          {/* Content right */}
+          <div className="flex flex-col justify-center gap-4 p-8 lg:w-1/2 lg:p-12">
+            <Skeleton className="h-9 w-3/4 lg:h-10" />
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="mt-2 h-11 w-28 rounded-md" />
+          </div>
+        </div>
+      </section>
 
-      {/* 4 BookList rows */}
+      {/* 4 BookList rows — matches book-list/content.tsx */}
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="space-y-4">
-          <Skeleton className="h-6 w-36" />
-          <div className="flex gap-4 overflow-hidden">
+        <section key={i}>
+          <div className="mb-6 flex items-center justify-between">
+            <Skeleton className="h-8 w-36" />
+          </div>
+          <div className="flex gap-4 overflow-hidden pb-4">
             {Array.from({ length: 8 }).map((_, j) => (
               <Skeleton
                 key={j}
-                className="aspect-[2/3] w-32 flex-shrink-0 rounded-lg sm:w-36 md:w-40"
+                className="aspect-[2/3] w-32 flex-shrink-0 rounded-md sm:w-36 md:w-40"
               />
             ))}
           </div>
-        </div>
+        </section>
       ))}
     </div>
   )
@@ -294,15 +321,15 @@ export function SubjectsBrowseSkeleton() {
     <div className="space-y-6">
       <div className="@container">
         <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-4">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 24 }).map((_, i) => (
             <div
               key={i}
               className="flex items-center gap-3 overflow-hidden rounded-lg border"
             >
-              <Skeleton className="h-16 w-16 shrink-0 rounded-s-lg" />
-              <div className="min-w-0 space-y-2 pe-3">
+              <Skeleton className="h-16 w-16 shrink-0 rounded-lg" />
+              <div className="min-w-0 pe-3">
                 <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-3 w-16" />
+                <Skeleton className="mt-1 h-3.5 w-14 rounded-full" />
               </div>
             </div>
           ))}
@@ -592,7 +619,10 @@ export function ExamCertConfigFormSkeleton() {
       {/* 2-col switches: logo + verification */}
       <div className="grid gap-6 md:grid-cols-2">
         {Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="flex items-center space-x-2">
+          <div
+            key={i}
+            className="flex items-center space-x-2 rtl:space-x-reverse"
+          >
             <Skeleton className="h-5 w-10 rounded-full" />
             <Skeleton className="h-4 w-28" />
           </div>

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Accounts Module - Server Actions
  * Server-side operations for chart of accounts, journal entries, and accounting reports

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -25,8 +27,6 @@ export function usePrice() {
 
   const onSubmit = async (data: SchoolPriceFormData) => {
     try {
-      console.log("💰 Price - Submitting:", data)
-
       // Update the listing with the pricing data
       await updateListingData({
         tuitionFee: data.tuitionFee,
@@ -42,7 +42,7 @@ export function usePrice() {
         goToNextStep(nextStep)
       }
     } catch (error) {
-      console.error("❌ Error submitting price form:", error)
+      console.error("Error submitting price form:", error)
     }
   }
 

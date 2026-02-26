@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * AI Provider Selection for Lead Extraction
  * Uses Vercel AI SDK for consistent interface across providers

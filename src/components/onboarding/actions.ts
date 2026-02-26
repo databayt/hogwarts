@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
@@ -89,13 +91,29 @@ export async function getUserSchools(): Promise<ActionResponse> {
 /**
  * Initialize school setup for onboarding.
  * Atomic school-user linking with session refresh.
+ * Optionally accepts a templateId to pre-fill school data from SCHOOL_TEMPLATES.
  */
-export async function initializeSchoolSetup(): Promise<ActionResponse> {
+export async function initializeSchoolSetup(
+  templateId?: string
+): Promise<ActionResponse> {
   try {
     const authContext = await getAuthContext()
 
+    // Resolve template data if templateId provided
+    let templateData: Record<string, unknown> | undefined
+    if (templateId) {
+      const { SCHOOL_TEMPLATES } = await import("./config")
+      const template = SCHOOL_TEMPLATES.find((t) => t.id === templateId)
+      if (template) {
+        templateData = { ...template.data } as Record<string, unknown>
+      }
+    }
+
     const { ensureUserSchool } = await import("@/lib/school-access")
-    const schoolResult = await ensureUserSchool(authContext.userId)
+    const schoolResult = await ensureUserSchool(
+      authContext.userId,
+      templateData
+    )
 
     if (!schoolResult.success) {
       return createActionResponse(undefined, {

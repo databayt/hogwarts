@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   AlertCircle,
   CheckCircle2,
@@ -83,6 +85,13 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
   const isRTL = lang === "ar"
   const { errors } = formState
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { formSteps?: Record<string, string> } }
+      }
+    )?.school?.admission?.formSteps ?? {}
+
   // Check section completeness
   const isPersonalComplete = !!(
     formData.firstName &&
@@ -124,18 +133,15 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
             <>
               <AlertCircle className="h-5 w-5 text-amber-500" />
               <span className="font-medium text-amber-700 dark:text-amber-300">
-                {isRTL
-                  ? "يرجى مراجعة المعلومات قبل التقديم"
-                  : "Please review your information before submitting"}
+                {dict.reviewBeforeSubmit ||
+                  "Please review your information before submitting"}
               </span>
             </>
           ) : (
             <>
               <CheckCircle2 className="h-5 w-5 text-green-500" />
               <span className="font-medium text-green-700 dark:text-green-300">
-                {isRTL
-                  ? "طلبك جاهز للتقديم"
-                  : "Your application is ready to submit"}
+                {dict.readyToSubmit || "Your application is ready to submit"}
               </span>
             </>
           )}
@@ -149,13 +155,12 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
             <div>
               <h3 className="font-semibold">{campaign.name}</h3>
               <p className="text-muted-foreground text-sm">
-                {isRTL ? "العام الدراسي:" : "Academic Year:"}{" "}
-                {campaign.academicYear}
+                {dict.academicYear || "Academic Year:"} {campaign.academicYear}
               </p>
             </div>
             {campaign.applicationFee && campaign.applicationFee > 0 && (
               <Badge variant="secondary">
-                {isRTL ? "رسوم التقديم:" : "Application Fee:"} $
+                {dict.applicationFee || "Application Fee:"} $
                 {campaign.applicationFee}
               </Badge>
             )}
@@ -165,46 +170,46 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
 
       {/* Personal Information */}
       <ReviewSection
-        title={isRTL ? "المعلومات الشخصية" : "Personal Information"}
+        title={dict.personalInformation || "Personal Information"}
         icon={<User className="h-5 w-5" />}
         isComplete={isPersonalComplete}
       >
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <ReviewField
-            label={isRTL ? "الاسم الأول" : "First Name"}
+            label={dict.firstName || "First Name"}
             value={formData.firstName}
             required
           />
           <ReviewField
-            label={isRTL ? "الاسم الأوسط" : "Middle Name"}
+            label={dict.middleName || "Middle Name"}
             value={formData.middleName}
           />
           <ReviewField
-            label={isRTL ? "اسم العائلة" : "Last Name"}
+            label={dict.lastName || "Last Name"}
             value={formData.lastName}
             required
           />
           <ReviewField
-            label={isRTL ? "تاريخ الميلاد" : "Date of Birth"}
+            label={dict.dateOfBirth || "Date of Birth"}
             value={formData.dateOfBirth}
             required
           />
           <ReviewField
-            label={isRTL ? "الجنس" : "Gender"}
+            label={dict.gender || "Gender"}
             value={formatGender(formData.gender)}
             required
           />
           <ReviewField
-            label={isRTL ? "الجنسية" : "Nationality"}
+            label={dict.nationality || "Nationality"}
             value={formData.nationality}
             required
           />
           <ReviewField
-            label={isRTL ? "الديانة" : "Religion"}
+            label={dict.religion || "Religion"}
             value={formData.religion}
           />
           <ReviewField
-            label={isRTL ? "الفئة" : "Category"}
+            label={dict.category || "Category"}
             value={formData.category}
           />
         </div>
@@ -212,23 +217,23 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
 
       {/* Contact Information */}
       <ReviewSection
-        title={isRTL ? "معلومات الاتصال" : "Contact Information"}
+        title={dict.contactInformation || "Contact Information"}
         icon={<Phone className="h-5 w-5" />}
         isComplete={isContactComplete}
       >
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <ReviewField
-            label={isRTL ? "البريد الإلكتروني" : "Email"}
+            label={dict.emailAddress || "Email"}
             value={formData.email}
             required
           />
           <ReviewField
-            label={isRTL ? "رقم الهاتف" : "Phone"}
+            label={dict.phone || "Phone"}
             value={formData.phone}
             required
           />
           <ReviewField
-            label={isRTL ? "هاتف بديل" : "Alternate Phone"}
+            label={dict.alternatePhone || "Alternate Phone"}
             value={formData.alternatePhone}
           />
         </div>
@@ -236,28 +241,28 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <div className="col-span-2 md:col-span-3">
             <ReviewField
-              label={isRTL ? "العنوان" : "Address"}
+              label={dict.address || "Address"}
               value={formData.address}
               required
             />
           </div>
           <ReviewField
-            label={isRTL ? "المدينة" : "City"}
+            label={dict.city || "City"}
             value={formData.city}
             required
           />
           <ReviewField
-            label={isRTL ? "الولاية" : "State/Province"}
+            label={dict.stateProvince || "State/Province"}
             value={formData.state}
             required
           />
           <ReviewField
-            label={isRTL ? "الرمز البريدي" : "Postal Code"}
+            label={dict.postalCode || "Postal Code"}
             value={formData.postalCode}
             required
           />
           <ReviewField
-            label={isRTL ? "الدولة" : "Country"}
+            label={dict.country || "Country"}
             value={formData.country}
             required
           />
@@ -266,52 +271,52 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
 
       {/* Guardian Information */}
       <ReviewSection
-        title={isRTL ? "معلومات ولي الأمر" : "Guardian Information"}
+        title={dict.guardianInformation || "Guardian Information"}
         icon={<Users className="h-5 w-5" />}
         isComplete={isGuardianComplete}
       >
         <div className="space-y-4">
           <div>
-            <h4 className="mb-2 font-medium">{isRTL ? "الأب" : "Father"}</h4>
+            <h4 className="mb-2 font-medium">{dict.father || "Father"}</h4>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <ReviewField
-                label={isRTL ? "الاسم" : "Name"}
+                label={dict.name || "Name"}
                 value={formData.fatherName}
                 required
               />
               <ReviewField
-                label={isRTL ? "المهنة" : "Occupation"}
+                label={dict.occupation || "Occupation"}
                 value={formData.fatherOccupation}
               />
               <ReviewField
-                label={isRTL ? "الهاتف" : "Phone"}
+                label={dict.phone || "Phone"}
                 value={formData.fatherPhone}
               />
               <ReviewField
-                label={isRTL ? "البريد" : "Email"}
+                label={dict.emailLabel || "Email"}
                 value={formData.fatherEmail}
               />
             </div>
           </div>
           <Separator />
           <div>
-            <h4 className="mb-2 font-medium">{isRTL ? "الأم" : "Mother"}</h4>
+            <h4 className="mb-2 font-medium">{dict.mother || "Mother"}</h4>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <ReviewField
-                label={isRTL ? "الاسم" : "Name"}
+                label={dict.name || "Name"}
                 value={formData.motherName}
                 required
               />
               <ReviewField
-                label={isRTL ? "المهنة" : "Occupation"}
+                label={dict.occupation || "Occupation"}
                 value={formData.motherOccupation}
               />
               <ReviewField
-                label={isRTL ? "الهاتف" : "Phone"}
+                label={dict.phone || "Phone"}
                 value={formData.motherPhone}
               />
               <ReviewField
-                label={isRTL ? "البريد" : "Email"}
+                label={dict.emailLabel || "Email"}
                 value={formData.motherEmail}
               />
             </div>
@@ -321,23 +326,23 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
               <Separator />
               <div>
                 <h4 className="mb-2 font-medium">
-                  {isRTL ? "ولي الأمر الإضافي" : "Additional Guardian"}
+                  {dict.additionalGuardian || "Additional Guardian"}
                 </h4>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   <ReviewField
-                    label={isRTL ? "الاسم" : "Name"}
+                    label={dict.name || "Name"}
                     value={formData.guardianName}
                   />
                   <ReviewField
-                    label={isRTL ? "صلة القرابة" : "Relationship"}
+                    label={dict.relationship || "Relationship"}
                     value={formData.guardianRelation}
                   />
                   <ReviewField
-                    label={isRTL ? "الهاتف" : "Phone"}
+                    label={dict.phone || "Phone"}
                     value={formData.guardianPhone}
                   />
                   <ReviewField
-                    label={isRTL ? "البريد" : "Email"}
+                    label={dict.emailLabel || "Email"}
                     value={formData.guardianEmail}
                   />
                 </div>
@@ -349,30 +354,30 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
 
       {/* Academic Information */}
       <ReviewSection
-        title={isRTL ? "المعلومات الأكاديمية" : "Academic Information"}
+        title={dict.academicInformation || "Academic Information"}
         icon={<GraduationCap className="h-5 w-5" />}
         isComplete={isAcademicComplete}
       >
         <div className="space-y-4">
           <div>
             <h4 className="mb-2 font-medium">
-              {isRTL ? "التعليم السابق" : "Previous Education"}
+              {dict.previousEducation || "Previous Education"}
             </h4>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <ReviewField
-                label={isRTL ? "المدرسة" : "School"}
+                label={dict.school || "School"}
                 value={formData.previousSchool}
               />
               <ReviewField
-                label={isRTL ? "الصف" : "Class"}
+                label={dict.class || "Class"}
                 value={formData.previousClass}
               />
               <ReviewField
-                label={isRTL ? "الدرجات" : "Marks"}
+                label={dict.marks || "Marks"}
                 value={formData.previousMarks}
               />
               <ReviewField
-                label={isRTL ? "الإنجازات" : "Achievements"}
+                label={dict.achievements || "Achievements"}
                 value={formData.achievements}
               />
             </div>
@@ -380,24 +385,24 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
           <Separator />
           <div>
             <h4 className="mb-2 font-medium">
-              {isRTL ? "التقديم لـ" : "Applying For"}
+              {dict.applyingFor || "Applying For"}
             </h4>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <ReviewField
-                label={isRTL ? "الصف" : "Grade"}
+                label={dict.grade || "Grade"}
                 value={formData.applyingForClass}
                 required
               />
               <ReviewField
-                label={isRTL ? "التخصص" : "Stream"}
+                label={dict.stream || "Stream"}
                 value={formData.preferredStream}
               />
               <ReviewField
-                label={isRTL ? "اللغة الثانية" : "Second Language"}
+                label={dict.secondLanguage || "Second Language"}
                 value={formData.secondLanguage}
               />
               <ReviewField
-                label={isRTL ? "اللغة الثالثة" : "Third Language"}
+                label={dict.thirdLanguage || "Third Language"}
                 value={formData.thirdLanguage}
               />
             </div>
@@ -407,7 +412,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
 
       {/* Documents */}
       <ReviewSection
-        title={isRTL ? "المستندات" : "Documents"}
+        title={dict.documents || "Documents"}
         icon={<FileText className="h-5 w-5" />}
         isComplete={isDocumentsComplete}
       >
@@ -415,7 +420,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <div className="flex flex-col">
               <span className="text-muted-foreground text-sm">
-                {isRTL ? "صورة شخصية" : "Passport Photo"}
+                {dict.passportPhoto || "Passport Photo"}
               </span>
               {formData.photoUrl ? (
                 <div className="mt-1">
@@ -427,13 +432,13 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
                 </div>
               ) : (
                 <span className="text-amber-500">
-                  {isRTL ? "مطلوب" : "Required"}
+                  {dict.required || "Required"}
                 </span>
               )}
             </div>
             <div className="flex flex-col">
               <span className="text-muted-foreground text-sm">
-                {isRTL ? "التوقيع" : "Signature"}
+                {dict.signature || "Signature"}
               </span>
               {formData.signatureUrl ? (
                 <div className="mt-1">
@@ -449,10 +454,10 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
             </div>
             <div className="flex flex-col">
               <span className="text-muted-foreground text-sm">
-                {isRTL ? "المستندات المرفقة" : "Attached Documents"}
+                {dict.attachedDocuments || "Attached Documents"}
               </span>
               <span>
-                {formData.documents?.length || 0} {isRTL ? "ملف" : "file(s)"}
+                {formData.documents?.length || 0} {dict.files || "file(s)"}
               </span>
             </div>
           </div>
@@ -460,7 +465,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
           {formData.documents && formData.documents.length > 0 && (
             <div className="mt-4">
               <h4 className="mb-2 text-sm font-medium">
-                {isRTL ? "قائمة المستندات:" : "Document List:"}
+                {dict.documentList || "Document List:"}
               </h4>
               <ul className="space-y-1">
                 {formData.documents.map((doc, index) => (
@@ -479,9 +484,8 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
       <Card className="border-primary">
         <CardContent className="pt-6">
           <p className="text-muted-foreground text-sm">
-            {isRTL
-              ? 'بالنقر على "تقديم الطلب"، أؤكد أن جميع المعلومات المقدمة صحيحة ودقيقة. أفهم أن تقديم معلومات كاذبة قد يؤدي إلى رفض الطلب أو إلغاء القبول.'
-              : 'By clicking "Submit Application", I confirm that all information provided is true and accurate. I understand that submitting false information may result in rejection of the application or cancellation of admission.'}
+            {dict.declaration ||
+              'By clicking "Submit Application", I confirm that all information provided is true and accurate. I understand that submitting false information may result in rejection of the application or cancellation of admission.'}
           </p>
         </CardContent>
       </Card>

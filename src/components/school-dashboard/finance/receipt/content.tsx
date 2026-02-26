@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Main Receipts Content Component
  * Follows Hogwarts content pattern - client component that composes the feature

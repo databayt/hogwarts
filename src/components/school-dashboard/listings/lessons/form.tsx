@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -11,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createLesson,
   getLesson,
@@ -28,6 +31,8 @@ interface LessonCreateFormProps {
 }
 
 export function LessonCreateForm({ onSuccess }: LessonCreateFormProps) {
+  const { dictionary: fullDict } = useDictionary()
+  const t = fullDict?.messages?.toast
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
@@ -88,7 +93,11 @@ export function LessonCreateForm({ onSuccess }: LessonCreateFormProps) {
         : await createLesson(values)
 
       if (res?.success) {
-        toast.success(currentId ? "Lesson updated" : "Lesson created")
+        toast.success(
+          currentId
+            ? t?.success?.updated || "Lesson updated"
+            : t?.success?.created || "Lesson created"
+        )
         closeModal()
         // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
@@ -99,12 +108,16 @@ export function LessonCreateForm({ onSuccess }: LessonCreateFormProps) {
       } else {
         toast.error(
           res?.error ||
-            (currentId ? "Failed to update lesson" : "Failed to create lesson")
+            (currentId
+              ? t?.error?.updateFailed || "Failed to update lesson"
+              : t?.error?.createFailed || "Failed to create lesson")
         )
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      toast.error("An unexpected error occurred")
+      toast.error(
+        fullDict?.common?.unexpectedError || "An unexpected error occurred"
+      )
     }
   }
 

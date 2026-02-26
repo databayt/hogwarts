@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import {
@@ -69,6 +71,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Student {
   id: string
@@ -128,6 +131,8 @@ export function AttendanceTracking({
   enableQRCode = true,
   enableBulkUpload = true,
 }: AttendanceTrackingProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.messages?.toast
   const [selectedTab, setSelectedTab] = useState<"manual" | "qrcode" | "bulk">(
     "manual"
   )
@@ -271,7 +276,7 @@ export function AttendanceTracking({
       setQrCodeUrl(url)
       setQrDialogOpen(true)
     } catch (error) {
-      toast.error("Failed to generate QR code")
+      toast.error(t?.error?.generic || "Failed to generate QR code")
     }
   }
 
@@ -293,10 +298,10 @@ export function AttendanceTracking({
       await onMarkAttendance(records)
 
       if (!isAutoSave) {
-        toast.success("Attendance saved successfully")
+        toast.success(t?.success?.saved || "Attendance saved successfully")
       }
     } catch (error) {
-      toast.error("Failed to save attendance")
+      toast.error(t?.error?.saveFailed || "Failed to save attendance")
     } finally {
       setSaving(false)
     }
@@ -323,7 +328,10 @@ export function AttendanceTracking({
         )
 
         if (studentIdIndex === -1 || statusIndex === -1) {
-          toast.error("CSV must contain Student ID and Status columns")
+          toast.error(
+            t?.error?.invalidFormat ||
+              "CSV must contain Student ID and Status columns"
+          )
           return
         }
 
@@ -355,9 +363,11 @@ export function AttendanceTracking({
         })
 
         setAttendanceData(newData)
-        toast.success(`Updated attendance for ${updated} students`)
+        toast.success(
+          t?.success?.updated || `Updated attendance for ${updated} students`
+        )
       } catch (error) {
-        toast.error("Failed to parse CSV file")
+        toast.error(t?.error?.importFailed || "Failed to parse CSV file")
       }
     }
     reader.readAsText(file)

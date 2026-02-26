@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   Bar,
   BarChart,
@@ -22,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 interface ExpenseChartProps {
   expenseCategories: {
@@ -49,6 +52,8 @@ export function ExpenseChart({
   expenseCategories,
   className,
 }: ExpenseChartProps) {
+  const { locale } = useLocale()
+
   // Sort categories by amount for better visualization
   const sortedCategories = [...expenseCategories].sort(
     (a, b) => b.amount - a.amount
@@ -83,7 +88,7 @@ export function ExpenseChart({
       <div className="bg-background rounded-lg border p-3 shadow-lg">
         <p className="font-semibold">{data.name || data.payload.category}</p>
         <p className="text-sm">
-          Amount: SDG {new Intl.NumberFormat("en-SD").format(data.value)}
+          Amount: SDG {new Intl.NumberFormat(locale).format(data.value)}
         </p>
         <p className="text-sm">
           Percentage: {data.payload.percentage.toFixed(1)}%
@@ -222,7 +227,7 @@ export function ExpenseChart({
           <div className="mb-4 flex items-center justify-between">
             <span className="text-sm font-medium">Total Expenses</span>
             <span className="text-lg font-bold">
-              SDG {new Intl.NumberFormat("en-SD").format(totalExpenses)}
+              SDG {new Intl.NumberFormat(locale).format(totalExpenses)}
             </span>
           </div>
 
@@ -243,7 +248,7 @@ export function ExpenseChart({
                 </div>
                 <div className="text-end">
                   <span className="text-sm font-medium">
-                    SDG {new Intl.NumberFormat("en-SD").format(cat.amount)}
+                    SDG {new Intl.NumberFormat(locale).format(cat.amount)}
                   </span>
                   <span className="text-muted-foreground ms-2 text-xs">
                     ({cat.percentage.toFixed(1)}%)

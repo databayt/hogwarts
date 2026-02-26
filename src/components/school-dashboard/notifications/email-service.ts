@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import type { NotificationPriority, NotificationType } from "@prisma/client"
 import { Resend } from "resend"
 
@@ -398,7 +400,7 @@ export async function processPendingEmailNotifications(
     const result = await sendNotificationEmail({
       notificationId: notification.id,
       to: notification.user.email,
-      locale: "en", // TODO: Get from user preferences
+      locale: "ar", // Platform default language (Arabic)
       type: notification.type,
       priority: notification.priority,
       title: notification.title,

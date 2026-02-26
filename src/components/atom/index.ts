@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Atom components - Compose 2+ UI primitives into reusable patterns
  * Following shadcn/ui architecture hierarchy

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { animate, motion, useMotionValue } from "framer-motion"
 import useMeasure from "react-use-measure"

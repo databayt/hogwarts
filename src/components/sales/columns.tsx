@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { ColumnDef } from "@tanstack/react-table"
 import { Building2, Ellipsis, Mail, Phone, Star } from "lucide-react"
 
@@ -70,39 +72,32 @@ export const getLeadColumns = (
   const isRTL = lang === "ar"
 
   const t = {
-    name: dictionary?.table?.name ?? (isRTL ? "الاسم" : "Name"),
-    email: dictionary?.table?.email ?? (isRTL ? "البريد الإلكتروني" : "Email"),
-    company: dictionary?.table?.company ?? (isRTL ? "الشركة" : "Company"),
-    status: dictionary?.table?.status ?? (isRTL ? "الحالة" : "Status"),
-    priority: dictionary?.table?.priority ?? (isRTL ? "الأولوية" : "Priority"),
-    score: dictionary?.table?.score ?? (isRTL ? "النتيجة" : "Score"),
-    source: dictionary?.table?.source ?? (isRTL ? "المصدر" : "Source"),
-    created:
-      dictionary?.table?.created ?? (isRTL ? "تاريخ الإنشاء" : "Created"),
-    actions: dictionary?.actions ?? (isRTL ? "إجراءات" : "Actions"),
-    view: dictionary?.view ?? (isRTL ? "عرض" : "View"),
-    edit: dictionary?.edit ?? (isRTL ? "تعديل" : "Edit"),
-    delete: dictionary?.delete ?? (isRTL ? "حذف" : "Delete"),
+    name: dictionary?.table?.name || "Name",
+    email: dictionary?.table?.email || "Email",
+    company: dictionary?.table?.company || "Company",
+    status: dictionary?.table?.status || "Status",
+    priority: dictionary?.table?.priority || "Priority",
+    score: dictionary?.table?.score || "Score",
+    source: dictionary?.table?.source || "Source",
+    created: dictionary?.table?.created || "Created",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
     // Status translations
-    NEW: dictionary?.status?.NEW ?? (isRTL ? "جديد" : "New"),
-    CONTACTED:
-      dictionary?.status?.CONTACTED ?? (isRTL ? "تم التواصل" : "Contacted"),
-    QUALIFIED: dictionary?.status?.QUALIFIED ?? (isRTL ? "مؤهل" : "Qualified"),
-    PROPOSAL: dictionary?.status?.PROPOSAL ?? (isRTL ? "عرض" : "Proposal"),
-    NEGOTIATION:
-      dictionary?.status?.NEGOTIATION ?? (isRTL ? "تفاوض" : "Negotiation"),
-    CLOSED_WON:
-      dictionary?.status?.CLOSED_WON ??
-      (isRTL ? "تم الإغلاق (ربح)" : "Closed Won"),
-    CLOSED_LOST:
-      dictionary?.status?.CLOSED_LOST ??
-      (isRTL ? "تم الإغلاق (خسارة)" : "Closed Lost"),
-    ARCHIVED: dictionary?.status?.ARCHIVED ?? (isRTL ? "مؤرشف" : "Archived"),
+    NEW: dictionary?.status?.NEW || "New",
+    CONTACTED: dictionary?.status?.CONTACTED || "Contacted",
+    QUALIFIED: dictionary?.status?.QUALIFIED || "Qualified",
+    PROPOSAL: dictionary?.status?.PROPOSAL || "Proposal",
+    NEGOTIATION: dictionary?.status?.NEGOTIATION || "Negotiation",
+    CLOSED_WON: dictionary?.status?.CLOSED_WON || "Closed Won",
+    CLOSED_LOST: dictionary?.status?.CLOSED_LOST || "Closed Lost",
+    ARCHIVED: dictionary?.status?.ARCHIVED || "Archived",
     // Priority translations
-    LOW: dictionary?.priority?.LOW ?? (isRTL ? "منخفض" : "Low"),
-    MEDIUM: dictionary?.priority?.MEDIUM ?? (isRTL ? "متوسط" : "Medium"),
-    HIGH: dictionary?.priority?.HIGH ?? (isRTL ? "عالي" : "High"),
-    URGENT: dictionary?.priority?.URGENT ?? (isRTL ? "عاجل" : "Urgent"),
+    LOW: dictionary?.priority?.LOW || "Low",
+    MEDIUM: dictionary?.priority?.MEDIUM || "Medium",
+    HIGH: dictionary?.priority?.HIGH || "High",
+    URGENT: dictionary?.priority?.URGENT || "Urgent",
   }
 
   return [
@@ -270,8 +265,7 @@ export const getLeadColumns = (
         const onDelete = async () => {
           try {
             const deleteMsg = (
-              dictionary?.deleteConfirm ??
-              (isRTL ? "حذف {name}؟" : "Delete {name}?")
+              dictionary?.deleteConfirm || "Delete {name}?"
             ).replace("{name}", lead.name)
             const ok = await confirmDeleteDialog(deleteMsg)
             if (!ok) return
@@ -281,17 +275,13 @@ export const getLeadColumns = (
               DeleteToast()
               options?.onDeleteSuccess?.(lead.id)
             } else {
-              ErrorToast(
-                dictionary?.deleteFailed ??
-                  (isRTL ? "فشل حذف العميل المحتمل" : "Failed to delete lead")
-              )
+              ErrorToast(dictionary?.deleteFailed || "Failed to delete lead")
             }
           } catch (e) {
             ErrorToast(
               e instanceof Error
                 ? e.message
-                : (dictionary?.deleteFailedGeneric ??
-                    (isRTL ? "فشل الحذف" : "Failed to delete"))
+                : dictionary?.deleteFailedGeneric || "Failed to delete"
             )
           }
         }

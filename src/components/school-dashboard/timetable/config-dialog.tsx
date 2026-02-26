@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useMemo, useState } from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
 
@@ -504,7 +506,7 @@ export function ConfigDialog({
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
           "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
-          "data-[state=open]:slide-in-from-left-1/2 data-[state=closed]:slide-out-to-left-1/2",
+          "data-[state=open]:slide-in-from-left-1/2 data-[state=closed]:slide-out-to-start-1/2",
           "data-[state=open]:slide-in-from-top-[48%] data-[state=closed]:slide-out-to-top-[48%]",
           "backdrop-blur-sm"
         )}

@@ -1,13 +1,18 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { Award, Download, FileBarChart, TrendingUp } from "lucide-react"
 import { type SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 interface Props {
   dictionary: Dictionary
@@ -37,8 +42,8 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
         status: "COMPLETED",
       },
       include: {
-        class: { select: { name: true } },
-        subject: { select: { subjectName: true } },
+        class: { select: { name: true, lang: true } },
+        subject: { select: { subjectName: true, lang: true } },
         examResults: {
           select: {
             id: true,
@@ -51,26 +56,38 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       take: 20,
     })
 
-    examsWithResults = completedExams.map((exam) => {
-      const totalStudents = exam.examResults.length
-      const presentResults = exam.examResults.filter((r) => !r.isAbsent)
-      const averagePercentage =
-        presentResults.length > 0
-          ? presentResults.reduce((sum, r) => sum + r.percentage, 0) /
-            presentResults.length
-          : null
+    examsWithResults = await Promise.all(
+      completedExams.map(async (exam) => {
+        const totalStudents = exam.examResults.length
+        const presentResults = exam.examResults.filter((r) => !r.isAbsent)
+        const averagePercentage =
+          presentResults.length > 0
+            ? presentResults.reduce((sum, r) => sum + r.percentage, 0) /
+              presentResults.length
+            : null
 
-      return {
-        id: exam.id,
-        title: exam.title,
-        examDate: exam.examDate,
-        className: exam.class.name,
-        subjectName: exam.subject.subjectName,
-        totalStudents,
-        resultsGenerated: totalStudents,
-        averagePercentage,
-      }
-    })
+        return {
+          id: exam.id,
+          title: exam.title,
+          examDate: exam.examDate,
+          className: await getDisplayText(
+            exam.class.name,
+            (exam.class.lang || "ar") as SupportedLanguage,
+            lang,
+            schoolId!
+          ),
+          subjectName: await getDisplayText(
+            exam.subject.subjectName,
+            (exam.subject.lang || "ar") as SupportedLanguage,
+            lang,
+            schoolId!
+          ),
+          totalStudents,
+          resultsGenerated: totalStudents,
+          averagePercentage,
+        }
+      })
+    )
   }
 
   const r = dictionary?.results

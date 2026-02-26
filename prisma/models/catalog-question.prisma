@@ -11,6 +11,7 @@ enum ContentVisibility {
   PRIVATE
   SCHOOL
   PUBLIC
+  PAID
 }
 
 model CatalogQuestion {
@@ -52,6 +53,13 @@ model CatalogQuestion {
   catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
   catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
 
+  // School mirrors (adopted by schools into their QuestionBank)
+  schoolMirrors QuestionBank[] @relation("CatalogQuestionMirror")
+
+  // Pricing for PAID visibility
+  price    Decimal? @db.Decimal(8, 2)
+  currency String?  @default("USD")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -61,5 +69,6 @@ model CatalogQuestion {
   @@index([approvalStatus, visibility])
   @@index([questionType, difficulty])
   @@index([contributedBy])
+  @@index([contributedSchoolId])
   @@map("catalog_questions")
 }

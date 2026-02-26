@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Featured Questions Component - Displays high-quality, frequently used questions
 import Link from "next/link"
 import type {
@@ -107,7 +110,7 @@ export function FeaturedQuestions({
                 {index < 3 && (
                   <Badge
                     variant="default"
-                    className="absolute -top-2 -right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full p-0"
+                    className="absolute -end-2 -top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full p-0"
                   >
                     #{index + 1}
                   </Badge>

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Timetable (Schedule) Server Actions Module
  *
@@ -66,6 +69,7 @@ import { Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
 import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 
 // Constants imported from ./constants.ts to avoid "use server" export restrictions
 import { ABSENCE_TYPES, SUBSTITUTION_STATUS } from "./constants"
@@ -2354,92 +2358,29 @@ export async function getActiveTerm() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  const today = new Date()
+  const { term, source } = await resolveActiveTerm(schoolId)
 
-  // Priority 1: Explicitly marked as active
-  const activeTerm = await db.term.findFirst({
-    where: { schoolId, isActive: true },
-    select: {
-      id: true,
-      termNumber: true,
-      startDate: true,
-      endDate: true,
-      schoolYear: { select: { id: true, yearName: true } },
-    },
-  })
-
-  if (activeTerm) {
-    return {
-      term: {
-        id: activeTerm.id,
-        termNumber: activeTerm.termNumber,
-        label: `${activeTerm.schoolYear.yearName} - Term ${activeTerm.termNumber}`,
-        startDate: activeTerm.startDate,
-        endDate: activeTerm.endDate,
-        yearId: activeTerm.schoolYear.id,
-      },
-      source: "explicit" as const,
-    }
+  if (!term) {
+    return { term: null, source: "none" as const }
   }
 
-  // Priority 2: Current date falls within term dates
-  const currentTerm = await db.term.findFirst({
-    where: {
-      schoolId,
-      startDate: { lte: today },
-      endDate: { gte: today },
-    },
-    select: {
-      id: true,
-      termNumber: true,
-      startDate: true,
-      endDate: true,
-      schoolYear: { select: { id: true, yearName: true } },
-    },
+  // Fetch year name for label
+  const schoolYear = await db.schoolYear.findFirst({
+    where: { id: term.yearId },
+    select: { yearName: true },
   })
 
-  if (currentTerm) {
-    return {
-      term: {
-        id: currentTerm.id,
-        termNumber: currentTerm.termNumber,
-        label: `${currentTerm.schoolYear.yearName} - Term ${currentTerm.termNumber}`,
-        startDate: currentTerm.startDate,
-        endDate: currentTerm.endDate,
-        yearId: currentTerm.schoolYear.id,
-      },
-      source: "date_range" as const,
-    }
-  }
-
-  // Priority 3: Most recent term
-  const recentTerm = await db.term.findFirst({
-    where: { schoolId },
-    orderBy: { startDate: "desc" },
-    select: {
-      id: true,
-      termNumber: true,
-      startDate: true,
-      endDate: true,
-      schoolYear: { select: { id: true, yearName: true } },
+  return {
+    term: {
+      id: term.id,
+      termNumber: term.termNumber,
+      label: `${schoolYear?.yearName ?? "Unknown"} - Term ${term.termNumber}`,
+      startDate: term.startDate,
+      endDate: term.endDate,
+      yearId: term.yearId,
     },
-  })
-
-  if (recentTerm) {
-    return {
-      term: {
-        id: recentTerm.id,
-        termNumber: recentTerm.termNumber,
-        label: `${recentTerm.schoolYear.yearName} - Term ${recentTerm.termNumber}`,
-        startDate: recentTerm.startDate,
-        endDate: recentTerm.endDate,
-        yearId: recentTerm.schoolYear.id,
-      },
-      source: "most_recent" as const,
-    }
+    source,
   }
-
-  return { term: null, source: "none" as const }
 }
 
 /**

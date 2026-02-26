@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { cookies } from "next/headers"
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 import NextAuth from "next-auth"
@@ -709,6 +712,18 @@ export const {
       if (callbackUrl) {
         const validated = validateCallbackUrl(callbackUrl, baseUrl)
         if (validated) return validated
+      }
+
+      // --- Step 1.5: Respect explicit relative paths from signIn({ redirectTo }) ---
+      // When login action sets redirectTo: "/en/onboarding", honor it directly.
+      // Skip: root (/), locale roots (/en, /ar), and URLs with tenant params.
+      if (
+        url.startsWith("/") &&
+        url !== "/" &&
+        !url.match(/^\/(en|ar)\/?$/) &&
+        !url.includes("tenant=")
+      ) {
+        return `${baseUrl}${url}`
       }
 
       // --- Step 2: Detect subdomain from host → redirect to school dashboard ---

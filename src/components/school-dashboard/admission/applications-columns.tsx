@@ -1,8 +1,12 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,11 +16,16 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+
+import { updateApplicationStatus } from "./actions"
 
 export type ApplicationRow = {
   id: string
@@ -198,15 +207,55 @@ export const getApplicationColumns = (
       cell: ({ row }) => {
         const application = row.original
         const router = useRouter()
+        const [isPending, startTransition] = useTransition()
 
         const onView = () => {
           router.push(`/admission/applications/${application.id}`)
         }
 
+        const onUpdateStatus = (status: string) => {
+          startTransition(async () => {
+            const result = await updateApplicationStatus({
+              id: application.id,
+              status,
+            })
+            if (result.success) {
+              toast.success("Status updated")
+              router.refresh()
+            } else {
+              toast.error(result.error || "Failed to update status")
+            }
+          })
+        }
+
+        const onSendEmail = () => {
+          if (application.email) {
+            window.open(`mailto:${application.email}`)
+          }
+        }
+
+        const statusOptions = [
+          {
+            value: "UNDER_REVIEW",
+            label: t?.status?.UNDER_REVIEW || "Under Review",
+          },
+          {
+            value: "SHORTLISTED",
+            label: t?.status?.SHORTLISTED || "Shortlisted",
+          },
+          { value: "SELECTED", label: t?.status?.SELECTED || "Selected" },
+          { value: "WAITLISTED", label: t?.status?.WAITLISTED || "Waitlisted" },
+          { value: "REJECTED", label: t?.status?.REJECTED || "Rejected" },
+        ]
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0"
+                disabled={isPending}
+              >
                 <Ellipsis className="h-4 w-4" />
                 <span className="sr-only">Open menu</span>
               </Button>
@@ -219,10 +268,23 @@ export const getApplicationColumns = (
               <DropdownMenuItem onClick={onView}>
                 {t?.applications?.viewDetails || "View Details"}
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                {t?.applications?.updateStatus || "Update Status"}
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  {t?.applications?.updateStatus || "Update Status"}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {statusOptions.map((opt) => (
+                    <DropdownMenuItem
+                      key={opt.value}
+                      onClick={() => onUpdateStatus(opt.value)}
+                      disabled={application.status === opt.value}
+                    >
+                      {opt.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuItem onClick={onSendEmail}>
                 {t?.applications?.sendEmail || "Send Email"}
               </DropdownMenuItem>
             </DropdownMenuContent>

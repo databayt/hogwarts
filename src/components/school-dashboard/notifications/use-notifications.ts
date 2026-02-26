@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { NotificationPriority, NotificationType } from "@prisma/client"
 import { useSession } from "next-auth/react"

@@ -1,12 +1,10 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState } from "react"
 import { Play, X } from "lucide-react"
 import { motion } from "motion/react"
-
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 
 import { UP_NEXT_COUNTDOWN } from "./constants"
 import type { UpNextOverlayProps } from "./types"
@@ -35,7 +33,7 @@ function CountdownRing({
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}
-        className="text-muted"
+        className="text-white/20"
       />
       {/* Progress circle */}
       <motion.circle
@@ -48,7 +46,7 @@ function CountdownRing({
         strokeDasharray={circumference}
         strokeDashoffset={circumference - progress}
         strokeLinecap="round"
-        className="text-primary"
+        className="text-white"
         initial={{ strokeDashoffset: circumference }}
         animate={{ strokeDashoffset: circumference - progress }}
         transition={{ duration: 0.5, ease: "linear" }}
@@ -118,81 +116,64 @@ export function VideoUpNext({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className={cn(
-        "absolute inset-0 z-50",
-        "flex items-center justify-center",
-        "bg-background/80 backdrop-blur-sm"
-      )}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="absolute end-4 bottom-4 z-50 w-[300px] rounded-xl bg-black p-4 text-white"
     >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      >
-        <Card className="bg-card/95 border-border/50 w-[360px] border backdrop-blur-sm sm:w-[400px]">
-          <CardContent className="p-6">
-            <div className="flex gap-4">
-              {/* Circular countdown */}
-              <div className="relative flex h-14 w-14 flex-shrink-0 items-center justify-center">
-                <CountdownRing countdown={countdown} total={initialCountdown} />
-                <span className="text-foreground absolute text-lg font-bold">
-                  {countdown}
-                </span>
-              </div>
+      <div className="flex gap-4">
+        {/* Circular countdown */}
+        <div className="relative flex h-14 w-14 flex-shrink-0 items-center justify-center">
+          <CountdownRing countdown={countdown} total={initialCountdown} />
+          <span className="absolute text-lg font-bold text-white">
+            {countdown}
+          </span>
+        </div>
 
-              {/* Next lesson info */}
-              <div className="min-w-0 flex-1">
-                <p className="text-muted-foreground text-sm font-medium">
-                  Up Next
-                </p>
-                <h4 className="text-foreground mt-1 truncate font-semibold">
-                  {nextLesson.title}
-                </h4>
-                <p className="text-muted-foreground mt-0.5 truncate text-sm">
-                  {nextLesson.chapterTitle}
-                  {nextLesson.duration && (
-                    <span className="ms-2">
-                      &bull; {formatDuration(nextLesson.duration)}
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
+        {/* Next lesson info */}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-white/60">Up Next</p>
+          <h4 className="mt-1 truncate font-semibold text-white">
+            {nextLesson.title}
+          </h4>
+          <p className="mt-0.5 truncate text-sm text-white/60">
+            {nextLesson.chapterTitle}
+            {nextLesson.duration && (
+              <span className="ms-2">
+                &bull; {formatDuration(nextLesson.duration)}
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
 
-            {/* Action buttons */}
-            <div className="mt-5 flex gap-3">
-              <Button onClick={onPlayNext} className="flex-1" size="lg">
-                <Play className="me-2 h-4 w-4" />
-                Play Now
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleCancel}
-                aria-label="Cancel auto-play"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+      {/* Action buttons */}
+      <div className="mt-4 flex gap-3">
+        <button
+          onClick={onPlayNext}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 font-medium text-black transition-colors hover:bg-white/90"
+        >
+          <Play className="h-4 w-4" />
+          Play Now
+        </button>
+        <button
+          onClick={handleCancel}
+          aria-label="Cancel auto-play"
+          className="rounded-lg bg-white/10 px-3 py-2.5 text-white transition-colors hover:bg-white/20"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
 
-            {/* Keyboard hint */}
-            <p className="text-muted-foreground mt-4 text-center text-xs">
-              Press{" "}
-              <kbd className="bg-muted rounded px-1.5 py-0.5 font-mono">
-                Enter
-              </kbd>{" "}
-              to play or{" "}
-              <kbd className="bg-muted rounded px-1.5 py-0.5 font-mono">
-                Esc
-              </kbd>{" "}
-              to cancel
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
+      {/* Keyboard hint */}
+      <p className="mt-3 text-center text-xs text-white/40">
+        Press{" "}
+        <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono">Enter</kbd>{" "}
+        to play or{" "}
+        <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono">Esc</kbd>{" "}
+        to cancel
+      </p>
     </motion.div>
   )
 }

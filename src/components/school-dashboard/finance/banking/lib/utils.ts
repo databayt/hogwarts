@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -63,8 +66,8 @@ export const formatDateTime = (dateString: Date) => {
   }
 }
 
-export function formatAmount(amount: number): string {
-  const formatter = new Intl.NumberFormat("en-US", {
+export function formatAmount(amount: number, locale: string = "ar"): string {
+  const formatter = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,

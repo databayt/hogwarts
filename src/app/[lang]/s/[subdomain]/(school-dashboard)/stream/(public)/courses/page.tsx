@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Suspense } from "react"
 import { Metadata } from "next"
 
@@ -79,6 +82,7 @@ async function CoursesRenderer({
         totalCount={0}
         page={1}
         perPage={12}
+        activeGrade=""
       />
     )
   }
@@ -88,6 +92,7 @@ async function CoursesRenderer({
     perPage: search.perPage,
     title: search.title || undefined,
     category: search.category || undefined,
+    grade: search.level ? parseInt(search.level) : undefined,
     lang,
   })
 
@@ -100,6 +105,7 @@ async function CoursesRenderer({
       totalCount={count}
       page={search.page}
       perPage={search.perPage}
+      activeGrade={search.level || ""}
     />
   )
 }

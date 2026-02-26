@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Pre-flight checks before deployment
  * Run: npx tsx scripts/deploy-preflight.ts --env production

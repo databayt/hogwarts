@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { docsArabicSource, docsSource } from "@/lib/source"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { DocsSidebar } from "@/components/docs/docs-sidebar"

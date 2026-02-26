@@ -68,7 +68,8 @@ async function selectShadcnByLabel(
  * Click the Next/Back button in the FormFooter
  */
 async function clickFooterNext(
-  page: import("@playwright/test").Page
+  page: import("@playwright/test").Page,
+  expectedUrlPattern?: RegExp
 ): Promise<void> {
   // FormFooter uses a fixed bottom bar with Next button
   const nextBtn = page.locator(
@@ -77,7 +78,9 @@ async function clickFooterNext(
   await nextBtn.first().click()
   // Wait for navigation to next step
   await page.waitForLoadState("domcontentloaded")
-  await page.waitForTimeout(500)
+  if (expectedUrlPattern) {
+    await page.waitForURL(expectedUrlPattern, { timeout: TIMEOUTS.navigation })
+  }
 }
 
 // ============================================================================
@@ -129,6 +132,9 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
   }) => {
     // Increase timeout for this long journey test
     test.setTimeout(120_000)
+
+    // Unique email per run to avoid duplicate submission conflicts
+    const uniqueEmail = `test-e2e-${Date.now()}@example.com`
 
     // Step 1: Start from admissions page
     await page.context().clearCookies()
@@ -214,9 +220,7 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
     await page.waitForURL(/\/contact/, { timeout: TIMEOUTS.navigation })
     await assertNoSSE(page)
 
-    await page
-      .locator('input[name="email"]')
-      .fill("test-e2e-applicant@example.com")
+    await page.locator('input[name="email"]').fill(uniqueEmail)
     await page.locator('input[name="phone"]').fill("+249123456789")
     await page.locator('input[name="address"]').fill("123 Test Street")
     await page.locator('input[name="city"]').fill("Khartoum")
@@ -256,9 +260,17 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
     await page.waitForURL(/\/review/, { timeout: TIMEOUTS.navigation })
     await assertNoSSE(page)
 
-    // Verify review page has content (summary cards)
-    const body = page.locator("body")
-    await expect(body).not.toBeEmpty()
+    // Verify review page shows entered data
+    const reviewBody = page.locator("body")
+    await expect(reviewBody).not.toBeEmpty()
+
+    // Verify key data appears in review (applicant name, guardian info)
+    const reviewText = await reviewBody.textContent()
+    const hasApplicantName =
+      reviewText?.includes("Test") || reviewText?.includes("Applicant")
+    const hasGuardianInfo =
+      reviewText?.includes("Father") || reviewText?.includes("Mother")
+    expect(hasApplicantName || hasGuardianInfo).toBeTruthy()
 
     // Click Submit Application (the final button)
     const submitBtn = page.locator(

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Attendance Security Utilities
  * Rate limiting, audit logging, and scan protection
@@ -264,7 +267,7 @@ export async function getAuditLogs(
 // QR CODE SECURITY (HMAC SIGNATURES)
 // ============================================================================
 
-const QR_SECRET = process.env.QR_CODE_SECRET || "attendance-qr-secret-key"
+const QR_SECRET = process.env.QR_CODE_SECRET || ""
 
 /**
  * Generate HMAC signature for QR code data
@@ -277,6 +280,9 @@ export function generateQRSignature(data: {
   classId: string
   expiresAt: number
 }): string {
+  if (!QR_SECRET) {
+    throw new Error("QR_CODE_SECRET environment variable is required")
+  }
   const payload = JSON.stringify({
     sessionId: data.sessionId,
     schoolId: data.schoolId,

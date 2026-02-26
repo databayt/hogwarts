@@ -1,9 +1,12 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type {
   CatalogChapterItem,
@@ -22,26 +25,25 @@ interface Props {
 }
 
 export function CatalogChaptersContent({ subject, chapters, lang }: Props) {
-  const isRTL = lang === "ar"
+  const { dictionary } = useDictionary()
+  const cat = dictionary?.school?.subjects?.catalog as
+    | Record<string, string>
+    | undefined
   const [activeChapter, setActiveChapter] = useState<string | null>(
     chapters[0]?.slug ?? null
   )
 
   const t = useMemo(
     () => ({
-      min: isRTL ? "\u062f" : "min",
-      videos: isRTL
-        ? "\u0641\u064a\u062f\u064a\u0648\u0647\u0627\u062a"
-        : "videos",
-      resources: isRTL ? "\u0645\u0648\u0627\u0631\u062f" : "resources",
-      exploreMaterial: isRTL
-        ? "\u0627\u0633\u062a\u0643\u0634\u0641 \u0627\u0644\u0645\u0627\u062f\u0629"
-        : "Explore Material",
-      exploreDescription: isRTL
-        ? `\u0627\u0633\u062a\u0643\u0634\u0641 \u0645\u0648\u0627\u062f \u0648\u0641\u064a\u062f\u064a\u0648\u0647\u0627\u062a ${subject.name}`
-        : `Explore ${subject.name} material and videos`,
+      min: cat?.min || "min",
+      videos: cat?.videos || "videos",
+      resources: cat?.resources || "resources",
+      exploreMaterial: cat?.exploreMaterial || "Explore Material",
+      exploreDescription: (
+        cat?.exploreDescription || "Explore {name} material and videos"
+      ).replace("{name}", subject.name),
     }),
-    [isRTL]
+    [cat, subject.name]
   )
 
   // Track active chapter on scroll for sidebar indicator

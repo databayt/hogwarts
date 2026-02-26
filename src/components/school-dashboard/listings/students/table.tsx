@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
@@ -58,32 +60,24 @@ function StudentsTableInner({
 
   // Translations with fallbacks
   const t = {
-    fullName: dictionary?.fullName || (lang === "ar" ? "الاسم" : "Name"),
-    class: dictionary?.class || (lang === "ar" ? "الفصل" : "Class"),
-    status: dictionary?.status || (lang === "ar" ? "الحالة" : "Status"),
-    created:
-      dictionary?.created || (lang === "ar" ? "تاريخ الإنشاء" : "Created"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
-    allStudents:
-      dictionary?.allStudents ||
-      (lang === "ar" ? "جميع الطلاب" : "All Students"),
+    fullName: dictionary?.fullName || "Name",
+    class: dictionary?.class || "Class",
+    status: dictionary?.status || "Status",
+    created: dictionary?.created || "Created",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
+    allStudents: dictionary?.allStudents || "All Students",
     addNewStudent:
-      dictionary?.addNewStudent ||
-      (lang === "ar"
-        ? "أضف طالباً جديداً إلى مدرستك"
-        : "Add a new student to your school"),
-    active: dictionary?.active || (lang === "ar" ? "نشط" : "Active"),
-    inactive: dictionary?.inactive || (lang === "ar" ? "غير نشط" : "Inactive"),
-    search:
-      dictionary?.search ||
-      (lang === "ar" ? "بحث في الطلاب..." : "Search students..."),
-    create: dictionary?.create || (lang === "ar" ? "إنشاء" : "Create"),
-    export: dictionary?.export || (lang === "ar" ? "تصدير" : "Export"),
-    reset: dictionary?.reset || (lang === "ar" ? "إعادة تعيين" : "Reset"),
-    noAccount: lang === "ar" ? "لا يوجد حساب" : "No Account",
+      dictionary?.addNewStudent || "Add a new student to your school",
+    active: dictionary?.active || "Active",
+    inactive: dictionary?.inactive || "Inactive",
+    search: dictionary?.searchPlaceholder || "Search students...",
+    create: dictionary?.create || "Create",
+    export: dictionary?.export || "Export",
+    reset: dictionary?.reset || "Reset",
+    noAccount: dictionary?.noAccount || "No Account",
   }
 
   // View mode (table/grid)
@@ -169,8 +163,7 @@ function StudentsTableInner({
   const handleDelete = useCallback(
     async (student: StudentRow) => {
       try {
-        const deleteMsg =
-          lang === "ar" ? `حذف ${student.name}؟` : `Delete ${student.name}?`
+        const deleteMsg = `${t.delete} ${student.name}?`
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
 
@@ -184,7 +177,7 @@ function StudentsTableInner({
           // Revert on error
           refresh()
           ErrorToast(
-            lang === "ar" ? "فشل حذف الطالب" : "Failed to delete student"
+            dictionary?.failedToDeleteStudent || "Failed to delete student"
           )
         }
       } catch (e) {
@@ -192,9 +185,7 @@ function StudentsTableInner({
         ErrorToast(
           e instanceof Error
             ? e.message
-            : lang === "ar"
-              ? "فشل الحذف"
-              : "Failed to delete"
+            : dictionary?.failedToDeleteStudent || "Failed to delete"
         )
       }
     },
@@ -214,9 +205,8 @@ function StudentsTableInner({
     (student: StudentRow) => {
       if (!student.userId) {
         ErrorToast(
-          lang === "ar"
-            ? "هذا الطالب ليس لديه حساب مستخدم"
-            : "This student does not have a user account"
+          dictionary?.noAccountMessage ||
+            "This student does not have a user account"
         )
         return
       }
@@ -228,10 +218,7 @@ function StudentsTableInner({
   // Bulk delete handler
   const handleBulkDelete = useCallback(
     async (rows: StudentRow[]) => {
-      const deleteMsg =
-        lang === "ar"
-          ? `حذف ${rows.length} طالب؟`
-          : `Delete ${rows.length} students?`
+      const deleteMsg = `${t.delete} ${rows.length} ${dictionary?.title || "students"}?`
       const ok = await confirmDeleteDialog(deleteMsg)
       if (!ok) return
 
@@ -250,9 +237,7 @@ function StudentsTableInner({
       } else {
         refresh()
         ErrorToast(
-          lang === "ar"
-            ? `فشل حذف ${failures.length} طالب`
-            : `Failed to delete ${failures.length} students`
+          `${dictionary?.failedToDeleteStudent || "Failed to delete"} (${failures.length})`
         )
       }
     },
@@ -266,10 +251,7 @@ function StudentsTableInner({
       const csv = rows
         .map((r) => `${r.name},${r.className},${r.status},${r.createdAt}`)
         .join("\n")
-      const header =
-        lang === "ar"
-          ? "الاسم,الفصل,الحالة,تاريخ الإنشاء"
-          : "Name,Class,Status,Created"
+      const header = `${t.fullName},${t.class},${t.status},${t.created}`
       const csvContent = `${header}\n${csv}`
 
       // Download
@@ -317,8 +299,8 @@ function StudentsTableInner({
     create: t.create,
     reset: t.reset,
     export: t.export,
-    exportCSV: lang === "ar" ? "تصدير CSV" : "Export CSV",
-    exporting: lang === "ar" ? "جاري التصدير..." : "Exporting...",
+    exportCSV: dictionary?.exportCSV || "Export CSV",
+    exporting: dictionary?.exporting || "Exporting...",
   }
 
   return (
@@ -398,12 +380,8 @@ function StudentsTableInner({
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
                 {isLoading
-                  ? lang === "ar"
-                    ? "جاري التحميل..."
-                    : "Loading..."
-                  : lang === "ar"
-                    ? "تحميل المزيد"
-                    : "Load More"}
+                  ? dictionary?.loading || "Loading..."
+                  : dictionary?.loadMore || "Load More"}
               </button>
             </div>
           )}

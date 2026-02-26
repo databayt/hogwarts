@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -89,7 +91,7 @@ function PageLink({
     >
       {page.name}
       {isActive && (
-        <span className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
+        <span className="bg-primary absolute start-0 end-0 bottom-0 h-0.5" />
       )}
     </Link>
   )

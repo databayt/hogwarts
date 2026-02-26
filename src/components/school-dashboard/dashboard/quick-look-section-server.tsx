@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { getQuickLookData } from "./actions"
 import { QuickLookSection } from "./quick-look-section"
 
@@ -17,7 +20,7 @@ export async function QuickLookSectionServer({
   let data
 
   try {
-    data = await getQuickLookData()
+    data = await getQuickLookData(locale)
   } catch (error) {
     console.error("[QuickLookSectionServer] Error fetching data:", error)
     // Return client component with empty data on error

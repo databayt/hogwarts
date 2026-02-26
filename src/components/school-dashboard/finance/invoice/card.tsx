@@ -1,6 +1,9 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { Invoice } from "./types"
 
@@ -14,8 +17,9 @@ type InvoiceSummaryCardProps = {
 }
 
 export function InvoiceSummaryCard({ invoice }: InvoiceSummaryCardProps) {
+  const { locale } = useLocale()
   const currencyCode = invoice.currency || "USD"
-  const amount = new Intl.NumberFormat("en-US", {
+  const amount = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currencyCode,
   }).format(invoice.total)

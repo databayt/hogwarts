@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { differenceInDays, isToday, isTomorrow } from "date-fns"
 import {
@@ -60,7 +63,7 @@ export async function ParentDashboard({
     try {
       const [parentData, qlData, weather] = await Promise.all([
         getParentDashboardData(),
-        getQuickLookData(),
+        getQuickLookData(locale),
         getWeatherData(),
       ])
       data = parentData
@@ -490,7 +493,7 @@ export async function ParentDashboard({
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 {dashDict.labels?.viewAll || "View all"}{" "}
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">

@@ -29,10 +29,20 @@ model Book {
   availableCopies Int     @default(1)
   videoUrl        String?
   summary         String  @db.Text
+  gradeLevel      String  @default("GENERAL")
+  isbn            String?
+  publisher       String?
+  publicationYear Int?
+  language        String?
+  pageCount       Int?
 
   // Multi-tenant support
   schoolId String
   school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  // Optional link to global catalog
+  catalogBookId String?
+  catalogBook   CatalogBook? @relation(fields: [catalogBookId], references: [id], onDelete: SetNull)
 
   // Relations
   borrowRecords BorrowRecord[]
@@ -43,6 +53,8 @@ model Book {
 
   @@index([schoolId])
   @@index([schoolId, title])
+  @@index([schoolId, catalogBookId])
+  @@index([schoolId, gradeLevel])
   @@map("books")
 }
 

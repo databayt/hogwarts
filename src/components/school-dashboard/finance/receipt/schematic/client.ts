@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { SchematicClient } from "@schematichq/schematic-typescript-node"
 
 // Initialize with placeholder if env var not set (for build time)

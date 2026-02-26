@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   Children,
   createContext,
@@ -105,7 +107,7 @@ export function PromptInputAttachment({
       )}
       <Button
         aria-label="Remove attachment"
-        className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100"
+        className="absolute -end-1.5 -top-1.5 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100"
         onClick={() => attachments.remove(data.id)}
         size="icon"
         type="button"
@@ -535,7 +537,7 @@ export const PromptInputTools = ({
     data-slot="prompt-input-tools"
     className={cn(
       "flex items-center gap-1",
-      "[&_button:first-child]:rounded-bl-xl",
+      "[&_button:first-child]:rounded-es-xl",
       className
     )}
     {...props}

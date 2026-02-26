@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import {
   Calendar,
   CreditCard,
@@ -150,8 +153,8 @@ function BankAccountRow({
 }
 
 // Utility functions
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+function formatCurrency(amount: number, locale: string = "ar"): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
@@ -159,7 +162,10 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-function formatDate(date: Date | string | undefined): string {
+function formatDate(
+  date: Date | string | undefined,
+  locale: string = "ar"
+): string {
   if (!date) return "Never"
   const d = new Date(date)
   const now = new Date()
@@ -168,7 +174,7 @@ function formatDate(date: Date | string | undefined): string {
   if (diffHours < 1) return "Just now"
   if (diffHours < 24) return `${diffHours}h ago`
 
-  return d.toLocaleDateString("en-US", {
+  return d.toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
   })

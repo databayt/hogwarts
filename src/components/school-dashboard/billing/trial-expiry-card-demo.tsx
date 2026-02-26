@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { TrialExpiryCard } from "@/components/billingsdk/trial-expiry-card"
 
 // Set trial end date 7 days from now for demo

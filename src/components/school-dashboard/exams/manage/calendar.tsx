@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import {
@@ -270,7 +272,7 @@ export function ExamCalendar({
                         )}
 
                         {hasConflict && (
-                          <CircleAlert className="absolute top-1 right-1 h-3 w-3 text-red-500" />
+                          <CircleAlert className="absolute end-1 top-1 h-3 w-3 text-red-500" />
                         )}
                       </button>
                     </TooltipTrigger>

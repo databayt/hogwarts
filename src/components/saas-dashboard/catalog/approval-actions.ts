@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
@@ -25,6 +27,7 @@ type ContentType =
   | "CatalogQuestion"
   | "CatalogMaterial"
   | "CatalogAssignment"
+  | "CatalogBook"
   | "LessonVideo"
 
 // ============================================================================
@@ -57,6 +60,12 @@ export async function approveContent(contentType: ContentType, id: string) {
       break
     case "CatalogAssignment":
       await db.catalogAssignment.update({
+        where: { id },
+        data: approvalData,
+      })
+      break
+    case "CatalogBook":
+      await db.catalogBook.update({
         where: { id },
         data: approvalData,
       })
@@ -118,6 +127,12 @@ export async function rejectContent(
       break
     case "CatalogAssignment":
       await db.catalogAssignment.update({
+        where: { id },
+        data: rejectionData,
+      })
+      break
+    case "CatalogBook":
+      await db.catalogBook.update({
         where: { id },
         data: rejectionData,
       })

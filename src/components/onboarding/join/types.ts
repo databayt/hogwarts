@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 export type JoinMethod = "invite-with-codes" | "manual-enrollment"
 export type UserRole = "teacher" | "staff" | "student" | "parent" | "admin"
 export type InviteStatus = "pending" | "accepted" | "expired" | "revoked"

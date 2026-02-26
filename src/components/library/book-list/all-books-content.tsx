@@ -1,20 +1,31 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 
-import { BOOK_GENRES, LIBRARY_CONFIG } from "../config"
-import BookList from "./content"
+import { BOOK_GRADE_LEVELS, LIBRARY_CONFIG } from "../config"
+import BookCard from "./book-card"
+import BooksToolbar from "./books-toolbar"
 
 interface Props {
   searchParams?: {
     page?: string
     search?: string
     genre?: string
+    gradeLevel?: string
   }
   dictionary?: Record<string, unknown>
+}
+
+const GRADE_LEVEL_LABELS: Record<string, string> = {
+  GENERAL: "General",
+  KG: "KG",
+  PRIMARY: "Primary",
+  INTERMEDIATE: "Intermediate",
+  SECONDARY: "Secondary",
 }
 
 export default async function AllBooksContent({
@@ -42,6 +53,7 @@ export default async function AllBooksContent({
   const page = Math.max(1, parseInt(searchParams?.page || "1", 10) || 1)
   const search = searchParams?.search || ""
   const genre = searchParams?.genre || ""
+  const gradeLevel = searchParams?.gradeLevel || ""
   const perPage = LIBRARY_CONFIG.BOOKS_PER_PAGE
 
   // Build where clause
@@ -58,8 +70,12 @@ export default async function AllBooksContent({
     where.genre = genre
   }
 
-  // Parallel fetch: books + count
-  const [books, totalCount] = await Promise.all([
+  if (gradeLevel && BOOK_GRADE_LEVELS.includes(gradeLevel as never)) {
+    where.gradeLevel = gradeLevel
+  }
+
+  // Parallel fetch: books + count + distinct genres
+  const [books, totalCount, distinctGenres] = await Promise.all([
     db.book.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -67,11 +83,17 @@ export default async function AllBooksContent({
       take: perPage,
     }),
     db.book.count({ where }),
+    db.book.findMany({
+      where: { schoolId },
+      select: { genre: true },
+      distinct: ["genre"],
+    }),
   ])
 
   const totalPages = Math.ceil(totalCount / perPage)
+  const genres = distinctGenres.map((g) => g.genre)
 
-  if (totalCount === 0 && !search && !genre) {
+  if (totalCount === 0 && !search && !genre && !gradeLevel) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <div className="bg-muted mb-6 flex h-24 w-24 items-center justify-center rounded-full">
@@ -105,6 +127,7 @@ export default async function AllBooksContent({
     const sp = new URLSearchParams()
     if (params.search) sp.set("search", params.search)
     if (params.genre) sp.set("genre", params.genre)
+    if (params.gradeLevel) sp.set("gradeLevel", params.gradeLevel)
     if (params.page && params.page !== "1") sp.set("page", params.page)
     const qs = sp.toString()
     return qs ? `?${qs}` : ""
@@ -112,60 +135,35 @@ export default async function AllBooksContent({
 
   return (
     <div className="space-y-6">
-      {/* Search and filter bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <form className="flex flex-1 gap-2" action="" method="GET">
-          <Input
-            name="search"
-            placeholder={lib?.searchBooks || "Search books"}
-            defaultValue={search}
-            className="max-w-sm"
-          />
-          {genre && <input type="hidden" name="genre" value={genre} />}
-          <Button type="submit" variant="secondary" size="sm">
-            {lib?.searchBooks || "Search"}
-          </Button>
-        </form>
-
-        <div className="flex items-center gap-2">
-          <Link
-            href={buildHref({ search, genre: "", page: "1" })}
-            className={`rounded-full px-3 py-1 text-sm transition-colors ${
-              !genre
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            {lib?.allGenres || "All Genres"}
-          </Link>
-          {BOOK_GENRES.slice(0, 6).map((g) => (
-            <Link
-              key={g}
-              href={buildHref({ search, genre: g, page: "1" })}
-              className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                genre === g
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              {g}
-            </Link>
-          ))}
-        </div>
+      {/* Page title */}
+      <div>
+        <h1>{(lib as Record<string, any>)?.hero?.title || "Revelio"}</h1>
+        <p className="text-muted-foreground">
+          {(lib as Record<string, any>)?.hero?.subtitle || "Unlock hidden."}
+        </p>
       </div>
+
+      {/* Search and filter toolbar */}
+      <BooksToolbar
+        genres={genres}
+        gradeLevelLabels={GRADE_LEVEL_LABELS}
+        searchPlaceholder={lib?.searchBooks || "Search books"}
+        genreLabel={lib?.genre || "Genre"}
+        gradeLabel={lib?.grade || "Grade"}
+      />
 
       {/* Results count */}
       <p className="text-muted-foreground">
         {totalCount} {lib?.booksInLibrary || "books in the library"}
       </p>
 
-      {/* Book list or no results */}
+      {/* Book grid or no results */}
       {books.length > 0 ? (
-        <BookList
-          title={lib?.allBooks || "All Books"}
-          books={books}
-          containerClassName=""
-        />
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {books.map((book) => (
+            <BookCard key={book.id} book={book} />
+          ))}
+        </ul>
       ) : (
         <div className="flex min-h-[30vh] flex-col items-center justify-center">
           <p className="text-muted-foreground">
@@ -174,48 +172,20 @@ export default async function AllBooksContent({
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4">
-          {page > 1 ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link
-                href={buildHref({
-                  search,
-                  genre,
-                  page: String(page - 1),
-                })}
-              >
-                {lib?.previous || "Previous"}
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" disabled>
-              {lib?.previous || "Previous"}
-            </Button>
-          )}
-
-          <span className="text-muted-foreground text-sm">
-            {lib?.page || "Page"} {page} / {totalPages}
-          </span>
-
-          {page < totalPages ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link
-                href={buildHref({
-                  search,
-                  genre,
-                  page: String(page + 1),
-                })}
-              >
-                {lib?.next || "Next"}
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" disabled>
-              {lib?.next || "Next"}
-            </Button>
-          )}
+      {/* See More pagination */}
+      {page < totalPages && (
+        <div className="flex justify-center">
+          <Link
+            href={buildHref({
+              search,
+              genre,
+              gradeLevel,
+              page: String(page + 1),
+            })}
+            className="text-muted-foreground hover:underline"
+          >
+            {lib?.seeMore || "See More"}
+          </Link>
         </div>
       )}
     </div>

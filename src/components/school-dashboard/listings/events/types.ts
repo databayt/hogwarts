@@ -1,5 +1,10 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { type UseFormReturn } from "react-hook-form"
 import { z } from "zod"
+
+import type { Locale } from "@/components/internationalization/config"
 
 import { eventCreateSchema } from "./validation"
 
@@ -52,6 +57,7 @@ export type EventRow = {
 export interface EventFormStepProps {
   form: UseFormReturn<z.infer<typeof eventCreateSchema>>
   isView: boolean
+  lang?: Locale
 }
 
 export type StepFieldKeys = keyof z.infer<typeof eventCreateSchema>

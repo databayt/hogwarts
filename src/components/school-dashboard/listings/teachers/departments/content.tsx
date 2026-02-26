@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Department Management Content
  *
@@ -176,33 +179,32 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
     }
   }
 
+  const d = dictionary?.teachers?.departments
   const t = {
-    title: lang === "ar" ? "إدارة الأقسام" : "Department Management",
+    title: d?.management || "Department Management",
     subtitle:
-      lang === "ar"
-        ? "إدارة أقسام المدرسة وتعيين المعلمين"
-        : "Manage school departments and teacher assignments",
-    search: lang === "ar" ? "البحث في الأقسام..." : "Search departments...",
-    addDepartment: lang === "ar" ? "إضافة قسم" : "Add Department",
-    editDepartment: lang === "ar" ? "تعديل القسم" : "Edit Department",
-    deleteDepartment: lang === "ar" ? "حذف القسم" : "Delete Department",
-    department: lang === "ar" ? "القسم" : "Department",
-    departmentName: lang === "ar" ? "اسم القسم" : "Department Name",
-    language: lang === "ar" ? "اللغة" : "Language",
-    teachers: lang === "ar" ? "المعلمون" : "Teachers",
-    subjects: lang === "ar" ? "المواد" : "Subjects",
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    save: lang === "ar" ? "حفظ" : "Save",
-    cancel: lang === "ar" ? "إلغاء" : "Cancel",
-    primary: lang === "ar" ? "أساسي" : "Primary",
-    departmentHead: lang === "ar" ? "رئيس القسم" : "Department Head",
-    noDepartments: lang === "ar" ? "لا توجد أقسام" : "No departments found",
-    noTeachers: lang === "ar" ? "لا يوجد معلمون" : "No teachers assigned",
-    noSubjects: lang === "ar" ? "لا توجد مواد" : "No subjects assigned",
-    totalDepartments: lang === "ar" ? "إجمالي الأقسام" : "Total Departments",
-    totalTeachers: lang === "ar" ? "إجمالي المعلمين" : "Total Teachers",
-    totalSubjects: lang === "ar" ? "إجمالي المواد" : "Total Subjects",
-    viewDetails: lang === "ar" ? "عرض التفاصيل" : "View Details",
+      d?.subtitle || "Manage school departments and teacher assignments",
+    search: d?.searchPlaceholder || "Search departments...",
+    addDepartment: d?.addDepartment || "Add Department",
+    editDepartment: d?.editDepartment || "Edit Department",
+    deleteDepartment: d?.deleteDepartment || "Delete Department",
+    department: d?.department || "Department",
+    departmentName: d?.departmentName || "Department Name",
+    language: dictionary?.common?.language || "Language",
+    teachers: d?.teachers || "Teachers",
+    subjects: d?.subjects || "Subjects",
+    actions: d?.actions || "Actions",
+    save: d?.save || "Save",
+    cancel: d?.cancel || "Cancel",
+    primary: d?.primary || "Primary",
+    departmentHead: d?.departmentHead || "Department Head",
+    noDepartments: d?.noDepartments || "No departments found",
+    noTeachers: d?.noTeachers || "No teachers assigned",
+    noSubjects: d?.noSubjects || "No subjects assigned",
+    totalDepartments: d?.totalDepartments || "Total Departments",
+    totalTeachers: d?.totalTeachers || "Total Teachers",
+    totalSubjects: d?.totalSubjects || "Total Subjects",
+    viewDetails: d?.viewDetails || "View Details",
   }
 
   // Filter departments
@@ -364,7 +366,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
               className="ms-4"
             >
               <RefreshCw className="me-2 h-4 w-4" aria-hidden="true" />
-              {lang === "ar" ? "إعادة المحاولة" : "Retry"}
+              {dictionary?.common?.retry || "Retry"}
             </Button>
           </AlertDescription>
         </Alert>
@@ -387,9 +389,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
             <DialogHeader>
               <DialogTitle>{t.addDepartment}</DialogTitle>
               <DialogDescription>
-                {lang === "ar"
-                  ? "أضف قسم جديد للمدرسة"
-                  : "Add a new department to the school"}
+                {d?.addDescription || "Add a new department to the school"}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -399,11 +399,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                   id="name"
                   value={newDepartmentName}
                   onChange={(e) => setNewDepartmentName(e.target.value)}
-                  placeholder={
-                    lang === "ar"
-                      ? "مثال: قسم العلوم"
-                      : "e.g., Science Department"
-                  }
+                  placeholder={d?.placeholder || "e.g., Science Department"}
                 />
               </div>
               <div className="space-y-2">
@@ -415,10 +411,10 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                   className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
                 >
                   <option value="ar">
-                    {lang === "ar" ? "عربي" : "Arabic"}
+                    {dictionary?.common?.arabic || "Arabic"}
                   </option>
                   <option value="en">
-                    {lang === "ar" ? "إنجليزي" : "English"}
+                    {dictionary?.common?.english || "English"}
                   </option>
                 </select>
               </div>
@@ -495,7 +491,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
       <Card>
         <CardContent className="pt-6">
           <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder={t.search}
               value={searchTerm}
@@ -698,12 +694,8 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                                   }}
                                 >
                                   {teacher.isDepartmentHead
-                                    ? lang === "ar"
-                                      ? "إزالة"
-                                      : "Remove Head"
-                                    : lang === "ar"
-                                      ? "تعيين رئيس"
-                                      : "Make Head"}
+                                    ? d?.removeHead || "Remove Head"
+                                    : d?.makeHead || "Make Head"}
                                 </Button>
                               </div>
                             </div>
@@ -783,9 +775,11 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                 onChange={(e) => setNewDepartmentLang(e.target.value)}
                 className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
               >
-                <option value="ar">{lang === "ar" ? "عربي" : "Arabic"}</option>
+                <option value="ar">
+                  {dictionary?.common?.arabic || "Arabic"}
+                </option>
                 <option value="en">
-                  {lang === "ar" ? "إنجليزي" : "English"}
+                  {dictionary?.common?.english || "English"}
                 </option>
               </select>
             </div>
@@ -826,9 +820,10 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
               {t.deleteDepartment}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {lang === "ar"
-                ? `هل أنت متأكد أنك تريد حذف "${deleteDialog.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`
-                : `Are you sure you want to delete "${deleteDialog.name}"? This action cannot be undone.`}
+              {(
+                dictionary?.common?.confirmDeleteMessage ||
+                'Are you sure you want to delete "{name}"? This action cannot be undone.'
+              ).replace("{name}", deleteDialog.name)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -846,7 +841,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                   aria-hidden="true"
                 />
               )}
-              {lang === "ar" ? "حذف" : "Delete"}
+              {dictionary?.common?.delete || "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

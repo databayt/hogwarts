@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import {
   ColumnDef,
@@ -41,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 const data: Payment[] = [
   {
@@ -88,7 +91,7 @@ export type Payment = {
   email: string
 }
 
-export const columns: ColumnDef<Payment>[] = [
+export const getColumns = (locale: string): ColumnDef<Payment>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -130,7 +133,7 @@ export const columns: ColumnDef<Payment>[] = [
       const amount = parseFloat(row.getValue("amount"))
 
       // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
+      const formatted = new Intl.NumberFormat(locale, {
         style: "currency",
         currency: "USD",
       }).format(amount)
@@ -170,6 +173,7 @@ export const columns: ColumnDef<Payment>[] = [
 ]
 
 export function CardsPayments() {
+  const { locale } = useLocale()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -177,6 +181,8 @@ export function CardsPayments() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+
+  const columns = React.useMemo(() => getColumns(locale), [locale])
 
   const table = useReactTable({
     data,

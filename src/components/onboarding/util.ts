@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { ONBOARDING_STEPS, REQUIRED_STEPS, STEP_ORDER } from "./config"
 import type {
   OnboardingProgress,
@@ -336,9 +339,6 @@ export function clearDraftFromStorage(schoolId: string): void {
 // Performance monitoring utilities
 export function measureStepTime(step: OnboardingStep, startTime: number): void {
   const duration = Date.now() - startTime
-
-  // Log performance metrics for optimization
-  console.log(`Step ${step} completed in ${duration}ms`)
 
   // You can extend this to send metrics to your analytics service
   if (typeof window !== "undefined" && "performance" in window) {

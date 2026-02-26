@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
@@ -188,7 +190,7 @@ export function AttendanceHub({
                 onClick={() => handleMethodSelect(currentMethod)}
               >
                 Continue
-                <ChevronRight className="ms-1 h-4 w-4" />
+                <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
               </Button>
             </div>
           </CardHeader>

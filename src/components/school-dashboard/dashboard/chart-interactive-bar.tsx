@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
@@ -16,6 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 export interface InteractiveBarChartData {
   date: string
@@ -146,6 +149,7 @@ function InteractiveBarChartInner({
   primaryLabel = "Desktop",
   secondaryLabel = "Mobile",
 }: InteractiveBarChartProps) {
+  const { locale } = useLocale()
   // Transform custom data to use primary/secondary keys if provided
   const chartData = React.useMemo(() => {
     if (data) {
@@ -241,7 +245,7 @@ function InteractiveBarChartInner({
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value)
-                return date.toLocaleDateString("en-US", {
+                return date.toLocaleDateString(locale, {
                   month: "short",
                   day: "numeric",
                 })
@@ -253,7 +257,7 @@ function InteractiveBarChartInner({
                   className="w-[150px]"
                   nameKey="views"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    return new Date(value).toLocaleDateString(locale, {
                       month: "short",
                       day: "numeric",
                       year: "numeric",

@@ -1,18 +1,50 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
- * Catalog Content Seed
+ * Catalog Content Seed (Optimized for ClickView K-12 62 Subjects)
  *
- * Seeds 5 content types for all ClickView catalog subjects:
- * - LessonVideo (lesson-level, ~600)
- * - CatalogMaterial (subject + chapter + lesson level, ~325)
- * - CatalogExam (subject + chapter + lesson level, ~863)
- * - CatalogQuestion (subject + chapter + lesson level, ~2600)
- * - CatalogAssignment (lesson-level, ~600)
+ * Seeds 4 content types with subject-aware exam blueprints:
+ * - CatalogMaterial (subject + chapter level)
+ * - CatalogExam (subject + chapter + lesson level) with proper distribution JSON
+ * - CatalogQuestion (subject + chapter + ALL lessons) with category-specific text
+ * - CatalogAssignment (lesson-level)
+ *
+ * Key optimizations over previous version:
+ * 1. Subject-aware question distributions (STEM vs Humanities vs Languages)
+ * 2. Bloom's taxonomy alignment per subject category
+ * 3. Difficulty curves by school level (Elementary=easy-heavy, High=balanced)
+ * 4. Rich distribution JSON on every CatalogExam (not null)
+ * 5. Full lesson coverage (ALL lessons, not just first 3 per chapter)
+ * 6. More exam types: midterm, practice, diagnostic (not just final/test/quiz)
+ * 7. Category-specific MCQ options (not generic "Wrong answer A/B/C")
+ * 8. 10 question templates per category (80 total) cycling by index
+ *
+ * Scale: ~62 subjects -> ~1600 exams -> ~8000 questions -> ~1000 assignments
  *
  * Usage: pnpm db:seed:single catalog-content
  */
 
 import type { PrismaClient } from "@prisma/client"
 
+import {
+  buildBloomDistribution,
+  buildDistribution,
+  CHAPTER_LEVEL_EXAM_TYPES,
+  extractSchoolLevel,
+  generateQuestionText,
+  getBloomFromTemplate,
+  getExamTypeConfig,
+  getMcqOptions,
+  getSubjectCategory,
+  LESSON_LEVEL_EXAM_TYPES,
+  QUESTIONS_PER_CHAPTER,
+  QUESTIONS_PER_LESSON,
+  QUESTIONS_PER_SUBJECT,
+  SUBJECT_LEVEL_EXAM_TYPES,
+  type ExamType,
+  type SubjectCategory,
+} from "./exam-blueprints"
 import { logSuccess, randomNumber } from "./utils"
 
 // ============================================================================
@@ -39,28 +71,6 @@ interface SubjectWithContent {
 // CONSTANTS
 // ============================================================================
 
-const YOUTUBE_IDS = [
-  "dQw4w9WgXcQ",
-  "9bZkp7q19f0",
-  "kJQP7kiw5Fk",
-  "JGwWNGJdvx8",
-  "RgKAFK5djSk",
-  "OPf0YbXqDm0",
-  "CevxZvSJLk8",
-  "hT_nvWreIhg",
-  "fJ9rUzIMcZQ",
-  "60ItHLz5WEA",
-]
-
-const BLOOM_LEVELS = [
-  "REMEMBER",
-  "UNDERSTAND",
-  "APPLY",
-  "ANALYZE",
-  "EVALUATE",
-  "CREATE",
-] as const
-
 const QUESTION_TYPES = [
   "MULTIPLE_CHOICE",
   "TRUE_FALSE",
@@ -84,17 +94,120 @@ function seededRandom(seed: number): number {
   return x - Math.floor(x)
 }
 
-function pickYoutubeId(index: number): string {
-  return YOUTUBE_IDS[index % YOUTUBE_IDS.length]
+/** Pick a random value in range using seed */
+function seededRange(min: number, max: number, seed: number): number {
+  return Math.floor(seededRandom(seed) * (max - min + 1)) + min
 }
 
-function mcqOptions(topic: string): object[] {
-  return [
-    { label: `Correct answer for ${topic}`, isCorrect: true },
-    { label: `Wrong answer A`, isCorrect: false },
-    { label: `Wrong answer B`, isCorrect: false },
-    { label: `Wrong answer C`, isCorrect: false },
-  ]
+/** Cycle through question types deterministically */
+function cycleQuestionType(index: number): (typeof QUESTION_TYPES)[number] {
+  return QUESTION_TYPES[index % QUESTION_TYPES.length]
+}
+
+/** Points by difficulty */
+function pointsForDifficulty(diff: string): number {
+  return diff === "EASY" ? 1 : diff === "MEDIUM" ? 2 : 3
+}
+
+/** Build question data for a given scope */
+function buildQuestion(
+  category: SubjectCategory,
+  topicName: string,
+  chapterName: string,
+  difficulty: (typeof DIFFICULTIES)[number],
+  globalIdx: number,
+  scopeIds: {
+    catalogSubjectId?: string
+    catalogChapterId?: string
+    catalogLessonId?: string
+  }
+): Record<string, unknown> {
+  const qType = cycleQuestionType(globalIdx)
+  const bloomLevel = getBloomFromTemplate(category, globalIdx)
+  const questionText = generateQuestionText(
+    category,
+    topicName,
+    chapterName,
+    difficulty,
+    globalIdx
+  )
+
+  const isObjective =
+    qType === "MULTIPLE_CHOICE" ||
+    qType === "TRUE_FALSE" ||
+    qType === "MULTI_SELECT"
+
+  return {
+    ...scopeIds,
+    questionText,
+    questionType: qType,
+    difficulty,
+    bloomLevel,
+    points: pointsForDifficulty(difficulty),
+    options: isObjective ? getMcqOptions(category, topicName) : undefined,
+    sampleAnswer:
+      qType === "SHORT_ANSWER" || qType === "ESSAY"
+        ? `Sample answer demonstrating understanding of ${topicName} at ${difficulty.toLowerCase()} level.`
+        : undefined,
+    explanation: `This question tests ${bloomLevel.toLowerCase()}-level thinking about ${topicName}.`,
+    approvalStatus: "APPROVED",
+    visibility: "PUBLIC",
+    status: "PUBLISHED",
+    usageCount: randomNumber(5, 200),
+  }
+}
+
+/** Build exam data with proper distribution JSON */
+function buildExam(
+  subjectId: string,
+  category: SubjectCategory,
+  level: "elementary" | "middle" | "high",
+  examType: ExamType,
+  title: string,
+  description: string,
+  seed: number,
+  scopeIds: { chapterId?: string; lessonId?: string }
+): Record<string, unknown> {
+  const config = getExamTypeConfig(examType)
+  const totalQuestions = seededRange(
+    config.questionCountRange[0],
+    config.questionCountRange[1],
+    seed
+  )
+  const duration = seededRange(
+    config.durationRange[0],
+    config.durationRange[1],
+    seed + 1
+  )
+  const totalMarks = seededRange(
+    config.totalMarksRange[0],
+    config.totalMarksRange[1],
+    seed + 2
+  )
+  const passingMarks =
+    config.passingPercent > 0
+      ? Math.round(totalMarks * (config.passingPercent / 100))
+      : null
+
+  const distribution = buildDistribution(totalQuestions, category, level)
+  const bloomDistribution = buildBloomDistribution(totalQuestions, category)
+
+  return {
+    subjectId,
+    ...scopeIds,
+    title,
+    description,
+    lang: "en",
+    examType,
+    durationMinutes: duration,
+    totalMarks,
+    passingMarks,
+    totalQuestions,
+    distribution,
+    questions: { bloomDistribution },
+    status: "PUBLISHED",
+    usageCount: randomNumber(10, 300),
+  }
 }
 
 // ============================================================================
@@ -102,29 +215,7 @@ function mcqOptions(topic: string): object[] {
 // ============================================================================
 
 export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
-  // 1. Resolve users + demo school for multi-creator videos
-  const [devUser, teacherUser, demoSchool] = await Promise.all([
-    prisma.user.findFirst({
-      where: { email: "dev@databayt.org" },
-      select: { id: true },
-    }),
-    prisma.user.findFirst({
-      where: { email: "teacher@databayt.org" },
-      select: { id: true },
-    }),
-    prisma.school.findFirst({
-      where: { domain: "demo" },
-      select: { id: true },
-    }),
-  ])
-  if (!devUser) {
-    throw new Error("dev@databayt.org not found. Run auth seed first.")
-  }
-  const userId = devUser.id
-  const teacherUserId = teacherUser?.id ?? null
-  const demoSchoolId = demoSchool?.id ?? null
-
-  // 2. Fetch all published catalog subjects with chapters + lessons
+  // 1. Fetch all published catalog subjects with chapters + lessons
   const subjects: SubjectWithContent[] = await prisma.catalogSubject.findMany({
     where: { status: "PUBLISHED" },
     orderBy: { sortOrder: "asc" },
@@ -162,28 +253,18 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
 
   console.log(`   Found ${subjects.length} subjects`)
 
-  // 3. Build all records in memory
-  const videos: NonNullable<
-    Parameters<typeof prisma.lessonVideo.createMany>[0]
-  >["data"] = []
-  const materials: NonNullable<
-    Parameters<typeof prisma.catalogMaterial.createMany>[0]
-  >["data"] = []
-  const exams: NonNullable<
-    Parameters<typeof prisma.catalogExam.createMany>[0]
-  >["data"] = []
-  const questions: NonNullable<
-    Parameters<typeof prisma.catalogQuestion.createMany>[0]
-  >["data"] = []
-  const assignments: NonNullable<
-    Parameters<typeof prisma.catalogAssignment.createMany>[0]
-  >["data"] = []
+  // 2. Build all records in memory
+  const materials: Record<string, unknown>[] = []
+  const exams: Record<string, unknown>[] = []
+  const questions: Record<string, unknown>[] = []
+  const assignments: Record<string, unknown>[] = []
 
   let globalIdx = 0
 
   for (let si = 0; si < subjects.length; si++) {
     const subject = subjects[si]
-    const isFeaturedSubject = si // use subject index for featured video pick
+    const category = getSubjectCategory(subject.name)
+    const level = extractSchoolLevel(subject.slug)
 
     // --- Subject-level materials (2: textbook + syllabus) ---
     materials.push({
@@ -217,45 +298,32 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
       usageCount: randomNumber(200, 800),
     })
 
-    // --- Subject-level exam (1: final) ---
-    const finalQCount = randomNumber(30, 50)
-    exams.push({
-      subjectId: subject.id,
-      title: `${subject.name} - Final Exam`,
-      description: `Comprehensive final examination for ${subject.name}`,
-      lang: "en",
-      examType: "final",
-      durationMinutes: randomNumber(90, 120),
-      totalMarks: randomNumber(80, 100),
-      passingMarks: randomNumber(40, 50),
-      totalQuestions: finalQCount,
-      status: "PUBLISHED",
-      usageCount: randomNumber(50, 300),
-    })
+    // --- Subject-level exams (final + midterm) ---
+    for (const examType of SUBJECT_LEVEL_EXAM_TYPES) {
+      const seed = si * 1000 + (examType === "final" ? 0 : 500)
+      exams.push(
+        buildExam(
+          subject.id,
+          category,
+          level,
+          examType,
+          `${subject.name} - ${examType === "final" ? "Final Exam" : "Midterm Exam"}`,
+          `${examType === "final" ? "Comprehensive final" : "Mid-semester"} examination for ${subject.name}`,
+          seed,
+          {}
+        )
+      )
+    }
 
-    // --- Subject-level questions (6: 2 per difficulty) ---
-    for (const diff of DIFFICULTIES) {
-      for (let q = 0; q < 2; q++) {
-        const qType = QUESTION_TYPES[globalIdx % QUESTION_TYPES.length]
-        const bloom = BLOOM_LEVELS[globalIdx % BLOOM_LEVELS.length]
-        questions.push({
+    // --- Subject-level questions (10 per subject, spread across difficulties) ---
+    for (let q = 0; q < QUESTIONS_PER_SUBJECT; q++) {
+      const diff = DIFFICULTIES[q % DIFFICULTIES.length]
+      questions.push(
+        buildQuestion(category, subject.name, subject.name, diff, globalIdx, {
           catalogSubjectId: subject.id,
-          questionText: `${subject.name} ${diff.toLowerCase()} question ${q + 1}: What is a key concept in this subject?`,
-          questionType: qType,
-          difficulty: diff,
-          bloomLevel: bloom,
-          points: diff === "EASY" ? 1 : diff === "MEDIUM" ? 2 : 3,
-          options:
-            qType === "MULTIPLE_CHOICE" ? mcqOptions(subject.name) : undefined,
-          sampleAnswer: `Sample answer for ${subject.name} question`,
-          explanation: `This tests understanding of ${subject.name} at ${diff.toLowerCase()} level.`,
-          approvalStatus: "APPROVED",
-          visibility: "PUBLIC",
-          status: "PUBLISHED",
-          usageCount: randomNumber(10, 200),
         })
-        globalIdx++
-      }
+      )
+      globalIdx++
     }
 
     // --- Chapter level ---
@@ -279,118 +347,74 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
         usageCount: randomNumber(20, 400),
       })
 
-      // Chapter exam (1: chapter_test)
-      const chQCount = randomNumber(15, 30)
-      exams.push({
-        subjectId: subject.id,
-        chapterId: chapter.id,
-        title: `${chapter.name} - Chapter Test`,
-        description: `Assessment for ${chapter.name}`,
-        lang: "en",
-        examType: "chapter_test",
-        durationMinutes: randomNumber(30, 60),
-        totalMarks: randomNumber(40, 70),
-        passingMarks: randomNumber(20, 35),
-        totalQuestions: chQCount,
-        status: "PUBLISHED",
-        usageCount: randomNumber(20, 150),
-      })
+      // Chapter exams (chapter_test + practice)
+      for (const examType of CHAPTER_LEVEL_EXAM_TYPES) {
+        const seed =
+          si * 10000 + ci * 100 + (examType === "chapter_test" ? 0 : 50)
+        exams.push(
+          buildExam(
+            subject.id,
+            category,
+            level,
+            examType,
+            `${chapter.name} - ${examType === "chapter_test" ? "Chapter Test" : "Practice Test"}`,
+            `${examType === "chapter_test" ? "Assessment" : "Practice"} for ${chapter.name}`,
+            seed,
+            { chapterId: chapter.id }
+          )
+        )
+      }
 
-      // Chapter questions (3: 1 per difficulty)
-      for (const diff of DIFFICULTIES) {
-        const qType = QUESTION_TYPES[globalIdx % QUESTION_TYPES.length]
-        const bloom = BLOOM_LEVELS[globalIdx % BLOOM_LEVELS.length]
-        questions.push({
-          catalogChapterId: chapter.id,
-          questionText: `${chapter.name} (${diff.toLowerCase()}): Explain a concept from this chapter.`,
-          questionType: qType,
-          difficulty: diff,
-          bloomLevel: bloom,
-          points: diff === "EASY" ? 1 : diff === "MEDIUM" ? 2 : 3,
-          options:
-            qType === "MULTIPLE_CHOICE" ? mcqOptions(chapter.name) : undefined,
-          sampleAnswer: `Sample answer for ${chapter.name}`,
-          explanation: `This tests ${chapter.name} knowledge at ${diff.toLowerCase()} level.`,
-          approvalStatus: "APPROVED",
-          visibility: "PUBLIC",
-          status: "PUBLISHED",
-          usageCount: randomNumber(5, 100),
-        })
+      // Chapter questions (6 per chapter: 2 per difficulty)
+      for (let q = 0; q < QUESTIONS_PER_CHAPTER; q++) {
+        const diff = DIFFICULTIES[q % DIFFICULTIES.length]
+        questions.push(
+          buildQuestion(category, chapter.name, chapter.name, diff, globalIdx, {
+            catalogChapterId: chapter.id,
+          })
+        )
         globalIdx++
       }
 
-      // --- Lesson level (first 3 lessons per chapter) ---
-      const lessonSlice = chapter.lessons.slice(0, 3)
-      for (let li = 0; li < lessonSlice.length; li++) {
-        const lesson = lessonSlice[li]
-        const lessonSeed = si * 1000 + ci * 100 + li
+      // --- Lesson level (ALL lessons, not just first 3) ---
+      for (let li = 0; li < chapter.lessons.length; li++) {
+        const lesson = chapter.lessons[li]
+        const lessonSeed = si * 100000 + ci * 1000 + li
 
-        // Video (1 per lesson) — ~70% platform, ~30% school contributor
-        const duration = randomNumber(300, 1800)
-        const viewCount = randomNumber(100, 5000)
-        const isFeatured = li === 0 && ci === 0 // first lesson of first chapter = featured
-        const isSchoolVideo =
-          teacherUserId && demoSchoolId && seededRandom(lessonSeed + 42) < 0.3
+        // Lesson exams (quiz + diagnostic)
+        for (const examType of LESSON_LEVEL_EXAM_TYPES) {
+          const seed = lessonSeed + (examType === "quiz" ? 0 : 500)
+          exams.push(
+            buildExam(
+              subject.id,
+              category,
+              level,
+              examType,
+              `${lesson.name} - ${examType === "quiz" ? "Quiz" : "Diagnostic"}`,
+              `${examType === "quiz" ? "Quick quiz" : "Diagnostic assessment"} for ${lesson.name}`,
+              seed,
+              { chapterId: chapter.id, lessonId: lesson.id }
+            )
+          )
+        }
 
-        videos.push({
-          catalogLessonId: lesson.id,
-          userId: isSchoolVideo ? teacherUserId : userId,
-          schoolId: isSchoolVideo ? demoSchoolId : null,
-          title: `${lesson.name} - Introduction`,
-          description: `Video lesson covering ${lesson.name}`,
-          lang: "en",
-          videoUrl: `https://www.youtube.com/watch?v=${pickYoutubeId(lessonSeed)}`,
-          durationSeconds: duration,
-          provider: "youtube",
-          externalId: pickYoutubeId(lessonSeed),
-          visibility: isSchoolVideo ? "SCHOOL" : "PUBLIC",
-          approvalStatus: "APPROVED",
-          viewCount,
-          isFeatured: isSchoolVideo ? false : isFeatured,
-        })
-
-        // Lesson exam (1: quiz)
-        const quizQCount = randomNumber(5, 15)
-        exams.push({
-          subjectId: subject.id,
-          chapterId: chapter.id,
-          lessonId: lesson.id,
-          title: `${lesson.name} - Quiz`,
-          description: `Quick quiz for ${lesson.name}`,
-          lang: "en",
-          examType: "quiz",
-          durationMinutes: randomNumber(10, 20),
-          totalMarks: randomNumber(10, 30),
-          passingMarks: randomNumber(5, 15),
-          totalQuestions: quizQCount,
-          status: "PUBLISHED",
-          usageCount: randomNumber(10, 100),
-        })
-
-        // Lesson questions (3: 1 per difficulty)
-        for (const diff of DIFFICULTIES) {
-          const qType = QUESTION_TYPES[globalIdx % QUESTION_TYPES.length]
-          const bloom = BLOOM_LEVELS[globalIdx % BLOOM_LEVELS.length]
-          questions.push({
-            catalogLessonId: lesson.id,
-            questionText: `${lesson.name} (${diff.toLowerCase()}): What is the main takeaway from this lesson?`,
-            questionType: qType,
-            difficulty: diff,
-            bloomLevel: bloom,
-            points: diff === "EASY" ? 1 : diff === "MEDIUM" ? 2 : 3,
-            options:
-              qType === "MULTIPLE_CHOICE" ? mcqOptions(lesson.name) : undefined,
-            sampleAnswer: `Sample answer for ${lesson.name}`,
-            explanation: `This covers ${lesson.name} at ${diff.toLowerCase()} difficulty.`,
-            approvalStatus: "APPROVED",
-            visibility: "PUBLIC",
-            status: "PUBLISHED",
-            usageCount: randomNumber(5, 80),
-          })
+        // Lesson questions (4 per lesson: spread across difficulties + 1 extra)
+        for (let q = 0; q < QUESTIONS_PER_LESSON; q++) {
+          const diff = DIFFICULTIES[q % DIFFICULTIES.length]
+          questions.push(
+            buildQuestion(
+              category,
+              lesson.name,
+              chapter.name,
+              diff,
+              globalIdx,
+              { catalogLessonId: lesson.id }
+            )
+          )
           globalIdx++
         }
 
-        // Assignment (1: homework)
+        // Assignment (1 per lesson: homework or project)
         const isProject = seededRandom(lessonSeed) > 0.8
         assignments.push({
           catalogLessonId: lesson.id,
@@ -410,49 +434,57 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
     }
   }
 
-  // 4. Batch insert (5 createMany calls)
-  console.log(`   Inserting ${videos.length} videos...`)
-  const videoResult = await prisma.lessonVideo.createMany({
-    data: videos,
-    skipDuplicates: true,
-  })
-  logSuccess("Videos", videoResult.count)
-
+  // 3. Batch insert
   console.log(`   Inserting ${materials.length} materials...`)
   const materialResult = await prisma.catalogMaterial.createMany({
-    data: materials,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: materials as any,
     skipDuplicates: true,
   })
   logSuccess("Materials", materialResult.count)
 
   console.log(`   Inserting ${exams.length} exams...`)
   const examResult = await prisma.catalogExam.createMany({
-    data: exams,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: exams as any,
     skipDuplicates: true,
   })
   logSuccess("Exams", examResult.count)
 
   console.log(`   Inserting ${questions.length} questions...`)
   const questionResult = await prisma.catalogQuestion.createMany({
-    data: questions,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: questions as any,
     skipDuplicates: true,
   })
   logSuccess("Questions", questionResult.count)
 
   console.log(`   Inserting ${assignments.length} assignments...`)
   const assignmentResult = await prisma.catalogAssignment.createMany({
-    data: assignments,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: assignments as any,
     skipDuplicates: true,
   })
   logSuccess("Assignments", assignmentResult.count)
 
+  // 4. Summary with category breakdown
+  const categoryBreakdown = new Map<string, number>()
+  for (const subject of subjects) {
+    const cat = getSubjectCategory(subject.name)
+    categoryBreakdown.set(cat, (categoryBreakdown.get(cat) || 0) + 1)
+  }
+
   console.log(`\n   Summary:`)
-  console.log(`   - Videos:      ${videoResult.count}`)
   console.log(`   - Materials:   ${materialResult.count}`)
   console.log(`   - Exams:       ${examResult.count}`)
   console.log(`   - Questions:   ${questionResult.count}`)
   console.log(`   - Assignments: ${assignmentResult.count}`)
   console.log(
-    `   - Total:       ${videoResult.count + materialResult.count + examResult.count + questionResult.count + assignmentResult.count}`
+    `   - Total:       ${materialResult.count + examResult.count + questionResult.count + assignmentResult.count}`
   )
+  console.log(`\n   Category breakdown:`)
+  categoryBreakdown.forEach((count, cat) => {
+    console.log(`   - ${cat}: ${count} subjects`)
+  })
+  console.log(`   - Videos:      Use 'pnpm seed:videos' for real HD videos`)
 }

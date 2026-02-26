@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import {
@@ -750,7 +752,7 @@ export function EventManagement({
                         setSelectedMonth((prev) => addDays(prev, -30))
                       }
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
                     </Button>
                     <Button
                       variant="outline"
@@ -766,7 +768,7 @@ export function EventManagement({
                         setSelectedMonth((prev) => addDays(prev, 30))
                       }
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                     </Button>
                   </div>
                 </div>

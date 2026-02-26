@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { ExitIcon, GearIcon, PersonIcon } from "@radix-ui/react-icons"

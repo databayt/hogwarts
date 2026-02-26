@@ -130,6 +130,7 @@ model School {
   branding                 SchoolBranding?
   // Events relations
   events                   Event[]
+  eventRegistrations       EventRegistration[]
 
   // Examination relations
   exams            Exam[]
@@ -333,6 +334,7 @@ model School {
   // Catalog Bridge relations
   schoolSubjectSelections SchoolSubjectSelection[]
   schoolContentOverrides  SchoolContentOverride[]
+  schoolBookSelections    SchoolBookSelection[]
 
   // Enrollment relations (catalog)
   catalogEnrollments     Enrollment[]
@@ -484,6 +486,7 @@ model YearLevel {
   reportCards       ReportCard[]
   batches           Batch[]
   academicGrades    AcademicGrade[]
+  results           Result[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

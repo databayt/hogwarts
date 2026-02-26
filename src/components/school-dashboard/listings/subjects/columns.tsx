@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
@@ -56,15 +58,13 @@ export const getSubjectColumns = (
   callbacks?: SubjectColumnCallbacks
 ): ColumnDef<SubjectRow>[] => {
   const t = {
-    subject: dictionary?.subject || (lang === "ar" ? "المادة" : "Subject"),
-    department:
-      dictionary?.department || (lang === "ar" ? "القسم" : "Department"),
-    created:
-      dictionary?.created || (lang === "ar" ? "تاريخ الإنشاء" : "Created"),
-    actions: lang === "ar" ? "إجراءات" : "Actions",
-    view: lang === "ar" ? "عرض" : "View",
-    edit: lang === "ar" ? "تعديل" : "Edit",
-    delete: lang === "ar" ? "حذف" : "Delete",
+    subject: dictionary?.subject || "Subject",
+    department: dictionary?.department || "Department",
+    created: dictionary?.created || "Created",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
   }
 
   return [

@@ -519,4 +519,4 @@ For issues or questions:
 
 ## License
 
-MIT License - Part of Hogwarts School Management Platform
+SSPL-1.0 - Part of Hogwarts School Management Platform

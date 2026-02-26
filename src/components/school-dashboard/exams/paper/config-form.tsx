@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Paper Configuration Form
  * Configures exam paper generation settings
@@ -37,6 +40,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createPaperConfig, updatePaperConfig } from "./actions"
 import type { PaperConfigWithRelations } from "./actions/types"
@@ -55,9 +59,10 @@ export function ConfigForm({
   generatedExamId,
   existingConfig,
   locale,
-  dictionary,
 }: ConfigFormProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.generate?.paper?.config
   const [isPending, startTransition] = useTransition()
   const [previewKey, setPreviewKey] = useState(0)
 
@@ -132,10 +137,9 @@ export function ConfigForm({
 
         if (result.success) {
           toast({
-            title: isRTL ? "تم الحفظ" : "Saved",
-            description: isRTL
-              ? "تم حفظ إعدادات الورقة"
-              : "Paper configuration saved successfully",
+            title: t?.saved || "Saved",
+            description:
+              t?.config_saved || "Paper configuration saved successfully",
           })
           setPreviewKey((k) => k + 1)
           if (!isEditing) {
@@ -143,17 +147,15 @@ export function ConfigForm({
           }
         } else {
           toast({
-            title: isRTL ? "خطأ" : "Error",
+            title: dictionary?.generate?.paper?.error || "Error",
             description: result.error,
             variant: "destructive",
           })
         }
       } catch {
         toast({
-          title: isRTL ? "خطأ" : "Error",
-          description: isRTL
-            ? "حدث خطأ غير متوقع"
-            : "An unexpected error occurred",
+          title: dictionary?.generate?.paper?.error || "Error",
+          description: t?.unexpected_error || "An unexpected error occurred",
           variant: "destructive",
         })
       }
@@ -175,13 +177,10 @@ export function ConfigForm({
         {/* Template & Layout */}
         <Card>
           <CardHeader>
-            <CardTitle>
-              {isRTL ? "القالب والتخطيط" : "Template & Layout"}
-            </CardTitle>
+            <CardTitle>{t?.template_layout || "Template & Layout"}</CardTitle>
             <CardDescription>
-              {isRTL
-                ? "اختر نمط وتخطيط ورقة الاختبار"
-                : "Choose the exam paper style and layout"}
+              {t?.template_layout_desc ||
+                "Choose the exam paper style and layout"}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-3">
@@ -190,7 +189,7 @@ export function ConfigForm({
               name="template"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "القالب" : "Template"}</FormLabel>
+                  <FormLabel>{t?.template || "Template"}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -230,7 +229,7 @@ export function ConfigForm({
               name="layout"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "التخطيط" : "Layout"}</FormLabel>
+                  <FormLabel>{t?.layout || "Layout"}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -267,9 +266,7 @@ export function ConfigForm({
               name="answerSheetType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {isRTL ? "ورقة الإجابة" : "Answer Sheet"}
-                  </FormLabel>
+                  <FormLabel>{t?.answer_sheet || "Answer Sheet"}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -307,11 +304,9 @@ export function ConfigForm({
         {/* Header Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>{isRTL ? "إعدادات الرأس" : "Header Settings"}</CardTitle>
+            <CardTitle>{t?.header_settings || "Header Settings"}</CardTitle>
             <CardDescription>
-              {isRTL
-                ? "تخصيص رأس ورقة الاختبار"
-                : "Customize the exam paper header"}
+              {t?.header_settings_desc || "Customize the exam paper header"}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -321,13 +316,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {isRTL ? "شعار المدرسة" : "School Logo"}
-                    </FormLabel>
+                    <FormLabel>{t?.school_logo || "School Logo"}</FormLabel>
                     <FormDescription>
-                      {isRTL
-                        ? "عرض شعار المدرسة في الرأس"
-                        : "Display school logo in header"}
+                      {t?.school_logo_desc || "Display school logo in header"}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -349,11 +340,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {isRTL ? "عنوان الاختبار" : "Exam Title"}
-                    </FormLabel>
+                    <FormLabel>{t?.exam_title || "Exam Title"}</FormLabel>
                     <FormDescription>
-                      {isRTL ? "عرض عنوان الاختبار" : "Display exam title"}
+                      {t?.exam_title_desc || "Display exam title"}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -375,11 +364,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {isRTL ? "معلومات الطالب" : "Student Info"}
-                    </FormLabel>
+                    <FormLabel>{t?.student_info || "Student Info"}</FormLabel>
                     <FormDescription>
-                      {isRTL ? "حقول الاسم ورقم الطالب" : "Name and ID fields"}
+                      {t?.student_info_desc || "Name and ID fields"}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -401,13 +388,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {isRTL ? "التعليمات" : "Instructions"}
-                    </FormLabel>
+                    <FormLabel>{t?.instructions || "Instructions"}</FormLabel>
                     <FormDescription>
-                      {isRTL
-                        ? "عرض تعليمات الاختبار"
-                        : "Display exam instructions"}
+                      {t?.instructions_desc || "Display exam instructions"}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -429,14 +412,13 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="sm:col-span-2">
                   <FormLabel>
-                    {isRTL ? "تعليمات مخصصة" : "Custom Instructions"}
+                    {t?.custom_instructions || "Custom Instructions"}
                   </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder={
-                        isRTL
-                          ? "أدخل تعليمات إضافية..."
-                          : "Enter additional instructions..."
+                        t?.custom_instructions_placeholder ||
+                        "Enter additional instructions..."
                       }
                       className="min-h-20"
                       {...field}
@@ -444,9 +426,8 @@ export function ConfigForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    {isRTL
-                      ? "تعليمات إضافية للطلاب"
-                      : "Additional instructions for students"}
+                    {t?.custom_instructions_desc ||
+                      "Additional instructions for students"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -458,11 +439,9 @@ export function ConfigForm({
         {/* Question Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>
-              {isRTL ? "إعدادات الأسئلة" : "Question Settings"}
-            </CardTitle>
+            <CardTitle>{t?.question_settings || "Question Settings"}</CardTitle>
             <CardDescription>
-              {isRTL ? "تخصيص عرض الأسئلة" : "Customize question display"}
+              {t?.question_settings_desc || "Customize question display"}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -473,10 +452,10 @@ export function ConfigForm({
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
                     <FormLabel>
-                      {isRTL ? "أرقام الأسئلة" : "Question Numbers"}
+                      {t?.question_numbers || "Question Numbers"}
                     </FormLabel>
                     <FormDescription>
-                      {isRTL ? "عرض أرقام الأسئلة" : "Show question numbers"}
+                      {t?.question_numbers_desc || "Show question numbers"}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -498,9 +477,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{isRTL ? "الدرجات" : "Points"}</FormLabel>
+                    <FormLabel>{t?.points || "Points"}</FormLabel>
                     <FormDescription>
-                      {isRTL ? "عرض درجات كل سؤال" : "Show points per question"}
+                      {t?.points_desc || "Show points per question"}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -522,11 +501,9 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {isRTL ? "نوع السؤال" : "Question Type"}
-                    </FormLabel>
+                    <FormLabel>{t?.question_type || "Question Type"}</FormLabel>
                     <FormDescription>
-                      {isRTL ? "عرض نوع السؤال" : "Show question type label"}
+                      {t?.question_type_desc || "Show question type label"}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -549,12 +526,10 @@ export function ConfigForm({
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
                     <FormLabel>
-                      {isRTL ? "خلط الأسئلة" : "Shuffle Questions"}
+                      {t?.shuffle_questions || "Shuffle Questions"}
                     </FormLabel>
                     <FormDescription>
-                      {isRTL
-                        ? "ترتيب عشوائي للأسئلة"
-                        : "Randomize question order"}
+                      {t?.shuffle_questions_desc || "Randomize question order"}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -577,12 +552,10 @@ export function ConfigForm({
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
                     <FormLabel>
-                      {isRTL ? "خلط الخيارات" : "Shuffle Options"}
+                      {t?.shuffle_options || "Shuffle Options"}
                     </FormLabel>
                     <FormDescription>
-                      {isRTL
-                        ? "ترتيب عشوائي للخيارات"
-                        : "Randomize option order"}
+                      {t?.shuffle_options_desc || "Randomize option order"}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -604,7 +577,7 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {isRTL ? "أسطر الإجابة القصيرة" : "Short Answer Lines"}
+                    {t?.short_answer_lines || "Short Answer Lines"}
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -619,9 +592,8 @@ export function ConfigForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    {isRTL
-                      ? "عدد الأسطر للإجابات القصيرة"
-                      : "Number of lines for short answers"}
+                    {t?.short_answer_lines_desc ||
+                      "Number of lines for short answers"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -633,7 +605,7 @@ export function ConfigForm({
               name="answerLinesEssay"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "أسطر المقال" : "Essay Lines"}</FormLabel>
+                  <FormLabel>{t?.essay_lines || "Essay Lines"}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -647,9 +619,7 @@ export function ConfigForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    {isRTL
-                      ? "عدد الأسطر للمقالات"
-                      : "Number of lines for essay answers"}
+                    {t?.essay_lines_desc || "Number of lines for essay answers"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -661,11 +631,9 @@ export function ConfigForm({
         {/* Print Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>
-              {isRTL ? "إعدادات الطباعة" : "Print Settings"}
-            </CardTitle>
+            <CardTitle>{t?.print_settings || "Print Settings"}</CardTitle>
             <CardDescription>
-              {isRTL ? "إعدادات الصفحة والتذييل" : "Page and footer settings"}
+              {t?.print_settings_desc || "Page and footer settings"}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -674,7 +642,7 @@ export function ConfigForm({
               name="pageSize"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "حجم الورقة" : "Page Size"}</FormLabel>
+                  <FormLabel>{t?.page_size || "Page Size"}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -702,7 +670,7 @@ export function ConfigForm({
               name="orientation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "الاتجاه" : "Orientation"}</FormLabel>
+                  <FormLabel>{t?.orientation || "Orientation"}</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value)
@@ -717,10 +685,10 @@ export function ConfigForm({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="portrait">
-                        {isRTL ? "عمودي" : "Portrait"}
+                        {t?.portrait || "Portrait"}
                       </SelectItem>
                       <SelectItem value="landscape">
-                        {isRTL ? "أفقي" : "Landscape"}
+                        {t?.landscape || "Landscape"}
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -735,9 +703,7 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {isRTL ? "أرقام الصفحات" : "Page Numbers"}
-                    </FormLabel>
+                    <FormLabel>{t?.page_numbers || "Page Numbers"}</FormLabel>
                   </div>
                   <FormControl>
                     <Switch
@@ -758,9 +724,7 @@ export function ConfigForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {isRTL ? "إجمالي الصفحات" : "Total Pages"}
-                    </FormLabel>
+                    <FormLabel>{t?.total_pages || "Total Pages"}</FormLabel>
                   </div>
                   <FormControl>
                     <Switch
@@ -780,12 +744,12 @@ export function ConfigForm({
               name="customFooter"
               render={({ field }) => (
                 <FormItem className="sm:col-span-2">
-                  <FormLabel>
-                    {isRTL ? "تذييل مخصص" : "Custom Footer"}
-                  </FormLabel>
+                  <FormLabel>{t?.custom_footer || "Custom Footer"}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={isRTL ? "نص التذييل..." : "Footer text..."}
+                      placeholder={
+                        t?.custom_footer_placeholder || "Footer text..."
+                      }
                       {...field}
                       onBlur={() => triggerPreview()}
                     />
@@ -800,7 +764,7 @@ export function ConfigForm({
               name="versionCount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "عدد النسخ" : "Version Count"}</FormLabel>
+                  <FormLabel>{t?.version_count || "Version Count"}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -811,9 +775,8 @@ export function ConfigForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    {isRTL
-                      ? "عدد نسخ الاختبار (A، B، C...)"
-                      : "Number of exam versions (A, B, C...)"}
+                    {t?.version_count_desc ||
+                      "Number of exam versions (A, B, C...)"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -825,16 +788,12 @@ export function ConfigForm({
         {/* Actions */}
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => router.back()}>
-            {isRTL ? "إلغاء" : "Cancel"}
+            {t?.cancel || "Cancel"}
           </Button>
           <Button type="submit" disabled={isPending}>
             {isPending
-              ? isRTL
-                ? "جاري الحفظ..."
-                : "Saving..."
-              : isRTL
-                ? "حفظ الإعدادات"
-                : "Save Settings"}
+              ? t?.saving || "Saving..."
+              : t?.save_settings || "Save Settings"}
           </Button>
         </div>
       </form>

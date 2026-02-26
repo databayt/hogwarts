@@ -1,15 +1,22 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Paper Generation Server Actions
  * Generate exam papers and answer keys as PDFs
  */
+import React from "react"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import { renderToBuffer } from "@react-pdf/renderer"
+import { put } from "@vercel/blob"
 
 import { db } from "@/lib/db"
 
 import { getVersionCode } from "../config"
+import { getTemplate } from "../templates"
 import type {
   AnswerKeyEntry,
   ExamPaperData,
@@ -115,6 +122,46 @@ function shuffleArray<T>(array: T[], seed?: string): T[] {
 }
 
 // ============================================================================
+// HELPER: Render PDF and Upload
+// ============================================================================
+
+async function renderAndUploadPdf(
+  paperData: ExamPaperData,
+  schoolId: string
+): Promise<string | undefined> {
+  try {
+    const templateEntry = getTemplate(paperData.config.template)
+    const TemplateComponent = templateEntry.component
+
+    const document = React.createElement(TemplateComponent, {
+      data: paperData,
+    })
+
+    // Templates render <Document> internally, cast for renderToBuffer
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const buffer = await renderToBuffer(document as any)
+
+    const examTitle =
+      paperData.exam.title?.replace(/[^a-zA-Z0-9-_]/g, "-") || "exam"
+    const versionSuffix = paperData.metadata.versionCode
+      ? `-${paperData.metadata.versionCode}`
+      : ""
+    const filename = `exams/${schoolId}/${examTitle}${versionSuffix}-${Date.now()}.pdf`
+
+    const blob = await put(filename, buffer, {
+      access: "public",
+      contentType: "application/pdf",
+      addRandomSuffix: false,
+    })
+
+    return blob.url
+  } catch (error) {
+    console.error("PDF render/upload failed:", error)
+    return undefined
+  }
+}
+
+// ============================================================================
 // GENERATE EXAM PAPER
 // ============================================================================
 
@@ -204,8 +251,8 @@ export async function generateExamPaper(
     const totalMarks = questions.reduce((sum, q) => sum + q.points, 0)
     const totalQuestions = questions.length
 
-    // Build paper data (for PDF generation - would use react-pdf in actual implementation)
-    const _paperData: ExamPaperData = {
+    // Build paper data for PDF generation
+    const paperData: ExamPaperData = {
       exam: {
         ...generatedExam.exam,
         class: generatedExam.exam.class,
@@ -234,6 +281,9 @@ export async function generateExamPaper(
       },
     }
 
+    // Render PDF and upload to blob storage
+    const pdfUrl = await renderAndUploadPdf(paperData, schoolId)
+
     // Store question order and option order for this version
     const questionOrder = questions.map((q) => q.id)
     const optionOrder = config.shuffleOptions
@@ -248,7 +298,7 @@ export async function generateExamPaper(
         )
       : null
 
-    // Create generated paper record
+    // Create generated paper record with PDF URL
     const paper = await db.generatedPaper.create({
       data: {
         schoolId,
@@ -259,7 +309,7 @@ export async function generateExamPaper(
           typeof db.generatedPaper.create
         >[0]["data"]["optionOrder"],
         generatedBy: userId,
-        // pdfUrl would be set after actual PDF generation and upload
+        pdfUrl,
       },
     })
 

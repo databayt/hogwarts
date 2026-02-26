@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Teacher Profile Publications Tab
  * Research papers, articles, and academic contributions
@@ -390,7 +393,7 @@ export function PublicationsTab({
           {/* Search Bar */}
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder="Search publications..."
                 value={searchTerm}
@@ -622,7 +625,7 @@ export function PublicationsTab({
                     </span>
                     <div className="bg-muted relative h-6 flex-1 rounded-full">
                       <div
-                        className="bg-primary absolute inset-y-0 left-0 flex items-center justify-end rounded-full pe-2"
+                        className="bg-primary absolute inset-y-0 start-0 flex items-center justify-end rounded-full pe-2"
                         style={{ width: `${(item.count / 100) * 100}%` }}
                       >
                         <span className="text-primary-foreground text-xs font-medium">
@@ -693,7 +696,7 @@ export function PublicationsTab({
                       </div>
                     </div>
                     <Button variant="ghost" size="sm">
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                     </Button>
                   </div>
                 ))}

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState } from "react"
 import {
   AlertTriangle,
@@ -131,36 +133,33 @@ export function TeacherScheduleContent({
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [workloadFilter, setWorkloadFilter] = useState<string>("all")
 
+  const d = dictionary?.teachers?.schedule
   const t = {
-    title:
-      lang === "ar" ? "جدول المعلمين والأعباء" : "Teacher Schedules & Workload",
-    subtitle:
-      lang === "ar"
-        ? "عرض جداول المعلمين وتوزيع الأعباء التعليمية"
-        : "View teacher schedules and workload distribution",
-    search: lang === "ar" ? "البحث..." : "Search teachers...",
-    all: lang === "ar" ? "الكل" : "All",
-    active: lang === "ar" ? "نشط" : "Active",
-    onLeave: lang === "ar" ? "في إجازة" : "On Leave",
-    underutilized: lang === "ar" ? "أقل من الطاقة" : "Underutilized",
-    normal: lang === "ar" ? "طبيعي" : "Normal",
-    overload: lang === "ar" ? "زيادة في الحمل" : "Overloaded",
-    teacher: lang === "ar" ? "المعلم" : "Teacher",
-    department: lang === "ar" ? "القسم" : "Department",
-    periods: lang === "ar" ? "الحصص" : "Periods",
-    classes: lang === "ar" ? "الفصول" : "Classes",
-    subjects: lang === "ar" ? "المواد" : "Subjects",
-    status: lang === "ar" ? "الحالة" : "Status",
-    workload: lang === "ar" ? "عبء العمل" : "Workload",
-    summary: lang === "ar" ? "ملخص" : "Summary",
-    totalTeachers: lang === "ar" ? "إجمالي المعلمين" : "Total Teachers",
-    avgPeriods: lang === "ar" ? "متوسط الحصص" : "Avg. Periods",
-    periodsPerWeek: lang === "ar" ? "حصة/أسبوع" : "periods/week",
-    config: lang === "ar" ? "إعدادات العبء" : "Workload Config",
-    min: lang === "ar" ? "الحد الأدنى" : "Minimum",
-    max: lang === "ar" ? "الحد الأقصى" : "Maximum",
-    threshold: lang === "ar" ? "حد الزيادة" : "Overload Threshold",
-    noTeachers: lang === "ar" ? "لا يوجد معلمون" : "No teachers found",
+    title: d?.pageTitle || "Teacher Schedules & Workload",
+    subtitle: d?.subtitle || "View teacher schedules and workload distribution",
+    search: d?.searchPlaceholder || "Search teachers...",
+    all: d?.all || "All",
+    active: d?.active || "Active",
+    onLeave: d?.onLeave || "On Leave",
+    underutilized: d?.underutilized || "Underutilized",
+    normal: d?.normal || "Normal",
+    overload: d?.overloaded || "Overloaded",
+    teacher: d?.teacher || "Teacher",
+    department: d?.department || "Department",
+    periods: d?.periods || "Periods",
+    classes: d?.classes || "Classes",
+    subjects: d?.subjects || "Subjects",
+    status: d?.status || "Status",
+    workload: d?.workload || "Workload",
+    summary: d?.summary || "Summary",
+    totalTeachers: d?.totalTeachers || "Total Teachers",
+    avgPeriods: d?.avgPeriods || "Avg. Periods",
+    periodsPerWeek: d?.periodsPerWeek || "periods/week",
+    config: d?.config || "Workload Config",
+    min: d?.min || "Minimum",
+    max: d?.max || "Maximum",
+    threshold: d?.threshold || "Overload Threshold",
+    noTeachers: d?.noTeachers || "No teachers found",
   }
 
   // Filter teachers
@@ -304,7 +303,7 @@ export function TeacherScheduleContent({
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder={t.search}
                 value={searchTerm}

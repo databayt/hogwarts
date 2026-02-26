@@ -199,4 +199,4 @@ Marketing and growth team responsible for conversion optimization.
 
 ## License
 
-MIT
+SSPL-1.0

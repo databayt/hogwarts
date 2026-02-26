@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Dashboard Server Actions Module
  *
@@ -59,8 +62,10 @@ import {
   subMonths,
 } from "date-fns"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 import type {
   AcademicPerformanceMetrics,
@@ -4062,7 +4067,9 @@ export interface QuickLookData {
  * Fetch Quick Look data with real database integration
  * Returns counts and recent items for announcements, events, notifications, and messages
  */
-export async function getQuickLookData(): Promise<QuickLookData> {
+export async function getQuickLookData(
+  locale: string = "ar"
+): Promise<QuickLookData> {
   const session = await auth()
   const userId = session?.user?.id
   const schoolId = session?.user?.schoolId
@@ -4087,9 +4094,21 @@ export async function getQuickLookData(): Promise<QuickLookData> {
     const [announcementsData, eventsData, notificationsData, messagesData] =
       await Promise.all([
         // 1. ANNOUNCEMENTS - published, not expired, scoped to user
-        getAnnouncementsQuickLook(schoolId, userId, userRole, last24Hours, now),
+        getAnnouncementsQuickLook(
+          schoolId,
+          userId,
+          userRole,
+          last24Hours,
+          now,
+          locale as SupportedLanguage
+        ),
         // 2. EVENTS - upcoming events in the next 30 days
-        getEventsQuickLook(schoolId, last7Days, now),
+        getEventsQuickLook(
+          schoolId,
+          last7Days,
+          now,
+          locale as SupportedLanguage
+        ),
         // 3. NOTIFICATIONS - unread notifications for user
         getNotificationsQuickLook(schoolId, userId, last24Hours),
         // 4. MESSAGES - unread messages in conversations
@@ -4113,7 +4132,8 @@ async function getAnnouncementsQuickLook(
   userId: string,
   userRole: string | undefined,
   last24Hours: Date,
-  now: Date
+  now: Date,
+  locale: SupportedLanguage
 ): Promise<QuickLookItem> {
   // Get all active announcements for the school
   const announcements = await db.announcement.findMany({
@@ -4134,6 +4154,7 @@ async function getAnnouncementsQuickLook(
     select: {
       id: true,
       title: true,
+      lang: true,
       createdAt: true,
       readReceipts: {
         where: { userId },
@@ -4153,18 +4174,28 @@ async function getAnnouncementsQuickLook(
   ).length
   const mostRecent = announcements[0]
 
+  const recentTitle = mostRecent
+    ? await getDisplayText(
+        mostRecent.title,
+        (mostRecent.lang || "ar") as SupportedLanguage,
+        locale,
+        schoolId
+      )
+    : ""
+
   return {
     type: "announcements",
     count: totalCount,
     newCount: unreadCount > 0 ? unreadCount : newCount,
-    recent: mostRecent?.title || "",
+    recent: recentTitle,
   }
 }
 
 async function getEventsQuickLook(
   schoolId: string,
   last7Days: Date,
-  now: Date
+  now: Date,
+  locale: SupportedLanguage
 ): Promise<QuickLookItem> {
   const thirtyDaysFromNow = addDays(now, 30)
 
@@ -4180,6 +4211,7 @@ async function getEventsQuickLook(
     select: {
       id: true,
       title: true,
+      lang: true,
       eventDate: true,
       createdAt: true,
     },
@@ -4191,11 +4223,20 @@ async function getEventsQuickLook(
   const newCount = events.filter((e) => e.createdAt >= last7Days).length
   const nextEvent = events[0]
 
+  const recentTitle = nextEvent
+    ? await getDisplayText(
+        nextEvent.title,
+        (nextEvent.lang || "ar") as SupportedLanguage,
+        locale,
+        schoolId
+      )
+    : ""
+
   return {
     type: "events",
     count: totalCount,
     newCount,
-    recent: nextEvent?.title || "",
+    recent: recentTitle,
   }
 }
 
@@ -5521,11 +5562,18 @@ export async function getUpcomingClass(): Promise<{
     const currentDay = now.getDay() // 0 = Sun ... 6 = Sat (matches Timetable.dayOfWeek Int)
     const currentMinutes = now.getHours() * 60 + now.getMinutes()
 
+    // Get active term for filtering
+    const activeTerm = await db.term.findFirst({
+      where: { schoolId, isActive: true },
+      select: { id: true },
+    })
+
     // Find the next timetable slot for today
     const timetableSlots = await db.timetable.findMany({
       where: {
         schoolId,
         dayOfWeek: currentDay,
+        ...(activeTerm ? { termId: activeTerm.id } : {}),
         // If teacher, filter by their teacher record
         ...(role === "TEACHER" && userId
           ? {

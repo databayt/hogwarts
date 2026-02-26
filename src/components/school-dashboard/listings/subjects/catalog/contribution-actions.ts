@@ -1,5 +1,7 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
@@ -60,33 +62,74 @@ export async function submitQuestion(data: {
   sampleAnswer?: string
   explanation?: string
   tags?: string[]
+  visibility?: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
 }) {
   const { userId, schoolId } = await requireContributor()
 
-  const question = await db.catalogQuestion.create({
-    data: {
-      catalogSubjectId: data.catalogSubjectId,
-      catalogChapterId: data.catalogChapterId ?? null,
-      catalogLessonId: data.catalogLessonId ?? null,
-      questionText: data.questionText,
-      questionType: data.questionType,
-      difficulty: data.difficulty,
-      bloomLevel: data.bloomLevel,
-      points: data.points,
-      options: data.options ?? undefined,
-      sampleAnswer: data.sampleAnswer ?? null,
-      explanation: data.explanation ?? null,
-      tags: data.tags ?? [],
-      contributedBy: userId,
-      contributedSchoolId: schoolId,
-      approvalStatus: "PENDING",
-      visibility: "PUBLIC",
-      status: "DRAFT",
-    },
+  // Create in catalog + auto-mirror to school's QuestionBank
+  const result = await db.$transaction(async (tx) => {
+    // 1. Create CatalogQuestion
+    const question = await tx.catalogQuestion.create({
+      data: {
+        catalogSubjectId: data.catalogSubjectId,
+        catalogChapterId: data.catalogChapterId ?? null,
+        catalogLessonId: data.catalogLessonId ?? null,
+        questionText: data.questionText,
+        questionType: data.questionType,
+        difficulty: data.difficulty,
+        bloomLevel: data.bloomLevel,
+        points: data.points,
+        options: data.options ?? undefined,
+        sampleAnswer: data.sampleAnswer ?? null,
+        explanation: data.explanation ?? null,
+        tags: data.tags ?? [],
+        contributedBy: userId,
+        contributedSchoolId: schoolId,
+        approvalStatus: "PENDING",
+        visibility: data.visibility ?? "PUBLIC",
+        status: "DRAFT",
+      },
+    })
+
+    // 2. Auto-mirror to school's QuestionBank if subject is linked
+    const subject = await tx.subject.findFirst({
+      where: { schoolId, catalogSubjectId: data.catalogSubjectId },
+    })
+
+    if (subject) {
+      const mirror = await tx.questionBank.create({
+        data: {
+          schoolId,
+          subjectId: subject.id,
+          catalogQuestionId: question.id,
+          catalogSubjectId: data.catalogSubjectId,
+          catalogChapterId: data.catalogChapterId ?? null,
+          catalogLessonId: data.catalogLessonId ?? null,
+          questionText: data.questionText,
+          questionType: data.questionType,
+          difficulty: data.difficulty,
+          bloomLevel: data.bloomLevel,
+          points: data.points,
+          options: data.options ?? undefined,
+          sampleAnswer: data.sampleAnswer ?? null,
+          explanation: data.explanation ?? null,
+          tags: data.tags ?? [],
+          source: "MANUAL",
+          createdBy: userId,
+        },
+      })
+
+      await tx.questionAnalytics.create({
+        data: { questionId: mirror.id, schoolId },
+      })
+    }
+
+    return question
   })
 
   revalidatePath("/subjects/catalog")
-  return { success: true, id: question.id }
+  revalidatePath("/exams/qbank")
+  return { success: true, id: result.id }
 }
 
 // ============================================================================
@@ -186,7 +229,7 @@ export async function submitAssignment(data: {
 export async function updateContributionVisibility(
   type: "question" | "material" | "assignment",
   id: string,
-  visibility: "PRIVATE" | "SCHOOL" | "PUBLIC"
+  visibility: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
 ) {
   const { userId } = await requireContributor()
 

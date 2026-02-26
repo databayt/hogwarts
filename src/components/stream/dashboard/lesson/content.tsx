@@ -1,10 +1,14 @@
 "use client"
 
-import { useCallback, useMemo, useState, useTransition } from "react"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
+  BookOpen,
+  Check,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -21,6 +25,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import type {
   AvailableVideo,
   CatalogLessonWithProgress,
@@ -76,6 +88,19 @@ export function StreamLessonContent({
   const [activeVideoId, setActiveVideoId] = useState<string | null>(
     lesson.availableVideos[0]?.id ?? null
   )
+  const [isInWishlist, setIsInWishlist] = useState(false)
+  const [showDescDialog, setShowDescDialog] = useState(false)
+  const [autoPlay, setAutoPlay] = useState(false)
+  const [wishlistDialog, setWishlistDialog] = useState<
+    "added" | "removed" | null
+  >(null)
+
+  // Auto-dismiss wishlist overlay after 1.5s
+  useEffect(() => {
+    if (!wishlistDialog) return
+    const timer = setTimeout(() => setWishlistDialog(null), 1500)
+    return () => clearTimeout(timer)
+  }, [wishlistDialog])
 
   const activeVideo = useMemo(
     () => lesson.availableVideos.find((v) => v.id === activeVideoId) ?? null,
@@ -194,73 +219,389 @@ export function StreamLessonContent({
               />
             ) : null}
 
-            {/* Gradient overlay */}
-            <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 pt-24">
-              <h1 className="text-lg font-semibold text-white sm:text-2xl">
+            {/* Gradient overlay — Apple TV style */}
+            <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 pt-32">
+              {/* Grade badge */}
+              {lesson.chapter.course.grades.length > 0 && (
+                <div className="mb-2 flex gap-1.5">
+                  {lesson.chapter.course.grades.map((grade) => (
+                    <span
+                      key={grade}
+                      className="rounded-md border border-white/30 bg-black/60 px-2.5 text-xs font-medium text-white backdrop-blur-sm"
+                    >
+                      Grade {gradeWord(grade)}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Title */}
+              <h1 className="text-2xl font-bold tracking-tight text-white sm:text-4xl">
                 {lesson.title}
               </h1>
-              <p className="mt-1 text-sm text-white/70">
-                {lesson.chapter.course.title} &middot; {lesson.chapter.title}
-              </p>
-              {lesson.description && (
-                <p className="mt-1 line-clamp-1 text-sm text-white/50">
-                  {lesson.description}
-                </p>
-              )}
+
+              {/* Creator */}
+              <div className="mt-1.5 flex items-center gap-2">
+                <Image
+                  src="/logo.png"
+                  alt="Hogwarts"
+                  width={16}
+                  height={16}
+                  className="rounded-sm brightness-0 invert"
+                />
+                <span className="text-sm font-medium text-white">Hogwarts</span>
+              </div>
+
+              {/* Chapter & Lesson position + MORE */}
+              <div className="mt-1 flex items-center gap-2 text-sm text-white">
+                <span>
+                  C{lesson.chapter.position} L{lesson.position} &middot;{" "}
+                  {lesson.chapter.course.title} &middot; {lesson.chapter.title}
+                </span>
+                <button
+                  onClick={() => setShowDescDialog(true)}
+                  className="shrink-0 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium text-white/80 backdrop-blur-sm transition-colors hover:bg-white/25"
+                >
+                  MORE
+                </button>
+              </div>
+
+              {/* Row 4: Info badges */}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-white">
+                {lesson.year && <span>{lesson.year}</span>}
+                {lesson.year &&
+                  formatDuration(lesson.duration, lesson.videoDuration) && (
+                    <span>&middot;</span>
+                  )}
+                {formatDuration(lesson.duration, lesson.videoDuration) && (
+                  <span>
+                    {formatDuration(lesson.duration, lesson.videoDuration)}
+                  </span>
+                )}
+                <span className="rounded bg-white px-1.5 text-xs font-medium text-black">
+                  4K
+                </span>
+                {lesson.isFree && (
+                  <span className="rounded border border-white px-1.5 text-xs text-white">
+                    Free
+                  </span>
+                )}
+                <span className="rounded border border-white px-1.5 text-xs text-white">
+                  CC
+                </span>
+                <span className="rounded border border-white px-1.5 text-xs text-white">
+                  AD
+                </span>
+                {lesson.availableVideos.length > 1 && (
+                  <>
+                    <span>&middot;</span>
+                    <span>{lesson.availableVideos.length} instructors</span>
+                  </>
+                )}
+                {lesson.attachments.length > 0 && (
+                  <>
+                    <span>&middot;</span>
+                    <span>
+                      {lesson.attachments.length} resource
+                      {lesson.attachments.length > 1 ? "s" : ""}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Row 5: Play pill + Wishlist */}
               <div className="mt-4 flex items-center gap-3">
+                {/* Play button — two states based on watch progress */}
+                {lesson.progress &&
+                lesson.progress.watchedSeconds > 0 &&
+                lesson.progress.totalSeconds ? (
+                  <button
+                    onClick={() => {
+                      if (currentVideoUrl) {
+                        setAutoPlay(true)
+                        setShowHero(false)
+                      }
+                    }}
+                    disabled={!currentVideoUrl}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-5 font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+                  >
+                    <Play className="size-4 shrink-0 fill-current" />
+                    <div className="h-1 w-12 overflow-hidden rounded-full bg-black/20">
+                      <div
+                        className="h-full rounded-full bg-black"
+                        style={{
+                          width: `${Math.min(100, (lesson.progress.watchedSeconds / lesson.progress.totalSeconds) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-black/60">
+                      {formatRemaining(
+                        lesson.progress.watchedSeconds,
+                        lesson.progress.totalSeconds
+                      )}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (currentVideoUrl) {
+                        setAutoPlay(true)
+                        setShowHero(false)
+                      }
+                    }}
+                    disabled={!currentVideoUrl}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-6 font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+                  >
+                    <Play className="size-4 fill-current" />
+                    Play
+                  </button>
+                )}
+
+                {/* Wishlist toggle */}
                 <button
                   onClick={() => {
-                    if (currentVideoUrl) setShowHero(false)
+                    setIsInWishlist((prev) => {
+                      setWishlistDialog(prev ? "removed" : "added")
+                      return !prev
+                    })
                   }}
-                  disabled={!currentVideoUrl}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2 font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
-                >
-                  <Play className="size-4 fill-current" />
-                  Play
-                </button>
-                <button
-                  onClick={() => toast.info("Coming soon")}
                   className="inline-flex size-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
                 >
-                  <Plus className="size-5" />
+                  {isInWishlist ? (
+                    <Check className="size-5" />
+                  ) : (
+                    <Plus className="size-5" />
+                  )}
                 </button>
               </div>
             </div>
+
+            {/* About this Lesson — Apple TV+ info sheet */}
+            <Dialog open={showDescDialog} onOpenChange={setShowDescDialog}>
+              <DialogContent
+                showCloseButton={false}
+                className="flex max-h-[80vh] flex-col overflow-hidden rounded-3xl p-0 sm:max-w-[380px]"
+              >
+                {/* Fixed header — title + subtitle only */}
+                <div className="shrink-0 px-6 pt-2.5 pb-0.5">
+                  {/* Done pill — top-right */}
+                  <DialogClose asChild>
+                    <button className="absolute end-4 top-3 rounded-full bg-neutral-200 px-2.5 py-0.5 text-xs font-light text-gray-500 dark:bg-neutral-700 dark:text-gray-400">
+                      Done
+                    </button>
+                  </DialogClose>
+
+                  {/* Header — centered title + subtitle */}
+                  <DialogHeader className="items-center gap-0 text-center">
+                    <DialogTitle className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {lesson.title}
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-gray-500 dark:text-gray-400">
+                      {lesson.chapter.course.title}
+                    </DialogDescription>
+                  </DialogHeader>
+                </div>
+
+                {/* Scrollable body */}
+                <div className="overflow-y-auto px-6 pb-6">
+                  {/* Description */}
+                  <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                    {lesson.description ||
+                      lesson.chapter.course.description ||
+                      "Explore this lesson and discover new concepts."}
+                  </p>
+
+                  {/* Metadata badges row */}
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[13px]">
+                    {lesson.year && <span>{lesson.year}</span>}
+                    {lesson.year &&
+                      formatDuration(lesson.duration, lesson.videoDuration) && (
+                        <span>&middot;</span>
+                      )}
+                    {formatDuration(lesson.duration, lesson.videoDuration) && (
+                      <span>
+                        {formatDuration(lesson.duration, lesson.videoDuration)}
+                      </span>
+                    )}
+                    <span className="bg-foreground text-background rounded px-1 text-[10px] leading-4 font-bold">
+                      4K
+                    </span>
+                    {lesson.isFree && (
+                      <span className="rounded border px-1 text-[10px] leading-4">
+                        Free
+                      </span>
+                    )}
+                    <span className="rounded border px-1 text-[10px] leading-4">
+                      CC
+                    </span>
+                    <span className="rounded border px-1 text-[10px] leading-4">
+                      AD
+                    </span>
+                  </div>
+                  {/* ── Information ── */}
+                  <div className="mt-5 pt-4">
+                    <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                      Information
+                    </h3>
+                    <div className="mt-3 space-y-3">
+                      {lesson.year && (
+                        <div>
+                          <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                            Released
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">
+                            {lesson.year}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                          Course
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300">
+                          {lesson.chapter.course.title}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                          Chapter
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300">
+                          {lesson.chapter.title}
+                        </p>
+                      </div>
+                      {lesson.chapter.course.grades.length > 0 && (
+                        <div>
+                          <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                            Grade
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">
+                            {lesson.chapter.course.grades
+                              .map((g) => `Grade ${gradeWord(g)}`)
+                              .join(", ")}
+                          </p>
+                        </div>
+                      )}
+                      {lesson.availableVideos.length > 0 && (
+                        <div>
+                          <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                            Instructors
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">
+                            {lesson.availableVideos
+                              .map((v) => v.instructor.name ?? "Instructor")
+                              .join(", ")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ── About this Course ── */}
+                  {(lesson.chapter.course.description ||
+                    lesson.chapter.course.objectives.length > 0 ||
+                    lesson.chapter.course.prerequisites ||
+                    lesson.chapter.course.targetAudience) && (
+                    <div className="mt-5 pt-4">
+                      <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                        About this Course
+                      </h3>
+                      <div className="mt-3 space-y-3">
+                        {lesson.chapter.course.description && (
+                          <div>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                              Description
+                            </p>
+                            <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+                              {lesson.chapter.course.description}
+                            </p>
+                          </div>
+                        )}
+                        {lesson.chapter.course.objectives.length > 0 && (
+                          <div>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                              Objectives
+                            </p>
+                            <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+                              {lesson.chapter.course.objectives.join(", ")}
+                            </p>
+                          </div>
+                        )}
+                        {lesson.chapter.course.prerequisites && (
+                          <div>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                              Prerequisites
+                            </p>
+                            <p className="text-xs text-gray-600 dark:text-gray-300">
+                              {lesson.chapter.course.prerequisites}
+                            </p>
+                          </div>
+                        )}
+                        {lesson.chapter.course.targetAudience && (
+                          <div>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                              Target Audience
+                            </p>
+                            <p className="text-xs text-gray-600 dark:text-gray-300">
+                              {lesson.chapter.course.targetAudience}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Current Lesson ── */}
+                  {lesson.description && (
+                    <div className="mt-5 pt-4">
+                      <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                        Current Lesson
+                      </h3>
+                      <div className="mt-3">
+                        <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                          Description
+                        </p>
+                        <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+                          {lesson.description}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Wishlist overlay — Apple TV transient feedback */}
+            {wishlistDialog && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
+                <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-10 shadow-xl dark:bg-neutral-800">
+                  <Check className="size-16 text-gray-400 dark:text-gray-500" />
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    {wishlistDialog === "added"
+                      ? "Added to Watchlist"
+                      : "Removed from Watchlist"}
+                  </p>
+                </div>
+              </div>
+            )}
           </>
         ) : currentVideoUrl ? (
-          <div className="h-full w-full">
-            {currentVideoUrl.includes("youtube.com") ||
-            currentVideoUrl.includes("youtu.be") ? (
-              <iframe
-                className="h-full w-full rounded-lg"
-                src={getYouTubeEmbedUrl(currentVideoUrl)}
-                title={lesson.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : currentVideoUrl.includes("vimeo.com") ? (
-              <iframe
-                className="h-full w-full rounded-lg"
-                src={getVimeoEmbedUrl(currentVideoUrl)}
-                title={lesson.title}
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <VideoPlayer
-                url={currentVideoUrl}
-                title={lesson.title}
-                lessonId={lesson.id}
-                initialPosition={initialPosition}
-                posterUrl={lesson.thumbnailUrl}
-                nextLesson={nextLessonData}
-                onProgress={handleProgress}
-                onComplete={handleVideoComplete}
-                onNextLesson={handleNextLesson}
-                className="h-full w-full rounded-lg"
-              />
-            )}
-          </div>
+          <VideoPlayer
+            url={currentVideoUrl}
+            title={lesson.title}
+            lessonId={lesson.id}
+            initialPosition={initialPosition}
+            posterUrl={lesson.thumbnailUrl}
+            nextLesson={nextLessonData}
+            onProgress={handleProgress}
+            onComplete={handleVideoComplete}
+            onNextLesson={handleNextLesson}
+            autoPlay={autoPlay}
+            chapterNumber={lesson.chapter.position}
+            lessonNumber={lesson.position}
+            courseTitle={lesson.chapter.course.title}
+            className="h-full w-full"
+          />
         ) : null}
       </div>
 
@@ -478,7 +819,7 @@ export function StreamLessonContent({
         {lesson.previousLesson ? (
           <Link href={`${baseUrl}/${lesson.previousLesson.id}`}>
             <Button variant="outline">
-              <ChevronLeft className="me-2 size-4" />
+              <ChevronLeft className="me-2 size-4 rtl:rotate-180" />
               <span className="hidden sm:inline">Previous:</span>{" "}
               <span className="max-w-[150px] truncate">
                 {lesson.previousLesson.title}
@@ -496,20 +837,60 @@ export function StreamLessonContent({
               <span className="max-w-[150px] truncate">
                 {lesson.nextLesson.title}
               </span>
-              <ChevronRight className="ms-2 size-4" />
+              <ChevronRight className="ms-2 size-4 rtl:rotate-180" />
             </Button>
           </Link>
         ) : (
           <Link href={baseUrl}>
             <Button>
               Back to Course
-              <ChevronRight className="ms-2 size-4" />
+              <ChevronRight className="ms-2 size-4 rtl:rotate-180" />
             </Button>
           </Link>
         )}
       </div>
     </div>
   )
+}
+
+// Helper: number to word (1-12)
+const GRADE_WORDS: Record<number, string> = {
+  1: "One",
+  2: "Two",
+  3: "Three",
+  4: "Four",
+  5: "Five",
+  6: "Six",
+  7: "Seven",
+  8: "Eight",
+  9: "Nine",
+  10: "Ten",
+  11: "Eleven",
+  12: "Twelve",
+}
+function gradeWord(n: number): string {
+  return GRADE_WORDS[n] ?? String(n)
+}
+
+// Helper: format duration from minutes or seconds
+function formatDuration(
+  minutes?: number | null,
+  seconds?: number | null
+): string {
+  const totalMin = minutes ?? (seconds ? Math.ceil(seconds / 60) : 0)
+  if (totalMin === 0) return ""
+  if (totalMin >= 60)
+    return `${Math.floor(totalMin / 60)}h ${totalMin % 60} min`
+  return `${totalMin} min`
+}
+
+// Helper: format remaining time
+function formatRemaining(watchedSeconds: number, totalSeconds: number): string {
+  const remainSec = Math.max(0, totalSeconds - watchedSeconds)
+  const remainMin = Math.ceil(remainSec / 60)
+  if (remainMin >= 60)
+    return `${Math.floor(remainMin / 60)}h ${remainMin % 60}m left`
+  return `${remainMin}m left`
 }
 
 // Lightweight quiz question renderer for practice mode
@@ -596,17 +977,4 @@ function QuizQuestion({
       )}
     </div>
   )
-}
-
-// Helper functions for video embedding
-function getYouTubeEmbedUrl(url: string): string {
-  const videoId = url.match(
-    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-  )?.[1]
-  return videoId ? `https://www.youtube.com/embed/${videoId}` : url
-}
-
-function getVimeoEmbedUrl(url: string): string {
-  const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1]
-  return videoId ? `https://player.vimeo.com/video/${videoId}` : url
 }

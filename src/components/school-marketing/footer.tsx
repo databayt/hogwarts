@@ -1,12 +1,21 @@
+"use client"
+
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 import Image from "next/image"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 const Footer = () => {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.marketing?.site?.footer
+  const links = t?.links as Record<string, string> | undefined
+
   return (
-    <footer className="border-border bg-muted -mx-[calc(var(--container-px)+3.5rem)] border-t px-[calc(var(--container-px)+3.5rem)] pt-16 pb-6">
+    <footer className="border-border bg-muted -mx-[var(--marketing-px)] border-t px-[var(--marketing-px)] pt-16 pb-6">
       <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
         {/* Map Section */}
         <div className="lg:min-w-0 lg:flex-[2]">
@@ -24,14 +33,10 @@ const Footer = () => {
           <div className="space-y-2 pb-4">
             <div>
               <p className="text-muted-foreground text-sm">
-                123 Magical Learning Lane, <br /> Education City, EC 12345
+                {t?.address ||
+                  "123 Magical Learning Lane, \n Education City, EC 12345"}
               </p>
             </div>
-            {/* <div>
-                <p className="text-sm text-muted-foreground">
-                  Mon-Fri: 8AM-5PM
-                </p>
-              </div> */}
           </div>
 
           <Button
@@ -47,7 +52,7 @@ const Footer = () => {
                 height={40}
                 className="dark:invert"
               />
-              Get Directions
+              {t?.getDirections || "Get Directions"}
             </Link>
           </Button>
         </div>
@@ -57,7 +62,7 @@ const Footer = () => {
           {/* Academics */}
           <div>
             <h3 className="text-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
-              Academics
+              {t?.academics || "Academics"}
             </h3>
             <ul className="space-y-2">
               <li>
@@ -65,7 +70,7 @@ const Footer = () => {
                   href="/houses"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Houses
+                  {links?.houses || "Houses"}
                 </Link>
               </li>
               <li>
@@ -73,7 +78,7 @@ const Footer = () => {
                   href="/curriculum"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Curriculum
+                  {links?.curriculum || "Curriculum"}
                 </Link>
               </li>
               <li>
@@ -81,7 +86,7 @@ const Footer = () => {
                   href="/faculty"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Faculty
+                  {links?.faculty || "Faculty"}
                 </Link>
               </li>
               <li>
@@ -89,7 +94,7 @@ const Footer = () => {
                   href="/library"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Library
+                  {links?.library || "Library"}
                 </Link>
               </li>
               <li>
@@ -97,7 +102,7 @@ const Footer = () => {
                   href="/subjects"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Subjects
+                  {links?.subjects || "Subjects"}
                 </Link>
               </li>
               <li>
@@ -105,7 +110,7 @@ const Footer = () => {
                   href="/exams"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Exams
+                  {links?.exams || "Exams"}
                 </Link>
               </li>
             </ul>
@@ -114,7 +119,7 @@ const Footer = () => {
           {/* Campus */}
           <div>
             <h3 className="text-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
-              Campus
+              {t?.campus || "Campus"}
             </h3>
             <ul className="space-y-2">
               <li>
@@ -122,7 +127,7 @@ const Footer = () => {
                   href="/admission"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Admissions
+                  {links?.admissions || "Admissions"}
                 </Link>
               </li>
               <li>
@@ -130,7 +135,7 @@ const Footer = () => {
                   href="/dormitories"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Dormitories
+                  {links?.dormitories || "Dormitories"}
                 </Link>
               </li>
               <li>
@@ -138,7 +143,7 @@ const Footer = () => {
                   href="/great-hall"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Great Hall
+                  {links?.greatHall || "Great Hall"}
                 </Link>
               </li>
               <li>
@@ -146,7 +151,7 @@ const Footer = () => {
                   href="/quidditch"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Quidditch
+                  {links?.quidditch || "Quidditch"}
                 </Link>
               </li>
               <li>
@@ -154,7 +159,7 @@ const Footer = () => {
                   href="/grounds"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Grounds
+                  {links?.grounds || "Grounds"}
                 </Link>
               </li>
             </ul>
@@ -163,7 +168,7 @@ const Footer = () => {
           {/* Activities */}
           <div>
             <h3 className="text-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
-              Activities
+              {t?.activities || "Activities"}
             </h3>
             <ul className="space-y-2">
               <li>
@@ -171,7 +176,7 @@ const Footer = () => {
                   href="/clubs"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Clubs
+                  {links?.clubs || "Clubs"}
                 </Link>
               </li>
               <li>
@@ -179,7 +184,7 @@ const Footer = () => {
                   href="/events"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Events
+                  {links?.events || "Events"}
                 </Link>
               </li>
               <li>
@@ -187,7 +192,7 @@ const Footer = () => {
                   href="/sports"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Sports
+                  {links?.sports || "Sports"}
                 </Link>
               </li>
               <li>
@@ -195,7 +200,7 @@ const Footer = () => {
                   href="/competitions"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Competitions
+                  {links?.competitions || "Competitions"}
                 </Link>
               </li>
               <li>
@@ -203,7 +208,7 @@ const Footer = () => {
                   href="/tournaments"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Tournaments
+                  {links?.tournaments || "Tournaments"}
                 </Link>
               </li>
               <li>
@@ -211,7 +216,7 @@ const Footer = () => {
                   href="/ceremonies"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Ceremonies
+                  {links?.ceremonies || "Ceremonies"}
                 </Link>
               </li>
               <li>
@@ -219,7 +224,7 @@ const Footer = () => {
                   href="/traditions"
                   className="muted hover:text-primary transition-colors"
                 >
-                  Traditions
+                  {links?.traditions || "Traditions"}
                 </Link>
               </li>
             </ul>
@@ -228,7 +233,7 @@ const Footer = () => {
           {/* Support */}
           <div>
             <h3 className="text-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
-              Support
+              {t?.support || "Support"}
             </h3>
             <ul className="space-y-2">
               <li>
@@ -236,7 +241,7 @@ const Footer = () => {
                   href="/about"
                   className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
                 >
-                  About
+                  {links?.about || "About"}
                 </Link>
               </li>
               <li>
@@ -244,7 +249,7 @@ const Footer = () => {
                   href="/contact"
                   className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
                 >
-                  Contact
+                  {links?.contact || "Contact"}
                 </Link>
               </li>
               <li>
@@ -252,7 +257,7 @@ const Footer = () => {
                   href="/help"
                   className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
                 >
-                  Help Center
+                  {links?.helpCenter || "Help Center"}
                 </Link>
               </li>
               <li>
@@ -260,7 +265,7 @@ const Footer = () => {
                   href="/alumni"
                   className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
                 >
-                  Alumni
+                  {links?.alumni || "Alumni"}
                 </Link>
               </li>
               <li>
@@ -268,7 +273,7 @@ const Footer = () => {
                   href="/careers"
                   className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
                 >
-                  Careers
+                  {links?.careers || "Careers"}
                 </Link>
               </li>
             </ul>
@@ -280,14 +285,14 @@ const Footer = () => {
       <div className="border-border mt-8 border-t pt-6">
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
           <p className="text-muted-foreground text-sm">
-            Build by{" "}
+            {t?.buildBy || "Build by"}{" "}
             <Link
               href="https://databayt.org"
               className="hover:text-primary transition-colors"
             >
               databayt
             </Link>
-            , source code available on{" "}
+            {t?.sourceCode || ", source code available on"}{" "}
             <Link
               href="https://github.com/databayt/hogwarts"
               className="hover:text-primary transition-colors"
@@ -300,34 +305,15 @@ const Footer = () => {
               href="/terms"
               className="text-muted-foreground hover:text-primary text-sm transition-colors"
             >
-              Terms
+              {t?.terms || "Terms"}
             </Link>
             <Link
               href="/privacy"
               className="text-muted-foreground hover:text-primary text-sm transition-colors"
             >
-              Privacy
+              {t?.privacy || "Privacy"}
             </Link>
           </div>
-
-          {/* Social Icons - Commented out as in original */}
-          {/* <div className="flex items-center gap-4 ps-8">
-              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 712.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 712 18.407a11.616 11.616 0 006.29 1.84" />
-                </svg>
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                </svg>
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                </svg>
-              </Link>
-            </div> */}
         </div>
       </div>
     </footer>

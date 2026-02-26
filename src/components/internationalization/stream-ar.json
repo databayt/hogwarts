@@ -279,6 +279,43 @@
     "enrollmentButton": {
       "loading": "جاري التحميل...",
       "enrollInCourse": "التسجيل في الدورة"
+    },
+    "certificate": {
+      "title": "شهادة إتمام",
+      "completed": "تاريخ الإتمام:",
+      "certificateNumber": "رقم الشهادة:",
+      "view": "عرض",
+      "download": "تحميل",
+      "downloading": "جاري التحميل...",
+      "linkCopied": "تم نسخ الرابط!"
+    },
+    "coursesFilter": {
+      "all": "الكل",
+      "noCoursesAvailable": "لا توجد دورات متاحة",
+      "noCoursesAvailableDesc": "لا توجد دورات متاحة حالياً. تفقد لاحقاً!",
+      "seeMore": "عرض المزيد"
+    },
+    "adminCoursesColumns": {
+      "title": "العنوان",
+      "status": "الحالة",
+      "published": "منشور",
+      "draft": "مسودة",
+      "price": "السعر",
+      "free": "مجاني",
+      "enrollments": "المسجلين",
+      "chapters": "الفصول",
+      "created": "التاريخ",
+      "actions": "الإجراءات",
+      "openMenu": "فتح القائمة",
+      "editInfo": "تعديل المعلومات",
+      "manageChapters": "إدارة الفصول",
+      "delete": "حذف"
+    },
+    "courseTypes": {
+      "professionalCertificate": "شهادة احترافية",
+      "specialization": "تخصص",
+      "course": "دورة",
+      "shortCourse": "دورة قصيرة"
     }
   }
 }

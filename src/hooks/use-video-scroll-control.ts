@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 
 interface UseVideoScrollControlOptions {
@@ -19,6 +21,7 @@ interface UseVideoScrollControlReturn {
   isInView: boolean
   isMuted: boolean
   visibilityRatio: number
+  toggleMute: () => void
 }
 
 /**
@@ -46,11 +49,18 @@ export function useVideoScrollControl(
   const volumeAnimationRef = useRef<number | null>(null)
   const targetVolumeRef = useRef<number>(0)
   const hasUserInteracted = useRef(false)
+  const userMutedRef = useRef(false)
   const playPromiseRef = useRef<Promise<void> | null>(null)
 
   const [isInView, setIsInView] = useState(false)
   const [isMuted, setIsMuted] = useState(true)
   const [visibilityRatio, setVisibilityRatio] = useState(0)
+
+  // Refs to avoid stale closures in event handlers
+  const isInViewRef = useRef(isInView)
+  const visibilityRatioRef = useRef(visibilityRatio)
+  isInViewRef.current = isInView
+  visibilityRatioRef.current = visibilityRatio
 
   // Cancel volume animation
   const cancelVolumeAnimation = useCallback(() => {
@@ -155,13 +165,19 @@ export function useVideoScrollControl(
       hasUserInteracted.current = true
 
       const video = videoRef.current
-      if (video && isInView && video.muted && targetVolume > 0) {
+      if (
+        video &&
+        isInViewRef.current &&
+        video.muted &&
+        !userMutedRef.current &&
+        targetVolume > 0
+      ) {
         video.muted = false
         video.volume = 0
         setIsMuted(false)
 
         const newVolume = progressiveVolume
-          ? calculateVolume(visibilityRatio)
+          ? calculateVolume(visibilityRatioRef.current)
           : targetVolume
         animateToVolume(video, newVolume, 600)
       }
@@ -176,14 +192,7 @@ export function useVideoScrollControl(
       window.removeEventListener("scroll", handleInteraction)
       window.removeEventListener("touchstart", handleInteraction)
     }
-  }, [
-    isInView,
-    visibilityRatio,
-    targetVolume,
-    progressiveVolume,
-    calculateVolume,
-    animateToVolume,
-  ])
+  }, [targetVolume, progressiveVolume, calculateVolume, animateToVolume])
 
   // Progressive Intersection Observer with multiple thresholds
   useEffect(() => {
@@ -206,8 +215,12 @@ export function useVideoScrollControl(
         if (ratio >= playThreshold) {
           safePlay(video)
 
-          // Handle progressive volume
-          if (hasUserInteracted.current && progressiveVolume) {
+          // Handle progressive volume (skip if user explicitly muted)
+          if (
+            hasUserInteracted.current &&
+            progressiveVolume &&
+            !userMutedRef.current
+          ) {
             const newVolume = calculateVolume(ratio)
 
             if (video.muted && newVolume > 0) {
@@ -262,6 +275,32 @@ export function useVideoScrollControl(
     }
   }, [])
 
+  // Toggle mute from UI button
+  const toggleMute = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    hasUserInteracted.current = true
+
+    if (video.muted) {
+      // Unmute: animate volume up
+      userMutedRef.current = false
+      video.muted = false
+      video.volume = 0
+      setIsMuted(false)
+
+      const newVolume = progressiveVolume
+        ? calculateVolume(visibilityRatioRef.current)
+        : targetVolume
+      animateToVolume(video, newVolume, 400)
+    } else {
+      // Mute: animate volume down, then mute
+      userMutedRef.current = true
+      animateToVolume(video, 0, 300)
+      // animateToVolume auto-mutes when volume reaches 0
+    }
+  }, [progressiveVolume, targetVolume, calculateVolume, animateToVolume])
+
   // Cleanup
   useEffect(() => {
     return () => cancelVolumeAnimation()
@@ -273,5 +312,6 @@ export function useVideoScrollControl(
     isInView,
     isMuted,
     visibilityRatio,
+    toggleMute,
   }
 }

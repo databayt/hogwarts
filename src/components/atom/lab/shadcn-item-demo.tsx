@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { BadgeCheck, ChevronRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -41,7 +43,7 @@ export function ShadcnItemDemo() {
             Your profile has been verified.
           </div>
         </div>
-        <ChevronRight className="text-muted-foreground size-4" />
+        <ChevronRight className="text-muted-foreground size-4 rtl:rotate-180" />
       </a>
     </div>
   )

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import Link from "next/link"
 import {
@@ -20,6 +22,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { AnthropicIcons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 // ============================================================================
 // TYPES
@@ -253,10 +256,12 @@ function StudentCard({
   data,
   locale,
   subdomain,
+  dict,
 }: {
   data: StudentUpcomingData
   locale: string
   subdomain: string
+  dict?: Record<string, string>
 }) {
   const overdueCount = data.assignments.filter((a) => a.isOverdue).length
   const pendingCount = data.assignments.filter(
@@ -264,31 +269,40 @@ function StudentCard({
   ).length
 
   return {
-    title: "Assignments",
+    title: dict?.assignments || "Assignments",
     subtitle:
-      overdueCount > 0 ? `${overdueCount} overdue` : `${pendingCount} pending`,
+      overdueCount > 0
+        ? `${overdueCount} ${dict?.overdue || "overdue"}`
+        : `${pendingCount} ${dict?.pending || "pending"}`,
     icon: FileText,
     badge:
       overdueCount > 0
-        ? { label: "Overdue", variant: "destructive" as const }
+        ? { label: dict?.overdue || "Overdue", variant: "destructive" as const }
         : undefined,
     details: [
-      { label: "Pending", value: `${pendingCount}`, icon: Clock },
       {
-        label: "Overdue",
+        label: dict?.pending || "Pending",
+        value: `${pendingCount}`,
+        icon: Clock,
+      },
+      {
+        label: dict?.overdue || "Overdue",
         value: `${overdueCount}`,
         icon: AlertTriangle,
         highlight: overdueCount > 0,
       },
       ...(data.nextClass
         ? [
-            { label: "Next Class", value: data.nextClass.subject },
-            { label: "Time", value: data.nextClass.time },
+            {
+              label: dict?.nextClass || "Next Class",
+              value: data.nextClass.subject,
+            },
+            { label: dict?.time || "Time", value: data.nextClass.time },
           ]
         : []),
     ],
     linkHref: `/${locale}/s/${subdomain}/assignments`,
-    linkLabel: "View Assignments",
+    linkLabel: dict?.viewAssignments || "View Assignments",
   }
 }
 
@@ -296,40 +310,48 @@ function TeacherCard({
   data,
   locale,
   subdomain,
+  dict,
 }: {
   data: TeacherUpcomingData
   locale: string
   subdomain: string
+  dict?: Record<string, string>
 }) {
   return {
-    title: "Today's Overview",
+    title: dict?.todaysOverview || "Today's Overview",
     subtitle: data.nextClass
-      ? `Next: ${data.nextClass.subject}`
-      : "No classes today",
+      ? `${dict?.next || "Next"}: ${data.nextClass.subject}`
+      : dict?.noClassesToday || "No classes today",
     icon: BookOpen,
     badge:
       data.attendanceDue > 0
         ? {
-            label: `${data.attendanceDue} attendance due`,
+            label: `${data.attendanceDue} ${dict?.attendanceDue || "attendance due"}`,
             variant: "secondary" as const,
           }
         : undefined,
     details: [
-      { label: "Classes Today", value: `${data.classesToday}` },
+      {
+        label: dict?.classesToday || "Classes Today",
+        value: `${data.classesToday}`,
+      },
       ...(data.nextClass
         ? [
-            { label: "Room", value: data.nextClass.room },
-            { label: "Students", value: `${data.nextClass.students}` },
+            { label: dict?.room || "Room", value: data.nextClass.room },
+            {
+              label: dict?.students || "Students",
+              value: `${data.nextClass.students}`,
+            },
           ]
         : []),
       {
-        label: "Pending Grading",
+        label: dict?.pendingGrading || "Pending Grading",
         value: `${data.pendingGrading}`,
         highlight: data.pendingGrading > 10,
       },
     ],
     linkHref: `/${locale}/s/${subdomain}/timetable`,
-    linkLabel: "View Timetable",
+    linkLabel: dict?.viewTimetable || "View Timetable",
   }
 }
 
@@ -337,38 +359,39 @@ function ParentCard({
   data,
   locale,
   subdomain,
+  dict,
 }: {
   data: ParentUpcomingData
   locale: string
   subdomain: string
+  dict?: Record<string, string>
 }) {
   const totalOverdue = data.children.reduce(
     (sum, c) => sum + c.overdueAssignments,
     0
   )
-  const totalPending = data.children.reduce(
-    (sum, c) => sum + c.pendingAssignments,
-    0
-  )
 
   return {
-    title: "Children Overview",
-    subtitle: `${data.children.length} child${data.children.length > 1 ? "ren" : ""} enrolled`,
+    title: dict?.childrenOverview || "Children Overview",
+    subtitle: `${data.children.length} ${dict?.childrenEnrolled || "children enrolled"}`,
     icon: Users,
     badge:
       totalOverdue > 0
-        ? { label: `${totalOverdue} overdue`, variant: "destructive" as const }
+        ? {
+            label: `${totalOverdue} ${dict?.overdue || "overdue"}`,
+            variant: "destructive" as const,
+          }
         : undefined,
     details: data.children.map((child) => ({
       label: child.name,
       value:
         child.overdueAssignments > 0
-          ? `${child.overdueAssignments} overdue`
-          : `${child.pendingAssignments} pending`,
+          ? `${child.overdueAssignments} ${dict?.overdue || "overdue"}`
+          : `${child.pendingAssignments} ${dict?.pending || "pending"}`,
       highlight: child.overdueAssignments > 0,
     })),
     linkHref: `/${locale}/s/${subdomain}/children`,
-    linkLabel: "View Children",
+    linkLabel: dict?.viewChildren || "View Children",
   }
 }
 
@@ -376,37 +399,45 @@ function StaffCard({
   data,
   locale,
   subdomain,
+  dict,
 }: {
   data: StaffUpcomingData
   locale: string
   subdomain: string
+  dict?: Record<string, string>
 }) {
   const highPriorityCount = data.urgentTasks.filter(
     (t) => t.priority === "high"
   ).length
 
   return {
-    title: "Today's Tasks",
-    subtitle: `${data.todaysTasks} tasks to complete`,
+    title: dict?.todaysTasks || "Today's Tasks",
+    subtitle: `${data.todaysTasks} ${dict?.tasksToComplete || "tasks to complete"}`,
     icon: ClipboardList,
     badge:
       highPriorityCount > 0
         ? {
-            label: `${highPriorityCount} urgent`,
+            label: `${highPriorityCount} ${dict?.urgent || "urgent"}`,
             variant: "destructive" as const,
           }
         : undefined,
     details: [
-      { label: "Total Tasks", value: `${data.todaysTasks}` },
       {
-        label: "Urgent",
+        label: dict?.totalTasks || "Total Tasks",
+        value: `${data.todaysTasks}`,
+      },
+      {
+        label: dict?.urgent || "Urgent",
         value: `${highPriorityCount}`,
         highlight: highPriorityCount > 0,
       },
-      { label: "Pending Requests", value: `${data.pendingRequests}` },
+      {
+        label: dict?.pendingRequests || "Pending Requests",
+        value: `${data.pendingRequests}`,
+      },
     ],
     linkHref: `/${locale}/s/${subdomain}/tasks`,
-    linkLabel: "View Tasks",
+    linkLabel: dict?.viewTasks || "View Tasks",
   }
 }
 
@@ -414,35 +445,43 @@ function AccountantCard({
   data,
   locale,
   subdomain,
+  dict,
 }: {
   data: AccountantUpcomingData
   locale: string
   subdomain: string
+  dict?: Record<string, string>
 }) {
   const formatCurrency = (amount: number) => `$${amount.toLocaleString()}`
 
   return {
-    title: "Financial Status",
-    subtitle: `${data.overdueInvoices.count} overdue invoices`,
+    title: dict?.financialStatus || "Financial Status",
+    subtitle: `${data.overdueInvoices.count} ${dict?.overdueInvoices || "overdue invoices"}`,
     icon: DollarSign,
     badge:
       data.overdueInvoices.count > 0
-        ? { label: "Action Required", variant: "destructive" as const }
+        ? {
+            label: dict?.actionRequired || "Action Required",
+            variant: "destructive" as const,
+          }
         : undefined,
     details: [
-      { label: "Pending Payments", value: `${data.pendingPayments.count}` },
       {
-        label: "Overdue Amount",
+        label: dict?.pendingPayments || "Pending Payments",
+        value: `${data.pendingPayments.count}`,
+      },
+      {
+        label: dict?.overdueAmount || "Overdue Amount",
         value: formatCurrency(data.overdueInvoices.totalAmount),
         highlight: true,
       },
       {
-        label: "Today's Collections",
+        label: dict?.todaysCollections || "Today's Collections",
         value: formatCurrency(data.todayCollections),
       },
     ],
     linkHref: `/${locale}/s/${subdomain}/finance/invoice`,
-    linkLabel: "View Invoices",
+    linkLabel: dict?.viewInvoices || "View Invoices",
   }
 }
 
@@ -450,34 +489,45 @@ function PrincipalCard({
   data,
   locale,
   subdomain,
+  dict,
 }: {
   data: PrincipalUpcomingData
   locale: string
   subdomain: string
+  dict?: Record<string, string>
 }) {
   const highAlerts = data.criticalAlerts.filter(
     (a) => a.severity === "high"
   ).length
 
   return {
-    title: "Today's Priorities",
-    subtitle: `${data.todayMeetings} meetings scheduled`,
+    title: dict?.todaysPriorities || "Today's Priorities",
+    subtitle: `${data.todayMeetings} ${dict?.meetingsScheduled || "meetings scheduled"}`,
     icon: Calendar,
     badge:
       highAlerts > 0
-        ? { label: `${highAlerts} critical`, variant: "destructive" as const }
+        ? {
+            label: `${highAlerts} ${dict?.critical || "critical"}`,
+            variant: "destructive" as const,
+          }
         : undefined,
     details: [
-      { label: "Meetings Today", value: `${data.todayMeetings}` },
-      { label: "Pending Approvals", value: `${data.pendingApprovals}` },
       {
-        label: "Alerts",
+        label: dict?.meetingsToday || "Meetings Today",
+        value: `${data.todayMeetings}`,
+      },
+      {
+        label: dict?.pendingApprovals || "Pending Approvals",
+        value: `${data.pendingApprovals}`,
+      },
+      {
+        label: dict?.alerts || "Alerts",
         value: `${data.criticalAlerts.length}`,
         highlight: highAlerts > 0,
       },
     ],
     linkHref: `/${locale}/s/${subdomain}/reports`,
-    linkLabel: "View Dashboard",
+    linkLabel: dict?.viewDashboard || "View Dashboard",
   }
 }
 
@@ -485,34 +535,45 @@ function AdminCard({
   data,
   locale,
   subdomain,
+  dict,
 }: {
   data: AdminUpcomingData
   locale: string
   subdomain: string
+  dict?: Record<string, string>
 }) {
   const highAlerts = data.systemAlerts.filter(
     (a) => a.severity === "high"
   ).length
 
   return {
-    title: "System Status",
-    subtitle: `${data.activeIssues} active issues`,
+    title: dict?.systemStatus || "System Status",
+    subtitle: `${data.activeIssues} ${dict?.activeIssues || "active issues"}`,
     icon: Bell,
     badge:
       highAlerts > 0
-        ? { label: `${highAlerts} critical`, variant: "destructive" as const }
+        ? {
+            label: `${highAlerts} ${dict?.critical || "critical"}`,
+            variant: "destructive" as const,
+          }
         : undefined,
     details: [
-      { label: "Pending Approvals", value: `${data.pendingApprovals}` },
       {
-        label: "Active Issues",
+        label: dict?.pendingApprovals || "Pending Approvals",
+        value: `${data.pendingApprovals}`,
+      },
+      {
+        label: dict?.activeIssues || "Active Issues",
         value: `${data.activeIssues}`,
         highlight: data.activeIssues > 0,
       },
-      { label: "System Alerts", value: `${data.systemAlerts.length}` },
+      {
+        label: dict?.systemAlerts || "System Alerts",
+        value: `${data.systemAlerts.length}`,
+      },
     ],
     linkHref: `/${locale}/s/${subdomain}/school`,
-    linkLabel: "View School Panel",
+    linkLabel: dict?.viewSchoolPanel || "View School Panel",
   }
 }
 
@@ -520,7 +581,8 @@ function getRoleCardConfig(
   role: UserRole,
   data: UpcomingData,
   locale: string,
-  subdomain: string
+  subdomain: string,
+  dict?: Record<string, string>
 ) {
   switch (role) {
     case "STUDENT":
@@ -528,33 +590,52 @@ function getRoleCardConfig(
         data: data as StudentUpcomingData,
         locale,
         subdomain,
+        dict,
       })
     case "TEACHER":
       return TeacherCard({
         data: data as TeacherUpcomingData,
         locale,
         subdomain,
+        dict,
       })
     case "GUARDIAN":
-      return ParentCard({ data: data as ParentUpcomingData, locale, subdomain })
+      return ParentCard({
+        data: data as ParentUpcomingData,
+        locale,
+        subdomain,
+        dict,
+      })
     case "STAFF":
-      return StaffCard({ data: data as StaffUpcomingData, locale, subdomain })
+      return StaffCard({
+        data: data as StaffUpcomingData,
+        locale,
+        subdomain,
+        dict,
+      })
     case "ACCOUNTANT":
       return AccountantCard({
         data: data as AccountantUpcomingData,
         locale,
         subdomain,
+        dict,
       })
     case "PRINCIPAL":
       return PrincipalCard({
         data: data as PrincipalUpcomingData,
         locale,
         subdomain,
+        dict,
       })
     case "ADMIN":
     case "DEVELOPER":
     default:
-      return AdminCard({ data: data as AdminUpcomingData, locale, subdomain })
+      return AdminCard({
+        data: data as AdminUpcomingData,
+        locale,
+        subdomain,
+        dict,
+      })
   }
 }
 
@@ -582,10 +663,20 @@ export function Upcoming({
   className,
 }: UpcomingProps) {
   const [isFlipped, setIsFlipped] = useState(false)
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.upcoming as
+    | Record<string, string>
+    | undefined
 
   // Use provided data or fallback to defaults
   const effectiveData = data || getDefaultData(role)
-  const cardConfig = getRoleCardConfig(role, effectiveData, locale, subdomain)
+  const cardConfig = getRoleCardConfig(
+    role,
+    effectiveData,
+    locale,
+    subdomain,
+    dict
+  )
   const Icon = cardConfig.icon
 
   return (
@@ -645,7 +736,7 @@ export function Upcoming({
             </div>
           </div>
 
-          <div className="absolute right-0 bottom-0 left-0 p-5">
+          <div className="absolute start-0 end-0 bottom-0 p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-1.5">
                 <h3 className="text-foreground text-lg leading-snug font-semibold tracking-tighter transition-all duration-500 ease-out group-hover:translate-y-[-4px]">
@@ -751,7 +842,7 @@ export function Upcoming({
                     "scale-90 opacity-0 group-hover/start:scale-100 group-hover/start:opacity-100"
                   )}
                 />
-                <ArrowRight className="text-primary relative z-10 h-4 w-4 transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" />
+                <ArrowRight className="text-primary relative z-10 h-4 w-4 transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110 rtl:rotate-180 rtl:group-hover/start:-translate-x-0.5" />
               </div>
             </Link>
           </div>
@@ -776,8 +867,18 @@ export function SimpleUpcoming({
   subdomain,
   className,
 }: UpcomingProps) {
+  const { dictionary } = useDictionary()
+  const simpleDict = dictionary?.school?.dashboard?.upcoming as
+    | Record<string, string>
+    | undefined
   const effectiveData = data || getDefaultData(role)
-  const cardConfig = getRoleCardConfig(role, effectiveData, locale, subdomain)
+  const cardConfig = getRoleCardConfig(
+    role,
+    effectiveData,
+    locale,
+    subdomain,
+    simpleDict
+  )
   const Icon = cardConfig.icon
 
   return (
@@ -825,7 +926,7 @@ export function SimpleUpcoming({
         className="bg-muted/50 hover:bg-primary/10 flex items-center justify-between rounded-lg p-2 transition-colors"
       >
         <span className="text-sm font-medium">{cardConfig.linkLabel}</span>
-        <ArrowRight className="text-primary h-4 w-4" />
+        <ArrowRight className="text-primary h-4 w-4 rtl:rotate-180" />
       </Link>
     </div>
   )

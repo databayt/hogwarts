@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Scanner } from "@yudiel/react-qr-scanner"
 import {
@@ -379,14 +381,14 @@ export function QRScanner({
                 <div className="pointer-events-none absolute inset-0">
                   {/* Corner markers - larger for mobile visibility */}
                   <div className="border-primary absolute inset-8 rounded-lg border-2" />
-                  <div className="border-primary absolute top-8 left-8 h-10 w-10 border-s-4 border-t-4 sm:h-8 sm:w-8" />
-                  <div className="border-primary absolute top-8 right-8 h-10 w-10 border-e-4 border-t-4 sm:h-8 sm:w-8" />
-                  <div className="border-primary absolute bottom-8 left-8 h-10 w-10 border-s-4 border-b-4 sm:h-8 sm:w-8" />
-                  <div className="border-primary absolute right-8 bottom-8 h-10 w-10 border-e-4 border-b-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute start-8 top-8 h-10 w-10 border-s-4 border-t-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute end-8 top-8 h-10 w-10 border-e-4 border-t-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute start-8 bottom-8 h-10 w-10 border-s-4 border-b-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute end-8 bottom-8 h-10 w-10 border-e-4 border-b-4 sm:h-8 sm:w-8" />
 
                   {/* Animated scan line */}
                   <div
-                    className="bg-primary/50 absolute right-8 left-8 h-0.5 animate-pulse"
+                    className="bg-primary/50 absolute start-8 end-8 h-0.5 animate-pulse"
                     style={{
                       top: "50%",
                       animation: "scan-line 2s ease-in-out infinite",
@@ -480,7 +482,7 @@ export function QRScanner({
           <div
             className={cn(
               "flex flex-wrap justify-center gap-2",
-              isFullscreen && "fixed right-4 bottom-4 left-4 z-50"
+              isFullscreen && "fixed start-4 end-4 bottom-4 z-50"
             )}
           >
             {scanning ? (

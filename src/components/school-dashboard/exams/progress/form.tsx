@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
@@ -253,7 +255,10 @@ export function ProgressReportForm({
           <label className="text-sm font-medium">Recipients</label>
           <div className="space-y-2">
             {RECIPIENT_TYPES.map((type) => (
-              <div key={type.value} className="flex items-center space-x-2">
+              <div
+                key={type.value}
+                className="flex items-center space-x-2 rtl:space-x-reverse"
+              >
                 <input
                   type="checkbox"
                   id={`recipient-${type.value}`}
@@ -273,7 +278,10 @@ export function ProgressReportForm({
           <label className="text-sm font-medium">Delivery Channels</label>
           <div className="space-y-2">
             {CHANNELS.map((channel) => (
-              <div key={channel.value} className="flex items-center space-x-2">
+              <div
+                key={channel.value}
+                className="flex items-center space-x-2 rtl:space-x-reverse"
+              >
                 <input
                   type="checkbox"
                   id={`channel-${channel.value}`}
@@ -299,7 +307,7 @@ export function ProgressReportForm({
             formData.channels.length === 0
           }
         >
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
           {schedule ? "Update Schedule" : "Create Schedule"}
         </Button>
         <Button

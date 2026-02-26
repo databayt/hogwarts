@@ -1392,5 +1392,5 @@ Allowing push, but please fix errors before merging to main
 
 **Author**: Hogwarts School Automation Platform Team
 **Maintained by**: Claude Code Automation Suite
-**License**: MIT
+**License**: SSPL-1.0
 **Last Updated**: 2025-10-31

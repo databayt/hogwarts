@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -39,6 +41,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { getFinancialOverviewByRole } from "./actions"
 import type { DashboardRole } from "./resource-usage-section"
@@ -514,7 +517,7 @@ function StatsStatusCard({ item }: { item: FinancialStat }) {
               </div>
             </div>
             <ChevronRight
-              className="text-muted-foreground/60 group-hover:text-muted-foreground size-5 shrink-0"
+              className="text-muted-foreground/60 group-hover:text-muted-foreground size-5 shrink-0 rtl:rotate-180"
               aria-hidden={true}
             />
           </div>
@@ -529,6 +532,7 @@ function StatsStatusCard({ item }: { item: FinancialStat }) {
 // ============================================================================
 
 function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
+  const { locale } = useLocale()
   const [activeChart, setActiveChart] = React.useState<"income" | "expenses">(
     "income"
   )
@@ -590,7 +594,7 @@ function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value)
-                return date.toLocaleDateString("en-US", {
+                return date.toLocaleDateString(locale, {
                   month: "short",
                   day: "numeric",
                 })
@@ -602,7 +606,7 @@ function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
                   className="w-[150px]"
                   nameKey="views"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    return new Date(value).toLocaleDateString(locale, {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
@@ -765,6 +769,7 @@ export function FinancialOverviewSection({
   role,
   className,
 }: FinancialOverviewSectionProps) {
+  const { locale } = useLocale()
   const [data, setData] = useState<FinancialOverviewData>(
     defaultDataByRole[role] || defaultDataByRole.ADMIN
   )

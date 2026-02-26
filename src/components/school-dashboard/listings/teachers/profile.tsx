@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { format } from "date-fns"
 import {
@@ -589,7 +591,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                         <div key={index} className="relative flex gap-4 pb-8">
                           {/* Timeline line */}
                           {index < teacher.experiences.length - 1 && (
-                            <div className="bg-border absolute top-10 bottom-0 left-[19px] w-0.5" />
+                            <div className="bg-border absolute start-[19px] top-10 bottom-0 w-0.5" />
                           )}
 
                           {/* Timeline dot */}

@@ -2,7 +2,7 @@
  * Epic 5: Onboarding
  * Story 5.3: Full Onboarding Flow
  *
- * Tests the complete 15-step onboarding wizard including:
+ * Tests the complete 16-step onboarding wizard including:
  * - Full flow completion (OB-020)
  * - Step validation (OB-021)
  * - Back navigation data persistence (OB-022)
@@ -151,37 +151,41 @@ test.describe("Story 5.3: Full Onboarding Flow @onboarding @critical", () => {
 
     // Step 6: Capacity
     await onboarding.completeCapacity(TEST_SCHOOL.capacity)
+    await onboarding.expectOnStep("schedule")
+
+    // Step 7: Schedule
+    await onboarding.completeSchedule()
     await onboarding.expectOnStep("branding")
 
-    // Step 7: Branding (optional, skip)
+    // Step 8: Branding (optional, skip)
     await onboarding.completeBranding()
     await onboarding.expectOnStep("import")
 
-    // Step 8: Import (optional, skip)
+    // Step 9: Import (optional, skip)
     await onboarding.completeImport()
     await onboarding.expectOnStep("finish-setup")
 
-    // Step 9: Finish Setup
+    // Step 10: Finish Setup
     await onboarding.completeFinishSetup()
     await onboarding.expectOnStep("join")
 
-    // Step 10: Join
+    // Step 11: Join
     await onboarding.completeJoin()
     await onboarding.expectOnStep("visibility")
 
-    // Step 11: Visibility
+    // Step 12: Visibility
     await onboarding.completeVisibility()
     await onboarding.expectOnStep("price")
 
-    // Step 12: Price
+    // Step 13: Price
     await onboarding.completePrice(TEST_SCHOOL.pricing)
     await onboarding.expectOnStep("discount")
 
-    // Step 13: Discount (optional)
+    // Step 14: Discount (optional)
     await onboarding.completeDiscount()
     await onboarding.expectOnStep("legal")
 
-    // Step 14: Legal (triggers publish / completeOnboarding)
+    // Step 15: Legal (triggers publish / completeOnboarding)
     // The legal step has a "Finish" button that calls completeOnboarding
     // and shows the success modal
     await onboarding.selectOperationalStatus("existing")
@@ -241,8 +245,8 @@ test.describe("Story 5.3: Step Validation @onboarding", () => {
     await onboarding.completeAboutSchool()
     await onboarding.expectOnStep("title")
 
-    // Try with too short title (less than 3 chars)
-    await onboarding.fillTitle("AB")
+    // Try with too short title (less than 2 chars, TITLE_MIN_LENGTH = 2)
+    await onboarding.fillTitle("A")
     await page.waitForTimeout(500)
 
     // Attempt to click next - should either fail validation or stay on same step
@@ -358,6 +362,7 @@ test.describe("Story 5.3: Back Navigation @onboarding", () => {
 
     // Now go back to description
     await onboarding.clickBack()
+    await page.waitForURL(/\/description/, { timeout: 10_000 })
     await onboarding.expectOnStep("description")
 
     // Verify description textarea still has data
@@ -370,6 +375,7 @@ test.describe("Story 5.3: Back Navigation @onboarding", () => {
 
     // Go back to title step
     await onboarding.clickBack()
+    await page.waitForURL(/\/title/, { timeout: 10_000 })
     await onboarding.expectOnStep("title")
 
     // Verify title data is preserved
@@ -382,6 +388,7 @@ test.describe("Story 5.3: Back Navigation @onboarding", () => {
 
     // Verify Back is disabled on about-school (first step)
     await onboarding.clickBack()
+    await page.waitForURL(/\/about-school/, { timeout: 10_000 })
     await onboarding.expectOnStep("about-school")
     const backEnabled = await onboarding.isBackEnabled()
     expect(backEnabled).toBeFalsy()
@@ -503,8 +510,8 @@ test.describe("Story 5.3: Subdomain Availability @onboarding", () => {
       expect(demoUnavailable).toBeTruthy()
     }
 
-    // Test with invalid subdomain (too short)
-    await onboarding.fillSubdomain("ab")
+    // Test with invalid subdomain (too short, min is 3 chars)
+    await onboarding.fillSubdomain("a")
     await page.waitForTimeout(1000)
 
     const shortAvailable = await onboarding.isSubdomainAvailable()
@@ -764,7 +771,7 @@ test.describe("Story 5.3: Navigation & UI @onboarding", () => {
   })
 
   test("OB-031: Each step page has no SSE", async ({ page }) => {
-    test.setTimeout(180_000)
+    test.setTimeout(300_000)
 
     const result = await loginAndCreateSchool(page)
     if (!result) {

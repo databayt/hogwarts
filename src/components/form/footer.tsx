@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useMemo } from "react"
 import Image from "next/image"
 import { useParams, usePathname, useRouter } from "next/navigation"
@@ -245,7 +247,7 @@ export function FormFooter({
   const groupCount = Object.keys(config.groups).length
 
   return (
-    <footer className="bg-background fixed right-0 bottom-0 left-0 px-4 sm:px-6 md:px-12 lg:px-20">
+    <footer className="bg-background fixed start-0 end-0 bottom-0 px-4 sm:px-6 md:px-12 lg:px-20">
       {/* Progress bars */}
       <div dir="ltr" className="mx-auto max-w-5xl">
         <div
@@ -365,6 +367,7 @@ export const ONBOARDING_CONFIG: StepConfig = {
     "location",
     "stand-out",
     "capacity",
+    "schedule",
     "branding",
     "import",
     "finish-setup",
@@ -377,7 +380,7 @@ export const ONBOARDING_CONFIG: StepConfig = {
   ],
   groups: {
     1: ["about-school", "title", "description", "location", "stand-out"],
-    2: ["capacity", "branding", "import", "finish-setup"],
+    2: ["capacity", "schedule", "branding", "import", "finish-setup"],
     3: ["join", "visibility", "price", "discount", "legal", "subdomain"],
   },
   groupLabels: [

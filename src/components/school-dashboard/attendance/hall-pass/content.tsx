@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Hall Pass Content
  *
@@ -12,6 +15,7 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { cancelHallPass, getActiveHallPasses, returnHallPass } from "./actions"
 import { IssuePassDialog } from "./issue-dialog"
@@ -68,6 +72,8 @@ interface HallPassContentProps {
 }
 
 export function HallPassContent({ locale, classId }: HallPassContentProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.hallPass
   const isRTL = locale === "ar"
   const [passes, setPasses] = useState<ActivePass[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -128,17 +134,16 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">
-            {isRTL ? "تصاريح المرور" : "Hall Passes"}
-          </h1>
+          <h1 className="text-2xl font-bold">{t?.title || "Hall Passes"}</h1>
           <p className="text-muted-foreground">
-            {isRTL
-              ? `${passes.length} طالب خارج الفصل حالياً`
-              : `${passes.length} students currently out`}
+            {(t?.students_out || "{count} students currently out").replace(
+              "{count}",
+              String(passes.length)
+            )}
           </p>
         </div>
         <Button onClick={() => setIsIssueDialogOpen(true)}>
-          {isRTL ? "إصدار تصريح جديد" : "Issue New Pass"}
+          {t?.issue_new_pass || "Issue New Pass"}
         </Button>
       </div>
 
@@ -150,12 +155,10 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
               ✓
             </div>
             <h3 className="mb-2 text-lg font-medium">
-              {isRTL ? "لا يوجد طلاب خارج الفصل" : "No students out"}
+              {t?.no_students_out || "No students out"}
             </h3>
             <p className="text-muted-foreground text-sm">
-              {isRTL
-                ? "جميع الطلاب في فصولهم"
-                : "All students are in their classrooms"}
+              {t?.all_in_classrooms || "All students are in their classrooms"}
             </p>
           </CardContent>
         </Card>
@@ -176,7 +179,7 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                 {/* Time indicator bar */}
                 <div
                   className={cn(
-                    "absolute top-0 right-0 left-0 h-1",
+                    "absolute start-0 end-0 top-0 h-1",
                     timeStatus === "expired" && "bg-destructive",
                     timeStatus === "warning" && "bg-yellow-500",
                     timeStatus === "normal" && "bg-primary"
@@ -221,7 +224,7 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                   {/* Destination */}
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-sm">
-                      {isRTL ? "الوجهة" : "Destination"}
+                      {t?.destination || "Destination"}
                     </span>
                     <span className="font-medium">
                       {destinationLabels[pass.destination][isRTL ? "ar" : "en"]}
@@ -231,14 +234,14 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                   {/* Time info */}
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-sm">
-                      {isRTL ? "الخروج" : "Left at"}
+                      {t?.left_at || "Left at"}
                     </span>
                     <span>{formatTime(pass.issuedAt)}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-sm">
-                      {isRTL ? "العودة المتوقعة" : "Expected back"}
+                      {t?.expected_back || "Expected back"}
                     </span>
                     <span
                       className={cn(
@@ -264,12 +267,12 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                   >
                     {timeStatus === "expired" ? (
                       <span className="font-medium">
-                        {isRTL ? "تجاوز الوقت المحدد" : "Overdue"}
+                        {t?.overdue || "Overdue"}
                       </span>
                     ) : (
                       <span>
                         {pass.minutesRemaining}{" "}
-                        {isRTL ? "دقيقة متبقية" : "min remaining"}
+                        {t?.min_remaining || "min remaining"}
                       </span>
                     )}
                   </div>
@@ -277,9 +280,8 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                   {/* Conflict warning */}
                   {pass.hasConflict && (
                     <div className="rounded-lg bg-orange-100 px-3 py-2 text-center text-sm text-orange-700">
-                      {isRTL
-                        ? "تحذير: طالب آخر في نفس الوجهة"
-                        : "Warning: Another student at same destination"}
+                      {t?.conflict_warning ||
+                        "Warning: Another student at same destination"}
                     </div>
                   )}
 
@@ -291,14 +293,14 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                       className="flex-1"
                       onClick={() => handleCancel(pass.id)}
                     >
-                      {isRTL ? "إلغاء" : "Cancel"}
+                      {dictionary?.attendance?.form?.cancel || "Cancel"}
                     </Button>
                     <Button
                       size="sm"
                       className="flex-1"
                       onClick={() => handleReturn(pass.id)}
                     >
-                      {isRTL ? "تسجيل العودة" : "Mark Returned"}
+                      {t?.mark_returned || "Mark Returned"}
                     </Button>
                   </div>
                 </CardContent>

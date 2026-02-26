@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import {
   ListFilter,
@@ -20,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ConversationCard, ConversationCardSkeleton } from "./conversation-card"
 import { ConversationListEmpty } from "./empty-state"
@@ -54,6 +57,8 @@ export function ConversationList({
   onMute,
   className,
 }: ConversationListProps) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const [searchQuery, setSearchQuery] = useState("")
   const [filter, setFilter] = useState<"all" | "unread" | "pinned">("all")
   const [typeFilter, setTypeFilter] = useState<ConversationType | "all">("all")
@@ -136,7 +141,7 @@ export function ConversationList({
       <div className="border-border space-y-3 border-b p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-foreground text-lg font-semibold">
-            {locale === "ar" ? "الرسائل" : "Messages"}
+            {m?.ui?.title || "Messages"}
           </h2>
           <Button
             variant="ghost"
@@ -150,11 +155,11 @@ export function ConversationList({
 
         {/* Search */}
         <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={locale === "ar" ? "بحث..." : "Search..."}
+            placeholder={m?.ui?.search_dots || "Search..."}
             className="ps-9"
           />
         </div>
@@ -168,16 +173,16 @@ export function ConversationList({
           >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="all">
-                {locale === "ar" ? "الكل" : "All"}
+                {m?.ui?.all_filter || "All"}
               </TabsTrigger>
               <TabsTrigger value="unread">
-                {locale === "ar" ? "غير مقروء" : "Unread"}
+                {m?.ui?.unread_filter || "Unread"}
                 {unreadCount > 0 && (
                   <span className="ms-1 text-xs">({unreadCount})</span>
                 )}
               </TabsTrigger>
               <TabsTrigger value="pinned">
-                {locale === "ar" ? "مثبت" : "Pinned"}
+                {m?.ui?.pinned_filter || "Pinned"}
                 {pinnedCount > 0 && (
                   <span className="ms-1 text-xs">({pinnedCount})</span>
                 )}
@@ -194,22 +199,22 @@ export function ConversationList({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">
-                {locale === "ar" ? "كل الأنواع" : "All types"}
+                {m?.ui?.all_types || "All types"}
               </SelectItem>
               <SelectItem value="direct">
-                {locale === "ar" ? "مباشر" : "Direct"}
+                {m?.types?.direct_short || "Direct"}
               </SelectItem>
               <SelectItem value="group">
-                {locale === "ar" ? "مجموعة" : "Group"}
+                {m?.types?.group_short || "Group"}
               </SelectItem>
               <SelectItem value="class">
-                {locale === "ar" ? "صف" : "Class"}
+                {m?.types?.class_short || "Class"}
               </SelectItem>
               <SelectItem value="department">
-                {locale === "ar" ? "قسم" : "Department"}
+                {m?.types?.department_short || "Department"}
               </SelectItem>
               <SelectItem value="announcement">
-                {locale === "ar" ? "إعلان" : "Announcement"}
+                {m?.types?.announcement_short || "Announcement"}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -229,14 +234,11 @@ export function ConversationList({
             <div className="flex h-64 flex-col items-center justify-center p-4 text-center">
               <Search className="text-muted-foreground/50 mb-3 h-8 w-8" />
               <p className="text-muted-foreground">
-                {locale === "ar"
-                  ? "لا توجد محادثات مطابقة"
-                  : "No matching conversations"}
+                {m?.ui?.no_matching_conversations ||
+                  "No matching conversations"}
               </p>
               <p className="text-muted-foreground/70 mt-1 text-sm">
-                {locale === "ar"
-                  ? "جرب كلمات بحث مختلفة"
-                  : "Try different search terms"}
+                {m?.ui?.try_different_terms || "Try different search terms"}
               </p>
             </div>
           ) : (

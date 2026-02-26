@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -25,6 +27,7 @@ import {
 } from "@/components/ui/select"
 import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createTerm, updateTerm } from "./actions"
 import type { Term } from "./types"
@@ -54,6 +57,8 @@ export function TermForm({
     ((dictionary?.school as Record<string, unknown>)?.academic as
       | Record<string, string>
       | undefined) ?? {}
+  const { dictionary: fullDict } = useDictionary()
+  const t = fullDict?.messages?.toast
   const [isPending, setIsPending] = React.useState(false)
 
   const {
@@ -135,15 +140,20 @@ export function TermForm({
 
       if (result.success) {
         toast.success(
-          result.message || (editingTerm ? "Term updated" : "Term created")
+          result.message ||
+            (editingTerm
+              ? t?.success?.updated || "Term updated"
+              : t?.success?.created || "Term created")
         )
         onOpenChange(false)
         onSuccess()
       } else {
-        toast.error(result.message || "Failed to save term")
+        toast.error(
+          result.message || t?.error?.saveFailed || "Failed to save term"
+        )
       }
     } catch {
-      toast.error("An error occurred")
+      toast.error(fullDict?.common?.unexpectedError || "An error occurred")
     } finally {
       setIsPending(false)
     }

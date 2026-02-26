@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 
 import { ApplicationCard, type DraftApplication } from "./application-card"
@@ -31,10 +33,7 @@ export function DraftApplications({
 
   return (
     <div className="space-y-2 sm:space-y-3">
-      <h5>
-        {dict.completeYourApplication ||
-          (isRTL ? "أكمل طلبك" : "Complete your application")}
-      </h5>
+      <h5>{dict.completeYourApplication || "Complete your application"}</h5>
       <div className="space-y-2">
         {applications.map((application) => (
           <ApplicationCard

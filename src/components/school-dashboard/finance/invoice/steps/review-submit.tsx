@@ -1,11 +1,14 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect } from "react"
 import { useFormContext } from "react-hook-form"
 import { z } from "zod"
 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { InvoiceSchemaZod } from "../validation"
 
@@ -14,6 +17,7 @@ interface ReviewSubmitStepProps {
 }
 
 export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
+  const { locale } = useLocale()
   const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>()
   const {
     register,
@@ -33,7 +37,7 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
     setValue("total", totalAmount)
   }, [totalAmount, setValue])
 
-  const totalAmountInCurrencyFormat = new Intl.NumberFormat("en-us", {
+  const totalAmountInCurrencyFormat = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: watch("currency") || "USD",
   }).format(totalAmount)
@@ -101,7 +105,7 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
           <div className="flex justify-between text-sm">
             <span>Sub Total:</span>
             <span>
-              {new Intl.NumberFormat("en-us", {
+              {new Intl.NumberFormat(locale, {
                 style: "currency",
                 currency: watch("currency") || "USD",
               }).format(sub_total)}
@@ -110,7 +114,7 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
           <div className="flex justify-between text-sm">
             <span>Discount:</span>
             <span>
-              {new Intl.NumberFormat("en-us", {
+              {new Intl.NumberFormat(locale, {
                 style: "currency",
                 currency: watch("currency") || "USD",
               }).format(discount)}
@@ -119,7 +123,7 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
           <div className="flex justify-between text-sm">
             <span>Tax ({tax_percentage}%):</span>
             <span>
-              {new Intl.NumberFormat("en-us", {
+              {new Intl.NumberFormat(locale, {
                 style: "currency",
                 currency: watch("currency") || "USD",
               }).format(taxAmount)}

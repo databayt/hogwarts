@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 
@@ -7,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { AnthropicIcons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { QuickLookData } from "./actions"
 
@@ -53,6 +56,9 @@ export function QuickLookSection({
   subdomain,
   data,
 }: QuickLookSectionProps) {
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.quickLook
+
   // Default/fallback data when no real data is provided
   const defaultData: QuickLookData = {
     announcements: { type: "announcements", count: 0, newCount: 0, recent: "" },
@@ -64,10 +70,26 @@ export function QuickLookSection({
   const quickLookData = data || defaultData
 
   const quickLookItems = [
-    { ...quickLookConfig.announcements, data: quickLookData.announcements },
-    { ...quickLookConfig.events, data: quickLookData.events },
-    { ...quickLookConfig.notifications, data: quickLookData.notifications },
-    { ...quickLookConfig.messages, data: quickLookData.messages },
+    {
+      ...quickLookConfig.announcements,
+      label: dict?.announcements || quickLookConfig.announcements.label,
+      data: quickLookData.announcements,
+    },
+    {
+      ...quickLookConfig.events,
+      label: dict?.events || quickLookConfig.events.label,
+      data: quickLookData.events,
+    },
+    {
+      ...quickLookConfig.notifications,
+      label: dict?.notifications || quickLookConfig.notifications.label,
+      data: quickLookData.notifications,
+    },
+    {
+      ...quickLookConfig.messages,
+      label: dict?.messages || quickLookConfig.messages.label,
+      data: quickLookData.messages,
+    },
   ]
 
   return (
@@ -104,7 +126,7 @@ export function QuickLookSection({
                               "bg-primary/10 text-primary"
                           )}
                         >
-                          +{item.data.newCount} new
+                          +{item.data.newCount} {dict?.new || "new"}
                         </Badge>
                       )}
                     </div>
@@ -120,14 +142,15 @@ export function QuickLookSection({
                 )}
                 {!item.data.recent && item.data.count === 0 && (
                   <p className="text-muted-foreground text-xs italic">
-                    No recent {item.label.toLowerCase()}
+                    {dict?.noRecent || "No recent"} {item.label.toLowerCase()}
                   </p>
                 )}
                 <Link
                   href={`/${locale}/s/${subdomain}${item.href}`}
                   className="text-primary inline-flex items-center text-xs hover:underline"
                 >
-                  View All <ChevronRight className="ms-1 h-3 w-3" />
+                  {dict?.viewAll || "View All"}{" "}
+                  <ChevronRight className="ms-1 h-3 w-3 rtl:rotate-180" />
                 </Link>
               </CardContent>
             </Card>

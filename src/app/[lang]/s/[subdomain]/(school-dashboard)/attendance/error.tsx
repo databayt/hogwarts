@@ -1,7 +1,10 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect } from "react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -13,6 +16,8 @@ interface ErrorProps {
 }
 
 export default function AttendanceError({ error, reset }: ErrorProps) {
+  const params = useParams<{ lang: string }>()
+
   useEffect(() => {
     if (process.env.NODE_ENV === "production") {
       // Sentry.captureException(error)
@@ -42,7 +47,7 @@ export default function AttendanceError({ error, reset }: ErrorProps) {
           Try again
         </Button>
         <Button variant="ghost" className="gap-2" asChild>
-          <Link href="/">
+          <Link href={`/${params.lang || "en"}`}>
             <Icons.home className="h-4 w-4" />
             Go home
           </Link>

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import type { UserInvoice } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"
@@ -71,7 +73,7 @@ export function DashboardContent({ dictionary, lang }: Props) {
       accessorKey: "total",
       header: "Amount",
       cell: ({ row }) => {
-        const totalAmountInCurrencyFormat = new Intl.NumberFormat("en-us", {
+        const totalAmountInCurrencyFormat = new Intl.NumberFormat(lang, {
           style: "currency",
           currency: row.original.currency,
         }).format(row.original.total)

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Import all icons from categories
 import { ANTHROPIC_ILLUSTRATIONS, AnthropicIcons } from "./anthropic"
 import * as AppIcons from "./categories/apps"

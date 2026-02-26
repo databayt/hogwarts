@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * All invoices view component
  *
@@ -108,7 +111,7 @@ export function AllInvoices({
       {/* Filters */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+          <Search className="text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2" />
           <Input
             placeholder="Search invoices..."
             value={filters.search}

@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Paper List Component
  * Shows list of generated papers
@@ -32,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface PaperListProps {
   papers: GeneratedPaper[]
@@ -39,6 +43,8 @@ interface PaperListProps {
 }
 
 export function PaperList({ papers, locale }: PaperListProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.generate?.paper?.list
   const isRTL = locale === "ar"
   const dateLocale = isRTL ? ar : enUS
 
@@ -46,13 +52,9 @@ export function PaperList({ papers, locale }: PaperListProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>
-            {isRTL ? "الأوراق المولدة" : "Generated Papers"}
-          </CardTitle>
+          <CardTitle>{t?.generated_papers || "Generated Papers"}</CardTitle>
           <CardDescription>
-            {isRTL
-              ? "لم يتم إنشاء أي أوراق بعد"
-              : "No papers have been generated yet"}
+            {t?.no_papers_desc || "No papers have been generated yet"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -60,9 +62,7 @@ export function PaperList({ papers, locale }: PaperListProps) {
             <div className="text-muted-foreground flex flex-col items-center gap-2">
               <FileText className="h-8 w-8" />
               <p className="text-sm">
-                {isRTL
-                  ? "انتقل إلى تبويب الإنشاء لإنشاء الأوراق"
-                  : "Go to Generate tab to create papers"}
+                {t?.go_to_generate || "Go to Generate tab to create papers"}
               </p>
             </div>
           </div>
@@ -74,22 +74,25 @@ export function PaperList({ papers, locale }: PaperListProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isRTL ? "الأوراق المولدة" : "Generated Papers"}</CardTitle>
+        <CardTitle>{t?.generated_papers || "Generated Papers"}</CardTitle>
         <CardDescription>
-          {isRTL
-            ? `${papers.length} ورقة تم إنشاؤها`
-            : `${papers.length} papers generated`}
+          {(t?.papers_count || "{count} papers generated").replace(
+            "{count}",
+            String(papers.length)
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{isRTL ? "النسخة" : "Version"}</TableHead>
-              <TableHead>{isRTL ? "تاريخ الإنشاء" : "Generated"}</TableHead>
-              <TableHead>{isRTL ? "الحالة" : "Status"}</TableHead>
+              <TableHead>
+                {(t?.version_label || "Version {code}").split(" ")[0]}
+              </TableHead>
+              <TableHead>{t?.generated || "Generated"}</TableHead>
+              <TableHead>{t?.status || "Status"}</TableHead>
               <TableHead className="text-end">
-                {isRTL ? "الإجراءات" : "Actions"}
+                {t?.actions || "Actions"}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -101,12 +104,11 @@ export function PaperList({ papers, locale }: PaperListProps) {
                     <FileText className="text-muted-foreground h-4 w-4" />
                     <span className="font-medium">
                       {paper.versionCode
-                        ? isRTL
-                          ? `نسخة ${paper.versionCode}`
-                          : `Version ${paper.versionCode}`
-                        : isRTL
-                          ? "الورقة الرئيسية"
-                          : "Main Paper"}
+                        ? (t?.version_label || "Version {code}").replace(
+                            "{code}",
+                            paper.versionCode
+                          )
+                        : t?.main_paper || "Main Paper"}
                     </span>
                   </div>
                 </TableCell>
@@ -118,12 +120,10 @@ export function PaperList({ papers, locale }: PaperListProps) {
                 </TableCell>
                 <TableCell>
                   {paper.pdfUrl ? (
-                    <Badge variant="secondary">
-                      {isRTL ? "جاهز" : "Ready"}
-                    </Badge>
+                    <Badge variant="secondary">{t?.ready || "Ready"}</Badge>
                   ) : (
                     <Badge variant="outline">
-                      {isRTL ? "قيد المعالجة" : "Processing"}
+                      {t?.processing || "Processing"}
                     </Badge>
                   )}
                 </TableCell>
@@ -138,7 +138,7 @@ export function PaperList({ papers, locale }: PaperListProps) {
                       <DropdownMenuItem disabled={!paper.pdfUrl}>
                         <Eye className="h-4 w-4" />
                         <span className="ms-2">
-                          {isRTL ? "معاينة" : "Preview"}
+                          {dictionary?.generate?.paper?.preview || "Preview"}
                         </span>
                       </DropdownMenuItem>
                       <DropdownMenuItem disabled={!paper.pdfUrl} asChild>
@@ -146,21 +146,23 @@ export function PaperList({ papers, locale }: PaperListProps) {
                           <a href={paper.pdfUrl} download>
                             <Download className="h-4 w-4" />
                             <span className="ms-2">
-                              {isRTL ? "تحميل" : "Download"}
+                              {dictionary?.generate?.paper?.generation
+                                ?.download || "Download"}
                             </span>
                           </a>
                         ) : (
                           <>
                             <Download className="h-4 w-4" />
                             <span className="ms-2">
-                              {isRTL ? "تحميل" : "Download"}
+                              {dictionary?.generate?.paper?.generation
+                                ?.download || "Download"}
                             </span>
                           </>
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive">
                         <Trash2 className="h-4 w-4" />
-                        <span className="ms-2">{isRTL ? "حذف" : "Delete"}</span>
+                        <span className="ms-2">{t?.delete || "Delete"}</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

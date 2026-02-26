@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { notFound } from "next/navigation"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
@@ -18,10 +21,8 @@ export default async function JoinPage({ params }: JoinPageProps) {
 
   return (
     <JoinLandingContent
-      schoolId={result.data.id}
       schoolName={result.data.name}
       schoolLogo={result.data.logoUrl}
-      subdomain={subdomain}
     />
   )
 }

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Gamification Content
  *
@@ -14,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   getActiveCompetitions,
@@ -47,6 +51,8 @@ interface GamificationContentProps {
 }
 
 export function GamificationContent({ locale }: GamificationContentProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.gamification
   const isRTL = locale === "ar"
   const [isLoading, setIsLoading] = useState(true)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
@@ -92,12 +98,10 @@ export function GamificationContent({ locale }: GamificationContentProps) {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">
-          {isRTL ? "نظام المكافآت" : "Rewards & Gamification"}
+          {t?.title || "Rewards & Gamification"}
         </h1>
         <p className="text-muted-foreground">
-          {isRTL
-            ? "نقاط الحضور والشارات والمسابقات"
-            : "Attendance points, badges, and competitions"}
+          {t?.subtitle || "Attendance points, badges, and competitions"}
         </p>
       </div>
 
@@ -105,29 +109,27 @@ export function GamificationContent({ locale }: GamificationContentProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="leaderboard">
-            {isRTL ? "لوحة المتصدرين" : "Leaderboard"}
+            {t?.leaderboard || "Leaderboard"}
           </TabsTrigger>
           <TabsTrigger value="competitions">
-            {isRTL ? "المسابقات" : "Competitions"}
+            {t?.competitions || "Competitions"}
           </TabsTrigger>
-          <TabsTrigger value="badges">
-            {isRTL ? "الشارات" : "Badges"}
-          </TabsTrigger>
+          <TabsTrigger value="badges">{t?.badges || "Badges"}</TabsTrigger>
         </TabsList>
 
         {/* Leaderboard Tab */}
         <TabsContent value="leaderboard" className="mt-4">
-          <LeaderboardSection leaderboard={leaderboard} isRTL={isRTL} />
+          <LeaderboardSection leaderboard={leaderboard} t={t} />
         </TabsContent>
 
         {/* Competitions Tab */}
         <TabsContent value="competitions" className="mt-4">
-          <CompetitionsSection competitions={competitions} isRTL={isRTL} />
+          <CompetitionsSection competitions={competitions} t={t} />
         </TabsContent>
 
         {/* Badges Tab */}
         <TabsContent value="badges" className="mt-4">
-          <BadgesSection isRTL={isRTL} />
+          <BadgesSection t={t} />
         </TabsContent>
       </Tabs>
     </div>
@@ -137,10 +139,10 @@ export function GamificationContent({ locale }: GamificationContentProps) {
 // Leaderboard Section
 function LeaderboardSection({
   leaderboard,
-  isRTL,
+  t,
 }: {
   leaderboard: LeaderboardEntry[]
-  isRTL: boolean
+  t: Record<string, string> | undefined
 }) {
   const getMedalColor = (rank: number) => {
     if (rank === 1) return "text-yellow-500"
@@ -161,13 +163,13 @@ function LeaderboardSection({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <span className="text-2xl">🏆</span>
-          {isRTL ? "أفضل الطلاب حضوراً" : "Top Attendance Students"}
+          {t?.top_students || "Top Attendance Students"}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {leaderboard.length === 0 ? (
           <p className="text-muted-foreground py-8 text-center">
-            {isRTL ? "لا توجد بيانات بعد" : "No data yet"}
+            {t?.no_data_yet || "No data yet"}
           </p>
         ) : (
           <div className="space-y-3">
@@ -212,8 +214,7 @@ function LeaderboardSection({
                     <p className="font-medium">{entry.studentName}</p>
                     <div className="text-muted-foreground flex items-center gap-2 text-sm">
                       <span className="text-orange-500">🔥</span>
-                      {entry.currentStreak}{" "}
-                      {isRTL ? "يوم متتالي" : "day streak"}
+                      {entry.currentStreak} {t?.day_streak || "day streak"}
                     </div>
                   </div>
                 </div>
@@ -246,7 +247,7 @@ function LeaderboardSection({
                       {entry.points.toLocaleString()}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                      {isRTL ? "نقطة" : "points"}
+                      {t?.points || "points"}
                     </p>
                   </div>
                 </div>
@@ -262,10 +263,10 @@ function LeaderboardSection({
 // Competitions Section
 function CompetitionsSection({
   competitions,
-  isRTL,
+  t,
 }: {
   competitions: Competition[]
-  isRTL: boolean
+  t: Record<string, string> | undefined
 }) {
   return (
     <div className="space-y-4">
@@ -273,10 +274,10 @@ function CompetitionsSection({
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
-              {isRTL ? "لا توجد مسابقات نشطة" : "No active competitions"}
+              {t?.no_active_competitions || "No active competitions"}
             </p>
             <Button variant="outline" className="mt-4">
-              {isRTL ? "إنشاء مسابقة" : "Create Competition"}
+              {t?.create_competition || "Create Competition"}
             </Button>
           </CardContent>
         </Card>
@@ -286,7 +287,7 @@ function CompetitionsSection({
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{competition.name}</span>
-                <Badge variant="secondary">{isRTL ? "نشطة" : "Active"}</Badge>
+                <Badge variant="secondary">{t?.active || "Active"}</Badge>
               </CardTitle>
               {competition.description && (
                 <p className="text-muted-foreground text-sm">
@@ -295,9 +296,7 @@ function CompetitionsSection({
               )}
               {competition.winnerReward && (
                 <p className="text-sm">
-                  <span className="font-medium">
-                    {isRTL ? "الجائزة: " : "Prize: "}
-                  </span>
+                  <span className="font-medium">{t?.prize || "Prize: "}</span>
                   {competition.winnerReward}
                 </p>
               )}
@@ -333,10 +332,9 @@ function CompetitionsSection({
                     </div>
                     <Progress value={entry.attendanceRate} className="h-2" />
                     <p className="text-muted-foreground mt-1 text-xs">
-                      {entry.totalStudents} {isRTL ? "طالب" : "students"} •{" "}
-                      {entry.presentDays} {isRTL ? "حضور" : "present"} /{" "}
-                      {entry.presentDays + entry.absentDays}{" "}
-                      {isRTL ? "يوم" : "days"}
+                      {entry.totalStudents} {t?.students || "students"} •{" "}
+                      {entry.presentDays} {t?.present || "present"} /{" "}
+                      {entry.presentDays + entry.absentDays} {t?.days || "days"}
                     </p>
                   </div>
                 ))}
@@ -350,74 +348,61 @@ function CompetitionsSection({
 }
 
 // Badges Section
-function BadgesSection({ isRTL }: { isRTL: boolean }) {
+function BadgesSection({ t }: { t: Record<string, string> | undefined }) {
   const badges = [
     {
       code: "PERFECT_WEEK",
-      name: isRTL ? "أسبوع مثالي" : "Perfect Week",
-      description: isRTL
-        ? "5 أيام متتالية من الحضور"
-        : "5 consecutive days of attendance",
+      name: t?.perfect_week || "Perfect Week",
+      description: t?.perfect_week_desc || "5 consecutive days of attendance",
       icon: "📅",
       color: "#10B981",
       points: 50,
     },
     {
       code: "PERFECT_MONTH",
-      name: isRTL ? "شهر مثالي" : "Perfect Month",
-      description: isRTL
-        ? "حضور 100% طوال الشهر"
-        : "100% attendance for the month",
+      name: t?.perfect_month || "Perfect Month",
+      description: t?.perfect_month_desc || "100% attendance for the month",
       icon: "🏆",
       color: "#F59E0B",
       points: 200,
     },
     {
       code: "EARLY_BIRD",
-      name: isRTL ? "الطائر المبكر" : "Early Bird",
-      description: isRTL
-        ? "20 يوماً متتالياً في الوقت"
-        : "20 consecutive on-time days",
+      name: t?.early_bird || "Early Bird",
+      description: t?.early_bird_desc || "20 consecutive on-time days",
       icon: "🌅",
       color: "#8B5CF6",
       points: 100,
     },
     {
       code: "COMEBACK_KID",
-      name: isRTL ? "العودة القوية" : "Comeback Kid",
-      description: isRTL
-        ? "تحسين الحضور بنسبة 15%"
-        : "Improved attendance by 15%",
+      name: t?.comeback_kid || "Comeback Kid",
+      description: t?.comeback_kid_desc || "Improved attendance by 15%",
       icon: "📈",
       color: "#EC4899",
       points: 75,
     },
     {
       code: "ATTENDANCE_CHAMPION",
-      name: isRTL ? "بطل الحضور" : "Attendance Champion",
-      description: isRTL
-        ? "ضمن أفضل 3 في الشهر"
-        : "Top 3 in monthly leaderboard",
+      name: t?.attendance_champion || "Attendance Champion",
+      description:
+        t?.attendance_champion_desc || "Top 3 in monthly leaderboard",
       icon: "🏅",
       color: "#EAB308",
       points: 150,
     },
     {
       code: "STREAK_MASTER",
-      name: isRTL ? "خبير السلاسل" : "Streak Master",
-      description: isRTL
-        ? "30 يوماً متتالياً من الحضور"
-        : "30-day attendance streak",
+      name: t?.streak_master || "Streak Master",
+      description: t?.streak_master_desc || "30-day attendance streak",
       icon: "🔥",
       color: "#EF4444",
       points: 300,
     },
     {
       code: "TEAM_PLAYER",
-      name: isRTL ? "لاعب الفريق" : "Team Player",
-      description: isRTL
-        ? "جزء من فريق فائز بمسابقة"
-        : "Part of competition winning class",
+      name: t?.team_player || "Team Player",
+      description: t?.team_player_desc || "Part of competition winning class",
       icon: "👥",
       color: "#3B82F6",
       points: 100,

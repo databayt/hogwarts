@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Client-side dictionary loader for the chatbot
 export async function getClientDictionary(locale: "en" | "ar") {
   try {

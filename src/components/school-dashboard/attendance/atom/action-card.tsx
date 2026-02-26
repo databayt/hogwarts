@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import type { ElementType } from "react"
 import Link from "next/link"
 import {
@@ -76,7 +78,7 @@ export function ActionCard({
                 )}
               </div>
             </div>
-            <ChevronRight className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors" />
+            <ChevronRight className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors rtl:rotate-180" />
           </div>
         </CardHeader>
       </Card>

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -60,41 +62,16 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
 
     const saveAndNext = async () => {
       const data = form.getValues()
-      console.log("🎯 [TITLE FORM] saveAndNext called", {
-        schoolId,
-        data,
-        timestamp: new Date().toISOString(),
-      })
 
       return new Promise<void>((resolve, reject) => {
         startTransition(async () => {
           try {
-            console.log("📤 [TITLE FORM] Calling updateSchoolTitle", {
-              schoolId,
-              title: data.title,
-              timestamp: new Date().toISOString(),
-            })
-
             const result = await updateSchoolTitle(schoolId, data)
 
-            console.log("📥 [TITLE FORM] updateSchoolTitle response", {
-              success: result.success,
-              error: result.error,
-              data: result.data,
-              timestamp: new Date().toISOString(),
-            })
-
             if (result.success) {
-              console.log(
-                "✅ [TITLE FORM] Update successful, calling onSuccess callback"
-              )
               onSuccess?.()
               resolve()
             } else {
-              console.log("❌ [TITLE FORM] Update failed", {
-                error: result.error,
-                errors: result.errors,
-              })
               const errorMessage = getErrorMessage(result.error || "")
               ErrorToast(errorMessage)
               if (result.errors) {
@@ -105,7 +82,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
               reject(new Error(errorMessage))
             }
           } catch (err) {
-            console.error("❌ [TITLE FORM] Exception caught:", err)
+            console.error("Exception in saveAndNext:", err)
             const errorMessage =
               err instanceof Error
                 ? err.message

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 import {
   Area,
@@ -34,6 +36,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 // Define colors for charts
 const COLORS = {
@@ -70,6 +73,8 @@ export function AttendanceTrendsChart({
   data,
   className,
 }: AttendanceTrendsChartProps) {
+  const { locale } = useLocale()
+
   if (!data || data.length === 0) {
     return (
       <Card className={className}>
@@ -104,7 +109,7 @@ export function AttendanceTrendsChart({
               stroke="#64748b"
               style={{ fontSize: 12 }}
               tickFormatter={(value) =>
-                new Date(value).toLocaleDateString("en", {
+                new Date(value).toLocaleDateString(locale, {
                   month: "short",
                   day: "numeric",
                 })

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import type React from "react"
 import { useState } from "react"
 import { Box, Pencil } from "lucide-react"
@@ -16,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface MetricCardProps {
   title: string
@@ -57,7 +60,7 @@ function MetricCard({
       return (
         <div className="bg-muted relative h-1 w-full overflow-hidden rounded-full">
           <div
-            className="absolute left-0 h-full bg-emerald-500 transition-all duration-300"
+            className="absolute start-0 h-full bg-emerald-500 transition-all duration-300"
             style={{ width: `${writesPercentage}%` }}
           />
           <div
@@ -135,7 +138,7 @@ function MetricCard({
           )}
         </div>
 
-        <div className="absolute right-0 bottom-0 left-0">
+        <div className="absolute start-0 end-0 bottom-0">
           <Button
             variant="ghost"
             className="bg-muted/50 h-8 w-full justify-start gap-0 rounded-none text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
@@ -158,6 +161,8 @@ function BudgetDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [budget, setBudget] = useState("150")
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.stats
 
   const handleUpdate = () => {
     onOpenChange(false)
@@ -167,16 +172,17 @@ function BudgetDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Update budget</DialogTitle>
+          <DialogTitle>{dict?.updateBudget || "Update budget"}</DialogTitle>
           <DialogDescription>
-            When your monthly cost reaches the max budget, we send an email and
-            throttle your database. You will not be charged beyond your set
-            budget for this database.
+            {dict?.budgetDescription ||
+              "When your monthly cost reaches the max budget, we send an email and throttle your database. You will not be charged beyond your set budget for this database."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
-          <Label htmlFor="budget">Max budget per month</Label>
+          <Label htmlFor="budget">
+            {dict?.maxBudget || "Max budget per month"}
+          </Label>
           <Input
             id="budget"
             value={budget}
@@ -188,9 +194,9 @@ function BudgetDialog({
 
         <DialogFooter className="pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {dict?.cancel || "Cancel"}
           </Button>
-          <Button onClick={handleUpdate}>Update</Button>
+          <Button onClick={handleUpdate}>{dict?.update || "Update"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -199,54 +205,67 @@ function BudgetDialog({
 
 export default function StatsDashboard() {
   const [budgetDialogOpen, setBudgetDialogOpen] = useState(false)
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.stats
 
   return (
     <>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          title="Commands"
+          title={dict?.commands || "Commands"}
           value="13.8M"
-          limit="Unlimited"
+          limit={dict?.unlimited || "Unlimited"}
           percentage={67}
           progressColor="bg-blue-500"
           details={[
-            { label: "Writes", value: "11,276,493", color: "bg-emerald-500" },
-            { label: "Reads", value: "2,548,921", color: "bg-blue-500" },
+            {
+              label: dict?.writes || "Writes",
+              value: "11,276,493",
+              color: "bg-emerald-500",
+            },
+            {
+              label: dict?.reads || "Reads",
+              value: "2,548,921",
+              color: "bg-blue-500",
+            },
           ]}
-          actionLabel="Upgrade"
+          actionLabel={dict?.upgrade || "Upgrade"}
           actionIcon={<Box className="h-4 w-4" />}
         />
 
         <MetricCard
-          title="Bandwidth"
+          title={dict?.bandwidth || "Bandwidth"}
           value="141 GB"
           limit="150 GB"
           percentage={94}
           progressColor="bg-orange-500"
-          warningMessage="There will be a charge for the excessive bandwidth over the limit."
-          actionLabel="Upgrade"
+          warningMessage={
+            dict?.bandwidthWarning ||
+            "There will be a charge for the excessive bandwidth over the limit."
+          }
+          actionLabel={dict?.upgrade || "Upgrade"}
           actionIcon={<Box className="h-4 w-4" />}
         />
 
         <MetricCard
-          title="Storage"
+          title={dict?.storage || "Storage"}
           value="37 GB"
           limit="500 GB"
           percentage={7.4}
           progressColor="bg-emerald-500"
-          status="It's all right."
-          actionLabel="Upgrade"
+          status={dict?.itsAllRight || "It's all right."}
+          actionLabel={dict?.upgrade || "Upgrade"}
           actionIcon={<Box className="h-4 w-4" />}
         />
 
         <MetricCard
-          title="Cost"
+          title={dict?.cost || "Cost"}
           value="$73.42"
-          limit="$150 Budget"
+          limit={`$150 ${dict?.budget || "Budget"}`}
           percentage={48.95}
           progressColor="bg-emerald-500"
-          status="It's all right."
-          actionLabel="Change Budget"
+          status={dict?.itsAllRight || "It's all right."}
+          actionLabel={dict?.changeBudget || "Change Budget"}
           actionIcon={<Pencil className="h-4 w-4" />}
           onActionClick={() => setBudgetDialogOpen(true)}
         />

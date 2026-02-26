@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Students Server Actions Module
  *
@@ -75,6 +78,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -120,13 +124,13 @@ export async function createStudent(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Check permission
@@ -135,7 +139,8 @@ export async function createStudent(
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -185,6 +190,7 @@ export async function createStudent(
           ? { enrollmentDate: new Date(parsed.enrollmentDate) }
           : {}),
         userId: normalizedUserId,
+        academicGradeId: parsed.academicGradeId || null,
       },
     })
 
@@ -226,13 +232,13 @@ export async function updateStudent(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Check permission
@@ -241,7 +247,8 @@ export async function updateStudent(
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -288,6 +295,9 @@ export async function updateStudent(
         ? new Date(rest.enrollmentDate)
         : null
     }
+    if (typeof rest.academicGradeId !== "undefined") {
+      data.academicGradeId = rest.academicGradeId || null
+    }
 
     // Update student (using updateMany for tenant safety)
     const studentModel = getModelOrThrow("student")
@@ -331,13 +341,13 @@ export async function deleteStudent(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Check permission
@@ -346,7 +356,8 @@ export async function deleteStudent(input: {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -399,13 +410,13 @@ export async function getStudent(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Check permission
@@ -414,7 +425,8 @@ export async function getStudent(input: {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -486,13 +498,13 @@ export async function getStudents(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Check permission
@@ -501,7 +513,8 @@ export async function getStudents(
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized",
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -610,12 +623,12 @@ export async function getStudentsCSV(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -776,12 +789,12 @@ export async function getStudentsExportData(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -932,12 +945,12 @@ export async function registerStudent(
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {
@@ -1043,6 +1056,7 @@ export async function registerStudent(
       // Academic
       category: input.category || null,
       studentType: input.studentType || "REGULAR",
+      academicGradeId: input.academicGradeId || null,
 
       // Health Information
       medicalConditions: input.medicalConditions || null,
@@ -1272,12 +1286,12 @@ export async function bulkDeleteStudents(input: {
     const session = await auth()
     const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     try {

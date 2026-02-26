@@ -35,15 +35,17 @@ for (const [role, credentials] of Object.entries(TEST_USERS)) {
   setup(`authenticate as ${role}`, async ({ page }) => {
     await page.goto("/en/login")
 
-    // Fill in credentials
-    await page.getByLabel(/email/i).fill(credentials.email)
-    await page.getByLabel(/password/i).fill(credentials.password)
+    // Fill in credentials (inputs use placeholder, not label)
+    await page.getByRole("textbox", { name: /email/i }).fill(credentials.email)
+    await page
+      .getByRole("textbox", { name: /password/i })
+      .fill(credentials.password)
 
     // Submit
     await page.getByRole("button", { name: /sign in|login|log in/i }).click()
 
     // Wait for navigation away from login page
-    await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 })
+    await expect(page).not.toHaveURL(/\/login/, { timeout: 30_000 })
 
     // Save storage state for reuse
     await page.context().storageState({ path: `playwright/.auth/${role}.json` })

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 export const STEPS = {
   1: "Basic Information",
   2: "Schedule & Details",

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { type Metadata } from "next"
 import Link from "next/link"
 import { Barcode, Clock, MapPin, Pencil, QrCode, Upload } from "lucide-react"
@@ -62,7 +65,7 @@ const methods = [
   {
     id: "realtime",
     icon: Clock,
-    href: "realtime",
+    href: "",
     color: "bg-cyan-100 text-cyan-600",
     recommended: false,
   },
@@ -124,7 +127,7 @@ export default async function Page({ params }: Props) {
               className="relative overflow-hidden transition-shadow hover:shadow-md"
             >
               {method.recommended && (
-                <div className="absolute top-3 right-3">
+                <div className="absolute end-3 top-3">
                   <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
                     Recommended
                   </span>

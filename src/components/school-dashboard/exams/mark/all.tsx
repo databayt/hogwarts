@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // All Questions List View with Advanced Filtering
 import { useMemo, useState } from "react"
 import Link from "next/link"
@@ -147,7 +150,7 @@ export function AllQuestions({
         <div className="flex gap-2">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder={dict.table.search}
               value={searchQuery}

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState, useTransition } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Plus, Trash2 } from "lucide-react"
@@ -175,7 +177,7 @@ export function ListingTemplate<
     if (permissions.canEdit || permissions.canDelete) {
       baseColumns.push({
         id: "actions",
-        header: "Actions",
+        header: dictionary?.common?.actions || "Actions",
         cell: ({ row }) => {
           const item = row.original
 
@@ -187,7 +189,9 @@ export function ListingTemplate<
                   size="icon"
                   onClick={() => crudModal.openEdit(item)}
                 >
-                  <span className="sr-only">Edit</span>
+                  <span className="sr-only">
+                    {dictionary?.common?.edit || "Edit"}
+                  </span>
                   ✏️
                 </Button>
               )}
@@ -203,7 +207,9 @@ export function ListingTemplate<
                   }}
                 >
                   <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete</span>
+                  <span className="sr-only">
+                    {dictionary?.common?.delete || "Delete"}
+                  </span>
                 </Button>
               )}
             </div>
@@ -304,12 +310,12 @@ export function ListingTemplate<
   // Modal title
   const modalTitle = useMemo(() => {
     if (crudModal.isCreate) {
-      return `Create ${config.entityName}`
+      return `${dictionary?.common?.create || "Create"} ${config.entityName}`
     } else if (crudModal.isEdit) {
-      return `Edit ${config.entityName}`
+      return `${dictionary?.common?.edit || "Edit"} ${config.entityName}`
     }
     return config.entityName
-  }, [crudModal, config.entityName])
+  }, [crudModal, config.entityName, dictionary])
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -319,7 +325,7 @@ export function ListingTemplate<
         {permissions.canCreate && (
           <Button onClick={crudModal.openCreate}>
             <Plus className="me-2 h-4 w-4" />
-            Create
+            {dictionary?.common?.create || "Create"}
           </Button>
         )}
       </div>
@@ -382,7 +388,11 @@ export function ListingTemplate<
                 : config.form.defaultValues
             }
             onSubmit={handleFormSubmit}
-            submitLabel={crudModal.isCreate ? "Create" : "Save"}
+            submitLabel={
+              crudModal.isCreate
+                ? dictionary?.common?.create || "Create"
+                : dictionary?.common?.save || "Save"
+            }
             showCancel
             onCancel={crudModal.close}
           >

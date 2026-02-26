@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Kiosk Scanner
  *
@@ -8,6 +11,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+
 interface KioskScannerProps {
   onScan: (value: string) => void
   onCancel: () => void
@@ -15,6 +20,8 @@ interface KioskScannerProps {
 }
 
 export function KioskScanner({ onScan, onCancel, locale }: KioskScannerProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance?.kiosk
   const isRTL = locale === "ar"
   const [scannerInput, setScannerInput] = useState("")
   const [isListening, setIsListening] = useState(true)
@@ -94,13 +101,13 @@ export function KioskScanner({ onScan, onCancel, locale }: KioskScannerProps) {
           {/* Scanning animation */}
           <div className="relative h-48 w-48">
             {/* Corner brackets */}
-            <div className="border-primary absolute top-0 left-0 h-8 w-8 border-s-4 border-t-4" />
-            <div className="border-primary absolute top-0 right-0 h-8 w-8 border-e-4 border-t-4" />
-            <div className="border-primary absolute bottom-0 left-0 h-8 w-8 border-s-4 border-b-4" />
-            <div className="border-primary absolute right-0 bottom-0 h-8 w-8 border-e-4 border-b-4" />
+            <div className="border-primary absolute start-0 top-0 h-8 w-8 border-s-4 border-t-4" />
+            <div className="border-primary absolute end-0 top-0 h-8 w-8 border-e-4 border-t-4" />
+            <div className="border-primary absolute start-0 bottom-0 h-8 w-8 border-s-4 border-b-4" />
+            <div className="border-primary absolute end-0 bottom-0 h-8 w-8 border-e-4 border-b-4" />
 
             {/* Scanning line animation */}
-            <div className="bg-primary/50 absolute top-1/2 right-4 left-4 h-0.5 animate-pulse" />
+            <div className="bg-primary/50 absolute start-4 end-4 top-1/2 h-0.5 animate-pulse" />
           </div>
         </div>
 
@@ -109,13 +116,11 @@ export function KioskScanner({ onScan, onCancel, locale }: KioskScannerProps) {
       </div>
 
       <h2 className="mb-2 text-3xl font-bold">
-        {isRTL ? "جاري المسح..." : "Scanning..."}
+        {t?.scanning || "Scanning..."}
       </h2>
 
       <p className="text-muted-foreground mb-4 text-lg">
-        {isRTL
-          ? "ضع بطاقتك أمام الماسح الضوئي"
-          : "Place your card in front of the scanner"}
+        {t?.place_card || "Place your card in front of the scanner"}
       </p>
 
       {/* Show current input if any */}
@@ -129,7 +134,7 @@ export function KioskScanner({ onScan, onCancel, locale }: KioskScannerProps) {
         onClick={onCancel}
         className="text-muted-foreground hover:text-foreground mt-4 text-lg transition-colors"
       >
-        {isRTL ? "إلغاء" : "Cancel"}
+        {t?.cancel || "Cancel"}
       </button>
     </div>
   )

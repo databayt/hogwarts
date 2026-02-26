@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 export { default as SchoolOnboardingDashboard } from "./overview/host-dashboard"
 export { default as SchoolCard } from "./overview/school-card"
 export { default as NewSchoolOptions } from "./overview/new-school-options"

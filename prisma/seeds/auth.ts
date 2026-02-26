@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Auth Seed
  * Creates User accounts for all roles
@@ -51,28 +54,32 @@ export async function seedAdminUsers(
           ? null
           : schoolId
 
-      const user = await prisma.user.upsert({
-        where: {
-          email_schoolId: {
-            email: userData.email,
-            schoolId: userSchoolId ?? "",
-          },
-        },
-        update: {
-          username: userData.username,
-          password: passwordHash,
-          role: userData.role as UserRole,
-          emailVerified: new Date(),
-        },
-        create: {
-          email: userData.email,
-          username: userData.username,
-          password: passwordHash,
-          role: userData.role as UserRole,
-          schoolId: userSchoolId,
-          emailVerified: new Date(),
-        },
+      // Use findFirst + create/update to handle null schoolId correctly
+      // (Prisma upsert with composite unique can't match NULL values)
+      const existing = await prisma.user.findFirst({
+        where: { email: userData.email, schoolId: userSchoolId },
       })
+
+      const user = existing
+        ? await prisma.user.update({
+            where: { id: existing.id },
+            data: {
+              username: userData.username,
+              password: passwordHash,
+              role: userData.role as UserRole,
+              emailVerified: new Date(),
+            },
+          })
+        : await prisma.user.create({
+            data: {
+              email: userData.email,
+              username: userData.username,
+              password: passwordHash,
+              role: userData.role as UserRole,
+              schoolId: userSchoolId,
+              emailVerified: new Date(),
+            },
+          })
 
       users.push({
         id: user.id,

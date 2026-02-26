@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import React from "react"
 
 import { Separator } from "@/components/ui/separator"
@@ -37,9 +40,18 @@ interface SiteHeaderProps {
 
 export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
   const dictionary = await getDictionary(locale as Locale)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nav = (dictionary as any)?.marketing?.site?.nav as
+    | Record<string, string>
+    | undefined
 
-  // Transform nav items for MobileNav
-  const navItems = marketingConfig.mainNav.map((item) => ({
+  // Translate nav items via dictionary
+  const translatedNav = marketingConfig.mainNav.map((item) => ({
+    ...item,
+    title: (item.key && nav?.[item.key]) || item.title,
+  }))
+
+  const navItems = translatedNav.map((item) => ({
     href: item.href,
     label: item.title,
     disabled: item.disabled,
@@ -49,11 +61,7 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
     <header className="bg-background sticky top-0 z-50 w-full">
       <div className="flex h-14 items-center gap-2 **:data-[slot=separator]:!h-4 md:gap-4">
         {/* Desktop: MainNav */}
-        <MainNav
-          items={marketingConfig.mainNav}
-          school={school}
-          locale={locale}
-        />
+        <MainNav items={translatedNav} school={school} locale={locale} />
         {/* Mobile: Popover-based menu */}
         <SiteMobileNav
           items={navItems}

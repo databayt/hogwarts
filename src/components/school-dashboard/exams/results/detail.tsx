@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { ArrowLeft, Download, FileText } from "lucide-react"
 
@@ -69,7 +72,7 @@ export default async function ResultDetailContent({
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/${lang}/results`}>
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
               Back
             </Link>
           </Button>

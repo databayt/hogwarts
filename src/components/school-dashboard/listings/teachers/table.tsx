@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
@@ -55,44 +57,40 @@ function TeachersTableInner({
   const router = useRouter()
   const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
-  const isRtl = lang === "ar"
-
   // Translations with fallbacks
   const t = {
-    fullName: dictionary?.fullName || (isRtl ? "الاسم" : "Name"),
-    email: dictionary?.email || (isRtl ? "البريد الإلكتروني" : "Email"),
-    phone: isRtl ? "الهاتف" : "Phone",
-    department: isRtl ? "القسم" : "Department",
-    subjects: isRtl ? "المواد" : "Subjects",
-    classes: isRtl ? "الفصول" : "Classes",
-    status: dictionary?.status || (isRtl ? "الحالة" : "Status"),
-    created: dictionary?.created || (isRtl ? "تاريخ الإنشاء" : "Created"),
-    actions: isRtl ? "إجراءات" : "Actions",
-    view: isRtl ? "عرض الملف" : "View Profile",
-    edit: isRtl ? "تعديل" : "Edit",
-    delete: isRtl ? "حذف" : "Delete",
-    allTeachers:
-      dictionary?.allTeachers || (isRtl ? "جميع المعلمين" : "All Teachers"),
+    fullName: dictionary?.fullName || "Name",
+    email: dictionary?.email || "Email",
+    phone: dictionary?.phone || "Phone",
+    department: dictionary?.department || "Department",
+    subjects: dictionary?.subjects || "Subjects",
+    classes: dictionary?.classes || "Classes",
+    status: dictionary?.status || "Status",
+    created: dictionary?.created || "Created",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View Profile",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
+    allTeachers: dictionary?.allTeachers || "All Teachers",
     addNewTeacher:
-      dictionary?.addNewTeacher ||
-      (isRtl
-        ? "أضف معلماً جديداً إلى مدرستك"
-        : "Add a new teacher to your school"),
-    active: dictionary?.active || (isRtl ? "نشط" : "Active"),
-    inactive: dictionary?.inactive || (isRtl ? "غير نشط" : "Inactive"),
-    search:
-      dictionary?.search ||
-      (isRtl ? "بحث في المعلمين..." : "Search teachers..."),
-    create: dictionary?.create || (isRtl ? "إنشاء" : "Create"),
-    export: dictionary?.export || (isRtl ? "تصدير" : "Export"),
-    reset: dictionary?.reset || (isRtl ? "إعادة تعيين" : "Reset"),
-    noAccount: isRtl ? "بدون حساب" : "No Account",
-    hasAccount: isRtl ? "لديه حساب" : "Has Account",
-    noDepartment: isRtl ? "غير معين" : "Unassigned",
-    statusUpdated: isRtl ? "تم تحديث الحالة" : "Status updated",
-    activate: isRtl ? "تفعيل" : "Activate",
-    deactivate: isRtl ? "إلغاء التفعيل" : "Deactivate",
-    joined: isRtl ? "انضم" : "Joined",
+      dictionary?.addNewTeacher || "Add a new teacher to your school",
+    active: dictionary?.active || "Active",
+    inactive: dictionary?.inactive || "Inactive",
+    search: dictionary?.search || "Search teachers...",
+    create: dictionary?.create || "Create",
+    export: dictionary?.export || "Export",
+    reset: dictionary?.reset || "Reset",
+    noAccount: dictionary?.noAccount || "No Account",
+    hasAccount: dictionary?.hasAccount || "Has Account",
+    noDepartment: dictionary?.noDepartment || "Unassigned",
+    statusUpdated: dictionary?.statusUpdated || "Status updated",
+    activate: dictionary?.activate || "Activate",
+    deactivate: dictionary?.deactivate || "Deactivate",
+    joined: dictionary?.joined || "Joined",
+    failedToDeleteTeacher:
+      dictionary?.failedToDeleteTeacher || "Failed to delete teacher",
+    failedToUpdateStatus:
+      dictionary?.failedToUpdateStatus || "Failed to update status",
   }
 
   // View mode (table/grid)
@@ -159,9 +157,7 @@ function TeachersTableInner({
   const handleDelete = useCallback(
     async (teacher: TeacherRow) => {
       try {
-        const deleteMsg = isRtl
-          ? `حذف ${teacher.name}؟`
-          : `Delete ${teacher.name}?`
+        const deleteMsg = `${t.delete} ${teacher.name}?`
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
 
@@ -174,20 +170,18 @@ function TeachersTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast(isRtl ? "فشل حذف المعلم" : "Failed to delete teacher")
+          ErrorToast(t.failedToDeleteTeacher || "Failed to delete teacher")
         }
       } catch (e) {
         refresh()
         ErrorToast(
           e instanceof Error
             ? e.message
-            : isRtl
-              ? "فشل الحذف"
-              : "Failed to delete"
+            : t.failedToDeleteTeacher || "Failed to delete"
         )
       }
     },
-    [optimisticRemove, refresh, isRtl]
+    [optimisticRemove, refresh, t.failedToDeleteTeacher]
   )
 
   // Handle edit
@@ -226,8 +220,7 @@ function TeachersTableInner({
           // Revert on error
           refresh()
           ErrorToast(
-            result.error ||
-              (isRtl ? "فشل تحديث الحالة" : "Failed to update status")
+            result.error || t.failedToUpdateStatus || "Failed to update status"
           )
         }
       } catch (e) {
@@ -235,13 +228,11 @@ function TeachersTableInner({
         ErrorToast(
           e instanceof Error
             ? e.message
-            : isRtl
-              ? "فشل التحديث"
-              : "Failed to update"
+            : t.failedToUpdateStatus || "Failed to update"
         )
       }
     },
-    [optimisticUpdate, refresh, isRtl, t.statusUpdated]
+    [optimisticUpdate, refresh, t.statusUpdated, t.failedToUpdateStatus]
   )
 
   // Generate columns on the client side with dictionary, lang, and callbacks
@@ -320,8 +311,8 @@ function TeachersTableInner({
     create: t.create,
     reset: t.reset,
     export: t.export,
-    exportCSV: isRtl ? "تصدير CSV" : "Export CSV",
-    exporting: isRtl ? "جاري التصدير..." : "Exporting...",
+    exportCSV: dictionary?.exportCSV || "Export CSV",
+    exporting: dictionary?.exporting || "Exporting...",
   }
 
   return (
@@ -399,12 +390,8 @@ function TeachersTableInner({
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
                 {isLoading
-                  ? isRtl
-                    ? "جاري التحميل..."
-                    : "Loading..."
-                  : isRtl
-                    ? "تحميل المزيد"
-                    : "Load More"}
+                  ? dictionary?.loading || "Loading..."
+                  : dictionary?.loadMore || "Load More"}
               </button>
             </div>
           )}

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import Link, { LinkProps } from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -102,13 +104,13 @@ export function MobileNav({
             <div className="relative size-4">
               <span
                 className={cn(
-                  "bg-foreground absolute left-0 block h-0.5 w-4 transition-all duration-100",
+                  "bg-foreground absolute start-0 block h-0.5 w-4 transition-all duration-100",
                   open ? "top-[0.4rem] -rotate-45" : "top-1"
                 )}
               />
               <span
                 className={cn(
-                  "bg-foreground absolute left-0 block h-0.5 w-4 transition-all duration-100",
+                  "bg-foreground absolute start-0 block h-0.5 w-4 transition-all duration-100",
                   open ? "top-[0.4rem] rotate-45" : "top-2.5"
                 )}
               />

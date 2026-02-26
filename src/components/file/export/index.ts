@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Import for internal use in legacy functions
 import { downloadBlob as _downloadBlob } from "./csv-generator"
 

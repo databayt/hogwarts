@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -11,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createTeacher,
   getTeacher,
@@ -33,6 +36,8 @@ interface TeacherCreateFormProps {
 }
 
 export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
+  const { dictionary: fullDict } = useDictionary()
+  const t = fullDict?.messages?.toast
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
@@ -102,7 +107,11 @@ export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
         ? await updateTeacher({ id: currentId, ...values })
         : await createTeacher(values)
       if (res?.success) {
-        toast.success(currentId ? "Teacher updated" : "Teacher created")
+        toast.success(
+          currentId
+            ? t?.success?.teacherUpdated || "Teacher updated"
+            : t?.success?.teacherCreated || "Teacher created"
+        )
         closeModal()
         // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
@@ -114,13 +123,15 @@ export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
         toast.error(
           res?.error ||
             (currentId
-              ? "Failed to update teacher"
-              : "Failed to create teacher")
+              ? t?.error?.teacherUpdateFailed || "Failed to update teacher"
+              : t?.error?.teacherCreateFailed || "Failed to create teacher")
         )
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      toast.error("An unexpected error occurred")
+      toast.error(
+        fullDict?.common?.unexpectedError || "An unexpected error occurred"
+      )
     }
   }
 

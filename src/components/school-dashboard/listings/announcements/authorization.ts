@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Authorization middleware for announcements feature
  * Implements role-based access control (RBAC) for announcement operations

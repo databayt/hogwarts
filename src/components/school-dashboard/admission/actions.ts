@@ -1,12 +1,18 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { AdmissionApplicationStatus } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
+import { extractGradeNumber } from "@/lib/grade-utils"
 
+import { assertAdmissionPermission } from "./authorization"
 import {
   getApplicationsList,
   getCampaignOptions,
@@ -37,7 +43,7 @@ export async function getCampaigns(params: {
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const result = await getCampaignsList(schoolId, params)
@@ -84,7 +90,7 @@ export async function getCampaign(params: { id: string }): Promise<
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const campaign = await db.admissionCampaign.findUnique({
@@ -123,8 +129,10 @@ export async function createCampaign(
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(session.user.role, "manageCampaigns")
 
     // Validate input
     const validated = campaignSchemaWithValidation.safeParse(data)
@@ -172,8 +180,10 @@ export async function updateCampaign(
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(session.user.role, "manageCampaigns")
 
     // Validate input
     const validated = campaignSchemaWithValidation.safeParse(data)
@@ -221,8 +231,10 @@ export async function deleteCampaign(params: {
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(session.user.role, "manageCampaigns")
 
     // Check if campaign has applications
     const campaign = await db.admissionCampaign.findUnique({
@@ -270,7 +282,7 @@ export async function getApplications(params: {
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const result = await getApplicationsList(schoolId, params)
@@ -313,8 +325,10 @@ export async function updateApplicationStatus(params: {
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(session.user.role, "updateStatus")
 
     await db.application.update({
       where: { id: params.id, schoolId },
@@ -349,7 +363,7 @@ export async function getMeritListData(params: {
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const result = await getMeritList(schoolId, params)
@@ -390,8 +404,10 @@ export async function generateMeritList(params: {
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(session.user.role, "generateMeritList")
 
     // Get all applications for the campaign that are eligible for ranking
     const applications = await db.application.findMany({
@@ -440,7 +456,7 @@ export async function getEnrollmentData(params: {
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const result = await getEnrollmentList(schoolId, params)
@@ -487,8 +503,10 @@ export async function confirmEnrollment(params: {
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(session.user.role, "confirmEnrollment")
 
     // 1. Fetch the application with fields needed for Student creation
     const application = await db.application.findUnique({
@@ -502,176 +520,199 @@ export async function confirmEnrollment(params: {
 
     const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
 
-    // 2. Update application status to ADMITTED
-    await db.application.update({
-      where: { id: params.id, schoolId },
-      data: {
-        status: "ADMITTED",
-        admissionConfirmed: true,
-        confirmationDate: new Date(),
-        enrollmentNumber,
-      },
-    })
-
-    // 3. Create or find Student record if the application is linked to a user
-    if (application.userId) {
-      // Check if student already exists and belongs to a different school
-      const existingStudent = await db.student.findUnique({
-        where: { userId: application.userId },
-        select: { id: true, schoolId: true },
+    await db.$transaction(async (tx) => {
+      // 2. Update application status to ADMITTED
+      await tx.application.update({
+        where: { id: params.id, schoolId },
+        data: {
+          status: "ADMITTED",
+          admissionConfirmed: true,
+          confirmationDate: new Date(),
+          enrollmentNumber,
+        },
       })
 
-      if (existingStudent && existingStudent.schoolId !== schoolId) {
-        return {
-          success: false,
-          error: "Student is already enrolled in another school",
-        }
-      }
-
-      const student = existingStudent
-        ? existingStudent
-        : await db.student.create({
-            data: {
-              schoolId,
-              userId: application.userId,
-              givenName: application.firstName,
-              middleName: application.middleName,
-              surname: application.lastName,
-              dateOfBirth: application.dateOfBirth,
-              gender: application.gender,
-              nationality: application.nationality ?? undefined,
-              email: application.email,
-              mobileNumber: application.phone,
-              currentAddress: application.address,
-              city: application.city,
-              state: application.state,
-              postalCode: application.postalCode,
-              country: application.country,
-              admissionNumber: enrollmentNumber,
-              admissionDate: new Date(),
-              enrollmentDate: new Date(),
-              status: "ACTIVE",
-              category: application.category ?? undefined,
-              previousSchoolName: application.previousSchool ?? undefined,
-              previousGrade: application.previousClass ?? undefined,
-            },
-          })
-
-      // 4. Try to match applyingForClass to a YearLevel and create StudentYearLevel
-      try {
-        const yearLevel = await db.yearLevel.findFirst({
-          where: {
-            schoolId,
-            levelName: application.applyingForClass,
-          },
+      // 3. Create or find Student record if the application is linked to a user
+      if (application.userId) {
+        // Check if student already exists and belongs to a different school
+        const existingStudent = await tx.student.findUnique({
+          where: { userId: application.userId },
+          select: { id: true, schoolId: true },
         })
 
-        if (yearLevel) {
-          // Find the school year matching the campaign's academic year
-          const schoolYear = await db.schoolYear.findFirst({
-            where: {
-              schoolId,
-              yearName: application.campaign.academicYear,
-            },
-          })
+        if (existingStudent && existingStudent.schoolId !== schoolId) {
+          throw new Error("Student is already enrolled in another school")
+        }
 
-          if (schoolYear) {
-            // Upsert to be idempotent (unique on [schoolId, studentId, yearId])
-            await db.studentYearLevel.upsert({
-              where: {
-                schoolId_studentId_yearId: {
-                  schoolId,
-                  studentId: student.id,
-                  yearId: schoolYear.id,
-                },
-              },
-              create: {
+        const student = existingStudent
+          ? existingStudent
+          : await tx.student.create({
+              data: {
                 schoolId,
-                studentId: student.id,
-                levelId: yearLevel.id,
-                yearId: schoolYear.id,
-              },
-              update: {
-                levelId: yearLevel.id,
+                userId: application.userId,
+                givenName: application.firstName,
+                middleName: application.middleName,
+                surname: application.lastName,
+                dateOfBirth: application.dateOfBirth,
+                gender: application.gender,
+                nationality: application.nationality ?? undefined,
+                email: application.email,
+                mobileNumber: application.phone,
+                currentAddress: application.address,
+                city: application.city,
+                state: application.state,
+                postalCode: application.postalCode,
+                country: application.country,
+                admissionNumber: enrollmentNumber,
+                admissionDate: new Date(),
+                enrollmentDate: new Date(),
+                status: "ACTIVE",
+                category: application.category ?? undefined,
+                previousSchoolName: application.previousSchool ?? undefined,
+                previousGrade: application.previousClass ?? undefined,
               },
             })
+
+        // 4. Try to match applyingForClass to a YearLevel and create StudentYearLevel
+        try {
+          // Cascading search: exact -> case-insensitive -> grade number
+          let yearLevel = await tx.yearLevel.findFirst({
+            where: {
+              schoolId,
+              levelName: application.applyingForClass,
+            },
+          })
+
+          if (!yearLevel) {
+            yearLevel = await tx.yearLevel.findFirst({
+              where: {
+                schoolId,
+                levelName: {
+                  equals: application.applyingForClass,
+                  mode: "insensitive",
+                },
+              },
+            })
+          }
+
+          if (!yearLevel) {
+            const gradeNum = extractGradeNumber(
+              application.applyingForClass ?? ""
+            )
+            if (gradeNum) {
+              yearLevel = await tx.yearLevel.findFirst({
+                where: { schoolId, levelOrder: gradeNum },
+              })
+            }
+          }
+
+          if (yearLevel) {
+            // Find the school year matching the campaign's academic year
+            const schoolYear = await tx.schoolYear.findFirst({
+              where: {
+                schoolId,
+                yearName: application.campaign.academicYear,
+              },
+            })
+
+            if (schoolYear) {
+              // Upsert to be idempotent (unique on [schoolId, studentId, yearId])
+              await tx.studentYearLevel.upsert({
+                where: {
+                  schoolId_studentId_yearId: {
+                    schoolId,
+                    studentId: student.id,
+                    yearId: schoolYear.id,
+                  },
+                },
+                create: {
+                  schoolId,
+                  studentId: student.id,
+                  levelId: yearLevel.id,
+                  yearId: schoolYear.id,
+                },
+                update: {
+                  levelId: yearLevel.id,
+                },
+              })
+            } else {
+              console.warn(
+                `[confirmEnrollment] No SchoolYear found for academicYear="${application.campaign.academicYear}" in school=${schoolId}`
+              )
+            }
           } else {
             console.warn(
-              `[confirmEnrollment] No SchoolYear found for academicYear="${application.campaign.academicYear}" in school=${schoolId}`
+              `[confirmEnrollment] No YearLevel found matching applyingForClass="${application.applyingForClass}" in school=${schoolId}. Available levels should be checked in Year Level settings.`
             )
           }
-        } else {
+        } catch (ylError) {
+          // Don't break enrollment if year level matching fails
           console.warn(
-            `[confirmEnrollment] No YearLevel found matching applyingForClass="${application.applyingForClass}" in school=${schoolId}`
+            "[confirmEnrollment] Failed to create StudentYearLevel:",
+            ylError
           )
         }
-      } catch (ylError) {
-        // Don't break enrollment if year level matching fails
-        console.warn(
-          "[confirmEnrollment] Failed to create StudentYearLevel:",
-          ylError
-        )
-      }
 
-      // 5. Update user role to STUDENT if not already a higher role
-      try {
-        const user = await db.user.findUnique({
-          where: { id: application.userId },
-          select: { role: true },
-        })
-
-        if (user && user.role === "USER") {
-          await db.user.update({
+        // 5. Update user role to STUDENT if not already a higher role
+        try {
+          const user = await tx.user.findUnique({
             where: { id: application.userId },
-            data: { role: "STUDENT" },
+            select: { role: true },
           })
+
+          if (user && user.role === "USER") {
+            await tx.user.update({
+              where: { id: application.userId },
+              data: { role: "STUDENT" },
+            })
+          }
+        } catch (roleError) {
+          console.warn(
+            "[confirmEnrollment] Failed to update user role:",
+            roleError
+          )
         }
-      } catch (roleError) {
-        console.warn(
-          "[confirmEnrollment] Failed to update user role:",
-          roleError
-        )
-      }
 
-      // 6. Auto-assign fees if matching FeeStructure exists
-      try {
-        const feeStructures = await db.feeStructure.findMany({
-          where: {
-            schoolId,
-            academicYear: application.campaign.academicYear,
-            isActive: true,
-          },
-        })
+        // 6. Auto-assign fees if matching FeeStructure exists
+        try {
+          const feeStructures = await tx.feeStructure.findMany({
+            where: {
+              schoolId,
+              academicYear: application.campaign.academicYear,
+              isActive: true,
+            },
+          })
 
-        await Promise.all(
-          feeStructures.map((fs) =>
-            db.feeAssignment.upsert({
-              where: {
-                studentId_feeStructureId_academicYear: {
+          await Promise.all(
+            feeStructures.map((fs) =>
+              tx.feeAssignment.upsert({
+                where: {
+                  studentId_feeStructureId_academicYear: {
+                    studentId: student.id,
+                    feeStructureId: fs.id,
+                    academicYear: application.campaign.academicYear,
+                  },
+                },
+                create: {
+                  schoolId,
                   studentId: student.id,
                   feeStructureId: fs.id,
                   academicYear: application.campaign.academicYear,
+                  finalAmount: fs.totalAmount,
+                  status: "PENDING",
                 },
-              },
-              create: {
-                schoolId,
-                studentId: student.id,
-                feeStructureId: fs.id,
-                academicYear: application.campaign.academicYear,
-                finalAmount: fs.totalAmount,
-                status: "PENDING",
-              },
-              update: {}, // Don't overwrite existing
-            })
+                update: {}, // Don't overwrite existing
+              })
+            )
           )
-        )
-      } catch (feeError) {
-        console.warn(
-          "[confirmEnrollment] Fee auto-assignment failed:",
-          feeError
-        )
+        } catch (feeError) {
+          console.warn(
+            "[confirmEnrollment] Fee auto-assignment failed:",
+            feeError
+          )
+        }
       }
-    }
+    })
 
     revalidatePath("/admission/enrollment")
     return { success: true, data: null }
@@ -690,8 +731,10 @@ export async function recordPayment(params: {
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(session.user.role, "recordPayment")
 
     await db.application.update({
       where: { id: params.id, schoolId },
@@ -729,10 +772,38 @@ export async function getAvailableClassesForPlacement(params: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
-    if (!schoolId) return { success: false, error: "Unauthorized" }
+    if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+
+    // Cascading match: text contains OR grade number
+    const gradeNum = extractGradeNumber(params.applyingForClass)
+    const gradeWhere = gradeNum
+      ? {
+          OR: [
+            {
+              grade: {
+                name: {
+                  contains: params.applyingForClass,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+            { grade: { gradeNumber: gradeNum } },
+          ],
+        }
+      : {
+          grade: {
+            name: {
+              contains: params.applyingForClass,
+              mode: "insensitive" as const,
+            },
+          },
+        }
 
     const classes = await db.class.findMany({
-      where: { schoolId },
+      where: {
+        schoolId,
+        ...gradeWhere,
+      },
       select: {
         id: true,
         name: true,
@@ -764,7 +835,7 @@ export async function placeStudentInClass(params: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
-    if (!schoolId) return { success: false, error: "Unauthorized" }
+    if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     // Get the application and verify it's ADMITTED
     const application = await db.application.findUnique({
@@ -843,6 +914,9 @@ export async function placeStudentInClass(params: {
       },
     })
 
+    // Sync to LMS enrollment (non-blocking)
+    await syncStudentClassToEnrollment(schoolId, student.id, params.classId)
+
     revalidatePath("/admission/enrollment")
     revalidatePath("/classrooms")
     return { success: true, data: null }
@@ -864,7 +938,7 @@ export async function fetchCampaignOptions(): Promise<
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const options = await getCampaignOptions(schoolId)

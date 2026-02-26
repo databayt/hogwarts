@@ -1,8 +1,9 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 
-import { OnboardingProvider } from "../use-onboarding"
 import { ContactStep } from "./contact"
 import { DocumentsStep } from "./documents"
 import { PersonalStep } from "./personal"
@@ -26,17 +27,11 @@ const STEP_COMPONENTS: Record<string, React.ComponentType> = {
 
 interface StepRendererProps {
   step: string
-  schoolId: string
-  subdomain: string
 }
 
-export function StepRenderer({ step, schoolId, subdomain }: StepRendererProps) {
+export function StepRenderer({ step }: StepRendererProps) {
   const Component = STEP_COMPONENTS[step]
   if (!Component) return null
 
-  return (
-    <OnboardingProvider schoolId={schoolId} subdomain={subdomain}>
-      <Component />
-    </OnboardingProvider>
-  )
+  return <Component />
 }

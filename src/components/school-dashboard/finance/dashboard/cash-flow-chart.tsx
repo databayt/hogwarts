@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   Bar,
   BarChart,
@@ -19,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 interface CashFlowChartProps {
   inflowData: number[]
@@ -35,6 +38,8 @@ export function CashFlowChart({
   labels,
   className,
 }: CashFlowChartProps) {
+  const { locale } = useLocale()
+
   // Prepare data for the chart
   const chartData = [
     {
@@ -58,7 +63,7 @@ export function CashFlowChart({
   ]
 
   const formatValue = (value: number) => {
-    return new Intl.NumberFormat("en-SD", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "SDG",
       minimumFractionDigits: 0,

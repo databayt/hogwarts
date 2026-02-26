@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useTransition } from "react"
 import {
   ArrowRight,
@@ -229,7 +231,7 @@ export function SubstitutionList({
                   <span className="font-medium">
                     {record.originalTeacher.name}
                   </span>
-                  <ArrowRight className="text-muted-foreground h-4 w-4" />
+                  <ArrowRight className="text-muted-foreground h-4 w-4 rtl:rotate-180" />
                   <span className="font-medium text-green-600">
                     {record.substituteTeacher.name}
                   </span>

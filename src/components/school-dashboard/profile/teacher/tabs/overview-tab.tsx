@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Teacher Profile Overview Tab
  * Summary view with teaching metrics and key highlights
@@ -211,13 +214,13 @@ export function OverviewTab({
                   </div>
                 </div>
                 <Button variant="ghost" size="sm">
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                 </Button>
               </div>
             ))}
             <Button variant="outline" size="sm" className="w-full">
               View All Classes
-              <ChevronRight className="ms-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
             </Button>
           </CardContent>
         </Card>
@@ -356,7 +359,7 @@ export function OverviewTab({
             </span>
             <Button variant="outline" size="sm">
               View All Reviews
-              <ChevronRight className="ms-1 h-4 w-4" />
+              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
             </Button>
           </CardTitle>
         </CardHeader>

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Verify multi-tenant isolation - ensures all queries include schoolId
  * Run: npx tsx scripts/tenant-verify.ts [--fix]

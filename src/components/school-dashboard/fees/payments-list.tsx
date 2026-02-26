@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { format } from "date-fns"
 import { Download, Eye, Plus } from "lucide-react"
 
@@ -21,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 interface Payment {
   id: string
@@ -49,9 +52,10 @@ interface Props {
 }
 
 export function PaymentsList({ payments, dictionary }: Props) {
+  const { locale } = useLocale()
   const formatCurrency = (amount: any) => {
     const value = typeof amount === "object" ? amount.toNumber() : amount
-    return new Intl.NumberFormat("en-IN", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 0,

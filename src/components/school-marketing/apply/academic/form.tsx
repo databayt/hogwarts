@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useEffect, useImperativeHandle } from "react"
 import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -89,8 +91,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
           {/* Previous Education */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">
-              {dict.previousEducation ||
-                (isRTL ? "التعليم السابق" : "Previous Education")}
+              {dict.previousEducation || "Previous Education"}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
@@ -99,16 +100,12 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.previousSchool ||
-                        (isRTL ? "المدرسة السابقة" : "Previous School")}
+                      {dict.previousSchool || "Previous School"}
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder={
-                          dict.schoolPlaceholder ||
-                          (isRTL ? "اسم المدرسة" : "School name")
-                        }
+                        placeholder={dict.schoolPlaceholder || "School name"}
                       />
                     </FormControl>
                     <FormMessage />
@@ -121,16 +118,12 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.previousClass ||
-                        (isRTL ? "الصف السابق" : "Previous Class")}
+                      {dict.previousClass || "Previous Class"}
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder={
-                          dict.classPlaceholder ||
-                          (isRTL ? "مثال: الصف الخامس" : "e.g., Grade 5")
-                        }
+                        placeholder={dict.classPlaceholder || "e.g., Grade 5"}
                       />
                     </FormControl>
                     <FormMessage />
@@ -143,16 +136,12 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.previousMarks ||
-                        (isRTL ? "الدرجات السابقة" : "Previous Marks")}
+                      {dict.previousMarks || "Previous Marks"}
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder={
-                          dict.marksPlaceholder ||
-                          (isRTL ? "مثال: 450/500" : "e.g., 450/500")
-                        }
+                        placeholder={dict.marksPlaceholder || "e.g., 450/500"}
                       />
                     </FormControl>
                     <FormMessage />
@@ -165,16 +154,12 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.previousPercentage ||
-                        (isRTL ? "النسبة المئوية" : "Percentage")}
+                      {dict.previousPercentage || "Percentage"}
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder={
-                          dict.percentagePlaceholder ||
-                          (isRTL ? "مثال: 90%" : "e.g., 90%")
-                        }
+                        placeholder={dict.percentagePlaceholder || "e.g., 90%"}
                       />
                     </FormControl>
                     <FormMessage />
@@ -187,7 +172,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
           {/* Applying For */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">
-              {dict.applyingFor || (isRTL ? "التقديم لـ" : "Applying For")}
+              {dict.applyingFor || "Applying For"}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
@@ -196,20 +181,13 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.applyingForClass ||
-                        (isRTL
-                          ? "الصف المتقدم إليه"
-                          : "Applying for Class")}{" "}
-                      *
+                      {dict.applyingForClass || "Applying for Class"} *
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue
-                            placeholder={
-                              dict.selectClass ||
-                              (isRTL ? "اختر الصف" : "Select class")
-                            }
+                            placeholder={dict.selectClass || "Select class"}
                           />
                         </SelectTrigger>
                       </FormControl>
@@ -231,17 +209,13 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.preferredStream ||
-                        (isRTL ? "المسار المفضل" : "Preferred Stream")}
+                      {dict.preferredStream || "Preferred Stream"}
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue
-                            placeholder={
-                              dict.selectStream ||
-                              (isRTL ? "اختر المسار" : "Select stream")
-                            }
+                            placeholder={dict.selectStream || "Select stream"}
                           />
                         </SelectTrigger>
                       </FormControl>
@@ -263,7 +237,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
           {/* Languages */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">
-              {dict.languages || (isRTL ? "اللغات" : "Languages")}
+              {dict.languages || "Languages"}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
@@ -272,16 +246,14 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.secondLanguage ||
-                        (isRTL ? "اللغة الثانية" : "Second Language")}
+                      {dict.secondLanguage || "Second Language"}
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue
                             placeholder={
-                              dict.selectLanguage ||
-                              (isRTL ? "اختر اللغة" : "Select language")
+                              dict.selectLanguage || "Select language"
                             }
                           />
                         </SelectTrigger>
@@ -304,16 +276,14 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {dict.thirdLanguage ||
-                        (isRTL ? "اللغة الثالثة" : "Third Language")}
+                      {dict.thirdLanguage || "Third Language"}
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue
                             placeholder={
-                              dict.selectLanguage ||
-                              (isRTL ? "اختر اللغة" : "Select language")
+                              dict.selectLanguage || "Select language"
                             }
                           />
                         </SelectTrigger>
@@ -339,18 +309,14 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
             name="achievements"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  {dict.achievements || (isRTL ? "الإنجازات" : "Achievements")}
-                </FormLabel>
+                <FormLabel>{dict.achievements || "Achievements"}</FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
                     rows={4}
                     placeholder={
                       dict.achievementsPlaceholder ||
-                      (isRTL
-                        ? "أدخل أي إنجازات أو جوائز"
-                        : "Enter any achievements or awards")
+                      "Enter any achievements or awards"
                     }
                   />
                 </FormControl>

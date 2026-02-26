@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState, useTransition } from "react"
 import { ChevronDown, ChevronUp, Loader2, Search, X } from "lucide-react"
 import { useDebouncedCallback } from "use-debounce"
@@ -8,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { MessageDTO } from "./types"
 
@@ -24,6 +27,8 @@ export function MessageSearch({
   onResultClick,
   className,
 }: MessageSearchProps) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<MessageDTO[]>([])
@@ -92,7 +97,7 @@ export function MessageSearch({
         size="icon"
         onClick={() => setIsOpen(true)}
         className={cn("h-8 w-8", className)}
-        aria-label={locale === "ar" ? "بحث في الرسائل" : "Search messages"}
+        aria-label={m?.search?.title || "Search messages"}
       >
         <Search className="h-4 w-4" />
       </Button>
@@ -103,24 +108,22 @@ export function MessageSearch({
     <div
       className={cn(
         "bg-muted/50 flex items-center gap-2 rounded-lg px-3 py-2",
-        "animate-in fade-in slide-in-from-right-2 duration-200",
+        "animate-in fade-in slide-in-from-right-2 rtl:slide-in-from-left-2 duration-200",
         className
       )}
     >
       {/* Search input */}
       <div className="relative flex-1">
-        <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2" />
+        <Search className="text-muted-foreground absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2" />
         <Input
           value={query}
           onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder={
-            locale === "ar" ? "بحث في الرسائل..." : "Search messages..."
-          }
+          placeholder={m?.search?.messages_placeholder || "Search messages..."}
           className="h-8 ps-8 pe-4 text-sm"
           autoFocus
         />
         {isSearching && (
-          <Loader2 className="text-muted-foreground absolute top-1/2 right-2.5 h-4 w-4 -translate-y-1/2 animate-spin" />
+          <Loader2 className="text-muted-foreground absolute end-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin" />
         )}
       </div>
 
@@ -135,7 +138,7 @@ export function MessageSearch({
             size="icon"
             onClick={handlePrevResult}
             className="h-7 w-7"
-            aria-label={locale === "ar" ? "النتيجة السابقة" : "Previous result"}
+            aria-label="Previous result"
           >
             <ChevronUp className="h-4 w-4" />
           </Button>
@@ -144,7 +147,7 @@ export function MessageSearch({
             size="icon"
             onClick={handleNextResult}
             className="h-7 w-7"
-            aria-label={locale === "ar" ? "النتيجة التالية" : "Next result"}
+            aria-label="Next result"
           >
             <ChevronDown className="h-4 w-4" />
           </Button>
@@ -154,7 +157,7 @@ export function MessageSearch({
       {/* No results message */}
       {query && !isSearching && results.length === 0 && (
         <span className="text-muted-foreground text-xs">
-          {locale === "ar" ? "لا توجد نتائج" : "No results"}
+          {m?.search?.no_results || "No results"}
         </span>
       )}
 
@@ -164,7 +167,7 @@ export function MessageSearch({
         size="icon"
         onClick={handleClose}
         className="h-7 w-7"
-        aria-label={locale === "ar" ? "إغلاق" : "Close"}
+        aria-label={m?.accessibility?.close_conversation || "Close"}
       >
         <X className="h-4 w-4" />
       </Button>

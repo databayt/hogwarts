@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { format } from "date-fns"
 import { ChevronRight, TrendingDown, TrendingUp } from "lucide-react"
@@ -51,7 +54,7 @@ export async function PrincipalDashboard({
     let weatherData
     try {
       const [qlData, weather] = await Promise.all([
-        getQuickLookData(),
+        getQuickLookData(locale),
         getWeatherData(),
       ])
       quickLookData = qlData
@@ -421,7 +424,7 @@ export async function PrincipalDashboard({
                 href={`/${locale}/s/${school?.domain}/grades`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
-                View all <ChevronRight className="h-4 w-4" />
+                View all <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">

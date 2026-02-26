@@ -1,5 +1,8 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Question Navigation Component
  *
@@ -97,7 +100,7 @@ export function QuestionNav({
                 >
                   {idx + 1}
                   {isFlagged && (
-                    <Flag className="absolute -top-1 -right-1 h-3 w-3 fill-yellow-500 text-yellow-500" />
+                    <Flag className="absolute -end-1 -top-1 h-3 w-3 fill-yellow-500 text-yellow-500" />
                   )}
                 </Button>
               )

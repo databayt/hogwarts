@@ -1,5 +1,8 @@
 "use server"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 // Results Block Server Actions - Optimized for N+1 Query Prevention
 import { revalidatePath } from "next/cache"
 import { z } from "zod"

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
@@ -258,12 +261,12 @@ export async function NotificationCenterContent({
                   page: String(page - 1),
                 }).toString()}`}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
                 Previous
               </Link>
             ) : (
               <span>
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
                 Previous
               </span>
             )}
@@ -322,12 +325,12 @@ export async function NotificationCenterContent({
                 }).toString()}`}
               >
                 Next
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             ) : (
               <span>
                 Next
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </span>
             )}
           </Button>

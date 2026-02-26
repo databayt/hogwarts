@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
@@ -23,7 +25,7 @@ export function SchoolContextWrapper({ children }: SchoolContextWrapperProps) {
   useEffect(() => {
     async function validateAndSetupContext() {
       if (!requestedSchoolId) {
-        console.error("❌ No school ID in URL")
+        console.error("No school ID in URL")
         router.push("/onboarding")
         return
       }
@@ -43,7 +45,6 @@ export function SchoolContextWrapper({ children }: SchoolContextWrapperProps) {
 
         if (!result.success) {
           if (result.redirectTo) {
-            console.log("🔄 Redirecting to correct school:", result.redirectTo)
             router.push(result.redirectTo)
           } else {
             setError(result.error || "Unable to access this school")
@@ -52,12 +53,8 @@ export function SchoolContextWrapper({ children }: SchoolContextWrapperProps) {
         }
 
         // Context is valid, proceed with rendering
-        console.log("✅ School context validated:", {
-          schoolId: result.schoolId,
-          schoolName: result.schoolName,
-        })
       } catch (err) {
-        console.error("❌ Error validating school context:", err)
+        console.error("Error validating school context:", err)
         setError("Failed to validate school access")
       } finally {
         setIsValidating(false)

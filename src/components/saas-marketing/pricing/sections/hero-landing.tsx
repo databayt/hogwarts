@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
@@ -69,7 +72,7 @@ export default async function HeroLanding({ lang }: HeroLandingProps) {
             className={cn(buttonVariants({ size: "lg" }), "gap-2 rounded-full")}
           >
             <span>Go Pricing</span>
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4 rtl:rotate-180" />
           </Link>
           <Link
             href={siteConfig.links.github}

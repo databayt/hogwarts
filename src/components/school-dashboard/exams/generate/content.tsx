@@ -1,16 +1,23 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import {
   BarChart3,
   BookOpen,
+  ClipboardList,
   FileText,
+  GraduationCap,
   Key,
   Plus,
   Printer,
   Sparkles,
+  Zap,
 } from "lucide-react"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -21,6 +28,125 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+const EXAM_PRESETS = [
+  {
+    id: "midterm",
+    icon: BookOpen,
+    template: "FORMAL",
+    duration: 60,
+    groupByType: true,
+    en: {
+      title: "Midterm",
+      description: "Standard midterm exam with formal layout",
+    },
+    ar: {
+      title: "اختبار نصفي",
+      description: "اختبار نصفي بتنسيق رسمي",
+    },
+  },
+  {
+    id: "final",
+    icon: GraduationCap,
+    template: "FORMAL",
+    duration: 120,
+    groupByType: true,
+    en: {
+      title: "Final",
+      description: "Comprehensive final exam with formal layout",
+    },
+    ar: {
+      title: "اختبار نهائي",
+      description: "اختبار نهائي شامل بتنسيق رسمي",
+    },
+  },
+  {
+    id: "quiz",
+    icon: ClipboardList,
+    template: "MODERN",
+    duration: 20,
+    groupByType: false,
+    en: {
+      title: "Quiz",
+      description: "Short quiz with modern clean layout",
+    },
+    ar: {
+      title: "اختبار قصير",
+      description: "اختبار قصير بتنسيق عصري",
+    },
+  },
+  {
+    id: "pop-quiz",
+    icon: Zap,
+    template: "CLASSIC",
+    duration: 10,
+    groupByType: false,
+    en: {
+      title: "Pop Quiz",
+      description: "Quick surprise quiz with classic layout",
+    },
+    ar: {
+      title: "اختبار مفاجئ",
+      description: "اختبار سريع مفاجئ بتنسيق كلاسيكي",
+    },
+  },
+] as const
+
+interface PresetProps {
+  lang: Locale
+}
+
+export function QuickGeneratePresets({ lang }: PresetProps) {
+  const isAr = lang === "ar"
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <h3 className="font-semibold tracking-tight">
+          {isAr ? "إنشاء سريع" : "Quick Generate"}
+        </h3>
+        <p className="text-muted-foreground text-sm">
+          {isAr
+            ? "اختر نموذجاً جاهزاً لإنشاء اختبار بسرعة"
+            : "Pick a preset to quickly generate an exam"}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {EXAM_PRESETS.map((preset) => {
+          const Icon = preset.icon
+          const label = isAr ? preset.ar : preset.en
+          const href = `/${lang}/exams/generate/templates/new?preset=${preset.id}&template=${preset.template}&duration=${preset.duration}&groupByType=${preset.groupByType}`
+
+          return (
+            <Link key={preset.id} href={href} className="group">
+              <Card className="group-hover:border-primary/50 group-hover:bg-accent/50 h-full transition-colors">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <Badge variant="secondary">{preset.template}</Badge>
+                  </div>
+                  <CardTitle className="pt-2 text-base">
+                    {label.title}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {label.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Badge variant="outline" className="text-xs">
+                    {preset.duration} {isAr ? "دقيقة" : "min"}
+                  </Badge>
+                </CardContent>
+              </Card>
+            </Link>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 interface Props {
   dictionary: Dictionary
@@ -92,6 +218,9 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Generate Presets */}
+      <QuickGeneratePresets lang={lang} />
 
       {/* Action Cards */}
       <div className="grid gap-6 md:grid-cols-2">

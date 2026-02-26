@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { siteConfig } from "./config"
@@ -22,8 +25,8 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="py-4">
-        <p className="text-muted-foreground text-center text-sm leading-loose text-balance md:text-start rtl:md:text-end">
-          Build by{" "}
+        <p className="text-muted-foreground text-center text-sm leading-loose text-balance md:text-start">
+          {footerDict.builtBy}{" "}
           <a
             href={siteConfig.links.twitter}
             target="_blank"
@@ -32,7 +35,8 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
           >
             Databayt
           </a>
-          , source code available on{" "}
+          {", "}
+          {footerDict.sourceCode}{" "}
           <a
             href={siteConfig.links.github}
             target="_blank"

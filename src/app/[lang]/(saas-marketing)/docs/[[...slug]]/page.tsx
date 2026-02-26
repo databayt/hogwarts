@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -116,7 +119,7 @@ export default async function DocsPage(props: {
                       asChild
                     >
                       <Link href={neighbours.previous.url}>
-                        <ArrowLeft />
+                        <ArrowLeft className="rtl:rotate-180" />
                         <span className="sr-only">
                           {dictionary?.common?.previous || "Previous"}
                         </span>
@@ -134,7 +137,7 @@ export default async function DocsPage(props: {
                         <span className="sr-only">
                           {dictionary?.common?.next || "Next"}
                         </span>
-                        <ArrowRight />
+                        <ArrowRight className="rtl:rotate-180" />
                       </Link>
                     </Button>
                   )}
@@ -178,7 +181,8 @@ export default async function DocsPage(props: {
               className="shadow-none"
             >
               <Link href={neighbours.previous.url}>
-                <ArrowLeft /> {neighbours.previous.name}
+                <ArrowLeft className="rtl:rotate-180" />{" "}
+                {neighbours.previous.name}
               </Link>
             </Button>
           )}
@@ -190,7 +194,7 @@ export default async function DocsPage(props: {
               asChild
             >
               <Link href={neighbours.next.url}>
-                {neighbours.next.name} <ArrowRight />
+                {neighbours.next.name} <ArrowRight className="rtl:rotate-180" />
               </Link>
             </Button>
           )}

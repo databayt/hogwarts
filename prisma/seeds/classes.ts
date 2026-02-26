@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Classes Seed
  * Creates Classes and Student Enrollments
@@ -7,7 +10,6 @@
 
 import type { PrismaClient } from "@prisma/client"
 
-import { SUBJECTS, YEAR_LEVELS } from "./constants"
 import type {
   ClassRef,
   ClassroomRef,
@@ -53,41 +55,20 @@ export async function seedClasses(
   const startPeriod = teachingPeriods[0] || periods[0]
   const endPeriod = teachingPeriods[1] || periods[1] || startPeriod
 
-  // Create classes for each subject-level combination
+  // Build yearLevelId → AcademicGrade.id map for gradeId assignment
+  const academicGrades = await prisma.academicGrade.findMany({
+    where: { schoolId },
+    select: { id: true, yearLevelId: true },
+  })
+  const gradeByYearLevel = new Map(
+    academicGrades
+      .filter((g) => g.yearLevelId)
+      .map((g) => [g.yearLevelId!, g.id])
+  )
+
+  // Create one class per subject × year level
   for (const subject of subjects) {
-    // Find which levels this subject applies to
-    const subjectConfig = SUBJECTS.find((s) => s.name === subject.subjectName)
-    if (!subjectConfig) continue
-
-    const applicableLevels = yearLevels.filter((level) => {
-      if (subjectConfig.levels.includes("all")) return true
-
-      const levelOrder =
-        YEAR_LEVELS.find((yl) => yl.name === level.levelName)?.order || 0
-
-      if (subjectConfig.levels.includes("KG-6")) {
-        return levelOrder >= 1 && levelOrder <= 8
-      }
-      if (subjectConfig.levels.includes("1-6")) {
-        return levelOrder >= 3 && levelOrder <= 8
-      }
-      if (subjectConfig.levels.includes("3-12")) {
-        return levelOrder >= 5 && levelOrder <= 14
-      }
-      if (subjectConfig.levels.includes("4-12")) {
-        return levelOrder >= 6 && levelOrder <= 14
-      }
-      if (subjectConfig.levels.includes("7-12")) {
-        return levelOrder >= 9 && levelOrder <= 14
-      }
-      if (subjectConfig.levels.includes("KG-9")) {
-        return levelOrder >= 1 && levelOrder <= 11
-      }
-
-      return false
-    })
-
-    for (const level of applicableLevels) {
+    for (const level of yearLevels) {
       // Assign a teacher (round-robin)
       const teacher = teachers[teacherIndex % teachers.length]
       teacherIndex++
@@ -98,6 +79,9 @@ export async function seedClasses(
 
       // Create class name (Arabic: subject - level)
       const className = `${subject.subjectName} - ${level.levelName}`
+
+      // Resolve gradeId from yearLevel
+      const gradeId = gradeByYearLevel.get(level.id) || null
 
       try {
         const classRecord = await prisma.class.upsert({
@@ -111,6 +95,7 @@ export async function seedClasses(
             lang: "ar",
             teacherId: teacher.id,
             classroomId: classroom.id,
+            gradeId,
           },
           create: {
             schoolId,
@@ -122,6 +107,7 @@ export async function seedClasses(
             classroomId: classroom.id,
             startPeriodId: startPeriod.id,
             endPeriodId: endPeriod.id,
+            gradeId,
           },
         })
 

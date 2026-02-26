@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -13,6 +15,7 @@ import {
   ErrorToast,
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
@@ -38,7 +41,8 @@ function ClassroomsTableInner({
   const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
   const [searchValue, setSearchValue] = useState("")
-  const isAr = lang === "ar"
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classrooms as Record<string, string> | undefined
 
   const { data, hasMore, isLoading, loadMore, refresh, optimisticRemove } =
     usePlatformData<ClassroomRow, { name?: string }>({
@@ -62,7 +66,7 @@ function ClassroomsTableInner({
   const handleDelete = useCallback(
     async (row: ClassroomRow) => {
       const ok = await confirmDeleteDialog(
-        `${isAr ? "حذف" : "Delete"} ${row.roomName}?`
+        `${d?.delete || "Delete"} ${row.roomName}?`
       )
       if (!ok) return
       optimisticRemove(row.id)
@@ -74,15 +78,19 @@ function ClassroomsTableInner({
         ErrorToast(result.error)
       }
     },
-    [optimisticRemove, refresh, isAr]
+    [optimisticRemove, refresh, d]
   )
 
   const handleEdit = useCallback((id: string) => openModal(id), [openModal])
 
   const columns = useMemo(
     () =>
-      getClassroomColumns(lang, { onEdit: handleEdit, onDelete: handleDelete }),
-    [lang, handleEdit, handleDelete]
+      getClassroomColumns(
+        lang,
+        { onEdit: handleEdit, onDelete: handleDelete },
+        d
+      ),
+    [lang, handleEdit, handleDelete, d]
   )
 
   const { table } = useDataTable<ClassroomRow>({
@@ -110,13 +118,13 @@ function ClassroomsTableInner({
         onToggleView={() => {}}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder={isAr ? "بحث في الغرف..." : "Search rooms..."}
+        searchPlaceholder={d?.search || "Search rooms..."}
         onCreate={() => openModal()}
         entityName="classrooms"
         translations={{
-          search: isAr ? "بحث..." : "Search...",
-          create: isAr ? "إنشاء" : "Create",
-          reset: isAr ? "إعادة تعيين" : "Reset",
+          search: d?.search || "Search...",
+          create: d?.create || "Create",
+          reset: d?.reset || "Reset",
         }}
       />
 

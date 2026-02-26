@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Internal Onboarding Server Actions Tests
  *
@@ -10,6 +13,8 @@ import { revalidatePath } from "next/cache"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { sendEmail } from "@/lib/email"
+import { normalizePhoneNumber, sendSMS } from "@/lib/notifications/sms"
 
 import { checkExistingApplication, submitInternalOnboarding } from "../actions"
 
@@ -17,18 +22,32 @@ import { checkExistingApplication, submitInternalOnboarding } from "../actions"
 // Mocks
 // =============================================================================
 
+vi.mock("@/lib/email", () => ({
+  sendEmail: vi.fn().mockResolvedValue({ success: true }),
+}))
+
+vi.mock("@/lib/notifications/sms", () => ({
+  normalizePhoneNumber: vi.fn((phone: string) => phone),
+  sendSMS: vi.fn().mockResolvedValue({ success: true }),
+}))
+
 vi.mock("@/lib/db", () => ({
   db: {
     application: { findFirst: vi.fn() },
     school: { findUnique: vi.fn() },
-    user: { findFirst: vi.fn(), create: vi.fn() },
-    teacher: { create: vi.fn() },
+    user: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    teacher: { create: vi.fn(), count: vi.fn().mockResolvedValue(0) },
     teacherPhoneNumber: { create: vi.fn() },
     teacherQualification: { create: vi.fn() },
     staffMember: { create: vi.fn() },
     staffPhoneNumber: { create: vi.fn() },
     staffQualification: { create: vi.fn() },
-    student: { create: vi.fn() },
+    student: { create: vi.fn(), count: vi.fn().mockResolvedValue(0) },
+    notification: { createMany: vi.fn().mockResolvedValue({ count: 0 }) },
     $transaction: vi.fn(),
   },
 }))
@@ -273,7 +292,7 @@ describe("checkExistingApplication", () => {
 describe("submitInternalOnboarding", () => {
   // Create a tx mock that mirrors db model mocks
   const createTxMock = () => ({
-    user: { create: vi.fn() },
+    user: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() },
     teacher: { create: vi.fn() },
     teacherPhoneNumber: { create: vi.fn() },
     teacherQualification: { create: vi.fn() },
@@ -284,10 +303,21 @@ describe("submitInternalOnboarding", () => {
   })
 
   const setupSuccessfulTransaction = (
-    txMock: ReturnType<typeof createTxMock>
+    txMock: ReturnType<typeof createTxMock>,
+    schoolOverrides: Record<string, any> = {}
   ) => {
-    vi.mocked(db.school.findUnique).mockResolvedValue({ id: "school-1" } as any)
+    vi.mocked(db.school.findUnique).mockResolvedValue({
+      id: "school-1",
+      name: "Test School",
+      maxStudents: 100,
+      maxTeachers: 10,
+      ...schoolOverrides,
+    } as any)
     vi.mocked(db.user.findFirst).mockResolvedValue(null)
+    vi.mocked(db.student.count).mockResolvedValue(0)
+    vi.mocked(db.teacher.count).mockResolvedValue(0)
+    vi.mocked(db.user.findMany).mockResolvedValue([])
+    vi.mocked(db.notification.createMany).mockResolvedValue({ count: 0 })
     vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
       return callback(txMock)
     })
@@ -325,13 +355,12 @@ describe("submitInternalOnboarding", () => {
     })
 
     it("should return error when email is already registered", async () => {
-      vi.mocked(db.school.findUnique).mockResolvedValue({
-        id: "school-1",
-      } as any)
-      vi.mocked(db.user.findFirst).mockResolvedValue({
+      const txMock = createTxMock()
+      txMock.user.findFirst.mockResolvedValue({
         id: "existing-user",
         email: "ahmed@example.com",
       } as any)
+      setupSuccessfulTransaction(txMock)
 
       const result = await submitInternalOnboarding("school-1", {
         role: "teacher",
@@ -347,11 +376,9 @@ describe("submitInternalOnboarding", () => {
     })
 
     it("should check email uniqueness scoped by schoolId", async () => {
-      vi.mocked(db.school.findUnique).mockResolvedValue({
-        id: "school-1",
-      } as any)
-      vi.mocked(db.user.findFirst).mockResolvedValue(null)
-      vi.mocked(db.$transaction).mockRejectedValue(new Error("tx error"))
+      const txMock = createTxMock()
+      txMock.user.create.mockRejectedValue(new Error("create error"))
+      setupSuccessfulTransaction(txMock)
 
       await submitInternalOnboarding("school-1", {
         role: "teacher",
@@ -360,7 +387,7 @@ describe("submitInternalOnboarding", () => {
         roleDetails: createTeacherDetails(),
       })
 
-      expect(db.user.findFirst).toHaveBeenCalledWith({
+      expect(txMock.user.findFirst).toHaveBeenCalledWith({
         where: { email: "test@example.com", schoolId: "school-1" },
       })
     })
@@ -368,8 +395,8 @@ describe("submitInternalOnboarding", () => {
     it("should return generic error on transaction failure", async () => {
       vi.mocked(db.school.findUnique).mockResolvedValue({
         id: "school-1",
+        name: "Test School",
       } as any)
-      vi.mocked(db.user.findFirst).mockResolvedValue(null)
       vi.mocked(db.$transaction).mockRejectedValue(
         new Error("Transaction failed")
       )
@@ -931,6 +958,265 @@ describe("submitInternalOnboarding", () => {
           status: "pending_approval",
         },
       })
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Post-Submission Notifications
+  // ---------------------------------------------------------------------------
+
+  describe("post-submission notifications", () => {
+    // Helper for notification tests - creates a successful submission
+    const submitTeacherSuccessfully = async (contactOverrides = {}) => {
+      const txMock = createTxMock()
+      txMock.user.create.mockResolvedValue({ id: "user-notif-1" })
+      txMock.teacher.create.mockResolvedValue({ id: "teacher-notif-1" })
+      setupSuccessfulTransaction(txMock)
+
+      return submitInternalOnboarding("school-1", {
+        role: "teacher",
+        personal: createPersonalData(),
+        contact: createContactData(contactOverrides),
+        roleDetails: createTeacherDetails(),
+      })
+    }
+
+    describe("SMS notifications", () => {
+      it("should normalize phone and send SMS after teacher submission", async () => {
+        const result = await submitTeacherSuccessfully({ phone: "0912345678" })
+
+        expect(result.success).toBe(true)
+        expect(normalizePhoneNumber).toHaveBeenCalledWith("0912345678", "+249")
+        expect(sendSMS).toHaveBeenCalledWith(
+          expect.objectContaining({
+            to: "0912345678",
+            message: expect.stringContaining("Test School"),
+          })
+        )
+      })
+
+      it("should include reference code in SMS message", async () => {
+        const result = await submitTeacherSuccessfully({ phone: "0912345678" })
+
+        expect(result.success).toBe(true)
+        const smsCall = vi.mocked(sendSMS).mock.calls[0]?.[0] as any
+        expect(smsCall?.message).toContain("Reference:")
+        expect(smsCall?.message).toContain("Test School")
+      })
+
+      it("should NOT send SMS when phone is empty string", async () => {
+        const result = await submitTeacherSuccessfully({ phone: "" })
+
+        expect(result.success).toBe(true)
+        expect(sendSMS).not.toHaveBeenCalled()
+      })
+
+      it("should NOT send SMS when phone is undefined", async () => {
+        const result = await submitTeacherSuccessfully({ phone: undefined })
+
+        expect(result.success).toBe(true)
+        expect(sendSMS).not.toHaveBeenCalled()
+      })
+
+      it("should NOT fail submission when SMS fails", async () => {
+        vi.mocked(sendSMS).mockRejectedValueOnce(new Error("SMS service down"))
+
+        const result = await submitTeacherSuccessfully({ phone: "0912345678" })
+
+        expect(result.success).toBe(true)
+        expect(result.data?.status).toBe("pending_approval")
+      })
+    })
+
+    describe("email notifications", () => {
+      it("should send email with correct to and subject containing school name", async () => {
+        const result = await submitTeacherSuccessfully()
+
+        expect(result.success).toBe(true)
+        expect(sendEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            to: "ahmed@example.com",
+            subject: expect.stringContaining("Test School"),
+          })
+        )
+      })
+
+      it("should include role and school name in email message", async () => {
+        const result = await submitTeacherSuccessfully()
+
+        expect(result.success).toBe(true)
+        expect(sendEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              message: expect.stringContaining("teacher"),
+            }),
+          })
+        )
+        expect(sendEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              message: expect.stringContaining("Test School"),
+            }),
+          })
+        )
+      })
+
+      it("should NOT fail submission when email fails", async () => {
+        vi.mocked(sendEmail).mockRejectedValueOnce(
+          new Error("Email service down")
+        )
+
+        const result = await submitTeacherSuccessfully()
+
+        expect(result.success).toBe(true)
+        expect(result.data?.status).toBe("pending_approval")
+      })
+    })
+
+    describe("admin notifications", () => {
+      it("should query admins scoped by schoolId", async () => {
+        await submitTeacherSuccessfully()
+
+        expect(db.user.findMany).toHaveBeenCalledWith({
+          where: { schoolId: "school-1", role: "ADMIN" },
+          select: { id: true },
+        })
+      })
+
+      it("should create notifications for all admins", async () => {
+        const txMock = createTxMock()
+        txMock.user.create.mockResolvedValue({ id: "user-notif-1" })
+        txMock.teacher.create.mockResolvedValue({ id: "teacher-notif-1" })
+        setupSuccessfulTransaction(txMock)
+        // Override findMany AFTER setupSuccessfulTransaction to return admins
+        vi.mocked(db.user.findMany).mockResolvedValue([
+          { id: "admin-1" } as any,
+          { id: "admin-2" } as any,
+        ])
+
+        await submitInternalOnboarding("school-1", {
+          role: "teacher",
+          personal: createPersonalData(),
+          contact: createContactData(),
+          roleDetails: createTeacherDetails(),
+        })
+
+        expect(db.notification.createMany).toHaveBeenCalledWith({
+          data: expect.arrayContaining([
+            expect.objectContaining({
+              schoolId: "school-1",
+              userId: "admin-1",
+              type: "account_created",
+              priority: "high",
+            }),
+            expect.objectContaining({
+              schoolId: "school-1",
+              userId: "admin-2",
+              type: "account_created",
+              priority: "high",
+            }),
+          ]),
+        })
+      })
+
+      it("should NOT call createMany when no admins exist", async () => {
+        vi.mocked(db.user.findMany).mockResolvedValue([])
+
+        await submitTeacherSuccessfully()
+
+        expect(db.notification.createMany).not.toHaveBeenCalled()
+      })
+
+      it("should NOT fail submission when notification fails", async () => {
+        const txMock = createTxMock()
+        txMock.user.create.mockResolvedValue({ id: "user-notif-1" })
+        txMock.teacher.create.mockResolvedValue({ id: "teacher-notif-1" })
+        setupSuccessfulTransaction(txMock)
+        // Override AFTER setup to simulate admin found + notification failure
+        vi.mocked(db.user.findMany).mockResolvedValue([
+          { id: "admin-1" } as any,
+        ])
+        vi.mocked(db.notification.createMany).mockRejectedValueOnce(
+          new Error("Notification service down")
+        )
+
+        const result = await submitInternalOnboarding("school-1", {
+          role: "teacher",
+          personal: createPersonalData(),
+          contact: createContactData(),
+          roleDetails: createTeacherDetails(),
+        })
+
+        expect(result.success).toBe(true)
+        expect(result.data?.status).toBe("pending_approval")
+      })
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Capacity Limits
+  // ---------------------------------------------------------------------------
+
+  describe("capacity limits", () => {
+    it("should reject student when student count >= maxStudents", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        id: "school-1",
+        name: "Test School",
+        maxStudents: 50,
+        maxTeachers: 10,
+      } as any)
+      vi.mocked(db.student.count).mockResolvedValue(50)
+
+      const result = await submitInternalOnboarding("school-1", {
+        role: "student",
+        personal: createPersonalData(),
+        contact: createContactData(),
+        roleDetails: createStudentDetails(),
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain("student capacity")
+    })
+
+    it("should reject teacher when teacher count >= maxTeachers", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        id: "school-1",
+        name: "Test School",
+        maxStudents: 100,
+        maxTeachers: 5,
+      } as any)
+      vi.mocked(db.teacher.count).mockResolvedValue(5)
+
+      const result = await submitInternalOnboarding("school-1", {
+        role: "teacher",
+        personal: createPersonalData(),
+        contact: createContactData(),
+        roleDetails: createTeacherDetails(),
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain("teacher capacity")
+    })
+
+    it("should allow submission when maxStudents is null (no limit)", async () => {
+      const txMock = createTxMock()
+      txMock.user.create.mockResolvedValue({ id: "user-no-limit" })
+      txMock.student.create.mockResolvedValue({ id: "student-no-limit" })
+      setupSuccessfulTransaction(txMock, {
+        maxStudents: null,
+        maxTeachers: null,
+      })
+
+      const result = await submitInternalOnboarding("school-1", {
+        role: "student",
+        personal: createPersonalData(),
+        contact: createContactData(),
+        roleDetails: createStudentDetails(),
+      })
+
+      expect(result.success).toBe(true)
+      // student.count should NOT have been called since there's no limit
+      expect(db.student.count).not.toHaveBeenCalled()
     })
   })
 })

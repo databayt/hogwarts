@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { format } from "date-fns"
 import { ArrowDownLeft, ArrowRight, ArrowUpRight } from "lucide-react"
@@ -14,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { RecentTransaction } from "./types"
 
@@ -26,6 +29,7 @@ export function TransactionList({
   transactions,
   className,
 }: TransactionListProps) {
+  const { locale } = useLocale()
   const getIcon = (type: RecentTransaction["type"]) => {
     switch (type) {
       case "income":
@@ -33,7 +37,7 @@ export function TransactionList({
       case "expense":
         return <ArrowUpRight className="h-4 w-4 text-red-500" />
       case "transfer":
-        return <ArrowRight className="h-4 w-4 text-blue-500" />
+        return <ArrowRight className="h-4 w-4 text-blue-500 rtl:rotate-180" />
     }
   }
 
@@ -61,7 +65,7 @@ export function TransactionList({
   }
 
   const formatAmount = (amount: number, type: RecentTransaction["type"]) => {
-    const formatted = new Intl.NumberFormat("en-SD", {
+    const formatted = new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "SDG",
       minimumFractionDigits: 0,
@@ -159,7 +163,7 @@ export function TransactionList({
             <p className="text-muted-foreground text-xs">Total Income</p>
             <p className="text-sm font-semibold text-green-600">
               SDG{" "}
-              {new Intl.NumberFormat("en-SD").format(
+              {new Intl.NumberFormat(locale).format(
                 transactions
                   .filter(
                     (t) => t.type === "income" && t.status === "completed"
@@ -172,7 +176,7 @@ export function TransactionList({
             <p className="text-muted-foreground text-xs">Total Expenses</p>
             <p className="text-sm font-semibold text-red-600">
               SDG{" "}
-              {new Intl.NumberFormat("en-SD").format(
+              {new Intl.NumberFormat(locale).format(
                 transactions
                   .filter(
                     (t) => t.type === "expense" && t.status === "completed"

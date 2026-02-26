@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { ReactNode } from "react"
 import type { UserInvoice } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"

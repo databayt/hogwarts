@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useEffect, useImperativeHandle } from "react"
 import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -90,9 +92,7 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.email || (isRTL ? "البريد الإلكتروني" : "Email")} *
-                  </FormLabel>
+                  <FormLabel>{dict.email || "Email"} *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -110,9 +110,7 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.phone || (isRTL ? "رقم الهاتف" : "Phone")} *
-                  </FormLabel>
+                  <FormLabel>{dict.phone || "Phone"} *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -133,8 +131,7 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {dict.alternatePhone ||
-                    (isRTL ? "هاتف بديل" : "Alternate Phone")}
+                  {dict.alternatePhone || "Alternate Phone"}
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -156,16 +153,11 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
             name="address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  {dict.address || (isRTL ? "العنوان" : "Address")} *
-                </FormLabel>
+                <FormLabel>{dict.address || "Address"} *</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder={
-                      dict.addressPlaceholder ||
-                      (isRTL ? "أدخل العنوان" : "Enter address")
-                    }
+                    placeholder={dict.addressPlaceholder || "Enter address"}
                   />
                 </FormControl>
                 <FormMessage />
@@ -180,16 +172,11 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
               name="city"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.city || (isRTL ? "المدينة" : "City")} *
-                  </FormLabel>
+                  <FormLabel>{dict.city || "City"} *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={
-                        dict.cityPlaceholder ||
-                        (isRTL ? "أدخل المدينة" : "Enter city")
-                      }
+                      placeholder={dict.cityPlaceholder || "Enter city"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -202,16 +189,11 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
               name="state"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.state || (isRTL ? "الولاية" : "State")} *
-                  </FormLabel>
+                  <FormLabel>{dict.state || "State"} *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder={
-                        dict.statePlaceholder ||
-                        (isRTL ? "أدخل الولاية" : "Enter state")
-                      }
+                      placeholder={dict.statePlaceholder || "Enter state"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -227,10 +209,7 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
               name="postalCode"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.postalCode ||
-                      (isRTL ? "الرمز البريدي" : "Postal Code")}
-                  </FormLabel>
+                  <FormLabel>{dict.postalCode || "Postal Code"}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -247,17 +226,12 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
               name="country"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {dict.country || (isRTL ? "الدولة" : "Country")} *
-                  </FormLabel>
+                  <FormLabel>{dict.country || "Country"} *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={
-                            dict.selectCountry ||
-                            (isRTL ? "اختر الدولة" : "Select country")
-                          }
+                          placeholder={dict.selectCountry || "Select country"}
                         />
                       </SelectTrigger>
                     </FormControl>

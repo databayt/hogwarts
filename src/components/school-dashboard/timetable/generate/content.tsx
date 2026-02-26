@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState, useTransition } from "react"
 import {
   AlertCircle,
@@ -18,6 +20,7 @@ import {
   Wand2,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -145,7 +148,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
       }
     } catch (error) {
       toast({
-        title: "Error",
+        title: d?.generate?.errors || "Error",
         description: "Failed to load terms",
         variant: "destructive",
       })
@@ -161,8 +164,10 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
   const handleGenerate = () => {
     if (!selectedTermId) {
       toast({
-        title: "Select a Term",
-        description: "Please select a term to generate timetable for",
+        title: d?.generate?.termSelection || "Select a Term",
+        description:
+          d?.generate?.selectTerm ||
+          "Please select a term to generate timetable for",
         variant: "destructive",
       })
       return
@@ -184,19 +189,19 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
 
         if (result.success) {
           toast({
-            title: "Generation Complete",
+            title: d?.generate?.generationComplete || "Generation Complete",
             description: `Successfully generated ${result.stats.placedSlots} slots`,
           })
         } else {
           toast({
-            title: "Generation Partial",
+            title: d?.generate?.generationPartial || "Generation Partial",
             description: `Generated ${result.stats.placedSlots}/${result.stats.totalSlots} slots with ${result.errors.length} errors`,
             variant: "destructive",
           })
         }
       } catch (error) {
         toast({
-          title: "Generation Failed",
+          title: d?.generate?.generationFailed || "Generation Failed",
           description:
             error instanceof Error ? error.message : "Unknown error occurred",
           variant: "destructive",
@@ -219,7 +224,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
 
       if (result.success) {
         toast({
-          title: "Timetable Applied",
+          title: d?.generate?.timetableApplied || "Timetable Applied",
           description: `Successfully created ${result.createdCount} slots`,
         })
         // Reset preview state
@@ -227,14 +232,14 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
         setStats(null)
       } else {
         toast({
-          title: "Application Failed",
+          title: d?.generate?.applicationFailed || "Application Failed",
           description: result.errors.join(", "),
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: "Application Failed",
+        title: d?.generate?.applicationFailed || "Application Failed",
         description:
           error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
@@ -309,32 +314,45 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2>{d?.generate?.title || "Generate Timetable"}</h2>
-          <p className="text-muted-foreground">
-            {d?.generate?.description ||
-              "AI-powered automatic schedule generation with conflict detection"}
-          </p>
-        </div>
-        <Badge variant="secondary" className="gap-1">
-          <Sparkles className="h-3 w-3" />
-          AI Powered
-        </Badge>
-      </div>
+      <Card className="from-primary/5 via-primary/10 to-primary/5 border-primary/20 bg-gradient-to-r">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 rounded-lg p-2">
+                <Wand2 className="text-primary h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle>
+                  {d?.generate?.title || "Generate Timetable"}
+                </CardTitle>
+                <CardDescription>
+                  {d?.generate?.description ||
+                    "AI-powered automatic schedule generation with conflict detection"}
+                </CardDescription>
+              </div>
+            </div>
+            <Badge variant="secondary" className="gap-1">
+              <Sparkles className="h-3 w-3" />
+              {d?.generate?.aiPowered || "AI Powered"}
+            </Badge>
+          </div>
+        </CardHeader>
+      </Card>
 
       {/* Term Selection */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            {"Term Selection"}
+            {d?.generate?.termSelection || "Term Selection"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Select value={selectedTermId} onValueChange={setSelectedTermId}>
             <SelectTrigger className="w-full max-w-sm">
-              <SelectValue placeholder="Select a term" />
+              <SelectValue
+                placeholder={d?.generate?.selectTerm || "Select a term"}
+              />
             </SelectTrigger>
             <SelectContent>
               {terms.map((term) => (
@@ -355,7 +373,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
               <div className="flex cursor-pointer items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Settings2 className="h-5 w-5" />
-                  {"Generation Settings"}
+                  {d?.generate?.generationSettings || "Generation Settings"}
                 </CardTitle>
                 {isConfigOpen ? (
                   <ChevronDown className="h-5 w-5" />
@@ -365,22 +383,26 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
               </div>
             </CollapsibleTrigger>
             <CardDescription>
-              Configure constraints and preferences for schedule generation
+              {d?.generate?.configureConstraints ||
+                "Configure constraints and preferences for schedule generation"}
             </CardDescription>
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-6">
               {/* Hard Constraints */}
               <div className="space-y-4">
-                <h4>Hard Constraints</h4>
+                <h4>{d?.generate?.hardConstraints || "Hard Constraints"}</h4>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="flex items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <Label>Enforce Teacher Expertise</Label>
+                      <Label>
+                        {d?.generate?.enforceTeacherExpertise ||
+                          "Enforce Teacher Expertise"}
+                      </Label>
                       <p className="text-muted-foreground">
                         <small>
-                          Teachers only assigned to subjects they&apos;re
-                          qualified for
+                          {d?.generate?.enforceTeacherExpertiseDesc ||
+                            "Teachers only assigned to subjects they're qualified for"}
                         </small>
                       </p>
                     </div>
@@ -393,9 +415,15 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                   </div>
                   <div className="flex items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <Label>Enforce Room Capacity</Label>
+                      <Label>
+                        {d?.generate?.enforceRoomCapacity ||
+                          "Enforce Room Capacity"}
+                      </Label>
                       <p className="text-muted-foreground">
-                        <small>Class size must fit in assigned room</small>
+                        <small>
+                          {d?.generate?.enforceRoomCapacityDesc ||
+                            "Class size must fit in assigned room"}
+                        </small>
                       </p>
                     </div>
                     <Switch
@@ -407,10 +435,14 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                   </div>
                   <div className="flex items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <Label>Require Lunch Break</Label>
+                      <Label>
+                        {d?.generate?.requireLunchBreak ||
+                          "Require Lunch Break"}
+                      </Label>
                       <p className="text-muted-foreground">
                         <small>
-                          Ensure teachers have break during lunch period
+                          {d?.generate?.requireLunchBreakDesc ||
+                            "Ensure teachers have break during lunch period"}
                         </small>
                       </p>
                     </div>
@@ -423,10 +455,14 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                   </div>
                   <div className="flex items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <Label>Prevent Back-to-Back</Label>
+                      <Label>
+                        {d?.generate?.preventBackToBack ||
+                          "Prevent Back-to-Back"}
+                      </Label>
                       <p className="text-muted-foreground">
                         <small>
-                          Avoid consecutive periods in different rooms
+                          {d?.generate?.preventBackToBackDesc ||
+                            "Avoid consecutive periods in different rooms"}
                         </small>
                       </p>
                     </div>
@@ -444,10 +480,12 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
 
               {/* Numeric Constraints */}
               <div className="space-y-4">
-                <h4>Workload Limits</h4>
+                <h4>{d?.generate?.workloadLimits || "Workload Limits"}</h4>
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label>Max Periods/Day</Label>
+                    <Label>
+                      {d?.generate?.maxPeriodsPerDay || "Max Periods/Day"}
+                    </Label>
                     <Input
                       type="number"
                       min={1}
@@ -462,7 +500,9 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Max Periods/Week</Label>
+                    <Label>
+                      {d?.generate?.maxPeriodsPerWeek || "Max Periods/Week"}
+                    </Label>
                     <Input
                       type="number"
                       min={1}
@@ -477,7 +517,9 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Max Consecutive</Label>
+                    <Label>
+                      {d?.generate?.maxConsecutive || "Max Consecutive"}
+                    </Label>
                     <Input
                       type="number"
                       min={1}
@@ -498,7 +540,10 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
 
               {/* Soft Preferences */}
               <div className="space-y-4">
-                <h4>Optimization Preferences</h4>
+                <h4>
+                  {d?.generate?.optimizationPreferences ||
+                    "Optimization Preferences"}
+                </h4>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -509,7 +554,8 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                       }
                     />
                     <Label htmlFor="balance">
-                      Balance subject distribution across week
+                      {d?.generate?.balanceDistribution ||
+                        "Balance subject distribution across week"}
                     </Label>
                   </div>
                   <div className="flex items-center gap-2">
@@ -521,7 +567,8 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                       }
                     />
                     <Label htmlFor="morning">
-                      Schedule core subjects in morning
+                      {d?.generate?.preferMorningCore ||
+                        "Schedule core subjects in morning"}
                     </Label>
                   </div>
                   <div className="flex items-center gap-2">
@@ -533,7 +580,8 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                       }
                     />
                     <Label htmlFor="lab">
-                      Avoid last period for lab activities
+                      {d?.generate?.avoidLastPeriodLab ||
+                        "Avoid last period for lab activities"}
                     </Label>
                   </div>
                   <div className="flex items-center gap-2">
@@ -545,7 +593,8 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                       }
                     />
                     <Label htmlFor="group">
-                      Group same subject on alternating days
+                      {d?.generate?.groupSameSubjectDays ||
+                        "Group same subject on alternating days"}
                     </Label>
                   </div>
                 </div>
@@ -560,12 +609,12 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                 {isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating...
+                    {d?.generate?.generating || "Generating..."}
                   </>
                 ) : (
                   <>
                     <Wand2 className="h-4 w-4" />
-                    Generate Preview
+                    {d?.generate?.generatePreview || "Generate Preview"}
                   </>
                 )}
               </Button>
@@ -580,7 +629,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
-              Generation Results
+              {d?.generate?.generationResults || "Generation Results"}
             </CardTitle>
             <CardDescription>
               Generated in {stats.generationTimeMs.toFixed(0)}ms with{" "}
@@ -592,7 +641,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
             <div className="grid gap-4 md:grid-cols-4">
               <div className="space-y-1 rounded-lg border p-3">
                 <p className="text-muted-foreground">
-                  <small>Slots Placed</small>
+                  <small>{d?.generate?.slotsPlaced || "Slots Placed"}</small>
                 </p>
                 <p>
                   <strong>
@@ -601,38 +650,78 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                 </p>
                 <Progress
                   value={(stats.placedSlots / stats.totalSlots) * 100}
-                  className="h-2"
+                  className={cn(
+                    "h-2",
+                    (stats.placedSlots / stats.totalSlots) * 100 >= 80
+                      ? "[&>div]:bg-green-500"
+                      : (stats.placedSlots / stats.totalSlots) * 100 >= 50
+                        ? "[&>div]:bg-amber-500"
+                        : "[&>div]:bg-red-500"
+                  )}
                 />
               </div>
               <div className="space-y-1 rounded-lg border p-3">
                 <p className="text-muted-foreground">
-                  <small>Optimization Score</small>
+                  <small>
+                    {d?.generate?.optimizationScore || "Optimization Score"}
+                  </small>
                 </p>
                 <p>
                   <strong>{stats.optimizationScore}%</strong>
                 </p>
-                <Progress value={stats.optimizationScore} className="h-2" />
+                <Progress
+                  value={stats.optimizationScore}
+                  className={cn(
+                    "h-2",
+                    stats.optimizationScore >= 80
+                      ? "[&>div]:bg-green-500"
+                      : stats.optimizationScore >= 50
+                        ? "[&>div]:bg-amber-500"
+                        : "[&>div]:bg-red-500"
+                  )}
+                />
               </div>
               <div className="space-y-1 rounded-lg border p-3">
                 <p className="text-muted-foreground">
-                  <small>Workload Balance</small>
+                  <small>
+                    {d?.generate?.workloadBalance || "Workload Balance"}
+                  </small>
                 </p>
                 <p>
                   <strong>{stats.teacherWorkloadBalance}%</strong>
                 </p>
                 <Progress
                   value={stats.teacherWorkloadBalance}
-                  className="h-2"
+                  className={cn(
+                    "h-2",
+                    stats.teacherWorkloadBalance >= 80
+                      ? "[&>div]:bg-green-500"
+                      : stats.teacherWorkloadBalance >= 50
+                        ? "[&>div]:bg-amber-500"
+                        : "[&>div]:bg-red-500"
+                  )}
                 />
               </div>
               <div className="space-y-1 rounded-lg border p-3">
                 <p className="text-muted-foreground">
-                  <small>Room Utilization</small>
+                  <small>
+                    {d?.generate?.roomUtilization || "Room Utilization"}
+                  </small>
                 </p>
                 <p>
                   <strong>{stats.roomUtilization}%</strong>
                 </p>
-                <Progress value={stats.roomUtilization} className="h-2" />
+                <Progress
+                  value={stats.roomUtilization}
+                  className={cn(
+                    "h-2",
+                    stats.roomUtilization >= 80
+                      ? "[&>div]:bg-green-500"
+                      : stats.roomUtilization >= 50
+                        ? "[&>div]:bg-amber-500"
+                        : "[&>div]:bg-red-500"
+                  )}
+                />
               </div>
             </div>
 
@@ -697,10 +786,11 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Schedule Preview
+              {d?.generate?.schedulePreview || "Schedule Preview"}
             </CardTitle>
             <CardDescription>
-              Review the generated schedule before applying
+              {d?.generate?.reviewBeforeApply ||
+                "Review the generated schedule before applying"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -708,12 +798,12 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Day</TableHead>
-                    <TableHead>Period</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Room</TableHead>
-                    <TableHead>Score</TableHead>
+                    <TableHead>{d?.generate?.day || "Day"}</TableHead>
+                    <TableHead>{d?.generate?.period || "Period"}</TableHead>
+                    <TableHead>{d?.generate?.class || "Class"}</TableHead>
+                    <TableHead>{d?.generate?.teacher || "Teacher"}</TableHead>
+                    <TableHead>{d?.generate?.room || "Room"}</TableHead>
+                    <TableHead>{d?.generate?.score || "Score"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -761,6 +851,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                                         ))}
                                       </ul>
                                     ) : (
+                                      d?.generate?.noViolations ||
                                       "No violations"
                                     )}
                                   </TooltipContent>
@@ -783,7 +874,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                 className="gap-2"
               >
                 <RefreshCw className="h-4 w-4" />
-                Regenerate
+                {d?.generate?.regenerate || "Regenerate"}
               </Button>
             </div>
             <div className="flex gap-2">
@@ -801,11 +892,12 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                       ) : (
                         <Play className="h-4 w-4" />
                       )}
-                      Merge
+                      {d?.generate?.merge || "Merge"}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    Add to existing schedule (keeps current slots)
+                    {d?.generate?.mergeDesc ||
+                      "Add to existing schedule (keeps current slots)"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -822,11 +914,12 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                       ) : (
                         <Save className="h-4 w-4" />
                       )}
-                      Replace All
+                      {d?.generate?.replaceAll || "Replace All"}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    Clear existing and apply new schedule
+                    {d?.generate?.replaceAllDesc ||
+                      "Clear existing and apply new schedule"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -840,10 +933,12 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Sparkles className="text-muted-foreground mb-4 h-12 w-12" />
-            <h3 className="mb-2">Ready to Generate</h3>
+            <h3 className="mb-2">
+              {d?.generate?.readyToGenerate || "Ready to Generate"}
+            </h3>
             <p className="text-muted-foreground mb-4 text-center">
-              Configure your constraints and click &quot;Generate Preview&quot;
-              to create an optimized timetable
+              {d?.generate?.readyDesc ||
+                'Configure your constraints and click "Generate Preview" to create an optimized timetable'}
             </p>
             <Button
               onClick={handleGenerate}
@@ -851,7 +946,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
               className="gap-2"
             >
               <Wand2 className="h-4 w-4" />
-              Generate Preview
+              {d?.generate?.generatePreview || "Generate Preview"}
             </Button>
           </CardContent>
         </Card>

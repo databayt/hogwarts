@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { Metadata } from "next"
 
 import { type Locale } from "@/components/internationalization/config"
@@ -6,7 +9,12 @@ import AllBooksContent from "@/components/library/book-list/all-books-content"
 
 interface Props {
   params: Promise<{ subdomain: string; lang: Locale }>
-  searchParams: Promise<{ page?: string; search?: string; genre?: string }>
+  searchParams: Promise<{
+    page?: string
+    search?: string
+    genre?: string
+    gradeLevel?: string
+  }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

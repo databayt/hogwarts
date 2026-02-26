@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -11,6 +13,9 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createEvent,
   getEvent,
@@ -25,12 +30,23 @@ import { ScheduleLocationStep } from "./schedule-location"
 interface EventCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
   onSuccess?: () => void
+  lang?: Locale
+  dictionary?: Dictionary["school"]["events"]
 }
 
-export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
+export function EventCreateForm({
+  onSuccess,
+  lang = "ar",
+  dictionary,
+}: EventCreateFormProps) {
+  const { dictionary: fullDict } = useDictionary()
+  const t = fullDict?.messages?.toast
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
+  const [originalLang, setOriginalLang] = useState<string | undefined>(
+    undefined
+  )
 
   const form = useForm<z.infer<typeof eventCreateSchema>>({
     resolver: zodResolver(eventCreateSchema),
@@ -61,9 +77,12 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
   useEffect(() => {
     const load = async () => {
       if (!currentId) return
-      const res = await getEvent({ id: currentId })
+      const res = await getEvent({ id: currentId, displayLang: lang })
       if (!res.success || !res.data) return
       const e = res.data as any
+
+      // Preserve original lang for edits
+      setOriginalLang(e.lang)
 
       form.reset({
         title: e.title ?? "",
@@ -87,12 +106,24 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
 
   async function onSubmit(values: z.infer<typeof eventCreateSchema>) {
     try {
+      // For new events, set lang to current locale
+      // For edits, preserve the original stored lang
+      const langValue = currentId ? originalLang || lang : lang
+
       const res = currentId
-        ? await updateEvent({ id: currentId, ...values })
-        : await createEvent(values)
+        ? await updateEvent({
+            id: currentId,
+            ...values,
+            lang: langValue,
+          } as any)
+        : await createEvent({ ...values, lang: langValue } as any)
 
       if (res?.success) {
-        toast.success(currentId ? "Event updated" : "Event created")
+        toast.success(
+          currentId
+            ? t?.success?.updated || "Event updated"
+            : t?.success?.created || "Event created"
+        )
         closeModal()
         // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
@@ -103,12 +134,16 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
       } else {
         toast.error(
           res?.error ||
-            (currentId ? "Failed to update event" : "Failed to create event")
+            (currentId
+              ? t?.error?.updateFailed || "Failed to update event"
+              : t?.error?.createFailed || "Failed to create event")
         )
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      toast.error("An unexpected error occurred")
+      toast.error(
+        fullDict?.common?.unexpectedError || "An unexpected error occurred"
+      )
     }
   }
 
@@ -170,7 +205,7 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <BasicInformationStep form={form} isView={isView} />
+        return <BasicInformationStep form={form} isView={isView} lang={lang} />
       case 2:
         return <ScheduleLocationStep form={form} isView={isView} />
       case 3:

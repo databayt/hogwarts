@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -100,7 +102,7 @@ export function ClassDetailContent({
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="me-2 h-4 w-4" />
+          <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
           {t.back}
         </Button>
         <Alert variant="destructive">
@@ -124,7 +126,7 @@ export function ClassDetailContent({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           </Button>
           <div>
             <h1 className="text-2xl font-semibold">{classData.name}</h1>

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 export interface ChatMessage {
   id: string
   role: "user" | "assistant" | "system"
@@ -86,6 +89,7 @@ export interface ChatbotProps {
   config?: ChatbotConfig
   className?: string
   promptType?: PromptType
+  subdomain?: string
   onMessageSend?: (message: string) => void
   onChatOpen?: () => void
   onChatClose?: () => void
@@ -116,6 +120,7 @@ export interface ChatWindowProps {
   theme?: ChatbotTheme
   title?: string
   subtitle?: string
+  promptType?: PromptType
   enableTypingIndicator?: boolean
   enableTimestamps?: boolean
 }

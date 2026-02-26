@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { format } from "date-fns"
 import {
@@ -55,12 +57,20 @@ import { HealthTab } from "./tabs/health-tab"
 // Import tab components
 import { PersonalTab } from "./tabs/personal-tab"
 
+export type GradeBoundaryData = {
+  grade: string
+  minScore: number
+  maxScore: number
+  gpaValue: number | null
+}
+
 interface StudentProfileProps {
   student: Student
   dictionary?: any
   onEdit?: () => void
   isOwner?: boolean
   userId?: string
+  gradeBoundaries?: GradeBoundaryData[]
 }
 
 const statusColors = {
@@ -87,6 +97,7 @@ export function StudentProfile({
   onEdit,
   isOwner = false,
   userId,
+  gradeBoundaries,
 }: StudentProfileProps) {
   const [activeTab, setActiveTab] = useState("personal")
 
@@ -366,7 +377,10 @@ export function StudentProfile({
               </TabsContent>
 
               <TabsContent value="academic" className="mt-0">
-                <AcademicTab student={student} />
+                <AcademicTab
+                  student={student}
+                  gradeBoundaries={gradeBoundaries}
+                />
               </TabsContent>
 
               <TabsContent value="guardian" className="mt-0">

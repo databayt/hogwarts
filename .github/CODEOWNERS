@@ -25,6 +25,15 @@
 # GitHub Configuration
 /.github/ @abdout
 
+# Licensing & Governance
+/LICENSE @abdout
+/NOTICE @abdout
+/LICENSING.md @abdout
+/TRADEMARKS.md @abdout
+/ENFORCEMENT.md @abdout
+/SECURITY.md @abdout
+/CODE_OF_CONDUCT.md @abdout
+
 # Documentation
 /docs/ @abdout
 /content/ @abdout

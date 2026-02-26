@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
   createContext,
   useCallback,
@@ -185,7 +187,7 @@ export function NotificationBell({ onClick }: { onClick?: () => void }) {
     <Button variant="ghost" size="icon" className="relative" onClick={onClick}>
       <Bell className="h-5 w-5" />
       {unreadCount > 0 && (
-        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+        <span className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       )}
@@ -369,7 +371,7 @@ export function NotificationToast({
   return (
     <div
       className={cn(
-        "fixed right-4 bottom-4 z-50 max-w-sm",
+        "fixed end-4 bottom-4 z-50 max-w-sm",
         "animate-in slide-in-from-bottom-2 duration-300"
       )}
     >

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { addMonths, format, isSameDay, startOfMonth, subMonths } from "date-fns"
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
@@ -78,7 +80,7 @@ export function DateStep({ schoolId }: DateStepProps) {
           onClick={handlePrevMonth}
           disabled={startOfMonth(currentMonth) <= startOfMonth(new Date())}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
         </Button>
         <h3 className="text-lg font-medium">
           {format(currentMonth, "MMMM yyyy")}
@@ -89,7 +91,7 @@ export function DateStep({ schoolId }: DateStepProps) {
           size="icon"
           onClick={handleNextMonth}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4 rtl:rotate-180" />
         </Button>
       </div>
 

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { z } from "zod"
 
 // Settings validation schema - matches fields displayed in settings-content.tsx

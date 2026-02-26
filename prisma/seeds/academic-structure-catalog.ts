@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Academic Structure + Catalog Bridge Seed
  *
@@ -10,7 +13,7 @@
 
 import type { PrismaClient } from "@prisma/client"
 
-import { SUBJECTS, YEAR_LEVELS } from "./constants"
+import { YEAR_LEVELS } from "./constants"
 import type { CatalogSubjectRef, YearLevelRef } from "./types"
 import { logSuccess } from "./utils"
 
@@ -300,7 +303,7 @@ export async function seedAcademicStructureCatalog(
   if (!catalogSubjects) {
     // Load from DB if not passed
     const subjects = await prisma.catalogSubject.findMany({
-      where: { status: "PUBLISHED", country: "SD" },
+      where: { status: "PUBLISHED", country: "US" },
       select: { id: true, name: true, slug: true, levels: true },
     })
     catalogSubjects = subjects.map((s) => ({
@@ -312,7 +315,7 @@ export async function seedAcademicStructureCatalog(
 
   // Load full catalog subjects with levels for matching
   const fullSubjects = await prisma.catalogSubject.findMany({
-    where: { status: "PUBLISHED", country: "SD" },
+    where: { status: "PUBLISHED", country: "US" },
     select: { id: true, name: true, levels: true },
   })
 

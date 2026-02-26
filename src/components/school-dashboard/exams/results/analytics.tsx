@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import Link from "next/link"
 import { ArrowLeft, Minus, TrendingDown, TrendingUp } from "lucide-react"
 import { type SearchParams } from "nuqs/server"
@@ -79,7 +82,7 @@ export default async function ResultsAnalyticsContent({
         />
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/${lang}/results`}>
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             Back
           </Link>
         </Button>

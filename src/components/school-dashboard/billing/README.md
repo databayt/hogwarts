@@ -471,7 +471,7 @@ For questions or issues:
 
 ## License
 
-MIT License - See LICENSE file for details
+SSPL-1.0 - See LICENSE file for details
 
 ---
 

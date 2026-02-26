@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Kiosk Server Actions
  *
@@ -8,13 +11,13 @@
 import { revalidatePath } from "next/cache"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import type { KioskAction, KioskMethod } from "./validation"
 
 interface LookupStudentInput {
   identifierValue: string
   method: KioskMethod
-  schoolId: string
 }
 
 interface LookupStudentResult {
@@ -39,7 +42,11 @@ export async function lookupStudent(
   input: LookupStudentInput
 ): Promise<LookupStudentResult> {
   try {
-    const { identifierValue, method, schoolId } = input
+    const { identifierValue, method } = input
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
 
     let student = null
 
@@ -154,7 +161,6 @@ interface ProcessKioskCheckInput {
   reasonCode?: string
   reasonNote?: string
   photoUrl?: string
-  schoolId: string
 }
 
 interface ProcessKioskCheckResult {
@@ -178,8 +184,11 @@ export async function processKioskCheck(
       reasonCode,
       reasonNote,
       photoUrl,
-      schoolId,
     } = input
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
 
     const now = new Date()
 
@@ -320,7 +329,6 @@ interface RegisterKioskInput {
   kioskId: string
   kioskName: string
   location?: string
-  schoolId: string
 }
 
 interface RegisterKioskResult {
@@ -336,7 +344,11 @@ export async function registerKiosk(
   input: RegisterKioskInput
 ): Promise<RegisterKioskResult> {
   try {
-    const { kioskId, kioskName, location, schoolId } = input
+    const { kioskId, kioskName, location } = input
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
 
     // Check if kiosk already registered (use unique constraint)
     const existingSession = await db.kioskSession.findUnique({

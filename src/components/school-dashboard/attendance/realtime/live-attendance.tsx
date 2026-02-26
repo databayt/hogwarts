@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import {
@@ -104,7 +106,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
       {/* Live Stats Grid */}
       <div className="grid gap-3 md:grid-cols-4">
         <Card className="relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-2">
+          <div className="absolute end-0 top-0 p-2">
             <Activity className="text-muted-foreground h-4 w-4 animate-pulse" />
           </div>
           <CardHeader className="pb-2">
@@ -117,7 +119,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
         </Card>
 
         <Card className="relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-2">
+          <div className="absolute end-0 top-0 p-2">
             <UserCheck className="h-4 w-4 text-green-500" />
           </div>
           <CardHeader className="pb-2">
@@ -137,7 +139,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
         </Card>
 
         <Card className="relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-2">
+          <div className="absolute end-0 top-0 p-2">
             <Clock className="h-4 w-4 text-yellow-500" />
           </div>
           <CardHeader className="pb-2">
@@ -157,7 +159,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
         </Card>
 
         <Card className="relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-2">
+          <div className="absolute end-0 top-0 p-2">
             <UserX className="h-4 w-4 text-red-500" />
           </div>
           <CardHeader className="pb-2">

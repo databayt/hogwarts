@@ -105,27 +105,26 @@
     box-shadow: none !important;
   }
 
-  /* Background colors for cells - force white for printing */
-  [class*="bg-purple-"],
-  [class*="bg-green-"],
-  [class*="bg-pink-"],
-  [class*="bg-blue-"],
-  [class*="bg-orange-"],
-  [class*="bg-yellow-"],
-  [class*="bg-rose-"],
-  [class*="bg-amber-"],
-  [class*="bg-teal-"],
-  [class*="bg-emerald-"],
-  [class*="bg-cyan-"],
-  [class*="bg-indigo-"],
-  [class*="bg-violet-"],
-  [class*="bg-lime-"],
-  [class*="bg-sky-"],
-  [class*="bg-neutral-"],
-  [class*="bg-red-"] {
-    background-color: white !important;
+  /* Preserve subject pastel colors for print legibility */
+  [class*="bg-red-100"],
+  [class*="bg-orange-100"],
+  [class*="bg-yellow-100"],
+  [class*="bg-green-100"],
+  [class*="bg-blue-100"] {
     print-color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
+  }
+
+  /* Neutral backgrounds stay white for print */
+  [class*="bg-neutral-"],
+  [class*="dark:bg-"] {
+    background-color: white !important;
+  }
+
+  /* Force logical border-e to physical border-right for print engines */
+  .border-e {
+    border-right-width: 1px !important;
+    border-right-color: #e5e5e5 !important;
   }
 
   /* Hide unnecessary elements */

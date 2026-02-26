@@ -102,6 +102,7 @@ model QuestionBank {
   catalogSubjectId String?
   catalogChapterId String?
   catalogLessonId  String?
+  catalogQuestionId String? @unique // 1:1 mirror of a CatalogQuestion
 
   // Question-specific data (JSON)
   // For MCQ/True-False: [{text: string, isCorrect: boolean, explanation?: string}]
@@ -139,6 +140,7 @@ model QuestionBank {
   catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id], onDelete: SetNull)
   catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
   catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
+  catalogQuestion CatalogQuestion? @relation("CatalogQuestionMirror", fields: [catalogQuestionId], references: [id], onDelete: SetNull)
 
   // Marking system relations
   rubrics        Rubric[]
@@ -168,6 +170,7 @@ model QuestionBank {
   @@index([schoolId, tags]) // For tag-based searches
   @@index([createdAt]) // For sorting
   @@index([schoolId, subjectId, bloomLevel]) // Composite for Bloom's taxonomy queries
+  @@index([catalogQuestionId])
   // @@fulltext([questionText]) // Full-text search on question content (not supported in PostgreSQL via Prisma)
   @@map("question_bank")
 }

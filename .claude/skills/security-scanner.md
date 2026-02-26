@@ -45,7 +45,7 @@
 
 - **Dependency Scanning**: npm audit, Snyk
 - **Version Management**: Regular updates
-- **License Compliance**: MIT compatibility
+- **License Compliance**: SSPL-1.0 compatibility
 - **Hogwarts Context**: 200+ dependencies
 
 #### A07: Authentication Failures

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useMemo, useState } from "react"
 import { type UseFormReturn } from "react-hook-form"
 
@@ -37,7 +39,6 @@ export function InformationStep({
   lang,
 }: InformationStepProps) {
   const t = dictionary
-  const isRTL = lang === "ar"
 
   // Single-language fields
   const titleField = "title" as const
@@ -65,7 +66,7 @@ export function InformationStep({
       }
     }
     loadSuggestions()
-  }, [isRTL])
+  }, [lang])
 
   // Transform suggestions to options format for autocomplete
   const titleOptions = useMemo(
@@ -92,14 +93,12 @@ export function InformationStep({
                 value={field.value ?? ""}
                 onValueChange={field.onChange}
                 options={titleOptions}
-                placeholder={
-                  isRTL ? "أدخل عنوان الإعلان" : "Enter announcement title"
-                }
+                placeholder={t?.titlePlaceholder || "Enter announcement title"}
                 disabled={isView}
-                dir={isRTL ? "rtl" : "ltr"}
+                dir={lang === "ar" ? "rtl" : "ltr"}
                 autoFocus={!isView}
-                emptyMessage={isRTL ? "لا توجد اقتراحات" : "No suggestions"}
-                groupHeading={isRTL ? "عناوين سابقة" : "Previous titles"}
+                emptyMessage={t?.noSuggestions || "No suggestions"}
+                groupHeading={t?.previousTitles || "Previous titles"}
               />
             </FormControl>
             <FormMessage />
@@ -120,16 +119,14 @@ export function InformationStep({
                 onValueChange={field.onChange}
                 options={bodyOptions}
                 placeholder={
-                  isRTL
-                    ? "أدخل محتوى الإعلان..."
-                    : "Enter announcement content..."
+                  t?.contentPlaceholder || "Enter announcement content..."
                 }
                 disabled={isView}
-                dir={isRTL ? "rtl" : "ltr"}
+                dir={lang === "ar" ? "rtl" : "ltr"}
                 isTextarea
                 rows={6}
-                emptyMessage={isRTL ? "لا توجد اقتراحات" : "No suggestions"}
-                groupHeading={isRTL ? "محتوى سابق" : "Previous content"}
+                emptyMessage={t?.noSuggestions || "No suggestions"}
+                groupHeading={t?.previousContent || "Previous content"}
               />
             </FormControl>
             <FormMessage />

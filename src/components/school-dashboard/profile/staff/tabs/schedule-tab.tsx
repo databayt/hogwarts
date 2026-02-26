@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Staff Profile Schedule Tab
  * Work schedule, meetings, and availability management
@@ -333,7 +336,7 @@ export function ScheduleTab({
                     size="sm"
                     onClick={() => navigateWeek("prev")}
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
                   </Button>
                   <span className="text-sm font-medium">
                     {format(currentWeek, "MMM dd")} -{" "}
@@ -344,7 +347,7 @@ export function ScheduleTab({
                     size="sm"
                     onClick={() => navigateWeek("next")}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                   </Button>
                 </div>
               </div>

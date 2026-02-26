@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -47,13 +50,20 @@ export default async function SiteLayout({
 
   return (
     <LoadingWrapper>
-      <div data-slot="site-layout" className="marketing-container">
+      <div
+        data-slot="site-layout"
+        className="marketing-container overflow-x-hidden"
+      >
         <SiteHeader school={school} locale={lang} />
         <main data-slot="main-content" role="main">
           {children}
         </main>
         {/* <SiteFooter /> */}
-        <Chatbot lang={lang as Locale} promptType="schoolSite" />
+        <Chatbot
+          lang={lang as Locale}
+          promptType="schoolSite"
+          subdomain={subdomain}
+        />
       </div>
     </LoadingWrapper>
   )

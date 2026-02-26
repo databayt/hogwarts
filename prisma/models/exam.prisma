@@ -720,6 +720,10 @@ model Result {
   gradedAt    DateTime
   gradedBy    String? // Teacher ID who entered the grade
 
+  // Year level for analytics grouping
+  yearLevelId String?
+  yearLevel   YearLevel? @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
+
   // Relations
   school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student    Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -738,6 +742,7 @@ model Result {
   @@index([schoolId, examId])
   @@index([schoolId, subjectId])
   @@index([schoolId, gradedAt])
+  @@index([schoolId, yearLevelId]) // For year-level analytics
   @@index([schoolId, studentId, subjectId]) // Composite for student subject results
   @@index([schoolId, classId, subjectId]) // Composite for class subject results
   @@index([percentage]) // For performance analysis

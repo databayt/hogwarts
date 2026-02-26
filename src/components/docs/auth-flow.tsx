@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import {
   ArrowDown,
@@ -173,11 +175,11 @@ function FlowStep({
       case "decision":
         return <GitBranch className="h-4 w-4" />
       case "action":
-        return <ArrowRight className="h-4 w-4" />
+        return <ArrowRight className="h-4 w-4 rtl:rotate-180" />
       case "end":
         return <Check className="h-4 w-4" />
       default:
-        return <ArrowRight className="h-4 w-4" />
+        return <ArrowRight className="h-4 w-4 rtl:rotate-180" />
     }
   }
 
@@ -200,7 +202,7 @@ function FlowStep({
     <div className="relative">
       {/* Connector line */}
       {!isLast && (
-        <div className="bg-border absolute top-12 bottom-0 left-5 w-px" />
+        <div className="bg-border absolute start-5 top-12 bottom-0 w-px" />
       )}
 
       {/* Step card */}

@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useId, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
@@ -219,7 +221,7 @@ export function AnimatedButton({
             ref={interactiveRef}
             className={cn(
               "absolute [background:radial-gradient(circle_at_center,_rgba(var(--pointer-color),_0.8)_0,_rgba(var(--pointer-color),_0)_50%)_no-repeat]",
-              "-top-1/2 -left-1/2 h-full w-full [mix-blend-mode:var(--blending-value)]",
+              "-start-1/2 -top-1/2 h-full w-full [mix-blend-mode:var(--blending-value)]",
               "pointer-events-none opacity-70"
             )}
           />

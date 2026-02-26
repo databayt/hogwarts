@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Audit role-based access control (RBAC) permissions
  * Run: npx tsx scripts/security-permissions.ts [--role TEACHER] [--dry-run]

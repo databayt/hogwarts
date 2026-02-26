@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -22,8 +24,6 @@ export function useFloorPlan() {
 
   const onSubmit = async (data: FloorPlanFormData) => {
     try {
-      console.log("School Capacity - Submitting:", data)
-
       await updateListingData({
         maxTeachers: data.teachers,
         maxStudents: data.studentCount,

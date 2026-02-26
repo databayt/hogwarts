@@ -1,11 +1,14 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 
 import {
   InvoiceHistory,
   type InvoiceItem,
 } from "@/components/billingsdk/invoice-history"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getInvoicesByRole } from "./actions"
 import type { DashboardRole } from "./resource-usage-section"
@@ -26,7 +29,13 @@ export interface InvoiceHistorySectionProps {
 // ROLE-SPECIFIC TITLES
 // ============================================================================
 
-function getHistoryTitleByRole(role: DashboardRole): string {
+function getHistoryTitleByRole(
+  role: DashboardRole,
+  dict?: Record<string, string>
+): string {
+  const roleKey = role.toLowerCase()
+  if (dict?.[roleKey]) return dict[roleKey]
+
   switch (role) {
     case "STUDENT":
       return "Fee Payments"
@@ -45,7 +54,7 @@ function getHistoryTitleByRole(role: DashboardRole): string {
     case "DEVELOPER":
       return "License Revenue"
     default:
-      return "Billing History"
+      return dict?.default || "Billing History"
   }
 }
 
@@ -325,9 +334,13 @@ export function InvoiceHistorySection({
     defaultInvoicesByRole[role] || defaultInvoicesByRole.ADMIN
   )
   const [isLoading, setIsLoading] = useState(true)
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.invoiceHistory as
+    | Record<string, string>
+    | undefined
 
   // Use provided title or derive from role
-  const title = sectionTitle || getHistoryTitleByRole(role)
+  const title = sectionTitle || getHistoryTitleByRole(role, dict)
 
   useEffect(() => {
     async function fetchData() {

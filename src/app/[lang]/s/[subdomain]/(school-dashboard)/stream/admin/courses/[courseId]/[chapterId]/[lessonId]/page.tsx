@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { getTenantContext } from "@/lib/tenant-context"
 import { LessonForm } from "@/components/stream/admin/courses/lesson/form"
 import { adminGetLesson } from "@/components/stream/data/admin/admin-get-lesson"

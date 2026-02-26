@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -73,6 +75,13 @@ export default function InquiryFormContent({
   const [isSubmitted, setIsSubmitted] = useState(false)
   const isRTL = lang === "ar"
 
+  const dict =
+    (
+      dictionary as unknown as {
+        school?: { admission?: { inquiryPage?: Record<string, string> } }
+      }
+    )?.school?.admission?.inquiryPage ?? {}
+
   const form = useForm<InquiryForm>({
     resolver: zodResolver(inquirySchema),
     defaultValues: {
@@ -107,17 +116,14 @@ export default function InquiryFormContent({
 
       if (result.success) {
         setIsSubmitted(true)
-        toast.success(
-          isRTL ? "تم إرسال استفسارك بنجاح" : "Inquiry submitted successfully"
-        )
+        toast.success(dict.inquirySubmitted || "Inquiry submitted successfully")
       } else {
         toast.error(
-          result.error ||
-            (isRTL ? "فشل في إرسال الاستفسار" : "Failed to submit inquiry")
+          result.error || dict.failedToSubmit || "Failed to submit inquiry"
         )
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في إرسال الاستفسار" : "Failed to submit inquiry")
+      toast.error(dict.failedToSubmit || "Failed to submit inquiry")
     } finally {
       setIsSubmitting(false)
     }
@@ -131,12 +137,11 @@ export default function InquiryFormContent({
             <AnthropicIcons.Sparkle className="text-primary h-10 w-10" />
           </div>
           <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
-            {isRTL ? "شكراً لتواصلك معنا!" : "Thank You for Reaching Out!"}
+            {dict.thankYou || "Thank You for Reaching Out!"}
           </h1>
           <p className="text-muted-foreground mx-auto mt-3 max-w-md leading-relaxed">
-            {isRTL
-              ? "تم استلام استفسارك وسنتواصل معك قريباً"
-              : "We've received your inquiry and will get back to you soon"}
+            {dict.inquiryReceived ||
+              "We've received your inquiry and will get back to you soon"}
           </p>
         </div>
 
@@ -144,9 +149,8 @@ export default function InquiryFormContent({
           <CardContent className="pt-6">
             <p className="text-muted-foreground text-center">
               <AnthropicIcons.Lightning className="me-2 inline h-4 w-4" />
-              {isRTL
-                ? "عادة ما نرد خلال 24-48 ساعة عمل"
-                : "We typically respond within 24-48 business hours"}
+              {dict.responseTime ||
+                "We typically respond within 24-48 business hours"}
             </p>
           </CardContent>
         </Card>
@@ -154,12 +158,12 @@ export default function InquiryFormContent({
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <Link href={`/${lang}`}>
             <Button variant="outline">
-              {isRTL ? "العودة للرئيسية" : "Back to Home"}
+              {dict.backToHome || "Back to Home"}
             </Button>
           </Link>
           <Link href={`/${lang}/apply`}>
             <Button className="group">
-              {isRTL ? "قدم الآن" : "Apply Now"}
+              {dict.applyNow || "Apply Now"}
               <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
             </Button>
           </Link>
@@ -175,24 +179,24 @@ export default function InquiryFormContent({
           <AnthropicIcons.Chat className="text-primary h-8 w-8" />
         </div>
         <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
-          {isRTL ? "تواصل معنا" : "Contact Admissions"}
+          {dict.contactAdmissions || "Contact Admissions"}
         </h1>
         <p className="text-muted-foreground mx-auto mt-3 max-w-md leading-relaxed">
-          {isRTL
-            ? `هل لديك أسئلة حول ${school.name}؟ نحن هنا للمساعدة.`
-            : `Have questions about ${school.name}? We're here to help.`}
+          {(
+            dict.contactSubtitle ||
+            "Have questions about {schoolName}? We're here to help."
+          ).replace("{schoolName}", school.name)}
         </p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            {isRTL ? "نموذج الاستفسار" : "Inquiry Form"}
+            {dict.inquiryForm || "Inquiry Form"}
           </CardTitle>
           <CardDescription>
-            {isRTL
-              ? "أخبرنا عن نفسك وسنتواصل معك قريباً"
-              : "Tell us about yourself and we'll get in touch soon"}
+            {dict.inquiryFormDesc ||
+              "Tell us about yourself and we'll get in touch soon"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -201,7 +205,7 @@ export default function InquiryFormContent({
               {/* Contact Information */}
               <div className="space-y-4">
                 <h3 className="font-medium">
-                  {isRTL ? "معلومات الاتصال" : "Contact Information"}
+                  {dict.contactInformation || "Contact Information"}
                 </h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
@@ -209,12 +213,12 @@ export default function InquiryFormContent({
                     name="parentName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{isRTL ? "اسمك" : "Your Name"} *</FormLabel>
+                        <FormLabel>{dict.yourName || "Your Name"} *</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder={
-                              isRTL ? "أدخل اسمك" : "Enter your name"
+                              dict.enterYourName || "Enter your name"
                             }
                           />
                         </FormControl>
@@ -227,9 +231,7 @@ export default function InquiryFormContent({
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          {isRTL ? "البريد الإلكتروني" : "Email"} *
-                        </FormLabel>
+                        <FormLabel>{dict.email || "Email"} *</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -248,7 +250,7 @@ export default function InquiryFormContent({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {isRTL ? "رقم الهاتف" : "Phone Number"}
+                        {dict.phoneNumber || "Phone Number"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -266,9 +268,7 @@ export default function InquiryFormContent({
               {/* Student Information */}
               <div className="space-y-4">
                 <h3 className="font-medium">
-                  {isRTL
-                    ? "معلومات الطالب (اختياري)"
-                    : "Student Information (Optional)"}
+                  {dict.studentInfoOptional || "Student Information (Optional)"}
                 </h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
@@ -277,13 +277,13 @@ export default function InquiryFormContent({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          {isRTL ? "اسم الطالب" : "Student Name"}
+                          {dict.studentName || "Student Name"}
                         </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder={
-                              isRTL ? "أدخل اسم الطالب" : "Enter student name"
+                              dict.enterStudentName || "Enter student name"
                             }
                           />
                         </FormControl>
@@ -297,9 +297,7 @@ export default function InquiryFormContent({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          {isRTL
-                            ? "تاريخ ميلاد الطالب"
-                            : "Student Date of Birth"}
+                          {dict.studentDOB || "Student Date of Birth"}
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="date" />
@@ -315,7 +313,7 @@ export default function InquiryFormContent({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {isRTL ? "الصف المهتم به" : "Interested Grade"}
+                        {dict.interestedGrade || "Interested Grade"}
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -324,7 +322,7 @@ export default function InquiryFormContent({
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue
-                              placeholder={isRTL ? "اختر الصف" : "Select grade"}
+                              placeholder={dict.selectGrade || "Select grade"}
                             />
                           </SelectTrigger>
                         </FormControl>
@@ -349,14 +347,14 @@ export default function InquiryFormContent({
                   name="message"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{isRTL ? "رسالتك" : "Your Message"}</FormLabel>
+                      <FormLabel>
+                        {dict.yourMessage || "Your Message"}
+                      </FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
                           placeholder={
-                            isRTL
-                              ? "اكتب استفسارك هنا..."
-                              : "Write your inquiry here..."
+                            dict.writeInquiry || "Write your inquiry here..."
                           }
                           rows={4}
                         />
@@ -374,13 +372,13 @@ export default function InquiryFormContent({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {isRTL ? "كيف سمعت عنا؟" : "How did you hear about us?"}
+                      {dict.howHeard || "How did you hear about us?"}
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue
-                            placeholder={isRTL ? "اختر" : "Select"}
+                            placeholder={dict.selectOption || "Select"}
                           />
                         </SelectTrigger>
                       </FormControl>
@@ -411,9 +409,8 @@ export default function InquiryFormContent({
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="font-normal">
-                        {isRTL
-                          ? "أرغب في تلقي التحديثات والأخبار"
-                          : "I'd like to receive updates and news"}
+                        {dict.receiveUpdates ||
+                          "I'd like to receive updates and news"}
                       </FormLabel>
                     </div>
                   </FormItem>
@@ -428,12 +425,12 @@ export default function InquiryFormContent({
                 {isSubmitting ? (
                   <>
                     <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
-                    {isRTL ? "جارٍ الإرسال..." : "Submitting..."}
+                    {dict.submitting || "Submitting..."}
                   </>
                 ) : (
                   <>
                     <AnthropicIcons.Sparkle className="me-2 h-4 w-4" />
-                    {isRTL ? "إرسال الاستفسار" : "Submit Inquiry"}
+                    {dict.submitInquiry || "Submit Inquiry"}
                   </>
                 )}
               </Button>
@@ -449,7 +446,7 @@ export default function InquiryFormContent({
             <AnthropicIcons.Checklist className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
             <div className="flex-1">
               <h3 className="mb-4 font-medium">
-                {isRTL ? "روابط سريعة" : "Quick Links"}
+                {dict.quickLinks || "Quick Links"}
               </h3>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Link href={`/${lang}/apply`}>
@@ -458,7 +455,7 @@ export default function InquiryFormContent({
                     className="group w-full justify-start"
                   >
                     <AnthropicIcons.Book className="me-2 h-4 w-4" />
-                    {isRTL ? "قدم طلب التحاق" : "Apply Now"}
+                    {dict.applyForAdmission || "Apply Now"}
                     <AnthropicIcons.ArrowRight className="ms-auto h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
                   </Button>
                 </Link>
@@ -468,7 +465,7 @@ export default function InquiryFormContent({
                     className="group w-full justify-start"
                   >
                     <AnthropicIcons.CalendarChart className="me-2 h-4 w-4" />
-                    {isRTL ? "حجز جولة" : "Schedule a Tour"}
+                    {dict.scheduleTour || "Schedule a Tour"}
                     <AnthropicIcons.ArrowRight className="ms-auto h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
                   </Button>
                 </Link>

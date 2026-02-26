@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useTransition } from "react"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useCallback, useRef, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -34,9 +36,11 @@ export function CapacityForm({
     defaultValues: {
       studentCount: initialData?.studentCount || 400,
       teachers: initialData?.teachers || 10,
-      classrooms: initialData?.classrooms || 10,
+      classrooms: initialData?.classrooms || 20,
     },
   })
+
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleSubmit = (data: CapacityFormData) => {
     startTransition(async () => {
@@ -60,14 +64,26 @@ export function CapacityForm({
     })
   }
 
+  const debouncedSave = useCallback(
+    (data: CapacityFormData) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        handleSubmit(data)
+      }, 500)
+    },
+    [] // handleSubmit is stable within the component
+  )
+
   const updateField = (field: keyof CapacityFormData, delta: number) => {
     const currentValue = form.getValues(field)
     const newValue = Math.max(1, currentValue + delta)
     form.setValue(field, newValue)
 
-    // Auto-save on change
+    // Debounced auto-save
     const updatedData = form.getValues()
-    handleSubmit(updatedData)
+    debouncedSave(updatedData)
   }
 
   const formatNumber = (num: number): string => {

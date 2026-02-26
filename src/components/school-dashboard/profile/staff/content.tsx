@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Staff Profile Content Component
  * Comprehensive staff member profile with administrative features
@@ -359,7 +362,7 @@ export function StaffProfileContent({
                   </span>
                 )}
                 {activeTab === tab.id && (
-                  <span className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
+                  <span className="bg-primary absolute start-0 end-0 bottom-0 h-0.5" />
                 )}
               </button>
             ))}

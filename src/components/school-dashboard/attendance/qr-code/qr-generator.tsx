@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import {
@@ -216,7 +218,7 @@ export function QRGenerator({
             {config.preventScreenshot && (
               <div className="pointer-events-none absolute inset-0 z-10">
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/10" />
-                <div className="absolute top-4 right-4">
+                <div className="absolute end-4 top-4">
                   <Badge variant="outline" className="bg-background">
                     <Shield className="me-1 h-3 w-3" />
                     Protected
@@ -425,7 +427,7 @@ export function QRGenerator({
               onClick={(e) => e.stopPropagation()}
             >
               <Button
-                className="absolute top-0 right-0"
+                className="absolute end-0 top-0"
                 variant="ghost"
                 size="icon"
                 onClick={toggleFullscreen}

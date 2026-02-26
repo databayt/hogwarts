@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState, useTransition } from "react"
 import {
   AlertCircle,
@@ -48,7 +50,6 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -95,6 +96,21 @@ type SchoolYear = { id: string; name: string; isCurrent: boolean }
 
 export default function TimetableSettingsContent({ dictionary, lang }: Props) {
   const d = dictionary?.timetable
+  const getDayLabel = (value: number, label: string) => {
+    const dayKeys = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ]
+    return (
+      (d?.settings as Record<string, string> | undefined)?.[dayKeys[value]] ||
+      label
+    )
+  }
   const { toast } = useToast()
 
   const [isPending, startTransition] = useTransition()
@@ -202,7 +218,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
         workingDays,
         defaultLunchAfterPeriod: lunchAfterPeriod,
       })
-      setSuccess("Settings saved successfully")
+      setSuccess(d?.settings?.settingsSaved || "Settings saved successfully")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save settings")
     } finally {
@@ -228,8 +244,10 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
 
     if (!selectedYearId) {
       toast({
-        title: "Select School Year",
-        description: "Please select a school year first",
+        title: d?.settings?.selectSchoolYear || "Select School Year",
+        description:
+          d?.settings?.selectSchoolYearFirst ||
+          "Please select a school year first",
         variant: "destructive",
       })
       return
@@ -243,7 +261,10 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
         endTime: newPeriod.endTime,
       })
 
-      toast({ title: "Period Created", description: `${newPeriod.name} added` })
+      toast({
+        title: d?.settings?.createPeriod || "Period Created",
+        description: `${newPeriod.name} added`,
+      })
       setNewPeriod({ name: "", startTime: "", endTime: "" })
       setIsAddingPeriod(false)
       loadConfig()
@@ -267,7 +288,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
         endTime: formatTime(editingPeriod.endTime),
       })
 
-      toast({ title: "Period Updated" })
+      toast({ title: d?.settings?.editPeriod || "Period Updated" })
       setEditingPeriod(null)
       loadConfig()
     } catch (err) {
@@ -312,7 +333,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       })
 
       toast({
-        title: "Periods Copied",
+        title: d?.settings?.periodCopied || "Periods Copied",
         description: `${result.copiedCount} copied, ${result.skippedCount} skipped`,
       })
       setIsCopyDialogOpen(false)
@@ -328,8 +349,10 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
   const handleApplyStructure = async (slug: string) => {
     if (!selectedYearId) {
       toast({
-        title: "Select School Year",
-        description: "Please select a school year first",
+        title: d?.settings?.selectSchoolYear || "Select School Year",
+        description:
+          d?.settings?.selectSchoolYearFirst ||
+          "Please select a school year first",
         variant: "destructive",
       })
       return
@@ -343,7 +366,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       })
 
       toast({
-        title: "Structure Applied",
+        title: d?.settings?.structureApplied || "Structure Applied",
         description: `Created ${result.createdCount} periods`,
       })
       setIsTemplateDialogOpen(false)
@@ -376,10 +399,12 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <div className="flex flex-col gap-2">
-              <Label>Term</Label>
+              <Label>{d?.settings?.term || "Term"}</Label>
               <Select value={selectedTerm} onValueChange={setSelectedTerm}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select term" />
+                  <SelectValue
+                    placeholder={d?.settings?.selectTerm || "Select term"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {terms.map((term) => (
@@ -392,15 +417,21 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>School Year (for periods)</Label>
+              <Label>
+                {d?.settings?.schoolYear || "School Year (for periods)"}
+              </Label>
               <Select value={selectedYearId} onValueChange={setSelectedYearId}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select year" />
+                  <SelectValue
+                    placeholder={d?.settings?.selectYear || "Select year"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {schoolYears.map((year) => (
                     <SelectItem key={year.id} value={year.id}>
-                      {year.name} {year.isCurrent && "(Current)"}
+                      {year.name}{" "}
+                      {year.isCurrent &&
+                        `(${d?.settings?.current || "Current"})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -417,7 +448,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                 <RefreshCw
                   className={cn("me-2 h-4 w-4", isPending && "animate-spin")}
                 />
-                Refresh
+                {d?.settings?.refresh || "Refresh"}
               </Button>
             </div>
           </div>
@@ -457,47 +488,46 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Calendar className="h-5 w-5" />
-                Working Days
+                {d?.settings?.workingDays || "Working Days"}
               </CardTitle>
               <CardDescription>
-                Select which days of the week have scheduled classes
+                {d?.settings?.workingDaysDesc ||
+                  "Select which days of the week have scheduled classes"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-wrap gap-2">
                 {DAY_LABELS.map((day) => (
-                  <div
+                  <button
                     key={day.value}
-                    className="bg-muted flex items-center justify-between rounded-lg p-3"
+                    type="button"
+                    onClick={() => toggleDay(day.value)}
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-full border-2 text-sm font-medium transition-all",
+                      workingDays.includes(day.value)
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-muted-foreground/20 bg-muted text-muted-foreground hover:border-primary/50"
+                    )}
                   >
-                    <Label
-                      htmlFor={`day-${day.value}`}
-                      className="cursor-pointer"
-                    >
-                      {day.label}
-                    </Label>
-                    <Switch
-                      id={`day-${day.value}`}
-                      checked={workingDays.includes(day.value)}
-                      onCheckedChange={() => toggleDay(day.value)}
-                    />
-                  </div>
+                    {getDayLabel(day.value, day.label).slice(0, 3)}
+                  </button>
                 ))}
               </div>
 
               <div className="border-t pt-4">
                 <p className="text-muted-foreground text-sm">
-                  <strong>Active:</strong>{" "}
+                  <strong>{d?.settings?.active || "Active"}:</strong>{" "}
                   {workingDays.length > 0
                     ? workingDays
-                        .map((d) =>
-                          DAY_LABELS.find((l) => l.value === d)?.label.slice(
-                            0,
-                            3
-                          )
+                        .map((dayVal) =>
+                          getDayLabel(
+                            dayVal,
+                            DAY_LABELS.find((l) => l.value === dayVal)?.label ||
+                              ""
+                          ).slice(0, 3)
                         )
                         .join(", ")
-                    : "No days selected"}
+                    : d?.settings?.noDaysSelected || "No days selected"}
                 </p>
               </div>
             </CardContent>
@@ -508,15 +538,18 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Clock className="h-5 w-5" />
-                Break & Lunch
+                {d?.settings?.breakAndLunch || "Break & Lunch"}
               </CardTitle>
               <CardDescription>
-                Configure when lunch break occurs in the schedule
+                {d?.settings?.breakAndLunchDesc ||
+                  "Configure when lunch break occurs in the schedule"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
-                <Label>Lunch After Period</Label>
+                <Label>
+                  {d?.settings?.lunchAfterPeriod || "Lunch After Period"}
+                </Label>
                 <Select
                   value={lunchAfterPeriod?.toString() || "none"}
                   onValueChange={(val) =>
@@ -524,20 +557,25 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select period" />
+                    <SelectValue
+                      placeholder={d?.settings?.selectPeriod || "Select period"}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No lunch break</SelectItem>
+                    <SelectItem value="none">
+                      {d?.settings?.noLunchBreak || "No lunch break"}
+                    </SelectItem>
                     {teachingPeriods.map((period, idx) => (
                       <SelectItem key={period.id} value={(idx + 1).toString()}>
-                        After Period {idx + 1}
+                        {(d?.settings?.afterPeriod || "After Period") + " "}
+                        {idx + 1}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground text-sm">
-                  The lunch break will appear after the selected period in the
-                  timetable grid
+                  {d?.settings?.lunchBreakDesc ||
+                    "The lunch break will appear after the selected period in the timetable grid"}
                 </p>
               </div>
             </CardContent>
@@ -550,10 +588,11 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                 <div>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Clock className="h-5 w-5" />
-                    Period Schedule
+                    {d?.settings?.periodSchedule || "Period Schedule"}
                   </CardTitle>
                   <CardDescription>
-                    Manage periods for the selected school year
+                    {d?.settings?.managePeriods ||
+                      "Manage periods for the selected school year"}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -569,24 +608,28 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                         disabled={!selectedYearId}
                       >
                         <Clock className="me-2 h-4 w-4" />
-                        Use Template
+                        {d?.settings?.useTemplate || "Use Template"}
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Create from Template</DialogTitle>
+                        <DialogTitle>
+                          {d?.settings?.createFromTemplate ||
+                            "Create from Template"}
+                        </DialogTitle>
                         <DialogDescription>
-                          Choose a template to create standard periods
+                          {d?.settings?.chooseTemplate ||
+                            "Choose a template to create standard periods"}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         {periods.length > 0 && (
                           <Alert>
                             <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Warning</AlertTitle>
+                            <AlertTitle>{"Warning"}</AlertTitle>
                             <AlertDescription>
-                              This will replace all existing periods for this
-                              year.
+                              {d?.settings?.replaceWarning ||
+                                "This will replace all existing periods for this year."}
                             </AlertDescription>
                           </Alert>
                         )}
@@ -604,7 +647,9 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                                 <div className="flex items-center gap-2">
                                   <strong>{structure.nameEn}</strong>
                                   {structure.isDefault && (
-                                    <Badge variant="secondary">Default</Badge>
+                                    <Badge variant="secondary">
+                                      {d?.settings?.default || "Default"}
+                                    </Badge>
                                   )}
                                 </div>
                                 <span className="text-muted-foreground text-xs">
@@ -633,26 +678,37 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                         disabled={periods.length === 0}
                       >
                         <Copy className="me-2 h-4 w-4" />
-                        Copy to Year
+                        {d?.settings?.copyToYear || "Copy to Year"}
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Copy Periods to Another Year</DialogTitle>
+                        <DialogTitle>
+                          {d?.settings?.copyPeriodsTitle ||
+                            "Copy Periods to Another Year"}
+                        </DialogTitle>
                         <DialogDescription>
-                          Copy all periods from current year to another school
-                          year
+                          {d?.settings?.copyPeriodsDesc ||
+                            "Copy all periods from current year to another school year"}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label>Target School Year</Label>
+                          <Label>
+                            {d?.settings?.targetSchoolYear ||
+                              "Target School Year"}
+                          </Label>
                           <Select
                             value={copyTargetYearId}
                             onValueChange={setCopyTargetYearId}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select target year" />
+                              <SelectValue
+                                placeholder={
+                                  d?.settings?.selectTargetYear ||
+                                  "Select target year"
+                                }
+                              />
                             </SelectTrigger>
                             <SelectContent>
                               {schoolYears
@@ -671,13 +727,13 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                           variant="outline"
                           onClick={() => setIsCopyDialogOpen(false)}
                         >
-                          Cancel
+                          {d?.settings?.cancel || "Cancel"}
                         </Button>
                         <Button
                           onClick={handleCopyPeriods}
                           disabled={!copyTargetYearId}
                         >
-                          Copy Periods
+                          {d?.settings?.copyPeriods || "Copy Periods"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -691,21 +747,29 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                     <DialogTrigger asChild>
                       <Button size="sm" disabled={!selectedYearId}>
                         <Plus className="me-2 h-4 w-4" />
-                        Add Period
+                        {d?.settings?.addPeriod || "Add Period"}
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Add New Period</DialogTitle>
+                        <DialogTitle>
+                          {d?.settings?.addNewPeriod || "Add New Period"}
+                        </DialogTitle>
                         <DialogDescription>
-                          Create a new period for the schedule
+                          {d?.settings?.createNewPeriod ||
+                            "Create a new period for the schedule"}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label>Period Name</Label>
+                          <Label>
+                            {d?.settings?.periodName || "Period Name"}
+                          </Label>
                           <Input
-                            placeholder="e.g., Period 1, Break, Lunch"
+                            placeholder={
+                              d?.settings?.periodNamePlaceholder ||
+                              "e.g., Period 1, Break, Lunch"
+                            }
                             value={newPeriod.name}
                             onChange={(e) =>
                               setNewPeriod({
@@ -717,7 +781,9 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>Start Time</Label>
+                            <Label>
+                              {d?.settings?.startTime || "Start Time"}
+                            </Label>
                             <Input
                               type="time"
                               value={newPeriod.startTime}
@@ -730,7 +796,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label>End Time</Label>
+                            <Label>{d?.settings?.endTime || "End Time"}</Label>
                             <Input
                               type="time"
                               value={newPeriod.endTime}
@@ -749,9 +815,11 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                           variant="outline"
                           onClick={() => setIsAddingPeriod(false)}
                         >
-                          Cancel
+                          {d?.settings?.cancel || "Cancel"}
                         </Button>
-                        <Button onClick={handleAddPeriod}>Create Period</Button>
+                        <Button onClick={handleAddPeriod}>
+                          {d?.settings?.createPeriod || "Create Period"}
+                        </Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
@@ -762,9 +830,13 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
               {periods.length === 0 ? (
                 <div className="text-muted-foreground flex flex-col items-center justify-center py-12">
                   <Clock className="mb-4 h-12 w-12 opacity-50" />
-                  <p>No periods configured for this year</p>
+                  <p>
+                    {d?.settings?.noPeriodsConfigured ||
+                      "No periods configured for this year"}
+                  </p>
                   <p className="text-sm">
-                    Add periods manually or use a template
+                    {d?.settings?.addPeriodsOrTemplate ||
+                      "Add periods manually or use a template"}
                   </p>
                 </div>
               ) : (
@@ -793,7 +865,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                               : "bg-primary text-primary-foreground"
                           )}
                           style={{
-                            left: `${Math.max(0, leftPercent)}%`,
+                            insetInlineStart: `${Math.max(0, leftPercent)}%`,
                             width: `${widthPercent}%`,
                           }}
                           title={`${period.name}: ${formatTime(period.startTime)} - ${formatTime(period.endTime)}`}
@@ -805,17 +877,29 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                       )
                     })}
                     {/* Time markers */}
-                    <div className="text-muted-foreground absolute bottom-0 left-0 w-full text-[10px]">
-                      <span className="absolute" style={{ left: "0%" }}>
+                    <div className="text-muted-foreground absolute start-0 bottom-0 w-full text-[10px]">
+                      <span
+                        className="absolute"
+                        style={{ insetInlineStart: "0%" }}
+                      >
                         6AM
                       </span>
-                      <span className="absolute" style={{ left: "25%" }}>
+                      <span
+                        className="absolute"
+                        style={{ insetInlineStart: "25%" }}
+                      >
                         10AM
                       </span>
-                      <span className="absolute" style={{ left: "50%" }}>
+                      <span
+                        className="absolute"
+                        style={{ insetInlineStart: "50%" }}
+                      >
                         2PM
                       </span>
-                      <span className="absolute" style={{ left: "75%" }}>
+                      <span
+                        className="absolute"
+                        style={{ insetInlineStart: "75%" }}
+                      >
                         6PM
                       </span>
                     </div>
@@ -840,7 +924,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                           <div className="flex items-center gap-1">
                             {period.isBreak && (
                               <Badge variant="secondary" className="text-xs">
-                                Break
+                                {d?.break || "Break"}
                               </Badge>
                             )}
                             <Button
@@ -884,12 +968,14 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Period</DialogTitle>
+            <DialogTitle>
+              {d?.settings?.editPeriod || "Edit Period"}
+            </DialogTitle>
           </DialogHeader>
           {editingPeriod && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Period Name</Label>
+                <Label>{d?.settings?.periodName || "Period Name"}</Label>
                 <Input
                   value={editingPeriod.name}
                   onChange={(e) =>
@@ -899,7 +985,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Start Time</Label>
+                  <Label>{d?.settings?.startTime || "Start Time"}</Label>
                   <Input
                     type="time"
                     value={formatTime(editingPeriod.startTime)}
@@ -912,7 +998,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>End Time</Label>
+                  <Label>{d?.settings?.endTime || "End Time"}</Label>
                   <Input
                     type="time"
                     value={formatTime(editingPeriod.endTime)}
@@ -929,9 +1015,11 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingPeriod(null)}>
-              Cancel
+              {d?.settings?.cancel || "Cancel"}
             </Button>
-            <Button onClick={handleUpdatePeriod}>Save Changes</Button>
+            <Button onClick={handleUpdatePeriod}>
+              {d?.settings?.saveChanges || "Save Changes"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -943,12 +1031,12 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
             {isSaving ? (
               <>
                 <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                Saving...
+                {d?.settings?.saving || "Saving..."}
               </>
             ) : (
               <>
                 <Save className="me-2 h-4 w-4" />
-                Save Settings
+                {d?.settings?.saveSettings || "Save Settings"}
               </>
             )}
           </Button>
@@ -959,7 +1047,10 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       {!selectedTerm && !isPending && (
         <div className="text-muted-foreground py-12 text-center">
           <Settings className="mx-auto mb-4 h-12 w-12 opacity-50" />
-          <p>Select a term to configure settings</p>
+          <p>
+            {d?.settings?.selectTermToConfigure ||
+              "Select a term to configure settings"}
+          </p>
         </div>
       )}
     </div>

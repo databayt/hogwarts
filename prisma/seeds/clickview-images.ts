@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * ClickView Images Seed
  *
@@ -91,7 +94,7 @@ async function processBanners(prisma: PrismaClient): Promise<void> {
       system: "clickview",
       OR: [{ bannerUrl: null }, { bannerUrl: { startsWith: "/" } }],
     },
-    select: { id: true, slug: true, name: true },
+    select: { id: true, slug: true, name: true, imageKey: true },
   })
 
   if (subjects.length === 0) {
@@ -106,7 +109,14 @@ async function processBanners(prisma: PrismaClient): Promise<void> {
   for (const subject of subjects) {
     if (!fs.existsSync(BANNERS_DIR)) continue
 
-    const bannerPath = path.join(BANNERS_DIR, `${subject.slug}.jpg`)
+    // Try grade-specific slug first, then legacy slug from imageKey
+    let bannerPath = path.join(BANNERS_DIR, `${subject.slug}.jpg`)
+    if (!fs.existsSync(bannerPath)) {
+      const legacySlug = extractLegacySlug(subject.imageKey)
+      if (legacySlug) {
+        bannerPath = path.join(BANNERS_DIR, `${legacySlug}.jpg`)
+      }
+    }
     if (!fs.existsSync(bannerPath)) {
       console.log(`  Skipped banner ${subject.slug} (no local file)`)
       continue
@@ -132,32 +142,52 @@ async function processBanners(prisma: PrismaClient): Promise<void> {
 }
 
 /**
+ * Extract the legacy slug from an imageKey path.
+ * "/clickview/illustrations/elementary-math.jpg" → "elementary-math"
+ */
+function extractLegacySlug(imageKey: string | null): string | null {
+  if (!imageKey) return null
+  const match = imageKey.match(
+    /\/clickview\/(?:illustrations|banners)\/([^.]+)\.jpg$/
+  )
+  return match?.[1] ?? null
+}
+
+/**
+ * Try finding an image file by slug in illustrations and banners dirs.
+ */
+function trySlugPaths(slug: string): string | null {
+  if (fs.existsSync(ILLUSTRATIONS_DIR)) {
+    const p = path.join(ILLUSTRATIONS_DIR, `${slug}.jpg`)
+    if (fs.existsSync(p)) return p
+  }
+  if (fs.existsSync(BANNERS_DIR)) {
+    const p = path.join(BANNERS_DIR, `${slug}.jpg`)
+    if (fs.existsSync(p)) return p
+  }
+  return null
+}
+
+/**
  * Find the best available local image file for a subject.
- * Priority: illustration → banner → imageKey local file
+ * Priority: current slug → legacy slug from imageKey → imageKey local file
  */
 function findImageFile(slug: string, imageKey: string | null): string | null {
-  // 1. Check illustration directory (discover page cover images)
-  if (fs.existsSync(ILLUSTRATIONS_DIR)) {
-    const illustrationPath = path.join(ILLUSTRATIONS_DIR, `${slug}.jpg`)
-    if (fs.existsSync(illustrationPath)) {
-      return illustrationPath
-    }
+  // 1. Try by current slug (works for legacy subjects)
+  const bySlug = trySlugPaths(slug)
+  if (bySlug) return bySlug
+
+  // 2. Try by legacy slug extracted from imageKey
+  const legacySlug = extractLegacySlug(imageKey)
+  if (legacySlug && legacySlug !== slug) {
+    const byLegacy = trySlugPaths(legacySlug)
+    if (byLegacy) return byLegacy
   }
 
-  // 2. Check banner directory
-  if (fs.existsSync(BANNERS_DIR)) {
-    const bannerPath = path.join(BANNERS_DIR, `${slug}.jpg`)
-    if (fs.existsSync(bannerPath)) {
-      return bannerPath
-    }
-  }
-
-  // 3. Check if imageKey points to a local file
+  // 3. Check if imageKey points to a local file directly
   if (imageKey && imageKey.startsWith("/")) {
     const localPath = path.resolve(__dirname, "../..", `public${imageKey}`)
-    if (fs.existsSync(localPath)) {
-      return localPath
-    }
+    if (fs.existsSync(localPath)) return localPath
   }
 
   return null

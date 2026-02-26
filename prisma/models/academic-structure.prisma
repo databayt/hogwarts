@@ -48,9 +48,11 @@ model AcademicGrade {
   school            School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   level             AcademicLevel            @relation(fields: [levelId], references: [id], onDelete: Cascade)
   yearLevel         YearLevel?               @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
-  streams           AcademicStream[]
-  subjectSelections SchoolSubjectSelection[]
-  classes           Class[]
+  streams            AcademicStream[]
+  subjectSelections  SchoolSubjectSelection[]
+  classes            Class[]
+  bookSelections     SchoolBookSelection[]
+  students           Student[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

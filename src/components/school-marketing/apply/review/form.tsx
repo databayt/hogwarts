@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useImperativeHandle } from "react"
 import { useParams } from "next/navigation"
 import { Phone, User, Users } from "lucide-react"
@@ -18,13 +20,20 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
   ({ onSuccess, dictionary }, ref) => {
     const params = useParams()
     const subdomain = params.subdomain as string
-    const campaignId = params.campaignId as string
+    const campaignId = params.id as string
     const { locale: lang } = useLocale()
     const isRTL = lang === "ar"
     const { session, campaign } = useApplySession()
 
     const dict = ((dictionary as Record<string, Record<string, string>> | null)
       ?.apply?.review ?? {}) as Record<string, string>
+
+    const formDict =
+      (
+        dictionary as unknown as {
+          school?: { admission?: { formSteps?: Record<string, string> } }
+        }
+      )?.school?.admission?.formSteps ?? {}
 
     const { personal, contact, guardian, academic, documents } =
       session.formData
@@ -77,7 +86,7 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Icons.checkCircle className="text-primary h-5 w-5" />
-                {dict.applyingFor || (isRTL ? "التقديم لـ" : "Applying For")}
+                {dict.applyingFor || "Applying For"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -101,28 +110,27 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <User className="text-primary h-5 w-5" />
-              {dict.personalInfo ||
-                (isRTL ? "المعلومات الشخصية" : "Personal Information")}
+              {dict.personalInfo || "Personal Information"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
             {renderField(
-              isRTL ? "الاسم الكامل" : "Full Name",
+              formDict.name || "Full Name",
               [personal?.firstName, personal?.middleName, personal?.lastName]
                 .filter(Boolean)
                 .join(" ")
             )}
             {renderField(
-              isRTL ? "تاريخ الميلاد" : "Date of Birth",
+              formDict.dateOfBirth || "Date of Birth",
               personal?.dateOfBirth
             )}
-            {renderField(isRTL ? "الجنس" : "Gender", personal?.gender)}
+            {renderField(formDict.gender || "Gender", personal?.gender)}
             {renderField(
-              isRTL ? "الجنسية" : "Nationality",
+              formDict.nationality || "Nationality",
               personal?.nationality
             )}
             {personal?.religion &&
-              renderField(isRTL ? "الديانة" : "Religion", personal.religion)}
+              renderField(formDict.religion || "Religion", personal.religion)}
           </CardContent>
         </Card>
 
@@ -131,23 +139,22 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Phone className="text-primary h-5 w-5" />
-              {dict.contactInfo ||
-                (isRTL ? "معلومات الاتصال" : "Contact Information")}
+              {dict.contactInfo || "Contact Information"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
-            {renderField(isRTL ? "البريد الإلكتروني" : "Email", contact?.email)}
-            {renderField(isRTL ? "الهاتف" : "Phone", contact?.phone)}
+            {renderField(formDict.emailAddress || "Email", contact?.email)}
+            {renderField(formDict.phone || "Phone", contact?.phone)}
             {contact?.alternatePhone &&
               renderField(
-                isRTL ? "هاتف بديل" : "Alternate Phone",
+                formDict.alternatePhone || "Alternate Phone",
                 contact.alternatePhone
               )}
             <Separator className="my-2" />
-            {renderField(isRTL ? "العنوان" : "Address", contact?.address)}
-            {renderField(isRTL ? "المدينة" : "City", contact?.city)}
-            {renderField(isRTL ? "الولاية" : "State", contact?.state)}
-            {renderField(isRTL ? "الدولة" : "Country", contact?.country)}
+            {renderField(formDict.address || "Address", contact?.address)}
+            {renderField(formDict.city || "City", contact?.city)}
+            {renderField(formDict.stateProvince || "State", contact?.state)}
+            {renderField(formDict.country || "Country", contact?.country)}
           </CardContent>
         </Card>
 
@@ -156,37 +163,36 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Users className="text-primary h-5 w-5" />
-              {dict.guardianInfo ||
-                (isRTL ? "معلومات ولي الأمر" : "Guardian Information")}
+              {dict.guardianInfo || "Guardian Information"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <p className="text-muted-foreground mb-2 text-sm font-medium">
-                {isRTL ? "الأب" : "Father"}
+                {formDict.father || "Father"}
               </p>
-              {renderField(isRTL ? "الاسم" : "Name", guardian?.fatherName)}
+              {renderField(formDict.name || "Name", guardian?.fatherName)}
               {guardian?.fatherOccupation &&
                 renderField(
-                  isRTL ? "المهنة" : "Occupation",
+                  formDict.occupation || "Occupation",
                   guardian.fatherOccupation
                 )}
               {guardian?.fatherPhone &&
-                renderField(isRTL ? "الهاتف" : "Phone", guardian.fatherPhone)}
+                renderField(formDict.phone || "Phone", guardian.fatherPhone)}
             </div>
             <Separator />
             <div>
               <p className="text-muted-foreground mb-2 text-sm font-medium">
-                {isRTL ? "الأم" : "Mother"}
+                {formDict.mother || "Mother"}
               </p>
-              {renderField(isRTL ? "الاسم" : "Name", guardian?.motherName)}
+              {renderField(formDict.name || "Name", guardian?.motherName)}
               {guardian?.motherOccupation &&
                 renderField(
-                  isRTL ? "المهنة" : "Occupation",
+                  formDict.occupation || "Occupation",
                   guardian.motherOccupation
                 )}
               {guardian?.motherPhone &&
-                renderField(isRTL ? "الهاتف" : "Phone", guardian.motherPhone)}
+                renderField(formDict.phone || "Phone", guardian.motherPhone)}
             </div>
           </CardContent>
         </Card>
@@ -196,28 +202,27 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Icons.graduationCap className="text-primary h-5 w-5" />
-              {dict.academicInfo ||
-                (isRTL ? "المعلومات الأكاديمية" : "Academic Information")}
+              {dict.academicInfo || "Academic Information"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
             {renderField(
-              isRTL ? "الصف المتقدم إليه" : "Applying for Class",
+              formDict.gradeApplyingFor || "Applying for Class",
               academic?.applyingForClass
             )}
             {academic?.previousSchool &&
               renderField(
-                isRTL ? "المدرسة السابقة" : "Previous School",
+                formDict.previousSchool || "Previous School",
                 academic.previousSchool
               )}
             {academic?.previousClass &&
               renderField(
-                isRTL ? "الصف السابق" : "Previous Class",
+                formDict.previousClass || "Previous Class",
                 academic.previousClass
               )}
             {academic?.preferredStream &&
               renderField(
-                isRTL ? "المسار" : "Stream",
+                formDict.stream || "Stream",
                 academic.preferredStream
               )}
           </CardContent>
@@ -228,19 +233,19 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Icons.fileText className="text-primary h-5 w-5" />
-              {dict.documents || (isRTL ? "المستندات" : "Documents")}
+              {dict.documents || "Documents"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {documents?.photoUrl && (
                 <Badge variant="secondary">
-                  {isRTL ? "الصورة الشخصية" : "Photo"} ✓
+                  {formDict.passportPhoto || "Photo"} ✓
                 </Badge>
               )}
               {documents?.signatureUrl && (
                 <Badge variant="secondary">
-                  {isRTL ? "التوقيع" : "Signature"} ✓
+                  {formDict.signature || "Signature"} ✓
                 </Badge>
               )}
               {documents?.documents?.map((doc, i) => (
@@ -252,8 +257,7 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
                 !documents?.signatureUrl &&
                 (!documents?.documents || documents.documents.length === 0) && (
                   <span className="text-muted-foreground text-sm">
-                    {dict.noDocuments ||
-                      (isRTL ? "لم يتم رفع مستندات" : "No documents uploaded")}
+                    {dict.noDocuments || "No documents uploaded"}
                   </span>
                 )}
             </div>

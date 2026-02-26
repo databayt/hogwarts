@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useTransition } from "react"
 import {
   ArrowRight,
@@ -116,10 +118,14 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
           {/* Filters */}
           <div className="flex flex-wrap gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Term</label>
+              <label className="text-sm font-medium">
+                {d?.conflicts?.term || "Term"}
+              </label>
               <Select value={selectedTerm} onValueChange={setSelectedTerm}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select term" />
+                  <SelectValue
+                    placeholder={d?.conflicts?.selectTerm || "Select term"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {terms.map((term) => (
@@ -141,7 +147,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                 <RefreshCw
                   className={cn("me-2 h-4 w-4", isPending && "animate-spin")}
                 />
-                Scan for Conflicts
+                {d?.conflicts?.scanForConflicts || "Scan for Conflicts"}
               </Button>
             </div>
           </div>
@@ -181,10 +187,12 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                       <CircleCheck className="h-6 w-6 text-green-600" />
                       <div>
                         <h3 className="font-semibold text-green-800 dark:text-green-200">
-                          No Conflicts Found
+                          {d?.conflicts?.noConflictsFound ||
+                            "No Conflicts Found"}
                         </h3>
                         <p className="text-sm text-green-600 dark:text-green-400">
-                          The timetable has no scheduling conflicts
+                          {d?.conflicts?.noConflictsDesc ||
+                            "The timetable has no scheduling conflicts"}
                         </p>
                       </div>
                     </>
@@ -193,13 +201,16 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                       <TriangleAlert className="h-6 w-6 text-red-600" />
                       <div>
                         <h3 className="font-semibold text-red-800 dark:text-red-200">
-                          {conflicts.length} Conflict
-                          {conflicts.length > 1 ? "s" : ""} Detected
+                          {conflicts.length}{" "}
+                          {d?.conflicts?.conflictsDetected ||
+                            "Conflicts Detected"}
                         </h3>
                         <p className="text-sm text-red-600 dark:text-red-400">
-                          {teacherConflicts.length} teacher conflict
+                          {teacherConflicts.length}{" "}
+                          {d?.conflicts?.teacherConflict || "teacher conflict"}
                           {teacherConflicts.length !== 1 ? "s" : ""},{" "}
-                          {roomConflicts.length} room conflict
+                          {roomConflicts.length}{" "}
+                          {d?.conflicts?.roomConflict || "room conflict"}
                           {roomConflicts.length !== 1 ? "s" : ""}
                         </p>
                       </div>
@@ -213,7 +224,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                 <div className="space-y-3">
                   <h3 className="flex items-center gap-2 font-semibold">
                     <User className="h-4 w-4" />
-                    Teacher Conflicts
+                    {d?.conflicts?.teacherConflicts || "Teacher Conflicts"}
                   </h3>
                   <div className="space-y-2">
                     {teacherConflicts.map((conflict, idx) => (
@@ -221,18 +232,23 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                         key={`teacher-${idx}`}
                         className="bg-muted flex flex-wrap items-center gap-3 rounded-lg p-4"
                       >
+                        <Badge variant="destructive" className="text-xs">
+                          {d?.conflicts?.critical || "Critical"}
+                        </Badge>
                         <Badge variant="destructive">
                           <User className="me-1 h-3 w-3" />
-                          {conflict.teacher?.name || "Unknown Teacher"}
+                          {conflict.teacher?.name ||
+                            d?.conflicts?.unknownTeacher ||
+                            "Unknown Teacher"}
                         </Badge>
                         <span className="text-muted-foreground text-sm">
-                          assigned to both
+                          {d?.conflicts?.assignedToBoth || "assigned to both"}
                         </span>
                         <Badge variant="outline">{conflict.classA.name}</Badge>
-                        <ArrowRight className="text-muted-foreground h-4 w-4" />
+                        <ArrowRight className="text-muted-foreground h-4 w-4 rtl:rotate-180" />
                         <Badge variant="outline">{conflict.classB.name}</Badge>
                         <span className="text-muted-foreground text-sm">
-                          at the same time
+                          {d?.conflicts?.atSameTime || "at the same time"}
                         </span>
                       </div>
                     ))}
@@ -245,7 +261,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                 <div className="space-y-3">
                   <h3 className="flex items-center gap-2 font-semibold">
                     <DoorOpen className="h-4 w-4" />
-                    Room Conflicts
+                    {d?.conflicts?.roomConflicts || "Room Conflicts"}
                   </h3>
                   <div className="space-y-2">
                     {roomConflicts.map((conflict, idx) => (
@@ -253,18 +269,23 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                         key={`room-${idx}`}
                         className="bg-muted flex flex-wrap items-center gap-3 rounded-lg p-4"
                       >
+                        <Badge variant="secondary" className="text-xs">
+                          {d?.conflicts?.warning || "Warning"}
+                        </Badge>
                         <Badge variant="destructive">
                           <DoorOpen className="me-1 h-3 w-3" />
-                          {conflict.room?.name || "Unknown Room"}
+                          {conflict.room?.name ||
+                            d?.conflicts?.unknownRoom ||
+                            "Unknown Room"}
                         </Badge>
                         <span className="text-muted-foreground text-sm">
-                          booked for both
+                          {d?.conflicts?.bookedForBoth || "booked for both"}
                         </span>
                         <Badge variant="outline">{conflict.classA.name}</Badge>
-                        <ArrowRight className="text-muted-foreground h-4 w-4" />
+                        <ArrowRight className="text-muted-foreground h-4 w-4 rtl:rotate-180" />
                         <Badge variant="outline">{conflict.classB.name}</Badge>
                         <span className="text-muted-foreground text-sm">
-                          at the same time
+                          {d?.conflicts?.atSameTime || "at the same time"}
                         </span>
                       </div>
                     ))}
@@ -278,7 +299,10 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
           {!selectedTerm && !isPending && (
             <div className="text-muted-foreground py-12 text-center">
               <TriangleAlert className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <p>Select a term to scan for conflicts</p>
+              <p>
+                {d?.conflicts?.selectTermToScan ||
+                  "Select a term to scan for conflicts"}
+              </p>
             </div>
           )}
         </CardContent>

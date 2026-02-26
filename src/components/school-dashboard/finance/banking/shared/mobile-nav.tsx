@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -71,7 +73,7 @@ export function BankingMobileNav({
         <Button
           variant="ghost"
           size="icon"
-          className="fixed top-4 left-4 z-40 lg:hidden"
+          className="fixed start-4 top-4 z-40 lg:hidden"
         >
           <Menu className="h-5 w-5" />
         </Button>

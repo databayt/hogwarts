@@ -1,5 +1,7 @@
 "use client"
 
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useMemo, useState } from "react"
 import {
@@ -491,7 +493,7 @@ export function ParentDashboard({
                 onClick={() => onViewDetails?.("assignments", selectedChild.id)}
               >
                 View All Assignments
-                <ChevronRight className="ms-2 h-4 w-4" />
+                <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
               </Button>
             </CardFooter>
           </Card>

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Storage Tier Manager
  * Automatically determines optimal storage tier based on file characteristics

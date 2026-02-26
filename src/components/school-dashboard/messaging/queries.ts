@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import { ConversationType, MessageStatus, Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
@@ -24,7 +27,7 @@ export const conversationListSelect = {
   type: true,
   title: true,
   description: true,
-  avatarUrl: true,
+  avatar: true,
   directParticipant1Id: true,
   directParticipant2Id: true,
   lastMessageAt: true,
@@ -46,10 +49,9 @@ export const conversationListSelect = {
       userId: true,
       role: true,
       nickname: true,
-      joinedAt: true,
+      createdAt: true,
       lastReadAt: true,
       isMuted: true,
-      mutedUntil: true,
       isPinned: true,
       user: {
         select: {

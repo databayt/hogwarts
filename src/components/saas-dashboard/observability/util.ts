@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Utility functions for Observability feature
  *
@@ -77,9 +80,9 @@ export function getActionCategoryLabel(category: LogActionCategory): string {
 /**
  * Format timestamp for display
  */
-export function formatTimestamp(date: Date | string): string {
+export function formatTimestamp(date: Date | string, locale = "ar"): string {
   const d = typeof date === "string" ? new Date(date) : date
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
