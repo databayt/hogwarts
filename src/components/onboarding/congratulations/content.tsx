@@ -203,12 +203,22 @@ export default function CongratulationsContent(props: Props) {
     setUpClasses: safeGet(
       d,
       "saas-marketing.onboarding.success.setUpClasses",
-      "Set Up Classes"
+      "Set Up Classrooms"
     ),
     setUpClassesDesc: safeGet(
       d,
       "saas-marketing.onboarding.success.setUpClassesDesc",
-      "Create class schedules and assign teachers"
+      "Configure sections per grade and assign rooms"
+    ),
+    reviewAcademicYear: safeGet(
+      d,
+      "saas-marketing.onboarding.success.reviewAcademicYear",
+      "Review Academic Year"
+    ),
+    reviewAcademicYearDesc: safeGet(
+      d,
+      "saas-marketing.onboarding.success.reviewAcademicYearDesc",
+      "Your academic year and terms were auto-configured. Review and adjust in Settings."
     ),
     configureSettings: safeGet(
       d,
@@ -409,25 +419,25 @@ export default function CongratulationsContent(props: Props) {
             </Card>
 
             <Card
-              className="cursor-pointer p-6 transition-shadow hover:shadow-lg"
+              className="border-chart-4/20 bg-chart-4/5 cursor-pointer p-6 transition-shadow hover:shadow-lg"
               onClick={handleGoToDashboard}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => e.key === "Enter" && handleGoToDashboard()}
             >
               <div className="flex items-start gap-4">
-                <div className="bg-chart-1/10 rounded-lg p-2">
-                  <ArrowRight
-                    className="text-chart-1 h-6 w-6 rtl:rotate-180"
+                <div className="bg-chart-4/10 rounded-lg p-2">
+                  <Calendar
+                    className="text-chart-4 h-6 w-6"
                     aria-hidden="true"
                   />
                 </div>
                 <div>
                   <h3 className="mb-1 scroll-m-20 text-lg font-semibold tracking-tight">
-                    {t.configureSettings}
+                    {t.reviewAcademicYear}
                   </h3>
                   <p className="text-muted-foreground text-sm">
-                    {t.configureSettingsDesc}
+                    {t.reviewAcademicYearDesc}
                   </p>
                 </div>
               </div>

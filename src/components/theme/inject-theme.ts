@@ -10,7 +10,19 @@
 
 import type { ThemeStyleProps } from "@/types/theme-editor"
 
-import { getCSSVariableName } from "./config"
+import {
+  DEFAULT_FONT_MONO,
+  DEFAULT_FONT_SANS,
+  DEFAULT_FONT_SERIF,
+  getCSSVariableName,
+} from "./config"
+
+// Font properties that should defer to CSS rules (e.g. :root[dir="rtl"]) when at default values
+const FONT_DEFAULTS: Record<string, string> = {
+  "font-sans": DEFAULT_FONT_SANS,
+  "font-serif": DEFAULT_FONT_SERIF,
+  "font-mono": DEFAULT_FONT_MONO,
+}
 
 /**
  * Inject CSS variables into a DOM element
@@ -49,6 +61,12 @@ export function applyThemeToDocument(
   const variables: Record<string, string> = {}
   Object.entries(styles).forEach(([key, value]) => {
     if (value) {
+      // Skip font properties at default values — let CSS rules handle
+      // direction-based defaults (e.g. :root[dir="rtl"] sets Rubik)
+      if (FONT_DEFAULTS[key] && value === FONT_DEFAULTS[key]) {
+        root.style.removeProperty(`--${getCSSVariableName(key)}`)
+        return
+      }
       const varName = getCSSVariableName(key)
       variables[`--${varName}`] = value
     }

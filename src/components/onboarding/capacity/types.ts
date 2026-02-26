@@ -4,13 +4,13 @@
 export interface CapacityData {
   students: number
   teachers: number
-  classrooms: number
+  classSections: number
 }
 
 export interface CapacityFormData {
   students: number
   teachers: number
-  classrooms: number
+  classSections: number
 }
 
 export interface CapacityLimits {
@@ -24,7 +24,7 @@ export interface CapacityLimits {
     max: number
     step: number
   }
-  classrooms: {
+  classSections: {
     min: number
     max: number
     step: number

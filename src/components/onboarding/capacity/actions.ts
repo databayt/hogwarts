@@ -28,7 +28,7 @@ export async function updateSchoolCapacity(
       data: {
         maxStudents: validated.studentCount,
         maxTeachers: validated.teachers,
-        maxClasses: validated.classrooms ?? 20,
+        maxClasses: validated.classSections ?? 20,
       },
     })
 
@@ -66,7 +66,7 @@ export async function getSchoolCapacity(
     return createActionResponse({
       studentCount: school.maxStudents || 400,
       teachers: school.maxTeachers || 10,
-      classrooms: school.maxClasses || 20,
+      classSections: school.maxClasses || 20,
     })
   } catch (error) {
     return createActionResponse(undefined, error)

@@ -115,6 +115,12 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
             `Created ${result.data.created} section${result.data.created !== 1 ? "s" : ""} with rooms`
         )
         result.data.details.forEach((d) => toast.info(d))
+        if (result.data.created > 0) {
+          toast.info(
+            "Sections use placeholder teacher/subject assignments. Reassign them in the Classes view.",
+            { duration: 8000 }
+          )
+        }
         // Update existing counts
         setRows((prev) =>
           prev.map((r) => {

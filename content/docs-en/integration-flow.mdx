@@ -134,15 +134,15 @@ schedule step    --> Period records + Terms + SchoolWeekConfig (via applyTimetab
 
 ### Capacity Step Clarification
 
-The capacity step's form labels say **"Students"**, **"Teachers"**, and **"Classrooms"**. What actually gets persisted:
+The capacity step's form labels say **"Students"**, **"Teachers"**, and **"Class Sections"**. What actually gets persisted:
 
-| Form Label     | Saved As             | What It Means                                      |
-| -------------- | -------------------- | -------------------------------------------------- |
-| Students       | `School.maxStudents` | Subscription/plan limit on total student records   |
-| Teachers       | `School.maxTeachers` | Subscription/plan limit on total teacher records   |
-| **Classrooms** | `School.maxClasses`  | Limits how many **`Class`** records can be created |
+| Form Label         | Saved As             | What It Means                                      |
+| ------------------ | -------------------- | -------------------------------------------------- |
+| Students           | `School.maxStudents` | Subscription/plan limit on total student records   |
+| Teachers           | `School.maxTeachers` | Subscription/plan limit on total teacher records   |
+| **Class Sections** | `School.maxClasses`  | Limits how many **`Class`** records can be created |
 
-Key distinction: **"Classrooms" in the form maps to `maxClasses`** -- it limits `Class` records (course sections), NOT physical `Classroom` records. No `Classroom` records are created during onboarding. The naming is a known source of confusion (see [Current Gaps](#current-gaps)).
+Key distinction: **"Class Sections" in the form maps to `maxClasses`** -- it limits `Class` records (course sections), NOT physical `Classroom` records. No `Classroom` records are created during onboarding, but a default `ClassroomType` is auto-created so the Configure tab works immediately.
 
 ### The Onboarding Completion Action
 
@@ -772,11 +772,11 @@ Known integration issues between layers:
 | ~~`country` format mismatch~~                    | 1 --> 4   | Fixed   | All models, seeds, and validation now use ISO 2-letter codes. Mapbox returns `short_code`, onboarding validates `^[A-Z]{2}$`.                                                                                                                   |
 | ~~Head of Department not in schema~~             | 5a        | Fixed   | `TeacherDepartment.isDepartmentHead` added. Toggle UI in department content. Seeded with one head per department.                                                                                                                               |
 | ~~No auto-placement after ADMITTED~~             | 5b --> 7  | Fixed   | Placement dialog (per-student) and bulk placement (batch) UI. `placeStudentInClass` action validates capacity.                                                                                                                                  |
-| Classroom setup not in onboarding                | 2 --> 6   | Partial | Capacity step saves `maxClasses` count but creates no `Classroom` records. Post-onboarding, the Configure tab auto-provisions rooms and sections per grade.                                                                                     |
+| ~~Classroom setup not in onboarding~~            | 2 --> 6   | Fixed   | `completeOnboarding()` now auto-creates a default `ClassroomType` ("Classroom") via upsert, removing the Configure tab blocker. Capacity step saves `maxClasses` count; rooms and sections are generated post-onboarding via the Configure tab. |
 | ~~Onboarding `facilities` not persisted~~        | 2 --> 6   | Fixed   | Removed from capacity form, validation, and types. No longer collected.                                                                                                                                                                         |
 | ~~`allowedSubjectTypes` unused~~                 | 6 --> 7   | Fixed   | Timetable algorithm now checks `RoomConstraint.allowedSubjectTypes` during slot generation.                                                                                                                                                     |
 | ~~Dashboard mock room data~~                     | 7         | Fixed   | `getUpcomingClass()` server action queries real timetable data (day, period, class, room).                                                                                                                                                      |
-| `maxClasses` naming confusion                    | 2 --> 6   | Open    | Form says "Classrooms" but saves to `maxClasses` (limits `Class` records, not `Classroom` rooms). Less confusing now that the UI route is `/classrooms`.                                                                                        |
+| ~~`maxClasses` naming confusion~~                | 2 --> 6   | Fixed   | Form field renamed from `classrooms` to `classSections`. UI labels consistently say "Class Sections" across onboarding and admin config. DB field `maxClasses` kept for backward compatibility.                                                 |
 | ~~No `gradeId` on Class model~~                  | 3 --> 5a  | Fixed   | Optional `gradeId` FK added to Class. Grade selector in form, grade column in table. Backfill script for existing records.                                                                                                                      |
 | ~~No classroom CRUD UI~~                         | 6         | Fixed   | Full 6-file CRUD pattern exists at `school-dashboard/listings/classrooms/`.                                                                                                                                                                     |
 | ~~Capacity cross-validation missing~~            | 5a --> 6  | Fixed   | `createClass` and `updateClass` enforce a hard error when `maxCapacity` exceeds room `capacity`. `maxClasses` plan limit also enforced in `createClass` and `generateSections`.                                                                 |
@@ -788,9 +788,9 @@ Known integration issues between layers:
 | ~~CatalogBook disconnected from subjects~~       | 1         | Fixed   | `CatalogBook.catalogSubjectId` now links books to grade-specific `CatalogSubject`. `SchoolBookSelection.gradeId` enables grade-scoped book assignments.                                                                                         |
 | ~~`getUpcomingClass()` missing termId~~          | 7         | Fixed   | `getUpcomingClass()` now looks up the active `Term` and filters timetable entries by `termId`.                                                                                                                                                  |
 | ~~Two disconnected enrollment systems~~          | 5b        | Fixed   | `syncStudentClassToEnrollment()` in `src/lib/enrollment-sync.ts` auto-creates an `Enrollment` record when a `StudentClass` is created. Wired into class enrollment and admission placement actions. Non-blocking (logs failures, never throws). |
-| No Academic Year Setup Wizard                    | 2 --> 7   | Open    | Schools must manually create new academic years and terms. No guided wizard for year rollover.                                                                                                                                                  |
-| Stream-specific subjects not auto-assigned       | 4         | Open    | `SchoolSubjectSelection.streamId` is always null during auto-assignment. Stream-specific subjects (e.g., Physics for Science stream only) must be configured manually.                                                                          |
-| `generateSections()` placeholder teacher         | 5a        | Open    | Auto-generated class sections use a placeholder teacher reference. Real teacher assignment is a manual step.                                                                                                                                    |
+| No Academic Year Setup Wizard                    | 2 --> 7   | Partial | Auto-created during onboarding. Congratulations page now includes "Review Academic Year" card directing admins to Settings > Academic. Full CRUD exists. No guided year-rollover wizard yet.                                                    |
+| ~~Stream-specific subjects not auto-assigned~~   | 4         | Fixed   | `setupCatalogForSchool()` now uses name-based heuristics to assign stream-specific subjects (Physics/Chemistry/Biology → Science, Philosophy → Arts) to the correct `AcademicStream` for grades 10-12. Shared subjects remain unscoped.         |
+| `generateSections()` placeholder teacher         | 5a        | Noted   | By design: sections use first available teacher/subject. Configure tab and post-generation toast now warn admins to reassign in the Classes view.                                                                                               |
 
 ---
 

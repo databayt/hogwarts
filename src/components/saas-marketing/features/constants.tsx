@@ -120,32 +120,28 @@ export const FEATURES: Feature[] = [
   {
     id: "student-management",
     title: "Student Management",
-    description:
-      "Complete student profiles, enrollment history, and academic records in one place.",
+    description: "Profiles, records, and enrollment in one place.",
     icon: "Users",
     category: "core",
   },
   {
     id: "teacher-management",
     title: "Teacher Management",
-    description:
-      "Track teacher qualifications, schedules, workloads, and performance evaluations.",
+    description: "Qualifications, schedules, and evaluations.",
     icon: "UserCheck",
     category: "core",
   },
   {
     id: "parent-portal",
     title: "Parent Portal",
-    description:
-      "Give parents real-time access to grades, attendance, and school communications.",
+    description: "Grades, attendance, and updates for parents.",
     icon: "House",
     category: "core",
   },
   {
     id: "role-based-access",
     title: "Role-Based Access",
-    description:
-      "8 user roles with granular permissions for secure multi-level access control.",
+    description: "Eight roles with granular permissions.",
     icon: "Shield",
     category: "core",
   },
@@ -154,8 +150,7 @@ export const FEATURES: Feature[] = [
   {
     id: "attendance-tracking",
     title: "Attendance Tracking",
-    description:
-      "QR code, barcode, and kiosk-based attendance with real-time dashboards.",
+    description: "QR, barcode, and kiosk-based check-in.",
     icon: "ClipboardCheck",
     category: "academic",
     isNew: true,
@@ -163,40 +158,35 @@ export const FEATURES: Feature[] = [
   {
     id: "exam-management",
     title: "Exam Management",
-    description:
-      "Create, schedule, and grade exams with automated mark entry and analytics.",
+    description: "Create, schedule, and grade exams easily.",
     icon: "FileText",
     category: "academic",
   },
   {
     id: "question-banks",
     title: "Question Banks",
-    description:
-      "Build reusable question banks with difficulty tagging and auto-generation.",
+    description: "Reusable banks with tagging and auto-gen.",
     icon: "Database",
     category: "academic",
   },
   {
     id: "gradebook",
     title: "Gradebook",
-    description:
-      "Weighted grading, GPA calculations, and progress tracking per student.",
+    description: "Weighted grading and GPA calculations.",
     icon: "BookMarked",
     category: "academic",
   },
   {
     id: "assignments",
     title: "Assignments",
-    description:
-      "Create, distribute, and collect assignments with submission tracking.",
+    description: "Distribute and collect with tracking.",
     icon: "ClipboardList",
     category: "academic",
   },
   {
     id: "subject-catalog",
     title: "Subject Catalog",
-    description:
-      "Centralized curriculum catalog with topics, prerequisites, and credit hours.",
+    description: "Curriculum with topics and prerequisites.",
     icon: "BookOpen",
     category: "academic",
   },
@@ -205,32 +195,28 @@ export const FEATURES: Feature[] = [
   {
     id: "timetable",
     title: "Timetable",
-    description:
-      "Automated timetable generation with conflict detection and substitution management.",
+    description: "Auto-generate with conflict detection.",
     icon: "CalendarDays",
     category: "scheduling",
   },
   {
     id: "event-calendar",
     title: "Event Calendar",
-    description:
-      "School-wide event planning with RSVP tracking and reminder notifications.",
+    description: "Plan events with RSVP and reminders.",
     icon: "Calendar",
     category: "scheduling",
   },
   {
     id: "substitution-management",
     title: "Substitution Management",
-    description:
-      "Manage teacher absences and auto-assign substitutes based on availability.",
+    description: "Auto-assign substitutes for absences.",
     icon: "RefreshCw",
     category: "scheduling",
   },
   {
     id: "period-management",
     title: "Period Management",
-    description:
-      "Configure bell schedules, period timings, and break structures per term.",
+    description: "Bell schedules, timings, and breaks.",
     icon: "Clock",
     category: "scheduling",
   },
@@ -239,40 +225,35 @@ export const FEATURES: Feature[] = [
   {
     id: "fee-management",
     title: "Fee Management",
-    description:
-      "Automate fee collection, installment plans, and overdue reminders.",
+    description: "Collect fees with installment plans.",
     icon: "Wallet",
     category: "finance",
   },
   {
     id: "invoicing",
     title: "Invoicing",
-    description:
-      "Generate and send professional invoices with online payment support.",
+    description: "Professional invoices with online pay.",
     icon: "Receipt",
     category: "finance",
   },
   {
     id: "payroll",
     title: "Payroll",
-    description:
-      "Automated salary calculations, deductions, and payslip generation.",
+    description: "Salary calculations and payslips.",
     icon: "Banknote",
     category: "finance",
   },
   {
     id: "expense-tracking",
     title: "Expense Tracking",
-    description:
-      "Track and categorize school expenditures with approval workflows.",
+    description: "Categorize expenditures with approvals.",
     icon: "TrendingDown",
     category: "finance",
   },
   {
     id: "financial-reports",
     title: "Financial Reports",
-    description:
-      "Income statements, balance sheets, and budget vs. actual comparisons.",
+    description: "Statements, balance sheets, and budgets.",
     icon: "PieChart",
     category: "finance",
   },
@@ -281,24 +262,21 @@ export const FEATURES: Feature[] = [
   {
     id: "classroom-management",
     title: "Classroom Management",
-    description:
-      "Manage room allocation, capacity, equipment, and maintenance schedules.",
+    description: "Room allocation, capacity, and equipment.",
     icon: "DoorOpen",
     category: "facilities",
   },
   {
     id: "library-management",
     title: "Library Management",
-    description:
-      "Book catalog, issue/return tracking, overdue fines, and digital library access.",
+    description: "Catalog, issue/return, and fines.",
     icon: "Library",
     category: "facilities",
   },
   {
     id: "transport-management",
     title: "Transport Management",
-    description:
-      "Route planning, vehicle tracking, and student bus assignment management.",
+    description: "Routes, vehicle tracking, and assignments.",
     icon: "Bus",
     category: "facilities",
     isPremium: true,
@@ -308,24 +286,21 @@ export const FEATURES: Feature[] = [
   {
     id: "staff-directory",
     title: "Staff Directory",
-    description:
-      "Centralized directory with contact info, departments, and org chart.",
+    description: "Contact info, departments, and org chart.",
     icon: "Contact",
     category: "hr",
   },
   {
     id: "leave-management",
     title: "Leave Management",
-    description:
-      "Apply, approve, and track leaves with balance calculation and calendar view.",
+    description: "Apply, approve, and track leave balances.",
     icon: "CalendarOff",
     category: "hr",
   },
   {
     id: "teacher-performance",
     title: "Teacher Performance",
-    description:
-      "Observation forms, peer reviews, and professional development tracking.",
+    description: "Observations, reviews, and development.",
     icon: "Award",
     category: "hr",
   },
@@ -334,16 +309,14 @@ export const FEATURES: Feature[] = [
   {
     id: "announcements",
     title: "Announcements",
-    description:
-      "Broadcast school-wide or targeted announcements with read receipts.",
+    description: "Broadcast with targeting and read receipts.",
     icon: "Megaphone",
     category: "operations",
   },
   {
     id: "hall-pass",
     title: "Hall Pass",
-    description:
-      "Digital hall pass system with time tracking and location monitoring.",
+    description: "Digital passes with time and location.",
     icon: "Ticket",
     category: "operations",
     isNew: true,
@@ -351,8 +324,7 @@ export const FEATURES: Feature[] = [
   {
     id: "inventory-management",
     title: "Inventory Management",
-    description:
-      "Track school supplies, lab equipment, and asset lifecycle management.",
+    description: "Supplies, equipment, and asset tracking.",
     icon: "Package",
     category: "operations",
   },
@@ -361,24 +333,21 @@ export const FEATURES: Feature[] = [
   {
     id: "dashboard-analytics",
     title: "Dashboard Analytics",
-    description:
-      "Role-specific dashboards with KPIs, trends, and actionable insights.",
+    description: "Role-specific KPIs, trends, and insights.",
     icon: "BarChart3",
     category: "analytics",
   },
   {
     id: "attendance-analytics",
     title: "Attendance Analytics",
-    description:
-      "Absence patterns, early warning systems, and intervention tracking.",
+    description: "Absence patterns and early warnings.",
     icon: "LineChart",
     category: "analytics",
   },
   {
     id: "academic-reports",
     title: "Academic Reports",
-    description:
-      "Student progress reports, class averages, and comparative analysis.",
+    description: "Progress reports and class comparisons.",
     icon: "TrendingUp",
     category: "analytics",
   },
@@ -387,24 +356,21 @@ export const FEATURES: Feature[] = [
   {
     id: "messaging",
     title: "Messaging",
-    description:
-      "Real-time messaging between teachers, parents, and administrators.",
+    description: "Real-time chat for teachers and parents.",
     icon: "MessageSquare",
     category: "communication",
   },
   {
     id: "notifications",
     title: "Notifications",
-    description:
-      "Push, email, and SMS notifications for events, grades, and deadlines.",
+    description: "Push, email, and SMS for all events.",
     icon: "Bell",
     category: "communication",
   },
   {
     id: "parent-communication",
     title: "Parent Communication",
-    description:
-      "Dedicated parent-teacher channels with meeting scheduling and updates.",
+    description: "Parent-teacher channels and scheduling.",
     icon: "MessageCircle",
     category: "communication",
   },
@@ -413,24 +379,21 @@ export const FEATURES: Feature[] = [
   {
     id: "online-admissions",
     title: "Online Admissions",
-    description:
-      "Digital application forms, document upload, and automated status tracking.",
+    description: "Digital forms with document upload.",
     icon: "UserPlus",
     category: "enrollment",
   },
   {
     id: "merit-lists",
     title: "Merit Lists",
-    description:
-      "Automated merit-based ranking with configurable criteria and cutoffs.",
+    description: "Automated ranking with custom criteria.",
     icon: "ListOrdered",
     category: "enrollment",
   },
   {
     id: "enrollment-workflow",
     title: "Enrollment Workflow",
-    description:
-      "Multi-step enrollment with payment collection and document verification.",
+    description: "Multi-step with payment and verification.",
     icon: "GitBranch",
     category: "enrollment",
   },
@@ -439,8 +402,7 @@ export const FEATURES: Feature[] = [
   {
     id: "alumni-network",
     title: "Alumni Network",
-    description:
-      "Connect with graduates, track career paths, and organize reunions.",
+    description: "Connect graduates and organize reunions.",
     icon: "GraduationCap",
     category: "community",
     isPremium: true,
@@ -448,16 +410,14 @@ export const FEATURES: Feature[] = [
   {
     id: "school-website",
     title: "School Website",
-    description:
-      "Customizable school marketing site with admissions, events, and news.",
+    description: "Custom site with admissions and news.",
     icon: "Globe",
     category: "community",
   },
   {
     id: "visitor-management",
     title: "Visitor Management",
-    description:
-      "Track campus visitors with check-in/out, badges, and appointment scheduling.",
+    description: "Check-in/out with badges and scheduling.",
     icon: "DoorClosed",
     category: "community",
   },
@@ -466,24 +426,21 @@ export const FEATURES: Feature[] = [
   {
     id: "health-records",
     title: "Health Records",
-    description:
-      "Maintain student health profiles, vaccination records, and medical alerts.",
+    description: "Health profiles, vaccines, and alerts.",
     icon: "HeartPulse",
     category: "welfare",
   },
   {
     id: "counseling",
     title: "Counseling",
-    description:
-      "Student counseling sessions, referral tracking, and wellbeing reports.",
+    description: "Sessions, referrals, and wellbeing reports.",
     icon: "HandHeart",
     category: "welfare",
   },
   {
     id: "early-warning",
     title: "Early Warning System",
-    description:
-      "AI-powered detection of at-risk students based on attendance and grades.",
+    description: "AI detection of at-risk students.",
     icon: "AlertTriangle",
     category: "welfare",
     isNew: true,
@@ -493,32 +450,28 @@ export const FEATURES: Feature[] = [
   {
     id: "lms",
     title: "Learning Management",
-    description:
-      "Course creation, content delivery, and progress tracking for online learning.",
+    description: "Courses, content, and progress tracking.",
     icon: "MonitorPlay",
     category: "e-learning",
   },
   {
     id: "video-lessons",
     title: "Video Lessons",
-    description:
-      "Stream and manage video content with chapter navigation and progress tracking.",
+    description: "Stream with chapters and progress.",
     icon: "PlayCircle",
     category: "e-learning",
   },
   {
     id: "online-quizzes",
     title: "Online Quizzes",
-    description:
-      "Timed quizzes with auto-grading, randomization, and instant feedback.",
+    description: "Auto-graded with instant feedback.",
     icon: "HelpCircle",
     category: "e-learning",
   },
   {
     id: "digital-resources",
     title: "Digital Resources",
-    description:
-      "Upload and organize digital textbooks, worksheets, and supplementary materials.",
+    description: "Textbooks, worksheets, and materials.",
     icon: "FolderOpen",
     category: "e-learning",
   },
@@ -527,24 +480,21 @@ export const FEATURES: Feature[] = [
   {
     id: "id-cards",
     title: "ID Cards",
-    description:
-      "Generate student and staff ID cards with photos, barcodes, and QR codes.",
+    description: "Photo IDs with barcodes and QR codes.",
     icon: "IdCard",
     category: "documents",
   },
   {
     id: "certificates",
     title: "Certificates",
-    description:
-      "Design and print certificates for graduation, awards, and achievements.",
+    description: "Design and print for any achievement.",
     icon: "ScrollText",
     category: "documents",
   },
   {
     id: "report-cards",
     title: "Report Cards",
-    description:
-      "Customizable report card templates with automatic data population.",
+    description: "Custom templates with auto data fill.",
     icon: "FileSpreadsheet",
     category: "documents",
   },

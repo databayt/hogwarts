@@ -75,6 +75,21 @@ export async function completeOnboarding(
       }
     }
 
+    // Auto-create default ClassroomType so the Configure tab works post-onboarding
+    // Non-blocking: classroom type creation failure should NOT prevent onboarding completion
+    try {
+      await db.classroomType.upsert({
+        where: { schoolId_name: { schoolId, name: "Classroom" } },
+        create: { schoolId, name: "Classroom" },
+        update: {},
+      })
+    } catch (classroomTypeError) {
+      console.error(
+        `[completeOnboarding] ClassroomType creation failed for school ${schoolId}:`,
+        classroomTypeError
+      )
+    }
+
     revalidatePath(`/onboarding/${schoolId}`)
 
     return createActionResponse({

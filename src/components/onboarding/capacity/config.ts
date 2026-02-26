@@ -14,7 +14,7 @@ export const CAPACITY_LIMITS: CapacityLimits = {
     max: 200,
     step: 1,
   },
-  classrooms: {
+  classSections: {
     min: 1,
     max: 100,
     step: 1,
@@ -37,21 +37,21 @@ export const CAPACITY_FIELDS: CapacityField[] = [
     step: CAPACITY_LIMITS.teachers.step,
   },
   {
-    id: "classrooms",
+    id: "classSections",
     label: "Class Sections",
     description: "Maximum number of class sections your school plan allows",
-    minValue: CAPACITY_LIMITS.classrooms.min,
-    step: CAPACITY_LIMITS.classrooms.step,
+    minValue: CAPACITY_LIMITS.classSections.min,
+    step: CAPACITY_LIMITS.classSections.step,
   },
 ] as const
 
 export const CAPACITY_MESSAGES = {
   STUDENTS_REQUIRED: "Student capacity is required",
   TEACHERS_REQUIRED: "Teacher capacity is required",
-  CLASSROOMS_REQUIRED: "Number of class sections is required",
+  CLASS_SECTIONS_REQUIRED: "Number of class sections is required",
   INVALID_STUDENTS: `Student count must be between ${CAPACITY_LIMITS.students.min} and ${CAPACITY_LIMITS.students.max}`,
   INVALID_TEACHERS: `Teacher count must be between ${CAPACITY_LIMITS.teachers.min} and ${CAPACITY_LIMITS.teachers.max}`,
-  INVALID_CLASSROOMS: `Class sections must be between ${CAPACITY_LIMITS.classrooms.min} and ${CAPACITY_LIMITS.classrooms.max}`,
+  INVALID_CLASS_SECTIONS: `Class sections must be between ${CAPACITY_LIMITS.classSections.min} and ${CAPACITY_LIMITS.classSections.max}`,
   STUDENT_TEACHER_RATIO: "Student to teacher ratio is too high",
-  STUDENT_CLASSROOM_RATIO: "Student to classroom ratio is too high",
+  STUDENT_CLASSROOM_RATIO: "Student to class section ratio is too high",
 } as const

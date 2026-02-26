@@ -57,14 +57,6 @@ export const platformNav: PlatformNavItem[] = [
     roles: ALL_ROLES,
     className: "h-4.5 w-4.5",
   },
-  { title: "Messages", href: "/messages", icon: "envelope", roles: ALL_ROLES },
-  {
-    title: "Notifications",
-    href: "/notifications",
-    icon: "bell",
-    roles: ALL_ROLES,
-    className: "h-4.5 w-4.5",
-  },
   { title: "Finance", href: "/finance", icon: "creditCard", roles: ALL_ROLES },
   {
     title: "Grades",

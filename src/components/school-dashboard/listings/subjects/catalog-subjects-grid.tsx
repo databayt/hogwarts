@@ -126,7 +126,7 @@ function SubjectThumb({
 
   return (
     <div
-      className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg"
+      className="relative h-16 w-16 shrink-0 overflow-hidden rounded-s-lg"
       style={{ backgroundColor: color ?? "#6b7280" }}
     >
       {showImage && (

@@ -90,15 +90,13 @@
 
   /* ===== MARKETING CONTAINER ===== */
   /* For: saas-marketing pages, tenant school-marketing pages */
-  /* Characteristics: generous spacing, max-width centered, Rubik font */
+  /* Characteristics: generous spacing, max-width centered */
   .marketing-container {
     @apply w-full;
     margin-inline: auto;
     padding-inline-start: var(--marketing-px);
     padding-inline-end: var(--marketing-px);
     max-width: var(--marketing-max);
-    --font-sans: var(--font-rubik), system-ui, sans-serif;
-    font-family: var(--font-sans);
   }
 
   /* Full-width saas-marketing variant (no max-width) */

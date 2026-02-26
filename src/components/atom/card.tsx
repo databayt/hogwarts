@@ -32,7 +32,9 @@ export default function Card({
       <div className="flex h-[180px] flex-col justify-between rounded-md p-6">
         <div className={iconSize}>{icon}</div>
         <div className="space-y-2">
-          <h4 className="hover:text-current">{title}</h4>
+          <h4 className="font-semibold tracking-tight hover:text-current">
+            {title}
+          </h4>
           <p className="text-muted-foreground hover:text-muted-foreground text-sm">
             {description}
           </p>

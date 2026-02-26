@@ -166,7 +166,7 @@ export function PlanLimitsSection({
                 <p className="text-muted-foreground text-sm">
                   {initialData.maxStudents.toLocaleString()} students,{" "}
                   {initialData.maxTeachers.toLocaleString()} teachers,{" "}
-                  {initialData.maxClasses.toLocaleString()} classes
+                  {initialData.maxClasses.toLocaleString()} class sections
                 </p>
               </div>
             </div>
@@ -351,7 +351,7 @@ export function PlanLimitsSection({
           </p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="maxClasses">Maximum Classes</Label>
+          <Label htmlFor="maxClasses">Maximum Class Sections</Label>
           <Input
             id="maxClasses"
             type="number"

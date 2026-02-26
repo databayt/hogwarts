@@ -22,7 +22,7 @@ export function createCapacitySchema(dictionary: Dictionary) {
       .number()
       .min(1, { message: v.get("atLeastOneTeacher") })
       .max(500, { message: v.get("maxTeachersLimit") }),
-    classrooms: z
+    classSections: z
       .number()
       .min(1, { message: v.get("atLeastOneClassroom") })
       .max(100, { message: v.get("maxClassroomsLimit") }),
@@ -42,7 +42,7 @@ export const capacitySchema = z.object({
     .number()
     .min(1, "School must have at least 1 teacher")
     .max(500, "Teacher count cannot exceed 500"),
-  classrooms: z
+  classSections: z
     .number()
     .min(1, "School must have at least 1 class section")
     .max(100, "Class sections cannot exceed 100"),

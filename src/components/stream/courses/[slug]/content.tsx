@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Check } from "lucide-react"
@@ -28,11 +29,11 @@ function PlayTriangleIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}
-      viewBox="0 0 24 24"
+      viewBox="96.69 30.35 93.5 97.51"
       fill="currentColor"
       aria-hidden="true"
     >
-      <path d="M8 5v14l11-7z" />
+      <path d="M113.428 127.863c2.588 0 5.03-.733 8.448-2.686l60.302-35.01c4.883-2.88 8.008-6.103 8.008-11.084 0-4.98-3.125-8.203-8.008-11.035l-60.302-35.01c-3.418-2.002-5.86-2.685-8.448-2.685-5.566 0-10.742 4.248-10.742 11.67v74.17c0 7.422 5.176 11.67 10.742 11.67Z" />
     </svg>
   )
 }
@@ -108,6 +109,34 @@ export function StreamCourseDetailContent({
       : ""
   const shareText = encodeURIComponent(course.title)
 
+  // Scrollspy: track active chapter on scroll for sidebar indicator
+  const [activeChapter, setActiveChapter] = useState<string | null>(
+    course.chapters[0]?.id ?? null
+  )
+
+  useEffect(() => {
+    if (course.chapters.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const id = entry.target.id.replace("chapter-", "")
+            setActiveChapter(id)
+          }
+        }
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+    )
+
+    for (const ch of course.chapters) {
+      const el = document.getElementById(`chapter-${ch.id}`)
+      if (el) observer.observe(el)
+    }
+
+    return () => observer.disconnect()
+  }, [course.chapters])
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -125,7 +154,7 @@ export function StreamCourseDetailContent({
                 className="hover:underline"
                 style={{ color: colors.muted }}
               >
-                {schoolName || "Hogwarts Academy"}
+                {schoolName || "Hogwarts"}
               </Link>
               <span>/</span>
               <Link
@@ -240,8 +269,8 @@ export function StreamCourseDetailContent({
                     priority
                     unoptimized
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors group-hover:bg-black/40">
-                    <PlayTriangleIcon className="size-16 text-white/80 transition-colors group-hover:text-white" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <PlayTriangleIcon className="size-10 text-white" />
                   </div>
                 </>
               ) : (
@@ -252,7 +281,7 @@ export function StreamCourseDetailContent({
                       catalogColor || accentColors[0] || colors.card,
                   }}
                 >
-                  <PlayTriangleIcon className="size-16 text-white/80" />
+                  <PlayTriangleIcon className="size-10 text-white" />
                 </div>
               )}
             </div>
@@ -395,134 +424,87 @@ export function StreamCourseDetailContent({
         </div>
       </section>
 
-      {/* Course Sections — flat chapter listing */}
+      {/* Course Sections — two-column layout with scrollspy sidebar */}
       <section className="mx-auto max-w-6xl px-4 py-12">
         <h2
           className="text-start text-2xl font-semibold sm:text-3xl"
           style={{ color: colors.text }}
         >
-          {dict?.stream?.courseDetail?.courseSections ?? "Course sections"}
+          {dict?.stream?.courseDetail?.chapters ?? "Chapters"}
         </h2>
 
-        <div className="mt-6 space-y-6">
-          {course.chapters.map((chapter, index) => {
-            const accentColor =
-              chapter.color || accentColors[index % accentColors.length]
-
-            return (
-              <div key={chapter.id}>
-                {/* Chapter Header */}
-                <div className="flex items-center gap-4">
-                  {chapter.imageUrl ? (
-                    <div
-                      className="relative size-10 shrink-0 overflow-hidden rounded-lg"
-                      style={{ backgroundColor: accentColor }}
-                    >
-                      <Image
-                        src={chapter.imageUrl}
-                        alt={chapter.title}
-                        fill
-                        className="object-cover"
-                        sizes="40px"
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className="size-10 shrink-0 rounded-lg"
-                      style={{ backgroundColor: accentColor }}
-                    />
-                  )}
-                  <div>
+        <div className="mt-6 flex gap-8">
+          {/* Main content */}
+          <div className="min-w-0 flex-1">
+            <div className="space-y-8">
+              {course.chapters.map((chapter) => {
+                if (chapter.lessons.length === 0) return null
+                return (
+                  <section
+                    key={chapter.id}
+                    id={`chapter-${chapter.id}`}
+                    className="scroll-mt-24 space-y-2"
+                  >
                     <h3
                       className="text-lg font-semibold"
                       style={{ color: colors.text }}
                     >
                       {chapter.title}
                     </h3>
-                    <p className="text-sm" style={{ color: colors.muted }}>
-                      {chapter.lessons.length}{" "}
-                      {chapter.lessons.length === 1
-                        ? (dict?.stream?.courseDetail?.lesson ?? "lesson")
-                        : (dict?.stream?.courseDetail?.lessons ?? "lessons")}
-                    </p>
-                  </div>
-                </div>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {chapter.lessons.map((lesson) => (
+                        <CourseLessonCard
+                          key={lesson.id}
+                          lesson={lesson}
+                          fallbackColor={catalogColor}
+                          dict={dict}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })}
+            </div>
+          </div>
 
-                {/* Chapter Description */}
-                {chapter.description && (
-                  <p className="mt-2 text-sm" style={{ color: colors.muted }}>
-                    {chapter.description}
-                  </p>
-                )}
-
-                {/* Lesson Cards — horizontal scroll */}
-                {chapter.lessons.length > 0 && (
-                  <div className="no-scrollbar -mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2">
-                    {chapter.lessons.map((lesson) => (
-                      <div
-                        key={lesson.id}
-                        className="w-56 shrink-0 overflow-hidden rounded-lg border"
-                        style={{ borderColor: colors.border }}
-                      >
-                        {/* Lesson image area */}
-                        <div
-                          className="relative flex h-28 items-center justify-center overflow-hidden"
-                          style={{
-                            backgroundColor:
-                              chapter.color || catalogColor || "#e5e7eb",
-                          }}
-                        >
-                          {lesson.imageUrl ? (
-                            <Image
-                              src={lesson.imageUrl}
-                              alt={lesson.title}
-                              fill
-                              className="object-cover"
-                              sizes="224px"
-                              unoptimized
-                            />
-                          ) : (
-                            <PlayTriangleIcon className="size-8 text-white/60" />
-                          )}
-                        </div>
-                        {/* Lesson info */}
-                        <div className="p-3">
-                          <p
-                            className="line-clamp-2 text-sm font-medium"
-                            style={{ color: colors.text }}
-                          >
-                            {lesson.title}
-                          </p>
-                          <div className="mt-1 flex items-center gap-2">
-                            {lesson.duration != null && lesson.duration > 0 && (
-                              <span
-                                className="text-xs"
-                                style={{ color: colors.muted }}
-                              >
-                                {Math.floor(lesson.duration / 60) > 0 &&
-                                  `${Math.floor(lesson.duration / 60)}:`}
-                                {String(lesson.duration % 60).padStart(2, "0")}
-                              </span>
-                            )}
-                            {lesson.isFree && (
-                              <span
-                                className="text-xs underline"
-                                style={{ color: colors.muted }}
-                              >
-                                {dict?.stream?.courseDetail?.preview ??
-                                  "Preview"}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+          {/* Sidebar nav */}
+          <aside className="sticky top-24 hidden w-48 shrink-0 self-start lg:block">
+            <p
+              className="mb-2 text-sm font-semibold"
+              style={{ color: colors.text }}
+            >
+              {course.title}
+            </p>
+            <nav className="relative">
+              <span
+                className="absolute start-0 top-3 bottom-3 border-s"
+                style={{ borderColor: colors.border }}
+              />
+              {course.chapters.map((ch) => {
+                const isActive = activeChapter === ch.id
+                return (
+                  <a
+                    key={ch.id}
+                    href={`#chapter-${ch.id}`}
+                    className="relative flex items-center gap-2 px-3 py-1.5 text-xs transition-colors"
+                    style={{
+                      color: isActive ? colors.text : colors.muted,
+                    }}
+                  >
+                    {isActive && (
+                      <span
+                        className="absolute start-[-5px] top-1/2 size-2.5 -translate-y-1/2 rounded-full"
+                        style={{
+                          backgroundColor: colors.text,
+                        }}
+                      />
+                    )}
+                    <span className="line-clamp-1">{ch.title}</span>
+                  </a>
+                )
+              })}
+            </nav>
+          </aside>
         </div>
       </section>
 
@@ -554,6 +536,72 @@ export function StreamCourseDetailContent({
           </div>
         </div>
       </section>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// CourseLessonCard — horizontal row: thumbnail + title + duration
+// ---------------------------------------------------------------------------
+
+function CourseLessonCard({
+  lesson,
+  fallbackColor,
+  dict,
+}: {
+  lesson: {
+    id: string
+    title: string
+    duration: number | null
+    imageUrl: string | null
+    isFree: boolean
+  }
+  fallbackColor: string | null | undefined
+  dict: any
+}) {
+  const [failed, setFailed] = useState(false)
+  const onError = useCallback(() => setFailed(true), [])
+
+  return (
+    <div className="group hover:bg-muted/50 flex items-start gap-3 rounded-md transition-colors">
+      {/* Thumbnail */}
+      <div
+        className="relative h-18 w-18 shrink-0 overflow-hidden rounded-sm transition-[border-radius] group-hover:rounded-e-none"
+        style={{ backgroundColor: fallbackColor ?? "#6b7280" }}
+      >
+        {lesson.imageUrl && !failed && (
+          <Image
+            src={lesson.imageUrl}
+            alt={lesson.title}
+            fill
+            className="object-cover"
+            quality={100}
+            sizes="72px"
+            onError={onError}
+            unoptimized
+          />
+        )}
+      </div>
+
+      {/* Text */}
+      <div className="min-w-0 flex-1 pt-1">
+        <p
+          className="line-clamp-2 text-sm leading-snug font-medium"
+          style={{ color: colors.text }}
+        >
+          {lesson.title}
+        </p>
+        {lesson.duration != null && lesson.duration > 0 && (
+          <p className="mt-0.5 text-xs" style={{ color: colors.muted }}>
+            {lesson.duration} min
+          </p>
+        )}
+        {lesson.isFree && (
+          <p className="mt-0.5 text-xs" style={{ color: colors.muted }}>
+            {dict?.stream?.courseDetail?.preview ?? "Preview"}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

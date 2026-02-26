@@ -7,6 +7,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
+  Bookmark,
   BookOpen,
   Check,
   CheckCircle2,
@@ -574,12 +575,12 @@ export function StreamLessonContent({
             {/* Wishlist overlay — Apple TV transient feedback */}
             {wishlistDialog && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-                <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-10 shadow-xl dark:bg-neutral-800">
-                  <Check className="size-16 text-gray-400 dark:text-gray-500" />
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-6 py-12 shadow-xl dark:bg-neutral-800">
+                  <Bookmark className="h-16 w-10 text-gray-700 dark:text-gray-300" />
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
                     {wishlistDialog === "added"
                       ? "Added to Watchlist"
-                      : "Removed from Watchlist"}
+                      : "Removed"}
                   </p>
                 </div>
               </div>

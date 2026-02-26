@@ -36,10 +36,10 @@ export default function Hero({ dictionary, params }: HeroProps) {
       description={t.subtitle}
       actions={
         <TwoButtons
-          primaryLabel={t.allCategories}
+          primaryLabel="Browse Features"
           primaryHref={`/${params.lang}/features`}
-          secondaryLabel={t.ctaGetStarted}
-          secondaryHref={`/${params.lang}/onboarding`}
+          secondaryLabel="Request Feature"
+          secondaryHref={`/${params.lang}/contact`}
         />
       }
     />

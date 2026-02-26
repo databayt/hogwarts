@@ -8,14 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 interface CapacityCardProps {
   studentCount: number
   teachers: number
-  classrooms: number
+  classSections: number
   className?: string
 }
 
 export function CapacityCard({
   studentCount,
   teachers,
-  classrooms,
+  classSections,
   className,
 }: CapacityCardProps) {
   const capacityItems = [
@@ -33,7 +33,7 @@ export function CapacityCard({
     },
     {
       label: "Class Sections",
-      value: classrooms,
+      value: classSections,
       icon: DoorOpen,
       color: "text-chart-1",
     },

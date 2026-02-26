@@ -56,6 +56,30 @@ const HIGH_SCHOOL_STREAMS = [
 ]
 
 /**
+ * Subject name patterns that are stream-specific for grades 10-12.
+ * Subjects matching SCIENCE_ONLY are assigned to science stream only.
+ * Subjects matching ARTS_ONLY are assigned to arts stream only.
+ * All other subjects remain shared (null streamId).
+ */
+const SCIENCE_ONLY_PATTERNS = [
+  "physics",
+  "chemistry",
+  "biology",
+  "calculus",
+  "فيزياء",
+  "كيمياء",
+  "أحياء",
+]
+const ARTS_ONLY_PATTERNS = ["philosophy", "فلسفة"]
+
+function getSubjectStreamType(subjectName: string): "SCIENCE" | "ARTS" | null {
+  const lower = subjectName.toLowerCase()
+  if (SCIENCE_ONLY_PATTERNS.some((p) => lower.includes(p))) return "SCIENCE"
+  if (ARTS_ONLY_PATTERNS.some((p) => lower.includes(p))) return "ARTS"
+  return null
+}
+
+/**
  * Get default weekly periods for a subject based on name and grade.
  * Core subjects get more periods; electives/specials get fewer.
  */
@@ -220,7 +244,11 @@ export async function setupCatalogForSchool(
     }
 
     // 3. Create high school streams (Science + Arts for grades 10-12)
-    const streamRecords: Array<{ id: string; gradeId: string }> = []
+    const streamRecords: Array<{
+      id: string
+      gradeId: string
+      streamType: string
+    }> = []
     const highGrades = gradeRecords.filter((g) => g.gradeNumber >= 10)
 
     for (const grade of highGrades) {
@@ -234,7 +262,11 @@ export async function setupCatalogForSchool(
             streamType: streamDef.streamType,
           },
         })
-        streamRecords.push({ id: stream.id, gradeId: grade.id })
+        streamRecords.push({
+          id: stream.id,
+          gradeId: grade.id,
+          streamType: streamDef.streamType,
+        })
       }
     }
 
@@ -278,17 +310,38 @@ export async function setupCatalogForSchool(
         )
         if (!gradeRecord) continue
 
-        await tx.schoolSubjectSelection.create({
-          data: {
-            schoolId,
-            catalogSubjectId: subject.id,
-            gradeId: gradeRecord.id,
-            isRequired: true,
-            isActive: true,
-            weeklyPeriods: getDefaultWeeklyPeriods(subject.name, gradeNumber),
-          },
-        })
-        selectionCount++
+        const baseData = {
+          schoolId,
+          catalogSubjectId: subject.id,
+          gradeId: gradeRecord.id,
+          isRequired: true,
+          isActive: true,
+          weeklyPeriods: getDefaultWeeklyPeriods(subject.name, gradeNumber),
+        }
+
+        // For grades 10+ with streams, create stream-scoped selections
+        const subjectStreamType =
+          gradeNumber >= 10 ? getSubjectStreamType(subject.name) : null
+        const gradeStreams = streamRecords.filter(
+          (s) => s.gradeId === gradeRecord.id
+        )
+
+        if (subjectStreamType && gradeStreams.length > 0) {
+          // Stream-specific subject: create selection only for matching stream(s)
+          const matchingStreams = gradeStreams.filter(
+            (s) => s.streamType === subjectStreamType
+          )
+          for (const stream of matchingStreams) {
+            await tx.schoolSubjectSelection.create({
+              data: { ...baseData, streamId: stream.id },
+            })
+            selectionCount++
+          }
+        } else {
+          // Shared subject or no streams: create without streamId
+          await tx.schoolSubjectSelection.create({ data: baseData })
+          selectionCount++
+        }
       }
     }
 

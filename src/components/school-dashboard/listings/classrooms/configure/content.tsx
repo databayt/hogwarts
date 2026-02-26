@@ -51,7 +51,8 @@ export async function ConfigureContent({ dictionary, lang }: Props) {
         <CardDescription>
           Configure how many sections each grade should have. Generating
           sections automatically creates both the class section and its assigned
-          room.
+          room. Generated sections use placeholder teacher and subject
+          assignments — reassign them in the Classes view after generation.
         </CardDescription>
       </CardHeader>
       <CardContent>

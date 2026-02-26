@@ -326,7 +326,7 @@ export function SubjectsBrowseSkeleton() {
               key={i}
               className="flex items-center gap-3 overflow-hidden rounded-lg border"
             >
-              <Skeleton className="h-16 w-16 shrink-0 rounded-lg" />
+              <Skeleton className="h-16 w-16 shrink-0 rounded-s-lg rounded-e-none" />
               <div className="min-w-0 pe-3">
                 <Skeleton className="h-4 w-28" />
                 <Skeleton className="mt-1 h-3.5 w-14 rounded-full" />

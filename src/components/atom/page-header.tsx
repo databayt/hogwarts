@@ -35,7 +35,16 @@ export function PageHeader({
         {announcement && (
           <div className={cn(announcementClassName)}>{announcement}</div>
         )}
-        {heading && <h2 className={cn(headingClassName)}>{heading}</h2>}
+        {heading && (
+          <h2
+            className={cn(
+              "text-4xl font-semibold tracking-tight",
+              headingClassName
+            )}
+          >
+            {heading}
+          </h2>
+        )}
         {description && (
           <p
             className={cn(

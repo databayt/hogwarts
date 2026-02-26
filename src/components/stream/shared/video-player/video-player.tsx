@@ -71,6 +71,27 @@ function VolumeMidIcon({ className }: { className?: string }) {
   )
 }
 
+function VolumeLowIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M2,16H5.889l5.295,4.332A.5.5,0,0,0,12,19.945V4.055a.5.5,0,0,0-.817-.387L5.889,8H2A1,1,0,0,0,1,9v6A1,1,0,0,0,2,16Z" />
+      <path
+        opacity="0.3"
+        d="M18,12a5.989,5.989,0,0,0-2.287-4.713L14.284,8.716a4,4,0,0,1,0,6.568l1.429,1.429A5.989,5.989,0,0,0,18,12Z"
+      />
+      <path
+        opacity="0.3"
+        d="M23,12a10.974,10.974,0,0,1-3.738,8.262l-1.418-1.418a9,9,0,0,0,0-13.689l1.418-1.418A10.974,10.974,0,0,1,23,12Z"
+      />
+    </svg>
+  )
+}
+
 function VolumeMutedIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -84,7 +105,7 @@ function VolumeMutedIcon({ className }: { className?: string }) {
   )
 }
 
-// Apple TV PiP icon
+// Apple TV PiP icon — rounded outer frame with filled mini-player
 function PipIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -93,12 +114,19 @@ function PipIcon({ className }: { className?: string }) {
       fill="currentColor"
       className={className}
     >
-      <path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zm-2-8h-7v5h7v-5z" />
+      <path
+        d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <rect x="12.5" y="12" width="7" height="5" rx="1" fill="currentColor" />
     </svg>
   )
 }
 
-// Apple TV Share icon (square with upward arrow)
+// Apple TV Share icon — square with upward arrow (SF Symbols style)
 function ShareIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -107,7 +135,14 @@ function ShareIcon({ className }: { className?: string }) {
       fill="currentColor"
       className={className}
     >
-      <path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z" />
+      <path
+        d="M12 2.5l4 4-1.4 1.4L13 6.3V15h-2V6.3L9.4 7.9 8 6.5l4-4z"
+        fill="currentColor"
+      />
+      <path
+        d="M6 10h3v2H6.5a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.5-.5H15v-2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"
+        fill="currentColor"
+      />
     </svg>
   )
 }
@@ -165,8 +200,8 @@ export function VideoPlayer({
   const hasTriggeredUpNextRef = useRef(false)
   const hasResumedRef = useRef(false)
 
-  // Volume slider — initially open like Apple TV
-  const [showVolumeSlider, setShowVolumeSlider] = useState(true)
+  // Volume slider — compact, expands on hover
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false)
   const volumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Speed menu state
@@ -421,22 +456,26 @@ export function VideoPlayer({
     actions.cancelUpNext()
   }, [actions])
 
-  // Volume hover handlers (keep slider always visible)
+  // Volume hover handlers — expand slider on hover, collapse on leave
   const handleVolumeEnter = useCallback(() => {
     if (volumeTimeoutRef.current) clearTimeout(volumeTimeoutRef.current)
+    setShowVolumeSlider(true)
   }, [])
 
   const handleVolumeLeave = useCallback(() => {
-    // No-op: volume slider stays always open
+    volumeTimeoutRef.current = setTimeout(() => setShowVolumeSlider(false), 600)
   }, [])
 
-  // Volume icon selection
-  const VolumeIcon =
-    state.isMuted || state.volume === 0
+  // Volume icon selection — matches original 4-level thresholds
+  const VolumeIcon = state.isMuted
+    ? VolumeMutedIcon
+    : state.volume <= 0
       ? VolumeMutedIcon
-      : state.volume < 50
-        ? VolumeMidIcon
-        : VolumeHighIcon
+      : state.volume <= 20
+        ? VolumeLowIcon
+        : state.volume <= 60
+          ? VolumeMidIcon
+          : VolumeHighIcon
 
   // Info label parts
   const infoSubtitle =
@@ -604,36 +643,44 @@ export function VideoPlayer({
             transition={{ duration: 0.3 }}
             className="absolute end-4 top-4 z-10 flex items-center gap-1"
           >
-            {/* Volume slider + icon — Apple TV style: slider left, icon right */}
+            {/* Volume — compact: icon only, slider expands on hover */}
             <div
-              className="flex items-center gap-2 rounded-full px-3 py-1.5 backdrop-blur-[40px]"
+              className="flex items-center overflow-hidden rounded-full backdrop-blur-[40px] transition-all duration-300"
               style={topGlassStyle}
               onMouseEnter={handleVolumeEnter}
               onMouseLeave={handleVolumeLeave}
             >
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={state.isMuted ? 0 : state.volume}
-                onChange={(e) => actions.setVolume(Number(e.target.value))}
-                className="h-[3px] w-20 cursor-pointer appearance-none rounded-full bg-white/30 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+              <div
+                className="overflow-hidden transition-all duration-300 ease-in-out"
                 style={{
-                  background: `linear-gradient(to right, rgba(255,255,255,0.9) ${state.isMuted ? 0 : state.volume}%, rgba(255,255,255,0.3) ${state.isMuted ? 0 : state.volume}%)`,
+                  width: showVolumeSlider ? 80 : 0,
+                  opacity: showVolumeSlider ? 1 : 0,
                 }}
-                aria-label="Volume"
-                onClick={(e) => e.stopPropagation()}
-              />
+              >
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={state.isMuted ? 0 : state.volume}
+                  onChange={(e) => actions.setVolume(Number(e.target.value))}
+                  className="ms-3 h-[3px] w-[68px] cursor-pointer appearance-none rounded-full bg-white/30 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                  style={{
+                    background: `linear-gradient(to right, rgba(255,255,255,0.9) ${state.isMuted ? 0 : state.volume}%, rgba(255,255,255,0.3) ${state.isMuted ? 0 : state.volume}%)`,
+                  }}
+                  aria-label="Volume"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation()
                   actions.toggleMute()
                 }}
-                className="flex shrink-0 items-center justify-center transition-opacity hover:opacity-80"
+                className="flex h-8 w-8 shrink-0 items-center justify-center transition-opacity hover:opacity-80"
                 aria-label={state.isMuted ? "Unmute" : "Mute"}
               >
-                <VolumeIcon className="h-4 w-4 text-white" />
+                <VolumeIcon className="h-3.5 w-3.5 text-white" />
               </button>
             </div>
           </motion.div>

@@ -67,6 +67,20 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
       }
     }
 
+    // Auto-create default ClassroomType so the Configure tab works post-onboarding
+    try {
+      await db.classroomType.upsert({
+        where: { schoolId_name: { schoolId, name: "Classroom" } },
+        create: { schoolId, name: "Classroom" },
+        update: {},
+      })
+    } catch (classroomTypeError) {
+      console.error(
+        `[publishSchool] ClassroomType creation failed for school ${schoolId}:`,
+        classroomTypeError
+      )
+    }
+
     revalidatePath(`/onboarding/${schoolId}`)
 
     return createActionResponse({

@@ -36,7 +36,7 @@ export function CapacityForm({
     defaultValues: {
       studentCount: initialData?.studentCount || 400,
       teachers: initialData?.teachers || 10,
-      classrooms: initialData?.classrooms || 20,
+      classSections: initialData?.classSections || 20,
     },
   })
 
@@ -164,7 +164,7 @@ export function CapacityForm({
           />
           <CounterRow
             label={dict.classSections || "Class Sections"}
-            field="classrooms"
+            field="classSections"
             step={1}
             minValue={1}
           />

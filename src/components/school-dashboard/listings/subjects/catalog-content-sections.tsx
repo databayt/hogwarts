@@ -352,43 +352,53 @@ export function CatalogContentSections({
           actionHref={`/${lang}/s/${subdomain}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`}
           actionLabel={t.seeAll}
         >
-          <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1">
+          <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
             {data.exams.map((exam) => (
-              <Card key={exam.id} className="w-56 shrink-0">
-                <CardContent className="p-3">
-                  <Badge
-                    variant="secondary"
-                    className="mb-2 text-[10px]"
-                    style={{
-                      backgroundColor: `${accentColor}20`,
-                      color: accentColor,
-                    }}
-                  >
-                    {t[exam.examType as keyof typeof t] ?? exam.examType}
-                  </Badge>
-                  <p className="line-clamp-2 text-sm font-medium">
-                    {exam.title}
-                  </p>
-                  <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-                    {exam.durationMinutes && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="size-3" />
-                        {exam.durationMinutes} {t.min}
-                      </span>
-                    )}
-                    {exam.totalMarks && (
-                      <span>
-                        {exam.totalMarks} {t.marks}
-                      </span>
-                    )}
-                    {exam.totalQuestions && (
-                      <span>
-                        {exam.totalQuestions} {t.questions}
-                      </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <div
+                key={exam.id}
+                className="w-56 shrink-0 rounded-xl p-3"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.15) 100%)",
+                  backdropFilter: "blur(40px) saturate(150%)",
+                  WebkitBackdropFilter: "blur(40px) saturate(150%)",
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                  boxShadow:
+                    "0 4px 24px -1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.4)",
+                }}
+              >
+                <Badge
+                  variant="secondary"
+                  className="mb-2 border-none text-[10px]"
+                  style={{
+                    backgroundColor: `${accentColor}20`,
+                    color: accentColor,
+                  }}
+                >
+                  {t[exam.examType as keyof typeof t] ?? exam.examType}
+                </Badge>
+                <p className="text-foreground line-clamp-2 text-sm font-medium">
+                  {exam.title}
+                </p>
+                <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                  {exam.durationMinutes && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="size-3" />
+                      {exam.durationMinutes} {t.min}
+                    </span>
+                  )}
+                  {exam.totalMarks && (
+                    <span>
+                      {exam.totalMarks} {t.marks}
+                    </span>
+                  )}
+                  {exam.totalQuestions && (
+                    <span>
+                      {exam.totalQuestions} {t.questions}
+                    </span>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         </ContentSection>

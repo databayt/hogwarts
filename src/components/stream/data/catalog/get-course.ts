@@ -110,13 +110,13 @@ export async function getCatalogCourse(
           })
           .then(async (groups) => {
             const topCreatorSchoolId = groups[0]?.schoolId ?? null
-            // Platform content (null schoolId) → "Hogwarts Academy"
-            if (!topCreatorSchoolId) return "Hogwarts Academy"
+            // Platform content (null schoolId) → "Hogwarts"
+            if (!topCreatorSchoolId) return "Hogwarts"
             const school = await db.school.findUnique({
               where: { id: topCreatorSchoolId },
               select: { name: true, preferredLanguage: true },
             })
-            if (!school?.name) return "Hogwarts Academy"
+            if (!school?.name) return "Hogwarts"
             const storedLang = (school.preferredLanguage || "ar") as "ar" | "en"
             const displayLang = (lang === "ar" ? "ar" : "en") as "ar" | "en"
             if (storedLang === displayLang) return school.name
@@ -127,7 +127,7 @@ export async function getCatalogCourse(
               topCreatorSchoolId
             )
           })
-      : Promise.resolve("Hogwarts Academy"),
+      : Promise.resolve("Hogwarts"),
   ])
 
   // Map to Stream-compatible shape

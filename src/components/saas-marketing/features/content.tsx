@@ -27,7 +27,9 @@ export default function Content({ dictionary, params }: ContentProps) {
 
       {/* Impact metrics */}
       <section className="py-16 md:py-24">
-        <h2 className="mb-12 text-center">{t.impactTitle}</h2>
+        <h2 className="mb-12 text-center text-3xl font-semibold tracking-tight">
+          {t.impactTitle}
+        </h2>
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
           {IMPACT_METRICS.map((metric) => (
             <div
@@ -47,21 +49,21 @@ export default function Content({ dictionary, params }: ContentProps) {
       </section>
 
       {/* CTA */}
-      <section className="bg-muted/50 flex flex-col items-center gap-6 rounded-2xl p-8 text-center md:p-16">
-        <h2>{t.ctaTitle}</h2>
+      <section className="bg-muted/50 mb-16 flex flex-col items-center gap-6 rounded-2xl p-8 text-center md:p-16">
+        <h2 className="text-3xl font-semibold tracking-tight">{t.ctaTitle}</h2>
         <p className="text-muted-foreground max-w-lg">{t.ctaSubtitle}</p>
         <div className="flex gap-4">
           <Link
-            href={`/${params.lang}/onboarding`}
+            href={`/${params.lang}/features`}
             className={cn(buttonVariants({ size: "lg" }))}
           >
-            {t.ctaGetStarted}
+            Browse Features
           </Link>
           <Link
-            href={`/${params.lang}/pricing`}
+            href={`/${params.lang}/contact`}
             className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
           >
-            {t.ctaViewPricing}
+            Request Feature
           </Link>
         </div>
       </section>

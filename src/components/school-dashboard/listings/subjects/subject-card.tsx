@@ -57,7 +57,7 @@ function SubjectCardInner({
       {/* Image - rounded on outer edge, sharp on text side */}
       <div
         className={cn(
-          "bg-muted relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-s-lg"
+          "bg-muted relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-s-lg rounded-e-none"
         )}
       >
         <Image
@@ -98,7 +98,7 @@ export const SubjectCard = React.memo(SubjectCardInner)
 export function SubjectCardSkeleton() {
   return (
     <div className="flex items-center gap-3 rounded-lg border">
-      <Skeleton className="h-14 w-14 flex-shrink-0 rounded-s-lg" />
+      <Skeleton className="h-14 w-14 flex-shrink-0 rounded-s-lg rounded-e-none" />
       <Skeleton className="h-4 w-24" />
     </div>
   )

@@ -288,8 +288,8 @@ export async function getCatalogLessonWithProgress(
       source,
       instructor: {
         id: v.user.id,
-        name: v.user.username,
-        image: v.user.image,
+        name: v.schoolId === null ? "Hogwarts" : v.user.username,
+        image: v.schoolId === null ? "/logo.png" : v.user.image,
       },
       school: {
         id: v.school?.id ?? null,
