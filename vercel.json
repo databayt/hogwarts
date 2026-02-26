@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/publish-announcements",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/expire-announcements",
@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/process-email-notifications",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
