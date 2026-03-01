@@ -12,6 +12,7 @@ export interface PageNavItem {
   name: string
   href: string
   hidden?: boolean
+  exact?: boolean
 }
 
 interface PageNavProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -28,21 +29,16 @@ export function PageNav({
   const pathname = usePathname()
 
   // Helper to check if a page is active
-  const isPageActive = (pageHref: string) => {
+  const isPageActive = (page: PageNavItem) => {
     // Remove trailing slash for comparison
     const normalizedPath = pathname.replace(/\/$/, "")
-    const normalizedHref = pageHref.replace(/\/$/, "")
-
-    // For attendance overview, check if we're at the base attendance path
-    if (
-      normalizedHref.endsWith("/attendance") &&
-      normalizedPath.endsWith("/attendance")
-    ) {
-      return true
-    }
+    const normalizedHref = page.href.replace(/\/$/, "")
 
     // Exact match
     if (normalizedPath === normalizedHref) return true
+
+    // If exact is set, only use exact match (no sub-path matching)
+    if (page.exact) return false
 
     // Sub-path match only for deep links (e.g. /school/configuration matches /school/configuration/identity)
     // Skip for shallow hrefs like /school (would falsely match /school/configuration)
@@ -62,10 +58,7 @@ export function PageNav({
       <ScrollArea className="max-w-[600px] lg:max-w-none">
         <nav className="flex items-center gap-6">
           {defaultPage && (
-            <PageLink
-              page={defaultPage}
-              isActive={isPageActive(defaultPage.href)}
-            />
+            <PageLink page={defaultPage} isActive={isPageActive(defaultPage)} />
           )}
           {pages
             .filter((page) => !page.hidden)
@@ -73,7 +66,7 @@ export function PageNav({
               <PageLink
                 key={page.href}
                 page={page}
-                isActive={isPageActive(page.href)}
+                isActive={isPageActive(page)}
               />
             ))}
         </nav>

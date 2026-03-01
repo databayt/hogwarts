@@ -555,6 +555,53 @@ export async function generateMultipleVersions(
 }
 
 // ============================================================================
+// DELETE PAPER
+// ============================================================================
+
+export async function deletePaper(
+  paperId: string
+): Promise<ActionResult<void>> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" }
+    }
+
+    const paper = await db.generatedPaper.findFirst({
+      where: { id: paperId, schoolId },
+      select: {
+        id: true,
+        configId: true,
+        config: { select: { generatedExamId: true } },
+      },
+    })
+
+    if (!paper) {
+      return {
+        success: false,
+        error: "Paper not found",
+        code: "NOT_FOUND",
+      }
+    }
+
+    await db.generatedPaper.delete({ where: { id: paperId } })
+
+    revalidatePath(`/exams/paper/${paper.config.generatedExamId}`)
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("Error deleting paper:", error)
+    return {
+      success: false,
+      error: "Failed to delete paper",
+      code: "DELETE_FAILED",
+    }
+  }
+}
+
+// ============================================================================
 // GET PAPER DATA (for preview)
 // ============================================================================
 

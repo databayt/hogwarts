@@ -68,6 +68,11 @@ export const paperConfigFormSchema = z.object({
 
   // Versioning
   versionCount: z.number().int().min(1).max(5).default(1),
+
+  // Regional preset & copy count
+  regionPreset: z.string().max(50).optional(),
+  customCopies: z.number().int().min(1).max(1000).optional(),
+  spareCopies: z.number().int().min(0).max(50).default(2),
 })
 
 export type PaperConfigFormInput = z.input<typeof paperConfigFormSchema>

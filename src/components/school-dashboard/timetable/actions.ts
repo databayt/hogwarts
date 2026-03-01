@@ -844,40 +844,18 @@ export async function getTeachersForSelection(input: unknown) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  const timetableModel = getModel("timetable")
-  if (timetableModel && validatedInput?.termId) {
-    const rows = await timetableModel.findMany({
-      where: { schoolId, termId: validatedInput.termId },
-      select: {
-        teacher: { select: { id: true, givenName: true, surname: true } },
-      },
-      distinct: ["teacherId"],
-    })
-    return {
-      teachers: rows.map((r: any) => ({
-        id: r.teacher.id,
-        label: [r.teacher.givenName, r.teacher.surname]
-          .filter(Boolean)
-          .join(" "),
-      })),
-    }
-  }
+  const rows = await db.teacher.findMany({
+    where: { schoolId },
+    orderBy: { surname: "asc" },
+    select: { id: true, givenName: true, surname: true },
+  })
 
-  const teacherModel = getModel("teacher")
-  if (teacherModel) {
-    const rows = await teacherModel.findMany({
-      where: { schoolId },
-      select: { id: true, givenName: true, surname: true },
-    })
-    return {
-      teachers: rows.map((t: any) => ({
-        id: t.id,
-        label: [t.givenName, t.surname].filter(Boolean).join(" "),
-      })),
-    }
+  return {
+    teachers: rows.map((t) => ({
+      id: t.id,
+      label: [t.givenName, t.surname].filter(Boolean).join(" "),
+    })),
   }
-
-  return { teachers: [] as Array<{ id: string; label: string }> }
 }
 
 export async function upsertTimetableSlot(input: unknown) {

@@ -32,6 +32,7 @@ export {
 
 // Generation actions
 export {
+  deletePaper,
   generateAnswerKey,
   generateExamPaper,
   generateMultipleVersions,

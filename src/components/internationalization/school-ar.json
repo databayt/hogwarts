@@ -475,6 +475,7 @@
     "attendance": {
       "title": "الحضور",
       "manual": "الحضور اليدوي",
+      "mark": "تسجيل",
       "overview": "نظرة عامة",
       "settings": "الإعدادات",
       "analytics": "التحليلات",

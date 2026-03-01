@@ -7,11 +7,14 @@
  * Paper List Component
  * Shows list of generated papers
  */
+import { useTransition } from "react"
+import { useRouter } from "next/navigation"
 import type { GeneratedPaper } from "@prisma/client"
 import { formatDistanceToNow } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import { Download, Eye, FileText, MoreHorizontal, Trash2 } from "lucide-react"
 
+import { toast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -37,6 +40,8 @@ import {
 } from "@/components/ui/table"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { deletePaper } from "./actions"
+
 interface PaperListProps {
   papers: GeneratedPaper[]
   locale: "en" | "ar"
@@ -44,9 +49,33 @@ interface PaperListProps {
 
 export function PaperList({ papers, locale }: PaperListProps) {
   const { dictionary } = useDictionary()
-  const t = dictionary?.generate?.paper?.list
+  // Cast to allow new i18n keys not yet in typed dictionary
+  const t = dictionary?.generate?.paper?.list as
+    | Record<string, string>
+    | undefined
   const isRTL = locale === "ar"
   const dateLocale = isRTL ? ar : enUS
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+
+  const handleDelete = (paperId: string) => {
+    startTransition(async () => {
+      const result = await deletePaper(paperId)
+      if (result.success) {
+        toast({
+          title: t?.deleted || "Deleted",
+          description: t?.paper_deleted || "Paper deleted successfully",
+        })
+        router.refresh()
+      } else {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        })
+      }
+    })
+  }
 
   if (papers.length === 0) {
     return (
@@ -160,7 +189,11 @@ export function PaperList({ papers, locale }: PaperListProps) {
                           </>
                         )}
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        disabled={isPending}
+                        onClick={() => handleDelete(paper.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                         <span className="ms-2">{t?.delete || "Delete"}</span>
                       </DropdownMenuItem>

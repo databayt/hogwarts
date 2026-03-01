@@ -8,11 +8,13 @@
 
 import type { ExamPaperTemplate } from "@prisma/client"
 
+import {
+  ClassicTemplate,
+  CustomTemplate,
+  FormalTemplate,
+  ModernTemplate,
+} from "../../templates"
 import type { ExamPaperData } from "../types"
-import { ClassicTemplate } from "./classic"
-import { CustomTemplate } from "./custom"
-import { FormalTemplate } from "./formal"
-import { ModernTemplate } from "./modern"
 
 // ============================================================================
 // Template Registry
@@ -78,8 +80,10 @@ export function getAllTemplates(): Array<{
 // Exports
 // ============================================================================
 
-export { ClassicTemplate } from "./classic"
-export { CustomTemplate } from "./custom"
-export { FormalTemplate } from "./formal"
-export { ModernTemplate } from "./modern"
+export {
+  ClassicTemplate,
+  CustomTemplate,
+  FormalTemplate,
+  ModernTemplate,
+} from "../../templates"
 export * from "./components"

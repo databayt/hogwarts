@@ -33,8 +33,8 @@ export default async function AttendanceLayout({ children, params }: Props) {
   // - Analytics, Reports: staff only
   // - Settings: admin/developer only
   const attendancePages: PageNavItem[] = [
-    { name: d?.overview || "Overview", href: basePath },
-    { name: d?.manual || "Mark", href: `${basePath}/manual`, hidden: !isStaff },
+    { name: d?.overview || "Overview", href: basePath, exact: true },
+    { name: d?.mark || "Mark", href: `${basePath}/manual`, hidden: !isStaff },
     {
       name: d?.navQrCode || "QR Code",
       href: `${basePath}/qr-code`,

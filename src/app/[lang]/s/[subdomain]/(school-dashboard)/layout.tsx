@@ -35,8 +35,10 @@ export default async function PlatformLayout({
     auth(),
   ])
 
-  if (!result.success || !result.data) {
-    console.error("School not found for subdomain:", subdomain, result)
+  if (!result.success) {
+    if (result.errorType === "db_error") {
+      throw new Error("Database temporarily unavailable")
+    }
     notFound()
   }
 

@@ -32,7 +32,10 @@ export default async function SchoolOnboardLayout({
   const { subdomain } = await params
   const result = await getSchoolBySubdomain(subdomain)
 
-  if (!result.success || !result.data) {
+  if (!result.success) {
+    if (result.errorType === "db_error") {
+      throw new Error("Database temporarily unavailable")
+    }
     notFound()
   }
 

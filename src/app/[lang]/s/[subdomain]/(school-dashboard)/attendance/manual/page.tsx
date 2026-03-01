@@ -50,30 +50,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <AttendanceProvider initialMethod="MANUAL">
-      <div className="space-y-6">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="rounded-lg bg-blue-100 p-3">
-            <svg
-              className="h-6 w-6 text-blue-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Manual Attendance</h1>
-            <p className="text-muted-foreground">
-              Mark attendance manually for your class
-            </p>
-          </div>
-        </div>
-        <AttendanceContent dictionary={dictionary.school} />
-      </div>
+      <AttendanceContent dictionary={dictionary.school} />
     </AttendanceProvider>
   )
 }

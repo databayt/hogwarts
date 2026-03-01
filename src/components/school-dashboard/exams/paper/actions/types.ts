@@ -50,6 +50,9 @@ export interface CreatePaperConfigInput {
   pageSize?: "A4" | "Letter"
   orientation?: "portrait" | "landscape"
   versionCount?: number
+  regionPreset?: string
+  customCopies?: number
+  spareCopies?: number
 }
 
 export interface UpdatePaperConfigInput {
@@ -75,6 +78,9 @@ export interface UpdatePaperConfigInput {
   pageSize?: "A4" | "Letter"
   orientation?: "portrait" | "landscape"
   versionCount?: number
+  regionPreset?: string | null
+  customCopies?: number | null
+  spareCopies?: number
 }
 
 // ============================================================================

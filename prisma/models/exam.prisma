@@ -523,6 +523,12 @@ model ExamPaperConfig {
   // Versioning (for multiple exam versions A/B/C)
   versionCount Int @default(1)
 
+  // Regional preset & copy count
+  regionPreset      String? // "sd-national", "sa-national", etc.
+  recommendedCopies Int?    // Auto-calculated: enrolled + spare
+  customCopies      Int?    // Teacher override
+  spareCopies       Int     @default(2)
+
   // Catalog bridge FK (adopted from catalog paper template)
   catalogPaperTemplateId String?
 

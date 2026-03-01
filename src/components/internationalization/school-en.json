@@ -475,6 +475,7 @@
     "attendance": {
       "title": "Attendance",
       "manual": "Manual Attendance",
+      "mark": "Mark",
       "overview": "Overview",
       "settings": "Settings",
       "analytics": "Analytics",

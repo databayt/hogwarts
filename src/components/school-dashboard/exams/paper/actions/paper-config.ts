@@ -12,6 +12,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 
+import { detectRegionPreset } from "../../templates/presets"
 import { DEFAULT_PAPER_CONFIG } from "../config"
 import type {
   ActionResult,
@@ -76,6 +77,23 @@ export async function createPaperConfig(
       }
     }
 
+    // Auto-detect region preset from school metadata
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { country: true, curriculum: true, schoolType: true },
+    })
+    const autoPreset = school ? detectRegionPreset(school) : undefined
+
+    // Calculate recommended copies from class enrollment
+    const enrolledCount = await db.studentClass.count({
+      where: {
+        classId: generatedExam.exam.classId,
+        schoolId,
+      },
+    })
+    const spareCopies = input.spareCopies ?? 2
+    const recommendedCopies = enrolledCount + spareCopies
+
     // Create config with defaults
     const config = await db.examPaperConfig.create({
       data: {
@@ -117,6 +135,10 @@ export async function createPaperConfig(
         pageSize: input.pageSize ?? DEFAULT_PAPER_CONFIG.pageSize,
         orientation: input.orientation ?? DEFAULT_PAPER_CONFIG.orientation,
         versionCount: input.versionCount ?? DEFAULT_PAPER_CONFIG.versionCount,
+        regionPreset: input.regionPreset ?? autoPreset,
+        recommendedCopies,
+        customCopies: input.customCopies,
+        spareCopies,
       },
       include: {
         generatedExam: {
@@ -257,6 +279,9 @@ export async function updatePaperConfig(
       "pageSize",
       "orientation",
       "versionCount",
+      "regionPreset",
+      "customCopies",
+      "spareCopies",
     ] as const
 
     for (const field of fields) {

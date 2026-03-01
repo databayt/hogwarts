@@ -48,21 +48,45 @@ import { ANSWER_SHEET_TYPES, PAPER_LAYOUTS, PAPER_TEMPLATES } from "./types"
 import { paperConfigFormSchema } from "./validation"
 import type { PaperConfigFormInput } from "./validation"
 
+const REGION_PRESETS = {
+  "sd-national": {
+    label: "Sudan National",
+    labelAr: "الامتحان الوطني السوداني",
+  },
+  "sa-national": {
+    label: "Saudi National",
+    labelAr: "الامتحان الوطني السعودي",
+  },
+  "us-standard": {
+    label: "US K-12 Standard",
+    labelAr: "المعيار الأمريكي K-12",
+  },
+  "mena-private": {
+    label: "MENA Private/International",
+    labelAr: "مدارس خاصة/دولية",
+  },
+} as const
+
 interface ConfigFormProps {
   generatedExamId: string
   existingConfig?: PaperConfigWithRelations
   locale: "en" | "ar"
   dictionary?: Record<string, unknown>
+  recommendedCopies?: number
 }
 
 export function ConfigForm({
   generatedExamId,
   existingConfig,
   locale,
+  recommendedCopies,
 }: ConfigFormProps) {
   const router = useRouter()
   const { dictionary } = useDictionary()
-  const t = dictionary?.generate?.paper?.config
+  // Cast to allow new i18n keys not yet in typed dictionary
+  const t = dictionary?.generate?.paper?.config as
+    | Record<string, string>
+    | undefined
   const [isPending, startTransition] = useTransition()
   const [previewKey, setPreviewKey] = useState(0)
 
@@ -96,6 +120,9 @@ export function ConfigForm({
             (existingConfig.orientation as "portrait" | "landscape") ??
             "portrait",
           versionCount: existingConfig.versionCount,
+          regionPreset: existingConfig.regionPreset ?? undefined,
+          customCopies: existingConfig.customCopies ?? undefined,
+          spareCopies: existingConfig.spareCopies ?? 2,
         }
       : {
           template: "CLASSIC",
@@ -119,6 +146,9 @@ export function ConfigForm({
           pageSize: "A4",
           orientation: "portrait",
           versionCount: 1,
+          regionPreset: undefined,
+          customCopies: undefined,
+          spareCopies: 2,
         },
   })
 
@@ -777,6 +807,129 @@ export function ConfigForm({
                   <FormDescription>
                     {t?.version_count_desc ||
                       "Number of exam versions (A, B, C...)"}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Region Preset & Print Copies */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t?.region_copies || "Region & Print Copies"}</CardTitle>
+            <CardDescription>
+              {t?.region_copies_desc ||
+                "Regional exam format and print quantity"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="regionPreset"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t?.region_preset || "Region Preset"}</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value === "auto" ? undefined : value)
+                      triggerPreview()
+                    }}
+                    defaultValue={field.value ?? "auto"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="auto">
+                        {t?.auto_detect || "Auto-detect"}
+                      </SelectItem>
+                      {Object.entries(REGION_PRESETS).map(([key, preset]) => (
+                        <SelectItem key={key} value={key}>
+                          {isRTL ? preset.labelAr : preset.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    {t?.region_preset_desc ||
+                      "Applies regional formatting (headers, watermarks, etc.)"}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="spareCopies"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t?.spare_copies || "Spare Copies"}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={50}
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t?.spare_copies_desc || "Extra copies beyond enrollment"}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="customCopies"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t?.custom_copies || "Custom Copies"}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={1000}
+                      placeholder={
+                        recommendedCopies
+                          ? String(recommendedCopies)
+                          : t?.auto_placeholder || "Auto"
+                      }
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? parseInt(e.target.value) : undefined
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {recommendedCopies
+                      ? (
+                          t?.recommended_copies ||
+                          "Recommended: {count} copies ({enrolled} enrolled + {spare} spare)"
+                        )
+                          .replace("{count}", String(recommendedCopies))
+                          .replace(
+                            "{enrolled}",
+                            String(
+                              recommendedCopies -
+                                (form.watch("spareCopies") ?? 2)
+                            )
+                          )
+                          .replace(
+                            "{spare}",
+                            String(form.watch("spareCopies") ?? 2)
+                          )
+                      : t?.custom_copies_desc ||
+                        "Override auto-calculated count"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

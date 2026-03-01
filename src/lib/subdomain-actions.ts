@@ -62,10 +62,25 @@
  */
 import { revalidatePath } from "next/cache"
 
+import { dbCircuitBreaker } from "@/lib/circuit-breaker"
 import { db } from "@/lib/db"
 
 import { dnsService } from "./dns-service"
 import { isValidSubdomain, normalizeSubdomain } from "./subdomain"
+
+// In-memory cache for getSchoolBySubdomain (same pattern as tenant-context.ts)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const schoolCache = new Map<string, { data: any; expiresAt: number }>()
+const SCHOOL_CACHE_TTL_MS = 60 * 1000 // 60 seconds
+
+export type SchoolLookupResult =
+  | { success: true; data: any; errorType?: undefined; error?: undefined }
+  | {
+      success: false
+      data?: undefined
+      errorType: "not_found" | "db_error"
+      error: string
+    }
 
 /**
  * Check if a subdomain is available for use
@@ -226,52 +241,113 @@ export async function updateSubdomain(
   }
 }
 
-/**
- * Get school data by subdomain
- */
-export async function getSchoolBySubdomain(subdomain: string): Promise<{
-  success: boolean
-  data?: any
-  error?: string
-}> {
-  try {
-    const normalized = normalizeSubdomain(subdomain)
+const SCHOOL_SELECT = {
+  id: true,
+  name: true,
+  domain: true,
+  logoUrl: true,
+  address: true,
+  phoneNumber: true,
+  email: true,
+  website: true,
+  timezone: true,
+  preferredLanguage: true,
+  planType: true,
+  maxStudents: true,
+  maxTeachers: true,
+  isActive: true,
+  currency: true,
+  createdAt: true,
+  updatedAt: true,
+} as const
 
-    const school = await db.school.findUnique({
-      where: { domain: normalized },
-      select: {
-        id: true,
-        name: true,
-        domain: true,
-        logoUrl: true,
-        address: true,
-        phoneNumber: true,
-        email: true,
-        website: true,
-        timezone: true,
-        preferredLanguage: true,
-        planType: true,
-        maxStudents: true,
-        maxTeachers: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+/**
+ * Get school data by subdomain — with in-memory cache, circuit breaker, and retry.
+ *
+ * Returns distinct error types so callers can differentiate:
+ * - "not_found" → subdomain doesn't exist (show 404)
+ * - "db_error"  → transient DB failure (show retry UI)
+ */
+export async function getSchoolBySubdomain(
+  subdomain: string
+): Promise<SchoolLookupResult> {
+  const normalized = normalizeSubdomain(subdomain)
+  const now = Date.now()
+
+  // Check in-memory cache first
+  const cached = schoolCache.get(normalized)
+  if (cached && cached.expiresAt > now) {
+    if (cached.data) {
+      return { success: true, data: cached.data }
+    }
+    return { success: false, errorType: "not_found", error: "School not found" }
+  }
+
+  // DB lookup with circuit breaker + one retry on transient errors
+  try {
+    const school = await dbCircuitBreaker.execute(() =>
+      db.school.findUnique({
+        where: { domain: normalized },
+        select: SCHOOL_SELECT,
+      })
+    )
+
+    // Cache the result (including nulls to avoid repeated lookups)
+    schoolCache.set(normalized, {
+      data: school,
+      expiresAt: now + SCHOOL_CACHE_TTL_MS,
     })
+
+    // Evict stale entries when cache grows large
+    if (schoolCache.size > 100) {
+      for (const [key, value] of schoolCache) {
+        if (value.expiresAt < now) schoolCache.delete(key)
+      }
+    }
 
     if (!school) {
       return {
         success: false,
+        errorType: "not_found",
         error: "School not found",
       }
     }
 
     return { success: true, data: school }
   } catch (error) {
-    console.error("Error fetching school by subdomain:", error)
-    return {
-      success: false,
-      error: "Database error occurred",
+    // One automatic retry for transient DB errors (cold starts, connection resets)
+    try {
+      const school = await dbCircuitBreaker.execute(() =>
+        db.school.findUnique({
+          where: { domain: normalized },
+          select: SCHOOL_SELECT,
+        })
+      )
+
+      schoolCache.set(normalized, {
+        data: school,
+        expiresAt: now + SCHOOL_CACHE_TTL_MS,
+      })
+
+      if (!school) {
+        return {
+          success: false,
+          errorType: "not_found",
+          error: "School not found",
+        }
+      }
+
+      return { success: true, data: school }
+    } catch (retryError) {
+      console.error(
+        `[getSchoolBySubdomain] DB error for "${normalized}" after retry:`,
+        retryError
+      )
+      return {
+        success: false,
+        errorType: "db_error",
+        error: "Database temporarily unavailable",
+      }
     }
   }
 }

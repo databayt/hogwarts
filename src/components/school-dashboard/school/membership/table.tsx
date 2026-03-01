@@ -2,11 +2,12 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Download, UserPlus } from "lucide-react"
 
+import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { Locale } from "@/components/internationalization/config"
+import { PlatformToolbar } from "@/components/school-dashboard/shared"
 import { DataTable } from "@/components/table/data-table"
 import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
@@ -39,6 +40,7 @@ export function MembershipTable({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [searchValue, setSearchValue] = useState("")
+  const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
   // Dialog states
   const [roleChangeMember, setRoleChangeMember] = useState<MemberRow | null>(
@@ -145,18 +147,13 @@ export function MembershipTable({
     },
   })
 
-  // Export handler
-  const handleExport = useCallback(async () => {
+  // CSV export for PlatformToolbar
+  const handleGetCSV = useCallback(async () => {
     const result = await exportMembersCSV()
     if (result.success && result.data) {
-      const blob = new Blob([result.data], {
-        type: "text/csv;charset=utf-8;",
-      })
-      const link = document.createElement("a")
-      link.href = URL.createObjectURL(blob)
-      link.download = "members.csv"
-      link.click()
+      return result.data
     }
+    return ""
   }, [])
 
   // Invite handler
@@ -199,43 +196,42 @@ export function MembershipTable({
       />
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4">
-        <Input
-          placeholder={t.searchMembers || "Search members..."}
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          className="max-w-sm"
-        />
-        <div className="flex items-center gap-2">
-          {canManage && (
-            <>
-              {table.getSelectedRowModel().rows.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleBulkSuspend}
-                  disabled={isPending}
-                >
-                  {t.bulkSuspend || "Bulk Suspend"}(
-                  {table.getSelectedRowModel().rows.length})
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowInvite(!showInvite)}
-              >
-                <UserPlus className="me-2 h-4 w-4" />
-                {t.inviteMember || "Invite"}
-              </Button>
-            </>
-          )}
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="me-2 h-4 w-4" />
-            {t.export || "Export"}
-          </Button>
-        </div>
-      </div>
+      <PlatformToolbar
+        table={table}
+        view={view}
+        onToggleView={toggleView}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        searchPlaceholder={t.searchMembers || "Search members..."}
+        onCreate={canManage ? () => setShowInvite(!showInvite) : undefined}
+        getCSV={handleGetCSV}
+        entityName="members"
+        additionalActions={
+          canManage && table.getSelectedRowModel().rows.length > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkSuspend}
+              disabled={isPending}
+            >
+              {t.bulkSuspend || "Bulk Suspend"} (
+              {table.getSelectedRowModel().rows.length})
+            </Button>
+          ) : undefined
+        }
+        translations={{
+          search: t.searchMembers || "Search members...",
+          create: t.inviteMember || "Invite",
+          reset: t.reset || "Reset",
+          export: t.export || "Export",
+          exportCSV: t.exportCSV || "Export CSV",
+          exporting: t.exporting || "Exporting...",
+          view: t.view || "View",
+          searchColumns: t.searchColumns || "Search columns...",
+          noColumns: t.noColumns || "No columns found.",
+          all: t.all || "All",
+        }}
+      />
 
       {/* Inline invite form */}
       {showInvite && (

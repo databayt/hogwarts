@@ -1,8 +1,9 @@
 import { auth } from "@/auth"
-import { Clock, ShieldAlert, UserCheck, Users } from "lucide-react"
 
+import { getDisplayText } from "@/lib/content-display"
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -35,83 +36,75 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
     )
   }
 
-  const [members, stats, pendingRequests, grades] = await Promise.all([
+  const [members, stats, pendingRequests, grades, school] = await Promise.all([
     getUnifiedMembers(schoolId),
     getMembershipStats(schoolId),
     getPendingRequests(schoolId),
     getAcademicGrades(schoolId),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    }),
   ])
 
   const canManage = userRole ? canManageMembers(userRole) : false
+  const contentLang = (school?.preferredLanguage || "ar") as "ar" | "en"
+
+  // Translate names when display language differs from content language
+  const translatedMembers = await Promise.all(
+    members.map(async (m) => ({
+      ...m,
+      name: await getDisplayText(m.name, contentLang, lang, schoolId),
+      gradeName: m.gradeName
+        ? await getDisplayText(m.gradeName, contentLang, lang, schoolId)
+        : null,
+    }))
+  )
 
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.totalMembers || "Total Members"}
-            </CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+        <Card className="p-6 py-4">
+          <CardContent className="p-0">
+            <span className="text-foreground text-3xl font-semibold">
               {stats.total.toLocaleString()}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {t.allRegistered || "All registered members"}
+            </span>
+            <p className="text-muted-foreground mt-1 text-sm font-medium">
+              {t.totalMembers || "Total Members"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.activeMembers || "Active Members"}
-            </CardTitle>
-            <UserCheck className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+        <Card className="p-6 py-4">
+          <CardContent className="p-0">
+            <span className="text-foreground text-3xl font-semibold">
               {stats.active.toLocaleString()}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {t.verifiedAndActive || "Verified and active"}
+            </span>
+            <p className="text-muted-foreground mt-1 text-sm font-medium">
+              {t.activeMembers || "Active Members"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.suspended || "Suspended"}
-            </CardTitle>
-            <ShieldAlert className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+        <Card className="p-6 py-4">
+          <CardContent className="p-0">
+            <span className="text-foreground text-3xl font-semibold">
               {stats.suspended.toLocaleString()}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {t.suspendedAccounts || "Suspended accounts"}
+            </span>
+            <p className="text-muted-foreground mt-1 text-sm font-medium">
+              {t.suspended || "Suspended"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.pendingRequests || "Pending Requests"}
-            </CardTitle>
-            <Clock className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+        <Card className="p-6 py-4">
+          <CardContent className="p-0">
+            <span className="text-foreground text-3xl font-semibold">
               {stats.pending.toLocaleString()}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {t.awaitingApproval || "Awaiting approval"}
+            </span>
+            <p className="text-muted-foreground mt-1 text-sm font-medium">
+              {t.pendingRequests || "Pending Requests"}
             </p>
           </CardContent>
         </Card>
@@ -119,7 +112,7 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
 
       {/* Members Table */}
       <MembershipTable
-        members={members}
+        members={translatedMembers}
         pendingRequests={pendingRequests}
         grades={grades}
         canManage={canManage}
