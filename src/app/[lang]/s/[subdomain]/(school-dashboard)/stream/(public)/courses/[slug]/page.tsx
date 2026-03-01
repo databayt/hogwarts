@@ -17,11 +17,11 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
+  const { lang, slug } = await params
   const { schoolId } = await getTenantContext()
 
   try {
-    const course = await getCatalogCourse(slug, schoolId)
+    const course = await getCatalogCourse(slug, schoolId, lang)
     return {
       title: `${course.title} - Course Details`,
       description: course.description || "Course details and enrollment",

@@ -1,7 +1,6 @@
-"use server"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { cache } from "react"
 import { notFound } from "next/navigation"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
@@ -14,7 +13,7 @@ import { db } from "@/lib/db"
  *
  * Migration: Replaces get-course.ts which queries StreamCourse.
  */
-export async function getCatalogCourse(
+export const getCatalogCourse = cache(async function getCatalogCourse(
   slug: string,
   schoolId: string | null,
   lang: string = "en"
@@ -57,28 +56,32 @@ export async function getCatalogCourse(
   let hiddenLessonIds = new Set<string>()
 
   if (schoolId) {
-    const overrides = await db.schoolContentOverride.findMany({
-      where: {
-        schoolId,
-        isHidden: true,
-        OR: [
-          { catalogChapterId: { in: subject.chapters.map((c) => c.id) } },
-          {
-            catalogLessonId: {
-              in: subject.chapters.flatMap((c) => c.lessons.map((l) => l.id)),
+    try {
+      const overrides = await db.schoolContentOverride.findMany({
+        where: {
+          schoolId,
+          isHidden: true,
+          OR: [
+            { catalogChapterId: { in: subject.chapters.map((c) => c.id) } },
+            {
+              catalogLessonId: {
+                in: subject.chapters.flatMap((c) => c.lessons.map((l) => l.id)),
+              },
             },
-          },
-        ],
-      },
-      select: {
-        catalogChapterId: true,
-        catalogLessonId: true,
-      },
-    })
+          ],
+        },
+        select: {
+          catalogChapterId: true,
+          catalogLessonId: true,
+        },
+      })
 
-    for (const o of overrides) {
-      if (o.catalogChapterId) hiddenChapterIds.add(o.catalogChapterId)
-      if (o.catalogLessonId) hiddenLessonIds.add(o.catalogLessonId)
+      for (const o of overrides) {
+        if (o.catalogChapterId) hiddenChapterIds.add(o.catalogChapterId)
+        if (o.catalogLessonId) hiddenLessonIds.add(o.catalogLessonId)
+      }
+    } catch {
+      // Content overrides failed — show all content (no filtering)
     }
   }
 
@@ -89,14 +92,18 @@ export async function getCatalogCourse(
 
   // Parallelize enrollment count, quiz count, and course creator
   const [enrollmentCount, quizCount, schoolName] = await Promise.all([
-    db.enrollment.count({
-      where: { catalogSubjectId: subject.id, isActive: true },
-    }),
-    db.catalogExam.count({
-      where: { subjectId: subject.id, status: "PUBLISHED" },
-    }),
+    db.enrollment
+      .count({
+        where: { catalogSubjectId: subject.id, isActive: true },
+      })
+      .catch(() => 0),
+    db.catalogExam
+      .count({
+        where: { subjectId: subject.id, status: "PUBLISHED" },
+      })
+      .catch(() => 0),
     // Dynamic creator attribution — find who contributed the most videos
-    allLessonIds.length > 0
+    (allLessonIds.length > 0
       ? db.lessonVideo
           .groupBy({
             by: ["schoolId"],
@@ -110,7 +117,6 @@ export async function getCatalogCourse(
           })
           .then(async (groups) => {
             const topCreatorSchoolId = groups[0]?.schoolId ?? null
-            // Platform content (null schoolId) → "Hogwarts"
             if (!topCreatorSchoolId) return "Hogwarts"
             const school = await db.school.findUnique({
               where: { id: topCreatorSchoolId },
@@ -127,7 +133,8 @@ export async function getCatalogCourse(
               topCreatorSchoolId
             )
           })
-      : Promise.resolve("Hogwarts"),
+      : Promise.resolve("Hogwarts")
+    ).catch(() => "Hogwarts"),
   ])
 
   // Map to Stream-compatible shape
@@ -201,7 +208,7 @@ export async function getCatalogCourse(
       schoolName,
     },
   }
-}
+})
 
 export type CatalogIndividualCourseType = Awaited<
   ReturnType<typeof getCatalogCourse>
