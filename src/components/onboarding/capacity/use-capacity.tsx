@@ -7,15 +7,19 @@ import { useEffect, useState } from "react"
 import { getSchoolCapacity } from "./actions"
 import { type CapacityFormData } from "./validation"
 
+interface CapacityData extends CapacityFormData {
+  schoolLevel: string
+}
+
 interface UseCapacityReturn {
-  data: CapacityFormData | null
+  data: CapacityData | null
   loading: boolean
   error: string | null
   refresh: () => Promise<void>
 }
 
 export function useCapacity(schoolId: string): UseCapacityReturn {
-  const [data, setData] = useState<CapacityFormData | null>(null)
+  const [data, setData] = useState<CapacityData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

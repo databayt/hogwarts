@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { CURRENCY_OPTIONS } from "../config"
 import { InvoiceSchemaZod } from "../validation"

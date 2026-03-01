@@ -60,31 +60,35 @@ const getStatusBadge = (status: string) => {
 
 export const getInvoiceColumns = (
   lang?: Locale,
-  callbacks?: InvoiceColumnCallbacks
+  callbacks?: InvoiceColumnCallbacks,
+  ic?: Record<string, string>
 ): ColumnDef<InvoiceRow>[] => [
   {
     accessorKey: "invoice_no",
     id: "invoice_no",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Invoice #" />
+      <DataTableColumnHeader
+        column={column}
+        title={ic?.invoiceHash || "Invoice #"}
+      />
     ),
-    meta: { label: "Invoice #", variant: "text" },
+    meta: { label: ic?.invoiceHash || "Invoice #", variant: "text" },
     enableColumnFilter: true,
   },
   {
     accessorKey: "client_name",
     id: "client_name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Client" />
+      <DataTableColumnHeader column={column} title={ic?.client || "Client"} />
     ),
-    meta: { label: "Client", variant: "text" },
+    meta: { label: ic?.client || "Client", variant: "text" },
     enableColumnFilter: true,
   },
   {
     accessorKey: "total",
     id: "total",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total" />
+      <DataTableColumnHeader column={column} title={ic?.total || "Total"} />
     ),
     cell: ({ row }) => {
       const invoice = row.original
@@ -97,23 +101,23 @@ export const getInvoiceColumns = (
         </span>
       )
     },
-    meta: { label: "Total", variant: "text" },
+    meta: { label: ic?.total || "Total", variant: "text" },
   },
   {
     accessorKey: "status",
     id: "status",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title={ic?.status || "Status"} />
     ),
     cell: ({ row }) => getStatusBadge(row.original.status),
     meta: {
-      label: "Status",
+      label: ic?.status || "Status",
       variant: "select",
       options: [
-        { label: "Paid", value: "PAID" },
-        { label: "Unpaid", value: "UNPAID" },
-        { label: "Overdue", value: "OVERDUE" },
-        { label: "Cancelled", value: "CANCELLED" },
+        { label: ic?.paid || "Paid", value: "PAID" },
+        { label: ic?.unpaid || "Unpaid", value: "UNPAID" },
+        { label: ic?.overdue || "Overdue", value: "OVERDUE" },
+        { label: ic?.cancelled || "Cancelled", value: "CANCELLED" },
       ],
     },
     enableColumnFilter: true,
@@ -122,31 +126,34 @@ export const getInvoiceColumns = (
     accessorKey: "due_date",
     id: "due_date",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Due Date" />
+      <DataTableColumnHeader
+        column={column}
+        title={ic?.dueDate || "Due Date"}
+      />
     ),
     cell: ({ getValue }) => (
       <span className="text-muted-foreground text-xs tabular-nums">
         {new Date(getValue<string>()).toLocaleDateString()}
       </span>
     ),
-    meta: { label: "Due Date", variant: "text" },
+    meta: { label: ic?.dueDate || "Due Date", variant: "text" },
   },
   {
     accessorKey: "createdAt",
     id: "createdAt",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Created" />
+      <DataTableColumnHeader column={column} title={ic?.created || "Created"} />
     ),
     cell: ({ getValue }) => (
       <span className="text-muted-foreground text-xs tabular-nums">
         {new Date(getValue<string>()).toLocaleDateString()}
       </span>
     ),
-    meta: { label: "Created", variant: "text" },
+    meta: { label: ic?.created || "Created", variant: "text" },
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">{ic?.actions || "Actions"}</span>,
     cell: ({ row }) => {
       const invoice = row.original
       const { openModal } = useModal()
@@ -162,25 +169,25 @@ export const getInvoiceColumns = (
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <Ellipsis className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{ic?.openMenu || "Open menu"}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{ic?.actions || "Actions"}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href={`/${lang}/finance/invoice/${invoice.id}`}>
                 <Eye className="me-2 h-4 w-4" />
-                View
+                {ic?.view || "View"}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="me-2 h-4 w-4" />
-              Edit
+              {ic?.edit || "Edit"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onDelete} className="text-red-600">
               <Trash2 className="me-2 h-4 w-4" />
-              Delete
+              {ic?.delete || "Delete"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

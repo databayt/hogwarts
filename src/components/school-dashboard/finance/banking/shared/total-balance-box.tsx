@@ -2,6 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+
 import { AnimatedCounter } from "./animated-counter"
 import { DoughnutChart } from "./doughnut-chart"
 
@@ -16,20 +18,28 @@ export function TotalBalanceBox({
   accounts = [],
   totalBanks,
   totalCurrentBalance,
-  dictionary,
+  dictionary: propDictionary,
 }: TotalBalanceBoxProps) {
+  const { dictionary: hookDictionary } = useDictionary()
+  const bp = ((propDictionary ||
+    (hookDictionary as any)?.finance?.bankingPage) ??
+    {}) as Record<string, string>
+
   return (
     <div className="bg-card rounded-lg border p-6">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <p className="muted font-medium">
-            {dictionary?.totalBalance || "Total Balance"}
+            {bp?.totalBalance || "Total Balance"}
           </p>
           <h2>
             <AnimatedCounter amount={totalCurrentBalance} />
           </h2>
           <p className="muted">
-            {totalBanks} {totalBanks === 1 ? "Bank Account" : "Bank Accounts"}
+            {totalBanks}{" "}
+            {totalBanks === 1
+              ? bp?.bankAccount || "Bank Account"
+              : bp?.bankAccounts || "Bank Accounts"}
           </p>
         </div>
 

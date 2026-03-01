@@ -34,10 +34,17 @@ export async function createCatalogSubject(data: FormData) {
 
   const raw = Object.fromEntries(data)
   const levels = data.getAll("levels") as string[]
+  const grades = data
+    .getAll("grades")
+    .map(Number)
+    .filter((n) => !isNaN(n))
+  const schoolTypes = data.getAll("schoolTypes") as string[]
 
   const validated = catalogSubjectSchema.parse({
     ...raw,
     levels,
+    grades,
+    schoolTypes,
     sortOrder: raw.sortOrder ? Number(raw.sortOrder) : 0,
   })
 
@@ -54,10 +61,19 @@ export async function updateCatalogSubject(id: string, data: FormData) {
 
   const raw = Object.fromEntries(data)
   const levels = data.getAll("levels") as string[]
+  const gradesRaw = data.getAll("grades")
+  const grades =
+    gradesRaw.length > 0
+      ? gradesRaw.map(Number).filter((n) => !isNaN(n))
+      : undefined
+  const schoolTypesRaw = data.getAll("schoolTypes") as string[]
+  const schoolTypes = schoolTypesRaw.length > 0 ? schoolTypesRaw : undefined
 
   const validated = catalogSubjectSchema.partial().parse({
     ...raw,
     levels: levels.length > 0 ? levels : undefined,
+    grades,
+    schoolTypes,
     sortOrder: raw.sortOrder ? Number(raw.sortOrder) : undefined,
   })
 
@@ -221,6 +237,53 @@ export async function updateCatalogLesson(id: string, data: FormData) {
 
   revalidatePath(`/catalog/${chapter.subjectId}`)
   return { success: true, lesson }
+}
+
+// ============================================================================
+// Reorder Actions
+// ============================================================================
+
+export async function reorderCatalogChapters(
+  subjectId: string,
+  chapters: { id: string; position: number }[]
+) {
+  await requireDeveloper()
+
+  await db.$transaction(
+    chapters.map((ch) =>
+      db.catalogChapter.update({
+        where: { id: ch.id, subjectId },
+        data: { sequenceOrder: ch.position },
+      })
+    )
+  )
+
+  revalidatePath(`/catalog/${subjectId}`)
+  return { success: true }
+}
+
+export async function reorderCatalogLessons(
+  chapterId: string,
+  lessons: { id: string; position: number }[]
+) {
+  await requireDeveloper()
+
+  const chapter = await db.catalogChapter.findUniqueOrThrow({
+    where: { id: chapterId },
+    select: { subjectId: true },
+  })
+
+  await db.$transaction(
+    lessons.map((l) =>
+      db.catalogLesson.update({
+        where: { id: l.id, chapterId },
+        data: { sequenceOrder: l.position },
+      })
+    )
+  )
+
+  revalidatePath(`/catalog/${chapter.subjectId}`)
+  return { success: true }
 }
 
 export async function deleteCatalogLesson(id: string) {

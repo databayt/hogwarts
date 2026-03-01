@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
@@ -16,6 +17,7 @@ import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createSubject,
+  getCatalogSubjectsForPicker,
   getSubject,
   updateSubject,
 } from "@/components/school-dashboard/listings/subjects/actions"
@@ -24,8 +26,14 @@ import { subjectCreateSchema } from "@/components/school-dashboard/listings/subj
 import { InformationStep } from "./information"
 
 interface SubjectCreateFormProps {
-  /** Callback fired on successful create/update - use for optimistic refresh */
   onSuccess?: () => void
+}
+
+type CatalogOption = {
+  id: string
+  name: string
+  department: string
+  slug: string
 }
 
 export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
@@ -34,11 +42,16 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
+  const [catalogOptions, setCatalogOptions] = useState<CatalogOption[]>([])
+  const [showProposal, setShowProposal] = useState(false)
+
   const form = useForm<z.infer<typeof subjectCreateSchema>>({
     resolver: zodResolver(subjectCreateSchema),
     defaultValues: {
       subjectName: "",
       departmentId: "",
+      catalogSubjectId: "",
+      lang: "ar",
     },
   })
 
@@ -49,6 +62,17 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
       : modal.id
     : undefined
 
+  // Load catalog subjects for the picker
+  useEffect(() => {
+    const loadCatalog = async () => {
+      const res = await getCatalogSubjectsForPicker()
+      if (res.success) {
+        setCatalogOptions(res.data)
+      }
+    }
+    loadCatalog()
+  }, [])
+
   useEffect(() => {
     const load = async () => {
       if (!currentId) return
@@ -58,11 +82,21 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
       form.reset({
         subjectName: s.subjectName ?? "",
         departmentId: s.departmentId ?? "",
+        catalogSubjectId: s.catalogSubjectId ?? "",
       })
     }
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId])
+
+  // When a catalog subject is selected, auto-fill the name
+  const handleCatalogSelect = (catalogId: string) => {
+    const selected = catalogOptions.find((c) => c.id === catalogId)
+    if (selected) {
+      form.setValue("catalogSubjectId", catalogId)
+      form.setValue("subjectName", selected.name)
+    }
+  }
 
   async function onSubmit(values: z.infer<typeof subjectCreateSchema>) {
     try {
@@ -76,7 +110,6 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
             : t?.success?.subjectCreated || "Subject created"
         )
         closeModal()
-        // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
           onSuccess()
         } else {
@@ -110,14 +143,12 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
 
   const handleSaveCurrentStep = async () => {
     if (currentId) {
-      // For editing, save current step data
       const currentStepFields = ["subjectName", "departmentId"] as const
       const stepValid = await form.trigger(currentStepFields)
       if (stepValid) {
         await form.handleSubmit(onSubmit)()
       }
     } else {
-      // For creating, just go to next step
       await handleNext()
     }
   }
@@ -129,7 +160,56 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <InformationStep form={form} isView={isView} />
+        return (
+          <div className="space-y-4">
+            {/* Catalog subject picker */}
+            {!currentId && catalogOptions.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Link to Catalog Subject (optional)
+                </label>
+                <select
+                  className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                  value={form.watch("catalogSubjectId") || ""}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleCatalogSelect(e.target.value)
+                    } else {
+                      form.setValue("catalogSubjectId", "")
+                    }
+                  }}
+                  disabled={isView}
+                >
+                  <option value="">-- Manual entry (no catalog link) --</option>
+                  {catalogOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.department})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-muted-foreground text-xs">
+                  Linking to the catalog enables LMS content, chapters, and
+                  lessons.
+                </p>
+              </div>
+            )}
+
+            <InformationStep form={form} isView={isView} />
+
+            {/* Propose New button */}
+            {!currentId && !isView && (
+              <div className="border-t pt-3">
+                <p className="text-muted-foreground mb-2 text-xs">
+                  Can&apos;t find your subject in the catalog?
+                </p>
+                {/* TODO: Implement proposal UI (ProposeSubjectDialog) */}
+                <Button type="button" variant="outline" size="sm" disabled>
+                  Propose New Subject to Catalog (Coming Soon)
+                </Button>
+              </div>
+            )}
+          </div>
+        )
       default:
         return null
     }

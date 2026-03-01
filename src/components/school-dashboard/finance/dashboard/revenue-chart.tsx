@@ -27,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 interface RevenueChartProps {
@@ -45,6 +46,10 @@ function RevenueChartInner({
   className,
 }: RevenueChartProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const dp = fd?.dashboardPage as Record<string, string> | undefined
+
   // Generate labels if not provided (last 12 months)
   const monthLabels =
     labels ||
@@ -99,17 +104,22 @@ function RevenueChartInner({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Revenue & Expenses</CardTitle>
+        <CardTitle>{dp?.revenueExpenses || "Revenue & Expenses"}</CardTitle>
         <CardDescription>
-          Monthly financial performance over the last 12 months
+          {dp?.monthlyPerformance ||
+            "Monthly financial performance over the last 12 months"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="area" className="w-full">
           <TabsList className="grid w-full max-w-[400px] grid-cols-3">
-            <TabsTrigger value="area">Area Chart</TabsTrigger>
-            <TabsTrigger value="bar">Bar Chart</TabsTrigger>
-            <TabsTrigger value="line">Line Chart</TabsTrigger>
+            <TabsTrigger value="area">
+              {dp?.areaChart || "Area Chart"}
+            </TabsTrigger>
+            <TabsTrigger value="bar">{dp?.barChart || "Bar Chart"}</TabsTrigger>
+            <TabsTrigger value="line">
+              {dp?.lineChart || "Line Chart"}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="area" className="mt-4">
@@ -157,7 +167,7 @@ function RevenueChartInner({
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#revenueGradient)"
-                  name="Revenue"
+                  name={dp?.revenue || "Revenue"}
                 />
                 <Area
                   type="monotone"
@@ -166,7 +176,7 @@ function RevenueChartInner({
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#expenseGradient)"
-                  name="Expenses"
+                  name={dp?.expenses || "Expenses"}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -188,9 +198,21 @@ function RevenueChartInner({
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                <Bar dataKey="revenue" fill="#10b981" name="Revenue" />
-                <Bar dataKey="expense" fill="#ef4444" name="Expenses" />
-                <Bar dataKey="profit" fill="#3b82f6" name="Profit" />
+                <Bar
+                  dataKey="revenue"
+                  fill="#10b981"
+                  name={dp?.revenue || "Revenue"}
+                />
+                <Bar
+                  dataKey="expense"
+                  fill="#ef4444"
+                  name={dp?.expenses || "Expenses"}
+                />
+                <Bar
+                  dataKey="profit"
+                  fill="#3b82f6"
+                  name={dp?.profit || "Profit"}
+                />
               </BarChart>
             </ResponsiveContainer>
           </TabsContent>
@@ -218,7 +240,7 @@ function RevenueChartInner({
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}
-                  name="Revenue"
+                  name={dp?.revenue || "Revenue"}
                 />
                 <Line
                   type="monotone"
@@ -227,7 +249,7 @@ function RevenueChartInner({
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}
-                  name="Expenses"
+                  name={dp?.expenses || "Expenses"}
                 />
                 <Line
                   type="monotone"
@@ -236,7 +258,7 @@ function RevenueChartInner({
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}
-                  name="Profit"
+                  name={dp?.profit || "Profit"}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -246,7 +268,9 @@ function RevenueChartInner({
         {/* Summary Stats */}
         <div className="mt-6 grid grid-cols-3 gap-4 border-t pt-6">
           <div className="text-center">
-            <p className="text-muted-foreground text-sm">Avg Monthly Revenue</p>
+            <p className="text-muted-foreground text-sm">
+              {dp?.avgMonthlyRevenue || "Avg Monthly Revenue"}
+            </p>
             <p className="text-lg font-semibold text-green-600">
               SDG{" "}
               {new Intl.NumberFormat(locale).format(
@@ -256,7 +280,7 @@ function RevenueChartInner({
           </div>
           <div className="text-center">
             <p className="text-muted-foreground text-sm">
-              Avg Monthly Expenses
+              {dp?.avgMonthlyExpenses || "Avg Monthly Expenses"}
             </p>
             <p className="text-lg font-semibold text-red-600">
               SDG{" "}
@@ -266,7 +290,9 @@ function RevenueChartInner({
             </p>
           </div>
           <div className="text-center">
-            <p className="text-muted-foreground text-sm">Avg Monthly Profit</p>
+            <p className="text-muted-foreground text-sm">
+              {dp?.avgMonthlyProfit || "Avg Monthly Profit"}
+            </p>
             <p className="text-lg font-semibold text-blue-600">
               SDG{" "}
               {new Intl.NumberFormat(locale).format(

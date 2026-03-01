@@ -7,6 +7,7 @@
  */
 
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { Plus } from "lucide-react"
 
@@ -25,6 +26,11 @@ interface ConfigsPageProps {
 export default async function ConfigsPage({ params }: ConfigsPageProps) {
   const { lang } = await params
   const session = await auth()
+
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams/certificates`)
+  }
+
   const schoolId = session?.user?.schoolId
   const isRtl = lang === "ar"
 

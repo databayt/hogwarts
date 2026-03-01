@@ -48,14 +48,27 @@ export interface StatsData {
   UnpaidInvoice: number | string
 }
 
-export function StatsCards({ stats }: { stats: StatsData }) {
+export function StatsCards({
+  stats,
+  dict,
+}: {
+  stats: StatsData
+  dict?: Record<string, string>
+}) {
+  const titleMap: Record<string, string> = {
+    totalRevenue: dict?.totalRevenue || "Total Revenue",
+    totalInvoice: dict?.totalInvoice || "Total Invoice",
+    paidInvoice: dict?.paidInvoice || "Paid Invoice",
+    UnpaidInvoice: dict?.unpaidInvoice || "Unpaid Invoice",
+  }
   return (
     <>
       {STATS_CARD_DEFS.map((def) => (
         <StatCard
           key={def.key}
-          title={def.title}
+          title={titleMap[def.key] || def.title}
           value={stats[def.key as keyof StatsData]}
+          subtitle={dict?.last30Days}
         />
       ))}
     </>
@@ -66,6 +79,7 @@ interface RecentInvoicesCardProps<TData> {
   data: TData[]
   columns: ColumnDef<TData, unknown>[]
   emptyText?: string
+  title?: string
   className?: string
 }
 
@@ -73,12 +87,13 @@ export function RecentInvoicesCard({
   data,
   columns,
   emptyText = "No invoice found",
+  title,
   className,
 }: RecentInvoicesCardProps<UserInvoice>) {
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Recent Invoice</CardTitle>
+        <CardTitle>{title || "Recent Invoice"}</CardTitle>
       </CardHeader>
       <CardContent>
         {data?.length === 0 ? (

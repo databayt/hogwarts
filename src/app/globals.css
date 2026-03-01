@@ -9,6 +9,7 @@
 @import "../styles/border.css"; */
 @import "../styles/clock.css";
 @import "../styles/gradient-animation.css";
+@import "../styles/liquid-glass.css";
 /* @import "../styles/marquee.css"; */
 
 @custom-variant dark (&:is(.dark *));
@@ -197,6 +198,21 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Infinite scroll animation for testimonials/marquee cards */
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
+@utility animate-scroll {
+  animation: scroll var(--animation-duration, 40s) linear infinite
+    var(--animation-direction, forwards);
 }
 
 /* Icon semantic colors - uses existing theme tokens */

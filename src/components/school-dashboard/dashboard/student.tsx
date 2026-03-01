@@ -67,7 +67,7 @@ export async function StudentDashboard({
       const [studentData, qlData, weather] = await Promise.all([
         getStudentDashboardData(),
         getQuickLookData(locale),
-        getWeatherData(),
+        getWeatherData("metric", locale),
       ])
       data = studentData
       quickLookData = qlData
@@ -179,7 +179,7 @@ export async function StudentDashboard({
       },
     ]
 
-    // Mock grade trend data
+    // TODO: Replace with real grade trend data from exam/assessment queries
     const gradeTrendData = [
       { period: "Sep", current: 75, previous: 70 },
       { period: "Oct", current: 78, previous: 72 },

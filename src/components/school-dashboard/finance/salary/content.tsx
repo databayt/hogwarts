@@ -36,10 +36,15 @@ interface Props {
 export default async function SalaryContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
 
+  const fd = (dictionary as any)?.finance
+  const c = fd?.common as Record<string, string> | undefined
+
   if (!schoolId) {
     return (
       <div>
-        <p className="text-muted-foreground">School context not found</p>
+        <p className="text-muted-foreground">
+          {c?.schoolNotFound || "School context not found"}
+        </p>
       </div>
     )
   }
@@ -63,7 +68,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
     return (
       <div>
         <p className="text-muted-foreground">
-          You don't have permission to view salary
+          {c?.noPermissionSalary || "You don't have permission to view salary"}
         </p>
       </div>
     )
@@ -115,7 +120,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
     }
   }
 
-  const d = dictionary?.finance?.salary
+  const sp = fd?.salaryPage as Record<string, string> | undefined
 
   return (
     <div className="space-y-6">
@@ -124,7 +129,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Monthly Payroll
+              {sp?.monthlyPayroll || "Monthly Payroll"}
             </CardTitle>
             <DollarSign className="text-muted-foreground h-4 w-4" />
           </CardHeader>
@@ -132,19 +137,8 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             <div className="text-2xl font-bold">
               ${(totalMonthlySalary / 100).toLocaleString()}
             </div>
-            <p className="text-muted-foreground text-xs">Total basic salary</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Staff</CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeStructuresCount}</div>
             <p className="text-muted-foreground text-xs">
-              With salary structures / {totalStaffCount}
+              {sp?.totalBasicSalary || "Total basic salary"}
             </p>
           </CardContent>
         </Card>
@@ -152,7 +146,23 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Average Salary
+              {sp?.activeStaff || "Active Staff"}
+            </CardTitle>
+            <Users className="text-muted-foreground h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeStructuresCount}</div>
+            <p className="text-muted-foreground text-xs">
+              {sp?.withSalaryStructures || "With salary structures"} /{" "}
+              {totalStaffCount}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {sp?.averageSalary || "Average Salary"}
             </CardTitle>
             <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>
@@ -160,13 +170,17 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             <div className="text-2xl font-bold">
               ${(averageSalary / 100).toLocaleString()}
             </div>
-            <p className="text-muted-foreground text-xs">Per staff member</p>
+            <p className="text-muted-foreground text-xs">
+              {sp?.perStaffMember || "Per staff member"}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Components</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {sp?.components || "Components"}
+            </CardTitle>
             <Settings className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -174,7 +188,8 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
               {allowancesCount + deductionsCount}
             </div>
             <p className="text-muted-foreground text-xs">
-              {allowancesCount} allowances, {deductionsCount} deductions
+              {allowancesCount} {sp?.allowances || "allowances"},{" "}
+              {deductionsCount} {sp?.deductions || "deductions"}
             </p>
           </CardContent>
         </Card>
@@ -188,22 +203,24 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Salary Structures
+                {sp?.salaryStructures || "Salary Structures"}
               </CardTitle>
               <CardDescription>
-                Define and manage staff salary structures
+                {sp?.defineManageStructures ||
+                  "Define and manage staff salary structures"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/salary/structures`}>
-                  View Structures ({activeStructuresCount})
+                  {sp?.viewStructures || "View Structures"} (
+                  {activeStructuresCount})
                 </Link>
               </Button>
               {canCreate && (
                 <Button variant="outline" asChild className="w-full" size="sm">
                   <Link href={`/${lang}/finance/salary/structures/new`}>
-                    Create Structure
+                    {sp?.createStructure || "Create Structure"}
                   </Link>
                 </Button>
               )}
@@ -217,22 +234,22 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Award className="h-5 w-5" />
-                Allowances
+                {sp?.allowances || "Allowances"}
               </CardTitle>
               <CardDescription>
-                Manage salary allowances and bonuses
+                {sp?.manageAllowances || "Manage salary allowances and bonuses"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/salary/allowances`}>
-                  View Allowances ({allowancesCount})
+                  {sp?.viewAllowances || "View Allowances"} ({allowancesCount})
                 </Link>
               </Button>
               {canCreate && (
                 <Button variant="outline" asChild className="w-full" size="sm">
                   <Link href={`/${lang}/finance/salary/allowances/new`}>
-                    Add Allowance
+                    {sp?.addAllowance || "Add Allowance"}
                   </Link>
                 </Button>
               )}
@@ -246,22 +263,23 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Deductions
+                {sp?.deductions || "Deductions"}
               </CardTitle>
               <CardDescription>
-                Manage salary deductions and contributions
+                {sp?.manageDeductions ||
+                  "Manage salary deductions and contributions"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/salary/deductions`}>
-                  View Deductions ({deductionsCount})
+                  {sp?.viewDeductions || "View Deductions"} ({deductionsCount})
                 </Link>
               </Button>
               {canCreate && (
                 <Button variant="outline" asChild className="w-full" size="sm">
                   <Link href={`/${lang}/finance/salary/deductions/new`}>
-                    Add Deduction
+                    {sp?.addDeduction || "Add Deduction"}
                   </Link>
                 </Button>
               )}
@@ -274,22 +292,22 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              Salary Calculator
+              {sp?.salaryCalculator || "Salary Calculator"}
             </CardTitle>
             <CardDescription>
-              Calculate net salary with components
+              {sp?.calculateNetSalary || "Calculate net salary with components"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/salary/calculator`}>
                 <Calculator className="me-2 h-4 w-4" />
-                Open Calculator
+                {sp?.openCalculator || "Open Calculator"}
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">
               <Link href={`/${lang}/finance/salary/calculator/batch`}>
-                Batch Calculate
+                {sp?.batchCalculate || "Batch Calculate"}
               </Link>
             </Button>
           </CardContent>
@@ -301,21 +319,22 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart className="h-5 w-5" />
-                Salary Reports
+                {sp?.salaryReports || "Salary Reports"}
               </CardTitle>
               <CardDescription>
-                Generate salary analysis and reports
+                {sp?.generateSalaryReports ||
+                  "Generate salary analysis and reports"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/salary/reports`}>
-                  View Reports
+                  {c?.viewReports || "View Reports"}
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full" size="sm">
                 <Link href={`/${lang}/finance/salary/reports/analysis`}>
-                  Salary Analysis
+                  {sp?.salaryAnalysis || "Salary Analysis"}
                 </Link>
               </Button>
             </CardContent>
@@ -328,21 +347,22 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Bulk Operations
+                {sp?.bulkOperations || "Bulk Operations"}
               </CardTitle>
               <CardDescription>
-                Apply salary changes to multiple staff
+                {sp?.applySalaryChanges ||
+                  "Apply salary changes to multiple staff"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/salary/bulk/increment`}>
-                  Bulk Increment
+                  {sp?.bulkIncrement || "Bulk Increment"}
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full" size="sm">
                 <Link href={`/${lang}/finance/salary/bulk/update`}>
-                  Bulk Update
+                  {sp?.bulkUpdate || "Bulk Update"}
                 </Link>
               </Button>
             </CardContent>

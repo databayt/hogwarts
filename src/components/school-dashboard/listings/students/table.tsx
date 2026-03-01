@@ -61,7 +61,7 @@ function StudentsTableInner({
   // Translations with fallbacks
   const t = {
     fullName: dictionary?.fullName || "Name",
-    class: dictionary?.class || "Class",
+    section: dictionary?.section || "Section",
     status: dictionary?.status || "Status",
     created: dictionary?.created || "Created",
     actions: dictionary?.actions || "Actions",
@@ -203,14 +203,7 @@ function StudentsTableInner({
   // Handle view
   const handleView = useCallback(
     (student: StudentRow) => {
-      if (!student.userId) {
-        ErrorToast(
-          dictionary?.noAccountMessage ||
-            "This student does not have a user account"
-        )
-        return
-      }
-      router.push(`/profile/${student.userId}`)
+      router.push(`/${lang}/students/${student.id}`)
     },
     [router, lang]
   )
@@ -249,9 +242,9 @@ function StudentsTableInner({
     async (rows: StudentRow[]) => {
       // Export selected rows as CSV
       const csv = rows
-        .map((r) => `${r.name},${r.className},${r.status},${r.createdAt}`)
+        .map((r) => `${r.name},${r.sectionName},${r.status},${r.createdAt}`)
         .join("\n")
-      const header = `${t.fullName},${t.class},${t.status},${t.created}`
+      const header = `${t.fullName},${t.section},${t.status},${t.created}`
       const csvContent = `${header}\n${csv}`
 
       // Download
@@ -359,7 +352,9 @@ function StudentsTableInner({
                     avatar={{ fallback: initials }}
                     title={student.name}
                     description={
-                      student.className !== "-" ? student.className : undefined
+                      student.sectionName !== "-"
+                        ? student.sectionName
+                        : undefined
                     }
                     subtitle={
                       student.status === "active" ? t.active : t.inactive

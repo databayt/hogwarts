@@ -6,22 +6,27 @@ import { DoorOpen, Laptop, UserCheck, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface CapacityCardProps {
-  studentCount: number
   teachers: number
-  classSections: number
+  sectionsPerGrade: number
+  studentsPerSection: number
+  gradeCount: number
   className?: string
 }
 
 export function CapacityCard({
-  studentCount,
   teachers,
-  classSections,
+  sectionsPerGrade,
+  studentsPerSection,
+  gradeCount,
   className,
 }: CapacityCardProps) {
+  const totalClassrooms = gradeCount * sectionsPerGrade
+  const totalStudents = totalClassrooms * studentsPerSection
+
   const capacityItems = [
     {
       label: "Students",
-      value: studentCount,
+      value: totalStudents,
       icon: Users,
       color: "text-chart-1",
     },
@@ -32,8 +37,8 @@ export function CapacityCard({
       color: "text-chart-2",
     },
     {
-      label: "Class Sections",
-      value: classSections,
+      label: "Classrooms",
+      value: totalClassrooms,
       icon: DoorOpen,
       color: "text-chart-1",
     },
@@ -69,7 +74,8 @@ export function CapacityCard({
 
         <div className="bg-accent/50 mt-4 rounded-lg p-3">
           <p className="text-muted-foreground text-sm">
-            Total capacity configured for your school management system
+            {gradeCount} grades × {sectionsPerGrade} sections ×{" "}
+            {studentsPerSection} students per section
           </p>
         </div>
       </CardContent>

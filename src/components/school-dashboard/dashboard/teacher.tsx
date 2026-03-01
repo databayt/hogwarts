@@ -62,7 +62,7 @@ export async function TeacherDashboard({
       const [teacherData, qlData, weather] = await Promise.all([
         getTeacherDashboardData(),
         getQuickLookData(locale),
-        getWeatherData(),
+        getWeatherData("metric", locale),
       ])
       data = teacherData
       quickLookData = qlData
@@ -174,7 +174,7 @@ export async function TeacherDashboard({
       },
     ]
 
-    // Weekly classes data
+    // TODO: Replace with real data from timetable queries
     const weeklyClasses = [
       { day: "Mon", value: 5 },
       { day: "Tue", value: 6 },
@@ -559,6 +559,7 @@ export async function TeacherDashboard({
             iconName="Calendar"
             showPercentage
           />
+          {/* TODO: Calculate from actual term dates */}
           <ProgressCard
             title="Term Progress"
             current={12}

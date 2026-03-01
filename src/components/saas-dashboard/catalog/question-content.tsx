@@ -20,6 +20,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
 
+import { CreateQuestionDialog } from "./create-question-dialog"
 import type { CatalogQuestionRow } from "./question-columns"
 import { QuestionTable } from "./question-table"
 
@@ -74,6 +75,11 @@ export async function QuestionContent({ lang }: Props) {
 
   return (
     <PageContainer>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Question Bank</h2>
+        <CreateQuestionDialog />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

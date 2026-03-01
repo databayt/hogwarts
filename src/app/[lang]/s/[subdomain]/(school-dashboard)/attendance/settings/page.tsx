@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { type Metadata } from "next"
+import { auth } from "@/auth"
 import { Bell, Clock, Save, Settings, Shield } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -37,7 +38,20 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  await params // Consume params to satisfy Next.js
+  const [, session] = await Promise.all([params, auth()])
+
+  // Admin/Developer only
+  const role = session?.user?.role ?? ""
+  if (role !== "ADMIN" && role !== "DEVELOPER") {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <h2>Access Denied</h2>
+        <p className="text-muted-foreground">
+          Only administrators can access attendance settings.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <AttendanceProvider>

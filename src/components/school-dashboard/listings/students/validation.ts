@@ -14,11 +14,13 @@ export function createStudentBaseSchema(dictionary: Dictionary) {
   const v = getValidationMessages(dictionary)
 
   return z.object({
-    givenName: z.string().optional(),
+    givenName: z.string().min(1, { message: v.required() }),
     middleName: z.string().optional(),
-    surname: z.string().optional(),
-    dateOfBirth: z.string().optional(), // ISO date YYYY-MM-DD
-    gender: z.enum(["male", "female"]).optional(),
+    surname: z.string().min(1, { message: v.required() }),
+    dateOfBirth: z.string().min(1, { message: v.required() }), // ISO date YYYY-MM-DD
+    gender: z.enum(["male", "female"], {
+      message: v.required(),
+    }),
     enrollmentDate: z.string().optional(), // ISO date YYYY-MM-DD
     userId: z.string().optional(),
     academicGradeId: z.string().optional(),
@@ -44,11 +46,11 @@ export function createStudentUpdateSchema(dictionary: Dictionary) {
 // ============================================================================
 
 export const studentBaseSchema = z.object({
-  givenName: z.string().optional(),
+  givenName: z.string().min(1, "Required"),
   middleName: z.string().optional(),
-  surname: z.string().optional(),
-  dateOfBirth: z.string().optional(), // ISO date YYYY-MM-DD
-  gender: z.enum(["male", "female"]).optional(),
+  surname: z.string().min(1, "Required"),
+  dateOfBirth: z.string().min(1, "Required"), // ISO date YYYY-MM-DD
+  gender: z.enum(["male", "female"]),
   enrollmentDate: z.string().optional(), // ISO date YYYY-MM-DD
   userId: z.string().optional(),
   academicGradeId: z.string().optional(),

@@ -95,6 +95,44 @@ export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
         contractEndDate: t.contractEndDate
           ? new Date(t.contractEndDate)
           : undefined,
+        // Nested arrays - populate from related data returned by getTeacher()
+        phoneNumbers: Array.isArray(t.phoneNumbers)
+          ? t.phoneNumbers.map((p: any) => ({
+              phoneNumber: p.phoneNumber ?? "",
+              phoneType: p.phoneType ?? "MOBILE",
+              isPrimary: p.isPrimary ?? false,
+            }))
+          : [],
+        qualifications: Array.isArray(t.qualifications)
+          ? t.qualifications.map((q: any) => ({
+              qualificationType: q.qualificationType ?? "",
+              name: q.name ?? "",
+              institution: q.institution ?? "",
+              major: q.major ?? "",
+              dateObtained: q.dateObtained
+                ? new Date(q.dateObtained)
+                : undefined,
+              expiryDate: q.expiryDate ? new Date(q.expiryDate) : undefined,
+              licenseNumber: q.licenseNumber ?? "",
+              documentUrl: q.documentUrl ?? "",
+            }))
+          : [],
+        experiences: Array.isArray(t.experiences)
+          ? t.experiences.map((e: any) => ({
+              institution: e.institution ?? "",
+              position: e.position ?? "",
+              startDate: e.startDate ? new Date(e.startDate) : undefined,
+              endDate: e.endDate ? new Date(e.endDate) : undefined,
+              isCurrent: e.isCurrent ?? false,
+              description: e.description ?? "",
+            }))
+          : [],
+        subjectExpertise: Array.isArray(t.subjectExpertise)
+          ? t.subjectExpertise.map((s: any) => ({
+              subjectId: s.subjectId ?? "",
+              expertiseLevel: s.expertiseLevel ?? "",
+            }))
+          : [],
       })
     }
     void load()

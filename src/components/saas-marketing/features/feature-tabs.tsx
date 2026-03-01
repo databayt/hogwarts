@@ -14,7 +14,7 @@ import { FEATURES } from "./constants"
 import { getCategoryIcon } from "./feature-icons"
 import type { FeatureCategory } from "./types"
 
-type TabId = "all" | "core" | "advanced" | FeatureCategory
+type TabId = "all" | FeatureCategory
 
 interface FeatureTabsProps {
   lang: Locale
@@ -24,22 +24,18 @@ const INITIAL_ROWS = 3
 const COLS_LG = 4
 const INITIAL_COUNT = INITIAL_ROWS * COLS_LG
 
-const CORE_CATEGORIES: FeatureCategory[] = [
-  "core",
-  "academic",
-  "scheduling",
-  "finance",
-]
-
 const tabs: { id: TabId; label: string }[] = [
   { id: "all", label: "All" },
   { id: "core", label: "Core" },
-  { id: "advanced", label: "Advanced" },
-  { id: "academic", label: "Academic" },
-  { id: "scheduling", label: "Scheduling" },
-  { id: "finance", label: "Finance" },
+  { id: "essential", label: "Essential" },
+  { id: "advance", label: "Advance" },
+  { id: "erp", label: "ERP" },
+  { id: "management", label: "Management" },
   { id: "communication", label: "Communication" },
-  { id: "e-learning", label: "E-Learning" },
+  { id: "lms", label: "LMS" },
+  { id: "technical", label: "Technical" },
+  { id: "integration", label: "Integration" },
+  { id: "ai", label: "AI" },
 ]
 
 export default function FeatureTabs({ lang }: FeatureTabsProps) {
@@ -50,11 +46,7 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
     () =>
       active === "all"
         ? FEATURES
-        : active === "core"
-          ? FEATURES.filter((f) => CORE_CATEGORIES.includes(f.category))
-          : active === "advanced"
-            ? FEATURES.filter((f) => !CORE_CATEGORIES.includes(f.category))
-            : FEATURES.filter((f) => f.category === active),
+        : FEATURES.filter((f) => f.category === active),
     [active]
   )
 

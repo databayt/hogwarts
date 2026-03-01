@@ -1,0 +1,49 @@
+// Catalog Proposal Models — School-initiated curriculum proposals
+
+enum ProposalType {
+  SUBJECT
+  CHAPTER
+  LESSON
+}
+
+enum ProposalStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+model CatalogProposal {
+  id         String         @id @default(cuid())
+  schoolId   String
+  proposedBy String
+  type       ProposalType
+  status     ProposalStatus @default(DRAFT)
+
+  // Proposal data (JSON — schema varies by type)
+  data Json // { name, department, description, grades, levels, country, ... }
+
+  // For chapter/lesson proposals, link to parent
+  parentSubjectId String? // CatalogSubject ID (for chapter proposals)
+  parentChapterId String? // CatalogChapter ID (for lesson proposals)
+
+  // Review
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  rejectionReason String?
+
+  // After approval, the created catalog entity ID
+  catalogEntityId String?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, status])
+  @@index([status])
+  @@map("catalog_proposals")
+}

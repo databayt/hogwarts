@@ -26,7 +26,9 @@ model CatalogSubject {
   department     String // Grouping (e.g. "العلوم")
   levels      SchoolLevel[]
   country     String        @default("SD")
-  system      String        @default("national")
+  curriculum  String        @default("national")  // "us-k12", "national", "british", "ib"
+  schoolTypes String[]      @default([])           // ["international", "private"]. Empty = all.
+  concept     String?                              // "math", "science" — image lookup key
   imageKey      String?
   thumbnailKey  String? // S3 key prefix for processed WebP variants (sm/md/original)
   color         String?
@@ -65,10 +67,11 @@ model CatalogSubject {
   certificates      SubjectCertificate[]
 
   // Content relations
-  catalogQuestions    CatalogQuestion[]
-  catalogMaterials    CatalogMaterial[]
-  catalogAssignments  CatalogAssignment[]
-  catalogBooks        CatalogBook[]
+  catalogQuestions      CatalogQuestion[]
+  catalogMaterials      CatalogMaterial[]
+  catalogAssignments    CatalogAssignment[]
+  catalogBooks          CatalogBook[]
+  catalogExamTemplates  CatalogExamTemplate[]
 
   // School-scoped reverse relations (FK bridges)
   schoolSubjects      Subject[]
@@ -80,7 +83,7 @@ model CatalogSubject {
 
   @@index([slug])
   @@index([status])
-  @@index([country, system])
+  @@index([country, curriculum])
   @@index([department])
   @@map("catalog_subjects")
 }
@@ -93,6 +96,7 @@ model CatalogChapter {
   lang          String        @default("ar")
   description   String?       @db.Text
   sequenceOrder Int
+  concept       String?                              // "algebra", "geometry" — image lookup key
   imageKey      String?
   thumbnailKey  String? // S3 key prefix for processed WebP variants
   color         String?
@@ -142,6 +146,7 @@ model CatalogLesson {
   lang            String        @default("ar")
   description     String?       @db.Text
   sequenceOrder   Int
+  concept         String?                              // inherits from chapter if null
   imageKey        String?
   thumbnailKey    String? // S3 key prefix for processed WebP variants
   color           String?
@@ -202,23 +207,53 @@ model CatalogExam {
   durationMinutes Int?
   totalMarks      Int?
   passingMarks    Int?
-  questions       Json?
+  questions       Json? // Legacy: use CatalogExamQuestion junction instead
   totalQuestions  Int?
   distribution    Json? // e.g. {"MULTIPLE_CHOICE": {"EASY": 5}}
+  bloomDistribution Json? // e.g. {"REMEMBER": 4, "UNDERSTAND": 3}
 
   gradeRange String?
   levels     SchoolLevel[]
   status     ContentStatus @default(DRAFT)
   tags       String[]      @default([])
 
+  // Community contribution (mirrors CatalogQuestion pattern)
+  contributedBy       String? // userId
+  contributedSchoolId String? // schoolId of contributor
+  approvalStatus      ApprovalStatus   @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
   // Engagement metrics
   usageCount   Int   @default(0)
   averageScore Float @default(0)
+  qualityScore Float @default(0)
+  ratingCount  Int   @default(0)
+
+  // Pricing for PAID visibility
+  price    Decimal? @db.Decimal(8, 2)
+  currency String?  @default("USD")
+
+  // Variant support (self-referencing)
+  variantOf    String? // parent CatalogExam id
+  variantLabel String? // e.g. "Version A", "Easy", "Standard"
 
   // Relations
   subject CatalogSubject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   chapter CatalogChapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
   lesson  CatalogLesson?  @relation("LessonExams", fields: [lessonId], references: [id], onDelete: SetNull)
+
+  // Variant relations
+  parentExam CatalogExam?  @relation("CatalogExamVariants", fields: [variantOf], references: [id], onDelete: SetNull)
+  variants   CatalogExam[] @relation("CatalogExamVariants")
+
+  // Junction table for questions
+  examQuestions CatalogExamQuestion[]
+
+  // School mirrors (adopted by schools)
+  schoolExams Exam[] @relation("CatalogExamMirror")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -227,5 +262,72 @@ model CatalogExam {
   @@index([chapterId])
   @@index([lessonId])
   @@index([status])
+  @@index([approvalStatus, visibility])
+  @@index([contributedBy])
+  @@index([contributedSchoolId])
+  @@index([variantOf])
   @@map("catalog_exams")
+}
+
+// Catalog-level paper template (NO schoolId — platform-wide)
+model CatalogPaperTemplate {
+  id   String @id @default(cuid())
+  name String
+  lang String @default("ar")
+
+  // Template & Layout
+  template        String @default("CLASSIC") // CLASSIC, MODERN, FORMAL, CUSTOM
+  layout          String @default("SINGLE_COLUMN") // SINGLE_COLUMN, TWO_COLUMN, BOOKLET
+  answerSheetType String @default("SEPARATE") // NONE, SEPARATE, BUBBLE
+
+  // Header Configuration
+  showSchoolLogo     Boolean @default(true)
+  showExamTitle      Boolean @default(true)
+  showInstructions   Boolean @default(true)
+  customInstructions String? @db.Text
+  showStudentInfo    Boolean @default(true)
+
+  // Question Configuration
+  showQuestionNumbers   Boolean @default(true)
+  showPointsPerQuestion Boolean @default(true)
+  showQuestionType      Boolean @default(false)
+  shuffleQuestions      Boolean @default(false)
+  shuffleOptions        Boolean @default(false)
+
+  // Answer Space
+  answerLinesShort Int @default(3)
+  answerLinesEssay Int @default(12)
+
+  // Footer & Print Settings
+  showPageNumbers Boolean @default(true)
+  showTotalPages  Boolean @default(true)
+  customFooter    String?
+  pageSize        String  @default("A4")
+  orientation     String  @default("portrait")
+
+  // Building blocks config (JSON array of block configs)
+  blockConfig Json? // [{type: "header", enabled: true, props: {...}}, ...]
+
+  // Community contribution
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus   @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  // Engagement metrics
+  usageCount Int @default(0)
+
+  status ContentStatus @default(PUBLISHED)
+  tags   String[]      @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([approvalStatus, visibility])
+  @@index([template])
+  @@map("catalog_paper_templates")
 }

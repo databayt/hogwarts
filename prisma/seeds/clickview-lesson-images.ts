@@ -27,6 +27,36 @@ import { logSuccess } from "./utils"
 
 const BY_URL_DIR = path.resolve(__dirname, "../../public/clickview/by-url")
 
+// Rate limit delay between ClickView downloads (ms)
+const DOWNLOAD_DELAY_MS = 100
+
+// ============================================================================
+// Download from ClickView CDN (fallback when no local file)
+// ============================================================================
+
+/**
+ * Download an image from ClickView CDN by coverId.
+ * Returns the image buffer or null on failure.
+ */
+async function downloadClickViewImage(coverId: string): Promise<Buffer | null> {
+  const url = `https://img.clickviewapp.com/v2/covers/${coverId}?width=2048`
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const arrayBuffer = await res.arrayBuffer()
+    return Buffer.from(arrayBuffer)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Small delay to avoid hammering ClickView.
+ */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 // ============================================================================
 // Build coverId → local file path map
 // ============================================================================
@@ -72,8 +102,6 @@ export async function seedClickViewLessonImages(
   const coverIdMap = buildCoverIdMap()
   console.log(`  Found ${coverIdMap.size} local cover images`)
 
-  if (coverIdMap.size === 0) return
-
   // Deduplication: coverId → S3 thumbnailKey (uploaded once, reused)
   const uploaded = new Map<string, string>()
 
@@ -95,7 +123,7 @@ async function processLessons(
     where: {
       thumbnailKey: null,
       chapter: {
-        subject: { system: "clickview" },
+        subject: { curriculum: "us-k12" },
       },
     },
     select: {
@@ -121,7 +149,8 @@ async function processLessons(
 
   console.log(`  Processing ${lessons.length} lessons without thumbnails...`)
 
-  let uploadCount = 0
+  let localCount = 0
+  let downloadCount = 0
   let reuseCount = 0
   let skipCount = 0
 
@@ -149,26 +178,38 @@ async function processLessons(
       continue
     }
 
-    // Find local file
+    // Find local file, fall back to downloading from ClickView
     const filePath = coverIdMap.get(coverId)
-    if (!filePath) {
+    let fileBuffer: Buffer | null = null
+
+    if (filePath) {
+      fileBuffer = fs.readFileSync(filePath)
+      localCount++
+    } else {
+      fileBuffer = await downloadClickViewImage(coverId)
+      if (fileBuffer) {
+        downloadCount++
+        await delay(DOWNLOAD_DELAY_MS)
+      }
+    }
+
+    if (!fileBuffer) {
       skipCount++
       continue
     }
 
     try {
-      const fileBuffer = fs.readFileSync(filePath)
       await processAndUploadCatalogImage(fileBuffer, s3Key)
       await prisma.catalogLesson.update({
         where: { id: lesson.id },
         data: { thumbnailKey: s3Key },
       })
       uploaded.set(coverId, s3Key)
-      uploadCount++
 
-      if (uploadCount % 50 === 0) {
+      const total = localCount + downloadCount
+      if (total % 50 === 0) {
         console.log(
-          `  Lessons: ${uploadCount} uploaded, ${reuseCount} reused, ${skipCount} skipped`
+          `  Lessons: ${localCount} local + ${downloadCount} downloaded, ${reuseCount} reused, ${skipCount} skipped`
         )
       }
     } catch (err) {
@@ -178,8 +219,8 @@ async function processLessons(
 
   logSuccess(
     "ClickView Lesson Thumbnails",
-    uploadCount,
-    `${reuseCount} reused, ${skipCount} skipped`
+    localCount + downloadCount,
+    `${localCount} local, ${downloadCount} downloaded, ${reuseCount} reused, ${skipCount} skipped`
   )
 }
 
@@ -196,7 +237,7 @@ async function processChapters(
   const chapters = await prisma.catalogChapter.findMany({
     where: {
       thumbnailKey: null,
-      subject: { system: "clickview" },
+      subject: { curriculum: "us-k12" },
     },
     select: {
       id: true,
@@ -220,7 +261,8 @@ async function processChapters(
 
   console.log(`  Processing ${chapters.length} chapters without thumbnails...`)
 
-  let uploadCount = 0
+  let localCount = 0
+  let downloadCount = 0
   let reuseCount = 0
   let skipCount = 0
 
@@ -251,22 +293,33 @@ async function processChapters(
       continue
     }
 
-    // Find local file
+    // Find local file, fall back to downloading from ClickView
     const filePath = coverIdMap.get(coverId)
-    if (!filePath) {
+    let fileBuffer: Buffer | null = null
+
+    if (filePath) {
+      fileBuffer = fs.readFileSync(filePath)
+      localCount++
+    } else {
+      fileBuffer = await downloadClickViewImage(coverId)
+      if (fileBuffer) {
+        downloadCount++
+        await delay(DOWNLOAD_DELAY_MS)
+      }
+    }
+
+    if (!fileBuffer) {
       skipCount++
       continue
     }
 
     try {
-      const fileBuffer = fs.readFileSync(filePath)
       await processAndUploadCatalogImage(fileBuffer, s3Key)
       await prisma.catalogChapter.update({
         where: { id: chapter.id },
         data: { thumbnailKey: s3Key },
       })
       uploaded.set(coverId, s3Key)
-      uploadCount++
     } catch (err) {
       console.error(`  Failed chapter ${chapter.slug}:`, err)
     }
@@ -274,8 +327,8 @@ async function processChapters(
 
   logSuccess(
     "ClickView Chapter Thumbnails",
-    uploadCount,
-    `${reuseCount} reused, ${skipCount} skipped`
+    localCount + downloadCount,
+    `${localCount} local, ${downloadCount} downloaded, ${reuseCount} reused, ${skipCount} skipped`
   )
 }
 

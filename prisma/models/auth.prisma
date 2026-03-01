@@ -18,6 +18,7 @@ model User {
   image         String?
   password      String?
   role          UserRole  @default(USER)
+  isSuspended   Boolean   @default(false)
 
   // GitHub-style profile fields
   bio           String? @db.Text // User bio/README
@@ -148,6 +149,10 @@ model User {
   catalogEnrollments     Enrollment[]
   catalogLessonProgress  LessonProgress[]
   catalogCertificates    SubjectCertificate[]
+
+  // Membership relations
+  membershipRequests       MembershipRequest[]  @relation("MembershipRequestUser")
+  reviewedMembershipRequests MembershipRequest[] @relation("MembershipRequestReviewer")
 
   // Event Registration relations
   eventRegistrations EventRegistration[] @relation("EventRegistrations")

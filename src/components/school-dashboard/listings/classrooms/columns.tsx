@@ -2,9 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import Link from "next/link"
 import { type ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -12,7 +14,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export type ClassroomRow = {
   id: string
@@ -20,6 +21,8 @@ export type ClassroomRow = {
   capacity: number
   typeName: string
   typeId: string
+  gradeName: string | null
+  gradeId: string | null
   classCount: number
   timetableCount: number
   createdAt: string
@@ -27,6 +30,7 @@ export type ClassroomRow = {
 
 export function getClassroomColumns(
   lang: string,
+  subdomain: string,
   callbacks: {
     onEdit?: (id: string) => void
     onDelete?: (row: ClassroomRow) => void
@@ -36,8 +40,10 @@ export function getClassroomColumns(
   const t = {
     roomName: dictionary?.roomName || "Room Name",
     type: dictionary?.type || "Type",
+    grade: dictionary?.grade || "Grade",
     capacity: dictionary?.capacity || "Capacity",
     classes: dictionary?.classes || "Classes",
+    shared: dictionary?.shared || "Shared",
     edit: dictionary?.edit || "Edit",
     delete: dictionary?.delete || "Delete",
   }
@@ -47,12 +53,27 @@ export function getClassroomColumns(
       accessorKey: "roomName",
       header: t.roomName,
       cell: ({ row }) => (
-        <span className="font-medium">{row.original.roomName}</span>
+        <Link
+          href={`/${lang}/s/${subdomain}/classrooms/${row.original.id}`}
+          className="text-primary font-medium hover:underline"
+        >
+          {row.original.roomName}
+        </Link>
       ),
     },
     {
       accessorKey: "typeName",
       header: t.type,
+    },
+    {
+      accessorKey: "gradeName",
+      header: t.grade,
+      cell: ({ row }) =>
+        row.original.gradeName ? (
+          <span>{row.original.gradeName}</span>
+        ) : (
+          <Badge variant="secondary">{t.shared}</Badge>
+        ),
     },
     {
       accessorKey: "capacity",

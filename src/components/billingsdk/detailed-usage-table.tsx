@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export interface UsageResource {
   name: string
@@ -34,6 +35,11 @@ export function DetailedUsageTable({
   description,
   resources,
 }: DetailedUsageTableProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.dashboard?.table as
+    | Record<string, string>
+    | undefined
+
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(num)
   }
@@ -69,15 +75,21 @@ export function DetailedUsageTable({
       <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableCaption className="sr-only">
-            Detailed usage of resources
+            {t?.detailedUsage || "Detailed usage of resources"}
           </TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[180px] px-6">Resource</TableHead>
-              <TableHead className="px-6 text-end">Used</TableHead>
-              <TableHead className="px-6 text-end">Limit</TableHead>
+              <TableHead className="w-[180px] px-6">
+                {t?.resource || "Resource"}
+              </TableHead>
+              <TableHead className="px-6 text-end">
+                {t?.used || "Used"}
+              </TableHead>
+              <TableHead className="px-6 text-end">
+                {t?.limit || "Limit"}
+              </TableHead>
               <TableHead className="min-w-[160px] px-6 text-end">
-                Usage
+                {t?.usage || "Usage"}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -88,7 +100,7 @@ export function DetailedUsageTable({
                   colSpan={4}
                   className="text-muted-foreground h-24 text-center"
                 >
-                  No resources found
+                  {t?.noResources || "No resources found"}
                 </TableCell>
               </TableRow>
             ) : (

@@ -25,6 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { QuickAction } from "./types"
 
@@ -48,6 +49,10 @@ const iconMap: Record<string, any> = {
 }
 
 export function QuickActions({ actions, className }: QuickActionsProps) {
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const dp = fd?.dashboardPage as Record<string, string> | undefined
+
   const getIcon = (iconName: string) => {
     const Icon = iconMap[iconName] || Plus
     return <Icon className="h-5 w-5" />
@@ -80,8 +85,10 @@ export function QuickActions({ actions, className }: QuickActionsProps) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>No actions available for your role</CardDescription>
+          <CardTitle>{dp?.quickActions || "Quick Actions"}</CardTitle>
+          <CardDescription>
+            {dp?.noActionsAvailable || "No actions available for your role"}
+          </CardDescription>
         </CardHeader>
       </Card>
     )
@@ -90,8 +97,10 @@ export function QuickActions({ actions, className }: QuickActionsProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
-        <CardDescription>Frequently used financial operations</CardDescription>
+        <CardTitle>{dp?.quickActions || "Quick Actions"}</CardTitle>
+        <CardDescription>
+          {dp?.frequentOperations || "Frequently used financial operations"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -141,13 +150,13 @@ export function QuickActions({ actions, className }: QuickActionsProps) {
           <Link href="/finance/reports">
             <Button variant="outline" className="w-full justify-start">
               <BarChart className="me-2 h-4 w-4" />
-              View All Reports
+              {dp?.viewAllReports || "View All Reports"}
             </Button>
           </Link>
           <Link href="/finance/settings">
             <Button variant="outline" className="w-full justify-start">
               <Calculator className="me-2 h-4 w-4" />
-              Finance Settings
+              {dp?.financeSettings || "Finance Settings"}
             </Button>
           </Link>
         </div>
@@ -158,6 +167,10 @@ export function QuickActions({ actions, className }: QuickActionsProps) {
 
 // Compact version for smaller spaces
 export function QuickActionsCompact({ actions, className }: QuickActionsProps) {
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const dp = fd?.dashboardPage as Record<string, string> | undefined
+
   const getIcon = (iconName: string) => {
     const Icon = iconMap[iconName] || Plus
     return <Icon className="h-4 w-4" />
@@ -194,7 +207,7 @@ export function QuickActionsCompact({ actions, className }: QuickActionsProps) {
         <Link href="/finance">
           <Button variant="outline" size="sm">
             <Plus className="h-4 w-4" />
-            <span className="ms-2">More</span>
+            <span className="ms-2">{dp?.more || "More"}</span>
           </Button>
         </Link>
       )}

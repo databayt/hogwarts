@@ -35,13 +35,11 @@ import { filterByQuery, filterByRole } from "./utils"
 interface GenericCommandMenuProps extends DialogProps {
   config: SearchConfig
   context?: SearchContext
-  variant?: "default" | "compact" | "icon"
 }
 
 export function GenericCommandMenu({
   config,
   context,
-  variant = "default",
   ...props
 }: GenericCommandMenuProps) {
   const router = useRouter()
@@ -266,38 +264,16 @@ export function GenericCommandMenu({
 
   return (
     <>
-      {variant === "icon" ? (
-        <Button
-          variant="link"
-          size="icon"
-          className="size-7 cursor-pointer transition-opacity hover:opacity-70"
-          onClick={() => setOpen(true)}
-          {...props}
-        >
-          <Search className="h-4 w-4" />
-          <span className="sr-only">{commandMenuDict?.search || "Search"}</span>
-        </Button>
-      ) : (
-        <Button
-          variant="outline"
-          className={cn(
-            "bg-muted/50 text-muted-foreground relative h-8 w-full justify-start rounded-[0.5rem] text-sm font-normal shadow-none sm:pe-12",
-            variant === "compact"
-              ? "md:w-40 lg:w-48"
-              : "md:w-40 lg:w-56 xl:w-64"
-          )}
-          onClick={() => setOpen(true)}
-          {...props}
-        >
-          <span className="hidden lg:inline-flex">{basePlaceholder}</span>
-          <span className="inline-flex lg:hidden">
-            {commandMenuDict?.searchShort || "Search..."}
-          </span>
-          <kbd className="bg-muted pointer-events-none absolute end-[0.3rem] top-[0.3rem] hidden h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none sm:flex">
-            <span className="text-xs">⌘</span>K
-          </kbd>
-        </Button>
-      )}
+      <Button
+        variant="link"
+        size="icon"
+        className="size-7 cursor-pointer transition-opacity hover:opacity-70"
+        onClick={() => setOpen(true)}
+        {...props}
+      >
+        <Search className="h-4 w-4" />
+        <span className="sr-only">{commandMenuDict?.search || "Search"}</span>
+      </Button>
 
       <SpotlightDialog open={open} onOpenChange={setOpen}>
         <div className="flex w-full flex-col items-center">

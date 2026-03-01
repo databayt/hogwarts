@@ -29,7 +29,7 @@ export interface StudentExportData {
   enrollmentDate: Date
   admissionNumber: string | null
   nationality: string | null
-  className: string | null
+  sectionName: string | null
   yearLevel: string | null
   guardianName: string | null
   guardianPhone: string | null
@@ -124,7 +124,7 @@ export const STUDENT_EXPORT_COLUMNS: ExportColumn<StudentExportData>[] = [
   date("enrollmentDate", "Enrollment Date", undefined, "تاريخ التسجيل"),
   text("admissionNumber", "Admission No.", "رقم القبول"),
   text("nationality", "Nationality", "الجنسية"),
-  text("className", "Class", "الفصل"),
+  text("sectionName", "Section", "الشعبة"),
   text("yearLevel", "Year Level", "المستوى الدراسي"),
   text("guardianName", "Guardian Name", "اسم ولي الأمر"),
   text("guardianPhone", "Guardian Phone", "هاتف ولي الأمر"),
@@ -146,7 +146,7 @@ export const STUDENT_EXPORT_COLUMNS_COMPACT: ExportColumn<StudentExportData>[] =
       "الاسم الكامل"
     ),
     text("email", "Email", "البريد الإلكتروني"),
-    text("className", "Class", "الفصل"),
+    text("sectionName", "Section", "الشعبة"),
     {
       key: "status",
       header: "Status",

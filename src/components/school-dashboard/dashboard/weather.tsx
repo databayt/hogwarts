@@ -107,11 +107,14 @@ function WeatherIcon({
 // DEFAULT/MOCK DATA
 // ============================================================================
 
-function getDefaultCurrentWeather(locale: string): WeatherCondition {
+function getDefaultCurrentWeather(
+  locale: string,
+  condDict?: Record<string, string>
+): WeatherCondition {
   return {
     day: new Date().toLocaleDateString(locale, { weekday: "long" }),
     condition: "sunny",
-    conditionLabel: "Sunny",
+    conditionLabel: condDict?.sunny || "Sunny",
     temperature: 24,
     tempLow: 18,
     humidity: 45,
@@ -120,14 +123,27 @@ function getDefaultCurrentWeather(locale: string): WeatherCondition {
   }
 }
 
-const defaultForecast: ForecastDay[] = [
-  { day: "Tue", condition: "partlycloudy", temp: 22 },
-  { day: "Wed", condition: "cloudy", temp: 20 },
-  { day: "Thu", condition: "rainy", temp: 18 },
-  { day: "Fri", condition: "pouring", temp: 16 },
-  { day: "Sat", condition: "cloudy", temp: 19 },
-  { day: "Sun", condition: "sunny", temp: 23 },
-]
+function getDefaultForecast(locale: string): ForecastDay[] {
+  const conditions: WeatherConditionType[] = [
+    "partlycloudy",
+    "cloudy",
+    "rainy",
+    "pouring",
+    "cloudy",
+    "sunny",
+  ]
+  const temps = [22, 20, 18, 16, 19, 23]
+  const now = new Date()
+  return [1, 2, 3, 4, 5, 6].map((offset, i) => {
+    const date = new Date(now)
+    date.setDate(date.getDate() + offset)
+    return {
+      day: date.toLocaleDateString(locale, { weekday: "short" }),
+      condition: conditions[i],
+      temp: temps[i],
+    }
+  })
+}
 
 // ============================================================================
 // WEATHER COMPONENT
@@ -163,10 +179,21 @@ export function Weather({
   const { locale } = useLocale()
   const { dictionary } = useDictionary()
   const dict = dictionary?.school?.dashboard?.weather
+  const condDict = dictionary?.school?.dashboard?.weatherConditions as
+    | Record<string, string>
+    | undefined
 
   // Use provided data or fall back to defaults
-  const currentWeather = current || getDefaultCurrentWeather(locale)
-  const forecastData = forecast || defaultForecast
+  const rawCurrent = current || getDefaultCurrentWeather(locale, condDict)
+  // Translate condition label via dictionary (overrides API English or default)
+  const currentWeather = condDict
+    ? {
+        ...rawCurrent,
+        conditionLabel:
+          condDict[rawCurrent.condition] || rawCurrent.conditionLabel,
+      }
+    : rawCurrent
+  const forecastData = forecast || getDefaultForecast(locale)
 
   const handleRefresh = useCallback(async () => {
     if (!onRefresh || refreshing) return

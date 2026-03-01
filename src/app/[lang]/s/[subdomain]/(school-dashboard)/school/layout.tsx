@@ -16,46 +16,31 @@ export default async function SchoolLayout({ children, params }: Props) {
   const { lang } = await params
 
   const dictionary = await getDictionary(lang as Locale)
-  const isArabic = lang === "ar"
+  const d = dictionary?.school?.schoolAdmin
+  const n = d?.navigation
 
-  // Flat navigation structure with inline translations
   const schoolPages: PageNavItem[] = [
-    { name: isArabic ? "نظرة عامة" : "Overview", href: `/${lang}/school` },
+    { name: n?.overview || "Overview", href: `/${lang}/school` },
     {
-      name: isArabic ? "الإعدادات" : "Configuration",
-      href: `/${lang}/school/configuration`,
+      name: n?.configuration || "Configuration",
+      href: `/${lang}/school/configuration/title`,
     },
+    { name: n?.membership || "Membership", href: `/${lang}/school/membership` },
     {
-      name: isArabic ? "الأعضاء" : "Membership",
-      href: `/${lang}/school/membership`,
-    },
-    {
-      name: isArabic ? "التواصل" : "Communication",
+      name: n?.communication || "Communication",
       href: `/${lang}/school/communication`,
     },
-    {
-      name: isArabic ? "الفوترة" : "Billing",
-      href: `/${lang}/school/billing`,
-    },
-    {
-      name: isArabic ? "الأمان" : "Security",
-      href: `/${lang}/school/security`,
-    },
-    {
-      name: isArabic ? "التقارير" : "Reports",
-      href: `/${lang}/school/reports`,
-    },
-    { name: isArabic ? "إدخال جماعي" : "Bulk", href: `/${lang}/school/bulk` },
-    {
-      name: isArabic ? "التحليل" : "Analysis",
-      href: `/${lang}/school/analysis`,
-    },
+    { name: n?.billing || "Billing", href: `/${lang}/school/billing` },
+    { name: n?.security || "Security", href: `/${lang}/school/security` },
+    { name: n?.reports || "Reports", href: `/${lang}/school/reports` },
+    { name: n?.bulk || "Bulk", href: `/${lang}/school/bulk` },
+    { name: n?.analysis || "Analysis", href: `/${lang}/school/analysis` },
   ]
 
   return (
     <AdminAuthGuard lang={lang as Locale}>
       <div className="space-y-6">
-        <PageHeadingSetter title={isArabic ? "المدرسة" : "School"} />
+        <PageHeadingSetter title={d?.title || "School"} />
         <PageNav pages={schoolPages} />
         {children}
       </div>

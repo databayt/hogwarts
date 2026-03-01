@@ -58,6 +58,12 @@ export async function selectCatalogBook(
       coverColor: true,
       rating: true,
       videoUrl: true,
+      isbn: true,
+      publisher: true,
+      publicationYear: true,
+      language: true,
+      pageCount: true,
+      gradeLevel: true,
     },
   })
 
@@ -92,6 +98,12 @@ export async function selectCatalogBook(
         totalCopies,
         availableCopies: totalCopies,
         videoUrl: catalogBook.videoUrl,
+        isbn: catalogBook.isbn,
+        publisher: catalogBook.publisher,
+        publicationYear: catalogBook.publicationYear,
+        language: catalogBook.language,
+        pageCount: catalogBook.pageCount,
+        gradeLevel: catalogBook.gradeLevel,
       },
     }),
   ])
@@ -161,6 +173,9 @@ export async function updateBookSelection(
     totalCopies?: number
     availableCopies?: number
     shelfLocation?: string
+    customName?: string
+    gradeId?: string | null
+    isActive?: boolean
   }
 ) {
   const { schoolId } = await requireSchoolAdmin()
@@ -179,5 +194,36 @@ export async function updateBookSelection(
   })
 
   revalidatePath("/library/catalog")
+  revalidatePath("/library/books")
+  revalidatePath("/library/admin/books")
+  return { success: true }
+}
+
+// ============================================================================
+// Toggle a book selection active/inactive
+// ============================================================================
+
+export async function toggleBookSelection(
+  catalogBookId: string,
+  isActive: boolean
+) {
+  const { schoolId } = await requireSchoolAdmin()
+
+  const selection = await db.schoolBookSelection.findFirst({
+    where: { schoolId, catalogBookId },
+  })
+
+  if (!selection) {
+    return { success: false, error: "Selection not found" }
+  }
+
+  await db.schoolBookSelection.update({
+    where: { id: selection.id },
+    data: { isActive },
+  })
+
+  revalidatePath("/library/catalog")
+  revalidatePath("/library/books")
+  revalidatePath("/library/admin/books")
   return { success: true }
 }

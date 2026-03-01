@@ -284,10 +284,16 @@ model ExamTemplate {
   // Example: {"REMEMBER": 4, "UNDERSTAND": 3, "APPLY": 3}
   bloomDistribution Json?
 
+  // Catalog bridge FK (adopted from catalog)
+  catalogExamTemplateId String?
+
   // Relations
   school         School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   generatedExams GeneratedExam[]
+
+  // Catalog bridge relation
+  catalogExamTemplate CatalogExamTemplate? @relation("CatalogExamTemplateMirror", fields: [catalogExamTemplateId], references: [id], onDelete: SetNull)
 
   createdBy String
   isActive  Boolean  @default(true)
@@ -299,8 +305,8 @@ model ExamTemplate {
   @@index([schoolId, isActive])
   @@index([schoolId, createdBy])
   @@index([schoolId, subjectId, isActive]) // Composite for active subject templates
+  @@index([catalogExamTemplateId])
   @@index([createdAt]) // For sorting
-  // @@fulltext([name, description]) // Full-text search on template info (not supported in PostgreSQL via Prisma)
   @@map("exam_templates")
 }
 

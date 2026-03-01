@@ -1,0 +1,83 @@
+.liquid-glass {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+}
+
+.liquid-glass__filter,
+.liquid-glass__overlay,
+.liquid-glass__specular {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.liquid-glass__filter {
+  z-index: 0;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.liquid-glass__overlay {
+  z-index: 1;
+}
+
+.liquid-glass__specular {
+  z-index: 2;
+}
+
+.liquid-glass__content {
+  position: relative;
+  z-index: 3;
+}
+
+/* Light mode — tinted glass on light background */
+.liquid-glass {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.liquid-glass .liquid-glass__filter {
+  filter: saturate(120%) brightness(0.98);
+}
+
+.liquid-glass .liquid-glass__overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.015) 0%,
+    rgba(0, 0, 0, 0.03) 50%,
+    rgba(0, 0, 0, 0.015) 100%
+  );
+}
+
+.liquid-glass .liquid-glass__specular {
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode — full glass effect */
+:is(.dark *).liquid-glass {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 6px 6px rgba(0, 0, 0, 0.15),
+    0 0 20px rgba(0, 0, 0, 0.08);
+}
+
+:is(.dark *).liquid-glass .liquid-glass__filter {
+  filter: saturate(120%) brightness(1.15);
+}
+
+:is(.dark *).liquid-glass .liquid-glass__overlay {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+:is(.dark *).liquid-glass .liquid-glass__specular {
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 0 5px rgba(255, 255, 255, 0.75);
+}

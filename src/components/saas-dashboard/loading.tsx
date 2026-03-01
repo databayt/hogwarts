@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 // =============================================================================
@@ -155,7 +155,7 @@ export function SaasAnalyticsSkeleton() {
           <Skeleton className="h-4 w-56" />
         </CardHeader>
         <CardContent className="space-y-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="flex items-center justify-between">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 w-20" />
@@ -169,6 +169,7 @@ export function SaasAnalyticsSkeleton() {
       <Card>
         <CardHeader>
           <Skeleton className="h-5 w-28" />
+          <Skeleton className="h-4 w-48" />
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
@@ -227,8 +228,8 @@ export function SaasBillingSkeleton() {
         </div>
         <div className="rounded-md border">
           <div className="bg-muted/50 flex h-12 items-center border-b px-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="mx-2 h-4 w-24 flex-1" />
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="mx-2 h-4 w-20 flex-1" />
             ))}
           </div>
           {Array.from({ length: 8 }).map((_, i) => (
@@ -236,10 +237,10 @@ export function SaasBillingSkeleton() {
               key={i}
               className="flex h-14 items-center border-b px-4 last:border-b-0"
             >
-              {Array.from({ length: 5 }).map((_, j) => (
+              {Array.from({ length: 7 }).map((_, j) => (
                 <Skeleton
                   key={j}
-                  className="mx-2 h-4 w-full max-w-[180px] flex-1"
+                  className="mx-2 h-4 w-full max-w-[140px] flex-1"
                 />
               ))}
             </div>
@@ -285,7 +286,7 @@ export function SaasBillingReceiptsSkeleton() {
       {/* DataTable */}
       <div className="rounded-md border">
         <div className="bg-muted/50 flex h-12 items-center border-b px-4">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="mx-2 h-4 w-24 flex-1" />
           ))}
         </div>
@@ -294,7 +295,7 @@ export function SaasBillingReceiptsSkeleton() {
             key={i}
             className="flex h-14 items-center border-b px-4 last:border-b-0"
           >
-            {Array.from({ length: 5 }).map((_, j) => (
+            {Array.from({ length: 6 }).map((_, j) => (
               <Skeleton
                 key={j}
                 className="mx-2 h-4 w-full max-w-[180px] flex-1"
@@ -346,7 +347,7 @@ export function SaasDomainsSkeleton() {
         {/* DataTable */}
         <div className="rounded-md border">
           <div className="bg-muted/50 flex h-12 items-center border-b px-4">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="mx-2 h-4 w-24 flex-1" />
             ))}
           </div>
@@ -355,7 +356,7 @@ export function SaasDomainsSkeleton() {
               key={i}
               className="flex h-14 items-center border-b px-4 last:border-b-0"
             >
-              {Array.from({ length: 5 }).map((_, j) => (
+              {Array.from({ length: 4 }).map((_, j) => (
                 <Skeleton
                   key={j}
                   className="mx-2 h-4 w-full max-w-[180px] flex-1"
@@ -386,8 +387,8 @@ export function SaasKanbanSkeleton() {
       </div>
 
       {/* Kanban board columns */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {["Backlog", "Todo", "In Progress", "Done"].map((_, i) => (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {["Todo", "In Progress", "Done"].map((_, i) => (
           <div key={i} className="space-y-3">
             {/* Column header */}
             <div className="flex items-center justify-between rounded-lg border p-3">
@@ -439,8 +440,8 @@ export function SaasObservabilitySkeleton() {
       {/* DataTable */}
       <div className="rounded-md border">
         <div className="bg-muted/50 flex h-12 items-center border-b px-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="mx-2 h-4 w-24 flex-1" />
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="mx-2 h-4 w-20 flex-1" />
           ))}
         </div>
         {Array.from({ length: 10 }).map((_, i) => (
@@ -448,10 +449,10 @@ export function SaasObservabilitySkeleton() {
             key={i}
             className="flex h-14 items-center border-b px-4 last:border-b-0"
           >
-            {Array.from({ length: 5 }).map((_, j) => (
+            {Array.from({ length: 8 }).map((_, j) => (
               <Skeleton
                 key={j}
-                className="mx-2 h-4 w-full max-w-[200px] flex-1"
+                className="mx-2 h-4 w-full max-w-[140px] flex-1"
               />
             ))}
           </div>
@@ -531,7 +532,7 @@ export function SaasProfileSkeleton() {
       <Card>
         <CardContent className="flex items-center justify-center py-10">
           <div className="space-y-2 text-center">
-            <Skeleton className="mx-auto size-16 rounded-full" />
+            <Skeleton className="mx-auto size-12 rounded-lg" />
             <Skeleton className="mx-auto h-5 w-36" />
             <Skeleton className="mx-auto h-4 w-56" />
           </div>
@@ -671,9 +672,6 @@ export function SaasTenantsSkeleton() {
               <Skeleton className="h-7 w-12" />
               <Skeleton className="mt-1 h-3 w-20" />
             </CardContent>
-            <CardFooter className="pt-0">
-              <Skeleton className="h-2 w-full rounded-full" />
-            </CardFooter>
           </Card>
         ))}
       </div>
@@ -687,8 +685,8 @@ export function SaasTenantsSkeleton() {
 
         <div className="rounded-md border">
           <div className="bg-muted/50 flex h-12 items-center border-b px-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="mx-2 h-4 w-20 flex-1" />
+            {Array.from({ length: 9 }).map((_, i) => (
+              <Skeleton key={i} className="mx-2 h-4 w-16 flex-1" />
             ))}
           </div>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -696,11 +694,10 @@ export function SaasTenantsSkeleton() {
               key={i}
               className="flex h-14 items-center border-b px-4 last:border-b-0"
             >
-              <Skeleton className="mx-2 size-8 rounded-full" />
-              {Array.from({ length: 5 }).map((_, j) => (
+              {Array.from({ length: 9 }).map((_, j) => (
                 <Skeleton
                   key={j}
-                  className="mx-2 h-4 w-full max-w-[160px] flex-1"
+                  className="mx-2 h-4 w-full max-w-[120px] flex-1"
                 />
               ))}
             </div>

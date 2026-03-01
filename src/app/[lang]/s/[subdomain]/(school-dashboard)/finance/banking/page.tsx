@@ -29,7 +29,7 @@ export default async function BankingDashboardPage({
       <BankingDashboardContent
         user={session.user}
         searchParams={resolvedSearchParams}
-        dictionary={dictionary.banking}
+        dictionary={dictionary}
         lang={lang as Locale}
       />
     </Suspense>

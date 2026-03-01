@@ -5,7 +5,21 @@
 import { useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { BookOpen, Clock, Download, FileText, Play } from "lucide-react"
+import {
+  BookOpen,
+  ClipboardList,
+  Clock,
+  FileEdit,
+  FileText,
+  FlaskConical,
+  FolderKanban,
+  GraduationCap,
+  Library,
+  Play,
+  Presentation,
+  StickyNote,
+  Video,
+} from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -31,7 +45,9 @@ interface VideoItem {
 interface MaterialItem {
   id: string
   title: string
+  description: string | null
   type: string
+  pageCount: number | null
   downloadCount: number
   fileSize: number | null
   mimeType: string | null
@@ -79,6 +95,7 @@ interface Props {
   data: ContentSectionsData
   lang: Locale
   subjectColor: string | null
+  subjectName: string
   subdomain: string
   subjectSlug: string
   catalogSubjectId: string
@@ -94,11 +111,30 @@ function formatDuration(seconds: number): string {
   return s > 0 ? `${m}:${String(s).padStart(2, "0")}` : `${m}:00`
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
+const EXAM_TYPE_PIPELINE = [
+  { key: "final", label: "Final" },
+  { key: "midterm", label: "Midterm" },
+  { key: "chapter_test", label: "Chapter" },
+  { key: "quiz", label: "Quiz" },
+  { key: "practice", label: "Practice" },
+  { key: "diagnostic", label: "Diagnostic" },
+] as const
+
+const TEST_TYPES = new Set(["chapter_test", "quiz", "practice"])
+
+const MATERIAL_TYPE_PIPELINE = [
+  { key: "TEXTBOOK", icon: BookOpen },
+  { key: "SYLLABUS", icon: ClipboardList },
+  { key: "REFERENCE", icon: Library },
+  { key: "STUDY_GUIDE", icon: GraduationCap },
+  { key: "PROJECT", icon: FolderKanban },
+  { key: "WORKSHEET", icon: FileEdit },
+  { key: "PRESENTATION", icon: Presentation },
+  { key: "LESSON_NOTES", icon: StickyNote },
+  { key: "VIDEO_GUIDE", icon: Video },
+  { key: "LAB_MANUAL", icon: FlaskConical },
+  { key: "OTHER", icon: FileText },
+] as const
 
 const QUESTION_TYPE_CONFIG: Record<
   string,
@@ -154,6 +190,7 @@ export function CatalogContentSections({
   data,
   lang,
   subjectColor,
+  subjectName,
   subdomain,
   subjectSlug,
   catalogSubjectId,
@@ -196,15 +233,21 @@ export function CatalogContentSections({
       // Exam types
       midterm: cat?.examTypes?.midterm || "Midterm",
       final: cat?.examTypes?.final || "Final",
-      chapter_test: cat?.examTypes?.chapter_test || "Chapter Test",
+      chapter_test: cat?.examTypes?.chapter_test || "Chapter",
       practice: cat?.examTypes?.practice || "Practice",
       quiz: cat?.examTypes?.quiz || "Quiz",
+      diagnostic:
+        (cat?.examTypes as Record<string, string> | undefined)?.diagnostic ||
+        "Diagnostic",
       // Material types
       TEXTBOOK: cat?.materialTypes?.TEXTBOOK || "Textbook",
       SYLLABUS: cat?.materialTypes?.SYLLABUS || "Syllabus",
-      WORKSHEET: cat?.materialTypes?.WORKSHEET || "Worksheet",
-      STUDY_GUIDE: cat?.materialTypes?.STUDY_GUIDE || "Study Guide",
       REFERENCE: cat?.materialTypes?.REFERENCE || "Reference",
+      STUDY_GUIDE: cat?.materialTypes?.STUDY_GUIDE || "Study Guide",
+      PROJECT: cat?.materialTypes?.PROJECT || "Project",
+      WORKSHEET: cat?.materialTypes?.WORKSHEET || "Worksheet",
+      PRESENTATION: cat?.materialTypes?.PRESENTATION || "Presentation",
+      LESSON_NOTES: cat?.materialTypes?.LESSON_NOTES || "Lesson Notes",
       VIDEO_GUIDE: cat?.materialTypes?.VIDEO_GUIDE || "Video Guide",
       LAB_MANUAL: cat?.materialTypes?.LAB_MANUAL || "Lab Manual",
       OTHER: cat?.materialTypes?.OTHER || "Other",
@@ -305,43 +348,17 @@ export function CatalogContentSections({
       )}
 
       {hasMaterials && (
-        <ContentSection title={t.materials} accentColor={accentColor}>
-          <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1">
-            {data.materials.map((material) => (
-              <Card key={material.id} className="w-52 shrink-0">
-                <CardContent className="flex items-start gap-3 p-3">
-                  <div
-                    className="flex size-10 shrink-0 items-center justify-center rounded-md"
-                    style={{ backgroundColor: accentColor }}
-                  >
-                    {material.type === "TEXTBOOK" ? (
-                      <BookOpen className="size-5 text-white" />
-                    ) : (
-                      <FileText className="size-5 text-white" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm font-medium">
-                      {material.title}
-                    </p>
-                    <Badge variant="outline" className="mt-1 text-[10px]">
-                      {t[material.type as keyof typeof t] ?? material.type}
-                    </Badge>
-                    <p className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
-                      <Download className="size-3" />
-                      {material.downloadCount} {t.downloads}
-                      {material.fileSize && (
-                        <span className="text-muted-foreground/60">
-                          {" \u00b7 "}
-                          {formatFileSize(material.fileSize)}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <ContentSection
+          title={t.materials}
+          accentColor={accentColor}
+          actionHref={`/${lang}/s/${subdomain}/subjects/${subjectSlug}/materials`}
+          actionLabel={t.seeAll}
+        >
+          <MaterialTypePipeline
+            materials={data.materials}
+            accentColor={accentColor}
+            t={t}
+          />
         </ContentSection>
       )}
 
@@ -352,55 +369,11 @@ export function CatalogContentSections({
           actionHref={`/${lang}/s/${subdomain}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`}
           actionLabel={t.seeAll}
         >
-          <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
-            {data.exams.map((exam) => (
-              <div
-                key={exam.id}
-                className="w-56 shrink-0 rounded-xl p-3"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.15) 100%)",
-                  backdropFilter: "blur(40px) saturate(150%)",
-                  WebkitBackdropFilter: "blur(40px) saturate(150%)",
-                  border: "1px solid rgba(255, 255, 255, 0.25)",
-                  boxShadow:
-                    "0 4px 24px -1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.4)",
-                }}
-              >
-                <Badge
-                  variant="secondary"
-                  className="mb-2 border-none text-[10px]"
-                  style={{
-                    backgroundColor: `${accentColor}20`,
-                    color: accentColor,
-                  }}
-                >
-                  {t[exam.examType as keyof typeof t] ?? exam.examType}
-                </Badge>
-                <p className="text-foreground line-clamp-2 text-sm font-medium">
-                  {exam.title}
-                </p>
-                <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-                  {exam.durationMinutes && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="size-3" />
-                      {exam.durationMinutes} {t.min}
-                    </span>
-                  )}
-                  {exam.totalMarks && (
-                    <span>
-                      {exam.totalMarks} {t.marks}
-                    </span>
-                  )}
-                  {exam.totalQuestions && (
-                    <span>
-                      {exam.totalQuestions} {t.questions}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          <ExamTypePipeline
+            exams={data.exams}
+            accentColor={accentColor}
+            t={t}
+          />
         </ContentSection>
       )}
 
@@ -500,6 +473,182 @@ export function CatalogContentSections({
           </div>
         </ContentSection>
       )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Exam Type Pipeline
+// ---------------------------------------------------------------------------
+
+function ExamTypePipeline({
+  exams,
+  accentColor,
+  t,
+}: {
+  exams: ExamItem[]
+  accentColor: string
+  t: Record<string, string>
+}) {
+  const typeGroups = useMemo(() => {
+    const grouped: Record<
+      string,
+      {
+        count: number
+        durations: number[]
+        questions: number[]
+        marks: number[]
+      }
+    > = {}
+    for (const exam of exams) {
+      const key = exam.examType
+      if (!grouped[key]) {
+        grouped[key] = { count: 0, durations: [], questions: [], marks: [] }
+      }
+      grouped[key].count++
+      if (exam.durationMinutes != null)
+        grouped[key].durations.push(exam.durationMinutes)
+      if (exam.totalQuestions != null)
+        grouped[key].questions.push(exam.totalQuestions)
+      if (exam.totalMarks != null) grouped[key].marks.push(exam.totalMarks)
+    }
+
+    // Order by pipeline constant, filter to types that exist in data
+    return EXAM_TYPE_PIPELINE.filter((p) => grouped[p.key]).map((p) => {
+      const g = grouped[p.key]
+      const avg = (arr: number[]) =>
+        arr.length > 0
+          ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
+          : null
+      return {
+        key: p.key,
+        label: t[p.key as keyof typeof t] ?? p.label,
+        count: g.count,
+        avgDuration: avg(g.durations),
+        avgQuestions: avg(g.questions),
+        avgMarks: avg(g.marks),
+      }
+    })
+  }, [exams, t])
+
+  return (
+    <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+      {typeGroups.map((group) => (
+        <div key={group.key} className="liquid-glass w-44 shrink-0">
+          <div className="liquid-glass__filter" />
+          <div className="liquid-glass__overlay" />
+          <div className="liquid-glass__specular" />
+          <div className="liquid-glass__content space-y-2 p-3">
+            <p className="text-foreground text-sm font-bold">{group.label}</p>
+            <p className="text-muted-foreground text-xs">
+              {group.count}{" "}
+              {TEST_TYPES.has(group.key)
+                ? group.count === 1
+                  ? "test"
+                  : "tests"
+                : group.count === 1
+                  ? "exam"
+                  : "exams"}
+            </p>
+            <div className="text-muted-foreground space-y-0.5 text-xs">
+              {group.avgDuration != null && (
+                <p className="flex items-center gap-1.5">
+                  <Clock className="size-3 shrink-0" />
+                  {group.avgDuration} {t.min}
+                </p>
+              )}
+              {group.avgQuestions != null && (
+                <p className="flex items-center gap-1.5">
+                  <FileText className="size-3 shrink-0" />
+                  {group.avgQuestions} Q
+                </p>
+              )}
+              {group.avgMarks != null && (
+                <p className="flex items-center gap-1.5">
+                  <span className="inline-flex size-3 shrink-0 items-center justify-center text-[10px]">
+                    ✓
+                  </span>
+                  {group.avgMarks} {t.marks}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Material Type Pipeline
+// ---------------------------------------------------------------------------
+
+function MaterialTypePipeline({
+  materials,
+  accentColor,
+  t,
+}: {
+  materials: MaterialItem[]
+  accentColor: string
+  t: Record<string, string>
+}) {
+  const typeGroups = useMemo(() => {
+    const grouped: Record<
+      string,
+      { count: number; pageCountSum: number; pageCountItems: number }
+    > = {}
+    for (const mat of materials) {
+      const key = mat.type
+      if (!grouped[key]) {
+        grouped[key] = { count: 0, pageCountSum: 0, pageCountItems: 0 }
+      }
+      grouped[key].count++
+      if (mat.pageCount != null) {
+        grouped[key].pageCountSum += mat.pageCount
+        grouped[key].pageCountItems++
+      }
+    }
+
+    return MATERIAL_TYPE_PIPELINE.filter((p) => grouped[p.key]).map((p) => {
+      const g = grouped[p.key]
+      const avgPages =
+        g.pageCountItems > 0
+          ? Math.round(g.pageCountSum / g.pageCountItems)
+          : null
+      return {
+        key: p.key,
+        icon: p.icon,
+        label: t[p.key as keyof typeof t] ?? p.key,
+        count: g.count,
+        avgPages,
+      }
+    })
+  }, [materials, t])
+
+  return (
+    <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+      {typeGroups.map((group) => {
+        const Icon = group.icon
+        return (
+          <div key={group.key} className="liquid-glass w-44 shrink-0">
+            <div className="liquid-glass__filter" />
+            <div className="liquid-glass__overlay" />
+            <div className="liquid-glass__specular" />
+            <div className="liquid-glass__content space-y-2 p-3">
+              <Icon className="text-muted-foreground size-5" />
+              <p className="text-foreground text-sm font-bold">{group.label}</p>
+              <p className="text-muted-foreground text-xs">
+                {group.count} {group.count === 1 ? "item" : "items"}
+              </p>
+              {group.avgPages != null && (
+                <p className="text-muted-foreground text-xs">
+                  {group.avgPages} pg avg
+                </p>
+              )}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

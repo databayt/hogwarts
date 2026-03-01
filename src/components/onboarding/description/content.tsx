@@ -20,21 +20,26 @@ export default function DescriptionContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
   const schoolId = params.id as string
-  const { enableNext, disableNext, setCustomNavigation } = useHostValidation()
-  const { data: descriptionData, loading, refresh } = useDescription(schoolId)
-  const [selectedType, setSelectedType] = useState<string | null>(null)
+  const { enableNext, setCustomNavigation } = useHostValidation()
+  const { data: descriptionData, loading } = useDescription(schoolId)
+  const [step, setStep] = useState<"type" | "level">("type")
   const dict = dictionary?.onboarding || {}
 
-  // Enable/disable next button based on school type selection
+  // Set initial step from loaded data
   useEffect(() => {
-    // Default to 'private' if no data exists
-    enableNext()
-
-    // Set selectedType to 'private' if no data exists
-    if (!selectedType && !descriptionData?.schoolType) {
-      setSelectedType("private")
+    if (
+      descriptionData?.schoolType &&
+      descriptionData?.schoolLevel &&
+      descriptionData.schoolType !== "technical"
+    ) {
+      setStep("level")
     }
-  }, [selectedType, descriptionData?.schoolType, enableNext, disableNext])
+  }, [descriptionData?.schoolType, descriptionData?.schoolLevel])
+
+  // Enable next button
+  useEffect(() => {
+    enableNext()
+  }, [enableNext])
 
   // Set up custom navigation to handle the Next button
   useEffect(() => {
@@ -54,13 +59,14 @@ export default function DescriptionContent({ dictionary }: Props) {
   if (loading) {
     return (
       <FormLayout>
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-full" />
+        <div className="space-y-3">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-4 w-80" />
         </div>
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-lg" />
+          ))}
         </div>
       </FormLayout>
     )
@@ -70,19 +76,24 @@ export default function DescriptionContent({ dictionary }: Props) {
     <FormLayout>
       <FormHeading
         title={
-          (dict.describeEducationModel || "Describe your school's") +
-          "\n" +
-          (dict.educationModel || "education model")
+          step === "type"
+            ? (dict.describeEducationModel || "Describe your school's") +
+              "\n" +
+              (dict.educationModel || "education model")
+            : dict.selectGradeLevels || "Select your grade levels"
         }
         description={
-          dict.selectSchoolTypeDescription ||
-          "Select the type that best describes your school's educational approach and governance structure."
+          step === "type"
+            ? dict.selectSchoolTypeDescription ||
+              "Select the type that best describes your school's educational approach and governance structure."
+            : dict.selectGradeLevelsDescription ||
+              "Choose the academic levels your school serves."
         }
       />
       <DescriptionForm
         schoolId={schoolId}
         initialData={descriptionData || undefined}
-        onTypeSelect={setSelectedType}
+        onStepChange={setStep}
         dictionary={dictionary}
       />
     </FormLayout>

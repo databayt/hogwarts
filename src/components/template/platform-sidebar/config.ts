@@ -112,7 +112,7 @@ export const platformNav: PlatformNavItem[] = [
     title: "Exams",
     href: "/exams",
     icon: "exam",
-    roles: ["ADMIN", "STAFF", "TEACHER"],
+    roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN"],
     className: "-ms-[1px] h-4.5 w-4.5",
   },
   {
@@ -125,7 +125,7 @@ export const platformNav: PlatformNavItem[] = [
     title: "Attendance",
     href: "/attendance",
     icon: "checkCircle",
-    roles: ["ADMIN", "STAFF", "TEACHER"],
+    roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN"],
   },
   {
     title: "Timetable",

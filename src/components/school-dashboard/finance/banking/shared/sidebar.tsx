@@ -15,6 +15,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface BankingSidebarProps {
   user: any
@@ -28,30 +29,39 @@ export function BankingSidebar({
   lang,
 }: BankingSidebarProps) {
   const pathname = usePathname()
+  const { dictionary: globalDict } = useDictionary()
+  const fd = (globalDict as any)?.finance
+  const bn = fd?.bankingNav as Record<string, string> | undefined
 
   const navItems = [
     {
-      title: dictionary?.dashboard || "Dashboard",
+      title: bn?.dashboard || dictionary?.dashboard || "Dashboard",
       href: `/${lang}/banking`,
       icon: House,
     },
     {
-      title: dictionary?.myBanks || "My Banks",
+      title: bn?.myBanks || dictionary?.myBanks || "My Banks",
       href: `/${lang}/banking/my-banks`,
       icon: CreditCard,
     },
     {
-      title: dictionary?.paymentTransfer || "Payment Transfer",
+      title:
+        bn?.paymentTransfer ||
+        dictionary?.paymentTransfer ||
+        "Payment Transfer",
       href: `/${lang}/banking/payment-transfer`,
       icon: SendHorizontal,
     },
     {
-      title: dictionary?.transactionHistory || "Transaction History",
+      title:
+        bn?.transactionHistory ||
+        dictionary?.transactionHistory ||
+        "Transaction History",
       href: `/${lang}/banking/transaction-history`,
       icon: History,
     },
     {
-      title: dictionary?.settings || "Settings",
+      title: bn?.settings || dictionary?.settings || "Settings",
       href: `/${lang}/banking/settings`,
       icon: Settings,
     },
@@ -60,7 +70,9 @@ export function BankingSidebar({
   return (
     <aside className="bg-card flex h-screen w-64 flex-col border-e">
       <div className="p-6">
-        <h2 className="text-lg font-semibold">Banking</h2>
+        <h2 className="text-lg font-semibold">
+          {bn?.banking || dictionary?.banking || "Banking"}
+        </h2>
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
@@ -99,7 +111,7 @@ export function BankingSidebar({
         <Button variant="ghost" className="w-full justify-start" asChild>
           <Link href={`/${lang}/logout`}>
             <LogOut className="me-2 h-4 w-4" />
-            {dictionary?.signOut || "Sign Out"}
+            {bn?.signOut || dictionary?.signOut || "Sign Out"}
           </Link>
         </Button>
       </div>

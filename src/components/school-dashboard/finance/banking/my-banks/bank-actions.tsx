@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { removeBank, syncBankData } from "./actions"
 
@@ -36,6 +37,9 @@ interface Props {
 
 export default function BankActions(props: Props) {
   const router = useRouter()
+  const { dictionary: dict } = useDictionary()
+  const fd = (dict as any)?.finance
+  const ba = fd?.bankingActions as Record<string, string> | undefined
   const [isPending, startTransition] = useTransition()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
@@ -43,12 +47,14 @@ export default function BankActions(props: Props) {
     startTransition(async () => {
       const result = await syncBankData({ accountId: props.accountId })
       if (result.success) {
-        toast.success(
-          props.dictionary.syncSuccess || "Bank data synced successfully"
-        )
+        toast.success(ba?.syncSuccess || "Bank data synced successfully")
         router.refresh()
       } else {
-        toast.error(result.error?.message || "Failed to sync bank data")
+        toast.error(
+          result.error?.message ||
+            ba?.failedSyncBank ||
+            "Failed to sync bank data"
+        )
       }
     })
   }
@@ -57,12 +63,14 @@ export default function BankActions(props: Props) {
     startTransition(async () => {
       const result = await removeBank({ accountId: props.accountId })
       if (result.success) {
-        toast.success(
-          props.dictionary.removeSuccess || "Bank account removed successfully"
-        )
+        toast.success(ba?.removeSuccess || "Bank account removed successfully")
         router.refresh()
       } else {
-        toast.error(result.error?.message || "Failed to remove bank account")
+        toast.error(
+          result.error?.message ||
+            ba?.failedRemoveBank ||
+            "Failed to remove bank account"
+        )
       }
       setShowDeleteDialog(false)
     })
@@ -83,7 +91,7 @@ export default function BankActions(props: Props) {
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleSync} disabled={isPending}>
             <RefreshCw className="me-2 h-4 w-4" />
-            {props.dictionary.syncData || "Sync Data"}
+            {ba?.syncData || "Sync Data"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -92,7 +100,7 @@ export default function BankActions(props: Props) {
             className="text-destructive"
           >
             <Trash2 className="me-2 h-4 w-4" />
-            {props.dictionary.remove || "Remove"}
+            {ba?.remove || "Remove"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -101,22 +109,20 @@ export default function BankActions(props: Props) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {props.dictionary.confirmRemove || "Remove Bank Account?"}
+              {ba?.confirmRemove || "Remove Bank Account?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {props.dictionary.removeDescription ||
+              {ba?.removeDescription ||
                 `Are you sure you want to remove ${props.accountName}? This action cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>
-              {props.dictionary.cancel || "Cancel"}
-            </AlertDialogCancel>
+            <AlertDialogCancel>{ba?.cancel || "Cancel"}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isPending}>
               {isPending ? (
                 <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
               ) : null}
-              {props.dictionary.remove || "Remove"}
+              {ba?.remove || "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

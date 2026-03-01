@@ -49,7 +49,7 @@ export async function updateSchoolBranding(
     })
 
     revalidatePath(`/onboarding/${schoolId}/branding`)
-    return createActionResponse(branding)
+    return createActionResponse({ id: branding.id })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createActionResponse(undefined, error)

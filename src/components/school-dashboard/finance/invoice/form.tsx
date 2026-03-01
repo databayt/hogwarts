@@ -13,6 +13,7 @@ import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createInvoice,
   getInvoiceById,
@@ -47,6 +48,9 @@ export function InvoiceCreateForm({
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const iform = fd?.invoiceForm as Record<string, string> | undefined
 
   const form = useForm<z.infer<typeof InvoiceSchemaZod>>({
     resolver: zodResolver(InvoiceSchemaZod),
@@ -57,7 +61,9 @@ export function InvoiceCreateForm({
       currency: currency || "USD",
       from: {
         name:
-          `${firstName || ""} ${lastName || ""}`.trim() || "Your Company Name",
+          `${firstName || ""} ${lastName || ""}`.trim() ||
+          iform?.yourCompanyName ||
+          "Your Company Name",
         email: email || "",
         address1: "",
         address2: "",
@@ -161,10 +167,16 @@ export function InvoiceCreateForm({
 
           form.reset(formData)
         } else {
-          ErrorToast(response.error || "Failed to fetch invoice data")
+          ErrorToast(
+            response.error ||
+              iform?.failedToFetchInvoice ||
+              "Failed to fetch invoice data"
+          )
         }
       } catch (error) {
-        ErrorToast("Failed to fetch invoice data")
+        ErrorToast(
+          iform?.failedToFetchInvoice || "Failed to fetch invoice data"
+        )
       } finally {
         setIsLoading(false)
       }
@@ -184,7 +196,7 @@ export function InvoiceCreateForm({
         : await createInvoice(values)
 
       if (response.success) {
-        SuccessToast("Invoice saved successfully")
+        SuccessToast(iform?.invoiceSavedSuccess || "Invoice saved successfully")
         closeModal()
         // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
@@ -193,11 +205,15 @@ export function InvoiceCreateForm({
           router.refresh()
         }
       } else {
-        ErrorToast(response.error || "Failed to process invoice")
+        ErrorToast(
+          response.error ||
+            iform?.failedToProcessInvoice ||
+            "Failed to process invoice"
+        )
       }
     } catch (error) {
       console.error("Invoice submission error:", error)
-      ErrorToast("Failed to process invoice")
+      ErrorToast(iform?.failedToProcessInvoice || "Failed to process invoice")
     } finally {
       setIsLoading(false)
     }
@@ -210,7 +226,10 @@ export function InvoiceCreateForm({
       if (step1Valid) {
         setCurrentStep(2)
       } else {
-        ErrorToast("Please fill in all required fields correctly")
+        ErrorToast(
+          iform?.fillRequiredFields ||
+            "Please fill in all required fields correctly"
+        )
       }
     } else if (currentStep === 2) {
       const step2Fields = STEP_FIELDS[2]
@@ -218,7 +237,10 @@ export function InvoiceCreateForm({
       if (step2Valid) {
         setCurrentStep(3)
       } else {
-        ErrorToast("Please fill in all required fields correctly")
+        ErrorToast(
+          iform?.fillRequiredFields ||
+            "Please fill in all required fields correctly"
+        )
       }
     } else if (currentStep === 3) {
       await form.handleSubmit(onSubmit)()
@@ -234,7 +256,10 @@ export function InvoiceCreateForm({
       if (stepValid) {
         await form.handleSubmit(onSubmit)()
       } else {
-        ErrorToast("Please fill in all required fields correctly")
+        ErrorToast(
+          iform?.fillRequiredFields ||
+            "Please fill in all required fields correctly"
+        )
       }
     } else {
       // For creating, just go to next step
@@ -268,16 +293,18 @@ export function InvoiceCreateForm({
       <div className="flex h-64 items-center justify-center">
         <div className="text-center">
           <div className="border-primary mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2"></div>
-          <p className="text-muted-foreground text-sm">Loading invoice...</p>
+          <p className="text-muted-foreground text-sm">
+            {iform?.loadingInvoice || "Loading invoice..."}
+          </p>
         </div>
       </div>
     )
   }
 
   const stepLabels: Record<number, string> = {
-    1: "Basic Information",
-    2: "Client & Items",
-    3: "Review & Submit",
+    1: iform?.basicInformation || "Basic Information",
+    2: iform?.clientAndItems || "Client & Items",
+    3: iform?.reviewAndSubmit || "Review & Submit",
   }
 
   return (
@@ -286,17 +313,18 @@ export function InvoiceCreateForm({
         <ModalFormLayout
           title={
             isView
-              ? "View Invoice"
+              ? iform?.viewInvoice || "View Invoice"
               : currentId
-                ? "Edit Invoice"
-                : "Create Invoice"
+                ? iform?.editInvoice || "Edit Invoice"
+                : iform?.createInvoice || "Create Invoice"
           }
           description={
             isView
-              ? "View invoice details"
+              ? iform?.viewInvoiceDetails || "View invoice details"
               : currentId
-                ? "Update invoice details"
-                : "Create a new invoice for your client"
+                ? iform?.updateInvoiceDetails || "Update invoice details"
+                : iform?.createNewInvoice ||
+                  "Create a new invoice for your client"
           }
         >
           {renderCurrentStep()}

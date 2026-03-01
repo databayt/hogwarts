@@ -113,6 +113,7 @@ model Exam {
   catalogSubjectId String?
   catalogChapterId String?
   catalogLessonId  String?
+  catalogExamId    String? // Bridge to CatalogExam (adopted exam)
 
   // Proctoring & Security settings
   proctorMode       ProctorMode @default(BASIC)
@@ -140,6 +141,7 @@ model Exam {
   catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id], onDelete: SetNull)
   catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
   catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
+  catalogExam    CatalogExam?    @relation("CatalogExamMirror", fields: [catalogExamId], references: [id], onDelete: SetNull)
 
   // Performance indexes
   @@index([schoolId, examDate])
@@ -150,6 +152,7 @@ model Exam {
   @@index([schoolId, examDate, status]) // Composite for upcoming exams
   @@index([schoolId, classId, examDate]) // Composite for class schedule
   @@index([schoolId, subjectId, examType]) // Composite for subject exams
+  @@index([catalogExamId])
   @@index([createdAt]) // For sorting
   @@map("exams")
 }
@@ -514,8 +517,14 @@ model ExamPaperConfig {
   pageSize        String  @default("A4") // A4, Letter
   orientation     String  @default("portrait")
 
+  // Building blocks config (JSON array of block configs)
+  blockConfig Json? // [{type: "header", enabled: true, props: {...}}, ...]
+
   // Versioning (for multiple exam versions A/B/C)
   versionCount Int @default(1)
+
+  // Catalog bridge FK (adopted from catalog paper template)
+  catalogPaperTemplateId String?
 
   school        School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   generatedExam GeneratedExam    @relation(fields: [generatedExamId], references: [id], onDelete: Cascade)
@@ -526,6 +535,7 @@ model ExamPaperConfig {
 
   @@index([schoolId])
   @@index([schoolId, generatedExamId])
+  @@index([catalogPaperTemplateId])
   @@map("exam_paper_configs")
 }
 

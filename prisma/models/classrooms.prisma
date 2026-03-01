@@ -1,16 +1,19 @@
 // Classroom Models
 
 model Classroom {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   schoolId String
   typeId   String
+  gradeId  String?
   roomName String
   capacity Int
-  lang     String @default("ar")
+  lang     String  @default("ar")
 
-  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  classroomType ClassroomType @relation(fields: [typeId], references: [id])
+  school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classroomType ClassroomType  @relation(fields: [typeId], references: [id])
+  grade         AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
   classes       Class[]
+  sections      Section[]
   timetables    Timetable[]
 
   // Timetable constraint relations
@@ -20,7 +23,36 @@ model Classroom {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, roomName]) // Unique room name per school
+  @@index([schoolId, gradeId])
   @@map("classrooms")
+}
+
+model Section {
+  id        String @id @default(cuid())
+  schoolId  String
+  gradeId   String
+  name      String   // "Grade 7-A"
+  letter    String   // "A"
+  lang      String   @default("ar")
+
+  homeroomTeacherId String?
+  classroomId       String?
+  maxCapacity       Int     @default(30)
+
+  school          School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grade           AcademicGrade  @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  homeroomTeacher Teacher?       @relation("HomeroomTeacher", fields: [homeroomTeacherId], references: [id], onDelete: SetNull)
+  classroom       Classroom?     @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  students        Student[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, gradeId, letter])
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@index([schoolId, gradeId])
+  @@map("sections")
 }
 
 model ClassroomType {

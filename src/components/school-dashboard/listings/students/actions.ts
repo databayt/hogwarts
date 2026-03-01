@@ -364,9 +364,80 @@ export async function deleteStudent(input: {
     // Parse and validate input
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    // Delete student (using deleteMany for tenant safety)
+    // Cascade validation: check for dependencies before deletion
+    const [
+      classCount,
+      attendanceCount,
+      examResultCount,
+      feeAssignmentCount,
+      submissionCount,
+      timetableRelated,
+    ] = await Promise.all([
+      db.studentClass.count({ where: { studentId: id, schoolId } }),
+      db.attendance.count({ where: { studentId: id, schoolId } }),
+      db.examResult.count({ where: { studentId: id, schoolId } }),
+      db.feeAssignment.count({ where: { studentId: id, schoolId } }),
+      db.assignmentSubmission.count({ where: { studentId: id, schoolId } }),
+      db.studentYearLevel.count({ where: { studentId: id, schoolId } }),
+    ])
+
+    if (classCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: student is enrolled in ${classCount} class(es). Unenroll first.`,
+      }
+    }
+    if (attendanceCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${attendanceCount} attendance record(s) exist. Archive or remove attendance first.`,
+      }
+    }
+    if (examResultCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${examResultCount} exam result(s) exist. Archive results first.`,
+      }
+    }
+    if (feeAssignmentCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${feeAssignmentCount} fee assignment(s) exist. Clear fees first.`,
+      }
+    }
+    if (submissionCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${submissionCount} assignment submission(s) exist. Archive submissions first.`,
+      }
+    }
+
+    // Auto-clean safe-to-delete dependent records in a transaction
     const studentModel = getModelOrThrow("student")
-    await studentModel.deleteMany({ where: { id, schoolId } })
+    await db.$transaction(async (tx) => {
+      // Clean up non-critical bridge/tracking records
+      if (timetableRelated > 0) {
+        await tx.studentYearLevel.deleteMany({
+          where: { studentId: id, schoolId },
+        })
+      }
+      await tx.studentGuardian.deleteMany({
+        where: { studentId: id, schoolId },
+      })
+      await tx.studentBatch.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.studentDocument.deleteMany({
+        where: { studentId: id, schoolId },
+      })
+      await tx.healthRecord.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.achievement.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.disciplinaryRecord.deleteMany({
+        where: { studentId: id, schoolId },
+      })
+      await tx.libraryRecord.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.feeRecord.deleteMany({ where: { studentId: id, schoolId } })
+      // Delete the student
+      await studentModel.deleteMany({ where: { id, schoolId } })
+    })
 
     // Revalidate cache
     revalidatePath(STUDENTS_PATH)
@@ -486,7 +557,7 @@ export async function getStudents(
       id: string
       userId: string | null
       name: string
-      className: string
+      sectionName: string
       status: string
       createdAt: string
     }>
@@ -534,9 +605,9 @@ export async function getStudents(
         : {}),
       ...(sp.status
         ? sp.status === "active"
-          ? { NOT: { userId: null } }
+          ? { status: "ACTIVE" }
           : sp.status === "inactive"
-            ? { userId: null }
+            ? { status: "INACTIVE" }
             : {}
         : {}),
     }
@@ -561,15 +632,11 @@ export async function getStudents(
         take,
         relationLoadStrategy: "join",
         include: {
-          studentClasses: {
-            include: {
-              class: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-            take: 1, // Get primary class
+          section: {
+            select: { name: true },
+          },
+          academicGrade: {
+            select: { name: true },
           },
         },
       }),
@@ -581,10 +648,7 @@ export async function getStudents(
       id: s.id as string,
       userId: s.userId as string | null,
       name: [s.givenName, s.surname].filter(Boolean).join(" "),
-      className:
-        s.studentClasses && s.studentClasses.length > 0
-          ? s.studentClasses[0].class?.name || "-"
-          : "-",
+      sectionName: s.section?.name || s.academicGrade?.name || "-",
       status: s.userId ? "active" : "inactive",
       createdAt: (s.createdAt as Date).toISOString(),
     }))
@@ -671,15 +735,11 @@ export async function getStudentsCSV(
             email: true,
           },
         },
-        studentClasses: {
-          include: {
-            class: {
-              select: {
-                name: true,
-              },
-            },
-          },
-          take: 1, // Get primary class
+        section: {
+          select: { name: true },
+        },
+        academicGrade: {
+          select: { name: true },
         },
       },
       orderBy: [{ givenName: "asc" }, { surname: "asc" }],
@@ -703,10 +763,7 @@ export async function getStudentsCSV(
         ? new Date(student.enrollmentDate).toISOString().split("T")[0]
         : "",
       status: student.userId ? "Active" : "Inactive",
-      className:
-        student.studentClasses && student.studentClasses.length > 0
-          ? student.studentClasses[0].class.name
-          : "",
+      sectionName: student.section?.name || student.academicGrade?.name || "",
       createdAt: new Date(student.createdAt).toISOString().split("T")[0],
     }))
 
@@ -722,7 +779,7 @@ export async function getStudentsCSV(
       { key: "email", label: "Email" },
       { key: "enrollmentDate", label: "Enrollment Date" },
       { key: "status", label: "Status" },
-      { key: "className", label: "Class" },
+      { key: "sectionName", label: "Section" },
       { key: "createdAt", label: "Created Date" },
     ]
 
@@ -777,7 +834,7 @@ export async function getStudentsExportData(
       enrollmentDate: Date
       admissionNumber: string | null
       nationality: string | null
-      className: string | null
+      sectionName: string | null
       yearLevel: string | null
       guardianName: string | null
       guardianPhone: string | null
@@ -837,15 +894,11 @@ export async function getStudentsExportData(
             email: true,
           },
         },
-        studentClasses: {
-          include: {
-            class: {
-              select: {
-                name: true,
-              },
-            },
-          },
-          take: 1,
+        section: {
+          select: { name: true },
+        },
+        academicGrade: {
+          select: { name: true },
         },
         studentYearLevels: {
           include: {
@@ -895,7 +948,7 @@ export async function getStudentsExportData(
       enrollmentDate: new Date(student.enrollmentDate),
       admissionNumber: student.admissionNumber || null,
       nationality: student.nationality || null,
-      className: student.studentClasses?.[0]?.class?.name || null,
+      sectionName: student.section?.name || student.academicGrade?.name || null,
       yearLevel: student.studentYearLevels?.[0]?.yearLevel?.name || null,
       guardianName: student.studentGuardians?.[0]?.guardian
         ? [
@@ -939,7 +992,7 @@ export async function getStudentsExportData(
  * @returns Action response with student data
  */
 export async function registerStudent(
-  input: any
+  input: Record<string, unknown>
 ): Promise<ActionResponse<any>> {
   try {
     const session = await auth()
@@ -959,13 +1012,45 @@ export async function registerStudent(
       return { success: false, error: "Unauthorized" }
     }
 
+    // Validate required fields
+    const registrationSchema = z
+      .object({
+        givenName: z.string().min(1),
+        surname: z.string().min(1),
+        dateOfBirth: z.string().min(1),
+        gender: z.string().min(1),
+        middleName: z.string().optional().nullable(),
+        bloodGroup: z.string().optional().nullable(),
+        nationality: z.string().optional().nullable(),
+        passportNumber: z.string().optional().nullable(),
+        email: z.string().email().optional().nullable(),
+        mobileNumber: z.string().optional().nullable(),
+        guardians: z
+          .array(
+            z.object({
+              givenName: z.string().min(1),
+              surname: z.string().min(1),
+              email: z.string().optional().nullable(),
+              mobileNumber: z.string().optional().nullable(),
+              relation: z.string().optional().nullable(),
+              isPrimary: z.boolean().optional(),
+            })
+          )
+          .optional(),
+      })
+      .passthrough()
+
+    const parsed = registrationSchema.parse(input)
+    // Use parsed data from here on
+    const validatedInput = parsed as Record<string, any>
+
     // Process guardian data first if provided
     const guardianIds = []
-    if (input.guardians && input.guardians.length > 0) {
+    if (validatedInput.guardians && validatedInput.guardians.length > 0) {
       const guardianModel = getModelOrThrow("guardian")
       const guardianPhoneNumberModel = getModelOrThrow("guardianPhoneNumber")
 
-      for (const guardian of input.guardians) {
+      for (const guardian of validatedInput.guardians) {
         // Check if guardian already exists by email
         let guardianRecord = await guardianModel.findFirst({
           where: {
@@ -1010,76 +1095,78 @@ export async function registerStudent(
     // Prepare student data
     const studentData: any = {
       schoolId,
-      givenName: input.givenName,
-      middleName: input.middleName || null,
-      surname: input.surname,
-      dateOfBirth: new Date(input.dateOfBirth),
-      gender: input.gender,
-      bloodGroup: input.bloodGroup || null,
-      nationality: input.nationality || "Saudi Arabia",
-      passportNumber: input.passportNumber || null,
-      visaStatus: input.visaStatus || null,
-      visaExpiryDate: input.visaExpiryDate
-        ? new Date(input.visaExpiryDate)
+      givenName: validatedInput.givenName,
+      middleName: validatedInput.middleName || null,
+      surname: validatedInput.surname,
+      dateOfBirth: new Date(validatedInput.dateOfBirth),
+      gender: validatedInput.gender,
+      bloodGroup: validatedInput.bloodGroup || null,
+      nationality: validatedInput.nationality || "Saudi Arabia",
+      passportNumber: validatedInput.passportNumber || null,
+      visaStatus: validatedInput.visaStatus || null,
+      visaExpiryDate: validatedInput.visaExpiryDate
+        ? new Date(validatedInput.visaExpiryDate as string)
         : null,
 
       // Contact Information
-      email: input.email || null,
-      mobileNumber: input.mobileNumber || null,
-      alternatePhone: input.alternatePhone || null,
+      email: validatedInput.email || null,
+      mobileNumber: validatedInput.mobileNumber || null,
+      alternatePhone: validatedInput.alternatePhone || null,
 
       // Address
-      currentAddress: input.currentAddress || null,
-      permanentAddress: input.sameAsPermanent
-        ? input.currentAddress
-        : input.permanentAddress || null,
-      city: input.city || null,
-      state: input.state || null,
-      postalCode: input.postalCode || null,
-      country: input.country || "Saudi Arabia",
+      currentAddress: validatedInput.currentAddress || null,
+      permanentAddress: validatedInput.sameAsPermanent
+        ? validatedInput.currentAddress
+        : validatedInput.permanentAddress || null,
+      city: validatedInput.city || null,
+      state: validatedInput.state || null,
+      postalCode: validatedInput.postalCode || null,
+      country: validatedInput.country || "Saudi Arabia",
 
       // Emergency Contact
-      emergencyContactName: input.emergencyContactName || null,
-      emergencyContactPhone: input.emergencyContactPhone || null,
-      emergencyContactRelation: input.emergencyContactRelation || null,
+      emergencyContactName: validatedInput.emergencyContactName || null,
+      emergencyContactPhone: validatedInput.emergencyContactPhone || null,
+      emergencyContactRelation: validatedInput.emergencyContactRelation || null,
 
       // Status and Enrollment
-      status: input.status || "ACTIVE",
-      enrollmentDate: input.enrollmentDate
-        ? new Date(input.enrollmentDate)
+      status: validatedInput.status || "ACTIVE",
+      enrollmentDate: validatedInput.enrollmentDate
+        ? new Date(validatedInput.enrollmentDate as string)
         : new Date(),
-      admissionNumber: input.admissionNumber || null,
-      admissionDate: input.admissionDate
-        ? new Date(input.admissionDate)
+      admissionNumber: validatedInput.admissionNumber || null,
+      admissionDate: validatedInput.admissionDate
+        ? new Date(validatedInput.admissionDate as string)
         : new Date(),
 
       // Academic
-      category: input.category || null,
-      studentType: input.studentType || "REGULAR",
-      academicGradeId: input.academicGradeId || null,
+      category: validatedInput.category || null,
+      studentType: validatedInput.studentType || "REGULAR",
+      academicGradeId: validatedInput.academicGradeId || null,
 
       // Health Information
-      medicalConditions: input.medicalConditions || null,
-      allergies: input.allergies || null,
-      medicationRequired: input.medicationRequired || null,
-      doctorName: input.doctorName || null,
-      doctorContact: input.doctorContact || null,
-      insuranceProvider: input.insuranceProvider || null,
-      insuranceNumber: input.insuranceNumber || null,
+      medicalConditions: validatedInput.medicalConditions || null,
+      allergies: validatedInput.allergies || null,
+      medicationRequired: validatedInput.medicationRequired || null,
+      doctorName: validatedInput.doctorName || null,
+      doctorContact: validatedInput.doctorContact || null,
+      insuranceProvider: validatedInput.insuranceProvider || null,
+      insuranceNumber: validatedInput.insuranceNumber || null,
 
       // Previous Education
-      previousSchoolName: input.previousSchoolName || null,
-      previousSchoolAddress: input.previousSchoolAddress || null,
-      previousGrade: input.previousGrade || null,
-      transferCertificateNo: input.transferCertificateNo || null,
-      transferDate: input.transferDate ? new Date(input.transferDate) : null,
-      previousAcademicRecord: input.previousAcademicRecord || null,
+      previousSchoolName: validatedInput.previousSchoolName || null,
+      previousSchoolAddress: validatedInput.previousSchoolAddress || null,
+      previousGrade: validatedInput.previousGrade || null,
+      transferCertificateNo: validatedInput.transferCertificateNo || null,
+      transferDate: validatedInput.transferDate
+        ? new Date(validatedInput.transferDate as string)
+        : null,
+      previousAcademicRecord: validatedInput.previousAcademicRecord || null,
 
       // Photo
-      profilePhotoUrl: input.profilePhotoUrl || null,
+      profilePhotoUrl: validatedInput.profilePhotoUrl || null,
 
       // GR Number - Auto-generate if not provided
-      grNumber: input.grNumber || null,
+      grNumber: validatedInput.grNumber || null,
     }
 
     // Generate GR Number if not provided
@@ -1144,9 +1231,9 @@ export async function registerStudent(
     }
 
     // Save documents if provided
-    if (input.documents && input.documents.length > 0) {
+    if (validatedInput.documents && validatedInput.documents.length > 0) {
       const studentDocumentModel = getModelOrThrow("studentDocument")
-      for (const doc of input.documents) {
+      for (const doc of validatedInput.documents) {
         if (doc.fileUrl) {
           await studentDocumentModel.create({
             data: {
@@ -1166,9 +1253,9 @@ export async function registerStudent(
     }
 
     // Save health records/vaccinations if provided
-    if (input.vaccinations && input.vaccinations.length > 0) {
+    if (validatedInput.vaccinations && validatedInput.vaccinations.length > 0) {
       const healthRecordModel = getModelOrThrow("healthRecord")
-      for (const vaccination of input.vaccinations) {
+      for (const vaccination of validatedInput.vaccinations) {
         if (vaccination.name) {
           await healthRecordModel.create({
             data: {
@@ -1317,8 +1404,80 @@ export async function bulkDeleteStudents(input: {
       return { success: false, error: "No valid students found" }
     }
 
-    const result = await studentModel.deleteMany({
-      where: { id: { in: validIds }, schoolId },
+    // Cascade validation: check for dependencies before bulk deletion
+    const [
+      classCount,
+      attendanceCount,
+      examResultCount,
+      feeAssignmentCount,
+      submissionCount,
+    ] = await Promise.all([
+      db.studentClass.count({
+        where: { studentId: { in: validIds }, schoolId },
+      }),
+      db.attendance.count({
+        where: { studentId: { in: validIds }, schoolId },
+      }),
+      db.examResult.count({
+        where: { studentId: { in: validIds }, schoolId },
+      }),
+      db.feeAssignment.count({
+        where: { studentId: { in: validIds }, schoolId },
+      }),
+      db.assignmentSubmission.count({
+        where: { studentId: { in: validIds }, schoolId },
+      }),
+    ])
+
+    const blockers: string[] = []
+    if (classCount > 0) blockers.push(`${classCount} class enrollment(s)`)
+    if (attendanceCount > 0)
+      blockers.push(`${attendanceCount} attendance record(s)`)
+    if (examResultCount > 0) blockers.push(`${examResultCount} exam result(s)`)
+    if (feeAssignmentCount > 0)
+      blockers.push(`${feeAssignmentCount} fee assignment(s)`)
+    if (submissionCount > 0)
+      blockers.push(`${submissionCount} assignment submission(s)`)
+
+    if (blockers.length > 0) {
+      return {
+        success: false,
+        error: `Cannot bulk delete: ${blockers.join(", ")} exist across selected students. Resolve dependencies first.`,
+      }
+    }
+
+    // Auto-clean safe-to-delete dependent records in a transaction
+    const result = await db.$transaction(async (tx) => {
+      await tx.studentYearLevel.deleteMany({
+        where: { studentId: { in: validIds }, schoolId },
+      })
+      await tx.studentGuardian.deleteMany({
+        where: { studentId: { in: validIds }, schoolId },
+      })
+      await tx.studentBatch.deleteMany({
+        where: { studentId: { in: validIds }, schoolId },
+      })
+      await tx.studentDocument.deleteMany({
+        where: { studentId: { in: validIds }, schoolId },
+      })
+      await tx.healthRecord.deleteMany({
+        where: { studentId: { in: validIds }, schoolId },
+      })
+      await tx.achievement.deleteMany({
+        where: { studentId: { in: validIds }, schoolId },
+      })
+      await tx.disciplinaryRecord.deleteMany({
+        where: { studentId: { in: validIds }, schoolId },
+      })
+      await tx.libraryRecord.deleteMany({
+        where: { studentId: { in: validIds }, schoolId },
+      })
+      await tx.feeRecord.deleteMany({
+        where: { studentId: { in: validIds }, schoolId },
+      })
+      return studentModel.deleteMany({
+        where: { id: { in: validIds }, schoolId },
+      })
     })
 
     revalidatePath("/students")

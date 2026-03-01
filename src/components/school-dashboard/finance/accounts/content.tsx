@@ -28,12 +28,17 @@ interface Props {
 }
 
 export default async function AccountsContent({ dictionary, lang }: Props) {
+  const fc = (dictionary as any)?.finance?.common as
+    | Record<string, string>
+    | undefined
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
       <div>
-        <p className="text-muted-foreground">School context not found</p>
+        <p className="text-muted-foreground">
+          {fc?.schoolNotFound || "School context not found"}
+        </p>
       </div>
     )
   }
@@ -61,7 +66,8 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
     return (
       <div>
         <p className="text-muted-foreground">
-          You don't have permission to view accounting
+          {fc?.noPermissionAccounts ||
+            "You don't have permission to view accounting"}
         </p>
       </div>
     )
@@ -97,6 +103,9 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
   }
 
   const d = dictionary?.finance?.accounts
+  const fd = (dictionary as any)?.finance
+  const ap = fd?.accountsPage as Record<string, string> | undefined
+  const c = fd?.common as Record<string, string> | undefined
 
   return (
     <div className="space-y-6">
@@ -105,7 +114,7 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
         <StatsCard
           title={d?.chartOfAccounts || "Chart of Accounts"}
           value={accountsCount}
-          description="Configured accounts"
+          description={ap?.configuredAccounts || "Configured accounts"}
           icon={BookOpen}
         />
         <StatsCard
@@ -115,15 +124,15 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
           icon={FileText}
         />
         <StatsCard
-          title="Ledger Entries"
+          title={ap?.ledgerEntries || "Ledger Entries"}
           value={ledgerEntriesCount}
-          description="Total transactions"
+          description={ap?.totalTransactions || "Total transactions"}
           icon={BarChart}
         />
         <StatsCard
-          title="Unposted"
+          title={ap?.unposted || "Unposted"}
           value={unpostedEntriesCount}
-          description="Requires posting"
+          description={c?.requiresPosting || "Requires posting"}
           icon={Calendar}
         />
       </DashboardGrid>
@@ -132,11 +141,13 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
       <DashboardGrid type="features">
         <FeatureCard
           title={d?.chartOfAccounts || "Chart of Accounts"}
-          description="Define and manage account structure"
+          description={
+            ap?.defineManageAccounts || "Define and manage account structure"
+          }
           icon={BookOpen}
           isPrimary
           primaryAction={{
-            label: "View Chart",
+            label: ap?.viewChart || "View Chart",
             href: `/${lang}/finance/accounts/chart`,
             count: accountsCount,
           }}
@@ -151,49 +162,55 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
         />
         <FeatureCard
           title={d?.journalEntry || "Journal Entries"}
-          description="Record financial transactions"
+          description={
+            ap?.recordTransactions || "Record financial transactions"
+          }
           icon={FileText}
           primaryAction={{
-            label: "View Journal",
+            label: ap?.viewJournal || "View Journal",
             href: `/${lang}/finance/accounts/journal`,
             count: journalEntriesCount,
           }}
           secondaryAction={
             canCreate
               ? {
-                  label: "New Entry",
+                  label: ap?.newEntry || "New Entry",
                   href: `/${lang}/finance/accounts/journal/new`,
                 }
               : undefined
           }
         />
         <FeatureCard
-          title="General Ledger"
-          description="View account balances and activity"
+          title={ap?.generalLedger || "General Ledger"}
+          description={
+            ap?.viewBalancesActivity || "View account balances and activity"
+          }
           icon={BarChart}
           primaryAction={{
-            label: "View Ledger",
+            label: ap?.viewLedger || "View Ledger",
             href: `/${lang}/finance/accounts/ledger`,
           }}
           secondaryAction={{
-            label: "Account Balances",
+            label: ap?.accountBalances || "Account Balances",
             href: `/${lang}/finance/accounts/ledger/balances`,
           }}
         />
         {canPencil && (
           <FeatureCard
-            title={d?.fiscalYear || "Fiscal Years"}
-            description="Manage accounting periods"
+            title={ap?.fiscalYears || d?.fiscalYear || "Fiscal Years"}
+            description={
+              ap?.manageAccountingPeriods || "Manage accounting periods"
+            }
             icon={Calendar}
             primaryAction={{
-              label: "Fiscal Years",
+              label: ap?.fiscalYears || "Fiscal Years",
               href: `/${lang}/finance/accounts/fiscal`,
               count: fiscalYearsCount,
             }}
             secondaryAction={
               canCreate
                 ? {
-                    label: "New Year",
+                    label: ap?.newYear || "New Year",
                     href: `/${lang}/finance/accounts/fiscal/new`,
                   }
                 : undefined
@@ -202,30 +219,34 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
         )}
         {canApprove && (
           <FeatureCard
-            title="Period Closing"
-            description="Close accounting periods"
+            title={ap?.periodClosing || "Period Closing"}
+            description={
+              ap?.closeAccountingPeriods || "Close accounting periods"
+            }
             icon={Lock}
             primaryAction={{
-              label: "Close Period",
+              label: ap?.closePeriod || "Close Period",
               href: `/${lang}/finance/accounts/closing`,
             }}
             secondaryAction={{
-              label: "History",
+              label: c?.history || "History",
               href: `/${lang}/finance/accounts/closing/history`,
             }}
           />
         )}
         {canPencil && (
           <FeatureCard
-            title="Accounting Settings"
-            description="Configure accounting rules"
+            title={ap?.accountingSettings || "Accounting Settings"}
+            description={
+              ap?.configureAccountingRules || "Configure accounting rules"
+            }
             icon={Settings}
             primaryAction={{
-              label: "Settings",
+              label: c?.settings || "Settings",
               href: `/${lang}/finance/accounts/settings`,
             }}
             secondaryAction={{
-              label: "Posting Rules",
+              label: ap?.postingRules || "Posting Rules",
               href: `/${lang}/finance/accounts/settings/rules`,
             }}
           />

@@ -178,10 +178,10 @@ export const getTeachersSchema = z.object({
   name: z.string().optional().default(""),
   emailAddress: z.string().optional().default(""),
   status: z.string().optional().default(""),
-  employmentStatus: z.string().optional().default(""),
-  employmentType: z.string().optional().default(""),
-  departmentId: z.string().optional().default(""),
-  subjectId: z.string().optional().default(""),
-  workloadStatus: z.enum(["UNDERUTILIZED", "NORMAL", "OVERLOAD"]).optional(),
+  employmentStatus: z.string().optional().default(""), // TODO: not applied as filter in getTeachers()
+  employmentType: z.string().optional().default(""), // TODO: not applied as filter in getTeachers()
+  departmentId: z.string().optional().default(""), // TODO: not applied as filter in getTeachers()
+  subjectId: z.string().optional().default(""), // TODO: not applied as filter in getTeachers()
+  workloadStatus: z.enum(["UNDERUTILIZED", "NORMAL", "OVERLOAD"]).optional(), // TODO: not applied as filter in getTeachers()
   sort: z.array(sortItemSchema).optional().default([]),
 })

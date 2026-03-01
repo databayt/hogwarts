@@ -11,9 +11,10 @@ import { ClassroomsTable } from "./table"
 
 interface Props {
   lang: Locale
+  subdomain: string
 }
 
-export default async function ClassroomsContent({ lang }: Props) {
+export default async function ClassroomsContent({ lang, subdomain }: Props) {
   const { schoolId } = await getTenantContext()
   let data: ClassroomRow[] = []
   let total = 0
@@ -29,8 +30,10 @@ export default async function ClassroomsContent({ lang }: Props) {
           roomName: true,
           capacity: true,
           typeId: true,
+          gradeId: true,
           lang: true,
           classroomType: { select: { id: true, name: true, lang: true } },
+          grade: { select: { id: true, name: true, lang: true } },
           _count: { select: { classes: true, timetables: true } },
           createdAt: true,
         },
@@ -55,6 +58,15 @@ export default async function ClassroomsContent({ lang }: Props) {
           schoolId!
         ),
         typeId: r.typeId,
+        gradeName: r.grade
+          ? await getDisplayText(
+              r.grade.name,
+              (r.grade.lang as "ar" | "en") || "ar",
+              lang,
+              schoolId!
+            )
+          : null,
+        gradeId: r.gradeId,
         classCount: r._count.classes,
         timetableCount: r._count.timetables,
         createdAt: r.createdAt.toISOString(),
@@ -65,7 +77,12 @@ export default async function ClassroomsContent({ lang }: Props) {
 
   return (
     <div className="space-y-6">
-      <ClassroomsTable initialData={data} total={total} lang={lang} />
+      <ClassroomsTable
+        initialData={data}
+        total={total}
+        lang={lang}
+        subdomain={subdomain ?? ""}
+      />
     </div>
   )
 }

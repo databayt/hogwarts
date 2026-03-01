@@ -11,6 +11,7 @@ import {
 import {
   applyTimetableStructureForNewSchool,
   setupCatalogForSchool,
+  setupDefaultsForSchool,
 } from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
 
@@ -39,7 +40,10 @@ export async function completeOnboarding(
         name: true,
         domain: true,
         country: true,
-        system: true,
+        curriculum: true,
+        schoolLevel: true,
+        schoolType: true,
+        preferredLanguage: true,
       },
     })
 
@@ -49,12 +53,39 @@ export async function completeOnboarding(
       )
     }
 
-    // Auto-setup academic structure (grades, levels, subject selections)
-    // Non-blocking: catalog setup failure should NOT prevent onboarding completion
+    // 1. Auto-provision defaults (YearLevels, Departments, ScoreRanges)
     try {
-      await setupCatalogForSchool(schoolId, {
+      const defaults = await setupDefaultsForSchool(
+        schoolId,
+        school.schoolLevel || "both"
+      )
+      console.log(
+        `[completeOnboarding] Defaults created for school ${schoolId}:`,
+        defaults
+      )
+    } catch (defaultsError) {
+      console.error(
+        `[completeOnboarding] Defaults setup failed for school ${schoolId}:`,
+        defaultsError
+      )
+    }
+
+    // 2. Auto-setup academic structure (grades, levels, subject selections)
+    try {
+      const catalog = await setupCatalogForSchool(schoolId, {
         country: school.country || undefined,
+        schoolType: school.schoolType || undefined,
       })
+      if (catalog.skipped && "message" in catalog) {
+        console.warn(
+          `[completeOnboarding] Catalog setup skipped for school ${schoolId}: ${catalog.message}`
+        )
+      } else {
+        console.log(
+          `[completeOnboarding] Catalog setup complete for school ${schoolId}:`,
+          catalog
+        )
+      }
     } catch (catalogError) {
       console.error(
         `[completeOnboarding] Catalog setup failed for school ${schoolId}:`,
@@ -62,11 +93,10 @@ export async function completeOnboarding(
       )
     }
 
-    // Apply timetable structure if the school selected one during onboarding
-    // Non-blocking: timetable setup failure should NOT prevent onboarding completion
-    if (school.system) {
+    // 3. Apply timetable structure if the school selected one during onboarding
+    if (school.curriculum) {
       try {
-        await applyTimetableStructureForNewSchool(schoolId, school.system)
+        await applyTimetableStructureForNewSchool(schoolId, school.curriculum)
       } catch (timetableError) {
         console.error(
           `[completeOnboarding] Timetable setup failed for school ${schoolId}:`,
@@ -75,8 +105,7 @@ export async function completeOnboarding(
       }
     }
 
-    // Auto-create default ClassroomType so the Configure tab works post-onboarding
-    // Non-blocking: classroom type creation failure should NOT prevent onboarding completion
+    // 4. Auto-create default ClassroomType so the Configure tab works post-onboarding
     try {
       await db.classroomType.upsert({
         where: { schoolId_name: { schoolId, name: "Classroom" } },

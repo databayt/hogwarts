@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { RecentItem, Role, SearchContext, SearchItem } from "./types"
+import type { RecentItem, Role, SearchItem } from "./types"
 
 const RECENT_ITEMS_KEY = "command-menu-recent"
 const MAX_RECENT_ITEMS = 10
@@ -15,26 +15,6 @@ export function filterByRole(items: SearchItem[], role?: Role): SearchItem[] {
   return items.filter((item) => {
     if (!item.roles || item.roles.length === 0) return true
     return item.roles.includes(role)
-  })
-}
-
-/**
- * Get contextual suggestions based on current path
- */
-export function getContextualSuggestions(
-  items: SearchItem[],
-  context: SearchContext
-): SearchItem[] {
-  if (!context.currentPath) return items
-
-  const pathSegments = context.currentPath.split("/").filter(Boolean)
-  const currentSection = pathSegments[pathSegments.length - 1]
-
-  return items.filter((item) => {
-    if (!item.keywords) return false
-    return item.keywords.some((keyword) =>
-      currentSection?.includes(keyword.toLowerCase())
-    )
   })
 }
 

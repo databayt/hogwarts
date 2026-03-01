@@ -16,6 +16,7 @@ import {
   ErrorToast,
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { InvoiceCreateForm } from "@/components/school-dashboard/finance/invoice/form"
 import { DataTable } from "@/components/table/data-table"
 import { DataTableToolbar } from "@/components/table/data-table-toolbar"
@@ -38,6 +39,10 @@ function InvoiceTableInner({
   lang = "en",
 }: InvoiceTableProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const il = fd?.invoiceList as Record<string, string> | undefined
+  const ic = fd?.invoiceColumns as Record<string, string> | undefined
 
   // State for incremental loading
   const [data, setData] = useState<InvoiceRow[]>(initialData)
@@ -59,7 +64,7 @@ function InvoiceTableInner({
     async (invoice: InvoiceRow) => {
       try {
         const ok = await confirmDeleteDialog(
-          `Delete invoice ${invoice.invoice_no}?`
+          `${il?.deleteInvoice || "Delete invoice"} ${invoice.invoice_no}?`
         )
         if (!ok) return
 
@@ -72,11 +77,15 @@ function InvoiceTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast("Failed to delete invoice")
+          ErrorToast(il?.failedToDelete || "Failed to delete invoice")
         }
       } catch (e) {
         refresh()
-        ErrorToast(e instanceof Error ? e.message : "Failed to delete")
+        ErrorToast(
+          e instanceof Error
+            ? e.message
+            : il?.failedToDeleteFallback || "Failed to delete"
+        )
       }
     },
     [refresh]
@@ -85,10 +94,14 @@ function InvoiceTableInner({
   // Generate columns with callbacks
   const columns = useMemo(
     () =>
-      getInvoiceColumns(lang, {
-        onDelete: handleDelete,
-      }),
-    [lang, handleDelete]
+      getInvoiceColumns(
+        lang,
+        {
+          onDelete: handleDelete,
+        },
+        ic
+      ),
+    [lang, handleDelete, ic]
   )
 
   const handleLoadMore = useCallback(async () => {
@@ -140,8 +153,8 @@ function InvoiceTableInner({
           size="sm"
           className="h-8 w-8 rounded-full p-0"
           onClick={() => openModal()}
-          aria-label="Create Invoice"
-          title="Create Invoice"
+          aria-label={il?.createInvoice || "Create Invoice"}
+          title={il?.createInvoice || "Create Invoice"}
         >
           <Plus className="h-4 w-4" />
         </Button>

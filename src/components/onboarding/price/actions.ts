@@ -45,7 +45,7 @@ export async function updateSchoolPricing(
 
     const validated = schoolPriceSchema.parse(data)
 
-    const updatedSchool = await db.school.update({
+    await db.school.update({
       where: { id: schoolId },
       data: {
         tuitionFee: validated.tuitionFee,
@@ -57,7 +57,7 @@ export async function updateSchoolPricing(
     })
 
     revalidatePath(`/onboarding/${schoolId}/price`)
-    return createActionResponse(updatedSchool)
+    return createActionResponse({ id: schoolId })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createActionResponse(undefined, {

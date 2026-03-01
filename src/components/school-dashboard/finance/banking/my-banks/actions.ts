@@ -133,14 +133,12 @@ export async function syncBankData(params: {
     // TODO: Implement Plaid sync logic
     // const plaidData = await plaidClient.syncAccount(account.plaidAccountId);
 
-    // Note: updatedAt field is automatically updated by Prisma @updatedAt directive
-
-    revalidatePath("/banking/my-banks")
-    revalidatePath("/banking")
-
     return {
-      success: true,
-      data: { message: "Bank data synced successfully" },
+      success: false,
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Bank sync is not yet implemented",
+      },
     }
   } catch (error) {
     console.error("Failed to sync bank data:", error)

@@ -71,7 +71,7 @@ export async function updateSchoolSubdomain(
     })
 
     revalidatePath(`/onboarding/${schoolId}`)
-    return createActionResponse(school)
+    return createActionResponse({ id: school.id })
   } catch (error) {
     console.error("Failed to update school subdomain:", error)
     return createActionResponse(undefined, error)

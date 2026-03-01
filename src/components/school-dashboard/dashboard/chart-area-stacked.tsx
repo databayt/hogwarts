@@ -20,6 +20,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export interface AreaChartStackedData {
   label: string
@@ -51,6 +52,10 @@ function AreaChartStackedInner({
   trend = 5.2,
   trendLabel = "January - June 2024",
 }: AreaChartStackedProps) {
+  const { dictionary } = useDictionary()
+  const cl = dictionary?.school?.dashboard?.chartLabels as
+    | Record<string, string>
+    | undefined
   // Transform custom data to use primary/secondary keys if provided
   const chartData = data
     ? data.map((d) => ({
@@ -94,7 +99,13 @@ function AreaChartStackedInner({
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              tickFormatter={(value) => {
+                // For short labels (already abbreviated), return as-is
+                if (value.length <= 5) return value
+                // For longer labels, take first word (handles Arabic day names)
+                const firstWord = value.split(/\s/)[0]
+                return firstWord.length <= 6 ? firstWord : firstWord.slice(0, 4)
+              }}
             />
             <ChartTooltip
               cursor={false}
@@ -123,12 +134,13 @@ function AreaChartStackedInner({
         <div className="flex items-center gap-2 leading-none font-medium">
           {trend >= 0 ? (
             <>
-              Trending up by {trend}% this month{" "}
-              <TrendingUp className="size-4" />
+              {cl?.trendingUp || "Trending up by"} {trend}%{" "}
+              {cl?.thisMonth || "this month"} <TrendingUp className="size-4" />
             </>
           ) : (
             <>
-              Trending down by {Math.abs(trend)}% this month{" "}
+              {cl?.trendingDown || "Trending down by"} {Math.abs(trend)}%{" "}
+              {cl?.thisMonth || "this month"}{" "}
               <TrendingDown className="size-4" />
             </>
           )}

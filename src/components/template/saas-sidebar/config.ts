@@ -19,6 +19,7 @@ export const platformNav: PlatformNavItem[] = [
   { title: "Domains", href: "/domains", icon: "browser" },
   { title: "Billing", href: "/billing", icon: "pieChart" },
   { title: "Observability", href: "/observability", icon: "barChart" },
+  { title: "Catalog", href: "/catalog", icon: "bookOpen" },
   { title: "Tenants", href: "/tenants", icon: "envelope" },
   { title: "Profile", href: "/profile", icon: "cog" },
 ]

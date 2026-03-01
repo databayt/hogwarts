@@ -1,0 +1,309 @@
+---
+title: "MVP Undone"
+description: "Audit of undone MVP features with classification: essential, important, and deferrable"
+---
+
+> Audit Date: 2026-02-27
+> Reference: [MVP Roadmap](/docs/mvp) | [OpenEduCat Docs](https://doc.openeducat.org/)
+
+---
+
+## Overall Progress
+
+| Epic              | Total   | Done   | In Progress | Backlog | % Done  |
+| ----------------- | ------- | ------ | ----------- | ------- | ------- |
+| 01 Infrastructure | 15      | 9      | 3           | 3       | 60%     |
+| 02 Authentication | 18      | 12     | 3           | 3       | 67%     |
+| 03 Configuration  | 12      | 3      | 0           | 9       | 25%     |
+| 04 Student        | 20      | 5      | 3           | 12      | 25%     |
+| 05 Listings       | 18      | 8      | 1           | 9       | 44%     |
+| 06 Attendance     | 12      | 3      | 3           | 6       | 25%     |
+| 07 Exam           | 15      | 0      | 2           | 13      | 0%      |
+| 08 Timetable      | 12      | 8      | 3           | 1       | 67%     |
+| 09 Admission      | 15      | 13     | 1           | 1       | 87%     |
+| **TOTAL**         | **137** | **61** | **19**      | **57**  | **45%** |
+
+**61 done / 19 in progress / 57 backlog**
+
+---
+
+## Undone Features (In Progress + Backlog = 76 items)
+
+### Classification Key
+
+- **ESSENTIAL** - Without this, a school cannot function. Must ship.
+- **IMPORTANT** - Schools expect it, but can workaround temporarily.
+- **DEFER** - Nice to have. Not needed for min MVP launch.
+
+---
+
+### Epic 01: Infrastructure (6 undone)
+
+| #   | Feature                                             | Status      | MVP Classification |
+| --- | --------------------------------------------------- | ----------- | ------------------ |
+| 1   | Subdomain routing (school.databayt.org)             | in progress | **ESSENTIAL**      |
+| 2   | Middleware for subdomain rewriting                  | in progress | **ESSENTIAL**      |
+| 3   | Development/staging/production environments         | in progress | IMPORTANT          |
+| 4   | CI/CD pipeline with automated tests                 | backlog     | DEFER              |
+| 5   | Testing infrastructure (Vitest, Playwright)         | backlog     | DEFER              |
+| 6   | Multi-tenant test suite with isolation verification | backlog     | DEFER              |
+
+**Min MVP needs: 2 items** (subdomain routing + middleware - they're the same effort)
+
+---
+
+### Epic 02: Authentication (6 undone)
+
+| #   | Feature                                      | Status      | MVP Classification |
+| --- | -------------------------------------------- | ----------- | ------------------ |
+| 7   | OAuth providers (Google, Facebook)           | in progress | IMPORTANT          |
+| 8   | Role-based access control enforced on routes | in progress | **ESSENTIAL**      |
+| 9   | User profile management                      | in progress | IMPORTANT          |
+| 10  | Two-factor authentication (2FA)              | backlog     | DEFER              |
+| 11  | User invitation system                       | backlog     | IMPORTANT          |
+| 12  | Audit logging for sensitive operations       | backlog     | DEFER              |
+
+**Min MVP needs: 1 item** (RBAC on routes)
+
+---
+
+### Epic 03: Configuration (9 undone)
+
+| #   | Feature                                | Status  | MVP Classification |
+| --- | -------------------------------------- | ------- | ------------------ |
+| 13  | School profile creation and management | backlog | **ESSENTIAL**      |
+| 14  | School information display             | backlog | **ESSENTIAL**      |
+| 15  | Department management                  | backlog | DEFER              |
+| 16  | School branding (logo upload)          | backlog | IMPORTANT          |
+| 17  | Color picker for school colors         | backlog | DEFER              |
+| 18  | Timezone configuration                 | backlog | DEFER              |
+| 19  | School settings page functional        | backlog | **ESSENTIAL**      |
+| 20  | School setup wizard for onboarding     | backlog | **ESSENTIAL**      |
+| 21  | Logo preview and management            | backlog | DEFER              |
+
+**Min MVP needs: 4 items** (profile, info display, settings page, setup wizard)
+
+---
+
+### Epic 04: Student (15 undone)
+
+| #   | Feature                                             | Status      | MVP Classification |
+| --- | --------------------------------------------------- | ----------- | ------------------ |
+| 22  | Student profile page structure (7 tabs)             | in progress | **ESSENTIAL**      |
+| 23  | Personal information tab complete                   | in progress | **ESSENTIAL**      |
+| 24  | Advanced filtering system                           | in progress | IMPORTANT          |
+| 25  | Academic information tab                            | backlog     | **ESSENTIAL**      |
+| 26  | Health records tab                                  | backlog     | DEFER              |
+| 27  | Documents tab with upload                           | backlog     | DEFER              |
+| 28  | Achievements tab                                    | backlog     | DEFER              |
+| 29  | Disciplinary records tab                            | backlog     | DEFER              |
+| 30  | Fees tab with payment history                       | backlog     | DEFER              |
+| 31  | Document upload and management                      | backlog     | DEFER              |
+| 32  | Photo upload and display                            | backlog     | DEFER              |
+| 33  | Batch operations (bulk actions)                     | backlog     | DEFER              |
+| 34  | Status transitions (enrolled/transferred/graduated) | backlog     | IMPORTANT          |
+| 35  | Previous education records                          | backlog     | DEFER              |
+| 36  | Emergency contact management                        | backlog     | IMPORTANT          |
+
+**Min MVP needs: 3 items** (profile structure, personal info tab, academic tab)
+
+---
+
+### Epic 05: Listings (10 undone)
+
+| #   | Feature                          | Status      | MVP Classification |
+| --- | -------------------------------- | ----------- | ------------------ |
+| 37  | Teacher profile display page     | in progress | **ESSENTIAL**      |
+| 38  | Class capacity management        | backlog     | IMPORTANT          |
+| 39  | Student-class conflict detection | backlog     | DEFER              |
+| 40  | Qualifications management        | backlog     | DEFER              |
+| 41  | Staff profile creation           | backlog     | IMPORTANT          |
+| 42  | Department assignment            | backlog     | DEFER              |
+| 43  | Class sections management        | backlog     | DEFER              |
+| 44  | Class roster export              | backlog     | DEFER              |
+| 45  | Resource sharing within class    | backlog     | DEFER              |
+| 46  | Class analytics dashboard        | backlog     | DEFER              |
+
+**Min MVP needs: 1 item** (teacher profile display)
+
+---
+
+### Epic 06: Attendance (9 undone)
+
+| #   | Feature                         | Status      | MVP Classification |
+| --- | ------------------------------- | ----------- | ------------------ |
+| 47  | Bulk attendance marking         | in progress | **ESSENTIAL**      |
+| 48  | Attendance reports by class     | in progress | **ESSENTIAL**      |
+| 49  | Attendance trends analytics     | in progress | IMPORTANT          |
+| 50  | Attendance reports by student   | backlog     | IMPORTANT          |
+| 51  | Monthly attendance summary      | backlog     | IMPORTANT          |
+| 52  | Absence notification to parents | backlog     | DEFER              |
+| 53  | Export attendance data          | backlog     | DEFER              |
+| 54  | Teacher attendance tracking     | backlog     | DEFER              |
+| 55  | Leave request integration       | backlog     | DEFER              |
+
+**Min MVP needs: 2 items** (bulk marking, class reports)
+
+---
+
+### Epic 07: Exam (15 undone) -- WEAKEST EPIC
+
+| #   | Feature                                      | Status      | MVP Classification |
+| --- | -------------------------------------------- | ----------- | ------------------ |
+| 56  | Exam creation and scheduling                 | in progress | **ESSENTIAL**      |
+| 57  | Grade entry interface                        | in progress | **ESSENTIAL**      |
+| 58  | Exam type configuration (midterm/final/quiz) | backlog     | **ESSENTIAL**      |
+| 59  | Grade scale configuration                    | backlog     | **ESSENTIAL**      |
+| 60  | Result calculation (weighted averages)       | backlog     | **ESSENTIAL**      |
+| 61  | Report card generation                       | backlog     | **ESSENTIAL**      |
+| 62  | Report card templates                        | backlog     | IMPORTANT          |
+| 63  | Result publication workflow                  | backlog     | IMPORTANT          |
+| 64  | Parent result notification                   | backlog     | DEFER              |
+| 65  | Class performance analytics                  | backlog     | DEFER              |
+| 66  | Subject-wise performance reports             | backlog     | DEFER              |
+| 67  | Grade history tracking                       | backlog     | DEFER              |
+| 68  | Exam room allocation                         | backlog     | DEFER              |
+| 69  | Exam schedule conflict detection             | backlog     | DEFER              |
+| 70  | Result export (PDF/CSV)                      | backlog     | IMPORTANT          |
+
+**Min MVP needs: 6 items** (create, grade entry, types, grade scale, calculation, report cards)
+
+---
+
+### Epic 08: Timetable (4 undone)
+
+| #   | Feature                      | Status      | MVP Classification |
+| --- | ---------------------------- | ----------- | ------------------ |
+| 71  | Break management in schedule | in progress | IMPORTANT          |
+| 72  | Room allocation              | in progress | IMPORTANT          |
+| 73  | Timetable export (PDF/print) | in progress | IMPORTANT          |
+| 74  | Student conflict detection   | backlog     | DEFER              |
+
+**Min MVP needs: 0 items** (core timetable already works)
+
+---
+
+### Epic 09: Admission (2 undone)
+
+| #   | Feature                          | Status      | MVP Classification |
+| --- | -------------------------------- | ----------- | ------------------ |
+| 75  | Fee payment integration (Stripe) | in progress | IMPORTANT          |
+| 76  | Admission analytics/reports      | backlog     | DEFER              |
+
+**Min MVP needs: 0 items** (admission is already production-ready)
+
+---
+
+## Min MVP Summary: 18 Essential Features
+
+These are the **absolute minimum** to launch a functional school:
+
+| #   | Feature                        | Epic           | Current Status |
+| --- | ------------------------------ | -------------- | -------------- |
+| 1   | Subdomain routing + middleware | Infrastructure | in progress    |
+| 2   | RBAC enforced on routes        | Authentication | in progress    |
+| 3   | School profile creation        | Configuration  | backlog        |
+| 4   | School information display     | Configuration  | backlog        |
+| 5   | School settings page           | Configuration  | backlog        |
+| 6   | School setup wizard            | Configuration  | backlog        |
+| 7   | Student profile page (7 tabs)  | Student        | in progress    |
+| 8   | Personal information tab       | Student        | in progress    |
+| 9   | Academic information tab       | Student        | backlog        |
+| 10  | Teacher profile display        | Listings       | in progress    |
+| 11  | Bulk attendance marking        | Attendance     | in progress    |
+| 12  | Attendance reports by class    | Attendance     | in progress    |
+| 13  | Exam creation and scheduling   | Exam           | in progress    |
+| 14  | Grade entry interface          | Exam           | in progress    |
+| 15  | Exam type configuration        | Exam           | backlog        |
+| 16  | Grade scale configuration      | Exam           | backlog        |
+| 17  | Result calculation             | Exam           | backlog        |
+| 18  | Report card generation         | Exam           | backlog        |
+
+### By effort breakdown:
+
+- **Already in progress (9):** #1, #2, #7, #8, #10, #11, #12, #13, #14
+- **Backlog - needs new work (9):** #3, #4, #5, #6, #9, #15, #16, #17, #18
+
+### By epic priority:
+
+1. **Exam (6 items)** - Biggest gap. Zero features done. Schools need grading.
+2. **Configuration (4 items)** - Schools need a profile/settings page.
+3. **Student (3 items)** - Profile tabs need completion.
+4. **Attendance (2 items)** - Bulk marking + reports.
+5. **Infrastructure (1 item)** - Subdomain routing (already in progress).
+6. **Authentication (1 item)** - RBAC enforcement (already in progress).
+7. **Listings (1 item)** - Teacher profile display (already in progress).
+8. **Timetable (0)** - Already good enough.
+9. **Admission (0)** - Already production-ready.
+
+---
+
+## What to DEFER (Not MVP)
+
+These 57 features from the roadmap are **not essential** for min MVP:
+
+- 2FA, audit logging, user invitation system
+- Department management, branding/colors, timezone
+- Student tabs: health, documents, achievements, disciplinary, fees
+- Photo/document uploads, batch operations, status transitions
+- Class capacity, conflict detection, qualifications, sections, analytics
+- Attendance: student reports, monthly summary, notifications, exports, teacher tracking
+- Exam: templates, publication workflow, parent notifications, analytics, room allocation
+- Timetable: student conflict detection
+- Admission: analytics/reports
+- CI/CD, testing infrastructure
+
+---
+
+## OpenEduCat Comparison: Features We Don't Need for MVP
+
+OpenEduCat has 80+ modules. These are **NOT needed** for min MVP:
+
+| OpenEduCat Feature                     | Why Skip                       |
+| -------------------------------------- | ------------------------------ |
+| Face Recognition Attendance            | Over-engineered for MVP        |
+| Live Attentiveness                     | AI feature, not core           |
+| LMS (Course Delivery, H5P)             | Separate product               |
+| Library Management                     | Phase 2+                       |
+| Digital Library / eBooks               | Phase 2+                       |
+| Transportation                         | Phase 2+                       |
+| Placement/Alumni Portal                | Phase 2+                       |
+| OMR / OBE / CBCS                       | University-level, not K-12 MVP |
+| Video Integrations (Zoom, Meet, Teams) | Use existing tools             |
+| Gamification                           | Phase 2+                       |
+| Forum / Blog                           | Phase 2+                       |
+| No-Code Studio                         | Phase 2+                       |
+| Helpdesk                               | Phase 2+                       |
+| E-Sign                                 | Phase 2+                       |
+| Marketing Automation                   | Phase 2+                       |
+
+---
+
+## Recommended Sprint Order
+
+### Sprint 1: Exam Foundation (biggest gap)
+
+- Exam type configuration
+- Grade scale configuration
+- Finish exam creation + grade entry (in progress)
+- Result calculation (weighted averages)
+- Report card generation
+
+### Sprint 2: School Configuration
+
+- School profile creation and management
+- School information display
+- School settings page
+- School setup wizard for onboarding
+
+### Sprint 3: Student + Listings Polish
+
+- Finish student profile tabs (personal + academic)
+- Finish teacher profile display page
+- Finish bulk attendance marking + reports
+
+### Sprint 4: Auth + Infra Finalize
+
+- Finish RBAC enforcement on routes
+- Finish subdomain routing + middleware
+- End-to-end testing of full flow

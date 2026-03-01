@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export interface InvoiceItem {
   id: string
@@ -40,22 +41,36 @@ export function InvoiceHistory({
   invoices,
   onDownload,
 }: InvoiceHistoryProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.dashboard?.invoiceTable as
+    | Record<string, string>
+    | undefined
+
   if (!invoices) return null
+
+  // Translate "Invoice" prefix in description strings from server actions
+  const translateDesc = (desc?: string) => {
+    if (!desc) return t?.invoice || "Invoice"
+    if (t?.invoice && desc.startsWith("Invoice ")) {
+      return desc.replace("Invoice ", `${t.invoice} `)
+    }
+    return desc
+  }
 
   const statusBadge = (status: InvoiceItem["status"]) => {
     switch (status) {
       case "paid":
         return (
           <Badge className="border-emerald-700/40 bg-emerald-600 text-emerald-50">
-            Paid
+            {t?.paid || "Paid"}
           </Badge>
         )
       case "refunded":
-        return <Badge variant="secondary">Refunded</Badge>
+        return <Badge variant="secondary">{t?.refunded || "Refunded"}</Badge>
       case "open":
-        return <Badge variant="outline">Open</Badge>
+        return <Badge variant="outline">{t?.open || "Open"}</Badge>
       case "void":
-        return <Badge variant="outline">Void</Badge>
+        return <Badge variant="outline">{t?.void || "Void"}</Badge>
     }
   }
 
@@ -77,16 +92,26 @@ export function InvoiceHistory({
       <div className="rounded-md border">
         <Table>
           <TableCaption className="sr-only">
-            List of past invoices with dates, amounts, status and download
-            actions
+            {t?.caption ||
+              "List of past invoices with dates, amounts, status and download actions"}
           </TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[120px] px-6">Date</TableHead>
-              <TableHead className="px-6">Description</TableHead>
-              <TableHead className="px-6 text-end">Amount</TableHead>
-              <TableHead className="px-6 text-end">Status</TableHead>
-              <TableHead className="px-6 text-end">Action</TableHead>
+              <TableHead className="w-[120px] px-6">
+                {t?.date || "Date"}
+              </TableHead>
+              <TableHead className="px-6">
+                {t?.description || "Description"}
+              </TableHead>
+              <TableHead className="px-6 text-end">
+                {t?.amount || "Amount"}
+              </TableHead>
+              <TableHead className="px-6 text-end">
+                {t?.status || "Status"}
+              </TableHead>
+              <TableHead className="px-6 text-end">
+                {t?.action || "Action"}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -96,7 +121,7 @@ export function InvoiceHistory({
                   colSpan={5}
                   className="text-muted-foreground h-24 text-center"
                 >
-                  No invoices yet
+                  {t?.noInvoices || "No invoices yet"}
                 </TableCell>
               </TableRow>
             )}
@@ -108,9 +133,9 @@ export function InvoiceHistory({
                 <TableCell className="max-w-[320px] px-6">
                   <div
                     className="truncate"
-                    title={inv.description || "Invoice"}
+                    title={translateDesc(inv.description)}
                   >
-                    {inv.description || "Invoice"}
+                    {translateDesc(inv.description)}
                   </div>
                 </TableCell>
                 <TableCell className="px-6 text-end font-medium">

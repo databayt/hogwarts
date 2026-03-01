@@ -49,7 +49,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
       title: dictionary.steps.step1.title,
       description: dictionary.steps.step1.description,
       illustration:
-        "https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg",
+        "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg",
     },
     {
       number: 2,
@@ -77,7 +77,9 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
     // Check if we have a real school ID from query params or sessionStorage
     const schoolIdFromParams = searchParams.get("schoolId")
     const schoolIdFromSession = sessionStorage.getItem("currentSchoolId")
-    const schoolId = schoolIdFromParams || schoolIdFromSession
+    const rawSchoolId = schoolIdFromParams || schoolIdFromSession
+    const schoolId =
+      rawSchoolId && rawSchoolId !== "undefined" ? rawSchoolId : null
 
     if (schoolId) {
       // Use the real school ID that was just created

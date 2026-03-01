@@ -24,6 +24,7 @@ export type GradeConfig = {
   existingSections: number
   existingRooms: number
   maxStudents: number
+  existingSectionRecords: number
 }
 
 export type RoomTypeOption = {
@@ -31,7 +32,7 @@ export type RoomTypeOption = {
   name: string
 }
 
-const SECTION_LETTERS = "ABCDEFGHIJ"
+const SECTION_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 /**
  * Get current grade configuration: grades with existing section/room counts
@@ -73,7 +74,7 @@ export async function getGradeConfiguration(): Promise<
           name: true,
           gradeNumber: true,
           maxStudents: true,
-          _count: { select: { classes: true } },
+          _count: { select: { classes: true, sections: true } },
         },
       }),
       db.classroomType.findMany({
@@ -83,19 +84,19 @@ export async function getGradeConfiguration(): Promise<
       }),
     ])
 
-    // Single query: count distinct classrooms per grade via classes
-    const classesWithRooms = await db.class.findMany({
+    // Count distinct classrooms per grade via sections
+    const sectionsWithRooms = await db.section.findMany({
       where: {
         schoolId,
         gradeId: { in: grades.map((g) => g.id) },
+        classroomId: { not: null },
       },
       select: { gradeId: true, classroomId: true },
       distinct: ["gradeId", "classroomId"],
     })
 
     const roomCountByGrade = new Map<string, number>()
-    for (const row of classesWithRooms) {
-      if (!row.gradeId) continue
+    for (const row of sectionsWithRooms) {
       roomCountByGrade.set(
         row.gradeId,
         (roomCountByGrade.get(row.gradeId) ?? 0) + 1
@@ -106,9 +107,10 @@ export async function getGradeConfiguration(): Promise<
       gradeId: g.id,
       gradeName: g.name,
       gradeNumber: g.gradeNumber,
-      existingSections: g._count.classes,
+      existingSections: g._count.sections,
       existingRooms: roomCountByGrade.get(g.id) ?? 0,
       maxStudents: g.maxStudents,
+      existingSectionRecords: g._count.sections,
     }))
 
     return {
@@ -159,86 +161,41 @@ export async function generateSections(
     }
 
     const parsed = generateSectionsSchema.parse(input)
-    let totalCreated = 0
-    const details: string[] = []
 
-    // Check plan limit
-    const [classCount, school] = await Promise.all([
-      db.class.count({ where: { schoolId } }),
-      db.school.findFirst({
+    // Enforce maxClasses plan limit
+    const [school, existingClassroomCount] = await Promise.all([
+      db.school.findUnique({
         where: { id: schoolId },
         select: { maxClasses: true },
       }),
+      db.classroom.count({ where: { schoolId } }),
     ])
 
-    const totalRequested = parsed.grades.reduce((sum, g) => {
-      return sum + g.sections
-    }, 0)
+    if (school?.maxClasses != null) {
+      const totalNewClassrooms = parsed.grades.reduce(
+        (sum, g) => sum + g.sections,
+        0
+      )
+      if (existingClassroomCount + totalNewClassrooms > school.maxClasses) {
+        return {
+          success: false,
+          error: `Classroom limit reached. Your plan allows ${school.maxClasses} classrooms and you currently have ${existingClassroomCount}. Requested ${totalNewClassrooms} new sections would exceed the limit.`,
+        }
+      }
+    }
+
+    let totalCreated = 0
+    const details: string[] = []
 
     // Count existing sections to only add what's needed
     const existingCounts = await Promise.all(
       parsed.grades.map(async (g) => {
-        const count = await db.class.count({
+        const count = await db.section.count({
           where: { schoolId, gradeId: g.gradeId },
         })
         return { gradeId: g.gradeId, count }
       })
     )
-
-    const totalNew = parsed.grades.reduce((sum, g) => {
-      const existing =
-        existingCounts.find((e) => e.gradeId === g.gradeId)?.count ?? 0
-      return sum + Math.max(0, g.sections - existing)
-    }, 0)
-
-    if (school?.maxClasses && classCount + totalNew > school.maxClasses) {
-      return {
-        success: false,
-        error: `Would exceed class limit (${classCount + totalNew}/${school.maxClasses}). Upgrade your plan or reduce sections.`,
-      }
-    }
-
-    // Get school's default subject, teacher, term for creating classes
-    const [defaultSubject, defaultTeacher, defaultTerm, defaultPeriods] =
-      await Promise.all([
-        db.subject.findFirst({
-          where: { schoolId },
-          select: { id: true },
-        }),
-        db.teacher.findFirst({
-          where: { schoolId },
-          select: { id: true },
-        }),
-        db.term.findFirst({
-          where: { schoolId },
-          orderBy: { createdAt: "desc" },
-          select: { id: true },
-        }),
-        db.period.findMany({
-          where: { schoolId },
-          orderBy: { startTime: "asc" },
-          take: 2,
-          select: { id: true },
-        }),
-      ])
-
-    if (!defaultSubject || !defaultTeacher || !defaultTerm) {
-      return {
-        success: false,
-        error:
-          "Please set up at least one subject, teacher, and term before generating sections.",
-      }
-    }
-
-    const startPeriodId = defaultPeriods[0]?.id
-    const endPeriodId = defaultPeriods[1]?.id ?? defaultPeriods[0]?.id
-
-    if (!startPeriodId) {
-      return {
-        success: false,
-        error: "Please set up at least one period before generating sections.",
-      }
-    }
 
     // Wrap all mutations in a transaction for atomicity
     await db.$transaction(async (tx) => {
@@ -250,13 +207,13 @@ export async function generateSections(
 
         if (!grade) continue
 
-        // Get existing classes for this grade
-        const existingClasses = await tx.class.findMany({
+        // Get existing sections for this grade
+        const existingSections = await tx.section.findMany({
           where: { schoolId, gradeId: gradeConfig.gradeId },
-          select: { name: true },
+          select: { letter: true },
         })
 
-        const existingCount = existingClasses.length
+        const existingCount = existingSections.length
         const needed = Math.max(0, gradeConfig.sections - existingCount)
 
         if (needed === 0) {
@@ -265,14 +222,7 @@ export async function generateSections(
         }
 
         // Determine which section letters are already used
-        const usedLetters = new Set(
-          existingClasses
-            .map((c) => {
-              const match = c.name.match(/-([A-J])$/)
-              return match ? match[1] : null
-            })
-            .filter(Boolean)
-        )
+        const usedLetters = new Set(existingSections.map((s) => s.letter))
 
         let created = 0
         for (let i = 0; i < SECTION_LETTERS.length && created < needed; i++) {
@@ -281,7 +231,7 @@ export async function generateSections(
 
           const roomName = `Grade ${grade.gradeNumber} - Room ${letter}`
 
-          // Upsert to handle concurrent requests gracefully
+          // Upsert classroom for the section
           const room = await tx.classroom.upsert({
             where: { schoolId_roomName: { schoolId, roomName } },
             create: {
@@ -289,26 +239,33 @@ export async function generateSections(
               roomName,
               typeId: gradeConfig.roomType,
               capacity: gradeConfig.capacityPerSection,
+              gradeId: gradeConfig.gradeId,
             },
             update: {},
           })
 
-          const className = `Grade ${grade.gradeNumber}-${letter}`
-          await tx.class.create({
+          // Capacity cross-validation: section capacity must not exceed room capacity
+          if (
+            room.capacity != null &&
+            gradeConfig.capacityPerSection > room.capacity
+          ) {
+            throw new Error(
+              `Section capacity (${gradeConfig.capacityPerSection}) exceeds room "${roomName}" capacity (${room.capacity}). Increase room capacity or reduce section size.`
+            )
+          }
+
+          const sectionName = `Grade ${grade.gradeNumber}-${letter}`
+          await tx.section.create({
             data: {
               schoolId,
-              name: className,
               gradeId: gradeConfig.gradeId,
+              name: sectionName,
+              letter,
+              lang: "ar",
               classroomId: room.id,
-              subjectId: defaultSubject.id,
-              teacherId: defaultTeacher.id,
-              termId: defaultTerm.id,
-              startPeriodId,
-              endPeriodId,
-              maxCapacity: gradeConfig.capacityPerSection,
-              minCapacity: Math.max(
-                1,
-                Math.floor(gradeConfig.capacityPerSection * 0.5)
+              maxCapacity: Math.min(
+                gradeConfig.capacityPerSection,
+                room.capacity ?? gradeConfig.capacityPerSection
               ),
             },
           })

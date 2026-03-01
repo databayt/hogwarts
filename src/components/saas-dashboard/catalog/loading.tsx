@@ -192,6 +192,87 @@ export function CatalogAnalyticsSkeleton() {
 // CATALOG STATS + TABLE — 4 stats + DataTable (shared by approvals, assignments, materials, questions)
 // =============================================================================
 
+// =============================================================================
+// CATALOG BOOK DETAIL — breadcrumb + hero + 3 stats + details card
+// =============================================================================
+
+export function CatalogBookDetailSkeleton() {
+  return (
+    <div>
+      {/* Breadcrumb */}
+      <Skeleton className="mb-4 h-4 w-36" />
+
+      {/* Hero banner */}
+      <div className="mb-6 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 p-6 dark:from-blue-950/20 dark:to-purple-950/20">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="mt-2 h-4 w-40" />
+        <div className="mt-3 flex gap-2">
+          <Skeleton className="h-6 w-20 rounded-full" />
+          <Skeleton className="h-6 w-20 rounded-full" />
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+      </div>
+
+      {/* 3 stat cards */}
+      <div className="mb-6 grid gap-4 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="size-4" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Details card */}
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <Skeleton className="h-5 w-28" />
+            <Skeleton className="mt-1 h-4 w-48" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-20 rounded-md" />
+            <Skeleton className="h-9 w-20 rounded-md" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="space-y-1">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+            ))}
+            {/* Full-width fields */}
+            <div className="space-y-1 sm:col-span-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+            {/* Tags */}
+            <div className="space-y-1 sm:col-span-2">
+              <Skeleton className="h-3 w-12" />
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-6 w-16 rounded-full" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 export function CatalogStatsTableSkeleton() {
   return (
     <div className="space-y-6">

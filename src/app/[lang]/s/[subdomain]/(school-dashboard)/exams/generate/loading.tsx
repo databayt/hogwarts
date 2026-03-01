@@ -1,42 +1,5 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
-import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import {
-  SkeletonCard,
-  SkeletonFormGrid,
-  SkeletonPageNav,
-} from "@/components/atom/loading"
+import { ExamsGenerateSkeleton } from "@/components/school-dashboard/loading"
 
 export default function Loading() {
-  return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <Skeleton className="h-8 w-64" />
-
-      {/* Navigation tabs */}
-      <SkeletonPageNav tabs={3} />
-
-      {/* Generation options */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Settings form */}
-        <Card>
-          <CardContent className="pt-6">
-            <SkeletonFormGrid fields={6} />
-          </CardContent>
-        </Card>
-
-        {/* Preview/templates */}
-        <div className="space-y-4">
-          <Skeleton className="h-6 w-32" />
-          <div className="grid gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+  return <ExamsGenerateSkeleton />
 }

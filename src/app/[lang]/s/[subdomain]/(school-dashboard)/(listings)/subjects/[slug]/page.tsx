@@ -5,10 +5,12 @@ import { notFound } from "next/navigation"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { CatalogContentSections } from "@/components/school-dashboard/listings/subjects/catalog-content-sections"
 import { CatalogDetailContent } from "@/components/school-dashboard/listings/subjects/catalog-detail"
+import { SchoolCatalogCustomization } from "@/components/school-dashboard/listings/subjects/catalog/school-catalog-customization"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
@@ -17,7 +19,8 @@ interface Props {
 export default async function CatalogSubjectDetailPage({ params }: Props) {
   const { lang, subdomain, slug } = await params
 
-  const subject = await db.catalogSubject.findUnique({
+  // Try catalog slug first, then fallback to school subject by ID
+  let subject = await db.catalogSubject.findUnique({
     where: { slug },
     select: {
       id: true,
@@ -69,6 +72,69 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
     },
   })
 
+  // Fallback: if slug didn't match a catalog subject, check if it's a school subject ID
+  // that links to a catalog subject via catalogSubjectId
+  if (!subject) {
+    const schoolSubject = await db.subject.findFirst({
+      where: { id: slug },
+      select: { catalogSubjectId: true },
+    })
+
+    if (schoolSubject?.catalogSubjectId) {
+      subject = await db.catalogSubject.findUnique({
+        where: { id: schoolSubject.catalogSubjectId },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          department: true,
+          color: true,
+          imageKey: true,
+          thumbnailKey: true,
+          bannerUrl: true,
+          levels: true,
+          grades: true,
+          totalChapters: true,
+          totalLessons: true,
+          averageRating: true,
+          usageCount: true,
+          ratingCount: true,
+          chapters: {
+            where: { status: "PUBLISHED" },
+            orderBy: { sequenceOrder: "asc" },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              description: true,
+              color: true,
+              imageKey: true,
+              thumbnailKey: true,
+              totalLessons: true,
+              lessons: {
+                where: { status: "PUBLISHED" },
+                orderBy: { sequenceOrder: "asc" },
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  description: true,
+                  color: true,
+                  imageKey: true,
+                  thumbnailKey: true,
+                  durationMinutes: true,
+                  videoCount: true,
+                  resourceCount: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    }
+  }
+
   if (!subject) {
     notFound()
   }
@@ -96,25 +162,25 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
         ],
       },
       orderBy: { downloadCount: "desc" },
-      take: 6,
       select: {
         id: true,
         title: true,
+        description: true,
         type: true,
+        pageCount: true,
         downloadCount: true,
         fileSize: true,
         mimeType: true,
       },
     }),
 
-    // Exams - linked at subject level
+    // Exams - linked at subject level (no take limit — aggregate by type in UI)
     db.catalogExam.findMany({
       where: {
         subjectId: subject.id,
         status: "PUBLISHED",
       },
       orderBy: { usageCount: "desc" },
-      take: 6,
       select: {
         id: true,
         title: true,
@@ -192,6 +258,30 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
     }),
   ])
 
+  // Query content overrides for this school
+  const { schoolId } = await getTenantContext()
+  const overrides = schoolId
+    ? await db.schoolContentOverride.findMany({
+        where: { schoolId },
+        select: {
+          catalogChapterId: true,
+          catalogLessonId: true,
+          isHidden: true,
+        },
+      })
+    : []
+
+  const hiddenChapterIds = new Set(
+    overrides
+      .filter((o) => o.catalogChapterId && o.isHidden)
+      .map((o) => o.catalogChapterId!)
+  )
+  const hiddenLessonIds = new Set(
+    overrides
+      .filter((o) => o.catalogLessonId && o.isHidden)
+      .map((o) => o.catalogLessonId!)
+  )
+
   const heroImageUrl = getCatalogImageUrl(subject.bannerUrl, null, "original")
   const subjectImageUrl = getCatalogImageUrl(
     subject.thumbnailKey,
@@ -268,10 +358,26 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
         chapters={chapters}
         lang={lang}
       />
+      <SchoolCatalogCustomization
+        chapters={subject.chapters.map((ch) => ({
+          id: ch.id,
+          name: ch.name,
+          isHidden: hiddenChapterIds.has(ch.id),
+          lessons: ch.lessons.map((l) => ({
+            id: l.id,
+            name: l.name,
+            isHidden: hiddenLessonIds.has(l.id),
+            videoCount: l.videoCount,
+          })),
+        }))}
+        catalogSubjectId={subject.id}
+        lang={lang}
+      />
       <CatalogContentSections
         data={contentSections}
         lang={lang}
         subjectColor={subject.color}
+        subjectName={subject.name}
         subdomain={subdomain}
         subjectSlug={subject.slug}
         catalogSubjectId={subject.id}

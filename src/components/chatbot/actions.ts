@@ -43,7 +43,7 @@ export async function sendMessage(
           description: true,
           schoolType: true,
           schoolLevel: true,
-          system: true,
+          curriculum: true,
           tuitionFee: true,
           registrationFee: true,
           applicationFee: true,

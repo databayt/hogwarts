@@ -132,6 +132,7 @@ const areaChartConfig = {
 // DEFAULT DATA BY ROLE
 // ============================================================================
 
+// TODO: Replace demo chart data with real financial data from finance queries
 const defaultChartData: ChartDataPoint[] = [
   { date: "2024-04-01", income: 22200, expenses: 15000 },
   { date: "2024-04-02", income: 9700, expenses: 18000 },
@@ -226,6 +227,7 @@ const defaultChartData: ChartDataPoint[] = [
   { date: "2024-06-30", income: 44600, expenses: 40000 },
 ]
 
+// TODO: Replace hardcoded role-specific financial stats with real data from finance module
 const defaultDataByRole: Record<DashboardRole, FinancialOverviewData> = {
   STUDENT: {
     stats: [

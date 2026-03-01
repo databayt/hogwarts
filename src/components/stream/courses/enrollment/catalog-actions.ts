@@ -66,7 +66,6 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
         where: {
           userId: session.user.id,
           catalogSubjectId,
-          ...(schoolId ? { schoolId } : {}),
         },
       })
 
@@ -82,6 +81,7 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
           data: {
             isActive: !isPaid, // Immediate for free, pending for paid
             status: isPaid ? "PENDING" : "ACTIVE",
+            ...(schoolId && !existingEnrollment.schoolId ? { schoolId } : {}),
             updatedAt: new Date(),
           },
         })
@@ -213,7 +213,6 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
  */
 export async function checkCatalogEnrollmentStatus(catalogSubjectId: string) {
   const session = await auth()
-  const { schoolId } = await getTenantContext()
 
   if (!session?.user) {
     return { enrolled: false }
@@ -224,7 +223,6 @@ export async function checkCatalogEnrollmentStatus(catalogSubjectId: string) {
       userId: session.user.id,
       catalogSubjectId,
       isActive: true,
-      ...(schoolId ? { schoolId } : {}),
     },
   })
 

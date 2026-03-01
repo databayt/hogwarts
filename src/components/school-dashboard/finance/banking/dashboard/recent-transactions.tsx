@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   formatAmount,
   formatDateTime,
@@ -96,6 +97,10 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
   currentPage,
   dictionary,
 }: RecentTransactionsListProps) {
+  const { dictionary: globalDict } = useDictionary()
+  const fd = (globalDict as any)?.finance
+  const bt = fd?.bankingTransactions as Record<string, string> | undefined
+
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -142,7 +147,9 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
     return (
       <div className="py-12 text-center">
         <p className="text-muted-foreground mb-4">
-          {dictionary?.noTransactions || "No transactions found"}
+          {bt?.noTransactions ||
+            dictionary?.noTransactions ||
+            "No transactions found"}
         </p>
       </div>
     )
@@ -159,7 +166,7 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
             onClick={() => handleCategoryChange(null)}
             disabled={isPending}
           >
-            {dictionary?.all || "All"}
+            {bt?.all || dictionary?.all || "All"}
           </Button>
           {categories.map((category: string) => (
             <Button
@@ -181,11 +188,19 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{dictionary?.transaction || "Transaction"}</TableHead>
-              <TableHead>{dictionary?.amount || "Amount"}</TableHead>
-              <TableHead>{dictionary?.status || "Status"}</TableHead>
-              <TableHead>{dictionary?.date || "Date"}</TableHead>
-              <TableHead>{dictionary?.category || "Category"}</TableHead>
+              <TableHead>
+                {bt?.transaction || dictionary?.transaction || "Transaction"}
+              </TableHead>
+              <TableHead>
+                {bt?.amount || dictionary?.amount || "Amount"}
+              </TableHead>
+              <TableHead>
+                {bt?.status || dictionary?.status || "Status"}
+              </TableHead>
+              <TableHead>{bt?.date || dictionary?.date || "Date"}</TableHead>
+              <TableHead>
+                {bt?.category || dictionary?.category || "Category"}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -193,7 +208,7 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
               <TransactionRow
                 key={transaction.id}
                 transaction={transaction}
-                dictionary={dictionary}
+                dictionary={bt || dictionary}
               />
             ))}
           </TableBody>
@@ -202,7 +217,8 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
 
       {filteredTransactions.length === 0 && (
         <div className="text-muted-foreground py-8 text-center">
-          {dictionary?.noMatchingTransactions ||
+          {bt?.noMatchingTransactions ||
+            dictionary?.noMatchingTransactions ||
             "No matching transactions found"}
         </div>
       )}

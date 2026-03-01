@@ -100,7 +100,10 @@ export const AtomsIndex: Record<string, AtomEntry> = {
   "command-menu": {
     name: "command-menu",
     files: [
-      { path: "src/components/atom/command-menu.tsx", type: "registry:atom" },
+      {
+        path: "src/components/atom/generic-command-menu/index.tsx",
+        type: "registry:atom",
+      },
     ],
   },
   counter: {

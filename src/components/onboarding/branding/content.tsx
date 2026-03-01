@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from "react"
 import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
-import { Upload, X } from "lucide-react"
+import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -28,7 +28,6 @@ export default function BrandingContent({ dictionary }: Props) {
   const { setCustomNavigation, enableNext } = useHostValidation()
   const { listing, updateListingData } = useListing()
   const [logo, setLogo] = useState<string>()
-  const [showUploader, setShowUploader] = useState(false)
 
   const id = params?.id as string
 
@@ -60,7 +59,6 @@ export default function BrandingContent({ dictionary }: Props) {
       const uploadedFile = files[0]
       const logoUrl = uploadedFile.cdnUrl || uploadedFile.url
       setLogo(logoUrl)
-      setShowUploader(false)
       updateListingData({ logoUrl })
     }
   }
@@ -95,52 +93,28 @@ export default function BrandingContent({ dictionary }: Props) {
             "Add your school's logo to personalize your school-dashboard. This is optional - you can always add it later."
           }
         />
-        <div>
-          {!logo && !showUploader ? (
-            <div
-              onClick={() => setShowUploader(true)}
-              className="border-muted-foreground/30 hover:border-muted-foreground/50 flex h-[250px] w-[400px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors"
-            >
-              <Upload className="text-muted-foreground mb-4 h-10 w-10" />
-              <p className="font-medium">{dict.uploadLogo || "Upload logo"}</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {dict.logoFileTypes || "SVG, PNG, JPG"}
-              </p>
-              <p className="text-muted-foreground mt-2 text-xs">
-                {dict.optional || "(Optional)"}
-              </p>
-            </div>
-          ) : showUploader ? (
-            <div className="w-[400px] space-y-4">
-              <FileUploader
-                category="IMAGE"
-                folder="school-logos"
-                accept={ACCEPT_IMAGES}
-                maxFiles={1}
-                multiple={false}
-                maxSize={5 * 1024 * 1024}
-                optimizeImages={true}
-                onUploadComplete={handleUploadComplete}
-                onUploadError={handleUploadError}
-              />
-              <Button
-                variant="outline"
-                onClick={() => setShowUploader(false)}
-                className="w-full"
-              >
-                {dict.cancel || "Cancel"}
-              </Button>
-            </div>
+        <div className="h-[300px]">
+          {!logo ? (
+            <FileUploader
+              category="IMAGE"
+              folder="school-logos"
+              accept={ACCEPT_IMAGES}
+              maxFiles={1}
+              multiple={false}
+              maxSize={5 * 1024 * 1024}
+              optimizeImages={true}
+              onUploadComplete={handleUploadComplete}
+              onUploadError={handleUploadError}
+              className="h-full [&>div]:h-full"
+            />
           ) : (
-            <div className="relative h-[250px] w-[400px] overflow-hidden rounded-lg border">
-              {logo && (
-                <Image
-                  src={logo}
-                  alt="School logo"
-                  fill
-                  className="object-contain p-4"
-                />
-              )}
+            <div className="relative h-full overflow-hidden rounded-lg border">
+              <Image
+                src={logo}
+                alt="School logo"
+                fill
+                className="object-contain p-8"
+              />
               <Button
                 size="icon"
                 variant="destructive"

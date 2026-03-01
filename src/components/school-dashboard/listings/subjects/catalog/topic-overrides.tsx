@@ -3,7 +3,16 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
-import { BookOpen, ChevronDown, ChevronRight, Eye, EyeOff } from "lucide-react"
+import {
+  BookOpen,
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Loader2,
+  Video,
+} from "lucide-react"
+import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -13,8 +22,19 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { uploadLessonVideo } from "@/components/stream/admin/courses/edit/video-actions"
 
 import { toggleContentOverride } from "./actions"
 
@@ -22,6 +42,7 @@ interface Lesson {
   id: string
   name: string
   isHidden: boolean
+  videoCount?: number
 }
 
 interface Chapter {
@@ -42,6 +63,13 @@ export function TopicOverrides({ chapters, lang }: Props) {
     | Record<string, string>
     | undefined
   const [isPending, startTransition] = useTransition()
+
+  // Video upload dialog state
+  const [isVideoOpen, setIsVideoOpen] = useState(false)
+  const [videoLessonId, setVideoLessonId] = useState("")
+  const [videoLessonName, setVideoLessonName] = useState("")
+  const [videoTitle, setVideoTitle] = useState("")
+  const [videoUrl, setVideoUrl] = useState("")
 
   const t = {
     hide: cat?.hide || "Hide",
@@ -69,6 +97,48 @@ export function TopicOverrides({ chapters, lang }: Props) {
     })
   }
 
+  function handleOpenVideoUpload(lessonId: string, lessonName: string) {
+    setVideoLessonId(lessonId)
+    setVideoLessonName(lessonName)
+    setVideoTitle("")
+    setVideoUrl("")
+    setIsVideoOpen(true)
+  }
+
+  function handleSubmitVideo() {
+    if (!videoUrl.trim()) {
+      toast.error("Video URL is required")
+      return
+    }
+
+    const provider =
+      videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")
+        ? ("YOUTUBE" as const)
+        : videoUrl.includes("vimeo.com")
+          ? ("VIMEO" as const)
+          : ("OTHER" as const)
+
+    startTransition(async () => {
+      try {
+        const result = await uploadLessonVideo({
+          catalogLessonId: videoLessonId,
+          title: videoTitle.trim() || videoLessonName,
+          videoUrl: videoUrl.trim(),
+          provider,
+        })
+
+        if (result.status === "success") {
+          toast.success("Video submitted for review")
+          setIsVideoOpen(false)
+        } else {
+          toast.error(result.message)
+        }
+      } catch {
+        toast.error("Failed to upload video")
+      }
+    })
+  }
+
   if (chapters.length === 0) {
     return (
       <p className="text-muted-foreground py-8 text-center text-sm">
@@ -78,18 +148,66 @@ export function TopicOverrides({ chapters, lang }: Props) {
   }
 
   return (
-    <div className="space-y-1">
-      {chapters.map((chapter) => (
-        <ChapterRow
-          key={chapter.id}
-          chapter={chapter}
-          t={t}
-          onToggleChapter={handleToggleChapter}
-          onToggleLesson={handleToggleLesson}
-          isPending={isPending}
-        />
-      ))}
-    </div>
+    <>
+      <div className="space-y-1">
+        {chapters.map((chapter) => (
+          <ChapterRow
+            key={chapter.id}
+            chapter={chapter}
+            t={t}
+            onToggleChapter={handleToggleChapter}
+            onToggleLesson={handleToggleLesson}
+            onUploadVideo={handleOpenVideoUpload}
+            isPending={isPending}
+          />
+        ))}
+      </div>
+
+      {/* Video Upload Dialog */}
+      <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Video</DialogTitle>
+            <DialogDescription>
+              Add a video for &quot;{videoLessonName}&quot;. It will be
+              submitted for review before becoming visible to students.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="tv-title">Video Title</Label>
+              <Input
+                id="tv-title"
+                value={videoTitle}
+                onChange={(e) => setVideoTitle(e.target.value)}
+                placeholder={videoLessonName}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tv-url">Video URL *</Label>
+              <Input
+                id="tv-url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://youtube.com/watch?v=..."
+              />
+              <p className="text-muted-foreground text-xs">
+                Supports YouTube, Vimeo, or direct video links
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsVideoOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitVideo} disabled={isPending}>
+              {isPending && <Loader2 className="me-2 size-4 animate-spin" />}
+              Submit Video
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -98,12 +216,14 @@ function ChapterRow({
   t,
   onToggleChapter,
   onToggleLesson,
+  onUploadVideo,
   isPending,
 }: {
   chapter: Chapter
   t: Record<string, string>
   onToggleChapter: (id: string, hidden: boolean) => void
   onToggleLesson: (id: string, hidden: boolean) => void
+  onUploadVideo: (lessonId: string, lessonName: string) => void
   isPending: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -153,7 +273,7 @@ function ChapterRow({
           {chapter.lessons.map((lesson) => (
             <div
               key={lesson.id}
-              className="flex items-center gap-2 py-1 text-sm"
+              className="group flex items-center gap-2 py-1 text-sm"
             >
               <BookOpen className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
               <span
@@ -164,19 +284,36 @@ function ChapterRow({
               >
                 {lesson.name}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                disabled={isPending}
-                onClick={() => onToggleLesson(lesson.id, lesson.isHidden)}
-              >
-                {lesson.isHidden ? (
-                  <Eye className="h-3.5 w-3.5" />
-                ) : (
-                  <EyeOff className="h-3.5 w-3.5" />
-                )}
-              </Button>
+              {(lesson.videoCount ?? 0) > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  {lesson.videoCount} video{lesson.videoCount !== 1 ? "s" : ""}
+                </Badge>
+              )}
+              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  disabled={isPending}
+                  onClick={() => onUploadVideo(lesson.id, lesson.name)}
+                  title="Upload video"
+                >
+                  <Video className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  disabled={isPending}
+                  onClick={() => onToggleLesson(lesson.id, lesson.isHidden)}
+                >
+                  {lesson.isHidden ? (
+                    <Eye className="h-3.5 w-3.5" />
+                  ) : (
+                    <EyeOff className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              </div>
             </div>
           ))}
           {chapter.lessons.length === 0 && (

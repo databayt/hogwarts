@@ -55,7 +55,7 @@ export async function PrincipalDashboard({
     try {
       const [qlData, weather] = await Promise.all([
         getQuickLookData(locale),
-        getWeatherData(),
+        getWeatherData("metric", locale),
       ])
       quickLookData = qlData
       weatherData = weather
@@ -168,6 +168,7 @@ export async function PrincipalDashboard({
       boardMeetings: mockBoardMeetings = [],
     } = principalData || {}
 
+    // TODO: Replace with real attendance data from attendance queries
     const weeklyAttendance = [
       { day: "Mon", value: 94 },
       { day: "Tue", value: 92 },

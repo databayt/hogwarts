@@ -7,12 +7,12 @@ import { DOCS_LINKS } from "@/components/docs/docs-config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { MobileNav } from "@/components/template/mobile-nav"
 
-import { CommandMenu } from "./command-menu"
 import { marketingConfig } from "./config"
 import { GitHubLink } from "./github-link"
 import { LangSwitcher } from "./lang-switcher"
 import { MainNav } from "./main-nav"
 import { ModeSwitcher } from "./mode-switcher"
+import { SearchMenu } from "./search-menu"
 
 interface SiteHeaderProps {
   dictionary?: Dictionary
@@ -66,7 +66,7 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
         />
         {/* Right: Actions - all hidden on mobile, shown in menu */}
         <nav className="hidden flex-1 items-center justify-end gap-0.5 lg:flex">
-          <CommandMenu dictionary={dictionary} />
+          <SearchMenu />
           <Separator orientation="vertical" className="ms-2" />
           <GitHubLink />
           <Separator orientation="vertical" className="mx-1" />

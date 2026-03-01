@@ -40,7 +40,7 @@ export async function seedClickViewImages(prisma: PrismaClient): Promise<void> {
 async function processThumbnails(prisma: PrismaClient): Promise<void> {
   const subjects = await prisma.catalogSubject.findMany({
     where: {
-      system: "clickview",
+      curriculum: "us-k12",
       thumbnailKey: null,
     },
     select: { id: true, slug: true, name: true, imageKey: true },
@@ -91,7 +91,7 @@ async function processThumbnails(prisma: PrismaClient): Promise<void> {
 async function processBanners(prisma: PrismaClient): Promise<void> {
   const subjects = await prisma.catalogSubject.findMany({
     where: {
-      system: "clickview",
+      curriculum: "us-k12",
       OR: [{ bannerUrl: null }, { bannerUrl: { startsWith: "/" } }],
     },
     select: { id: true, slug: true, name: true, imageKey: true },
@@ -169,8 +169,28 @@ function trySlugPaths(slug: string): string | null {
 }
 
 /**
+ * For grade-specific slugs like "us-math-grade-5", derive the level-based
+ * illustration filename: "elementary-math". Maps grade to level:
+ *   K-5 → elementary, 6-8 → middle, 9-12 → high
+ */
+function deriveGradeLevelSlug(slug: string): string | null {
+  const match = slug.match(/^us-(.+)-grade-(\d+)$/)
+  if (!match) return null
+
+  const [, subject, gradeStr] = match
+  const grade = parseInt(gradeStr, 10)
+
+  let level: string
+  if (grade <= 5) level = "elementary"
+  else if (grade <= 8) level = "middle"
+  else level = "high"
+
+  return `${level}-${subject}`
+}
+
+/**
  * Find the best available local image file for a subject.
- * Priority: current slug → legacy slug from imageKey → imageKey local file
+ * Priority: current slug → legacy slug from imageKey → grade-level derivation → imageKey local file
  */
 function findImageFile(slug: string, imageKey: string | null): string | null {
   // 1. Try by current slug (works for legacy subjects)
@@ -184,7 +204,14 @@ function findImageFile(slug: string, imageKey: string | null): string | null {
     if (byLegacy) return byLegacy
   }
 
-  // 3. Check if imageKey points to a local file directly
+  // 3. Try grade-to-level mapping (us-math-grade-5 → elementary-math)
+  const gradeLevelSlug = deriveGradeLevelSlug(slug)
+  if (gradeLevelSlug) {
+    const byGradeLevel = trySlugPaths(gradeLevelSlug)
+    if (byGradeLevel) return byGradeLevel
+  }
+
+  // 4. Check if imageKey points to a local file directly
   if (imageKey && imageKey.startsWith("/")) {
     const localPath = path.resolve(__dirname, "../..", `public${imageKey}`)
     if (fs.existsSync(localPath)) return localPath

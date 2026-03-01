@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 
 interface HostStepHeaderProps {
   stepNumber?: number
+  stepLabel?: string
   title: string
   description?: string
   illustration?: React.ReactNode
@@ -17,6 +18,7 @@ interface HostStepHeaderProps {
 
 const HostStepHeader: React.FC<HostStepHeaderProps> = ({
   stepNumber,
+  stepLabel,
   title,
   description,
   illustration,
@@ -28,7 +30,9 @@ const HostStepHeader: React.FC<HostStepHeaderProps> = ({
         {/* Left Side - Content */}
         <div className="space-y-4 sm:space-y-6">
           {stepNumber && (
-            <h6 className="text-muted-foreground">Step {stepNumber}</h6>
+            <h6 className="text-muted-foreground">
+              {stepLabel || "Step"} {stepNumber}
+            </h6>
           )}
 
           <h2 className="leading-tight">{title}</h2>

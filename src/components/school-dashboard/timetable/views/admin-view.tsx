@@ -2,21 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
-  Calendar,
   ChevronDown,
   ChevronRight,
-  DoorOpen,
-  FileText,
   GraduationCap,
-  RefreshCw,
   Settings,
   TriangleAlert,
   Users,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,14 +23,11 @@ import {
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -47,10 +39,7 @@ import {
   getSubjectsForSlotEditor,
   getTeachersForSelection,
   getTeachersForSlotEditor,
-  getTermsForSelection,
-  getTimetableByClass,
   getTimetableByGradeLevel,
-  getTimetableByRoom,
   getTimetableByTeacher,
   upsertTimetableSlot,
 } from "../actions"
@@ -86,52 +75,27 @@ interface Props {
   }>
   lunchAfterPeriod: number | null
   isLoading?: boolean
-  onTermChange: (termId: string) => void
 }
 
-type ViewMode = "class" | "teacher" | "room" | "grade"
-
-// Group classes by grade name
-function groupClassesByGrade(
-  classes: Array<{ id: string; label: string }>
-): Map<string, Array<{ id: string; label: string }>> {
-  const groups = new Map<string, Array<{ id: string; label: string }>>()
-  for (const cls of classes) {
-    // Extract grade from class name like "Mathematics - Grade 10 A"
-    const match = cls.label.match(/ - (.+)$/)
-    let gradeName = match ? match[1] : "Other"
-    // Strip trailing section letter (e.g., "Grade 7 A" -> "Grade 7")
-    gradeName = gradeName.replace(/\s+[A-Z]$/, "")
-    if (!groups.has(gradeName)) {
-      groups.set(gradeName, [])
-    }
-    groups.get(gradeName)!.push(cls)
-  }
-  return groups
-}
+type ViewMode = "grade" | "teacher"
 
 export default function AdminView({
   dictionary,
   lang,
   termId,
-  termInfo,
   workingDays,
   periods,
   lunchAfterPeriod,
   isLoading,
-  onTermChange,
 }: Props) {
   const d = dictionary?.timetable
   const isRTL = lang === "ar"
 
-  const [viewMode, setViewMode] = useState<ViewMode>("class")
+  const [viewMode, setViewMode] = useState<ViewMode>("grade")
   const [selectedId, setSelectedId] = useState<string>("")
+  const [selectedGrade, setSelectedGrade] = useState<string>("")
 
   // Data lists for selectors
-  const [terms, setTerms] = useState<Array<{ id: string; label: string }>>([])
-  const [classes, setClasses] = useState<Array<{ id: string; label: string }>>(
-    []
-  )
   const [teachers, setTeachers] = useState<
     Array<{ id: string; label: string }>
   >([])
@@ -158,7 +122,7 @@ export default function AdminView({
   const [expandedGrades, setExpandedGrades] = useState<Set<string>>(new Set())
   const [loadingGrades, setLoadingGrades] = useState<Set<string>>(new Set())
 
-  // Timetable data
+  // Timetable data (teacher view)
   const [slots, setSlots] = useState<any[]>([])
   const [entityInfo, setEntityInfo] = useState<any>(null)
 
@@ -189,44 +153,41 @@ export default function AdminView({
 
   const [isLoadingData, setIsLoadingData] = useState(false)
 
-  // Grouped classes for the class selector
-  const groupedClasses = useMemo(() => groupClassesByGrade(classes), [classes])
-
-  // Load initial selectors
+  // Load selector options + slot editor resources on mount
   useEffect(() => {
-    loadSelectors()
-  }, [])
-
-  // Reload entity list when term changes
-  useEffect(() => {
-    loadEntityList()
-  }, [termId, viewMode])
-
-  // Clear grade data when term changes to prevent stale data
-  useEffect(() => {
-    setGradeData(new Map())
-    setExpandedGrades(new Set())
-  }, [termId])
-
-  // Load slot editor resources when term changes
-  useEffect(() => {
+    loadSelectorOptions()
     loadSlotEditorResources()
   }, [termId])
 
-  // Load timetable when selection changes
+  // Clear grade data when term changes
   useEffect(() => {
-    if (selectedId && viewMode !== "grade") {
+    setGradeData(new Map())
+    setExpandedGrades(new Set())
+    setSelectedGrade("")
+  }, [termId])
+
+  // Load teacher timetable when teacher selection changes
+  useEffect(() => {
+    if (selectedId && viewMode === "teacher") {
       loadTimetable()
     }
   }, [selectedId, termId])
 
-  const loadSelectors = async () => {
-    const [termsResult, roomsResult] = await Promise.all([
-      getTermsForSelection(),
-      getRoomsForSelection(),
+  const loadSelectorOptions = async () => {
+    const [gradesResult, teachersResult] = await Promise.all([
+      getGradeLevelsForSelection({ termId }),
+      getTeachersForSelection({ termId }),
     ])
-    setTerms(termsResult.terms)
-    setRooms(roomsResult.rooms)
+    setGradeLevels(gradesResult.gradeLevels)
+    setTeachers(teachersResult.teachers)
+
+    // Auto-expand first grade on initial load
+    if (gradesResult.gradeLevels.length > 0) {
+      const firstName = gradesResult.gradeLevels[0].name
+      setSelectedGrade(firstName)
+      setExpandedGrades(new Set([firstName]))
+      loadGradeData(firstName)
+    }
   }
 
   const loadSlotEditorResources = async () => {
@@ -258,46 +219,8 @@ export default function AdminView({
         isAvailable: true,
       }))
     )
+    setRooms(roomsResult.rooms)
   }
-
-  const loadEntityList = async () => {
-    if (viewMode === "class") {
-      const result = await getClassesForSelection({ termId })
-      setClasses(result.classes)
-      if (result.classes.length > 0 && !selectedId) {
-        setSelectedId(result.classes[0].id)
-      }
-    } else if (viewMode === "teacher") {
-      const result = await getTeachersForSelection({ termId })
-      setTeachers(result.teachers)
-      if (result.teachers.length > 0 && !selectedId) {
-        setSelectedId(result.teachers[0].id)
-      }
-    } else if (viewMode === "grade") {
-      const result = await getGradeLevelsForSelection({ termId })
-      setGradeLevels(result.gradeLevels)
-    }
-  }
-
-  const loadTimetable = useCallback(async () => {
-    setIsLoadingData(true)
-    try {
-      let result: any
-      if (viewMode === "class") {
-        result = await getTimetableByClass({ termId, classId: selectedId })
-        setEntityInfo(result.classInfo)
-      } else if (viewMode === "teacher") {
-        result = await getTimetableByTeacher({ termId, teacherId: selectedId })
-        setEntityInfo(result.teacherInfo)
-      } else if (viewMode === "room") {
-        result = await getTimetableByRoom({ termId, roomId: selectedId })
-        setEntityInfo(result.roomInfo)
-      }
-      setSlots(result?.slots || [])
-    } finally {
-      setIsLoadingData(false)
-    }
-  }, [viewMode, selectedId, termId])
 
   const loadGradeData = async (gradeName: string) => {
     setLoadingGrades((prev) => new Set(prev).add(gradeName))
@@ -330,7 +253,6 @@ export default function AdminView({
         next.delete(gradeName)
       } else {
         next.add(gradeName)
-        // Load data if not already loaded
         if (!gradeData.has(gradeName)) {
           loadGradeData(gradeName)
         }
@@ -339,12 +261,25 @@ export default function AdminView({
     })
   }
 
+  const loadTimetable = useCallback(async () => {
+    setIsLoadingData(true)
+    try {
+      const result = await getTimetableByTeacher({
+        termId,
+        teacherId: selectedId,
+      })
+      setEntityInfo(result.teacherInfo)
+      setSlots(result?.slots || [])
+    } finally {
+      setIsLoadingData(false)
+    }
+  }, [selectedId, termId])
+
   const checkConflicts = async () => {
     const result = await detectTimetableConflicts({ termId })
     setConflicts(result.conflicts)
     setShowConflicts(true)
 
-    // Build set of conflicting class IDs for visual indicators
     const conflictIds = new Set<string>()
     for (const conflict of result.conflicts) {
       if (conflict.classA?.id) conflictIds.add(conflict.classA.id)
@@ -353,43 +288,27 @@ export default function AdminView({
     setConflictSlotIds(conflictIds)
   }
 
-  const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode)
-    setSelectedId("") // Reset selection
+  const handleGradeSelect = (gradeName: string) => {
+    setSelectedGrade(gradeName)
+    setSelectedId("")
+    setViewMode("grade")
+    setExpandedGrades(new Set([gradeName]))
+    if (!gradeData.has(gradeName)) {
+      loadGradeData(gradeName)
+    }
+  }
+
+  const handleTeacherSelect = (teacherId: string) => {
+    setSelectedId(teacherId)
+    setSelectedGrade("")
+    setViewMode("teacher")
+    setExpandedGrades(new Set())
     setSlots([])
     setEntityInfo(null)
+    setIsLoadingData(true)
   }
 
-  const getEntityList = () => {
-    switch (viewMode) {
-      case "class":
-        return classes
-      case "teacher":
-        return teachers
-      case "room":
-        return rooms.map((r) => ({
-          id: r.id,
-          label: `${r.label} (${r.capacity})`,
-        }))
-      default:
-        return []
-    }
-  }
-
-  const getViewIcon = () => {
-    switch (viewMode) {
-      case "class":
-        return <Calendar className="h-4 w-4" />
-      case "teacher":
-        return <Users className="h-4 w-4" />
-      case "room":
-        return <DoorOpen className="h-4 w-4" />
-      case "grade":
-        return <GraduationCap className="h-4 w-4" />
-    }
-  }
-
-  // Handle slot click to open editor (data already loaded via loadSlotEditorResources)
+  // Handle slot click to open editor
   const handleSlotClick = useCallback(
     (day: number, periodId: string, slot?: any) => {
       setSelectedDay(day)
@@ -430,7 +349,6 @@ export default function AdminView({
   // Handle conflict suggestion application
   const handleApplySuggestion = useCallback(
     (suggestion: { dayOfWeek: number; periodId: string }) => {
-      // Open slot editor pre-filled with the suggested time
       setSelectedDay(suggestion.dayOfWeek)
       setSelectedPeriod(suggestion.periodId)
       setSelectedSlot(null)
@@ -439,84 +357,55 @@ export default function AdminView({
     []
   )
 
-  // Render the entity selector (grouped for class view, flat for others)
-  const renderEntitySelector = () => {
-    if (viewMode === "grade") return null
-
-    const hasGroups = viewMode === "class" && groupedClasses.size > 1
-
-    return (
-      <div className="flex items-center gap-2">
-        {getViewIcon()}
-        <Select value={selectedId} onValueChange={setSelectedId}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder={`Select ${viewMode}`} />
-          </SelectTrigger>
-          <SelectContent>
-            {hasGroups
-              ? Array.from(groupedClasses.entries()).map(
-                  ([gradeName, gradeClasses]) => (
-                    <SelectGroup key={gradeName}>
-                      <SelectLabel>{gradeName}</SelectLabel>
-                      {gradeClasses.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.label}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  )
-                )
-              : getEntityList().map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-          </SelectContent>
-        </Select>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={loadTimetable}
-          disabled={!selectedId || isLoadingData}
-        >
-          <RefreshCw
-            className={cn("h-4 w-4", isLoadingData && "animate-spin")}
-          />
-        </Button>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4">
-      {/* Header Controls */}
+      {/* Toolbar: Grade + Teacher selectors, Conflicts, Settings */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardContent className="pt-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">
-                {d?.title || "Timetable Administration"}
-              </CardTitle>
-              <Badge variant="outline">{termInfo.label}</Badge>
+            {/* Grade + Teacher selectors */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 shrink-0" />
+                <Select value={selectedGrade} onValueChange={handleGradeSelect}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue
+                      placeholder={
+                        (d?.navigation as any)?.byGrade || "Select grade"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {gradeLevels.map((grade) => (
+                      <SelectItem key={grade.id} value={grade.name}>
+                        {grade.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 shrink-0" />
+                <Select value={selectedId} onValueChange={handleTeacherSelect}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue
+                      placeholder={d?.navigation?.byTeacher || "Select teacher"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teachers.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
+            {/* Actions */}
             <div className="flex items-center gap-2">
-              {/* Term Selector */}
-              <Select value={termId} onValueChange={onTermChange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select term" />
-                </SelectTrigger>
-                <SelectContent>
-                  {terms.map((term) => (
-                    <SelectItem key={term.id} value={term.id}>
-                      {term.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Conflict Check */}
               <Button variant="outline" size="sm" onClick={checkConflicts}>
                 <TriangleAlert className="me-2 h-4 w-4" />
                 Check Conflicts
@@ -524,11 +413,11 @@ export default function AdminView({
 
               {conflicts.length > 0 && (
                 <Badge variant="destructive">
-                  {conflicts.length} conflict{conflicts.length !== 1 ? "s" : ""}
+                  {conflicts.length} conflict
+                  {conflicts.length !== 1 ? "s" : ""}
                 </Badge>
               )}
 
-              {/* Settings Link */}
               <Button variant="ghost" size="icon" asChild>
                 <a href={`/${lang}/s/_/timetable/settings`}>
                   <Settings className="h-4 w-4" />
@@ -536,89 +425,8 @@ export default function AdminView({
               </Button>
             </div>
           </div>
-        </CardHeader>
-
-        <CardContent>
-          {/* View Mode Tabs */}
-          <Tabs
-            value={viewMode}
-            onValueChange={(v) => handleViewModeChange(v as ViewMode)}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <TabsList>
-                <TabsTrigger value="class" className="gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {d?.navigation?.byClass || "By Class"}
-                </TabsTrigger>
-                <TabsTrigger value="teacher" className="gap-2">
-                  <Users className="h-4 w-4" />
-                  {d?.navigation?.byTeacher || "By Teacher"}
-                </TabsTrigger>
-                <TabsTrigger value="room" className="gap-2">
-                  <DoorOpen className="h-4 w-4" />
-                  {d?.navigation?.byRoom || "By Room"}
-                </TabsTrigger>
-                <TabsTrigger value="grade" className="gap-2">
-                  <GraduationCap className="h-4 w-4" />
-                  {(d?.navigation as any)?.byGrade || "By Grade"}
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Entity Selector (hidden for grade view) */}
-              {renderEntitySelector()}
-            </div>
-          </Tabs>
         </CardContent>
       </Card>
-
-      {/* Entity Info Card (for class/teacher/room views) */}
-      {entityInfo && viewMode !== "grade" && (
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {viewMode === "class" && "Class"}
-                  {viewMode === "teacher" && "Teacher"}
-                  {viewMode === "room" && "Room"}
-                </p>
-                <p className="font-semibold">
-                  {entityInfo.name || entityInfo.label}
-                </p>
-              </div>
-
-              {viewMode === "teacher" && entityInfo.email && (
-                <div>
-                  <p className="text-muted-foreground text-sm">Email</p>
-                  <p className="text-sm">{entityInfo.email}</p>
-                </div>
-              )}
-
-              {viewMode === "room" && entityInfo.capacity && (
-                <div>
-                  <p className="text-muted-foreground text-sm">Capacity</p>
-                  <p className="text-sm">{entityInfo.capacity} students</p>
-                </div>
-              )}
-
-              {/* Workload stats for teacher view */}
-              {viewMode === "teacher" && (
-                <>
-                  <Badge variant="secondary">{slots.length} periods/week</Badge>
-                  <Badge variant="outline">
-                    {new Set(slots.map((s) => s.classId)).size} classes
-                  </Badge>
-                </>
-              )}
-
-              {/* Utilization for room view */}
-              {viewMode === "room" && (
-                <Badge variant="secondary">{slots.length} slots used</Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Grade View */}
       {viewMode === "grade" && (
@@ -691,9 +499,36 @@ export default function AdminView({
         </div>
       )}
 
-      {/* Timetable Grid (for class/teacher/room views) */}
-      {viewMode !== "grade" && (
+      {/* Teacher View */}
+      {viewMode === "teacher" && (
         <>
+          {entityInfo && (
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div>
+                    <p className="text-muted-foreground text-sm">Teacher</p>
+                    <p className="font-semibold">
+                      {entityInfo.name || entityInfo.label}
+                    </p>
+                  </div>
+
+                  {entityInfo.email && (
+                    <div>
+                      <p className="text-muted-foreground text-sm">Email</p>
+                      <p className="text-sm">{entityInfo.email}</p>
+                    </div>
+                  )}
+
+                  <Badge variant="secondary">{slots.length} periods/week</Badge>
+                  <Badge variant="outline">
+                    {new Set(slots.map((s: any) => s.classId)).size} classes
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {isLoadingData || isLoading ? (
             <Skeleton className="h-96 w-full rounded-lg" />
           ) : selectedId ? (
@@ -705,21 +540,14 @@ export default function AdminView({
                   periods={periods}
                   lunchAfterPeriod={lunchAfterPeriod}
                   isRTL={isRTL}
-                  viewMode={viewMode}
+                  viewMode="teacher"
                   editable={true}
                   onSlotClick={handleSlotClick}
                   conflictSlotIds={conflictSlotIds}
                 />
               </CardContent>
             </Card>
-          ) : (
-            <Card>
-              <CardContent className="text-muted-foreground py-12 text-center">
-                <FileText className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                <p>Select a {viewMode} to view timetable</p>
-              </CardContent>
-            </Card>
-          )}
+          ) : null}
         </>
       )}
 

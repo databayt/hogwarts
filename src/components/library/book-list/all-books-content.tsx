@@ -56,13 +56,31 @@ export default async function AllBooksContent({
   const gradeLevel = searchParams?.gradeLevel || ""
   const perPage = LIBRARY_CONFIG.BOOKS_PER_PAGE
 
-  // Build where clause
-  const where: Record<string, unknown> = { schoolId }
+  // Build where clause — only show catalog books with active selections, plus legacy books
+  const where: Record<string, unknown> = {
+    schoolId,
+    OR: [
+      // Catalog books: only if selection is active
+      {
+        catalogBookId: { not: null },
+        catalogBook: {
+          schoolSelections: { some: { schoolId, isActive: true } },
+        },
+      },
+      // Legacy books: always show during transition
+      { catalogBookId: null },
+    ],
+  }
 
   if (search) {
-    where.OR = [
-      { title: { contains: search, mode: "insensitive" } },
-      { author: { contains: search, mode: "insensitive" } },
+    // Wrap existing OR with AND to combine with search
+    where.AND = [
+      {
+        OR: [
+          { title: { contains: search, mode: "insensitive" } },
+          { author: { contains: search, mode: "insensitive" } },
+        ],
+      },
     ]
   }
 

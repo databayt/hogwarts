@@ -16,11 +16,34 @@ import { getAuthContext, requireSchoolOwnership } from "./auth-helpers"
 export async function getListing(id: string): Promise<ActionResponse> {
   try {
     await requireSchoolOwnership(id)
-    const school = await db.school.findUnique({ where: { id } })
+    const school = await db.school.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        domain: true,
+        logoUrl: true,
+        address: true,
+        phoneNumber: true,
+        email: true,
+        website: true,
+        timezone: true,
+        planType: true,
+        maxStudents: true,
+        maxTeachers: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
     if (!school) {
       return createActionResponse(undefined, new Error("School not found"))
     }
-    return createActionResponse(school)
+    return createActionResponse({
+      ...school,
+      createdAt: school.createdAt.toISOString(),
+      updatedAt: school.updatedAt.toISOString(),
+    })
   } catch (error) {
     return createActionResponse(undefined, error)
   }
@@ -82,7 +105,14 @@ export async function getUserSchools(): Promise<ActionResponse> {
       db.school.count({ where }),
     ])
 
-    return createActionResponse({ schools, totalCount })
+    return createActionResponse({
+      schools: schools.map((s) => ({
+        ...s,
+        createdAt: s.createdAt.toISOString(),
+        updatedAt: s.updatedAt.toISOString(),
+      })),
+      totalCount,
+    })
   } catch (error) {
     return createActionResponse(undefined, error)
   }
@@ -125,7 +155,7 @@ export async function initializeSchoolSetup(
     revalidatePath("/onboarding")
 
     return createActionResponse({
-      ...schoolResult.school,
+      schoolId: schoolResult.schoolId,
       _redirect: `/onboarding/${schoolResult.schoolId}/about-school`,
       _sessionRefreshRequired: true,
     })
@@ -202,8 +232,25 @@ export async function getSchoolSetupStatus(
     )
 
     return createActionResponse({
-      ...school,
+      id: school.id,
+      name: school.name,
+      address: school.address,
+      schoolType: school.schoolType,
+      schoolLevel: school.schoolLevel,
+      city: school.city,
+      state: school.state,
+      country: school.country,
+      maxStudents: school.maxStudents,
+      maxTeachers: school.maxTeachers,
+      maxClasses: school.maxClasses,
+      domain: school.domain,
+      isPublished: school.isPublished,
+      onboardingStep: school.onboardingStep,
       tuitionFee: school.tuitionFee ? Number(school.tuitionFee) : null,
+      onboardingCompletedAt:
+        school.onboardingCompletedAt?.toISOString() ?? null,
+      createdAt: school.createdAt.toISOString(),
+      updatedAt: school.updatedAt.toISOString(),
       completionPercentage,
       nextStep: getNextStep(school),
     })

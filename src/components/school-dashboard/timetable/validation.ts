@@ -350,34 +350,29 @@ export const validateRoomAvailability = (
  * - Prevents: Student fatigue from same-subject overload
  * - Enables: Subject teacher workload balancing (can't assign all periods to one teacher)
  */
+/**
+ * Default max periods per week for any subject.
+ * Since subject IDs are CUIDs (not human-readable names), we use a single
+ * configurable default. Schools can override via timetable settings.
+ */
+const DEFAULT_MAX_PERIODS_PER_WEEK = 6
+
 export const validateSubjectDistribution = (
   classId: string,
   subjectId: string,
-  weeklySlots: Array<{ classId: string; subjectId: string }>
+  weeklySlots: Array<{ classId: string; subjectId: string }>,
+  maxPeriodsOverride?: number
 ): { isValid: boolean; message?: string } => {
   const subjectCount = weeklySlots.filter(
     (slot) => slot.classId === classId && slot.subjectId === subjectId
   ).length
 
-  const maxPeriodsPerWeek: Record<string, number> = {
-    mathematics: 5,
-    english: 5,
-    science: 4,
-    history: 3,
-    geography: 3,
-    physical_education: 2,
-    art: 2,
-    music: 2,
-    computer_science: 2,
-  }
-
-  const subjectKey = subjectId.toLowerCase()
-  const maxAllowed = maxPeriodsPerWeek[subjectKey] || 3
+  const maxAllowed = maxPeriodsOverride ?? DEFAULT_MAX_PERIODS_PER_WEEK
 
   if (subjectCount >= maxAllowed) {
     return {
       isValid: false,
-      message: `Subject ${subjectId} already has ${subjectCount} periods (max: ${maxAllowed})`,
+      message: `Subject already has ${subjectCount} periods this week (max: ${maxAllowed})`,
     }
   }
 
@@ -398,7 +393,7 @@ export const validateSubjectDistribution = (
 export const validateTeacherTravelTime = (
   teacherId: string,
   dayOfWeek: number,
-  periodId: string,
+  periodOrder: number,
   classroomId: string,
   existingSlots: Array<{
     teacherId: string
@@ -415,10 +410,10 @@ export const validateTeacherTravelTime = (
     .sort((a, b) => a.periodOrder - b.periodOrder)
 
   // Check if this would create back-to-back classes in different rooms
+  // Compare using periodOrder (number) instead of periodId (CUID string)
   for (const slot of teacherSlots) {
-    if (Math.abs(slot.periodOrder - parseInt(periodId)) === 1) {
+    if (Math.abs(slot.periodOrder - periodOrder) === 1) {
       if (slot.classroomId !== classroomId) {
-        // Check if rooms are in different buildings (you'd need building data)
         return {
           isValid: false,
           message: `Teacher has back-to-back classes in different rooms`,

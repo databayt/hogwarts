@@ -2,13 +2,23 @@
 // Books, syllabi, worksheets, supplementary resources
 
 enum MaterialType {
+  // Subject level
   TEXTBOOK
   SYLLABUS
-  WORKSHEET
-  STUDY_GUIDE
   REFERENCE
+
+  // Chapter level
+  STUDY_GUIDE
+  PROJECT
+
+  // Lesson level
+  WORKSHEET
+  PRESENTATION
+  LESSON_NOTES
   VIDEO_GUIDE
   LAB_MANUAL
+
+  // Catch-all
   OTHER
 }
 

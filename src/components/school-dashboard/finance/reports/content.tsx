@@ -32,12 +32,17 @@ interface Props {
 }
 
 export default async function ReportsContent({ dictionary, lang }: Props) {
+  const fd = (dictionary as any)?.finance
+  const rp = fd?.reportsPage as Record<string, string> | undefined
+  const c = fd?.common as Record<string, string> | undefined
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
       <div>
-        <p className="text-muted-foreground">School context not found</p>
+        <p className="text-muted-foreground">
+          {c?.schoolNotFound || "School context not found"}
+        </p>
       </div>
     )
   }
@@ -55,7 +60,8 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
     return (
       <div>
         <p className="text-muted-foreground">
-          You don't have permission to view reports
+          {c?.noPermissionReports ||
+            "You don't have permission to view reports"}
         </p>
       </div>
     )
@@ -83,48 +89,60 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Generated Reports
+              {rp?.generatedReports || "Generated Reports"}
             </CardTitle>
             <FileBarChart className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{generatedReportsCount}</div>
             <p className="text-muted-foreground text-xs">
-              {reportsCount} total
+              {reportsCount} {c?.total || "total"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Report Types</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {rp?.reportTypes || "Report Types"}
+            </CardTitle>
             <BarChart className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">8</div>
-            <p className="text-muted-foreground text-xs">Available reports</p>
+            <p className="text-muted-foreground text-xs">
+              {rp?.availableReports || "Available reports"}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {rp?.scheduled || "Scheduled"}
+            </CardTitle>
             <Calendar className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
-            <p className="text-muted-foreground text-xs">Automated reports</p>
+            <p className="text-muted-foreground text-xs">
+              {rp?.automatedReports || "Automated reports"}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Exports</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {rp?.exports || "Exports"}
+            </CardTitle>
             <Download className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
-            <p className="text-muted-foreground text-xs">PDF, Excel, CSV</p>
+            <p className="text-muted-foreground text-xs">
+              {rp?.exportFormats || "PDF, Excel, CSV"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -134,21 +152,22 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="text-primary h-5 w-5" />
-              Profit & Loss Statement
+              {rp?.profitLossStatement || "Profit & Loss Statement"}
             </CardTitle>
             <CardDescription>
-              Income statement showing revenue and expenses
+              {rp?.incomeStatementDesc ||
+                "Income statement showing revenue and expenses"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/profit-loss`}>
-                Generate Report
+                {c?.generateReport || "Generate Report"}
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">
               <Link href={`/${lang}/finance/reports/profit-loss/history`}>
-                View History
+                {c?.viewHistory || "View History"}
               </Link>
             </Button>
           </CardContent>
@@ -158,21 +177,22 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart className="h-5 w-5" />
-              Balance Sheet
+              {rp?.balanceSheet || "Balance Sheet"}
             </CardTitle>
             <CardDescription>
-              Assets, liabilities, and equity statement
+              {rp?.assetsLiabilitiesEquity ||
+                "Assets, liabilities, and equity statement"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/balance-sheet`}>
-                Generate Report
+                {c?.generateReport || "Generate Report"}
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">
               <Link href={`/${lang}/finance/reports/balance-sheet/comparative`}>
-                Comparative
+                {rp?.comparative || "Comparative"}
               </Link>
             </Button>
           </CardContent>
@@ -182,21 +202,22 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Cash Flow Statement
+              {rp?.cashFlowStatement || "Cash Flow Statement"}
             </CardTitle>
             <CardDescription>
-              Operating, investing, and financing cash flows
+              {rp?.cashFlowDesc ||
+                "Operating, investing, and financing cash flows"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/cash-flow`}>
-                Generate Report
+                {c?.generateReport || "Generate Report"}
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">
               <Link href={`/${lang}/finance/reports/cash-flow/projection`}>
-                Projection
+                {rp?.projection || "Projection"}
               </Link>
             </Button>
           </CardContent>
@@ -206,21 +227,22 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart className="h-5 w-5" />
-              Trial Balance
+              {rp?.trialBalance || "Trial Balance"}
             </CardTitle>
             <CardDescription>
-              List of all accounts with debit/credit balances
+              {rp?.trialBalanceDesc ||
+                "List of all accounts with debit/credit balances"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/trial-balance`}>
-                Generate Report
+                {c?.generateReport || "Generate Report"}
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">
               <Link href={`/${lang}/finance/reports/trial-balance/adjusted`}>
-                Adjusted
+                {rp?.adjusted || "Adjusted"}
               </Link>
             </Button>
           </CardContent>
@@ -230,21 +252,22 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="h-5 w-5" />
-              Revenue Analysis
+              {rp?.revenueAnalysis || "Revenue Analysis"}
             </CardTitle>
             <CardDescription>
-              Detailed breakdown of revenue sources
+              {rp?.revenueAnalysisDesc ||
+                "Detailed breakdown of revenue sources"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/revenue`}>
-                Generate Report
+                {c?.generateReport || "Generate Report"}
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">
               <Link href={`/${lang}/finance/reports/revenue/trends`}>
-                Trends
+                {rp?.trends || "Trends"}
               </Link>
             </Button>
           </CardContent>
@@ -254,21 +277,22 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Expense Analysis
+              {rp?.expenseAnalysis || "Expense Analysis"}
             </CardTitle>
             <CardDescription>
-              Detailed breakdown of expense categories
+              {rp?.expenseAnalysisDesc ||
+                "Detailed breakdown of expense categories"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/expense`}>
-                Generate Report
+                {c?.generateReport || "Generate Report"}
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">
               <Link href={`/${lang}/finance/reports/expense/variance`}>
-                Variance
+                {rp?.variance || "Variance"}
               </Link>
             </Button>
           </CardContent>
@@ -278,19 +302,21 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Custom Reports
+              {rp?.customReports || "Custom Reports"}
             </CardTitle>
-            <CardDescription>Build custom financial reports</CardDescription>
+            <CardDescription>
+              {rp?.buildCustomReports || "Build custom financial reports"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/custom`}>
-                Create Custom
+                {rp?.createCustom || "Create Custom"}
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">
               <Link href={`/${lang}/finance/reports/custom/templates`}>
-                Templates
+                {rp?.templates || "Templates"}
               </Link>
             </Button>
           </CardContent>
@@ -300,10 +326,10 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileBarChart className="h-5 w-5" />
-              All Reports
+              {rp?.allReports || "All Reports"}
             </CardTitle>
             <CardDescription>
-              View and manage all generated reports
+              {rp?.viewManageReports || "View and manage all generated reports"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -314,7 +340,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">
               <Link href={`/${lang}/finance/reports/schedule`}>
-                Schedule Reports
+                {rp?.scheduleReports || "Schedule Reports"}
               </Link>
             </Button>
           </CardContent>

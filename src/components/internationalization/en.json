@@ -804,6 +804,32 @@
       }
     },
     "site": {
+      "about": {
+        "castle": {
+          "title": "The Castle of Hogwarts",
+          "description": "Founded over a thousand years ago by the four greatest witches and wizards of the age, Hogwarts School of Witchcraft and Wizardry stands as a magnificent castle in the Scottish Highlands. Our ancient walls have witnessed countless magical moments and housed generations of extraordinary students."
+        },
+        "greatHall": {
+          "title": "The Great Hall",
+          "description": "The heart of Hogwarts, where students gather for meals, celebrations, and the annual Sorting Ceremony. The enchanted ceiling reflects the sky above, and floating candles provide a magical ambiance. This is where house unity and school pride flourish."
+        },
+        "gryffindor": {
+          "title": "Gryffindor House",
+          "description": "Home to the brave and daring, Gryffindor House values courage, chivalry, and determination. Founded by Godric Gryffindor, this house has produced some of the most famous witches and wizards, including Harry Potter himself."
+        },
+        "studies": {
+          "title": "Magical Studies",
+          "description": "From Herbology in the greenhouses to Defense Against the Dark Arts, Hogwarts offers a comprehensive magical education. Students learn to brew potions, cast spells, and understand the mysteries of the magical world under expert guidance."
+        },
+        "friendship": {
+          "title": "The Bonds of Friendship",
+          "description": "At Hogwarts, friendships are forged that last a lifetime. Through shared adventures, challenges, and magical discoveries, students form unbreakable bonds that support them through their darkest hours and greatest triumphs."
+        },
+        "quidditch": {
+          "title": "Quidditch Pitch",
+          "description": "The magical sport of Quidditch brings excitement and house rivalry to new heights. Our pitch has witnessed legendary matches and continues to be where young witches and wizards discover their passion for flying and the thrill of chasing the Golden Snitch."
+        }
+      },
       "nav": {
         "about": "About",
         "admissions": "Admissions",
@@ -1606,8 +1632,44 @@
       "school": "School",
       "sales": "Sales",
       "stats": "Stats",
-      "staff": "Staff"
-    }
+      "staff": "Staff",
+      "admission": "Admission",
+      "finance": "Finance",
+      "fees": "Fees",
+      "payroll": "Payroll",
+      "salary": "Salary",
+      "wallet": "Wallet",
+      "budget": "Budget",
+      "expenses": "Expenses",
+      "receipt": "Receipt",
+      "invoice": "Invoice",
+      "accounts": "Accounts",
+      "banking": "Banking",
+      "timesheet": "Timesheet",
+      "generate": "Generate",
+      "manage": "Manage",
+      "schedule": "Schedule",
+      "analytics": "Analytics",
+      "overview": "Overview"
+    },
+    "notifications": "Notifications",
+    "messages": "Messages"
+  },
+  "userMenu": {
+    "login": "Login",
+    "userMenu": "User menu",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "tenants": "Tenants",
+    "mySchool": "My School",
+    "getStarted": "Get Started",
+    "settings": "Settings",
+    "goToPlatform": "Go to Platform",
+    "profile": "Profile",
+    "billing": "Billing",
+    "myAccount": "My Account",
+    "schoolSettings": "School Settings",
+    "helpSupport": "Help & Support"
   },
   "saas": {
     "sidebar": {
@@ -1619,7 +1681,8 @@
       "Observability": "Observability",
       "Tenants": "Tenants",
       "Profile": "Profile",
-      "Sales": "Sales"
+      "Sales": "Sales",
+      "Catalog": "Catalog"
     },
     "breadcrumb": {
       "dashboard": "Dashboard",
@@ -1631,6 +1694,18 @@
       "tenants": "Tenants",
       "profile": "Profile",
       "sales": "Sales"
+    },
+    "catalog": {
+      "navigation": {
+        "catalog": "Catalog",
+        "questions": "Questions",
+        "materials": "Materials",
+        "assignments": "Assignments",
+        "books": "Books",
+        "approvals": "Approvals",
+        "proposals": "Proposals",
+        "analytics": "Analytics"
+      }
     }
   },
   "commandMenu": {

@@ -2,6 +2,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { Suspense } from "react"
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
@@ -41,6 +43,12 @@ export default async function MarkingPage({
   params: Promise<{ lang: Locale }>
 }) {
   const { lang } = await params
+
+  const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams`)
+  }
+
   const dictionary = await getDictionary(lang)
 
   return (

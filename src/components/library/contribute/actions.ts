@@ -25,6 +25,14 @@ export async function contributeBook(input: {
   description?: string
   summary?: string
   coverColor?: string
+  coverUrl?: string
+  videoUrl?: string
+  gradeLevel?: string
+  pageCount?: number
+  publisher?: string
+  publicationYear?: number
+  language?: string
+  catalogSubjectId?: string
   tags?: string[]
 }) {
   const session = await auth()
@@ -54,6 +62,14 @@ export async function contributeBook(input: {
       description: input.description || null,
       summary: input.summary || null,
       coverColor: input.coverColor || "#000000",
+      coverUrl: input.coverUrl || null,
+      videoUrl: input.videoUrl || null,
+      gradeLevel: input.gradeLevel || "GENERAL",
+      pageCount: input.pageCount || null,
+      publisher: input.publisher || null,
+      publicationYear: input.publicationYear || null,
+      language: input.language || "ar",
+      catalogSubjectId: input.catalogSubjectId || null,
       tags: input.tags || [],
       contributedBy: session.user.id,
       contributedSchoolId: schoolId,

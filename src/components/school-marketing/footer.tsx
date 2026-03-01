@@ -15,7 +15,14 @@ const Footer = () => {
   const links = t?.links as Record<string, string> | undefined
 
   return (
-    <footer className="border-border bg-muted -mx-[var(--marketing-px)] border-t px-[var(--marketing-px)] pt-16 pb-6">
+    <footer
+      className="border-border bg-muted relative border-t pt-16 pb-6"
+      style={{
+        width: "100vw",
+        marginInlineStart: "calc(-50vw + 50%)",
+        paddingInline: "var(--marketing-px)",
+      }}
+    >
       <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
         {/* Map Section */}
         <div className="lg:min-w-0 lg:flex-[2]">
@@ -300,20 +307,6 @@ const Footer = () => {
               GitHub
             </Link>
           </p>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/terms"
-              className="text-muted-foreground hover:text-primary text-sm transition-colors"
-            >
-              {t?.terms || "Terms"}
-            </Link>
-            <Link
-              href="/privacy"
-              className="text-muted-foreground hover:text-primary text-sm transition-colors"
-            >
-              {t?.privacy || "Privacy"}
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

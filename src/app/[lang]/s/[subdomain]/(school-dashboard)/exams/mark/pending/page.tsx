@@ -2,6 +2,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import Link from "next/link"
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
 import { Calendar, Clock, Users } from "lucide-react"
 
 import { db } from "@/lib/db"
@@ -22,6 +24,12 @@ interface Props {
 
 export default async function PendingPage({ params }: Props) {
   const { lang } = await params
+
+  const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams`)
+  }
+
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 

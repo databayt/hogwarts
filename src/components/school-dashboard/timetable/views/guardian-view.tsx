@@ -3,14 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
-import {
-  Calendar,
-  ChevronRight,
-  Clock,
-  TriangleAlert,
-  User,
-  Users,
-} from "lucide-react"
+import { Calendar, ChevronRight, TriangleAlert, Users } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -25,7 +18,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -54,6 +46,7 @@ interface Props {
   lunchAfterPeriod: number | null
   isLoading?: boolean
   childrenIds?: string[]
+  defaultTab?: "today" | "full"
 }
 
 interface Child {
@@ -67,16 +60,6 @@ interface Child {
   isPrimary?: boolean
 }
 
-const DAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-]
-
 export default function GuardianView({
   dictionary,
   lang,
@@ -86,6 +69,7 @@ export default function GuardianView({
   periods,
   lunchAfterPeriod,
   isLoading,
+  defaultTab = "today",
 }: Props) {
   const d = dictionary?.timetable
   const isRTL = lang === "ar"
@@ -104,7 +88,6 @@ export default function GuardianView({
   const [classInfo, setClassInfo] = useState<any>(null)
 
   // View state
-  const [viewTab, setViewTab] = useState<"today" | "week">("today")
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
   const currentDay = new Date().getDay()
 
@@ -416,98 +399,78 @@ export default function GuardianView({
         </Card>
       )}
 
-      {/* View Tabs */}
-      <Tabs
-        value={viewTab}
-        onValueChange={(v) => setViewTab(v as "today" | "week")}
-      >
-        <TabsList>
-          <TabsTrigger value="today" className="gap-2">
-            <Clock className="h-4 w-4" />
-            Today ({DAY_NAMES[currentDay]})
-          </TabsTrigger>
-          <TabsTrigger value="week" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            Week View
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Today's Schedule */}
-        <TabsContent value="today" className="mt-4">
-          {isLoadingData ? (
-            <Skeleton className="h-64 w-full rounded-lg" />
-          ) : todaySchedule.length === 0 ? (
-            <Card>
-              <CardContent className="text-muted-foreground py-12 text-center">
-                <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                <p>No classes scheduled for today</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {todaySchedule.map((item, idx) => (
-                <Card
-                  key={idx}
-                  className={cn(
-                    "transition-colors",
-                    item.isBreak && "bg-muted/50 border-dashed",
-                    currentClassInfo?.item === item &&
-                      currentClassInfo?.type === "current" &&
-                      "border-green-500 bg-green-50 dark:bg-green-950/20"
-                  )}
-                >
-                  <CardContent className="py-3">
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 text-center">
-                        <p className="font-mono font-semibold">
-                          {formatTime(item.startTime)}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {formatTime(item.endTime)}
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">
-                          {item.isBreak
-                            ? item.periodName
-                            : item.subject || "Free Period"}
-                        </p>
-                        {!item.isBreak && item.teacher && (
-                          <p className="text-muted-foreground text-sm">
-                            {item.teacher} {item.room && `• ${item.room}`}
-                          </p>
-                        )}
-                      </div>
-                      {item.isBreak && <Badge variant="secondary">Break</Badge>}
+      {/* Content based on defaultTab */}
+      {defaultTab === "today" ? (
+        // Today's Schedule
+        isLoadingData ? (
+          <Skeleton className="h-64 w-full rounded-lg" />
+        ) : todaySchedule.length === 0 ? (
+          <Card>
+            <CardContent className="text-muted-foreground py-12 text-center">
+              <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
+              <p>No classes scheduled for today</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {todaySchedule.map((item, idx) => (
+              <Card
+                key={idx}
+                className={cn(
+                  "transition-colors",
+                  item.isBreak && "bg-muted/50 border-dashed",
+                  currentClassInfo?.item === item &&
+                    currentClassInfo?.type === "current" &&
+                    "border-green-500 bg-green-50 dark:bg-green-950/20"
+                )}
+              >
+                <CardContent className="py-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 text-center">
+                      <p className="font-mono font-semibold">
+                        {formatTime(item.startTime)}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {formatTime(item.endTime)}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Week View */}
-        <TabsContent value="week" className="mt-4">
-          {isLoadingData || isLoading ? (
-            <Skeleton className="h-96 w-full rounded-lg" />
-          ) : (
-            <Card>
-              <CardContent className="pt-4">
-                <SimpleGrid
-                  slots={slots}
-                  workingDays={workingDays}
-                  periods={periods}
-                  lunchAfterPeriod={lunchAfterPeriod}
-                  isRTL={isRTL}
-                  viewMode="class"
-                  editable={false}
-                />
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {item.isBreak
+                          ? item.periodName
+                          : item.subject || "Free Period"}
+                      </p>
+                      {!item.isBreak && item.teacher && (
+                        <p className="text-muted-foreground text-sm">
+                          {item.teacher} {item.room && `• ${item.room}`}
+                        </p>
+                      )}
+                    </div>
+                    {item.isBreak && <Badge variant="secondary">Break</Badge>}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
+      ) : // Full Week View
+      isLoadingData || isLoading ? (
+        <Skeleton className="h-96 w-full rounded-lg" />
+      ) : (
+        <Card>
+          <CardContent className="pt-4">
+            <SimpleGrid
+              slots={slots}
+              workingDays={workingDays}
+              periods={periods}
+              lunchAfterPeriod={lunchAfterPeriod}
+              isRTL={isRTL}
+              viewMode="class"
+              editable={false}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

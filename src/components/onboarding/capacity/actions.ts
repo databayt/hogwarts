@@ -14,6 +14,19 @@ import { db } from "@/lib/db"
 import { requireSchoolOwnership } from "../auth-helpers"
 import { capacitySchema, type CapacityFormData } from "./validation"
 
+function getGradeCount(schoolLevel: string | null | undefined): number {
+  switch (schoolLevel) {
+    case "primary":
+      return 6 // grades 1-6
+    case "secondary":
+      return 6 // grades 7-12
+    case "both":
+      return 12 // grades 1-12
+    default:
+      return 12
+  }
+}
+
 export async function updateSchoolCapacity(
   schoolId: string,
   data: CapacityFormData
@@ -23,17 +36,29 @@ export async function updateSchoolCapacity(
 
     const validated = capacitySchema.parse(data)
 
-    const updatedSchool = await db.school.update({
+    // Fetch schoolLevel to compute grade count
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { schoolLevel: true },
+    })
+
+    const gradeCount = getGradeCount(school?.schoolLevel)
+    const maxClasses = gradeCount * validated.sectionsPerGrade
+    const maxStudents = maxClasses * validated.studentsPerSection
+
+    await db.school.update({
       where: { id: schoolId },
       data: {
-        maxStudents: validated.studentCount,
         maxTeachers: validated.teachers,
-        maxClasses: validated.classSections ?? 20,
+        sectionsPerGrade: validated.sectionsPerGrade,
+        studentsPerSection: validated.studentsPerSection,
+        maxClasses,
+        maxStudents,
       },
     })
 
     revalidatePath(`/onboarding/${schoolId}/capacity`)
-    return createActionResponse(updatedSchool)
+    return createActionResponse({ id: schoolId })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createActionResponse(undefined, {
@@ -55,18 +80,20 @@ export async function getSchoolCapacity(
       where: { id: schoolId },
       select: {
         id: true,
-        maxStudents: true,
         maxTeachers: true,
-        maxClasses: true,
+        schoolLevel: true,
+        sectionsPerGrade: true,
+        studentsPerSection: true,
       },
     })
 
     if (!school) throw new Error("School not found")
 
     return createActionResponse({
-      studentCount: school.maxStudents || 400,
       teachers: school.maxTeachers || 10,
-      classSections: school.maxClasses || 20,
+      sectionsPerGrade: school.sectionsPerGrade || 2,
+      studentsPerSection: school.studentsPerSection || 30,
+      schoolLevel: school.schoolLevel || "both",
     })
   } catch (error) {
     return createActionResponse(undefined, error)

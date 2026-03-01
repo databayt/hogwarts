@@ -53,7 +53,7 @@ export async function StaffDashboard({
     try {
       const [qlData, weather] = await Promise.all([
         getQuickLookData(locale),
-        getWeatherData(),
+        getWeatherData("metric", locale),
       ])
       quickLookData = qlData
       weatherData = weather

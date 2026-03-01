@@ -347,11 +347,13 @@ async function getAcademicPerformanceMetricsInternal(
     db.assignment.count({ where: { schoolId } }),
   ])
 
+  // TODO: Implement real GPA calculation, pass rate, and improvement metrics.
+  // These are placeholder values (0) until grading/results models are built.
   return {
-    averageGPA: null,
-    passRate: null,
-    improvement: null,
-    topPerformers: null,
+    averageGPA: 0,
+    passRate: 0,
+    improvement: 0,
+    topPerformers: 0,
     totalExams,
     totalAssignments,
   }
@@ -367,10 +369,10 @@ export async function getAcademicPerformanceMetrics(): Promise<AcademicPerforman
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return {
-      averageGPA: null,
-      passRate: null,
-      improvement: null,
-      topPerformers: null,
+      averageGPA: 0,
+      passRate: 0,
+      improvement: 0,
+      topPerformers: 0,
       totalExams: 0,
       totalAssignments: 0,
     }
@@ -4110,9 +4112,19 @@ export async function getQuickLookData(
           locale as SupportedLanguage
         ),
         // 3. NOTIFICATIONS - unread notifications for user
-        getNotificationsQuickLook(schoolId, userId, last24Hours),
+        getNotificationsQuickLook(
+          schoolId,
+          userId,
+          last24Hours,
+          locale as SupportedLanguage
+        ),
         // 4. MESSAGES - unread messages in conversations
-        getMessagesQuickLook(schoolId, userId, last24Hours),
+        getMessagesQuickLook(
+          schoolId,
+          userId,
+          last24Hours,
+          locale as SupportedLanguage
+        ),
       ])
 
     return {
@@ -4243,7 +4255,8 @@ async function getEventsQuickLook(
 async function getNotificationsQuickLook(
   schoolId: string,
   userId: string,
-  last24Hours: Date
+  last24Hours: Date,
+  locale: SupportedLanguage
 ): Promise<QuickLookItem> {
   const [totalUnread, newNotifications, mostRecent] = await Promise.all([
     // Total unread notifications
@@ -4274,18 +4287,23 @@ async function getNotificationsQuickLook(
     }),
   ])
 
+  const recentTitle = mostRecent?.title
+    ? await getDisplayText(mostRecent.title, "en", locale, schoolId)
+    : ""
+
   return {
     type: "notifications",
     count: totalUnread,
     newCount: newNotifications,
-    recent: mostRecent?.title || "",
+    recent: recentTitle,
   }
 }
 
 async function getMessagesQuickLook(
   schoolId: string,
   userId: string,
-  last24Hours: Date
+  last24Hours: Date,
+  locale: SupportedLanguage
 ): Promise<QuickLookItem> {
   // Get user's conversations with unread counts
   const participations = await db.conversationParticipant.findMany({
@@ -4331,8 +4349,9 @@ async function getMessagesQuickLook(
 
   if (mostRecentParticipation?.conversation.messages[0]) {
     const content = mostRecentParticipation.conversation.messages[0].content
-    recentPreview =
+    const truncated =
       content.length > 50 ? content.substring(0, 47) + "..." : content
+    recentPreview = await getDisplayText(truncated, "en", locale, schoolId)
   }
 
   return {
@@ -5334,6 +5353,8 @@ export interface WorkflowStatus {
   totalTasks: number
 }
 
+// MOCK DATA: This entire function returns hardcoded mock tasks and requests.
+// TODO: Replace with real queries when Task, Request, etc. models exist.
 export async function getStaffDashboardData() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
@@ -5343,9 +5364,7 @@ export async function getStaffDashboardData() {
     where: { schoolId, published: true },
   })
 
-  // TODO: Replace with real queries when Task, Request, etc. models exist
-  // For now, return structured mock data
-
+  // MOCK DATA — tasks and requests below are hardcoded placeholders
   const tasks: StaffTask[] = [
     {
       id: "1",

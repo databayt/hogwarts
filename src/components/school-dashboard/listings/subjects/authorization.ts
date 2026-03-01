@@ -56,8 +56,17 @@ export function checkSubjectPermission(
     return schoolId === subject.schoolId
   }
 
-  // TEACHER, STUDENT, STAFF can read subjects
-  if (["TEACHER", "STUDENT", "STAFF", "ACCOUNTANT"].includes(role)) {
+  // TEACHER, STAFF can read and export subjects
+  if (["TEACHER", "STAFF"].includes(role)) {
+    if (action === "read" || action === "export") {
+      if (!subject?.schoolId) return false
+      return schoolId === subject.schoolId
+    }
+    return false
+  }
+
+  // STUDENT, ACCOUNTANT can read subjects
+  if (["STUDENT", "ACCOUNTANT"].includes(role)) {
     if (action === "read") {
       if (!subject?.schoolId) return false
       return schoolId === subject.schoolId
@@ -107,7 +116,7 @@ export function canCreateSubject(role: UserRole): boolean {
  * Check if role can export subjects
  */
 export function canExportSubjects(role: UserRole): boolean {
-  return ["DEVELOPER", "ADMIN"].includes(role)
+  return ["DEVELOPER", "ADMIN", "TEACHER", "STAFF"].includes(role)
 }
 
 /**
@@ -126,8 +135,9 @@ export function getAllowedActions(role: UserRole): SubjectAction[] {
     case "ADMIN":
       return ["create", "read", "update", "delete", "export", "bulk_action"]
     case "TEACHER":
-    case "STUDENT":
     case "STAFF":
+      return ["read", "export"]
+    case "STUDENT":
     case "ACCOUNTANT":
       return ["read"]
     default:

@@ -776,9 +776,9 @@ export async function getTeachers(
         : {}),
       ...(sp.status
         ? sp.status === "active"
-          ? { NOT: { userId: null } }
+          ? { employmentStatus: "ACTIVE" }
           : sp.status === "inactive"
-            ? { userId: null }
+            ? { NOT: { employmentStatus: "ACTIVE" } }
             : {}
         : {}),
     }
@@ -799,13 +799,13 @@ export async function getTeachers(
       teacherModel.count({ where }),
     ])
 
-    // Map results
+    // Map results — use employmentStatus for consistency with content.tsx
     const mapped = (rows as Array<any>).map((t) => ({
       id: t.id as string,
       userId: t.userId as string | null,
       name: [t.givenName, t.surname].filter(Boolean).join(" "),
       emailAddress: t.emailAddress || "-",
-      status: t.userId ? "active" : "inactive",
+      status: t.employmentStatus === "ACTIVE" ? "active" : "inactive",
       createdAt: (t.createdAt as Date).toISOString(),
     }))
 
@@ -876,9 +876,9 @@ export async function getTeachersCSV(
         : {}),
       ...(sp.status
         ? sp.status === "active"
-          ? { NOT: { userId: null } }
+          ? { employmentStatus: "ACTIVE" }
           : sp.status === "inactive"
-            ? { userId: null }
+            ? { NOT: { employmentStatus: "ACTIVE" } }
             : {}
         : {}),
     }
@@ -902,7 +902,7 @@ export async function getTeachersCSV(
           },
           take: 1, // Get primary department
         },
-        teacherPhoneNumbers: {
+        phoneNumbers: {
           where: {
             isPrimary: true,
           },
@@ -915,7 +915,7 @@ export async function getTeachersCSV(
       orderBy: [{ givenName: "asc" }, { surname: "asc" }],
     })
 
-    // Transform data for CSV export
+    // Transform data for CSV export — use employmentStatus for consistency
     const exportData = teachers.map((teacher: any) => ({
       teacherId: teacher.id,
       employeeId: teacher.employeeId || "",
@@ -926,14 +926,14 @@ export async function getTeachersCSV(
       email: teacher.emailAddress || "",
       userEmail: teacher.user?.email || "",
       phone:
-        teacher.teacherPhoneNumbers && teacher.teacherPhoneNumbers.length > 0
-          ? teacher.teacherPhoneNumbers[0].phoneNumber
+        teacher.phoneNumbers && teacher.phoneNumbers.length > 0
+          ? teacher.phoneNumbers[0].phoneNumber
           : "",
       department:
         teacher.teacherDepartments && teacher.teacherDepartments.length > 0
           ? teacher.teacherDepartments[0].department.departmentName
           : "",
-      status: teacher.userId ? "Active" : "Inactive",
+      status: teacher.employmentStatus === "ACTIVE" ? "Active" : "Inactive",
       createdAt: new Date(teacher.createdAt).toISOString().split("T")[0],
     }))
 
@@ -1102,8 +1102,7 @@ export async function getTeachersExportData(
       phone: string | null
       department: string | null
       qualification: string | null
-      specialization: string | null
-      hireDate: Date | null
+      joiningDate: Date | null
       status: string
       createdAt: Date
     }>
@@ -1146,9 +1145,9 @@ export async function getTeachersExportData(
         : {}),
       ...(sp.status
         ? sp.status === "active"
-          ? { NOT: { userId: null } }
+          ? { employmentStatus: "ACTIVE" }
           : sp.status === "inactive"
-            ? { userId: null }
+            ? { NOT: { employmentStatus: "ACTIVE" } }
             : {}
         : {}),
     }
@@ -1172,7 +1171,7 @@ export async function getTeachersExportData(
           },
           take: 1,
         },
-        teacherPhoneNumbers: {
+        phoneNumbers: {
           where: {
             isPrimary: true,
           },
@@ -1181,11 +1180,15 @@ export async function getTeachersExportData(
           },
           take: 1,
         },
+        qualifications: {
+          select: { degree: true, fieldOfStudy: true },
+          take: 1,
+        },
       },
       orderBy: [{ givenName: "asc" }, { surname: "asc" }],
     })
 
-    // Transform data for export
+    // Transform data for export — use employmentStatus for consistency
     const exportData = teachers.map((teacher: any) => ({
       id: teacher.id,
       employeeId: teacher.employeeId || null,
@@ -1196,17 +1199,24 @@ export async function getTeachersExportData(
       email: teacher.emailAddress || null,
       userEmail: teacher.user?.email || null,
       phone:
-        teacher.teacherPhoneNumbers && teacher.teacherPhoneNumbers.length > 0
-          ? teacher.teacherPhoneNumbers[0].phoneNumber
+        teacher.phoneNumbers && teacher.phoneNumbers.length > 0
+          ? teacher.phoneNumbers[0].phoneNumber
           : null,
       department:
         teacher.teacherDepartments && teacher.teacherDepartments.length > 0
           ? teacher.teacherDepartments[0].department.departmentName
           : null,
-      qualification: teacher.qualification || null,
-      specialization: teacher.specialization || null,
-      hireDate: teacher.hireDate ? new Date(teacher.hireDate) : null,
-      status: teacher.userId ? "Active" : "Inactive",
+      qualification:
+        teacher.qualifications && teacher.qualifications.length > 0
+          ? [
+              teacher.qualifications[0].degree,
+              teacher.qualifications[0].fieldOfStudy,
+            ]
+              .filter(Boolean)
+              .join(" - ")
+          : null,
+      joiningDate: teacher.joiningDate ? new Date(teacher.joiningDate) : null,
+      status: teacher.employmentStatus === "ACTIVE" ? "Active" : "Inactive",
       createdAt: new Date(teacher.createdAt),
     }))
 

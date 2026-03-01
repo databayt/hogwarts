@@ -18,6 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 export interface InteractiveBarChartData {
@@ -150,6 +151,10 @@ function InteractiveBarChartInner({
   secondaryLabel = "Mobile",
 }: InteractiveBarChartProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const cl = dictionary?.school?.dashboard?.chartLabels as
+    | Record<string, string>
+    | undefined
   // Transform custom data to use primary/secondary keys if provided
   const chartData = React.useMemo(() => {
     if (data) {
@@ -170,7 +175,7 @@ function InteractiveBarChartInner({
     () =>
       ({
         views: {
-          label: "Total",
+          label: cl?.total || "Total",
         },
         primary: {
           label: primaryLabel,

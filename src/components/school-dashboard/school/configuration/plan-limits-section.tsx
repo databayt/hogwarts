@@ -98,7 +98,7 @@ export function PlanLimitsSection({
   currentUsage,
   lang,
 }: Props) {
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(true)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string>("")
 

@@ -17,5 +17,5 @@ export const metadata = {
 // Redirect to the first step (personal information)
 export default async function ApplicationFormPage({ params }: Props) {
   const { lang, subdomain, id } = await params
-  redirect(`/${lang}/apply/${id}/personal`)
+  redirect(`/${lang}/s/${subdomain}/apply/${id}/personal`)
 }

@@ -31,13 +31,13 @@ export function computeQualityScore(metrics: {
 export async function getRankedSubjects(options?: {
   limit?: number
   country?: string
-  system?: string
+  curriculum?: string
 }) {
-  const { limit = 20, country, system } = options ?? {}
+  const { limit = 20, country, curriculum } = options ?? {}
 
   const where: Record<string, unknown> = { status: "PUBLISHED" }
   if (country) where.country = country
-  if (system) where.system = system
+  if (curriculum) where.curriculum = curriculum
 
   const subjects = await db.catalogSubject.findMany({
     where,
@@ -54,7 +54,7 @@ export async function getRankedSubjects(options?: {
       department: true,
       levels: true,
       country: true,
-      system: true,
+      curriculum: true,
       thumbnailKey: true,
       color: true,
       usageCount: true,
@@ -235,7 +235,7 @@ export async function getEngagementSummary() {
         averageRating: true,
         ratingCount: true,
         country: true,
-        system: true,
+        curriculum: true,
       },
     }),
     db.catalogLesson.findMany({

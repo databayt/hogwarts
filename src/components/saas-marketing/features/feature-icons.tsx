@@ -146,23 +146,39 @@ export const DocumentsIcon = (props: IconProps) => (
   </svg>
 )
 
-// Category → Icon resolver
+// AI — Sparkle/brain icon
+export const AIIcon = (props: IconProps) => (
+  <svg viewBox="0 0 24 24" {...props}>
+    <path
+      fill="currentColor"
+      d="M9 4a1 1 0 0 1 1 1a3 3 0 0 0 3 3a1 1 0 1 1 0 2a3 3 0 0 0-3 3a1 1 0 1 1-2 0a3 3 0 0 0-3-3a1 1 0 1 1 0-2a3 3 0 0 0 3-3a1 1 0 0 1 1-1m8-2a1 1 0 0 1 1 1a5 5 0 0 0 5 5a1 1 0 1 1 0 2a5 5 0 0 0-5 5a1 1 0 1 1-2 0a5 5 0 0 0-5-5a1 1 0 1 1 0-2a5 5 0 0 0 5-5a1 1 0 0 1 1-1"
+    />
+  </svg>
+)
+
+// LMS — Monitor/screen icon
+export const LMSIcon = (props: IconProps) => (
+  <svg viewBox="0 0 24 24" {...props}>
+    <path
+      fill="currentColor"
+      d="M21 2H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7v2H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-2v-2h7a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2m0 14H3V4h18z"
+    />
+  </svg>
+)
+
+// Category → Icon resolver (10 OpenEduCat modules)
 const categoryIconMap: Record<string, (props: IconProps) => React.JSX.Element> =
   {
     core: CoreIcon,
-    academic: AcademicIcon,
-    scheduling: SchedulingIcon,
-    finance: FinanceIcon,
-    facilities: FacilitiesIcon,
-    hr: HRIcon,
-    operations: OperationsIcon,
-    analytics: AnalyticsIcon,
+    essential: AcademicIcon,
+    advance: ELearningIcon,
+    erp: FinanceIcon,
+    management: FacilitiesIcon,
     communication: CommunicationIcon,
-    enrollment: EnrollmentIcon,
-    community: CommunityIcon,
-    welfare: WelfareIcon,
-    "e-learning": ELearningIcon,
-    documents: DocumentsIcon,
+    lms: LMSIcon,
+    technical: OperationsIcon,
+    integration: CommunityIcon,
+    ai: AIIcon,
   }
 
 export function getCategoryIcon(

@@ -21,6 +21,7 @@ import {
   type UploadedFileResult,
 } from "@/components/file"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { uploadReceipt } from "./actions"
 
@@ -36,6 +37,11 @@ const RECEIPT_ACCEPT = {
 
 export function UploadForm({ locale = "en" }: UploadFormProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const rp = (dictionary as any)?.finance?.receiptPage as
+    | Record<string, string>
+    | undefined
+
   const [isProcessing, setIsProcessing] = React.useState(false)
   const [uploadedFiles, setUploadedFiles] = React.useState<
     UploadedFileResult[]
@@ -43,7 +49,9 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
 
   const handleUploadComplete = (files: UploadedFileResult[]) => {
     setUploadedFiles(files)
-    toast.success("File uploaded successfully! Ready to process.")
+    toast.success(
+      rp?.fileUploaded || "File uploaded successfully! Ready to process."
+    )
   }
 
   const handleUploadError = (error: string) => {
@@ -52,7 +60,7 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
 
   const handleProcess = async () => {
     if (uploadedFiles.length === 0) {
-      toast.error("Please upload a file first.")
+      toast.error(rp?.pleaseUploadFirst || "Please upload a file first.")
       return
     }
 
@@ -70,17 +78,24 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
 
       if (result.success && result.data) {
         toast.success(
-          "Receipt processed successfully! AI extraction in progress..."
+          rp?.receiptProcessed ||
+            "Receipt processed successfully! AI extraction in progress..."
         )
         setUploadedFiles([])
         // Redirect to receipt detail page (relative to current route)
         router.push(`${result.data.receiptId}`)
         router.refresh()
       } else {
-        toast.error(result.error || "Processing failed. Please try again.")
+        toast.error(
+          result.error ||
+            rp?.processingFailed ||
+            "Processing failed. Please try again."
+        )
       }
     } catch (error) {
-      toast.error("An unexpected error occurred. Please try again.")
+      toast.error(
+        rp?.unexpectedError || "An unexpected error occurred. Please try again."
+      )
       console.error("Processing error:", error)
     } finally {
       setIsProcessing(false)
@@ -108,9 +123,11 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
             <div className="bg-primary/10 mx-auto flex h-12 w-12 items-center justify-center rounded-full">
               <Icons.upload className="text-primary h-6 w-6" />
             </div>
-            <p className="text-sm font-medium">File uploaded successfully</p>
+            <p className="text-sm font-medium">
+              {rp?.fileUploadedSuccess || "File uploaded successfully"}
+            </p>
             <p className="text-muted-foreground text-xs">
-              Ready to process with AI extraction
+              {rp?.readyToProcess || "Ready to process with AI extraction"}
             </p>
             <Button
               type="button"
@@ -118,7 +135,7 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
               size="sm"
               onClick={() => setUploadedFiles([])}
             >
-              Change File
+              {rp?.changeFile || "Change File"}
             </Button>
           </div>
         </div>
@@ -133,12 +150,12 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
         {isProcessing ? (
           <>
             <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
-            Processing Receipt...
+            {rp?.processingReceipt || "Processing Receipt..."}
           </>
         ) : (
           <>
             <Icons.upload className="me-2 h-4 w-4" />
-            Process Receipt
+            {rp?.processReceipt || "Process Receipt"}
           </>
         )}
       </Button>

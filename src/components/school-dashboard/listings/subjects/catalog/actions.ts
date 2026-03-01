@@ -61,7 +61,7 @@ export async function toggleSubjectSelection(
       data: { usageCount },
     })
 
-    revalidatePath("/subjects/catalog")
+    revalidatePath("/", "layout")
     return { success: true, selected: false }
   }
 
@@ -86,7 +86,7 @@ export async function toggleSubjectSelection(
     data: { usageCount },
   })
 
-  revalidatePath("/subjects/catalog")
+  revalidatePath("/", "layout")
   return { success: true, selected: true }
 }
 
@@ -126,7 +126,7 @@ export async function bulkSelectSubjects(
     }
   }
 
-  revalidatePath("/subjects/catalog")
+  revalidatePath("/", "layout")
   return { success: true, added }
 }
 
@@ -158,7 +158,7 @@ export async function updateSubjectSelection(
     data,
   })
 
-  revalidatePath("/subjects/catalog")
+  revalidatePath("/", "layout")
   return { success: true }
 }
 
@@ -172,8 +172,7 @@ export async function toggleContentOverride(input: {
   isHidden: boolean
   reason?: string
 }) {
-  const { schoolId } = await requireSchoolAdmin()
-  const session = await auth()
+  const { session, schoolId } = await requireSchoolAdmin()
   const userId = session?.user?.id
 
   const validated = contentOverrideSchema.parse(input)
@@ -220,7 +219,7 @@ export async function toggleContentOverride(input: {
     })
   }
 
-  revalidatePath("/subjects/catalog")
+  revalidatePath("/", "layout")
   return { success: true }
 }
 

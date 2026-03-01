@@ -25,7 +25,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import { getAvailableClassesForPlacement, placeStudentInClass } from "./actions"
+import {
+  getAvailableSectionsForPlacement,
+  placeStudentInSection,
+} from "./actions"
 
 interface AdmittedStudent {
   applicationId: string
@@ -40,7 +43,7 @@ interface BulkPlacementProps {
 }
 
 export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
-  const [classes, setClasses] = useState<
+  const [sections, setSections] = useState<
     Array<{
       id: string
       name: string
@@ -51,19 +54,37 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
     new Set()
   )
-  const [targetClassId, setTargetClassId] = useState("")
+  const [targetSectionId, setTargetSectionId] = useState("")
   const [isPending, startTransition] = useTransition()
   const [placedCount, setPlacedCount] = useState(0)
 
   const unplacedStudents = students.filter((s) => !s.hasPlacement)
 
   useEffect(() => {
-    getAvailableClassesForPlacement({ applyingForClass: "" }).then((res) => {
-      if (res.success && res.data) {
-        setClasses(res.data)
+    // Load sections for all unique grades that unplaced students are applying for
+    const uniqueGrades = [
+      ...new Set(
+        unplacedStudents.map((s) => s.applyingForClass).filter(Boolean)
+      ),
+    ]
+    if (uniqueGrades.length === 0) return
+
+    Promise.all(
+      uniqueGrades.map((grade) =>
+        getAvailableSectionsForPlacement({ applyingForClass: grade })
+      )
+    ).then((results) => {
+      const allSections = new Map<string, (typeof sections)[number]>()
+      for (const res of results) {
+        if (res.success && res.data) {
+          for (const sec of res.data) {
+            allSections.set(sec.id, sec)
+          }
+        }
       }
+      setSections([...allSections.values()])
     })
-  }, [])
+  }, [unplacedStudents.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleStudent = (applicationId: string) => {
     setSelectedStudents((prev) => {
@@ -86,16 +107,16 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
   }
 
   const handleBulkPlace = () => {
-    if (!targetClassId || selectedStudents.size === 0) return
+    if (!targetSectionId || selectedStudents.size === 0) return
 
     startTransition(async () => {
       let successCount = 0
       let errorCount = 0
 
       for (const applicationId of selectedStudents) {
-        const result = await placeStudentInClass({
+        const result = await placeStudentInSection({
           applicationId,
-          classId: targetClassId,
+          sectionId: targetSectionId,
         })
         if (result.success) {
           successCount++
@@ -123,7 +144,7 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
       <div className="flex items-center gap-2 rounded-lg border p-4">
         <Check className="text-green-600" />
         <p className="text-sm">
-          All admitted students have been placed in classes.
+          All admitted students have been placed in sections.
         </p>
       </div>
     )
@@ -133,24 +154,24 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-medium">Bulk Class Placement</h3>
+          <h3 className="font-medium">Bulk Section Placement</h3>
           <p className="text-muted-foreground text-sm">
-            {unplacedStudents.length} admitted student(s) without class
+            {unplacedStudents.length} admitted student(s) without section
             placement
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Select value={targetClassId} onValueChange={setTargetClassId}>
+          <Select value={targetSectionId} onValueChange={setTargetSectionId}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Target class" />
+              <SelectValue placeholder="Target section" />
             </SelectTrigger>
             <SelectContent>
-              {classes.map((cls) => {
-                const isFull = cls.enrolledStudents >= cls.maxCapacity
+              {sections.map((sec) => {
+                const isFull = sec.enrolledStudents >= sec.maxCapacity
                 return (
-                  <SelectItem key={cls.id} value={cls.id} disabled={isFull}>
-                    {cls.name} ({cls.enrolledStudents}/{cls.maxCapacity})
+                  <SelectItem key={sec.id} value={sec.id} disabled={isFull}>
+                    {sec.name} ({sec.enrolledStudents}/{sec.maxCapacity})
                   </SelectItem>
                 )
               })}
@@ -160,7 +181,7 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
           <Button
             onClick={handleBulkPlace}
             disabled={
-              !targetClassId || selectedStudents.size === 0 || isPending
+              !targetSectionId || selectedStudents.size === 0 || isPending
             }
           >
             {isPending

@@ -141,6 +141,8 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   }
 
   const d = dictionary?.finance
+  const fd = (dictionary as any)?.finance
+  const mp = fd?.mainPage as Record<string, string> | undefined
 
   return (
     <div className="space-y-6">
@@ -254,7 +256,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                   <p className="text-lg font-semibold">{invoicesCount}</p>
                   {unpaidInvoices > 0 && (
                     <span className="bg-destructive/10 text-destructive rounded px-1.5 py-0 text-[10px]">
-                      {unpaidInvoices} unpaid
+                      {unpaidInvoices} {mp?.unpaid || "unpaid"}
                     </span>
                   )}
                 </div>
@@ -286,7 +288,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                     {studentsWithFeesCount}
                   </p>
                   <span className="bg-muted text-muted-foreground rounded px-1.5 py-0 text-[10px]">
-                    students
+                    {mp?.students || "students"}
                   </span>
                 </div>
               </div>
@@ -318,7 +320,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                   </p>
                   {pendingPayrollCount > 0 && (
                     <span className="rounded bg-amber-500/10 px-1.5 py-0 text-[10px] text-amber-600">
-                      {pendingPayrollCount} pending
+                      {pendingPayrollCount} {mp?.pendingLabel || "pending"}
                     </span>
                   )}
                 </div>
@@ -348,7 +350,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 <div className="flex items-center gap-2">
                   <p className="text-lg font-semibold">{reportsCount}</p>
                   <span className="bg-muted text-muted-foreground rounded px-1.5 py-0 text-[10px]">
-                    generated
+                    {mp?.generated || "generated"}
                   </span>
                 </div>
               </div>
@@ -366,7 +368,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
 
       {/* Quick Actions */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href={`/${lang}/finance/invoice/new`}>
+        <Link href={`/${lang}/finance/invoice`}>
           <Card className="group hover:border-primary/30 cursor-pointer p-4 transition-all duration-300 hover:shadow-md">
             <CardContent className="p-0">
               <div className="flex items-center gap-3">
@@ -378,7 +380,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                     {d?.cards?.invoicing?.create || "Create Invoice"}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Bill clients & students
+                    {mp?.billClients || "Bill clients & students"}
                   </p>
                 </div>
               </div>
@@ -386,7 +388,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           </Card>
         </Link>
 
-        <Link href={`/${lang}/finance/payroll/process`}>
+        <Link href={`/${lang}/finance/payroll`}>
           <Card className="group hover:border-primary/30 cursor-pointer p-4 transition-all duration-300 hover:shadow-md">
             <CardContent className="p-0">
               <div className="flex items-center gap-3">
@@ -398,7 +400,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                     {d?.cards?.payroll?.process || "Process Payroll"}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Run monthly payroll
+                    {mp?.runPayroll || "Run monthly payroll"}
                   </p>
                 </div>
               </div>
@@ -418,7 +420,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                     {d?.cards?.expenses?.title || "Track Expenses"}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Approve & categorize
+                    {mp?.approveCategories || "Approve & categorize"}
                   </p>
                 </div>
               </div>
@@ -426,7 +428,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           </Card>
         </Link>
 
-        <Link href={`/${lang}/finance/reports/generate`}>
+        <Link href={`/${lang}/finance/reports`}>
           <Card className="group hover:border-primary/30 cursor-pointer p-4 transition-all duration-300 hover:shadow-md">
             <CardContent className="p-0">
               <div className="flex items-center gap-3">
@@ -438,7 +440,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                     {d?.cards?.reports?.generate || "Generate Report"}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    P&L, Balance Sheet
+                    {mp?.plBalanceSheet || "P&L, Balance Sheet"}
                   </p>
                 </div>
               </div>

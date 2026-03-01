@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { RecentTransaction } from "./types"
@@ -30,6 +31,11 @@ export function TransactionList({
   className,
 }: TransactionListProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const dp = fd?.dashboardPage as Record<string, string> | undefined
+  const c = fd?.common as Record<string, string> | undefined
+
   const getIcon = (type: RecentTransaction["type"]) => {
     switch (type) {
       case "income":
@@ -46,19 +52,19 @@ export function TransactionList({
       case "completed":
         return (
           <Badge variant="outline" className="text-green-600">
-            Completed
+            {dp?.completed || "Completed"}
           </Badge>
         )
       case "pending":
         return (
           <Badge variant="outline" className="text-yellow-600">
-            Pending
+            {c?.pending || "Pending"}
           </Badge>
         )
       case "failed":
         return (
           <Badge variant="outline" className="text-red-600">
-            Failed
+            {dp?.failed || "Failed"}
           </Badge>
         )
     }
@@ -87,9 +93,11 @@ export function TransactionList({
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle>
+            {dp?.recentTransactions || "Recent Transactions"}
+          </CardTitle>
           <CardDescription>
-            No transactions found for this period
+            {dp?.noTransactions || "No transactions found for this period"}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -101,12 +109,16 @@ export function TransactionList({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>Latest financial activities</CardDescription>
+            <CardTitle>
+              {dp?.recentTransactions || "Recent Transactions"}
+            </CardTitle>
+            <CardDescription>
+              {dp?.latestActivities || "Latest financial activities"}
+            </CardDescription>
           </div>
           <Link href="/finance/transactions">
             <Button variant="outline" size="sm">
-              View All
+              {c?.viewAll || "View All"}
             </Button>
           </Link>
         </div>
@@ -160,7 +172,9 @@ export function TransactionList({
         {/* Summary */}
         <div className="mt-4 grid grid-cols-3 gap-4 border-t pt-4 text-center">
           <div>
-            <p className="text-muted-foreground text-xs">Total Income</p>
+            <p className="text-muted-foreground text-xs">
+              {dp?.totalIncome || "Total Income"}
+            </p>
             <p className="text-sm font-semibold text-green-600">
               SDG{" "}
               {new Intl.NumberFormat(locale).format(
@@ -173,7 +187,9 @@ export function TransactionList({
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">Total Expenses</p>
+            <p className="text-muted-foreground text-xs">
+              {dp?.totalExpenses || "Total Expenses"}
+            </p>
             <p className="text-sm font-semibold text-red-600">
               SDG{" "}
               {new Intl.NumberFormat(locale).format(
@@ -186,7 +202,9 @@ export function TransactionList({
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">Pending</p>
+            <p className="text-muted-foreground text-xs">
+              {c?.pending || "Pending"}
+            </p>
             <p className="text-sm font-semibold text-yellow-600">
               {transactions.filter((t) => t.status === "pending").length}
             </p>

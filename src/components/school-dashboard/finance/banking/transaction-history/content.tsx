@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getAccounts } from "@/components/school-dashboard/finance/banking/actions/bank.actions"
 
 import { TransactionsTableImproved as TransactionsTable } from "./table"
@@ -19,6 +21,9 @@ export async function TransactionHistoryContent({
   lang,
 }: TransactionHistoryContentProps) {
   const page = Number(searchParams?.page) || 1
+  const fullDict = await getDictionary(lang as Locale)
+  const fd = (fullDict as any)?.finance
+  const bt = fd?.bankingTransactions as Record<string, string> | undefined
   const accountsResult = await getAccounts({ userId: user.id })
 
   if (
@@ -29,10 +34,10 @@ export async function TransactionHistoryContent({
     return (
       <div className="rounded-lg border p-12 text-center">
         <h3 className="mb-2 text-lg font-semibold">
-          {dictionary?.noTransactionHistory || "No transaction history"}
+          {bt?.noTransactionHistory || "No transaction history"}
         </h3>
         <p className="text-muted-foreground">
-          {dictionary?.connectBankForHistory ||
+          {bt?.connectBankForHistory ||
             "Connect a bank account to see your transaction history"}
         </p>
       </div>

@@ -28,6 +28,7 @@ interface ClassroomsTableProps {
   initialData: ClassroomRow[]
   total: number
   lang: Locale
+  subdomain: string
   perPage?: number
 }
 
@@ -35,6 +36,7 @@ function ClassroomsTableInner({
   initialData,
   total,
   lang,
+  subdomain,
   perPage = 20,
 }: ClassroomsTableProps) {
   const router = useRouter()
@@ -87,10 +89,11 @@ function ClassroomsTableInner({
     () =>
       getClassroomColumns(
         lang,
+        subdomain,
         { onEdit: handleEdit, onDelete: handleDelete },
         d
       ),
-    [lang, handleEdit, handleDelete, d]
+    [lang, subdomain, handleEdit, handleDelete, d]
   )
 
   const { table } = useDataTable<ClassroomRow>({

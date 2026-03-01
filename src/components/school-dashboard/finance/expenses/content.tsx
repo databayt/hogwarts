@@ -29,12 +29,18 @@ interface Props {
 }
 
 export default async function ExpensesContent({ dictionary, lang }: Props) {
+  const fd = (dictionary as any)?.finance
+  const ep = fd?.expensesPage as Record<string, string> | undefined
+  const c = fd?.common as Record<string, string> | undefined
+
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
       <div>
-        <p className="text-muted-foreground">School context not found</p>
+        <p className="text-muted-foreground">
+          {c?.schoolNotFound || "School context not found"}
+        </p>
       </div>
     )
   }
@@ -67,7 +73,8 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
     return (
       <div>
         <p className="text-muted-foreground">
-          You don't have permission to view expenses
+          {c?.noPermissionExpenses ||
+            "You don't have permission to view expenses"}
         </p>
       </div>
     )
@@ -106,52 +113,52 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
     }
   }
 
-  const d = dictionary?.finance?.expenses
-
   return (
     <div className="space-y-6">
       <DashboardGrid type="stats">
         <StatsCard
-          title="Total Expenses"
+          title={ep?.totalExpenses || "Total Expenses"}
           value={formatCurrency(totalExpenses)}
-          description="Approved expenses"
+          description={ep?.approvedExpenses || "Approved expenses"}
           icon={DollarSign}
         />
         <StatsCard
-          title="Pending"
+          title={ep?.pendingExpenses || "Pending"}
           value={pendingExpensesCount}
-          description="Awaiting approval"
+          description={ep?.awaitingApproval || "Awaiting approval"}
           icon={CircleAlert}
         />
         <StatsCard
-          title="All Expenses"
+          title={ep?.allExpenses || "All Expenses"}
           value={expensesCount}
-          description="Total submitted"
+          description={ep?.totalSubmitted || "Total submitted"}
           icon={Receipt}
         />
         <StatsCard
-          title="Categories"
+          title={ep?.categories || "Categories"}
           value={categoriesCount}
-          description="Expense types"
+          description={ep?.expenseTypes || "Expense types"}
           icon={FolderOpen}
         />
       </DashboardGrid>
 
       <DashboardGrid type="features">
         <FeatureCard
-          title="All Expenses"
-          description="View and manage expense submissions"
+          title={ep?.allExpenses || "All Expenses"}
+          description={
+            ep?.viewManageExpenses || "View and manage expense submissions"
+          }
           icon={Receipt}
           isPrimary
           primaryAction={{
-            label: "View Expenses",
+            label: ep?.viewExpenses || "View Expenses",
             href: `/${lang}/finance/expenses/all`,
             count: expensesCount,
           }}
           secondaryAction={
             canCreate
               ? {
-                  label: "Submit Expense",
+                  label: ep?.submitExpense || "Submit Expense",
                   href: `/${lang}/finance/expenses/new`,
                 }
               : undefined
@@ -159,33 +166,37 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
         />
         {canApprove && (
           <FeatureCard
-            title="Approval Workflow"
-            description="Review and approve expense requests"
+            title={ep?.approvalWorkflow || "Approval Workflow"}
+            description={
+              ep?.reviewApproveExpenses || "Review and approve expense requests"
+            }
             icon={CircleCheck}
             primaryAction={{
-              label: "Pending Approval",
+              label: c?.pendingApproval || "Pending Approval",
               href: `/${lang}/finance/expenses/approval`,
               count: pendingExpensesCount,
             }}
             secondaryAction={{
-              label: "Approved",
+              label: fd?.approved || "Approved",
               href: `/${lang}/finance/expenses/approved`,
             }}
           />
         )}
         {canPencil && (
           <FeatureCard
-            title="Expense Categories"
-            description="Manage expense categories and types"
+            title={ep?.expenseCategories || "Expense Categories"}
+            description={
+              ep?.manageCategories || "Manage expense categories and types"
+            }
             icon={FolderOpen}
             primaryAction={{
-              label: "View Categories",
+              label: ep?.viewCategories || "View Categories",
               href: `/${lang}/finance/expenses/categories`,
             }}
             secondaryAction={
               canCreate
                 ? {
-                    label: "Create Category",
+                    label: ep?.createCategory || "Create Category",
                     href: `/${lang}/finance/expenses/categories/new`,
                   }
                 : undefined
@@ -194,30 +205,34 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
         )}
         {canApprove && (
           <FeatureCard
-            title="Reimbursements"
-            description="Process expense reimbursements"
+            title={ep?.reimbursements || "Reimbursements"}
+            description={
+              ep?.processReimbursements || "Process expense reimbursements"
+            }
             icon={DollarSign}
             primaryAction={{
-              label: "Process",
+              label: c?.process || "Process",
               href: `/${lang}/finance/expenses/reimbursement`,
             }}
             secondaryAction={{
-              label: "History",
+              label: c?.history || "History",
               href: `/${lang}/finance/expenses/reimbursement/history`,
             }}
           />
         )}
         {canExport && (
           <FeatureCard
-            title="Expense Reports"
-            description="Generate expense analysis reports"
+            title={ep?.expenseReports || "Expense Reports"}
+            description={
+              ep?.generateExpenseReports || "Generate expense analysis reports"
+            }
             icon={TrendingUp}
             primaryAction={{
-              label: "View Reports",
+              label: c?.viewReports || "View Reports",
               href: `/${lang}/finance/expenses/reports`,
             }}
             secondaryAction={{
-              label: "Export",
+              label: fd?.export || "Export",
               href: `/${lang}/finance/expenses/reports/export`,
             }}
           />

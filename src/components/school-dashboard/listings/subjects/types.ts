@@ -11,6 +11,7 @@ export type SubjectDTO = {
   schoolId: string
   departmentId: string
   subjectName: string
+  catalogSubjectId?: string | null
   department?: { id: string; departmentName: string } | null
   createdAt: Date
   updatedAt: Date

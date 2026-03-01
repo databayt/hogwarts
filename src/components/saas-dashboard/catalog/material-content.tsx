@@ -15,6 +15,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
 
+import { CreateMaterialDialog } from "./create-material-dialog"
 import type { CatalogMaterialRow } from "./material-columns"
 import { MaterialTable } from "./material-table"
 
@@ -69,6 +70,11 @@ export async function MaterialContent({ lang }: Props) {
 
   return (
     <PageContainer>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Materials</h2>
+        <CreateMaterialDialog />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

@@ -32,7 +32,7 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({
       description:
         "Share some basic info, like where it is, and how many students it has.",
       illustration:
-        "https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg",
+        "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg",
     },
     {
       number: 2,

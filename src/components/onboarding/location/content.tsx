@@ -37,11 +37,18 @@ export default function LocationContent({ dictionary }: Props) {
   if (loading) {
     return (
       <FormLayout>
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-full" />
+        <div className="space-y-3">
+          <Skeleton className="h-9 w-56" />
+          <Skeleton className="h-4 w-72" />
         </div>
-        <Skeleton className="h-[300px] w-full rounded-lg" />
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-10 w-full rounded-md" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+        </div>
       </FormLayout>
     )
   }

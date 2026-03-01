@@ -37,7 +37,7 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
         name: true,
         domain: true,
         country: true,
-        system: true,
+        curriculum: true,
       },
     })
 
@@ -56,9 +56,9 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
 
     // Auto-setup timetable structure (school year, terms, periods)
     // Non-blocking: timetable setup failure should NOT prevent publishing
-    if (school.system) {
+    if (school.curriculum) {
       try {
-        await applyTimetableStructureForNewSchool(schoolId, school.system)
+        await applyTimetableStructureForNewSchool(schoolId, school.curriculum)
       } catch (timetableError) {
         console.error(
           `[publishSchool] Timetable setup failed for school ${schoolId}:`,
@@ -84,7 +84,9 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
     revalidatePath(`/onboarding/${schoolId}`)
 
     return createActionResponse({
-      ...school,
+      id: school.id,
+      name: school.name,
+      domain: school.domain,
       redirectUrl: `/s/${school.domain}`,
     })
   } catch (error) {
@@ -115,7 +117,14 @@ export async function getPublishStatus(
     if (!school) throw new Error("School not found")
 
     return createActionResponse({
-      ...school,
+      id: school.id,
+      name: school.name,
+      domain: school.domain,
+      isPublished: school.isPublished,
+      onboardingCompletedAt:
+        school.onboardingCompletedAt?.toISOString() ?? null,
+      schoolType: school.schoolType,
+      address: school.address,
       tuitionFee: school.tuitionFee ? Number(school.tuitionFee) : null,
     })
   } catch (error) {

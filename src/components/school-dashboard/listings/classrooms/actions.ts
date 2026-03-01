@@ -70,7 +70,9 @@ export async function getClassrooms(
         roomName: true,
         capacity: true,
         typeId: true,
+        gradeId: true,
         classroomType: { select: { id: true, name: true } },
+        grade: { select: { id: true, name: true } },
         _count: { select: { classes: true, timetables: true } },
         createdAt: true,
       },
@@ -86,6 +88,8 @@ export async function getClassrooms(
       capacity: r.capacity,
       typeName: r.classroomType.name,
       typeId: r.typeId,
+      gradeName: r.grade?.name ?? null,
+      gradeId: r.gradeId,
       classCount: r._count.classes,
       timetableCount: r._count.timetables,
       createdAt: r.createdAt.toISOString(),
@@ -116,6 +120,17 @@ export async function getClassroomTypes() {
   })
 }
 
+export async function getGrades() {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return []
+
+  return db.academicGrade.findMany({
+    where: { schoolId },
+    select: { id: true, name: true },
+    orderBy: { gradeNumber: "asc" },
+  })
+}
+
 export async function getClassroom(input: { id: string }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return null
@@ -136,7 +151,9 @@ export async function getClassroom(input: { id: string }) {
       roomName: true,
       capacity: true,
       typeId: true,
+      gradeId: true,
       classroomType: { select: { id: true, name: true } },
+      grade: { select: { id: true, name: true } },
     },
   })
 }
@@ -163,12 +180,32 @@ export async function createClassroom(
 
     const parsed = classroomCreateSchema.parse(input)
 
+    // Enforce maxClasses plan limit
+    const [school, existingClassroomCount] = await Promise.all([
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { maxClasses: true },
+      }),
+      db.classroom.count({ where: { schoolId } }),
+    ])
+
+    if (
+      school?.maxClasses != null &&
+      existingClassroomCount + 1 > school.maxClasses
+    ) {
+      return {
+        success: false,
+        error: `Classroom limit reached. Your plan allows ${school.maxClasses} classrooms and you currently have ${existingClassroomCount}. Upgrade your plan to add more.`,
+      }
+    }
+
     const row = await db.classroom.create({
       data: {
         schoolId,
         roomName: parsed.roomName,
         typeId: parsed.typeId,
         capacity: parsed.capacity,
+        gradeId: parsed.gradeId || null,
       },
     })
 
@@ -213,6 +250,7 @@ export async function updateClassroom(
     if (typeof rest.roomName !== "undefined") data.roomName = rest.roomName
     if (typeof rest.typeId !== "undefined") data.typeId = rest.typeId
     if (typeof rest.capacity !== "undefined") data.capacity = rest.capacity
+    if (typeof rest.gradeId !== "undefined") data.gradeId = rest.gradeId || null
 
     await db.classroom.updateMany({ where: { id, schoolId }, data })
 
@@ -286,4 +324,170 @@ export async function deleteClassroom(input: {
       error: error instanceof Error ? error.message : "Failed to delete",
     }
   }
+}
+
+// ============================================================================
+// Room Detail Queries
+// ============================================================================
+
+export async function getRoomDetail(input: { id: string }) {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return null
+
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext) return null
+  try {
+    assertClassroomPermission(authContext, "read", { schoolId })
+  } catch {
+    return null
+  }
+
+  return db.classroom.findFirst({
+    where: { id: input.id, schoolId },
+    select: {
+      id: true,
+      roomName: true,
+      capacity: true,
+      typeId: true,
+      gradeId: true,
+      lang: true,
+      classroomType: { select: { id: true, name: true, lang: true } },
+      grade: { select: { id: true, name: true, lang: true } },
+    },
+  })
+}
+
+export async function getRoomTimetable(input: {
+  roomId: string
+  termId: string
+}) {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return { slots: [], workingDays: [] as number[], periods: [] }
+
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext)
+    return { slots: [], workingDays: [] as number[], periods: [] }
+
+  const [slots, weekConfig, periods] = await Promise.all([
+    db.timetable.findMany({
+      where: {
+        schoolId,
+        classroomId: input.roomId,
+        termId: input.termId,
+        weekOffset: 0,
+      },
+      select: {
+        id: true,
+        dayOfWeek: true,
+        periodId: true,
+        class: {
+          select: {
+            id: true,
+            name: true,
+            grade: { select: { id: true, name: true } },
+            subject: { select: { id: true, subjectName: true } },
+          },
+        },
+        teacher: {
+          select: {
+            id: true,
+            givenName: true,
+            surname: true,
+          },
+        },
+      },
+    }),
+    db.schoolWeekConfig.findFirst({
+      where: { schoolId },
+      select: { workingDays: true },
+    }),
+    db.period.findMany({
+      where: { schoolId },
+      orderBy: { startTime: "asc" },
+      select: { id: true, name: true, startTime: true, endTime: true },
+    }),
+  ])
+
+  return {
+    slots: slots.map((s) => ({
+      id: s.id,
+      dayOfWeek: s.dayOfWeek,
+      periodId: s.periodId,
+      className: s.class.name,
+      classId: s.class.id,
+      gradeName: s.class.grade?.name ?? null,
+      gradeId: s.class.grade?.id ?? null,
+      subject: s.class.subject?.subjectName ?? "",
+      teacher: `${s.teacher.givenName} ${s.teacher.surname}`,
+      teacherId: s.teacher.id,
+    })),
+    workingDays: weekConfig?.workingDays ?? [0, 1, 2, 3, 4],
+    periods: periods.map((p) => ({
+      id: p.id,
+      name: p.name,
+      startTime: p.startTime.toISOString(),
+      endTime: p.endTime.toISOString(),
+    })),
+  }
+}
+
+export async function getRoomClasses(input: { roomId: string }) {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return []
+
+  return db.class.findMany({
+    where: { schoolId, classroomId: input.roomId },
+    select: {
+      id: true,
+      name: true,
+      maxCapacity: true,
+      grade: { select: { id: true, name: true } },
+      subject: { select: { id: true, subjectName: true } },
+      teacher: {
+        select: {
+          id: true,
+          givenName: true,
+          surname: true,
+        },
+      },
+      _count: { select: { studentClasses: true } },
+    },
+    orderBy: { name: "asc" },
+  })
+}
+
+// ============================================================================
+// Room Capacity Overview
+// ============================================================================
+
+export async function getRoomCapacityOverview() {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return null
+
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext) return null
+  try {
+    assertClassroomPermission(authContext, "read", { schoolId })
+  } catch {
+    return null
+  }
+
+  const rooms = await db.classroom.findMany({
+    where: { schoolId },
+    select: {
+      id: true,
+      roomName: true,
+      capacity: true,
+      lang: true,
+      classroomType: { select: { name: true, lang: true } },
+      grade: { select: { name: true, lang: true } },
+      _count: { select: { classes: true } },
+    },
+    orderBy: { roomName: "asc" },
+  })
+
+  return rooms
 }

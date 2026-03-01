@@ -39,7 +39,7 @@ const schoolIdentitySchema = z.object({
   description: z.string().optional(),
   schoolType: z.string().optional(),
   schoolLevel: z.string().optional(),
-  system: z.string().optional(),
+  curriculum: z.string().optional(),
   preferredLanguage: z.string().optional(),
 })
 
@@ -57,11 +57,11 @@ const SCHOOL_LEVELS = [
   { value: "both", label: "Both (K-12)" },
 ]
 
-const SCHOOL_SYSTEMS = [
+const SCHOOL_CURRICULA = [
+  { value: "us-k12", label: "US K-12" },
   { value: "national", label: "National Curriculum" },
   { value: "british", label: "British Curriculum" },
   { value: "ib", label: "International Baccalaureate (IB)" },
-  { value: "clickview", label: "ClickView" },
 ]
 
 const LANGUAGES = [
@@ -244,9 +244,10 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
                   Curriculum System
                 </Label>
                 <p className="font-medium capitalize">
-                  {initialData.system
-                    ? SCHOOL_SYSTEMS.find((s) => s.value === initialData.system)
-                        ?.label || initialData.system
+                  {initialData.curriculum
+                    ? SCHOOL_CURRICULA.find(
+                        (s) => s.value === initialData.curriculum
+                      )?.label || initialData.curriculum
                     : "Not set"}
                 </p>
               </div>
@@ -441,17 +442,17 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
       {/* Curriculum & Language */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="system">Curriculum System</Label>
+          <Label htmlFor="curriculum">Curriculum System</Label>
           <Select
-            value={form.watch("system") || ""}
-            onValueChange={(value) => form.setValue("system", value)}
+            value={form.watch("curriculum") || ""}
+            onValueChange={(value) => form.setValue("curriculum", value)}
             disabled={isPending}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select curriculum" />
             </SelectTrigger>
             <SelectContent>
-              {SCHOOL_SYSTEMS.map((sys) => (
+              {SCHOOL_CURRICULA.map((sys) => (
                 <SelectItem key={sys.value} value={sys.value}>
                   {sys.label}
                 </SelectItem>

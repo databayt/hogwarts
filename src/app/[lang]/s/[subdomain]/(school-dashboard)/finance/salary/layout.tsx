@@ -17,13 +17,23 @@ export default async function SalaryLayout({ children, params }: Props) {
   const d = dictionary?.finance?.salary
 
   // Define salary page navigation
+  const n = d?.navigation
   const salaryPages: PageNavItem[] = [
-    { name: "Overview", href: `/${lang}/finance/salary` },
-    { name: "Salary Structure", href: `/${lang}/finance/salary/structure` },
-    { name: "Salary Slips", href: `/${lang}/finance/salary/slips` },
-    { name: "Increments", href: `/${lang}/finance/salary/increments` },
-    { name: "Advances", href: `/${lang}/finance/salary/advances` },
-    { name: "Reports", href: `/${lang}/finance/salary/reports` },
+    { name: n?.overview || "Overview", href: `/${lang}/finance/salary` },
+    {
+      name: n?.structure || "Salary Structure",
+      href: `/${lang}/finance/salary/structure`,
+    },
+    { name: n?.slips || "Salary Slips", href: `/${lang}/finance/salary/slips` },
+    {
+      name: n?.increments || "Increments",
+      href: `/${lang}/finance/salary/increments`,
+    },
+    {
+      name: n?.advances || "Advances",
+      href: `/${lang}/finance/salary/advances`,
+    },
+    { name: n?.reports || "Reports", href: `/${lang}/finance/salary/reports` },
   ]
 
   return (

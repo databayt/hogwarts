@@ -90,11 +90,6 @@ export const ADMIN_NAV_ITEMS = [
     icon: "BookOpen",
   },
   {
-    title: "Add New Book",
-    href: "/library/admin/books/new",
-    icon: "Plus",
-  },
-  {
     title: "Browse Catalog",
     href: "/library/catalog",
     icon: "Library",
@@ -103,5 +98,10 @@ export const ADMIN_NAV_ITEMS = [
     title: "Contribute Book",
     href: "/library/contribute",
     icon: "BookPlus",
+  },
+  {
+    title: "My Contributions",
+    href: "/library/contributions",
+    icon: "ClipboardList",
   },
 ] as const

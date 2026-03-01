@@ -20,8 +20,9 @@ interface RateLimitEntry {
   blockedUntil: Date | null
 }
 
-// In-memory rate limit store (per device/IP)
-// In production, consider using Redis for distributed rate limiting
+// WARNING: In-memory store resets on every serverless cold start.
+// This provides minimal protection in Vercel/serverless environments.
+// TODO: Replace with Redis (Upstash) or database-backed rate limiting for production.
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
 const RATE_LIMIT_CONFIG = {
@@ -265,9 +266,19 @@ export async function getAuditLogs(
 
 // ============================================================================
 // QR CODE SECURITY (HMAC SIGNATURES)
+// TODO: These HMAC functions are currently dead code. The QR actions in
+// actions/qr.ts use randomBytes sessions instead. Migrate QR actions to use
+// generateQRSignature()/verifyQRSignature() for tamper-proof QR codes.
 // ============================================================================
 
-const QR_SECRET = process.env.QR_CODE_SECRET || ""
+// Lazy-loaded to avoid top-level crashes on import
+function getQRSecret(): string {
+  const secret = process.env.QR_CODE_SECRET
+  if (!secret) {
+    throw new Error("QR_CODE_SECRET environment variable is required")
+  }
+  return secret
+}
 
 /**
  * Generate HMAC signature for QR code data
@@ -280,9 +291,7 @@ export function generateQRSignature(data: {
   classId: string
   expiresAt: number
 }): string {
-  if (!QR_SECRET) {
-    throw new Error("QR_CODE_SECRET environment variable is required")
-  }
+  const secret = getQRSecret()
   const payload = JSON.stringify({
     sessionId: data.sessionId,
     schoolId: data.schoolId,
@@ -290,7 +299,7 @@ export function generateQRSignature(data: {
     expiresAt: data.expiresAt,
   })
 
-  return crypto.createHmac("sha256", QR_SECRET).update(payload).digest("hex")
+  return crypto.createHmac("sha256", secret).update(payload).digest("hex")
 }
 
 /**

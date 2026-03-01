@@ -24,6 +24,7 @@
  */
 
 import Link from "next/link"
+import { auth } from "@/auth"
 import {
   ArrowRight,
   BookOpen,
@@ -62,6 +63,8 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { SupportedLanguage } from "@/components/translation/types"
 
 import { ExamCardFlip } from "./exam-card-flip"
+import GuardianExamsContent from "./guardian-content"
+import StudentExamsContent from "./student-content"
 
 interface Props {
   dictionary: Dictionary
@@ -69,6 +72,17 @@ interface Props {
 }
 
 export default async function ExamsContent({ dictionary, lang }: Props) {
+  // Role-based routing: show persona-specific dashboards for students/guardians
+  const session = await auth()
+  const role = session?.user?.role
+
+  if (role === "STUDENT") {
+    return <StudentExamsContent dictionary={dictionary} lang={lang} />
+  }
+  if (role === "GUARDIAN") {
+    return <GuardianExamsContent dictionary={dictionary} lang={lang} />
+  }
+
   const { schoolId } = await getTenantContext()
 
   // Get comprehensive stats from all blocks

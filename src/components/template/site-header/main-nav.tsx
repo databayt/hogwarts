@@ -32,13 +32,20 @@ interface MainNavProps {
   items?: MainNavItem[]
   school: School
   locale: string
+  displayName?: string
 }
 
-export function MainNav({ items, school, locale }: MainNavProps) {
+export function MainNav({
+  items,
+  school,
+  locale,
+  displayName: displayNameProp,
+}: MainNavProps) {
   const segment = useSelectedLayoutSegment()
 
-  // Use subdomain instead of full school name and capitalize first letter
   const displayName =
+    displayNameProp ||
+    school.name ||
     school.domain.charAt(0).toUpperCase() + school.domain.slice(1)
 
   return (

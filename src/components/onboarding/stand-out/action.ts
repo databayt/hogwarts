@@ -59,7 +59,7 @@ export async function updateStandOutFeatures(
     })
 
     revalidatePath(`/onboarding/${schoolId}`)
-    return createActionResponse(school)
+    return createActionResponse({ id: school.id })
   } catch (error) {
     console.error("Failed to update stand-out features:", error)
     return createActionResponse(undefined, error)

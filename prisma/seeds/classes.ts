@@ -130,11 +130,72 @@ export async function seedClasses(
 }
 
 // ============================================================================
+// SECTIONS (HOMEROOMS) SEEDING
+// ============================================================================
+
+/**
+ * Create homeroom sections for each grade (e.g. Grade 7-A, Grade 7-B, Grade 7-C)
+ * Assigns homeroom teachers and classrooms via round-robin
+ */
+export async function seedSections(
+  prisma: PrismaClient,
+  schoolId: string,
+  teachers: TeacherRef[],
+  classrooms: ClassroomRef[]
+): Promise<void> {
+  const grades = await prisma.academicGrade.findMany({
+    where: { schoolId },
+    orderBy: { gradeNumber: "asc" },
+  })
+
+  if (grades.length === 0) return
+
+  let teacherIdx = 0
+  let classroomIdx = 0
+  let created = 0
+
+  for (const grade of grades) {
+    const sectionsPerGrade = 3 // A, B, C
+    for (let i = 0; i < sectionsPerGrade; i++) {
+      const letter = String.fromCharCode(65 + i) // A, B, C
+      const name = `Grade ${grade.gradeNumber}-${letter}`
+      const teacher = teachers[teacherIdx % teachers.length]
+      const classroom = classrooms[classroomIdx % classrooms.length]
+      teacherIdx++
+      classroomIdx++
+
+      try {
+        await prisma.section.upsert({
+          where: { schoolId_name: { schoolId, name } },
+          update: {},
+          create: {
+            schoolId,
+            gradeId: grade.id,
+            name,
+            letter,
+            lang: "en",
+            homeroomTeacherId: teacher.id,
+            classroomId: classroom.id,
+            maxCapacity: grade.maxStudents || 30,
+          },
+        })
+        created++
+      } catch {
+        // Skip if already exists with different constraints
+      }
+    }
+  }
+
+  logSuccess("Sections", created, "homeroom sections (A/B/C per grade)")
+}
+
+// ============================================================================
 // STUDENT ENROLLMENTS
 // ============================================================================
 
 /**
- * Enroll students in their classes based on year level
+ * Enroll students in their classes based on year level,
+ * and assign each student to a homeroom section via round-robin
  */
 export async function seedStudentEnrollments(
   prisma: PrismaClient,
@@ -183,6 +244,55 @@ export async function seedStudentEnrollments(
   })
 
   logSuccess("Student Enrollments", enrollmentCount, "across all classes")
+
+  // Assign students to homeroom sections (round-robin within their grade)
+  const gradeByYearLevel = new Map<string, string>()
+  const academicGrades = await prisma.academicGrade.findMany({
+    where: { schoolId },
+    select: { id: true, yearLevelId: true },
+  })
+  for (const g of academicGrades) {
+    if (g.yearLevelId) gradeByYearLevel.set(g.yearLevelId, g.id)
+  }
+
+  const sections = await prisma.section.findMany({
+    where: { schoolId },
+    orderBy: [{ gradeId: "asc" }, { letter: "asc" }],
+  })
+  const sectionsByGrade = new Map<string, typeof sections>()
+  for (const sec of sections) {
+    const existing = sectionsByGrade.get(sec.gradeId) || []
+    existing.push(sec)
+    sectionsByGrade.set(sec.gradeId, existing)
+  }
+
+  let sectionAssignments = 0
+  for (const [yearLevelId, levelStudents] of studentsByLevel) {
+    const gradeId = gradeByYearLevel.get(yearLevelId)
+    if (!gradeId) continue
+
+    const gradeSections = sectionsByGrade.get(gradeId)
+    if (!gradeSections || gradeSections.length === 0) continue
+
+    for (let i = 0; i < levelStudents.length; i++) {
+      const section = gradeSections[i % gradeSections.length]
+      try {
+        await prisma.student.update({
+          where: { id: levelStudents[i].id },
+          data: { sectionId: section.id },
+        })
+        sectionAssignments++
+      } catch {
+        // Skip on error
+      }
+    }
+  }
+
+  logSuccess(
+    "Section Assignments",
+    sectionAssignments,
+    "students assigned to homeroom sections"
+  )
 
   return enrollmentCount
 }
@@ -265,6 +375,7 @@ export async function seedAllClasses(
     term
   )
 
+  await seedSections(prisma, schoolId, teachers, classrooms)
   await seedStudentEnrollments(prisma, schoolId, students, classes)
   await seedClassTeachers(prisma, schoolId, classes, teachers)
 

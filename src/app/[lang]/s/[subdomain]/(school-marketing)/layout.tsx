@@ -50,10 +50,7 @@ export default async function SiteLayout({
 
   return (
     <LoadingWrapper>
-      <div
-        data-slot="site-layout"
-        className="marketing-container overflow-x-hidden"
-      >
+      <div data-slot="site-layout" className="marketing-container">
         <SiteHeader school={school} locale={lang} />
         <main data-slot="main-content" role="main">
           {children}

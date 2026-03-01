@@ -32,6 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ExpenseReceipt } from "./types"
 
@@ -41,24 +42,28 @@ interface ReceiptCardProps {
 }
 
 export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const rp = fd?.receiptPage as Record<string, string> | undefined
+
   const statusConfig = {
     pending: {
-      label: "Pending",
+      label: fd?.pending || "Pending",
       variant: "secondary" as const,
       icon: Clock,
     },
     processing: {
-      label: "Processing",
+      label: rp?.processing || "Processing",
       variant: "default" as const,
       icon: LoaderCircle,
     },
     processed: {
-      label: "Processed",
+      label: rp?.processed || "Processed",
       variant: "default" as const,
       icon: CircleCheck,
     },
     error: {
-      label: "Error",
+      label: fd?.error || "Error",
       variant: "destructive" as const,
       icon: CircleAlert,
     },
@@ -127,19 +132,22 @@ export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
 
         {receipt.status === "pending" && (
           <p className="text-muted-foreground text-xs">
-            AI extraction pending...
+            {rp?.aiExtractionPending || "AI extraction pending..."}
           </p>
         )}
 
         {receipt.status === "error" && (
           <p className="text-destructive text-xs">
-            Extraction failed. Click to retry.
+            {rp?.extractionFailed || "Extraction failed. Click to retry."}
           </p>
         )}
       </CardContent>
 
       <CardFooter className="text-muted-foreground flex items-center justify-between text-xs">
-        <span>Uploaded {format(new Date(receipt.uploadedAt), "PP")}</span>
+        <span>
+          {rp?.uploaded || "Uploaded"}{" "}
+          {format(new Date(receipt.uploadedAt), "PP")}
+        </span>
         <Button
           variant="ghost"
           size="sm"
@@ -147,7 +155,7 @@ export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
             window.location.href = `${receipt.id}`
           }}
         >
-          View Details
+          {rp?.viewDetails || "View Details"}
         </Button>
       </CardFooter>
     </Card>

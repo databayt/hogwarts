@@ -25,9 +25,40 @@ export function getCatalogImageUrl(
     return getCloudFrontUrl(`${thumbnailKey}-${size}.webp`)
   }
 
-  // Priority 2: imageKey (local path or external URL)
+  // Priority 2: imageKey — S3 catalog path or external URL
   if (imageKey) {
+    if (imageKey.startsWith("catalog/") && isCloudFrontConfigured()) {
+      return getCloudFrontUrl(imageKey)
+    }
     return imageKey
+  }
+
+  return null
+}
+
+/**
+ * Resolve a catalog image by concept name.
+ * Concept-based images are shared across curricula (e.g., "math" image
+ * used by us-k12 Math, national Math, etc.)
+ */
+export function getCatalogConceptImageUrl(
+  level: "subject" | "chapter" | "lesson",
+  imageKey: string | null | undefined,
+  concept: string | null | undefined,
+  size: CatalogImageSize = "sm"
+): string | null {
+  // Direct imageKey takes priority
+  if (imageKey) {
+    if (imageKey.startsWith("catalog/") && isCloudFrontConfigured()) {
+      return getCloudFrontUrl(imageKey)
+    }
+    if (imageKey.startsWith("http")) return imageKey
+    return imageKey
+  }
+
+  // Concept-based lookup from S3
+  if (concept && isCloudFrontConfigured()) {
+    return getCloudFrontUrl(`catalog/${level}s/${concept}-${size}.webp`)
   }
 
   return null

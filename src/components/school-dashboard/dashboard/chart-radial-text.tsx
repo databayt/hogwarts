@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ChartConfig, ChartContainer } from "@/components/ui/chart"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export interface RadialTextChartProps {
   value?: number
@@ -37,6 +38,10 @@ function RadialTextChartInner({
   trendLabel = "Total visitors in the last 6 months",
   maxValue = 100,
 }: RadialTextChartProps) {
+  const { dictionary } = useDictionary()
+  const cl = dictionary?.school?.dashboard?.chartLabels as
+    | Record<string, string>
+    | undefined
   const chartData = [
     { name: "value", value: value, fill: "var(--color-value)" },
   ]
@@ -111,12 +116,13 @@ function RadialTextChartInner({
         <div className="flex items-center gap-2 leading-none font-medium">
           {trend >= 0 ? (
             <>
-              Trending up by {trend}% this month{" "}
-              <TrendingUp className="size-4" />
+              {cl?.trendingUp || "Trending up by"} {trend}%{" "}
+              {cl?.thisMonth || "this month"} <TrendingUp className="size-4" />
             </>
           ) : (
             <>
-              Trending down by {Math.abs(trend)}% this month{" "}
+              {cl?.trendingDown || "Trending down by"} {Math.abs(trend)}%{" "}
+              {cl?.thisMonth || "this month"}{" "}
               <TrendingDown className="size-4" />
             </>
           )}

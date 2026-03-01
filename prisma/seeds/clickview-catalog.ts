@@ -975,7 +975,7 @@ export async function seedClickViewCatalog(
   console.log("  Deprecating old level-based subjects...")
   await prisma.catalogSubject.updateMany({
     where: {
-      system: "clickview",
+      curriculum: "us-k12",
       status: "PUBLISHED",
       OR: [
         { slug: { startsWith: "elementary-" } },
@@ -1059,7 +1059,7 @@ export async function seedClickViewCatalog(
           grades: [grade],
           gradeRange: String(grade),
           country: "US",
-          system: "clickview",
+          curriculum: "us-k12",
           clickviewId,
           clickviewUrl: entry.url
             ? `https://www.clickview.net${entry.url}`
@@ -1186,7 +1186,7 @@ export async function seedClickViewCatalog(
   console.log("  Updating denormalized counts...")
 
   const allSubjects = await prisma.catalogSubject.findMany({
-    where: { system: "clickview", status: "PUBLISHED" },
+    where: { curriculum: "us-k12", status: "PUBLISHED" },
     select: { id: true },
   })
 

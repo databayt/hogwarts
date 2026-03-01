@@ -17,7 +17,7 @@ model School {
   // School classification
   schoolType  String? // private, public, international, technical, special
   schoolLevel String? // primary, secondary, both
-  system      String? // clickview, national, british, ib
+  curriculum  String? // us-k12, national, british, ib
   description String? @db.Text
 
   // Location breakdown (address stays as street address)
@@ -39,7 +39,9 @@ model School {
   paymentSchedule String   @default("annual") // monthly, quarterly, semester, annual
 
   // Capacity
-  maxClasses Int @default(20)
+  maxClasses         Int @default(20)
+  sectionsPerGrade   Int @default(2)
+  studentsPerSection Int @default(30)
 
   // Video storage quota (Stream LMS)
   videoStorageUsedBytes  BigInt? @default(0)
@@ -82,6 +84,7 @@ model School {
   staffAccessCards         StaffAccessCard[]
   classrooms               Classroom[]
   classroomTypes           ClassroomType[]
+  sections                 Section[]
   teacherDepartments       TeacherDepartment[]
   teacherPhoneNumbers      TeacherPhoneNumber[]
   guardianTypes            GuardianType[]
@@ -331,10 +334,14 @@ model School {
   academicGrades  AcademicGrade[]
   academicStreams  AcademicStream[]
 
+  // Membership relations
+  membershipRequests     MembershipRequest[]
+
   // Catalog Bridge relations
   schoolSubjectSelections SchoolSubjectSelection[]
   schoolContentOverrides  SchoolContentOverride[]
   schoolBookSelections    SchoolBookSelection[]
+  catalogProposals        CatalogProposal[]
 
   // Enrollment relations (catalog)
   catalogEnrollments     Enrollment[]

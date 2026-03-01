@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { deleteReceipt, retryReceiptExtraction } from "./actions"
 import { ExpenseReceipt, ReceiptItem } from "./types"
@@ -45,21 +46,28 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [isRetrying, setIsRetrying] = React.useState(false)
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const rd = fd?.receiptDetail as Record<string, string> | undefined
 
   const statusConfig = {
-    pending: { label: "Pending", variant: "secondary" as const, icon: Clock },
+    pending: {
+      label: rd?.pending || "Pending",
+      variant: "secondary" as const,
+      icon: Clock,
+    },
     processing: {
-      label: "Processing",
+      label: rd?.processing || "Processing",
       variant: "default" as const,
       icon: LoaderCircle,
     },
     processed: {
-      label: "Processed",
+      label: rd?.processed || "Processed",
       variant: "default" as const,
       icon: CircleCheck,
     },
     error: {
-      label: "Error",
+      label: rd?.error || "Error",
       variant: "destructive" as const,
       icon: CircleAlert,
     },
@@ -71,7 +79,8 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
   const handleDelete = async () => {
     if (
       !confirm(
-        "Are you sure you want to delete this receipt? This action cannot be undone."
+        rd?.confirmDelete ||
+          "Are you sure you want to delete this receipt? This action cannot be undone."
       )
     ) {
       return
@@ -81,14 +90,16 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
     try {
       const result = await deleteReceipt(receipt.id)
       if (result.success) {
-        toast.success("Receipt deleted successfully")
+        toast.success(rd?.receiptDeleted || "Receipt deleted successfully")
         router.push("..")
         router.refresh()
       } else {
-        toast.error(result.error || "Failed to delete receipt")
+        toast.error(
+          result.error || rd?.failedDeleteReceipt || "Failed to delete receipt"
+        )
       }
     } catch (error) {
-      toast.error("An unexpected error occurred")
+      toast.error(rd?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsDeleting(false)
     }
@@ -99,13 +110,19 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
     try {
       const result = await retryReceiptExtraction(receipt.id)
       if (result.success) {
-        toast.success("Extraction retry started. Please wait...")
+        toast.success(
+          rd?.retryStarted || "Extraction retry started. Please wait..."
+        )
         router.refresh()
       } else {
-        toast.error(result.error || "Failed to retry extraction")
+        toast.error(
+          result.error ||
+            rd?.failedRetryExtraction ||
+            "Failed to retry extraction"
+        )
       }
     } catch (error) {
-      toast.error("An unexpected error occurred")
+      toast.error(rd?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsRetrying(false)
     }
@@ -126,7 +143,8 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
             {receipt.fileDisplayName || receipt.fileName}
           </h2>
           <p className="text-muted-foreground text-sm">
-            Uploaded {format(new Date(receipt.uploadedAt), "PPP")}
+            {rd?.uploaded || "Uploaded"}{" "}
+            {format(new Date(receipt.uploadedAt), "PPP")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -148,7 +166,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
               ) : (
                 <>
                   <RefreshCw className="me-2 h-4 w-4" />
-                  Retry
+                  {rd?.retry || "Retry"}
                 </>
               )}
             </Button>
@@ -160,7 +178,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
         {/* Receipt Image/PDF Preview */}
         <Card>
           <CardHeader>
-            <CardTitle>Receipt Image</CardTitle>
+            <CardTitle>{rd?.receiptImage || "Receipt Image"}</CardTitle>
           </CardHeader>
           <CardContent>
             {receipt.mimeType.startsWith("image/") ? (
@@ -173,7 +191,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
               <div className="flex flex-col items-center justify-center rounded-lg border p-12">
                 <FileText className="text-muted-foreground mb-4 h-16 w-16" />
                 <p className="text-muted-foreground mb-4 text-sm">
-                  PDF Document
+                  {rd?.pdfDocument || "PDF Document"}
                 </p>
                 <Button variant="outline" asChild>
                   <a
@@ -182,7 +200,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                     rel="noopener noreferrer"
                   >
                     <Download className="me-2 h-4 w-4" />
-                    View PDF
+                    {rd?.viewPdf || "View PDF"}
                   </a>
                 </Button>
               </div>
@@ -193,7 +211,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
         {/* Extracted Data */}
         <Card>
           <CardHeader>
-            <CardTitle>Extracted Data</CardTitle>
+            <CardTitle>{rd?.extractedData || "Extracted Data"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {receipt.status === "processed" ? (
@@ -202,7 +220,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       <MapPin className="h-4 w-4" />
-                      Merchant
+                      {rd?.merchant || "Merchant"}
                     </div>
                     <p className="ms-6 text-sm">{receipt.merchantName}</p>
                     {receipt.merchantAddress && (
@@ -217,7 +235,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       <Phone className="h-4 w-4" />
-                      Contact
+                      {rd?.contact || "Contact"}
                     </div>
                     <p className="ms-6 text-sm">{receipt.merchantContact}</p>
                   </div>
@@ -227,7 +245,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       <Calendar className="h-4 w-4" />
-                      Date
+                      {rd?.date || "Date"}
                     </div>
                     <p className="ms-6 text-sm">
                       {format(new Date(receipt.transactionDate), "PPP")}
@@ -240,7 +258,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-sm font-medium">
                         <DollarSign className="h-4 w-4" />
-                        Amount
+                        {rd?.amount || "Amount"}
                       </div>
                       <p className="ms-6 text-lg font-semibold">
                         {receipt.currency || "USD"}{" "}

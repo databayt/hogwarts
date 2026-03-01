@@ -68,49 +68,49 @@ const attendanceByGradeData = [
   { grade: "G10", attendance: 85, fill: "var(--color-grade10)" },
 ]
 
-const radialGridConfig = {
-  attendance: {
-    label: "Attendance %",
-  },
-  grade5: {
-    label: "Grade 5",
-    color: "hsl(var(--chart-1))",
-  },
-  grade6: {
-    label: "Grade 6",
-    color: "hsl(var(--chart-2))",
-  },
-  grade7: {
-    label: "Grade 7",
-    color: "hsl(var(--chart-3))",
-  },
-  grade8: {
-    label: "Grade 8",
-    color: "hsl(var(--chart-4))",
-  },
-  grade9: {
-    label: "Grade 9",
-    color: "hsl(var(--chart-5))",
-  },
-  grade10: {
-    label: "Grade 10",
-    color: "hsl(var(--chart-1))",
-  },
-} satisfies ChartConfig
-
 // Radial shape chart data - overall attendance percentage
 const overallAttendanceData = [{ attendance: 91, fill: "hsl(var(--chart-2))" }]
-
-const radialShapeConfig = {
-  attendance: {
-    label: "Attendance",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig
 
 function AttendanceSection() {
   const { dictionary } = useDictionary()
   const dict = dictionary?.school?.dashboard?.attendance
+
+  const radialGridConfig = {
+    attendance: {
+      label: dict?.attendancePercent || "Attendance %",
+    },
+    grade5: {
+      label: `${dict?.grade || "Grade"} 5`,
+      color: "hsl(var(--chart-1))",
+    },
+    grade6: {
+      label: `${dict?.grade || "Grade"} 6`,
+      color: "hsl(var(--chart-2))",
+    },
+    grade7: {
+      label: `${dict?.grade || "Grade"} 7`,
+      color: "hsl(var(--chart-3))",
+    },
+    grade8: {
+      label: `${dict?.grade || "Grade"} 8`,
+      color: "hsl(var(--chart-4))",
+    },
+    grade9: {
+      label: `${dict?.grade || "Grade"} 9`,
+      color: "hsl(var(--chart-5))",
+    },
+    grade10: {
+      label: `${dict?.grade || "Grade"} 10`,
+      color: "hsl(var(--chart-1))",
+    },
+  } satisfies ChartConfig
+
+  const radialShapeConfig = {
+    attendance: {
+      label: dict?.attendance || "Attendance",
+      color: "hsl(var(--chart-2))",
+    },
+  } satisfies ChartConfig
 
   return (
     <section>

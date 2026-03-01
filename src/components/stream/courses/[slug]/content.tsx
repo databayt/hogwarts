@@ -430,7 +430,8 @@ export function StreamCourseDetailContent({
           className="text-start text-2xl font-semibold sm:text-3xl"
           style={{ color: colors.text }}
         >
-          {dict?.stream?.courseDetail?.chapters ?? "Chapters"}
+          {(dict?.stream?.courseDetail as Record<string, string>)?.chapters ??
+            "Chapters"}
         </h2>
 
         <div className="mt-6 flex gap-8">

@@ -24,8 +24,7 @@ export interface TeacherExportData {
   phone: string | null
   department: string | null
   qualification: string | null
-  specialization: string | null
-  hireDate: Date | null
+  joiningDate: Date | null
   status: string
   createdAt: Date
 }
@@ -73,8 +72,7 @@ export const TEACHER_EXPORT_COLUMNS: ExportColumn<TeacherExportData>[] = [
   text("phone", "Phone", "الهاتف"),
   text("department", "Department", "القسم"),
   text("qualification", "Qualification", "المؤهل"),
-  text("specialization", "Specialization", "التخصص"),
-  date("hireDate", "Hire Date", undefined, "تاريخ التعيين"),
+  date("joiningDate", "Joining Date", undefined, "تاريخ الالتحاق"),
   {
     key: "status",
     header: "Status",

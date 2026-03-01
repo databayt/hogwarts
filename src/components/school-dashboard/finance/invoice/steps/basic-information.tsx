@@ -6,6 +6,7 @@ import { useFormContext } from "react-hook-form"
 import { z } from "zod"
 
 import { Input } from "@/components/ui/input"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { InvoiceSchemaZod } from "../validation"
 
@@ -19,6 +20,9 @@ export function BasicInformationStep({ isView }: BasicInformationStepProps) {
     register,
     formState: { errors },
   } = form
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const iform = fd?.invoiceForm as Record<string, string> | undefined
 
   return (
     <div className="space-y-6">
@@ -26,33 +30,39 @@ export function BasicInformationStep({ isView }: BasicInformationStepProps) {
       <div className="grid grid-cols-2 gap-8">
         {/* From Address */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">From (Your Company)</h3>
+          <h3 className="text-lg font-medium">
+            {iform?.fromYourCompany || "From (Your Company)"}
+          </h3>
           <div className="space-y-3">
             <div className="space-y-2">
               <Input
                 {...register("from.name")}
-                placeholder="Company Name"
+                placeholder={iform?.companyName || "Company Name"}
                 className={errors.from?.name ? "border-red-500" : ""}
               />
             </div>
             <div className="space-y-2">
               <Input
                 {...register("from.email")}
-                placeholder="Company Email"
+                placeholder={iform?.companyEmail || "Company Email"}
                 className={errors.from?.email ? "border-red-500" : ""}
               />
             </div>
             <div className="space-y-2">
               <Input
                 {...register("from.address1")}
-                placeholder="Company Address Line 1"
+                placeholder={
+                  iform?.companyAddressLine1 || "Company Address Line 1"
+                }
                 className={errors.from?.address1 ? "border-red-500" : ""}
               />
             </div>
             <div className="space-y-2">
               <Input
                 {...register("from.address2")}
-                placeholder="Address Line 2 (Optional)"
+                placeholder={
+                  iform?.addressLine2Optional || "Address Line 2 (Optional)"
+                }
               />
             </div>
           </div>
@@ -60,33 +70,40 @@ export function BasicInformationStep({ isView }: BasicInformationStepProps) {
 
         {/* To Address */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">To (Client)</h3>
+          <h3 className="text-lg font-medium">
+            {iform?.toClient || "To (Client)"}
+          </h3>
           <div className="space-y-3">
             <div className="space-y-2">
               <Input
                 {...register("to.name")}
-                placeholder="Client Name"
+                placeholder={iform?.clientName || "Client Name"}
                 className={errors.to?.name ? "border-red-500" : ""}
               />
             </div>
             <div className="space-y-2">
               <Input
                 {...register("to.email")}
-                placeholder="Client Email"
+                placeholder={iform?.clientEmail || "Client Email"}
                 className={errors.to?.email ? "border-red-500" : ""}
               />
             </div>
             <div className="space-y-2">
               <Input
                 {...register("to.address1")}
-                placeholder="Client Address Line 1"
+                placeholder={
+                  iform?.clientAddressLine1 || "Client Address Line 1"
+                }
                 className={errors.to?.address1 ? "border-red-500" : ""}
               />
             </div>
             <div className="space-y-2">
               <Input
                 {...register("to.address2")}
-                placeholder="Client Address Line 2 (Optional)"
+                placeholder={
+                  iform?.clientAddressLine2Optional ||
+                  "Client Address Line 2 (Optional)"
+                }
               />
             </div>
           </div>

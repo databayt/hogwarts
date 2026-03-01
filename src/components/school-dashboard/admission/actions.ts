@@ -9,7 +9,6 @@ import type { AdmissionApplicationStatus } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
 
 import { assertAdmissionPermission } from "./authorization"
@@ -532,11 +531,31 @@ export async function confirmEnrollment(params: {
         },
       })
 
-      // 3. Create or find Student record if the application is linked to a user
-      if (application.userId) {
+      // 3. Resolve userId — create a User for guest applications
+      let userId = application.userId
+      if (!userId) {
+        const guestUser = await tx.user.create({
+          data: {
+            email: application.email,
+            username: `${application.firstName} ${application.lastName}`,
+            role: "STUDENT",
+            schoolId,
+            emailVerified: new Date(),
+          },
+        })
+        userId = guestUser.id
+
+        // Link the application to the new user
+        await tx.application.update({
+          where: { id: params.id },
+          data: { userId },
+        })
+      }
+
+      {
         // Check if student already exists and belongs to a different school
         const existingStudent = await tx.student.findUnique({
-          where: { userId: application.userId },
+          where: { userId },
           select: { id: true, schoolId: true },
         })
 
@@ -549,7 +568,7 @@ export async function confirmEnrollment(params: {
           : await tx.student.create({
               data: {
                 schoolId,
-                userId: application.userId,
+                userId,
                 givenName: application.firstName,
                 middleName: application.middleName,
                 surname: application.lastName,
@@ -656,13 +675,13 @@ export async function confirmEnrollment(params: {
         // 5. Update user role to STUDENT if not already a higher role
         try {
           const user = await tx.user.findUnique({
-            where: { id: application.userId },
+            where: { id: userId },
             select: { role: true },
           })
 
           if (user && user.role === "USER") {
             await tx.user.update({
-              where: { id: application.userId },
+              where: { id: userId },
               data: { role: "STUDENT" },
             })
           }
@@ -757,7 +776,7 @@ export async function recordPayment(params: {
 // Placement Actions
 // ============================================================================
 
-export async function getAvailableClassesForPlacement(params: {
+export async function getAvailableSectionsForPlacement(params: {
   applyingForClass: string
 }): Promise<
   ActionResult<
@@ -799,7 +818,7 @@ export async function getAvailableClassesForPlacement(params: {
           },
         }
 
-    const classes = await db.class.findMany({
+    const sections = await db.section.findMany({
       where: {
         schoolId,
         ...gradeWhere,
@@ -808,29 +827,32 @@ export async function getAvailableClassesForPlacement(params: {
         id: true,
         name: true,
         maxCapacity: true,
-        _count: { select: { studentClasses: true } },
+        _count: { select: { students: true } },
       },
       orderBy: { name: "asc" },
     })
 
     return {
       success: true,
-      data: classes.map((c) => ({
-        id: c.id,
-        name: c.name,
-        enrolledStudents: c._count.studentClasses,
-        maxCapacity: c.maxCapacity ?? 50,
+      data: sections.map((s) => ({
+        id: s.id,
+        name: s.name,
+        enrolledStudents: s._count.students,
+        maxCapacity: s.maxCapacity,
       })),
     }
   } catch (error) {
-    console.error("[getAvailableClassesForPlacement]", error)
-    return { success: false, error: "Failed to fetch classes" }
+    console.error("[getAvailableSectionsForPlacement]", error)
+    return { success: false, error: "Failed to fetch sections" }
   }
 }
 
-export async function placeStudentInClass(params: {
+/** @deprecated Use getAvailableSectionsForPlacement instead */
+export const getAvailableClassesForPlacement = getAvailableSectionsForPlacement
+
+export async function placeStudentInSection(params: {
   applicationId: string
-  classId: string
+  sectionId: string
 }): Promise<ActionResult> {
   try {
     const session = await auth()
@@ -847,7 +869,7 @@ export async function placeStudentInClass(params: {
     if (application.status !== "ADMITTED") {
       return {
         success: false,
-        error: "Only admitted students can be placed in classes",
+        error: "Only admitted students can be placed in sections",
       }
     }
 
@@ -861,7 +883,7 @@ export async function placeStudentInClass(params: {
 
     const student = await db.student.findFirst({
       where: { userId: application.userId, schoolId },
-      select: { id: true },
+      select: { id: true, sectionId: true },
     })
 
     if (!student) {
@@ -872,59 +894,89 @@ export async function placeStudentInClass(params: {
       }
     }
 
-    // Check class capacity
-    const classData = await db.class.findFirst({
-      where: { id: params.classId, schoolId },
+    // Check section capacity
+    const sectionData = await db.section.findFirst({
+      where: { id: params.sectionId, schoolId },
       select: {
         id: true,
         name: true,
+        gradeId: true,
         maxCapacity: true,
-        _count: { select: { studentClasses: true } },
+        _count: { select: { students: true } },
       },
     })
 
-    if (!classData) return { success: false, error: "Class not found" }
+    if (!sectionData) return { success: false, error: "Section not found" }
 
-    const maxCapacity = classData.maxCapacity ?? 50
-    if (classData._count.studentClasses >= maxCapacity) {
+    if (sectionData._count.students >= sectionData.maxCapacity) {
       return {
         success: false,
-        error: `Class "${classData.name}" is at full capacity (${classData._count.studentClasses}/${maxCapacity})`,
+        error: `Section "${sectionData.name}" is at full capacity (${sectionData._count.students}/${sectionData.maxCapacity})`,
       }
     }
 
-    // Check for duplicate enrollment
-    const existing = await db.studentClass.findFirst({
-      where: { studentId: student.id, classId: params.classId, schoolId },
-    })
-
-    if (existing) {
+    // Check if already in this section
+    if (student.sectionId === params.sectionId) {
       return {
         success: false,
-        error: `${application.firstName} ${application.lastName} is already enrolled in "${classData.name}"`,
+        error: `${application.firstName} ${application.lastName} is already in "${sectionData.name}"`,
       }
     }
 
-    // Create enrollment
-    await db.studentClass.create({
-      data: {
-        schoolId,
-        studentId: student.id,
-        classId: params.classId,
-      },
-    })
+    // Assign student to section and create StudentClass entries
+    await db.$transaction(async (tx) => {
+      await tx.student.update({
+        where: { id: student.id },
+        data: { sectionId: params.sectionId },
+      })
 
-    // Sync to LMS enrollment (non-blocking)
-    await syncStudentClassToEnrollment(schoolId, student.id, params.classId)
+      // Find all classes for this section's grade and enroll the student
+      if (sectionData.gradeId) {
+        const gradeClasses = await tx.class.findMany({
+          where: { schoolId, gradeId: sectionData.gradeId },
+          select: { id: true },
+        })
+
+        if (gradeClasses.length > 0) {
+          await Promise.all(
+            gradeClasses.map((cls) =>
+              tx.studentClass.upsert({
+                where: {
+                  schoolId_studentId_classId: {
+                    schoolId,
+                    studentId: student.id,
+                    classId: cls.id,
+                  },
+                },
+                create: {
+                  schoolId,
+                  studentId: student.id,
+                  classId: cls.id,
+                },
+                update: {},
+              })
+            )
+          )
+        }
+      }
+    })
 
     revalidatePath("/admission/enrollment")
+    revalidatePath("/students")
     revalidatePath("/classrooms")
     return { success: true, data: null }
   } catch (error) {
-    console.error("[placeStudentInClass]", error)
+    console.error("[placeStudentInSection]", error)
     return { success: false, error: "Failed to place student" }
   }
 }
+
+/** @deprecated Use placeStudentInSection instead */
+export const placeStudentInClass =
+  placeStudentInSection as unknown as (params: {
+    applicationId: string
+    classId: string
+  }) => Promise<ActionResult>
 
 // ============================================================================
 // Helper Actions

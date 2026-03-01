@@ -2507,6 +2507,11 @@ export async function getPersonalizedTimetable(input: {
       break
     }
 
+    case "ACCOUNTANT":
+    case "STAFF":
+      viewType = "admin"
+      break
+
     default:
       viewType = "student" // Default to most restricted view
   }

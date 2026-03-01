@@ -28,12 +28,17 @@ interface Props {
 }
 
 export default async function TimesheetContent({ dictionary, lang }: Props) {
+  const fc = (dictionary as any)?.finance?.common as
+    | Record<string, string>
+    | undefined
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
       <div>
-        <p className="text-muted-foreground">School context not found</p>
+        <p className="text-muted-foreground">
+          {fc?.schoolNotFound || "School context not found"}
+        </p>
       </div>
     )
   }
@@ -70,7 +75,8 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
     return (
       <div>
         <p className="text-muted-foreground">
-          You don't have permission to view timesheets
+          {fc?.noPermissionTimesheets ||
+            "You don't have permission to view timesheets"}
         </p>
       </div>
     )
@@ -105,33 +111,36 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
   }
 
   const d = dictionary?.finance?.timesheet
+  const fd = (dictionary as any)?.finance
+  const tp = fd?.timesheetPage as Record<string, string> | undefined
+  const c = fd?.common as Record<string, string> | undefined
 
   return (
     <div className="space-y-6">
       {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
       <DashboardGrid type="stats">
         <StatsCard
-          title="Total Hours"
+          title={tp?.totalHours || "Total Hours"}
           value={totalHours.toLocaleString()}
-          description="Approved hours"
+          description={tp?.approvedHours || "Approved hours"}
           icon={Clock}
         />
         <StatsCard
-          title="Timesheet Entries"
+          title={tp?.timesheetEntries || "Timesheet Entries"}
           value={entriesCount}
-          description={`${approvedEntriesCount} approved`}
+          description={`${approvedEntriesCount} ${fd?.approved || "approved"}`}
           icon={FileText}
         />
         <StatsCard
-          title="Pending Approval"
+          title={c?.pendingApproval || "Pending Approval"}
           value={pendingEntriesCount}
-          description="Requires review"
+          description={c?.requiresReview || "Requires review"}
           icon={CircleAlert}
         />
         <StatsCard
-          title="Active Periods"
+          title={tp?.activePeriods || "Active Periods"}
           value={periodsCount}
-          description="Configured periods"
+          description={tp?.configuredPeriods || "Configured periods"}
           icon={Calendar}
         />
       </DashboardGrid>
@@ -140,19 +149,21 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
       <DashboardGrid type="features">
         {canEdit && (
           <FeatureCard
-            title="Timesheet Periods"
-            description="Define and manage timesheet periods"
+            title={tp?.timesheetPeriods || "Timesheet Periods"}
+            description={
+              tp?.defineManagePeriods || "Define and manage timesheet periods"
+            }
             icon={Calendar}
             isPrimary
             primaryAction={{
-              label: "View Periods",
+              label: tp?.viewPeriods || "View Periods",
               href: `/${lang}/finance/timesheet/periods`,
               count: periodsCount,
             }}
             secondaryAction={
               canCreate
                 ? {
-                    label: "Create Period",
+                    label: tp?.createPeriod || "Create Period",
                     href: `/${lang}/finance/timesheet/periods/new`,
                   }
                 : undefined
@@ -160,18 +171,20 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
           />
         )}
         <FeatureCard
-          title="Time Entries"
-          description="Record and track staff working hours"
+          title={tp?.timeEntries || "Time Entries"}
+          description={
+            tp?.recordTrackHours || "Record and track staff working hours"
+          }
           icon={Clock}
           primaryAction={{
-            label: "View Entries",
+            label: tp?.viewEntries || "View Entries",
             href: `/${lang}/finance/timesheet/entries`,
             count: entriesCount,
           }}
           secondaryAction={
             canCreate
               ? {
-                  label: "Record Time",
+                  label: tp?.recordTime || "Record Time",
                   href: `/${lang}/finance/timesheet/entries/new`,
                 }
               : undefined
@@ -179,58 +192,65 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
         />
         {canApprove && (
           <FeatureCard
-            title="Approval Queue"
-            description="Review and approve timesheet entries"
+            title={c?.approvalQueue || "Approval Queue"}
+            description={
+              tp?.reviewApproveEntries || "Review and approve timesheet entries"
+            }
             icon={CircleCheck}
             primaryAction={{
-              label: "Approve Entries",
+              label: tp?.approveEntries || "Approve Entries",
               href: `/${lang}/finance/timesheet/approve`,
               count: pendingEntriesCount,
             }}
             secondaryAction={{
-              label: "Bulk Approve",
+              label: tp?.bulkApprove || "Bulk Approve",
               href: `/${lang}/finance/timesheet/approve/bulk`,
             }}
           />
         )}
         <FeatureCard
-          title="Staff Timesheets"
-          description="View timesheets by staff member"
+          title={tp?.staffTimesheets || "Staff Timesheets"}
+          description={tp?.viewByStaff || "View timesheets by staff member"}
           icon={Users}
           primaryAction={{
-            label: "View By Staff",
+            label: tp?.viewByStaffButton || "View By Staff",
             href: `/${lang}/finance/timesheet/staff`,
           }}
           secondaryAction={{
-            label: "Staff Summary",
+            label: tp?.staffSummary || "Staff Summary",
             href: `/${lang}/finance/timesheet/staff/summary`,
           }}
         />
         {canExport && (
           <FeatureCard
-            title="Timesheet Reports"
-            description="Generate timesheet reports and analytics"
+            title={tp?.timesheetReports || "Timesheet Reports"}
+            description={
+              tp?.generateTimesheetReports ||
+              "Generate timesheet reports and analytics"
+            }
             icon={FileText}
             primaryAction={{
-              label: "View Reports",
+              label: c?.viewReports || "View Reports",
               href: `/${lang}/finance/timesheet/reports`,
             }}
             secondaryAction={{
-              label: "Hours Report",
+              label: tp?.hoursReport || "Hours Report",
               href: `/${lang}/finance/timesheet/reports/hours`,
             }}
           />
         )}
         <FeatureCard
-          title="Calendar View"
-          description="Visual calendar of timesheet entries"
+          title={tp?.calendarView || "Calendar View"}
+          description={
+            tp?.visualCalendar || "Visual calendar of timesheet entries"
+          }
           icon={Calendar}
           primaryAction={{
-            label: "View Calendar",
+            label: tp?.viewCalendar || "View Calendar",
             href: `/${lang}/finance/timesheet/calendar`,
           }}
           secondaryAction={{
-            label: "Month View",
+            label: tp?.monthView || "Month View",
             href: `/${lang}/finance/timesheet/calendar/month`,
           }}
         />

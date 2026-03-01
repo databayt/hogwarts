@@ -14,23 +14,30 @@ import { RoleRouter } from "./views"
 
 interface Props {
   dictionary?: Dictionary["school"]
+  defaultTab?: "today" | "full"
 }
 
-function TimetableContentInner({ dictionary }: Props) {
+function TimetableContentInner({ dictionary, defaultTab }: Props) {
   const params = useParams()
   const lang = (params?.lang as Locale) || "en"
 
   return (
     <div className="space-y-6">
-      {dictionary && <RoleRouter dictionary={dictionary} lang={lang} />}
+      {dictionary && (
+        <RoleRouter
+          dictionary={dictionary}
+          lang={lang}
+          defaultTab={defaultTab}
+        />
+      )}
     </div>
   )
 }
 
-export function TimetableContent({ dictionary }: Props) {
+export function TimetableContent({ dictionary, defaultTab }: Props) {
   return (
     <SessionProvider>
-      <TimetableContentInner dictionary={dictionary} />
+      <TimetableContentInner dictionary={dictionary} defaultTab={defaultTab} />
     </SessionProvider>
   )
 }

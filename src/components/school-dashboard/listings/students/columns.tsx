@@ -31,7 +31,7 @@ export type StudentRow = {
   id: string
   userId: string | null
   name: string
-  className: string
+  sectionName: string
   status: string
   createdAt: string
   classCount: number
@@ -49,7 +49,7 @@ export const getStudentColumns = (
 ): ColumnDef<StudentRow>[] => {
   const t = {
     name: dictionary?.fullName || "Name",
-    class: dictionary?.class || "Class",
+    section: dictionary?.section || "Section",
     classes: dictionary?.classes || "Classes",
     grades: dictionary?.grades || "Grades",
     status: dictionary?.status || "Status",
@@ -76,12 +76,12 @@ export const getStudentColumns = (
       enableColumnFilter: true,
     },
     {
-      accessorKey: "className",
-      id: "className",
+      accessorKey: "sectionName",
+      id: "sectionName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.class} />
+        <DataTableColumnHeader column={column} title={t.section} />
       ),
-      meta: { label: t.class, variant: "text" },
+      meta: { label: t.section, variant: "text" },
     },
     {
       accessorKey: "classCount",

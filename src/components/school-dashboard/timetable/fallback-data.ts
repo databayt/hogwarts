@@ -1,7 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Fallback data for when main timetable data is unavailable
+// WARNING: This file contains hardcoded mock data used as fallback when real timetable
+// data is unavailable. If this data appears in production, it means the real timetable
+// query failed silently. TODO: Replace with empty state UI instead of fake data.
 export const FALLBACK_SUBJECTS = [
   "Mathematics",
   "Science",

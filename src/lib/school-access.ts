@@ -486,7 +486,7 @@ export async function joinSchoolByCode(
     // Check user doesn't already belong to a school
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, schoolId: true, role: true },
+      select: { id: true, schoolId: true, role: true, email: true },
     })
 
     if (!user) return { success: false, error: "User not found" }
@@ -494,10 +494,15 @@ export async function joinSchoolByCode(
       return { success: false, error: "You already belong to a school" }
     }
 
-    // Look up school by join code
+    // Look up school by join code with branding for self-enrollment check
     const school = await db.school.findUnique({
       where: { joinCode: normalizedCode },
-      select: { id: true, name: true, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        isActive: true,
+        branding: { select: { allowSelfEnrollment: true } },
+      },
     })
 
     if (!school) return { success: false, error: "Invalid join code" }
@@ -505,7 +510,37 @@ export async function joinSchoolByCode(
       return { success: false, error: "This school is no longer active" }
     }
 
-    // Atomic: link user to school
+    // If self-enrollment is disabled, create a pending membership request
+    if (!school.branding?.allowSelfEnrollment) {
+      const userEmail = user.email || userId
+      await db.membershipRequest.upsert({
+        where: {
+          schoolId_email: { schoolId: school.id, email: userEmail },
+        },
+        create: {
+          schoolId: school.id,
+          userId: user.id,
+          email: userEmail,
+          requestedRole: "STAFF",
+          joinMethod: "JOIN_CODE",
+          status: "PENDING",
+        },
+        update: {},
+      })
+
+      logger.info(
+        "joinSchoolByCode: Created pending membership request (self-enrollment disabled)",
+        { userId, schoolId: school.id }
+      )
+
+      return {
+        success: false,
+        error:
+          "Your request to join has been submitted and is pending admin approval",
+      }
+    }
+
+    // Self-enrollment is enabled: link user to school directly
     await db.user.update({
       where: { id: userId },
       data: {

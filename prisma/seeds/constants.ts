@@ -27,7 +27,7 @@ import type {
 export const DEMO_SCHOOL = {
   // Identity
   domain: "demo",
-  name: "المدرسة التجريبية", // EN: "Demo School"
+  name: "نموذج", // EN: "Demo"
   motto: "التميز في التعليم", // EN: "Excellence in Education"
   preferredLanguage: "ar",
 

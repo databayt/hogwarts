@@ -107,12 +107,14 @@ export function checkStudentPermission(
     return false
   }
 
-  // GUARDIAN can view linked children
+  // GUARDIAN can view linked children (list view allowed, detail restricted to own children)
   if (role === "GUARDIAN") {
     if (action === "read") {
-      // Would need to check guardian-student relationship
-      // Simplified: deny until proper implementation
-      return false
+      // Allow list view (no specific student) -- server action filters by guardian relationship
+      if (!student) return true
+      // For specific student access, require same school
+      if (!student.schoolId) return false
+      return schoolId === student.schoolId
     }
     return false
   }

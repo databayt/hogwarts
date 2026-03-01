@@ -19,10 +19,10 @@ export default async function GradesLayout({ children, params }: Props) {
   // Grades page navigation (5 links)
   const gradesPages: PageNavItem[] = [
     { name: d?.navAll || "All", href: `/${lang}/grades` },
-    { name: "Generate", href: `/${lang}/grades/generate` },
+    { name: d?.navGenerate || "Generate", href: `/${lang}/grades/generate` },
     { name: d?.navReports || "Reports", href: `/${lang}/grades/reports` },
     { name: d?.navAnalytics || "Analytics", href: `/${lang}/grades/analytics` },
-    { name: "Settings", href: `/${lang}/grades/settings` },
+    { name: d?.navSettings || "Settings", href: `/${lang}/grades/settings` },
   ]
 
   return (

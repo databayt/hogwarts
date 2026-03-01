@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import type {
   BloomLevel,
   DifficultyLevel,
@@ -35,6 +36,50 @@ export default async function QuestionBankContent({
 }: Props) {
   const sp = await questionBankSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
+  const session = await auth()
+  const role = session?.user?.role
+
+  // For students/guardians, scope questions to enrolled subjects
+  let enrolledSubjectIds: string[] | null = null
+  if (schoolId && role === "STUDENT") {
+    const student = await db.student.findFirst({
+      where: { userId: session?.user?.id, schoolId },
+      select: { id: true },
+    })
+    if (student) {
+      const classes = await db.studentClass.findMany({
+        where: { studentId: student.id, schoolId },
+        include: { class: { select: { subjectId: true } } },
+      })
+      enrolledSubjectIds = classes
+        .map((sc) => sc.class.subjectId)
+        .filter(Boolean) as string[]
+    }
+  } else if (schoolId && role === "GUARDIAN") {
+    const guardian = await db.guardian.findFirst({
+      where: { userId: session?.user?.id, schoolId },
+      select: { id: true },
+    })
+    if (guardian) {
+      const sgs = await db.studentGuardian.findMany({
+        where: { guardianId: guardian.id, schoolId },
+        select: { studentId: true },
+      })
+      const classes = await db.studentClass.findMany({
+        where: {
+          studentId: { in: sgs.map((sg) => sg.studentId) },
+          schoolId,
+        },
+        include: { class: { select: { subjectId: true } } },
+      })
+      enrolledSubjectIds = [
+        ...new Set(
+          classes.map((sc) => sc.class.subjectId).filter(Boolean) as string[]
+        ),
+      ]
+    }
+  }
+
   let data: QuestionBankRow[] = []
   let total = 0
 
@@ -43,6 +88,10 @@ export default async function QuestionBankContent({
       const where: Prisma.QuestionBankWhereInput = {
         schoolId, // CRITICAL: Multi-tenant scope
         ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
+        // Scope to enrolled subjects for students/guardians
+        ...(enrolledSubjectIds && !sp.subjectId
+          ? { subjectId: { in: enrolledSubjectIds } }
+          : {}),
         ...(sp.questionType
           ? { questionType: sp.questionType as QuestionType }
           : {}),
@@ -135,6 +184,8 @@ export default async function QuestionBankContent({
     }
   }
 
+  const isReadOnly = ["STUDENT", "GUARDIAN"].includes(role || "")
+
   return (
     <QBankTabbedLayout>
       <QuestionBankTable
@@ -142,6 +193,7 @@ export default async function QuestionBankContent({
         total={total}
         perPage={sp.perPage}
         dictionary={dictionary}
+        readOnly={isReadOnly}
       />
     </QBankTabbedLayout>
   )

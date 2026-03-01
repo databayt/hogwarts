@@ -25,11 +25,24 @@ import {
 
 interface DataTableViewOptionsProps<TData> {
   table: Table<TData>
+  translations?: {
+    view?: string
+    searchColumns?: string
+    noColumns?: string
+    all?: string
+  }
 }
 
 function DataTableViewOptionsInner<TData>({
   table,
+  translations = {},
 }: DataTableViewOptionsProps<TData>) {
+  const t = {
+    view: translations.view || "View",
+    searchColumns: translations.searchColumns || "Search columns...",
+    noColumns: translations.noColumns || "No columns found.",
+    all: translations.all || "All",
+  }
   const columns = React.useMemo(
     () =>
       table
@@ -63,19 +76,19 @@ function DataTableViewOptionsInner<TData>({
           className="hidden h-9 lg:flex"
         >
           <Settings2 />
-          View
+          {t.view}
           <ChevronsUpDown className="ms-auto opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-44 p-0">
         <Command>
-          <CommandInput placeholder="Search columns..." />
+          <CommandInput placeholder={t.searchColumns} />
           <CommandList>
-            <CommandEmpty>No columns found.</CommandEmpty>
+            <CommandEmpty>{t.noColumns}</CommandEmpty>
             <CommandGroup>
               {/* Select All option */}
               <CommandItem onSelect={toggleAll}>
-                <span className="truncate font-medium">All</span>
+                <span className="truncate font-medium">{t.all}</span>
                 <Check
                   className={cn(
                     "ms-auto size-4 shrink-0",

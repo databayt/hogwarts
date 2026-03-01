@@ -48,7 +48,7 @@ export async function updateJoinSettings(
     })
 
     revalidatePath(`/onboarding/${schoolId}/join`)
-    return createActionResponse(branding)
+    return createActionResponse({ id: branding.id })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createActionResponse(undefined, {

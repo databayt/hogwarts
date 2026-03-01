@@ -19,9 +19,12 @@ export default async function ParentsLayout({ children, params }: Props) {
   // Parents page navigation (4 links)
   const parentsPages: PageNavItem[] = [
     { name: d?.allParents || "All", href: `/${lang}/parents` },
-    { name: "Link", href: `/${lang}/parents/link` },
-    { name: "Communication", href: `/${lang}/parents/communication` },
-    { name: "Settings", href: `/${lang}/parents/settings` },
+    { name: d?.navLink || "Link", href: `/${lang}/parents/link` },
+    {
+      name: d?.navCommunication || "Communication",
+      href: `/${lang}/parents/communication`,
+    },
+    { name: d?.navSettings || "Settings", href: `/${lang}/parents/settings` },
   ]
 
   return (

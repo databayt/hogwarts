@@ -18,9 +18,15 @@ export default async function AssignmentsLayout({ children, params }: Props) {
 
   // Define assignments page navigation
   const assignmentsPages: PageNavItem[] = [
-    { name: "All", href: `/${lang}/assignments` },
-    { name: "Upcoming", href: `/${lang}/assignments/upcoming` },
-    { name: "Submitted", href: `/${lang}/assignments/submitted` },
+    { name: d?.navAll || "All", href: `/${lang}/assignments` },
+    {
+      name: d?.navUpcoming || "Upcoming",
+      href: `/${lang}/assignments/upcoming`,
+    },
+    {
+      name: d?.navSubmitted || "Submitted",
+      href: `/${lang}/assignments/submitted`,
+    },
   ]
 
   return (

@@ -64,7 +64,7 @@ export async function ParentDashboard({
       const [parentData, qlData, weather] = await Promise.all([
         getParentDashboardData(),
         getQuickLookData(locale),
-        getWeatherData(),
+        getWeatherData("metric", locale),
       ])
       data = parentData
       quickLookData = qlData
@@ -252,7 +252,7 @@ export async function ParentDashboard({
       },
     ]
 
-    // Mock grade trend data
+    // TODO: Replace with real grade trend data from children's exam/assessment queries
     const gradeTrendData = [
       { period: "Sep", current: 75, previous: 70 },
       { period: "Oct", current: 78, previous: 72 },

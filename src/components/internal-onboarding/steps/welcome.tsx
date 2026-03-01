@@ -117,9 +117,9 @@ export function WelcomeStep({
               <div className="flex justify-center gap-2 pt-2">
                 <Button variant="outline" size="sm" onClick={copyRef}>
                   {copied ? (
-                    <Check className="mr-1 h-3 w-3" />
+                    <Check className="me-1 h-3 w-3" />
                   ) : (
-                    <Copy className="mr-1 h-3 w-3" />
+                    <Copy className="me-1 h-3 w-3" />
                   )}
                   {copied ? "Copied" : "Copy"}
                 </Button>
@@ -129,7 +129,7 @@ export function WelcomeStep({
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <MessageCircle className="mr-1 h-3 w-3" />
+                    <MessageCircle className="me-1 h-3 w-3" />
                     Share
                   </a>
                 </Button>

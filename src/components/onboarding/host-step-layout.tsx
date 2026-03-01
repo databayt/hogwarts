@@ -37,7 +37,7 @@ const HostStepLayout: React.FC<HostStepLayoutProps> = ({
             {subtitle && subtitle !== " " && (
               <div className="mt-3 sm:mt-4">
                 {typeof subtitle === "string" ? (
-                  <p className="text-gray-600">{subtitle}</p>
+                  <p className="text-muted-foreground">{subtitle}</p>
                 ) : (
                   subtitle
                 )}

@@ -134,6 +134,10 @@ export async function enrollStudent(input: {
             classId,
           },
         })
+        // TODO: Call syncStudentClassToEnrollment(schoolId, studentId, classId) from
+        // "@/lib/enrollment-sync" here to create a corresponding LMS Enrollment record.
+        // This bridges the timetable/attendance StudentClass with the catalog/LMS Enrollment
+        // so that the student automatically gets access to the subject's catalog content.
       }
     }
 

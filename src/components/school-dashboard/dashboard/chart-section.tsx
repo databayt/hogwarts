@@ -5,6 +5,7 @@
 import * as React from "react"
 
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import {
   AreaChartStacked,
@@ -89,6 +90,8 @@ function getChartSectionTitle(
 // HELPER: Generate date-based bar chart data
 // ============================================================================
 
+// Placeholder chart data -- deterministic so charts don't flicker on re-render.
+// TODO: Replace with real data from dashboard actions when metrics are available.
 function generateBarChartData(months: number = 3): InteractiveBarChartData[] {
   const data: InteractiveBarChartData[] = []
   const now = new Date()
@@ -96,10 +99,14 @@ function generateBarChartData(months: number = 3): InteractiveBarChartData[] {
   for (let i = months * 30; i >= 0; i--) {
     const date = new Date(now)
     date.setDate(date.getDate() - i)
+    // Deterministic pseudo-value based on day-of-year
+    const dayOfYear = Math.floor(
+      (date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000
+    )
     data.push({
       date: date.toISOString().split("T")[0],
-      primary: Math.floor(Math.random() * 400) + 100,
-      secondary: Math.floor(Math.random() * 300) + 80,
+      primary: 200 + ((dayOfYear * 17) % 300),
+      secondary: 150 + ((dayOfYear * 13) % 200),
     })
   }
   return data
@@ -376,15 +383,109 @@ const defaultDataByRole: Record<DashboardRole, RoleChartData> = {
  * Uses finance page layout: InteractiveBarChart (full width) +
  * RadialTextChart & AreaChartStacked (2-column grid).
  */
+// ============================================================================
+// HELPER: Translate area chart data labels (day/month/week names)
+// ============================================================================
+
+function translateDataLabels(
+  data: AreaChartStackedData[],
+  locale: string,
+  cl?: Record<string, string>
+): AreaChartStackedData[] {
+  return data.map((d) => {
+    const label = d.label
+    // Week N pattern
+    if (label.startsWith("Week ")) {
+      const num = label.replace("Week ", "")
+      return { ...d, label: `${cl?.week || "Week"} ${num}` }
+    }
+    // Term N pattern
+    if (label.startsWith("Term ")) {
+      const num = label.replace("Term ", "")
+      return { ...d, label: `${cl?.term || "Term"} ${num}` }
+    }
+    // Day names → use Intl
+    const dayIndex = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ].indexOf(label)
+    if (dayIndex >= 0) {
+      const date = new Date(2024, 0, dayIndex) // Jan 2024 starts on Monday=1
+      // Use a known date for each day of week
+      const refDate = new Date(2024, 0, 7 + dayIndex) // Jan 7 is Sunday
+      return {
+        ...d,
+        label: refDate.toLocaleDateString(locale, { weekday: "short" }),
+      }
+    }
+    // Month names → use Intl
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ]
+    const monthIndex = months.indexOf(label)
+    if (monthIndex >= 0) {
+      const date = new Date(2024, monthIndex, 1)
+      return {
+        ...d,
+        label: date.toLocaleDateString(locale, { month: "short" }),
+      }
+    }
+    return d
+  })
+}
+
 function ChartSectionInner({ role, className }: ChartSectionProps) {
   const { dictionary } = useDictionary()
+  const { locale } = useLocale()
   const dict = dictionary?.school?.dashboard?.charts as
+    | Record<string, string>
+    | undefined
+  const cl = dictionary?.school?.dashboard?.chartLabels as
     | Record<string, string>
     | undefined
 
   // Use default data based on role (API data is in legacy format)
   const data = defaultDataByRole[role] || defaultDataByRole.ADMIN
   const sectionTitle = getChartSectionTitle(role, dict)
+
+  // Translate chart labels via dictionary using role-prefixed keys
+  const roleKey = role.toLowerCase()
+  const barTitle = cl?.[`${roleKey}BarTitle`] || data.barChart.title
+  const barDesc = cl?.[`${roleKey}BarDesc`] || data.barChart.description
+  const barPrimary = cl?.[`${roleKey}BarPrimary`] || data.barChart.primaryLabel
+  const barSecondary =
+    cl?.[`${roleKey}BarSecondary`] || data.barChart.secondaryLabel
+  const radialLabel = cl?.[`${roleKey}RadialLabel`] || data.radialChart.label
+  const radialTrend =
+    cl?.[`${roleKey}RadialTrend`] || data.radialChart.trendLabel
+  const areaPrimary =
+    cl?.[`${roleKey}AreaPrimary`] || data.areaChart.primaryLabel
+  const areaSecondary =
+    cl?.[`${roleKey}AreaSecondary`] || data.areaChart.secondaryLabel
+  const areaTrend = cl?.[`${roleKey}AreaTrend`] || data.areaChart.trendLabel
+
+  // Translate area chart data labels (day/month/week names)
+  const translatedAreaData = translateDataLabels(
+    data.areaChart.data,
+    locale,
+    cl
+  )
 
   return (
     <section className={className}>
@@ -393,27 +494,27 @@ function ChartSectionInner({ role, className }: ChartSectionProps) {
         {/* Full width bar chart (like finance page) */}
         <InteractiveBarChart
           data={data.barChart.data}
-          title={data.barChart.title}
-          description={data.barChart.description}
-          primaryLabel={data.barChart.primaryLabel}
-          secondaryLabel={data.barChart.secondaryLabel}
+          title={barTitle}
+          description={barDesc}
+          primaryLabel={barPrimary}
+          secondaryLabel={barSecondary}
         />
 
         {/* 2-column grid: Radial + Area (like finance page) */}
         <div className="grid gap-4 md:grid-cols-2">
           <RadialTextChart
             value={data.radialChart.value}
-            label={data.radialChart.label}
+            label={radialLabel}
             trend={data.radialChart.trend}
-            trendLabel={data.radialChart.trendLabel}
+            trendLabel={radialTrend}
             maxValue={data.radialChart.maxValue}
           />
           <AreaChartStacked
-            data={data.areaChart.data}
-            primaryLabel={data.areaChart.primaryLabel}
-            secondaryLabel={data.areaChart.secondaryLabel}
+            data={translatedAreaData}
+            primaryLabel={areaPrimary}
+            secondaryLabel={areaSecondary}
             trend={data.areaChart.trend}
-            trendLabel={data.areaChart.trendLabel}
+            trendLabel={areaTrend}
           />
         </div>
       </div>

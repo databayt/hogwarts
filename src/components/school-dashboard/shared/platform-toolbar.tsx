@@ -56,6 +56,10 @@ interface PlatformToolbarProps<TData> {
     export?: string
     exportCSV?: string
     exporting?: string
+    view?: string
+    searchColumns?: string
+    noColumns?: string
+    all?: string
   }
   /** Additional class names */
   className?: string
@@ -89,6 +93,10 @@ export function PlatformToolbar<TData>({
     export: translations.export || "Export",
     exportCSV: translations.exportCSV || "Export CSV",
     exporting: translations.exporting || "Exporting...",
+    view: translations.view || "View",
+    searchColumns: translations.searchColumns || "Search columns...",
+    noColumns: translations.noColumns || "No columns found.",
+    all: translations.all || "All",
   }
 
   // Check if there are active filters (from table state or search)
@@ -170,7 +178,15 @@ export function PlatformToolbar<TData>({
       <div className="flex items-center gap-2">
         {/* Column visibility (table view only) */}
         {view === "table" && table && showColumnToggle && (
-          <DataTableViewOptions table={table} />
+          <DataTableViewOptions
+            table={table}
+            translations={{
+              view: t.view,
+              searchColumns: t.searchColumns,
+              noColumns: t.noColumns,
+              all: t.all,
+            }}
+          />
         )}
 
         {/* View toggle */}

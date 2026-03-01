@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 interface BankAccountsSummaryProps {
@@ -31,6 +32,10 @@ export function BankAccountsSummary({
   className,
 }: BankAccountsSummaryProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const dp = fd?.dashboardPage as Record<string, string> | undefined
+
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0)
 
   const getIcon = (type: string) => {
@@ -80,12 +85,16 @@ export function BankAccountsSummary({
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Bank Accounts</CardTitle>
-          <CardDescription>No bank accounts connected</CardDescription>
+          <CardTitle>{dp?.bankAccounts || "Bank Accounts"}</CardTitle>
+          <CardDescription>
+            {dp?.noBankAccounts || "No bank accounts connected"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Link href="/finance/banking/connect">
-            <Button className="w-full">Connect Bank Account</Button>
+            <Button className="w-full">
+              {dp?.connectBankAccount || "Connect Bank Account"}
+            </Button>
           </Link>
         </CardContent>
       </Card>
@@ -97,15 +106,17 @@ export function BankAccountsSummary({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Bank Accounts</CardTitle>
+            <CardTitle>{dp?.bankAccounts || "Bank Accounts"}</CardTitle>
             <CardDescription>
-              {accounts.length} active{" "}
-              {accounts.length === 1 ? "account" : "accounts"}
+              {accounts.length}{" "}
+              {accounts.length === 1
+                ? dp?.account || "account"
+                : dp?.accounts || "accounts"}
             </CardDescription>
           </div>
           <Link href="/finance/banking">
             <Button variant="outline" size="sm">
-              Manage
+              {dp?.manage || "Manage"}
             </Button>
           </Link>
         </div>
@@ -114,7 +125,9 @@ export function BankAccountsSummary({
         <div className="space-y-4">
           {/* Total Balance */}
           <div className="bg-muted/50 rounded-lg p-4">
-            <p className="text-muted-foreground text-sm">Total Balance</p>
+            <p className="text-muted-foreground text-sm">
+              {dp?.totalBalance || "Total Balance"}
+            </p>
             <p className="text-2xl font-bold">{formatBalance(totalBalance)}</p>
           </div>
 
@@ -141,7 +154,7 @@ export function BankAccountsSummary({
                         {formatBalance(account.balance)}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {percentage.toFixed(1)}% of total
+                        {percentage.toFixed(1)}% {dp?.ofTotal || "of total"}
                       </p>
                     </div>
                   </div>
@@ -155,12 +168,12 @@ export function BankAccountsSummary({
           <div className="grid grid-cols-2 gap-2 border-t pt-4">
             <Link href="/finance/banking/transfer">
               <Button variant="outline" size="sm" className="w-full">
-                Transfer Funds
+                {dp?.transferFunds || "Transfer Funds"}
               </Button>
             </Link>
             <Link href="/finance/banking/reconciliation">
               <Button variant="outline" size="sm" className="w-full">
-                Reconcile
+                {dp?.reconcile || "Reconcile"}
               </Button>
             </Link>
           </div>

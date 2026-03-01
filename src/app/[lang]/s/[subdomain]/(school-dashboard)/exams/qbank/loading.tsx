@@ -21,7 +21,7 @@ export default function Loading() {
       <SkeletonStats count={4} />
 
       {/* Questions data table */}
-      <SkeletonDataTable columns={6} rows={15} />
+      <SkeletonDataTable columns={11} rows={15} />
     </div>
   )
 }

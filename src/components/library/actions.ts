@@ -24,11 +24,20 @@ import {
   type UpdateBookSchema,
 } from "./validation"
 
-// Create a new book
+// Create a new book (catalog-linked only)
 export async function createBook(
-  data: BookSchema & { schoolId: string }
+  data: BookSchema & { schoolId: string; catalogBookId?: string }
 ): Promise<ActionResponse<Book>> {
   try {
+    // Books must come from the catalog — reject standalone creation
+    if (!data.catalogBookId) {
+      return {
+        success: false,
+        message:
+          "Books must be added from the catalog. Use Browse Catalog or Contribute Book instead.",
+      }
+    }
+
     const session = await auth()
     const authCtx = getAuthContext(session)
     if (!authCtx) return { success: false, message: "Not authenticated" }

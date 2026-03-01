@@ -1,6 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
@@ -15,6 +18,12 @@ interface Props {
 
 export default async function NewQuestionPage({ params }: Props) {
   const { lang } = await params
+
+  const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams/qbank`)
+  }
+
   const dictionary = await getDictionary(lang)
 
   return (

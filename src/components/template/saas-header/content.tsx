@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { GenericCommandMenu } from "@/components/atom/generic-command-menu"
-import { saasSearchConfig } from "@/components/atom/generic-command-menu/saas-config"
+import { SpotlightSearch } from "@/components/atom/generic-command-menu/spotlight-search"
 import { UserButton } from "@/components/auth/user-button"
 import { LanguageSwitcher } from "@/components/internationalization/language-switcher"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -95,7 +94,7 @@ export default function SaasHeader() {
           </div>
         </div>
         <div className="ms-auto flex items-center gap-1.5">
-          <GenericCommandMenu config={saasSearchConfig} variant="icon" />
+          <SpotlightSearch surface="saas-dashboard" />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
           <Button variant="link" size="icon" className="size-7">

@@ -25,17 +25,17 @@ export async function getSchoolScheduleData(
         country: true,
         schoolType: true,
         schoolLevel: true,
-        system: true,
+        curriculum: true,
       },
     })
 
     if (!school) throw new Error("School not found")
 
     return createActionResponse({
-      country: school.country || "SD",
+      country: school.country || null,
       schoolType: school.schoolType || undefined,
       schoolLevel: school.schoolLevel || undefined,
-      selectedStructure: school.system || undefined,
+      selectedStructure: school.curriculum || undefined,
     })
   } catch (error) {
     return createActionResponse(undefined, error)
@@ -49,10 +49,10 @@ export async function saveScheduleChoice(
   try {
     await requireSchoolOwnership(schoolId)
 
-    // Store the chosen structure slug in the school's system field
+    // Store the chosen structure slug in the school's curriculum field
     await db.school.update({
       where: { id: schoolId },
-      data: { system: structureSlug },
+      data: { curriculum: structureSlug },
     })
 
     revalidatePath(`/onboarding/${schoolId}/schedule`)

@@ -7,7 +7,12 @@ import { Dispatch, SetStateAction } from "react"
 import { Drawer } from "vaul"
 
 import { cn } from "@/lib/utils"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useMediaQuery } from "@/components/saas-marketing/pricing/hooks/use-media-query"
 
 interface ModalProps {
@@ -99,6 +104,10 @@ export function Modal({
           }
         }}
       >
+        <DialogTitle className="sr-only">Dialog</DialogTitle>
+        <DialogDescription className="sr-only">
+          Dialog content
+        </DialogDescription>
         {children}
       </DialogContent>
     </Dialog>

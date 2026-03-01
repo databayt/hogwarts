@@ -16,8 +16,20 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
-  const session = await auth()
+  const [dictionary, session] = await Promise.all([getDictionary(lang), auth()])
+
+  // Staff only
+  const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
+  if (!staffRoles.includes(session?.user?.role ?? "")) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <h2>Access Denied</h2>
+        <p className="text-muted-foreground">
+          You do not have permission to access barcode attendance.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <AttendanceProvider initialMethod="BARCODE">

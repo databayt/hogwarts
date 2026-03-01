@@ -5,6 +5,7 @@ import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { type Locale } from "@/components/internationalization/config"
 
@@ -34,7 +35,19 @@ export default async function LibraryAdminBooksContent({
   const books = await db.book.findMany({
     where: { schoolId },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      author: true,
+      genre: true,
+      totalCopies: true,
+      availableCopies: true,
+      rating: true,
+      catalogBookId: true,
+    },
   })
+
+  const isRTL = lang === "ar"
 
   return (
     <section className="library-admin-books-container">
@@ -44,14 +57,18 @@ export default async function LibraryAdminBooksContent({
         </h2>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href="/library/catalog">Browse Global Catalog</Link>
+            <Link href="/library/catalog">
+              {isRTL ? "تصفح الكتالوج" : "Browse Catalog"}
+            </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/library/contribute">Contribute Book</Link>
+            <Link href="/library/contribute">
+              {isRTL ? "ساهم بكتاب" : "Contribute Book"}
+            </Link>
           </Button>
-          <Button asChild>
-            <Link href="/library/admin/books/new">
-              + {t.library.admin.createNewBook}
+          <Button variant="outline" asChild>
+            <Link href="/library/contributions">
+              {isRTL ? "مساهماتي" : "My Contributions"}
             </Link>
           </Button>
         </div>
@@ -62,8 +79,8 @@ export default async function LibraryAdminBooksContent({
           <div className="library-admin-books-empty">
             <p>{t.library.admin.noBooks}</p>
             <Button asChild className="mt-4">
-              <Link href="/library/admin/books/new">
-                {t.library.admin.addFirstBook}
+              <Link href="/library/catalog">
+                {isRTL ? "أضف كتباً من الكتالوج" : "Add books from the catalog"}
               </Link>
             </Button>
           </div>
@@ -74,6 +91,7 @@ export default async function LibraryAdminBooksContent({
                 <th>{t.library.admin.bookTitle}</th>
                 <th>{t.library.admin.bookAuthor}</th>
                 <th>{t.library.admin.bookGenre}</th>
+                <th>{isRTL ? "المصدر" : "Source"}</th>
                 <th>{t.library.admin.totalCopies}</th>
                 <th>{t.library.available}</th>
                 <th>{t.library.rating}</th>
@@ -88,9 +106,20 @@ export default async function LibraryAdminBooksContent({
                   </td>
                   <td>{book.author}</td>
                   <td>{book.genre}</td>
+                  <td>
+                    {book.catalogBookId ? (
+                      <Badge variant="secondary">
+                        {isRTL ? "كتالوج" : "Catalog"}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">
+                        {isRTL ? "قديم" : "Legacy"}
+                      </Badge>
+                    )}
+                  </td>
                   <td>{book.totalCopies}</td>
                   <td>{book.availableCopies}</td>
-                  <td>⭐ {book.rating}/5</td>
+                  <td>{book.rating}/5</td>
                   <td>
                     <BookTableActions
                       bookId={book.id}

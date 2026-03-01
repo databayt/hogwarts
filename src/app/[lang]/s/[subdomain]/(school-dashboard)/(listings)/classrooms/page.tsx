@@ -1,28 +1,17 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { SearchParams } from "nuqs/server"
-
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import ClassesContent from "@/components/school-dashboard/listings/classes/content"
+import ClassroomsContent from "@/components/school-dashboard/listings/classrooms/content"
 
 export const metadata = { title: "Dashboard: Classrooms" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
-  searchParams: Promise<SearchParams>
 }
 
-export default async function Page({ params, searchParams }: Props) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
+export default async function Page({ params }: Props) {
+  const { lang, subdomain } = await params
 
-  return (
-    <ClassesContent
-      searchParams={searchParams}
-      dictionary={dictionary.school}
-      lang={lang}
-    />
-  )
+  return <ClassroomsContent lang={lang} subdomain={subdomain} />
 }

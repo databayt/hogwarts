@@ -34,6 +34,21 @@ export interface ResourceUsageSectionProps {
 }
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+function toCamelCase(str: string): string {
+  const words = str.split(/\s+/)
+  return words
+    .map((w, i) =>
+      i === 0
+        ? w.charAt(0).toLowerCase() + w.slice(1)
+        : w.charAt(0).toUpperCase() + w.slice(1)
+    )
+    .join("")
+}
+
+// ============================================================================
 // ROLE-SPECIFIC TITLES
 // ============================================================================
 
@@ -157,6 +172,13 @@ export function ResourceUsageSection({
   // Use provided title or derive from role
   const title = sectionTitle || getResourceTitleByRole(role, dict)
 
+  const resDict = dictionary?.school?.dashboard?.resourceNames as
+    | Record<string, string>
+    | undefined
+  const unitDict = dictionary?.school?.dashboard?.units as
+    | Record<string, string>
+    | undefined
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -182,10 +204,21 @@ export function ResourceUsageSection({
     fetchData()
   }, [role])
 
+  // Translate resource names and units via dictionary
+  const translatedResources = resources.map((r) => ({
+    ...r,
+    name: resDict?.[toCamelCase(r.name)] || r.name,
+    unit: r.unit ? unitDict?.[r.unit] || r.unit : r.unit,
+  }))
+
   return (
     <section className={className}>
       <SectionHeading title={title} />
-      <DetailedUsageTable resources={resources} title="" description="" />
+      <DetailedUsageTable
+        resources={translatedResources}
+        title=""
+        description=""
+      />
     </section>
   )
 }

@@ -10,7 +10,6 @@ import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCurrentUser } from "@/components/auth/use-current-user"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getUserSchools, initializeSchoolSetup } from "./actions"
 import { ErrorBoundary } from "./error-boundary"
@@ -35,35 +34,17 @@ export default function OnboardingContent({ dictionary, locale }: Props) {
   const router = useRouter()
   const user = useCurrentUser()
   const { update: updateSession } = useSession()
-  const { dictionary: d } = useDictionary()
   const [isCreating, setIsCreating] = React.useState(false)
   const [schools, setSchools] = React.useState<SchoolListItem[]>([])
   const [totalSchools, setTotalSchools] = React.useState<number>(0)
   const [isLoading, setIsLoading] = React.useState(true)
-  const [authChecked, setAuthChecked] = React.useState(false)
 
-  // Auth check - redirect unauthenticated users to login
+  // Load schools eagerly on mount — no auth gate needed since
+  // middleware already redirects unauthenticated users, and the
+  // server action validates auth independently via getAuthContext()
   useEffect(() => {
-    // Wait for user state to be determined
-    if (user === undefined) return
-
-    if (user === null) {
-      // User is not authenticated - redirect to login with callback
-      const currentPath = window.location.pathname
-      const loginUrl = `/${locale || "en"}/login?callbackUrl=${encodeURIComponent(currentPath)}`
-      router.push(loginUrl)
-      return
-    }
-
-    setAuthChecked(true)
-  }, [user, router, locale])
-
-  // Load schools only after auth check passes
-  useEffect(() => {
-    if (authChecked) {
-      loadUserSchools()
-    }
-  }, [authChecked])
+    loadUserSchools()
+  }, [])
 
   // i18n strings with fallbacks
   // Note: These keys may not exist in the dictionary yet, so we use direct fallbacks
@@ -115,9 +96,9 @@ export default function OnboardingContent({ dictionary, locale }: Props) {
         } catch {
           // Session refresh may fail, continue with navigation
         }
-        // Navigate directly to the school's onboarding with schoolId in URL (no sessionStorage)
+        // Navigate to the 3-stage overview page before starting onboarding
         router.push(
-          `/${locale || "en"}/onboarding/${response.data.id}/about-school`
+          `/${locale || "en"}/onboarding/overview?schoolId=${response.data.schoolId}`
         )
       } else {
         toast.dismiss(loadingToast)
@@ -139,8 +120,8 @@ export default function OnboardingContent({ dictionary, locale }: Props) {
     router.push(`/${locale || "en"}/onboarding/overview?template=true`)
   }
 
-  // Show loading state while checking auth
-  if (!authChecked || isLoading) {
+  // Show loading state while fetching schools
+  if (isLoading) {
     return (
       <div
         className="flex min-h-screen w-full items-center justify-center"

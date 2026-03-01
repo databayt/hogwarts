@@ -39,7 +39,7 @@ export default async function SubjectsContent({ lang, level }: Props) {
 
       // Fetch ALL published catalog subjects (selections provide custom names only)
       const catalogRows = await db.catalogSubject.findMany({
-        where: { status: "PUBLISHED", system: "clickview" },
+        where: { status: "PUBLISHED", curriculum: "us-k12" },
         orderBy: { sortOrder: "asc" },
         select: {
           id: true,
@@ -110,8 +110,16 @@ export default async function SubjectsContent({ lang, level }: Props) {
       if (level) {
         subjects = subjects.filter((s) => s.levels.includes(level))
       }
-    } catch {
+    } catch (error) {
       // Catalog tables may not exist yet (migrations pending)
+      // Log unexpected errors for debugging
+      const message = error instanceof Error ? error.message : String(error)
+      if (
+        !message.includes("does not exist") &&
+        !message.includes("relation")
+      ) {
+        console.error("[CatalogSubjects] Unexpected error:", message)
+      }
     }
   }
 

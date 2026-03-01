@@ -41,7 +41,7 @@ export async function updateSchoolLocation(
     })
 
     revalidatePath(`/onboarding/${schoolId}/location`)
-    return createActionResponse(updatedSchool)
+    return createActionResponse({ id: updatedSchool.id })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createActionResponse(undefined, error)

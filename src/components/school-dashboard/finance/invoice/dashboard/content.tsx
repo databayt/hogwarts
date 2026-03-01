@@ -53,6 +53,9 @@ export function DashboardContent({ dictionary, lang }: Props) {
     }
   }
 
+  const fd = (dictionary as any)?.finance
+  const ip = fd?.invoicePage as Record<string, string> | undefined
+
   useEffect(() => {
     fetchData()
   }, [])
@@ -60,18 +63,18 @@ export function DashboardContent({ dictionary, lang }: Props) {
   const columns: ColumnDef<UserInvoice>[] = [
     {
       accessorKey: "invoice_no",
-      header: "Invoice No",
+      header: ip?.invoiceNo || "Invoice No",
     },
     {
       accessorKey: "invoice_date",
-      header: "Date",
+      header: ip?.date || "Date",
       cell: ({ row }) => {
         return format(row.original.invoice_date, "PP")
       },
     },
     {
       accessorKey: "total",
-      header: "Amount",
+      header: ip?.amount || "Amount",
       cell: ({ row }) => {
         const totalAmountInCurrencyFormat = new Intl.NumberFormat(lang, {
           style: "currency",
@@ -83,14 +86,12 @@ export function DashboardContent({ dictionary, lang }: Props) {
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: ip?.status || "Status",
       cell: ({ row }) => {
         return <Badge>{row.original.status}</Badge>
       },
     },
   ]
-
-  const d = dictionary?.finance?.invoice
 
   return (
     <div className="space-y-6">
@@ -102,6 +103,7 @@ export function DashboardContent({ dictionary, lang }: Props) {
             paidInvoice: data?.paidInvoice ?? "-",
             UnpaidInvoice: data?.UnpaidInvoice ?? "-",
           }}
+          dict={ip}
         />
 
         {/***chart */}
@@ -112,6 +114,8 @@ export function DashboardContent({ dictionary, lang }: Props) {
           className="lg:col-span-2"
           data={data?.recentInvoice as unknown as UserInvoice[]}
           columns={columns}
+          emptyText={ip?.noInvoiceFound}
+          title={ip?.recentInvoice}
         />
       </div>
     </div>

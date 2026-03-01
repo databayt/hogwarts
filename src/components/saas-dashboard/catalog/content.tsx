@@ -18,6 +18,7 @@ import { Shell as PageContainer } from "@/components/table/shell"
 import type { SupportedLanguage } from "@/components/translation/types"
 
 import type { CatalogSubjectRow } from "./columns"
+import { CreateSubjectDialog } from "./create-subject-dialog"
 import { CatalogTable } from "./table"
 
 interface Props {
@@ -70,6 +71,11 @@ export async function CatalogContent({ lang }: Props) {
 
   return (
     <PageContainer>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Catalog</h2>
+        <CreateSubjectDialog />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

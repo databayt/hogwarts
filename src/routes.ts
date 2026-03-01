@@ -278,8 +278,8 @@ export const roleRoutes: Record<string, Role[]> = {
   "/timetable/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/lessons": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/lessons/*": ["ADMIN", "TEACHER", "DEVELOPER"],
-  "/exams": ["ADMIN", "TEACHER", "DEVELOPER"],
-  "/exams/*": ["ADMIN", "TEACHER", "DEVELOPER"],
+  "/exams": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
+  "/exams/*": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
   "/grades": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/grades/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/assignments": ["ADMIN", "TEACHER", "DEVELOPER"],
@@ -294,10 +294,24 @@ export const roleRoutes: Record<string, Role[]> = {
   "/parents/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
 
   // ============================================================================
-  // Attendance (admin, teachers, staff)
+  // Attendance (all school roles - role-specific views handled in UI)
   // ============================================================================
-  "/attendance": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
-  "/attendance/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
+  "/attendance": [
+    "ADMIN",
+    "TEACHER",
+    "STAFF",
+    "STUDENT",
+    "GUARDIAN",
+    "DEVELOPER",
+  ],
+  "/attendance/*": [
+    "ADMIN",
+    "TEACHER",
+    "STAFF",
+    "STUDENT",
+    "GUARDIAN",
+    "DEVELOPER",
+  ],
 
   // ============================================================================
   // Communication (all staff roles)
@@ -311,7 +325,7 @@ export const roleRoutes: Record<string, Role[]> = {
   // Student/Guardian self-service routes
   // ============================================================================
   "/my-grades": ["STUDENT", "GUARDIAN", "DEVELOPER"],
-  "/my-attendance": ["STUDENT", "GUARDIAN", "DEVELOPER"],
+  // "/my-attendance" - removed: unified into /attendance with role-based views
   "/my-fees": ["STUDENT", "GUARDIAN", "DEVELOPER"],
   "/my-assignments": ["STUDENT", "GUARDIAN", "DEVELOPER"],
   "/my-timetable": ["STUDENT", "GUARDIAN", "DEVELOPER"],
@@ -369,6 +383,7 @@ export const saasDashboardRoutes = [
   "/domains",
   "/observability",
   "/product",
+  "/catalog",
 ]
 
 /**

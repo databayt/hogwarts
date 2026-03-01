@@ -17,16 +17,29 @@ export default async function AccountsLayout({ children, params }: Props) {
   const d = dictionary?.finance?.accounts
 
   // Define accounts page navigation
+  const n = d?.navigation
   const accountsPages: PageNavItem[] = [
-    { name: "Overview", href: `/${lang}/finance/accounts` },
-    { name: "Chart of Accounts", href: `/${lang}/finance/accounts/chart` },
-    { name: "Journal Entries", href: `/${lang}/finance/accounts/journal` },
-    { name: "General Ledger", href: `/${lang}/finance/accounts/ledger` },
+    { name: n?.overview || "Overview", href: `/${lang}/finance/accounts` },
     {
-      name: "Reconciliation",
+      name: n?.chart || "Chart of Accounts",
+      href: `/${lang}/finance/accounts/chart`,
+    },
+    {
+      name: n?.journal || "Journal Entries",
+      href: `/${lang}/finance/accounts/journal`,
+    },
+    {
+      name: n?.ledger || "General Ledger",
+      href: `/${lang}/finance/accounts/ledger`,
+    },
+    {
+      name: n?.reconciliation || "Reconciliation",
       href: `/${lang}/finance/accounts/reconciliation`,
     },
-    { name: "Settings", href: `/${lang}/finance/accounts/settings` },
+    {
+      name: n?.settings || "Settings",
+      href: `/${lang}/finance/accounts/settings`,
+    },
   ]
 
   return (

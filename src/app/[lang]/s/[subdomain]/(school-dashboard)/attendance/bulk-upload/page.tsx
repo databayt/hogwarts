@@ -20,8 +20,9 @@ export default async function Page({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const session = await auth()
 
-  // Check permissions - only ADMIN and TEACHER can bulk upload
-  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "TEACHER") {
+  // Check permissions - staff only
+  const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
+  if (!staffRoles.includes(session?.user?.role ?? "")) {
     const d = dictionary?.school?.attendance?.bulkUpload?.accessDenied
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">

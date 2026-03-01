@@ -28,6 +28,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getReceipts } from "./actions"
 import { getColumns } from "./columns"
@@ -45,13 +46,17 @@ export function ReceiptsContent({
   initialReceipts = [],
   locale = "en",
 }: ReceiptsContentProps) {
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const rp = fd?.receiptPage as Record<string, string> | undefined
+
   const [receipts, setReceipts] =
     React.useState<ExpenseReceipt[]>(initialReceipts)
   const [isLoading, setIsLoading] = React.useState(false)
   const [viewMode, setViewMode] = React.useState<"grid" | "table">("grid")
   const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState(false)
 
-  const columns = React.useMemo(() => getColumns(), [])
+  const columns = React.useMemo(() => getColumns(fd, rp), [fd, rp])
 
   const loadReceipts = React.useCallback(async () => {
     setIsLoading(true)
@@ -103,24 +108,27 @@ export function ReceiptsContent({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Receipts</h2>
+          <h2 className="text-3xl font-bold">{rp?.heading || "Receipts"}</h2>
           <p className="text-muted-foreground">
-            Manage and track your expense receipts with AI-powered extraction
+            {rp?.description ||
+              "Manage and track your expense receipts with AI-powered extraction"}
           </p>
         </div>
         <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="me-2 h-4 w-4" />
-              Upload Receipt
+              {rp?.uploadReceipt || "Upload Receipt"}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Upload New Receipt</DialogTitle>
+              <DialogTitle>
+                {rp?.uploadNewReceipt || "Upload New Receipt"}
+              </DialogTitle>
               <DialogDescription>
-                Upload a receipt image or PDF. AI will automatically extract the
-                data.
+                {rp?.uploadDescription ||
+                  "Upload a receipt image or PDF. AI will automatically extract the data."}
               </DialogDescription>
             </DialogHeader>
             <UploadForm locale={locale} />
@@ -133,7 +141,7 @@ export function ReceiptsContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Receipts
+              {rp?.totalReceipts || "Total Receipts"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -142,7 +150,9 @@ export function ReceiptsContent({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Processed</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {rp?.processed || "Processed"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-chart-2 text-2xl font-bold">
@@ -152,7 +162,9 @@ export function ReceiptsContent({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Processing</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {rp?.processing || "Processing"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-primary text-2xl font-bold">
@@ -162,7 +174,9 @@ export function ReceiptsContent({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Errors</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {rp?.errors || "Errors"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-destructive text-2xl font-bold">
@@ -181,11 +195,11 @@ export function ReceiptsContent({
           <TabsList>
             <TabsTrigger value="grid" className="gap-2">
               <Grid3X3 className="h-4 w-4" />
-              Grid
+              {rp?.grid || "Grid"}
             </TabsTrigger>
             <TabsTrigger value="table" className="gap-2">
               <List className="h-4 w-4" />
-              Table
+              {rp?.table || "Table"}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -200,11 +214,11 @@ export function ReceiptsContent({
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground mb-4">
-              No receipts uploaded yet
+              {rp?.noReceipts || "No receipts uploaded yet"}
             </p>
             <Button onClick={() => setIsUploadDialogOpen(true)}>
               <Plus className="me-2 h-4 w-4" />
-              Upload Your First Receipt
+              {rp?.uploadFirstReceipt || "Upload Your First Receipt"}
             </Button>
           </CardContent>
         </Card>

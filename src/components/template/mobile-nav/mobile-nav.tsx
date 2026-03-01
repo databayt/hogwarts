@@ -5,25 +5,16 @@
 import * as React from "react"
 import Link, { LinkProps } from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, Mail, Search } from "lucide-react"
+import { Bell, Mail } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { GenericCommandMenu } from "@/components/atom/generic-command-menu"
-import { platformSearchConfig } from "@/components/atom/generic-command-menu/platform-config"
+import { SpotlightSearch } from "@/components/atom/generic-command-menu/spotlight-search"
 import type { Role } from "@/components/atom/generic-command-menu/types"
 import { UserButton } from "@/components/auth/user-button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -136,14 +127,13 @@ export function MobileNav({
           {showToolbar && (
             <div className="flex items-center justify-between gap-2 border-b pb-4">
               <div className="flex items-center gap-1">
-                <GenericCommandMenu
-                  config={platformSearchConfig}
+                <SpotlightSearch
+                  surface="school-dashboard"
                   context={{
                     currentRole: role,
                     currentPath: currentPath,
                     schoolId: school?.id,
                   }}
-                  variant="icon"
                 />
                 <LanguageSwitcher variant="toggle" />
                 <ModeSwitcher />
@@ -157,7 +147,9 @@ export function MobileNav({
                   >
                     <Link href={notificationsUrl}>
                       <Bell className="h-4 w-4" />
-                      <span className="sr-only">Notifications</span>
+                      <span className="sr-only">
+                        {dictionary?.platform?.notifications || "Notifications"}
+                      </span>
                     </Link>
                   </Button>
                 )}
@@ -171,7 +163,9 @@ export function MobileNav({
                   >
                     <Link href={messagesUrl}>
                       <Mail className="h-4 w-4" />
-                      <span className="sr-only">Messages</span>
+                      <span className="sr-only">
+                        {dictionary?.platform?.messages || "Messages"}
+                      </span>
                     </Link>
                   </Button>
                 )}
@@ -312,24 +306,10 @@ function MarketingActionsSection({
   dictionary?: Dictionary
   onClose: () => void
 }) {
-  const [searchOpen, setSearchOpen] = React.useState(false)
-
   return (
     <div className="flex flex-col gap-4 border-t pt-4">
       <div className="flex items-center gap-3">
-        {/* Search button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-10"
-          onClick={() => {
-            onClose()
-            setSearchOpen(true)
-          }}
-        >
-          <Search className="size-5" aria-hidden="true" />
-          <span className="sr-only">Search</span>
-        </Button>
+        <SpotlightSearch surface="saas-marketing" />
 
         {/* GitHub link */}
         <Button
@@ -350,25 +330,6 @@ function MarketingActionsSection({
         <ModeSwitcher iconClassName="size-5" />
         <UserButton variant="marketing" />
       </div>
-
-      {/* Search Dialog */}
-      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <CommandInput placeholder="Type a command or search..." />
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup heading="Suggestions">
-            <CommandItem>
-              <span>Documentation</span>
-            </CommandItem>
-            <CommandItem>
-              <span>Components</span>
-            </CommandItem>
-            <CommandItem>
-              <span>Examples</span>
-            </CommandItem>
-          </CommandGroup>
-        </CommandList>
-      </CommandDialog>
     </div>
   )
 }

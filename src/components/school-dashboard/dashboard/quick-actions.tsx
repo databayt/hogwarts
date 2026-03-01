@@ -7,6 +7,7 @@ import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 import { AnthropicIcons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 /**
  * QuickActions Component
@@ -85,6 +86,18 @@ const iconMap: Record<
   Contact: AnthropicIcons.Chat, // Contact
 }
 
+// Convert "My Grades" → "myGrades", "School" → "school"
+function toCamelCase(str: string): string {
+  const words = str.split(/\s+/)
+  return words
+    .map((w, i) =>
+      i === 0
+        ? w.charAt(0).toLowerCase() + w.slice(1)
+        : w.charAt(0).toUpperCase() + w.slice(1)
+    )
+    .join("")
+}
+
 interface QuickActionsProps {
   actions: QuickAction[]
   locale?: string
@@ -96,6 +109,11 @@ export function QuickActions({
   locale = "en",
   className,
 }: QuickActionsProps) {
+  const { dictionary } = useDictionary()
+  const dict = dictionary?.school?.dashboard?.quickActionsSection as
+    | Record<string, string>
+    | undefined
+
   return (
     <div className={cn("w-full", className)}>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -116,7 +134,7 @@ export function QuickActions({
               <span
                 className={cn("truncate text-base font-semibold", color.text)}
               >
-                {action.label}
+                {dict?.[toCamelCase(action.label)] || action.label}
               </span>
             </div>
           )

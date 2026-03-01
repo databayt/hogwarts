@@ -19,6 +19,7 @@ import TeacherView from "./teacher-view"
 interface Props {
   dictionary: Dictionary["school"]
   lang: Locale
+  defaultTab?: "today" | "full"
 }
 
 type ViewType = "admin" | "teacher" | "student" | "guardian"
@@ -48,7 +49,7 @@ interface PersonalizedData {
   lunchAfterPeriod: number | null
 }
 
-export default function RoleRouter({ dictionary, lang }: Props) {
+export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [termId, setTermId] = useState<string | null>(null)
@@ -79,22 +80,6 @@ export default function RoleRouter({ dictionary, lang }: Props) {
 
         // Note: Using most recent term when no active term is set
         void source
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load timetable"
-        )
-      }
-    })
-  }
-
-  // Handle term change (for admin view)
-  const handleTermChange = async (newTermId: string) => {
-    startTransition(async () => {
-      setError(null)
-      try {
-        setTermId(newTermId)
-        const data = await getPersonalizedTimetable({ termId: newTermId })
-        setViewData(data as PersonalizedData)
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load timetable"
@@ -146,19 +131,24 @@ export default function RoleRouter({ dictionary, lang }: Props) {
 
   switch (viewData.viewType) {
     case "admin":
-      return <AdminView {...commonProps} onTermChange={handleTermChange} />
+      return <AdminView {...commonProps} />
 
     case "teacher":
       return (
         <TeacherView
           {...commonProps}
           teacherId={viewData.filterData.teacherId}
+          defaultTab={defaultTab}
         />
       )
 
     case "student":
       return (
-        <StudentView {...commonProps} classId={viewData.filterData.classId} />
+        <StudentView
+          {...commonProps}
+          classId={viewData.filterData.classId}
+          defaultTab={defaultTab}
+        />
       )
 
     case "guardian":
@@ -166,13 +156,18 @@ export default function RoleRouter({ dictionary, lang }: Props) {
         <GuardianView
           {...commonProps}
           childrenIds={viewData.filterData.childrenIds}
+          defaultTab={defaultTab}
         />
       )
 
     default:
       // Fallback to student view (most restricted)
       return (
-        <StudentView {...commonProps} classId={viewData.filterData.classId} />
+        <StudentView
+          {...commonProps}
+          classId={viewData.filterData.classId}
+          defaultTab={defaultTab}
+        />
       )
   }
 }

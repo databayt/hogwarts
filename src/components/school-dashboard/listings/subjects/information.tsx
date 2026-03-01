@@ -3,8 +3,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
-import { type UseFormReturn } from "react-hook-form"
-import { z } from "zod"
 
 import {
   FormControl,
@@ -22,8 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import { getDepartments } from "./actions"
 import { SubjectFormStepProps } from "./types"
-import { subjectCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: SubjectFormStepProps) {
   const [departments, setDepartments] = useState<
@@ -33,13 +31,10 @@ export function InformationStep({ form, isView }: SubjectFormStepProps) {
   useEffect(() => {
     const loadDepartments = async () => {
       try {
-        // This would need to be implemented in a separate action
-        // For now, we'll use a placeholder
-        setDepartments([
-          { id: "dep_001", departmentName: "Transfiguration" },
-          { id: "dep_002", departmentName: "Potions" },
-          { id: "dep_003", departmentName: "Creatures" },
-        ])
+        const res = await getDepartments()
+        if (res.success) {
+          setDepartments(res.data)
+        }
       } catch (error) {
         console.error("Failed to load departments:", error)
       }

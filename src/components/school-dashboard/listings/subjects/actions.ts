@@ -61,6 +61,10 @@ export async function createSubject(
         schoolId,
         subjectName: parsed.subjectName,
         departmentId: parsed.departmentId,
+        lang: parsed.lang || "ar",
+        ...(parsed.catalogSubjectId
+          ? { catalogSubjectId: parsed.catalogSubjectId }
+          : {}),
       },
     })
 
@@ -125,6 +129,8 @@ export async function updateSubject(
       data.subjectName = rest.subjectName
     if (typeof rest.departmentId !== "undefined")
       data.departmentId = rest.departmentId
+    if (typeof rest.catalogSubjectId !== "undefined")
+      data.catalogSubjectId = rest.catalogSubjectId || null
 
     await subjectModel.updateMany({ where: { id, schoolId }, data })
 
@@ -270,6 +276,7 @@ type SubjectSelectResult = {
   subjectName: string
   lang: string
   departmentId: string | null
+  catalogSubjectId: string | null
   department: {
     id: string
     departmentName: string
@@ -323,6 +330,7 @@ export async function getSubject(input: {
         subjectName: true,
         lang: true,
         departmentId: true,
+        catalogSubjectId: true,
         department: {
           select: {
             id: true,
@@ -537,6 +545,78 @@ export async function bulkDeleteSubjects(input: {
         error instanceof Error
           ? error.message
           : "Failed to bulk delete subjects",
+    }
+  }
+}
+
+export async function getCatalogSubjectsForPicker(
+  search?: string
+): Promise<
+  ActionResponse<
+    Array<{ id: string; name: string; department: string; slug: string }>
+  >
+> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const where: any = { status: "PUBLISHED" }
+    if (search && search.trim()) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { department: { contains: search, mode: "insensitive" } },
+      ]
+    }
+
+    const subjects = await db.catalogSubject.findMany({
+      where,
+      select: { id: true, name: true, department: true, slug: true },
+      orderBy: { name: "asc" },
+      take: 50,
+    })
+
+    return { success: true, data: subjects }
+  } catch (error) {
+    console.error("[getCatalogSubjectsForPicker] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch catalog subjects",
+    }
+  }
+}
+
+export async function getDepartments(): Promise<
+  ActionResponse<Array<{ id: string; departmentName: string }>>
+> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const departments = await db.department.findMany({
+      where: { schoolId },
+      select: { id: true, departmentName: true },
+      orderBy: { departmentName: "asc" },
+    })
+
+    return { success: true, data: departments }
+  } catch (error) {
+    console.error("[getDepartments] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch departments",
     }
   }
 }

@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { LogoutButton } from "@/components/auth/logout-button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useCurrentUser } from "./use-current-user"
 
@@ -53,6 +54,10 @@ export const UserButton = ({
   const user = useCurrentUser()
   const params = useParams()
   const locale = (params?.lang as string) || "ar"
+  const { dictionary } = useDictionary()
+  const t = (key: string, fallback: string) =>
+    (dictionary?.userMenu as Record<string, string> | undefined)?.[key] ||
+    fallback
 
   // Build login URL with context params
   // - SaaS marketing: ?context=saas
@@ -83,7 +88,7 @@ export const UserButton = ({
       >
         <Link href={loginUrl}>
           <LogIn className="size-4 rtl:-scale-x-100" />
-          <span className="sr-only">Login</span>
+          <span className="sr-only">{t("login", "Login")}</span>
         </Link>
       </Button>
     )
@@ -113,7 +118,7 @@ export const UserButton = ({
               {userInitials}
             </AvatarFallback>
           </Avatar>
-          <span className="sr-only">User menu</span>
+          <span className="sr-only">{t("userMenu", "User menu")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
@@ -134,17 +139,21 @@ export const UserButton = ({
             locale={locale}
             role={user.role}
             schoolId={user.schoolId}
+            t={t}
           />
         )}
         {variant === "site" && (
-          <SiteMenu locale={locale} subdomain={subdomain} />
+          <SiteMenu locale={locale} subdomain={subdomain} t={t} />
         )}
-        {variant === "saas" && <SaasMenu locale={locale} role={user.role} />}
+        {variant === "saas" && (
+          <SaasMenu locale={locale} role={user.role} t={t} />
+        )}
         {variant === "platform" && (
           <PlatformMenu
             locale={locale}
             subdomain={subdomain}
             role={user.role}
+            t={t}
           />
         )}
 
@@ -153,7 +162,7 @@ export const UserButton = ({
         <LogoutButton>
           <DropdownMenuItem variant="destructive" className="cursor-pointer">
             <ExitIcon />
-            Logout
+            {t("logout", "Logout")}
             <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
           </DropdownMenuItem>
         </LogoutButton>
@@ -171,6 +180,7 @@ interface MenuProps {
   subdomain?: string
   role?: string
   schoolId?: string
+  t: (key: string, fallback: string) => string
 }
 
 /**
@@ -180,7 +190,7 @@ interface MenuProps {
  * - Users with schoolId: My School (go to school dashboard)
  * - Users without schoolId: Get Started (onboarding)
  */
-function MarketingMenu({ locale, role, schoolId }: MenuProps) {
+function MarketingMenu({ locale, role, schoolId, t }: MenuProps) {
   const isDeveloper = role === "DEVELOPER"
   const hasSchool = !!schoolId
 
@@ -192,13 +202,13 @@ function MarketingMenu({ locale, role, schoolId }: MenuProps) {
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link href={`/${locale}/dashboard`}>
               <LayoutDashboard />
-              Dashboard
+              {t("dashboard", "Dashboard")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link href={`/${locale}/tenants`}>
               <Building2 />
-              Tenants
+              {t("tenants", "Tenants")}
             </Link>
           </DropdownMenuItem>
         </>
@@ -209,7 +219,7 @@ function MarketingMenu({ locale, role, schoolId }: MenuProps) {
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link href={`/${locale}/my-school`}>
             <School />
-            My School
+            {t("mySchool", "My School")}
           </Link>
         </DropdownMenuItem>
       )}
@@ -219,7 +229,7 @@ function MarketingMenu({ locale, role, schoolId }: MenuProps) {
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link href={`/${locale}/newcomers`}>
             <Rocket />
-            Get Started
+            {t("getStarted", "Get Started")}
           </Link>
         </DropdownMenuItem>
       )}
@@ -228,7 +238,7 @@ function MarketingMenu({ locale, role, schoolId }: MenuProps) {
       <DropdownMenuItem asChild className="cursor-pointer">
         <Link href={`/${locale}/settings`}>
           <Settings />
-          Settings
+          {t("settings", "Settings")}
         </Link>
       </DropdownMenuItem>
     </DropdownMenuGroup>
@@ -240,7 +250,7 @@ function MarketingMenu({ locale, role, schoolId }: MenuProps) {
  * - Go to Platform (enter school dashboard)
  * - Profile
  */
-function SiteMenu({ locale, subdomain }: MenuProps) {
+function SiteMenu({ locale, subdomain, t }: MenuProps) {
   // For school sites, school-dashboard URL uses the subdomain routing
   const platformUrl = subdomain
     ? `/${locale}/s/${subdomain}/dashboard`
@@ -251,13 +261,13 @@ function SiteMenu({ locale, subdomain }: MenuProps) {
       <DropdownMenuItem asChild className="cursor-pointer">
         <Link href={platformUrl}>
           <School />
-          Go to Platform
+          {t("goToPlatform", "Go to Platform")}
         </Link>
       </DropdownMenuItem>
       <DropdownMenuItem asChild className="cursor-pointer">
         <Link href={`/${locale}/profile`}>
           <User />
-          Profile
+          {t("profile", "Profile")}
         </Link>
       </DropdownMenuItem>
     </DropdownMenuGroup>
@@ -271,7 +281,7 @@ function SiteMenu({ locale, subdomain }: MenuProps) {
  * - Tenants (DEVELOPER only)
  * - Settings
  */
-function SaasMenu({ locale, role }: MenuProps) {
+function SaasMenu({ locale, role, t }: MenuProps) {
   const isDeveloper = role === "DEVELOPER"
 
   return (
@@ -279,28 +289,28 @@ function SaasMenu({ locale, role }: MenuProps) {
       <DropdownMenuItem asChild className="cursor-pointer">
         <Link href={`/${locale}/profile`}>
           <User />
-          Profile
+          {t("profile", "Profile")}
           <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
         </Link>
       </DropdownMenuItem>
       <DropdownMenuItem asChild className="cursor-pointer">
         <Link href={`/${locale}/billing`}>
           <CreditCard />
-          Billing
+          {t("billing", "Billing")}
         </Link>
       </DropdownMenuItem>
       {isDeveloper && (
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link href={`/${locale}/tenants`}>
             <Building2 />
-            Tenants
+            {t("tenants", "Tenants")}
           </Link>
         </DropdownMenuItem>
       )}
       <DropdownMenuItem asChild className="cursor-pointer">
         <Link href={`/${locale}/settings`}>
           <Settings />
-          Settings
+          {t("settings", "Settings")}
           <DropdownMenuShortcut>⌘,</DropdownMenuShortcut>
         </Link>
       </DropdownMenuItem>
@@ -315,7 +325,7 @@ function SaasMenu({ locale, role }: MenuProps) {
  * - Switch School (if has multiple)
  * - Help & Support
  */
-function PlatformMenu({ locale, subdomain, role }: MenuProps) {
+function PlatformMenu({ locale, subdomain, role, t }: MenuProps) {
   // Build URLs with subdomain context
   const baseUrl = subdomain ? `/${locale}/s/${subdomain}` : `/${locale}`
   const isAdmin = role === "ADMIN" || role === "DEVELOPER"
@@ -325,28 +335,28 @@ function PlatformMenu({ locale, subdomain, role }: MenuProps) {
       <DropdownMenuItem asChild className="cursor-pointer">
         <Link href={`${baseUrl}/profile`}>
           <User />
-          Profile
+          {t("profile", "Profile")}
           <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
         </Link>
       </DropdownMenuItem>
       <DropdownMenuItem asChild className="cursor-pointer">
         <Link href={`${baseUrl}/account`}>
           <PersonIcon />
-          My Account
+          {t("myAccount", "My Account")}
         </Link>
       </DropdownMenuItem>
       {isAdmin && (
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link href={`${baseUrl}/admin/settings`}>
             <GearIcon />
-            School Settings
+            {t("schoolSettings", "School Settings")}
           </Link>
         </DropdownMenuItem>
       )}
       <DropdownMenuItem asChild className="cursor-pointer">
         <Link href={`${baseUrl}/help`}>
           <HelpCircle />
-          Help & Support
+          {t("helpSupport", "Help & Support")}
         </Link>
       </DropdownMenuItem>
     </DropdownMenuGroup>

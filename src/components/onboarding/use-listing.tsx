@@ -72,8 +72,8 @@ export interface Listing {
   primaryColor?: string
   borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "full"
   shadow?: "none" | "sm" | "md" | "lg" | "xl"
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt?: string
+  updatedAt?: string
 }
 
 interface ListingContextType {

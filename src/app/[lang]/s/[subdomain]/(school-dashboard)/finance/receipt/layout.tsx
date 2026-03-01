@@ -17,12 +17,25 @@ export default async function ReceiptLayout({ children, params }: Props) {
   const d = dictionary?.finance?.receipt
 
   // Define receipt page navigation
+  const n = d?.navigation
   const receiptPages: PageNavItem[] = [
-    { name: "Overview", href: `/${lang}/finance/receipt` },
-    { name: "Generate Receipt", href: `/${lang}/finance/receipt/generate` },
-    { name: "Receipt History", href: `/${lang}/finance/receipt/history` },
-    { name: "Templates", href: `/${lang}/finance/receipt/templates` },
-    { name: "Manage Plans", href: `/${lang}/finance/receipt/manage-plan` },
+    { name: n?.overview || "Overview", href: `/${lang}/finance/receipt` },
+    {
+      name: n?.generate || "Generate Receipt",
+      href: `/${lang}/finance/receipt/generate`,
+    },
+    {
+      name: n?.history || "Receipt History",
+      href: `/${lang}/finance/receipt/history`,
+    },
+    {
+      name: n?.templates || "Templates",
+      href: `/${lang}/finance/receipt/templates`,
+    },
+    {
+      name: n?.managePlans || "Manage Plans",
+      href: `/${lang}/finance/receipt/manage-plan`,
+    },
   ]
 
   return (

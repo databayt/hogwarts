@@ -21,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 interface CashFlowChartProps {
@@ -39,21 +40,24 @@ export function CashFlowChart({
   className,
 }: CashFlowChartProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const dp = fd?.dashboardPage as Record<string, string> | undefined
 
   // Prepare data for the chart
   const chartData = [
     {
-      name: "Cash Inflow",
+      name: dp?.cashInflow || "Cash Inflow",
       value: inflowData[0] || 0,
       color: "#10b981",
     },
     {
-      name: "Cash Outflow",
+      name: dp?.cashOutflow || "Cash Outflow",
       value: outflowData[0] || 0,
       color: "#ef4444",
     },
     {
-      name: "Net Cash Flow",
+      name: dp?.netCashFlow || "Net Cash Flow",
       value: (inflowData[0] || 0) - (outflowData[0] || 0),
       color:
         (inflowData[0] || 0) - (outflowData[0] || 0) >= 0
@@ -88,8 +92,10 @@ export function CashFlowChart({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Cash Flow</CardTitle>
-        <CardDescription>Cash movement for the current period</CardDescription>
+        <CardTitle>{dp?.cashFlow || "Cash Flow"}</CardTitle>
+        <CardDescription>
+          {dp?.cashMovement || "Cash movement for the current period"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -120,14 +126,16 @@ export function CashFlowChart({
         <div className="mt-6 space-y-3 border-t pt-6">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">
-              Current Balance
+              {dp?.currentBalance || "Current Balance"}
             </span>
             <span className="text-lg font-semibold">
               {formatValue(balanceData[0] || 0)}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Net Cash Flow</span>
+            <span className="text-muted-foreground text-sm">
+              {dp?.netCashFlow || "Net Cash Flow"}
+            </span>
             <span
               className={`text-lg font-semibold ${
                 (inflowData[0] || 0) - (outflowData[0] || 0) >= 0

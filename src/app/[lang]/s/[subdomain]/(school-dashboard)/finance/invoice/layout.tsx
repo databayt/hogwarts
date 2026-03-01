@@ -17,12 +17,22 @@ export default async function InvoiceLayout({ children, params }: Props) {
   const d = dictionary?.finance?.invoice
 
   // Define invoice page navigation
+  const n = d?.navigation
   const invoicePages: PageNavItem[] = [
-    { name: "Dashboard", href: `/${lang}/finance/invoice` },
-    { name: "List", href: `/${lang}/finance/invoice/list` },
-    { name: "Create Invoice", href: `/${lang}/finance/invoice/invoice/create` },
-    { name: "Settings", href: `/${lang}/finance/invoice/settings` },
-    { name: "Onboarding", href: `/${lang}/finance/invoice/onboarding` },
+    { name: n?.dashboard || "Dashboard", href: `/${lang}/finance/invoice` },
+    { name: n?.list || "List", href: `/${lang}/finance/invoice/list` },
+    {
+      name: n?.createNew || "Create Invoice",
+      href: `/${lang}/finance/invoice/invoice/create`,
+    },
+    {
+      name: n?.settings || "Settings",
+      href: `/${lang}/finance/invoice/settings`,
+    },
+    {
+      name: n?.onboarding || "Onboarding",
+      href: `/${lang}/finance/invoice/onboarding`,
+    },
   ]
 
   return (

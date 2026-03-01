@@ -51,9 +51,7 @@ export default async function LibraryAdminContent({
       <div className="library-admin-header">
         <h1 className="library-admin-title">{t.library.admin.dashboard}</h1>
         <Button asChild>
-          <Link href="/library/admin/books/new">
-            + {t.library.admin.addBook}
-          </Link>
+          <Link href="/library/catalog">+ {t.library.admin.addBook}</Link>
         </Button>
       </div>
 
@@ -100,9 +98,7 @@ export default async function LibraryAdminContent({
             </Link>
           </Button>
           <Button asChild variant="outline" className="w-full">
-            <Link href="/library/admin/books/new">
-              {t.library.admin.addBook}
-            </Link>
+            <Link href="/library/catalog">{t.library.admin.addBook}</Link>
           </Button>
         </div>
       </div>

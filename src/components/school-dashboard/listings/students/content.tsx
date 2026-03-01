@@ -73,13 +73,11 @@ export default async function StudentsContent({
               results: true,
             },
           },
-          studentClasses: {
-            take: 1,
-            include: {
-              class: {
-                select: { name: true, lang: true },
-              },
-            },
+          section: {
+            select: { name: true, lang: true },
+          },
+          academicGrade: {
+            select: { name: true, lang: true },
           },
         },
       }),
@@ -87,19 +85,25 @@ export default async function StudentsContent({
     ])
     data = await Promise.all(
       rows.map(async (s: any) => {
-        const cls = s.studentClasses?.[0]?.class
         return {
           id: s.id,
           userId: s.userId,
           name: getDisplayName(s.givenName, s.surname, lang),
-          className: cls?.name
+          sectionName: s.section?.name
             ? await getDisplayText(
-                cls.name,
-                cls.lang || "ar",
+                s.section.name,
+                s.section.lang || "ar",
                 lang,
                 effectiveSchoolId!
               )
-            : "-",
+            : s.academicGrade?.name
+              ? await getDisplayText(
+                  s.academicGrade.name,
+                  s.academicGrade.lang || "ar",
+                  lang,
+                  effectiveSchoolId!
+                )
+              : "-",
           status: s.userId ? "active" : "inactive",
           createdAt: (s.createdAt as Date).toISOString(),
           classCount: s._count?.studentClasses || 0,

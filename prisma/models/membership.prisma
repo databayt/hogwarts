@@ -1,0 +1,41 @@
+// Membership Management Models
+
+enum MembershipRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum JoinMethod {
+  MANUAL
+  JOIN_CODE
+  INVITATION
+}
+
+model MembershipRequest {
+  id              String                  @id @default(cuid())
+  schoolId        String
+  userId          String?
+  email           String
+  name            String?
+  requestedRole   UserRole                @default(STAFF)
+  status          MembershipRequestStatus @default(PENDING)
+  rejectionReason String?                 @db.Text
+  joinMethod      JoinMethod              @default(MANUAL)
+
+  // Review tracking
+  reviewedById    String?
+  reviewedAt      DateTime?
+
+  // Relations
+  school          School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user            User?     @relation("MembershipRequestUser", fields: [userId], references: [id], onDelete: SetNull)
+  reviewedBy      User?     @relation("MembershipRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([schoolId, email])
+  @@index([schoolId, status])
+  @@map("membership_requests")
+}

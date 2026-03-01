@@ -35,7 +35,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -65,17 +64,8 @@ interface Props {
   lunchAfterPeriod: number | null
   isLoading?: boolean
   classId?: string // Legacy prop - no longer needed
+  defaultTab?: "today" | "full"
 }
-
-const DAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-]
 
 export default function StudentView({
   dictionary,
@@ -86,11 +76,11 @@ export default function StudentView({
   periods,
   lunchAfterPeriod,
   isLoading,
+  defaultTab = "today",
 }: Props) {
   const d = dictionary?.timetable
   const isRTL = lang === "ar"
 
-  const [viewTab, setViewTab] = useState<"today" | "week">("today")
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [schoolName, setSchoolName] = useState<string>("")
@@ -353,100 +343,79 @@ export default function StudentView({
         </Card>
       )}
 
-      {/* View Tabs */}
-      <Tabs
-        value={viewTab}
-        onValueChange={(v) => setViewTab(v as "today" | "week")}
-        className="print:block"
-      >
-        <TabsList className="print:hidden">
-          <TabsTrigger value="today" className="gap-2">
-            <Clock className="h-4 w-4" />
-            {d?.studentView?.today || "Today"} ({DAY_NAMES[currentDay]})
-          </TabsTrigger>
-          <TabsTrigger value="week" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            {d?.studentView?.weekView || "Week View"}
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Today's Schedule - Hide when printing */}
-        <TabsContent value="today" className="mt-4 print:hidden">
-          {isLoadingData ? (
-            <Skeleton className="h-64 w-full rounded-lg" />
-          ) : todaySchedule.length === 0 ? (
-            <Card>
-              <CardContent className="text-muted-foreground py-12 text-center">
-                <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                <p>No classes scheduled for today</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {todaySchedule.map((item, idx) => (
-                <Card
-                  key={idx}
-                  className={cn(
-                    "transition-colors",
-                    item.isBreak && "bg-muted/50 border-dashed",
-                    currentClassInfo?.item === item &&
-                      currentClassInfo?.type === "current" &&
-                      "border-green-500 bg-green-50 dark:bg-green-950/20"
-                  )}
-                >
-                  <CardContent className="py-3">
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 text-center">
-                        <p className="font-mono font-semibold">
-                          {formatTime(item.startTime)}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {formatTime(item.endTime)}
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">
-                          {item.isBreak
-                            ? item.periodName
-                            : item.subject || "Free Period"}
-                        </p>
-                        {!item.isBreak && item.teacher && (
-                          <p className="text-muted-foreground text-sm">
-                            {item.teacher} {item.room && `• ${item.room}`}
-                          </p>
-                        )}
-                      </div>
-                      {item.isBreak && <Badge variant="secondary">Break</Badge>}
+      {/* Content based on defaultTab */}
+      {defaultTab === "today" ? (
+        // Today's Schedule
+        isLoadingData ? (
+          <Skeleton className="h-64 w-full rounded-lg" />
+        ) : todaySchedule.length === 0 ? (
+          <Card>
+            <CardContent className="text-muted-foreground py-12 text-center">
+              <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
+              <p>No classes scheduled for today</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {todaySchedule.map((item, idx) => (
+              <Card
+                key={idx}
+                className={cn(
+                  "transition-colors",
+                  item.isBreak && "bg-muted/50 border-dashed",
+                  currentClassInfo?.item === item &&
+                    currentClassInfo?.type === "current" &&
+                    "border-green-500 bg-green-50 dark:bg-green-950/20"
+                )}
+              >
+                <CardContent className="py-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 text-center">
+                      <p className="font-mono font-semibold">
+                        {formatTime(item.startTime)}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {formatTime(item.endTime)}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Week View */}
-        <TabsContent value="week" className="mt-4 print:mt-2">
-          {isLoadingData || isLoading ? (
-            <Skeleton className="h-96 w-full rounded-lg print:hidden" />
-          ) : (
-            <Card className="print:border-0 print:shadow-none">
-              <CardContent className="pt-4 print:p-0">
-                <SimpleGrid
-                  slots={slots}
-                  workingDays={workingDays}
-                  periods={periods}
-                  lunchAfterPeriod={lunchAfterPeriod}
-                  isRTL={isRTL}
-                  viewMode="class"
-                  editable={false}
-                  highlightToday
-                />
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {item.isBreak
+                          ? item.periodName
+                          : item.subject || "Free Period"}
+                      </p>
+                      {!item.isBreak && item.teacher && (
+                        <p className="text-muted-foreground text-sm">
+                          {item.teacher} {item.room && `• ${item.room}`}
+                        </p>
+                      )}
+                    </div>
+                    {item.isBreak && <Badge variant="secondary">Break</Badge>}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
+      ) : // Full Week View
+      isLoadingData || isLoading ? (
+        <Skeleton className="h-96 w-full rounded-lg print:hidden" />
+      ) : (
+        <Card className="print:border-0 print:shadow-none">
+          <CardContent className="pt-4 print:p-0">
+            <SimpleGrid
+              slots={slots}
+              workingDays={workingDays}
+              periods={periods}
+              lunchAfterPeriod={lunchAfterPeriod}
+              isRTL={isRTL}
+              viewMode="class"
+              editable={false}
+              highlightToday
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -45,13 +45,13 @@ export async function updateSchoolTitle(
 
     const validated = titleSchema.parse(data)
 
-    const updatedSchool = await db.school.update({
+    await db.school.update({
       where: { id: schoolId },
       data: { name: validated.title },
     })
 
     revalidatePath(`/onboarding/${schoolId}/title`)
-    return createActionResponse(updatedSchool)
+    return createActionResponse({ id: schoolId })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createActionResponse(undefined, {

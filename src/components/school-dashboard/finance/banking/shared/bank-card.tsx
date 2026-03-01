@@ -10,7 +10,10 @@ export function BankCard({
   account,
   userName,
   showBalance = true,
-}: BankCardProps) {
+  dictionary,
+}: BankCardProps & { dictionary?: Record<string, string> }) {
+  const bp = dictionary ?? {}
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -23,19 +26,25 @@ export function BankCard({
       <CardContent className="flex-1">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="muted">Account holder</span>
+            <span className="muted">
+              {bp.accountHolder || "Account holder"}
+            </span>
             <small className="font-medium">{userName}</small>
           </div>
           {showBalance && (
             <>
               <div className="flex items-center justify-between">
-                <span className="muted">Current balance</span>
+                <span className="muted">
+                  {bp.currentBalance || "Current balance"}
+                </span>
                 <small className="font-medium">
                   {formatAmount(Number(account.currentBalance))}
                 </small>
               </div>
               <div className="flex items-center justify-between">
-                <span className="muted">Available balance</span>
+                <span className="muted">
+                  {bp.availableBalance || "Available balance"}
+                </span>
                 <small className="font-medium">
                   {formatAmount(Number(account.availableBalance))}
                 </small>
@@ -43,7 +52,7 @@ export function BankCard({
             </>
           )}
           <div className="flex items-center justify-between">
-            <span className="muted">Type</span>
+            <span className="muted">{bp.type || "Type"}</span>
             <small className="font-medium capitalize">{account.type}</small>
           </div>
         </div>

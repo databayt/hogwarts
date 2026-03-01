@@ -35,8 +35,9 @@ export default async function Page({ params }: Props) {
     auth(),
   ])
 
-  // Check permissions
-  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "TEACHER") {
+  // Check permissions - staff only
+  const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
+  if (!staffRoles.includes(session?.user?.role ?? "")) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <h2>Access Denied</h2>

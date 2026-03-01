@@ -24,7 +24,7 @@ const schoolIdentitySchema = z.object({
   description: z.string().optional(),
   schoolType: z.string().optional(),
   schoolLevel: z.string().optional(),
-  system: z.string().optional(),
+  curriculum: z.string().optional(),
   preferredLanguage: z.string().optional(),
 })
 
@@ -47,7 +47,6 @@ const brandingSchema = z.object({
 type ActionResult = {
   success: boolean
   error?: string
-  data?: unknown
 }
 
 export async function updateSchoolIdentity(
@@ -91,14 +90,15 @@ export async function updateSchoolIdentity(
         description: validatedData.description || null,
         schoolType: validatedData.schoolType || null,
         schoolLevel: validatedData.schoolLevel || null,
-        system: validatedData.system || null,
+        curriculum: validatedData.curriculum || null,
         preferredLanguage: validatedData.preferredLanguage || "ar",
       },
     })
 
     revalidatePath("/school/configuration")
+    revalidatePath("/school/configuration/identity")
 
-    return { success: true, data: updated }
+    return { success: true }
   } catch (error) {
     console.error("Error updating school identity:", error)
     if (error instanceof z.ZodError) {
@@ -155,8 +155,9 @@ export async function updateSchoolBranding(
     })
 
     revalidatePath("/school/configuration")
+    revalidatePath("/school/configuration/branding")
 
-    return { success: true, data: updated }
+    return { success: true }
   } catch (error) {
     console.error("Error updating school branding:", error)
     if (error instanceof z.ZodError) {
@@ -171,9 +172,12 @@ export async function updateSchoolBranding(
 
 // Schema for school location update
 const schoolLocationSchema = z.object({
+  address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   country: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 })
 
 export async function updateSchoolLocation(
@@ -193,14 +197,18 @@ export async function updateSchoolLocation(
     const updated = await db.school.update({
       where: { id: schoolId },
       data: {
+        address: validatedData.address || null,
         city: validatedData.city || null,
         state: validatedData.state || null,
         country: validatedData.country || null,
+        latitude: validatedData.latitude ?? null,
+        longitude: validatedData.longitude ?? null,
       },
     })
 
     revalidatePath("/school/configuration")
-    return { success: true, data: updated }
+    revalidatePath("/school/configuration/location")
+    return { success: true }
   } catch (error) {
     console.error("Error updating school location:", error)
     if (error instanceof z.ZodError) {
@@ -248,7 +256,8 @@ export async function updateSchoolPricing(
     })
 
     revalidatePath("/school/configuration")
-    return { success: true, data: updated }
+    revalidatePath("/school/configuration/pricing")
+    return { success: true }
   } catch (error) {
     console.error("Error updating school pricing:", error)
     if (error instanceof z.ZodError) {
@@ -298,8 +307,9 @@ export async function updatePlanLimits(
     })
 
     revalidatePath("/school/configuration")
+    revalidatePath("/school/configuration/plan")
 
-    return { success: true, data: updated }
+    return { success: true }
   } catch (error) {
     console.error("Error updating plan limits:", error)
     if (error instanceof z.ZodError) {
@@ -343,8 +353,9 @@ export async function updateSchoolCapacity(
     })
 
     revalidatePath("/school/configuration")
+    revalidatePath("/school/configuration/capacity")
 
-    return { success: true, data: updated }
+    return { success: true }
   } catch (error) {
     console.error("Error updating school capacity:", error)
     if (error instanceof z.ZodError) {

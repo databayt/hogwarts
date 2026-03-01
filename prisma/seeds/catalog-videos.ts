@@ -51,7 +51,7 @@ export async function seedCatalogVideos(prisma: PrismaClient): Promise<void> {
 
   // Query all published ClickView subjects with their first 2 chapters' lessons
   const subjects = await prisma.catalogSubject.findMany({
-    where: { status: "PUBLISHED", system: "clickview" },
+    where: { status: "PUBLISHED", curriculum: "us-k12" },
     select: {
       id: true,
       slug: true,

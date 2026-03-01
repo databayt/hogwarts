@@ -6,6 +6,8 @@ import { z } from "zod"
 export const subjectBaseSchema = z.object({
   subjectName: z.string().min(1, "Subject name is required"),
   departmentId: z.string().min(1, "Department is required"),
+  catalogSubjectId: z.string().optional(),
+  lang: z.string().optional(),
 })
 
 export const subjectCreateSchema = subjectBaseSchema

@@ -74,13 +74,13 @@ export async function seedSchool(prisma: PrismaClient): Promise<SchoolRef> {
         targetLanguage: "en",
       },
     },
-    update: { translatedText: "Hogwarts Academy" },
+    update: { translatedText: "Demo" },
     create: {
       schoolId: school.id,
       sourceText: DEMO_SCHOOL.name,
       sourceLanguage: "ar",
       targetLanguage: "en",
-      translatedText: "Hogwarts Academy",
+      translatedText: "Demo",
       provider: "manual",
     },
   })

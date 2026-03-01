@@ -14,6 +14,7 @@ import {
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { createBankAccount } from "@/components/school-dashboard/finance/banking/actions/bank.actions"
 
 interface PlaidLinkProps {
@@ -43,6 +44,9 @@ export function PlaidLink({
   dictionary,
 }: PlaidLinkProps) {
   const router = useRouter()
+  const { dictionary: dict } = useDictionary()
+  const fd = (dict as any)?.finance
+  const bp = fd?.bankingPlaid as Record<string, string> | undefined
   const [token, setToken] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -69,7 +73,9 @@ export function PlaidLink({
         })
 
         if (!response.ok) {
-          throw new Error("Failed to create link token")
+          throw new Error(
+            bp?.failedCreateLinkToken || "Failed to create link token"
+          )
         }
 
         const data = await response.json()
@@ -89,7 +95,8 @@ export function PlaidLink({
         setError(
           err instanceof Error
             ? err.message
-            : "Failed to initialize bank connection"
+            : bp?.failedInitBankConnection ||
+                "Failed to initialize bank connection"
         )
       } finally {
         setIsLoading(false)
@@ -124,7 +131,9 @@ export function PlaidLink({
           })
 
           if (!response.ok) {
-            throw new Error("Failed to exchange token")
+            throw new Error(
+              bp?.failedExchangeToken || "Failed to exchange token"
+            )
           }
 
           const { access_token, item_id } = await response.json()
@@ -143,14 +152,16 @@ export function PlaidLink({
             router.push("/banking/my-banks")
             router.refresh()
           } else {
-            throw new Error("Failed to create bank account")
+            throw new Error(
+              bp?.failedCreateBankAccount || "Failed to create bank account"
+            )
           }
         } catch (err) {
           console.error("Error in onSuccess:", err)
           setError(
             err instanceof Error
               ? err.message
-              : "Failed to connect bank account"
+              : bp?.failedConnectBankAccount || "Failed to connect bank account"
           )
         }
       })
@@ -162,7 +173,9 @@ export function PlaidLink({
   const onExit = useCallback<PlaidLinkOnExit>((err, metadata) => {
     if (err) {
       console.error("Plaid Link exited with error:", err)
-      setError(err.error_message || "Connection cancelled")
+      setError(
+        err.error_message || bp?.connectionCancelled || "Connection cancelled"
+      )
     }
   }, [])
 
@@ -204,11 +217,11 @@ export function PlaidLink({
           <>
             <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
             {isPending
-              ? dictionary?.connecting || "Connecting..."
-              : dictionary?.loading || "Loading..."}
+              ? bp?.connecting || "Connecting..."
+              : bp?.loading || "Loading..."}
           </>
         ) : (
-          dictionary?.connectBank || "Connect Bank Account"
+          bp?.connectBankAccount || "Connect Bank Account"
         )}
       </Button>
     </div>

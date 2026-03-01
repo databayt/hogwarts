@@ -843,18 +843,48 @@ export async function seedBooks(
 
   for (const bookData of BOOKS) {
     try {
-      const existing = await prisma.book.findFirst({
+      // Check if a Book already exists for this school
+      const existingBook = await prisma.book.findFirst({
         where: { schoolId, title: bookData.title, author: bookData.author },
       })
 
-      if (existing) {
-        // Update cover data + new metadata for existing entries
+      if (existingBook) {
+        // Update cover data + metadata + link to catalog if not already linked
         const coverData = COVER_DATA[bookData.title]
         const newCoverUrl = coverData?.coverUrl || ""
+
+        let catalogBookId = existingBook.catalogBookId
+        if (!catalogBookId) {
+          // Try to find matching CatalogBook to link
+          const catalogBook = await prisma.catalogBook.findFirst({
+            where: { title: bookData.title, author: bookData.author },
+          })
+          if (catalogBook) {
+            catalogBookId = catalogBook.id
+
+            // Ensure SchoolBookSelection exists
+            const existingSelection =
+              await prisma.schoolBookSelection.findFirst({
+                where: { schoolId, catalogBookId: catalogBook.id },
+              })
+            if (!existingSelection) {
+              await prisma.schoolBookSelection.create({
+                data: {
+                  schoolId,
+                  catalogBookId: catalogBook.id,
+                  totalCopies: bookData.copies,
+                  availableCopies: bookData.copies,
+                  isActive: true,
+                },
+              })
+            }
+          }
+        }
+
         await prisma.book.update({
-          where: { id: existing.id },
+          where: { id: existingBook.id },
           data: {
-            ...(existing.coverUrl !== newCoverUrl
+            ...(existingBook.coverUrl !== newCoverUrl
               ? { coverUrl: newCoverUrl }
               : {}),
             gradeLevel: bookData.gradeLevel,
@@ -863,40 +893,91 @@ export async function seedBooks(
             publicationYear: bookData.publicationYear || null,
             language: bookData.language || null,
             pageCount: bookData.pageCount || null,
+            ...(catalogBookId ? { catalogBookId } : {}),
           },
         })
-        bookIds.push(existing.id)
+        bookIds.push(existingBook.id)
       } else {
-        const coverData = COVER_DATA[bookData.title]
-        const book = await prisma.book.create({
-          data: {
-            schoolId,
-            title: bookData.title,
-            author: bookData.author,
-            genre: bookData.genre,
-            gradeLevel: bookData.gradeLevel,
-            description: bookData.description,
-            summary: bookData.summary,
-            coverUrl: coverData?.coverUrl || "",
-            coverColor: bookData.coverColor,
-            rating: randomNumber(3, 5),
-            totalCopies: bookData.copies,
-            availableCopies: bookData.copies,
-            isbn: coverData?.isbn || null,
-            publisher: bookData.publisher || null,
-            publicationYear: bookData.publicationYear || null,
-            language: bookData.language || null,
-            pageCount: bookData.pageCount || null,
-          },
+        // Try to find CatalogBook to link
+        const catalogBook = await prisma.catalogBook.findFirst({
+          where: { title: bookData.title, author: bookData.author },
         })
-        bookIds.push(book.id)
+
+        const coverData = COVER_DATA[bookData.title]
+
+        if (catalogBook) {
+          // Catalog-linked path: create SchoolBookSelection + Book with catalogBookId
+          const existingSelection = await prisma.schoolBookSelection.findFirst({
+            where: { schoolId, catalogBookId: catalogBook.id },
+          })
+          if (!existingSelection) {
+            await prisma.schoolBookSelection.create({
+              data: {
+                schoolId,
+                catalogBookId: catalogBook.id,
+                totalCopies: bookData.copies,
+                availableCopies: bookData.copies,
+                isActive: true,
+              },
+            })
+          }
+
+          const book = await prisma.book.create({
+            data: {
+              schoolId,
+              catalogBookId: catalogBook.id,
+              title: catalogBook.title,
+              author: catalogBook.author,
+              genre: catalogBook.genre,
+              description: catalogBook.description ?? "",
+              summary: catalogBook.summary ?? "",
+              coverUrl: catalogBook.coverUrl ?? "",
+              coverColor: catalogBook.coverColor,
+              rating: Math.round(catalogBook.rating),
+              totalCopies: bookData.copies,
+              availableCopies: bookData.copies,
+              videoUrl: catalogBook.videoUrl,
+              isbn: catalogBook.isbn,
+              publisher: catalogBook.publisher,
+              publicationYear: catalogBook.publicationYear,
+              language: catalogBook.language,
+              pageCount: catalogBook.pageCount,
+              gradeLevel: catalogBook.gradeLevel,
+            },
+          })
+          bookIds.push(book.id)
+        } else {
+          // Fallback: create standalone Book (no catalog entry found)
+          const book = await prisma.book.create({
+            data: {
+              schoolId,
+              title: bookData.title,
+              author: bookData.author,
+              genre: bookData.genre,
+              gradeLevel: bookData.gradeLevel,
+              description: bookData.description,
+              summary: bookData.summary,
+              coverUrl: coverData?.coverUrl || "",
+              coverColor: bookData.coverColor,
+              rating: randomNumber(3, 5),
+              totalCopies: bookData.copies,
+              availableCopies: bookData.copies,
+              isbn: coverData?.isbn || null,
+              publisher: bookData.publisher || null,
+              publicationYear: bookData.publicationYear || null,
+              language: bookData.language || null,
+              pageCount: bookData.pageCount || null,
+            },
+          })
+          bookIds.push(book.id)
+        }
       }
     } catch {
       // Skip duplicates
     }
   }
 
-  logSuccess("Books", bookIds.length, "unique Arabic-titled collection")
+  logSuccess("Books", bookIds.length, "catalog-linked collection")
 
   return bookIds
 }

@@ -266,7 +266,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
     const category = getSubjectCategory(subject.name)
     const level = extractSchoolLevel(subject.slug)
 
-    // --- Subject-level materials (2: textbook + syllabus) ---
+    // --- Subject-level materials (3: textbook + syllabus + reference) ---
     materials.push({
       catalogSubjectId: subject.id,
       title: `${subject.name} - Textbook`,
@@ -296,6 +296,21 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
       visibility: "PUBLIC",
       downloadCount: randomNumber(100, 500),
       usageCount: randomNumber(200, 800),
+    })
+    materials.push({
+      catalogSubjectId: subject.id,
+      title: `${subject.name} - Reference Sheet`,
+      description: `Quick reference guide and formula sheet for ${subject.name}`,
+      lang: "en",
+      type: "REFERENCE",
+      fileSize: randomNumber(200_000, 1_000_000),
+      mimeType: "application/pdf",
+      pageCount: randomNumber(2, 10),
+      status: "PUBLISHED",
+      approvalStatus: "APPROVED",
+      visibility: "PUBLIC",
+      downloadCount: randomNumber(80, 600),
+      usageCount: randomNumber(150, 900),
     })
 
     // --- Subject-level exams (final + midterm) ---
@@ -330,7 +345,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
     for (let ci = 0; ci < subject.chapters.length; ci++) {
       const chapter = subject.chapters[ci]
 
-      // Chapter material (1: study guide)
+      // Chapter materials (2: study guide + project)
       materials.push({
         catalogChapterId: chapter.id,
         title: `${chapter.name} - Study Guide`,
@@ -346,6 +361,24 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
         downloadCount: randomNumber(10, 200),
         usageCount: randomNumber(20, 400),
       })
+      // ~40% of chapters get a project brief
+      if (seededRandom(si * 100 + ci) > 0.6) {
+        materials.push({
+          catalogChapterId: chapter.id,
+          title: `${chapter.name} - Project`,
+          description: `Multi-lesson project brief for ${chapter.name}`,
+          lang: "en",
+          type: "PROJECT",
+          fileSize: randomNumber(300_000, 2_000_000),
+          mimeType: "application/pdf",
+          pageCount: randomNumber(3, 12),
+          status: "PUBLISHED",
+          approvalStatus: "APPROVED",
+          visibility: "PUBLIC",
+          downloadCount: randomNumber(5, 100),
+          usageCount: randomNumber(10, 200),
+        })
+      }
 
       // Chapter exams (chapter_test + practice)
       for (const examType of CHAPTER_LEVEL_EXAM_TYPES) {
@@ -414,6 +447,93 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
           globalIdx++
         }
 
+        // Lesson materials (varies per lesson — worksheet + presentation always, others probabilistic)
+        materials.push({
+          catalogLessonId: lesson.id,
+          title: `${lesson.name} - Worksheet`,
+          description: `Practice exercises for ${lesson.name}`,
+          lang: "en",
+          type: "WORKSHEET",
+          fileSize: randomNumber(100_000, 1_000_000),
+          mimeType: "application/pdf",
+          pageCount: randomNumber(2, 8),
+          status: "PUBLISHED",
+          approvalStatus: "APPROVED",
+          visibility: "PUBLIC",
+          downloadCount: randomNumber(20, 300),
+          usageCount: randomNumber(30, 500),
+        })
+        materials.push({
+          catalogLessonId: lesson.id,
+          title: `${lesson.name} - Slides`,
+          description: `Presentation slides for ${lesson.name}`,
+          lang: "en",
+          type: "PRESENTATION",
+          fileSize: randomNumber(2_000_000, 15_000_000),
+          mimeType: "application/pdf",
+          pageCount: randomNumber(10, 35),
+          status: "PUBLISHED",
+          approvalStatus: "APPROVED",
+          visibility: "PUBLIC",
+          downloadCount: randomNumber(30, 400),
+          usageCount: randomNumber(50, 600),
+        })
+        // ~60% of lessons get notes
+        if (seededRandom(lessonSeed + 1) > 0.4) {
+          materials.push({
+            catalogLessonId: lesson.id,
+            title: `${lesson.name} - Notes`,
+            description: `Class handout and notes for ${lesson.name}`,
+            lang: "en",
+            type: "LESSON_NOTES",
+            fileSize: randomNumber(100_000, 2_000_000),
+            mimeType: "application/pdf",
+            pageCount: randomNumber(2, 12),
+            status: "PUBLISHED",
+            approvalStatus: "APPROVED",
+            visibility: "PUBLIC",
+            downloadCount: randomNumber(15, 250),
+            usageCount: randomNumber(20, 350),
+          })
+        }
+        // ~30% of lessons get a video guide
+        if (seededRandom(lessonSeed + 2) > 0.7) {
+          materials.push({
+            catalogLessonId: lesson.id,
+            title: `${lesson.name} - Video Guide`,
+            description: `Instructional video for ${lesson.name}`,
+            lang: "en",
+            type: "VIDEO_GUIDE",
+            externalUrl: `https://example.com/videos/${lesson.id}`,
+            status: "PUBLISHED",
+            approvalStatus: "APPROVED",
+            visibility: "PUBLIC",
+            downloadCount: randomNumber(10, 150),
+            usageCount: randomNumber(30, 300),
+          })
+        }
+        // ~20% of lessons (science-heavy) get a lab manual
+        if (
+          seededRandom(lessonSeed + 3) > 0.8 &&
+          (category === "STEM_SCIENCE" || category === "STEM_MATH")
+        ) {
+          materials.push({
+            catalogLessonId: lesson.id,
+            title: `${lesson.name} - Lab Manual`,
+            description: `Step-by-step lab procedure for ${lesson.name}`,
+            lang: "en",
+            type: "LAB_MANUAL",
+            fileSize: randomNumber(500_000, 3_000_000),
+            mimeType: "application/pdf",
+            pageCount: randomNumber(4, 15),
+            status: "PUBLISHED",
+            approvalStatus: "APPROVED",
+            visibility: "PUBLIC",
+            downloadCount: randomNumber(5, 100),
+            usageCount: randomNumber(10, 150),
+          })
+        }
+
         // Assignment (1 per lesson: homework or project)
         const isProject = seededRandom(lessonSeed) > 0.8
         assignments.push({
@@ -467,6 +587,79 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   })
   logSuccess("Assignments", assignmentResult.count)
 
+  // 3b. Create CatalogExamQuestion junction records
+  // Link each exam to questions in its scope (subject/chapter/lesson)
+  console.log(`   Creating CatalogExamQuestion junction records...`)
+  const createdExams = await prisma.catalogExam.findMany({
+    select: {
+      id: true,
+      subjectId: true,
+      chapterId: true,
+      lessonId: true,
+      totalQuestions: true,
+    },
+    orderBy: { createdAt: "desc" },
+    take: exams.length,
+  })
+
+  let junctionCount = 0
+  const JUNCTION_BATCH_SIZE = 500
+  const junctionBatch: {
+    catalogExamId: string
+    catalogQuestionId: string
+    order: number
+    points: number
+  }[] = []
+
+  for (const exam of createdExams) {
+    // Find questions in the same scope
+    const scopeWhere: Record<string, unknown> = {}
+    if (exam.lessonId) {
+      scopeWhere.catalogLessonId = exam.lessonId
+    } else if (exam.chapterId) {
+      scopeWhere.catalogChapterId = exam.chapterId
+    } else if (exam.subjectId) {
+      scopeWhere.catalogSubjectId = exam.subjectId
+    } else {
+      continue
+    }
+
+    const scopeQuestions = await prisma.catalogQuestion.findMany({
+      where: scopeWhere,
+      select: { id: true, points: true },
+      take: exam.totalQuestions || 10,
+    })
+
+    for (let i = 0; i < scopeQuestions.length; i++) {
+      junctionBatch.push({
+        catalogExamId: exam.id,
+        catalogQuestionId: scopeQuestions[i].id,
+        order: i + 1,
+        points: Number(scopeQuestions[i].points) || 1,
+      })
+    }
+
+    // Flush batch periodically
+    if (junctionBatch.length >= JUNCTION_BATCH_SIZE) {
+      const result = await prisma.catalogExamQuestion.createMany({
+        data: junctionBatch,
+        skipDuplicates: true,
+      })
+      junctionCount += result.count
+      junctionBatch.length = 0
+    }
+  }
+
+  // Flush remaining
+  if (junctionBatch.length > 0) {
+    const result = await prisma.catalogExamQuestion.createMany({
+      data: junctionBatch,
+      skipDuplicates: true,
+    })
+    junctionCount += result.count
+  }
+  logSuccess("ExamQuestions (junction)", junctionCount)
+
   // 4. Summary with category breakdown
   const categoryBreakdown = new Map<string, number>()
   for (const subject of subjects) {
@@ -475,12 +668,13 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   }
 
   console.log(`\n   Summary:`)
-  console.log(`   - Materials:   ${materialResult.count}`)
-  console.log(`   - Exams:       ${examResult.count}`)
-  console.log(`   - Questions:   ${questionResult.count}`)
-  console.log(`   - Assignments: ${assignmentResult.count}`)
+  console.log(`   - Materials:       ${materialResult.count}`)
+  console.log(`   - Exams:           ${examResult.count}`)
+  console.log(`   - Questions:       ${questionResult.count}`)
+  console.log(`   - ExamQuestions:   ${junctionCount}`)
+  console.log(`   - Assignments:     ${assignmentResult.count}`)
   console.log(
-    `   - Total:       ${materialResult.count + examResult.count + questionResult.count + assignmentResult.count}`
+    `   - Total:           ${materialResult.count + examResult.count + questionResult.count + junctionCount + assignmentResult.count}`
   )
   console.log(`\n   Category breakdown:`)
   categoryBreakdown.forEach((count, cat) => {

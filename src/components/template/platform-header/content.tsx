@@ -18,8 +18,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { GenericCommandMenu } from "@/components/atom/generic-command-menu"
-import { platformSearchConfig } from "@/components/atom/generic-command-menu/platform-config"
+import { SpotlightSearch } from "@/components/atom/generic-command-menu/spotlight-search"
 import type { Role } from "@/components/atom/generic-command-menu/types"
 import { useCurrentRole } from "@/components/auth/use-current-role"
 import { UserButton } from "@/components/auth/user-button"
@@ -61,13 +60,16 @@ export default function PlatformHeader({
 
   // Filter school-dashboard nav items by role for mobile menu
   const mobileNavItems = useMemo(() => {
+    const sidebarDict = dictionary?.platform?.sidebar as
+      | Record<string, string>
+      | undefined
     return platformNav
       .filter((item) => !role || item.roles.includes(role as PlatformRole))
       .map((item) => ({
         href: item.href,
-        label: item.title,
+        label: sidebarDict?.[item.title] || item.title,
       }))
-  }, [role])
+  }, [role, dictionary])
 
   return (
     <div className="bg-background sticky top-0 z-40 -mx-2">
@@ -130,14 +132,13 @@ export default function PlatformHeader({
           </div>
         </div>
         <div className="ms-auto hidden items-center gap-1.5 lg:flex">
-          <GenericCommandMenu
-            config={platformSearchConfig}
+          <SpotlightSearch
+            surface="school-dashboard"
             context={{
               currentRole: role,
               currentPath: pathname,
               schoolId: school?.id,
             }}
-            variant="icon"
           />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
@@ -149,7 +150,9 @@ export default function PlatformHeader({
           >
             <Link href={notificationsUrl}>
               <Bell className="h-4 w-4" />
-              <span className="sr-only">Notifications</span>
+              <span className="sr-only">
+                {dictionary?.platform?.notifications || "Notifications"}
+              </span>
             </Link>
           </Button>
           <Button
@@ -160,7 +163,9 @@ export default function PlatformHeader({
           >
             <Link href={messagesUrl}>
               <Mail className="h-4 w-4" />
-              <span className="sr-only">Messages</span>
+              <span className="sr-only">
+                {dictionary?.platform?.messages || "Messages"}
+              </span>
             </Link>
           </Button>
           <UserButton

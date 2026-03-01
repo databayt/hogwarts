@@ -19,25 +19,22 @@ export default async function SubjectsBrowseLayout({
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.subjects
 
-  const isAr = lang === "ar"
+  const n = d?.navigation
   const subjectsPages: PageNavItem[] = [
-    { name: isAr ? "الكل" : "All", href: `/${lang}/subjects` },
+    { name: n?.all || "All", href: `/${lang}/subjects` },
     {
-      name: isAr ? "ابتدائي" : "Elementary",
+      name: n?.elementary || "Elementary",
       href: `/${lang}/subjects/elementary`,
     },
-    { name: isAr ? "متوسط" : "Middle", href: `/${lang}/subjects/middle` },
-    { name: isAr ? "ثانوي" : "High", href: `/${lang}/subjects/high` },
+    { name: n?.middle || "Middle", href: `/${lang}/subjects/middle` },
+    { name: n?.high || "High", href: `/${lang}/subjects/high` },
+    { name: n?.catalog || "Catalog", href: `/${lang}/subjects/catalog` },
     {
-      name: isAr ? "الكتالوج" : "Catalog",
-      href: `/${lang}/subjects/catalog`,
-    },
-    {
-      name: isAr ? "المساهمة" : "Contribute",
+      name: n?.contribute || "Contribute",
       href: `/${lang}/subjects/contribute`,
     },
     {
-      name: isAr ? "مساهماتي" : "My Contributions",
+      name: n?.myContributions || "My Contributions",
       href: `/${lang}/subjects/contributions`,
     },
   ]

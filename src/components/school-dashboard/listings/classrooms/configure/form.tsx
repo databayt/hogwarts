@@ -30,9 +30,15 @@ import {
   type RoomTypeOption,
 } from "./actions"
 
+interface SchoolDefaults {
+  sectionsPerGrade: number
+  studentsPerSection: number
+}
+
 interface ConfigureFormProps {
   grades: GradeConfig[]
   roomTypes: RoomTypeOption[]
+  schoolDefaults?: SchoolDefaults
 }
 
 type GradeRow = {
@@ -45,9 +51,14 @@ type GradeRow = {
   existingSections: number
 }
 
-export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
+export function ConfigureForm({
+  grades,
+  roomTypes,
+  schoolDefaults,
+}: ConfigureFormProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
+  const d = dictionary?.school?.classrooms?.configure
   const [isPending, startTransition] = useTransition()
   const defaultRoomType = roomTypes[0]?.id ?? ""
 
@@ -56,15 +67,23 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
       gradeId: g.gradeId,
       gradeName: g.gradeName,
       gradeNumber: g.gradeNumber,
-      sections: Math.max(g.existingSections, 2),
-      capacityPerSection: g.maxStudents || 30,
+      sections: Math.max(
+        g.existingSections,
+        schoolDefaults?.sectionsPerGrade ?? 2
+      ),
+      capacityPerSection:
+        g.maxStudents || schoolDefaults?.studentsPerSection || 30,
       roomType: defaultRoomType,
       existingSections: g.existingSections,
     }))
   )
 
-  const [defaultSections, setDefaultSections] = useState(2)
-  const [defaultCapacity, setDefaultCapacity] = useState(30)
+  const [defaultSections, setDefaultSections] = useState(
+    schoolDefaults?.sectionsPerGrade ?? 2
+  )
+  const [defaultCapacity, setDefaultCapacity] = useState(
+    schoolDefaults?.studentsPerSection ?? 30
+  )
 
   const updateRow = (
     gradeId: string,
@@ -93,7 +112,8 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
 
     if (targetRows.length === 0) {
       toast.info(
-        t?.info?.noChanges ||
+        d?.noChanges ||
+          t?.info?.noChanges ||
           "All grades already have the configured number of sections"
       )
       return
@@ -114,17 +134,11 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
           t?.success?.created ||
             `Created ${result.data.created} section${result.data.created !== 1 ? "s" : ""} with rooms`
         )
-        result.data.details.forEach((d) => toast.info(d))
-        if (result.data.created > 0) {
-          toast.info(
-            "Sections use placeholder teacher/subject assignments. Reassign them in the Classes view.",
-            { duration: 8000 }
-          )
-        }
+        result.data.details.forEach((detail) => toast.info(detail))
         // Update existing counts
         setRows((prev) =>
           prev.map((r) => {
-            const target = targetRows.find((t) => t.gradeId === r.gradeId)
+            const target = targetRows.find((tr) => tr.gradeId === r.gradeId)
             if (target) {
               return { ...r, existingSections: r.sections }
             }
@@ -144,7 +158,7 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
       <div className="flex flex-wrap items-end gap-4">
         <div className="space-y-1">
           <label className="text-muted-foreground text-sm">
-            Default sections
+            {d?.defaultSections || "Default sections"}
           </label>
           <Select
             value={String(defaultSections)}
@@ -165,7 +179,7 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
 
         <div className="space-y-1">
           <label className="text-muted-foreground text-sm">
-            Default capacity
+            {d?.defaultCapacity || "Default capacity"}
           </label>
           <Input
             type="number"
@@ -178,7 +192,7 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
         </div>
 
         <Button variant="outline" size="sm" onClick={applyDefaults}>
-          Apply Defaults
+          {d?.applyDefaults || "Apply Defaults"}
         </Button>
 
         <Button
@@ -186,7 +200,9 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
           onClick={() => handleGenerate()}
           disabled={isPending || !rows.some(needsGeneration)}
         >
-          {isPending ? "Generating..." : "Generate All"}
+          {isPending
+            ? d?.generating || "Generating..."
+            : d?.generateAll || "Generate All"}
         </Button>
       </div>
 
@@ -194,19 +210,24 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Grade</TableHead>
-              <TableHead>Sections</TableHead>
-              <TableHead>Capacity/Section</TableHead>
-              <TableHead>Room Type</TableHead>
-              <TableHead>Existing</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>
+                {dictionary?.school?.classrooms?.grade || "Grade"}
+              </TableHead>
+              <TableHead>{d?.sections || "Sections"}</TableHead>
+              <TableHead>
+                {d?.capacityPerSection || "Capacity/Section"}
+              </TableHead>
+              <TableHead>{d?.roomType || "Room Type"}</TableHead>
+              <TableHead>{d?.existing || "Existing"}</TableHead>
+              <TableHead>{d?.actions || "Actions"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center">
-                  No grades configured. Set up academic grades first.
+                  {d?.noGrades ||
+                    "No grades configured. Set up academic grades first."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -258,12 +279,14 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
                       }
                     >
                       <SelectTrigger className="w-32">
-                        <SelectValue placeholder="Select type" />
+                        <SelectValue
+                          placeholder={d?.roomType || "Select type"}
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        {roomTypes.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.name}
+                        {roomTypes.map((rt) => (
+                          <SelectItem key={rt.id} value={rt.id}>
+                            {rt.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -294,7 +317,7 @@ export function ConfigureForm({ grades, roomTypes }: ConfigureFormProps) {
                       </Button>
                     ) : (
                       <span className="text-muted-foreground text-sm">
-                        Up to date
+                        {d?.upToDate || "Up to date"}
                       </span>
                     )}
                   </TableCell>

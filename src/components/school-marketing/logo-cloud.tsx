@@ -26,12 +26,12 @@ export default function LogoCloud() {
   return (
     <section className="overflow-hidden py-16 md:py-24">
       <div className="flex flex-col items-center md:flex-row">
-        <div className="md:max-w-44 md:border-e md:pe-6">
-          <p className="text-end text-sm">
+        <div className="shrink-0 md:border-e md:pe-6">
+          <p className="text-base font-medium">
             {(t?.trustedBy as string) || "Trusted by magical institutions"}
           </p>
         </div>
-        <div className="relative py-6 md:w-[calc(100%-11rem)]">
+        <div className="relative flex-1 overflow-hidden py-6" dir="ltr">
           <InfiniteSlider speedOnHover={20} speed={40} gap={112}>
             {items.map((name, index) => (
               <div key={index} className="flex items-center">

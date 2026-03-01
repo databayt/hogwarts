@@ -28,20 +28,6 @@ export function getFeaturesByCategories(
 }
 
 /**
- * Get new features
- */
-export function getNewFeatures(features: Feature[]): Feature[] {
-  return features.filter((feature) => feature.isNew === true)
-}
-
-/**
- * Get premium features
- */
-export function getPremiumFeatures(features: Feature[]): Feature[] {
-  return features.filter((feature) => feature.isPremium === true)
-}
-
-/**
  * Search features by query
  */
 export function searchFeatures(features: Feature[], query: string): Feature[] {
@@ -77,19 +63,15 @@ export function groupFeaturesByCategory(
 export function getCategoryLabel(category: FeatureCategory): string {
   const labels: Record<FeatureCategory, string> = {
     core: "Core",
-    academic: "Academic",
-    scheduling: "Scheduling",
-    finance: "Finance",
-    facilities: "Facilities",
-    hr: "HR",
-    operations: "Operations",
-    analytics: "Analytics",
+    essential: "Essential",
+    advance: "Advance",
+    erp: "ERP",
+    management: "Management",
     communication: "Communication",
-    enrollment: "Enrollment",
-    community: "Community",
-    welfare: "Welfare",
-    "e-learning": "E-Learning",
-    documents: "Documents",
+    lms: "LMS",
+    technical: "Technical",
+    integration: "Integration",
+    ai: "AI",
   }
   return labels[category]
 }
@@ -131,16 +113,10 @@ export function getFeatureCountByCategory(
 }
 
 /**
- * Sort features by priority (new first, then premium)
+ * Sort features alphabetically by title
  */
-export function sortFeaturesByPriority(features: Feature[]): Feature[] {
-  return [...features].sort((a, b) => {
-    if (a.isNew && !b.isNew) return -1
-    if (!a.isNew && b.isNew) return 1
-    if (a.isPremium && !b.isPremium) return -1
-    if (!a.isPremium && b.isPremium) return 1
-    return a.title.localeCompare(b.title)
-  })
+export function sortFeaturesByTitle(features: Feature[]): Feature[] {
+  return [...features].sort((a, b) => a.title.localeCompare(b.title))
 }
 
 /**
@@ -149,19 +125,15 @@ export function sortFeaturesByPriority(features: Feature[]): Feature[] {
 export function getFeatureIconColor(category: FeatureCategory): string {
   const colors: Record<FeatureCategory, string> = {
     core: "text-blue-600",
-    academic: "text-purple-600",
-    scheduling: "text-pink-600",
-    finance: "text-amber-600",
-    facilities: "text-emerald-600",
-    hr: "text-indigo-600",
-    operations: "text-slate-600",
-    analytics: "text-cyan-600",
+    essential: "text-purple-600",
+    advance: "text-pink-600",
+    erp: "text-amber-600",
+    management: "text-emerald-600",
     communication: "text-orange-600",
-    enrollment: "text-teal-600",
-    community: "text-rose-600",
-    welfare: "text-red-600",
-    "e-learning": "text-violet-600",
-    documents: "text-stone-600",
+    lms: "text-violet-600",
+    technical: "text-slate-600",
+    integration: "text-teal-600",
+    ai: "text-cyan-600",
   }
   return colors[category] || "text-gray-600"
 }

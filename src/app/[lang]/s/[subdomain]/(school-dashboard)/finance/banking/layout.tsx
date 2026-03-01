@@ -26,30 +26,33 @@ export default async function BankingLayout({
   }
 
   const dictionary = await getDictionary(lang as Locale)
+  const bp = (dictionary as any)?.finance?.bankingPage as
+    | Record<string, string>
+    | undefined
 
   // Define banking page navigation
   const bankingPages: PageNavItem[] = [
     {
-      name: dictionary?.banking?.dashboard || "Dashboard",
+      name: bp?.dashboard || "Dashboard",
       href: `/${lang}/finance/banking`,
     },
     {
-      name: dictionary?.banking?.myBanks || "My Banks",
+      name: bp?.myBanks || "My Banks",
       href: `/${lang}/finance/banking/my-banks`,
     },
     {
-      name: dictionary?.banking?.paymentTransfer || "Payment Transfer",
+      name: bp?.paymentTransfer || "Payment Transfer",
       href: `/${lang}/finance/banking/payment-transfer`,
     },
     {
-      name: dictionary?.banking?.transactionHistory || "Transaction History",
+      name: bp?.transactionHistory || "Transaction History",
       href: `/${lang}/finance/banking/transaction-history`,
     },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter title="Banking" />
+      <PageHeadingSetter title={bp?.title || "Banking"} />
       <PageNav pages={bankingPages} />
 
       {children}

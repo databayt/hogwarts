@@ -267,6 +267,7 @@ export type GenerationAlgorithmResult = {
     actualCount: number
     distributionMet: boolean
     missingCategories: string[]
+    catalogQuestionsUsed?: string[] // IDs of catalog questions used as fallback
   }
 }
 

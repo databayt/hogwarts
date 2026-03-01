@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { Edit, Plus, Trash } from "lucide-react"
 
@@ -25,10 +26,14 @@ export default async function QuestionBankPage({
   params: Promise<{ lang: Locale }>
 }) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
-  const dict = dictionary.marking
 
   const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams`)
+  }
+
+  const dictionary = await getDictionary(lang)
+  const dict = dictionary.marking
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {

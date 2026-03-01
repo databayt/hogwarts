@@ -23,7 +23,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { getAvailableClassesForPlacement, placeStudentInClass } from "./actions"
+import {
+  getAvailableSectionsForPlacement,
+  placeStudentInSection,
+} from "./actions"
 
 interface PlacementDialogProps {
   open: boolean
@@ -42,7 +45,7 @@ export function PlacementDialog({
   applyingForClass,
   onSuccess,
 }: PlacementDialogProps) {
-  const [classes, setClasses] = useState<
+  const [sections, setSections] = useState<
     Array<{
       id: string
       name: string
@@ -50,31 +53,31 @@ export function PlacementDialog({
       maxCapacity: number
     }>
   >([])
-  const [selectedClassId, setSelectedClassId] = useState("")
+  const [selectedSectionId, setSelectedSectionId] = useState("")
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     if (!open) return
-    getAvailableClassesForPlacement({ applyingForClass }).then((res) => {
+    getAvailableSectionsForPlacement({ applyingForClass }).then((res) => {
       if (res.success && res.data) {
-        setClasses(res.data)
+        setSections(res.data)
       }
     })
   }, [open, applyingForClass])
 
   const handlePlace = () => {
-    if (!selectedClassId) return
+    if (!selectedSectionId) return
 
     startTransition(async () => {
-      const result = await placeStudentInClass({
+      const result = await placeStudentInSection({
         applicationId,
-        classId: selectedClassId,
+        sectionId: selectedSectionId,
       })
 
       if (result.success) {
         toast.success(`${studentName} placed successfully`)
         onOpenChange(false)
-        setSelectedClassId("")
+        setSelectedSectionId("")
         onSuccess?.()
       } else {
         toast.error(result.error || "Failed to place student")
@@ -86,30 +89,33 @@ export function PlacementDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Place Student in Class</DialogTitle>
+          <DialogTitle>Place Student in Section</DialogTitle>
           <DialogDescription>
-            Assign {studentName} (applying for {applyingForClass}) to a class
+            Assign {studentName} (applying for {applyingForClass}) to a homeroom
             section.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+          <Select
+            value={selectedSectionId}
+            onValueChange={setSelectedSectionId}
+          >
             <SelectTrigger>
-              <SelectValue placeholder="Select a class" />
+              <SelectValue placeholder="Select a section" />
             </SelectTrigger>
             <SelectContent>
-              {classes.map((cls) => {
-                const isFull = cls.enrolledStudents >= cls.maxCapacity
+              {sections.map((sec) => {
+                const isFull = sec.enrolledStudents >= sec.maxCapacity
                 return (
-                  <SelectItem key={cls.id} value={cls.id} disabled={isFull}>
+                  <SelectItem key={sec.id} value={sec.id} disabled={isFull}>
                     <div className="flex items-center gap-2">
-                      <span>{cls.name}</span>
+                      <span>{sec.name}</span>
                       <Badge
                         variant={isFull ? "destructive" : "secondary"}
                         className="text-xs"
                       >
-                        {cls.enrolledStudents}/{cls.maxCapacity}
+                        {sec.enrolledStudents}/{sec.maxCapacity}
                       </Badge>
                     </div>
                   </SelectItem>
@@ -118,9 +124,10 @@ export function PlacementDialog({
             </SelectContent>
           </Select>
 
-          {classes.length === 0 && (
+          {sections.length === 0 && (
             <p className="text-muted-foreground text-sm">
-              No classes available. Create class sections first.
+              No sections available. Create sections in Classrooms &gt;
+              Configure first.
             </p>
           )}
         </div>
@@ -131,7 +138,7 @@ export function PlacementDialog({
           </Button>
           <Button
             onClick={handlePlace}
-            disabled={!selectedClassId || isPending}
+            disabled={!selectedSectionId || isPending}
           >
             {isPending ? "Placing..." : "Place Student"}
           </Button>

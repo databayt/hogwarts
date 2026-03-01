@@ -5,6 +5,8 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { SearchParams } from "nuqs/server"
 
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getInvoicesWithFilters } from "@/components/school-dashboard/finance/invoice/actions"
 import type { InvoiceRow } from "@/components/school-dashboard/finance/invoice/columns"
 import { invoiceSearchParams } from "@/components/school-dashboard/finance/invoice/list-params"
@@ -27,9 +29,14 @@ type ExtendedSession = {
 
 interface Props {
   searchParams: Promise<SearchParams>
+  lang?: Locale
 }
 
-export async function InvoiceContent({ searchParams }: Props) {
+export async function InvoiceContent({ searchParams, lang = "ar" }: Props) {
+  const dictionary = await getDictionary(lang)
+  const fd = (dictionary as any)?.finance
+  const il = fd?.invoiceList as Record<string, string> | undefined
+
   const session = (await auth()) as ExtendedSession | null
 
   if (!session?.user?.id) {
@@ -52,9 +59,12 @@ export async function InvoiceContent({ searchParams }: Props) {
     return (
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Invoices</h1>
+          <h1 className="text-xl font-semibold">
+            {il?.invoices || "Invoices"}
+          </h1>
           <p className="text-muted-foreground text-sm">
-            You don't have permission to view invoices
+            {il?.noPermissionInvoices ||
+              "You don't have permission to view invoices"}
           </p>
         </div>
       </div>

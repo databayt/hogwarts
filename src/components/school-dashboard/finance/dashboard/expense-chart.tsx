@@ -24,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 interface ExpenseChartProps {
@@ -53,6 +54,9 @@ export function ExpenseChart({
   className,
 }: ExpenseChartProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  const dp = fd?.dashboardPage as Record<string, string> | undefined
 
   // Sort categories by amount for better visualization
   const sortedCategories = [...expenseCategories].sort(
@@ -73,7 +77,7 @@ export function ExpenseChart({
       0
     )
     topCategories.push({
-      category: "Other",
+      category: dp?.other || "Other",
       amount: otherAmount,
       percentage: otherPercentage,
     })
@@ -88,10 +92,12 @@ export function ExpenseChart({
       <div className="bg-background rounded-lg border p-3 shadow-lg">
         <p className="font-semibold">{data.name || data.payload.category}</p>
         <p className="text-sm">
-          Amount: SDG {new Intl.NumberFormat(locale).format(data.value)}
+          {dp?.amountLabel || "Amount:"} SDG{" "}
+          {new Intl.NumberFormat(locale).format(data.value)}
         </p>
         <p className="text-sm">
-          Percentage: {data.payload.percentage.toFixed(1)}%
+          {dp?.percentageLabel || "Percentage:"}{" "}
+          {data.payload.percentage.toFixed(1)}%
         </p>
       </div>
     )
@@ -144,14 +150,16 @@ export function ExpenseChart({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Expense Breakdown</CardTitle>
-        <CardDescription>Distribution of expenses by category</CardDescription>
+        <CardTitle>{dp?.expenseBreakdown || "Expense Breakdown"}</CardTitle>
+        <CardDescription>
+          {dp?.distributionByCategory || "Distribution of expenses by category"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="pie" className="w-full">
           <TabsList className="grid w-full max-w-[200px] grid-cols-2">
-            <TabsTrigger value="pie">Pie Chart</TabsTrigger>
-            <TabsTrigger value="bar">Bar Chart</TabsTrigger>
+            <TabsTrigger value="pie">{dp?.pieChart || "Pie Chart"}</TabsTrigger>
+            <TabsTrigger value="bar">{dp?.barChart || "Bar Chart"}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="pie" className="mt-4">
@@ -225,7 +233,9 @@ export function ExpenseChart({
         {/* Summary Stats */}
         <div className="mt-6 border-t pt-6">
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-sm font-medium">Total Expenses</span>
+            <span className="text-sm font-medium">
+              {dp?.totalExpenses || "Total Expenses"}
+            </span>
             <span className="text-lg font-bold">
               SDG {new Intl.NumberFormat(locale).format(totalExpenses)}
             </span>
@@ -233,7 +243,9 @@ export function ExpenseChart({
 
           {/* Top 3 Categories */}
           <div className="space-y-2">
-            <p className="text-muted-foreground text-sm">Top Categories</p>
+            <p className="text-muted-foreground text-sm">
+              {dp?.topCategories || "Top Categories"}
+            </p>
             {topCategories.slice(0, 3).map((cat, index) => (
               <div
                 key={cat.category}

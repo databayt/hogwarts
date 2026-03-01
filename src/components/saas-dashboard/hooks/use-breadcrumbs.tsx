@@ -14,13 +14,13 @@ type BreadcrumbItem = {
 
 // This allows to add custom title as well
 const routeMapping: Record<string, BreadcrumbItem[]> = {
-  "/dashboard": [{ title: "Overview", link: "/dashboard" }],
+  "/dashboard": [{ title: "Dashboard", link: "/dashboard" }],
   "/dashboard/employee": [
-    { title: "Overview", link: "/dashboard" },
+    { title: "Dashboard", link: "/dashboard" },
     { title: "Employee", link: "/dashboard/employee" },
   ],
   "/dashboard/product": [
-    { title: "Overview", link: "/dashboard" },
+    { title: "Dashboard", link: "/dashboard" },
     { title: "Product", link: "/dashboard/product" },
   ],
   // Add more custom mappings as needed
@@ -116,13 +116,9 @@ export function useBreadcrumbs() {
       const isIdSegment =
         index === finalSegments.length - 1 &&
         /^(?:[a-z0-9]{10,}|\w{6,})$/i.test(segment)
-      // Special handling for lab -> Overview
-      let title = isIdSegment
+      const title = isIdSegment
         ? (resolvedTitle ?? "\u00A0")
         : segment.charAt(0).toUpperCase() + segment.slice(1)
-      if (segment === "dashboard") {
-        title = "Overview"
-      }
       return {
         title,
         link: path,

@@ -74,7 +74,7 @@ async function triggerAbsenceNotification(
       }),
       db.school.findFirst({
         where: { id: schoolId },
-        select: { name: true },
+        select: { name: true, preferredLanguage: true },
       }),
     ])
 
@@ -147,7 +147,7 @@ async function triggerAbsenceNotification(
             status: "ABSENT",
             schoolName,
           },
-          "en" // TODO: Get guardian's preferred language
+          (schoolInfo?.preferredLanguage as "ar" | "en") || "ar"
         ).catch((err) => {
           console.error("[triggerAbsenceNotification] SMS send failed:", err)
         })

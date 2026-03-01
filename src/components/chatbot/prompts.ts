@@ -7,7 +7,7 @@ export interface SchoolChatbotData {
   description?: string | null
   schoolType?: string | null
   schoolLevel?: string | null
-  system?: string | null
+  curriculum?: string | null
   tuitionFee?: number | null
   registrationFee?: number | null
   applicationFee?: number | null
@@ -90,7 +90,7 @@ export function buildSchoolSitePrompt(school: SchoolChatbotData): string {
   const details: string[] = []
   if (school.schoolType) details.push(`Type: ${school.schoolType}`)
   if (school.schoolLevel) details.push(`Level: ${school.schoolLevel}`)
-  if (school.system) details.push(`Curriculum: ${school.system}`)
+  if (school.curriculum) details.push(`Curriculum: ${school.curriculum}`)
   if (details.length > 0) {
     sections.push(details.join(" | "))
   }

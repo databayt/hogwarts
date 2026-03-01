@@ -19,12 +19,18 @@ export default async function AnnouncementsLayout({ children, params }: Props) {
   // Announcements page navigation (4 links)
   const announcementsPages: PageNavItem[] = [
     { name: d?.navAll || "All", href: `/${lang}/announcements` },
-    { name: "Templates", href: `/${lang}/announcements/templates` },
+    {
+      name: d?.navTemplates || "Templates",
+      href: `/${lang}/announcements/templates`,
+    },
     {
       name: d?.navArchived || "Archive",
       href: `/${lang}/announcements/archived`,
     },
-    { name: "Settings", href: `/${lang}/announcements/settings` },
+    {
+      name: d?.navSettings || "Settings",
+      href: `/${lang}/announcements/settings`,
+    },
   ]
 
   return (

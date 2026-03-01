@@ -53,6 +53,8 @@ export function AllInvoices({
   })
   const [sortBy, setSortBy] = useState<"date" | "amount" | "client">("date")
   const d = dictionary?.finance
+  const fd = (dictionary as any)?.finance
+  const il = fd?.invoiceList as Record<string, string> | undefined
 
   const filteredInvoices = invoices.filter((invoice) => {
     if (filters.search) {
@@ -89,7 +91,9 @@ export function AllInvoices({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3>{d?.cards?.invoicing?.viewAll || "All Invoices"}</h3>
+          <h3>
+            {il?.allInvoices || d?.cards?.invoicing?.viewAll || "All Invoices"}
+          </h3>
           <span className="bg-muted rounded-full px-2 py-1">
             <small>{sortedInvoices.length}</small>
           </span>
@@ -97,12 +101,12 @@ export function AllInvoices({
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <Download className="me-2 size-4" />
-            Export
+            {il?.export || "Export"}
           </Button>
           {onCreateNew && (
             <Button size="sm" onClick={onCreateNew}>
               <Plus className="me-2 size-4" />
-              {d?.cards?.invoicing?.create || "New Invoice"}
+              {il?.newInvoice || d?.cards?.invoicing?.create || "New Invoice"}
             </Button>
           )}
         </div>

@@ -30,10 +30,12 @@ import {
 import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { backfillClassGrades } from "./backfill-class-grades"
+import { backfillExamCatalogBridges } from "./backfill-exam-catalog-bridges"
 import { seedBanking } from "./banking"
 import { seedCatalog } from "./catalog"
 import { seedCatalogBooks } from "./catalog-books"
 import { seedCatalogContent } from "./catalog-content"
+import { seedCatalogExamTemplates } from "./catalog-exam-templates"
 import { seedCatalogImages } from "./catalog-images"
 import { seedCatalogVideos } from "./catalog-videos"
 import { seedAllClasses } from "./classes"
@@ -753,6 +755,21 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async () => {
       await backfillClassGrades()
+    },
+  },
+  "backfill-exam-catalog-bridges": {
+    description: "Backfill catalogSubjectId on Exam records from Subject",
+    global: true,
+    run: async () => {
+      await backfillExamCatalogBridges()
+    },
+  },
+  "catalog-exam-templates": {
+    description:
+      "Catalog exam blueprints, exam templates (2 per subject), paper templates",
+    global: true,
+    run: async (prisma) => {
+      await seedCatalogExamTemplates(prisma)
     },
   },
 }

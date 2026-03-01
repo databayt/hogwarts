@@ -17,13 +17,29 @@ export default async function TimesheetLayout({ children, params }: Props) {
   const d = dictionary?.finance?.timesheet
 
   // Define timesheet page navigation
+  const n = d?.navigation
   const timesheetPages: PageNavItem[] = [
-    { name: "Overview", href: `/${lang}/finance/timesheet` },
-    { name: "Time Entry", href: `/${lang}/finance/timesheet/entry` },
-    { name: "Approval", href: `/${lang}/finance/timesheet/approval` },
-    { name: "Calendar View", href: `/${lang}/finance/timesheet/calendar` },
-    { name: "Reports", href: `/${lang}/finance/timesheet/reports` },
-    { name: "Settings", href: `/${lang}/finance/timesheet/settings` },
+    { name: n?.overview || "Overview", href: `/${lang}/finance/timesheet` },
+    {
+      name: n?.entry || "Time Entry",
+      href: `/${lang}/finance/timesheet/entry`,
+    },
+    {
+      name: n?.approval || "Approval",
+      href: `/${lang}/finance/timesheet/approval`,
+    },
+    {
+      name: n?.calendar || "Calendar View",
+      href: `/${lang}/finance/timesheet/calendar`,
+    },
+    {
+      name: n?.reports || "Reports",
+      href: `/${lang}/finance/timesheet/reports`,
+    },
+    {
+      name: n?.settings || "Settings",
+      href: `/${lang}/finance/timesheet/settings`,
+    },
   ]
 
   return (

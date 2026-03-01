@@ -10,8 +10,11 @@ export const catalogSubjectSchema = z.object({
   description: z.string().optional(),
   department: z.string().min(1, "Department is required"),
   levels: z.array(z.enum(["ELEMENTARY", "MIDDLE", "HIGH"])).min(1),
+  grades: z.array(z.number().int()).default([]),
   country: z.string().default("SD"),
-  system: z.string().default("national"),
+  curriculum: z.string().default("national"),
+  schoolTypes: z.array(z.string()).default([]),
+  concept: z.string().optional(),
   imageKey: z.string().optional(),
   color: z.string().optional(),
   status: z

@@ -343,100 +343,87 @@ export function FileUploader({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Dropzone */}
       <Card
-        {...getRootProps()}
         className={cn(
-          "cursor-pointer border-2 border-dashed transition-colors",
+          "border-2 border-dashed transition-colors",
+          files.length > 0 && "border-solid",
           isDragActive && !isDragReject && "border-primary bg-primary/5",
           isDragReject && "border-destructive bg-destructive/5",
           (isUploading || isOptimizing) && "cursor-not-allowed opacity-50"
         )}
       >
-        <input {...getInputProps()} />
-        <div className="flex flex-col items-center justify-center p-8 text-center">
-          <Upload className="text-muted-foreground mb-4 h-12 w-12" />
-
-          {isDragActive ? (
-            isDragReject ? (
-              <p className="text-destructive">Some files will be rejected</p>
+        {files.length === 0 ? (
+          <div
+            {...getRootProps()}
+            className="flex h-full cursor-pointer flex-col items-center justify-center p-6 text-center"
+          >
+            <input {...getInputProps()} />
+            <Upload className="text-muted-foreground mb-2 h-8 w-8" />
+            {isDragActive ? (
+              isDragReject ? (
+                <p className="text-destructive text-sm">File not accepted</p>
+              ) : (
+                <p className="text-primary text-sm">Drop here</p>
+              )
             ) : (
-              <p className="text-primary">Drop files here</p>
-            )
-          ) : (
-            <>
-              <p className="mb-2 text-lg font-medium">
-                Drag & drop files here, or click to select
-              </p>
-              <p className="text-muted-foreground mb-4 text-sm">
-                {multiple ? `Up to ${maxFiles} files` : "Single file"} • Max{" "}
-                {formatBytes(maxSize)} per file
-              </p>
-              {optimizeImages && (
-                <p className="text-muted-foreground text-xs">
-                  Images will be automatically optimized before upload
+              <>
+                <p className="text-sm font-medium">
+                  Drop file or click to browse
                 </p>
-              )}
-            </>
-          )}
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {multiple ? `Up to ${maxFiles} files` : "Single file"} • Max{" "}
+                  {formatBytes(maxSize)}
+                </p>
+              </>
+            )}
+            {isOptimizing && (
+              <p className="text-muted-foreground mt-2 text-xs">
+                Optimizing...
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="flex h-full flex-col justify-center p-4">
+            <div className="space-y-2">
+              {files.map((uploadedFile) => (
+                <FilePreview
+                  key={uploadedFile.id}
+                  file={uploadedFile.file}
+                  preview={uploadedFile.preview}
+                  optimized={uploadedFile.optimized}
+                  progress={progress[uploadedFile.file.name]}
+                  onRemove={() => removeFile(uploadedFile.id)}
+                />
+              ))}
+            </div>
 
-          {isOptimizing && (
-            <p className="text-muted-foreground mt-4 text-sm">
-              Optimizing images...
-            </p>
-          )}
-        </div>
+            {Object.keys(progress).length > 0 && (
+              <UploadProgress progress={progress} />
+            )}
+
+            {!isUploading && (
+              <div className="mt-3 flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleUpload}
+                  disabled={isUploading || isOptimizing}
+                  className="flex-1"
+                >
+                  Upload
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={clearAll}
+                  disabled={isUploading || isOptimizing}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </Card>
-
-      {/* File List */}
-      {files.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">Selected Files ({files.length})</h3>
-            <Button variant="ghost" size="sm" onClick={clearAll}>
-              Clear All
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            {files.map((uploadedFile) => (
-              <FilePreview
-                key={uploadedFile.id}
-                file={uploadedFile.file}
-                preview={uploadedFile.preview}
-                optimized={uploadedFile.optimized}
-                progress={progress[uploadedFile.file.name]}
-                onRemove={() => removeFile(uploadedFile.id)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Upload Progress */}
-      {Object.keys(progress).length > 0 && (
-        <UploadProgress progress={progress} />
-      )}
-
-      {/* Actions */}
-      {files.length > 0 && !isUploading && (
-        <div className="flex gap-2">
-          <Button
-            onClick={handleUpload}
-            disabled={isUploading || isOptimizing}
-            className="flex-1"
-          >
-            Upload {files.length} file(s)
-          </Button>
-          <Button
-            variant="outline"
-            onClick={clearAll}
-            disabled={isUploading || isOptimizing}
-          >
-            Cancel
-          </Button>
-        </div>
-      )}
     </div>
   )
 }

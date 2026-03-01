@@ -41,27 +41,41 @@ export function PageNav({
       return true
     }
 
-    // For other pages, check exact match
-    return normalizedPath === normalizedHref
+    // Exact match
+    if (normalizedPath === normalizedHref) return true
+
+    // Sub-path match only for deep links (e.g. /school/configuration matches /school/configuration/identity)
+    // Skip for shallow hrefs like /school (would falsely match /school/configuration)
+    const segments = normalizedHref.split("/").filter(Boolean)
+    if (
+      segments.length >= 3 &&
+      normalizedPath.startsWith(normalizedHref + "/")
+    ) {
+      return true
+    }
+
+    return false
   }
 
   return (
     <div className={cn("border-b", className)} {...props}>
       <ScrollArea className="max-w-[600px] lg:max-w-none">
-        <nav className="flex items-center gap-6 rtl:flex-row-reverse">
+        <nav className="flex items-center gap-6">
           {defaultPage && (
             <PageLink
               page={defaultPage}
               isActive={isPageActive(defaultPage.href)}
             />
           )}
-          {pages.map((page) => (
-            <PageLink
-              key={page.href}
-              page={page}
-              isActive={isPageActive(page.href)}
-            />
-          ))}
+          {pages
+            .filter((page) => !page.hidden)
+            .map((page) => (
+              <PageLink
+                key={page.href}
+                page={page}
+                isActive={isPageActive(page.href)}
+              />
+            ))}
         </nav>
         <ScrollBar orientation="horizontal" className="invisible" />
       </ScrollArea>
@@ -85,8 +99,10 @@ function PageLink({
       href={page.href}
       key={page.href}
       className={cn(
-        "hover:text-primary relative px-1 pb-3 text-sm font-medium whitespace-nowrap transition-colors",
-        isActive ? "text-primary" : "text-muted-foreground"
+        "hover:text-primary relative px-1 pb-3 text-sm whitespace-nowrap transition-colors",
+        isActive
+          ? "text-primary font-semibold"
+          : "text-muted-foreground font-medium"
       )}
     >
       {page.name}

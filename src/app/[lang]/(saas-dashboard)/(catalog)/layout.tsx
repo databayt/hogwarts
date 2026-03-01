@@ -3,6 +3,8 @@
 
 import { db } from "@/lib/db"
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   children: React.ReactNode
@@ -11,24 +13,44 @@ interface Props {
 
 export default async function CatalogLayout({ children, params }: Props) {
   const { lang } = await params
-  // Get pending approval count for badge (across all content types)
-  const [questionPending, bookPending] = await Promise.all([
+  const dictionary = await getDictionary(lang as Locale)
+  const n = dictionary?.saas?.catalog?.navigation
+
+  // Get pending counts for badges
+  const [questionPending, bookPending, proposalPending] = await Promise.all([
     db.catalogQuestion.count({ where: { approvalStatus: "PENDING" } }),
     db.catalogBook.count({ where: { approvalStatus: "PENDING" } }),
+    db.catalogProposal.count({ where: { status: "SUBMITTED" } }),
   ])
   const pendingCount = questionPending + bookPending
 
+  const approvalsLabel = n?.approvals || "Approvals"
+  const proposalsLabel = n?.proposals || "Proposals"
+
   const catalogPages: PageNavItem[] = [
-    { name: "Catalog", href: `/${lang}/catalog` },
-    { name: "Questions", href: `/${lang}/catalog/questions` },
-    { name: "Materials", href: `/${lang}/catalog/materials` },
-    { name: "Assignments", href: `/${lang}/catalog/assignments` },
-    { name: "Books", href: `/${lang}/catalog/books` },
+    { name: n?.catalog || "Catalog", href: `/${lang}/catalog` },
+    { name: n?.questions || "Questions", href: `/${lang}/catalog/questions` },
+    { name: n?.materials || "Materials", href: `/${lang}/catalog/materials` },
     {
-      name: pendingCount > 0 ? `Approvals (${pendingCount})` : "Approvals",
+      name: n?.assignments || "Assignments",
+      href: `/${lang}/catalog/assignments`,
+    },
+    { name: n?.books || "Books", href: `/${lang}/catalog/books` },
+    {
+      name:
+        pendingCount > 0
+          ? `${approvalsLabel} (${pendingCount})`
+          : approvalsLabel,
       href: `/${lang}/catalog/approvals`,
     },
-    { name: "Analytics", href: `/${lang}/catalog/analytics` },
+    {
+      name:
+        proposalPending > 0
+          ? `${proposalsLabel} (${proposalPending})`
+          : proposalsLabel,
+      href: `/${lang}/catalog/proposals`,
+    },
+    { name: n?.analytics || "Analytics", href: `/${lang}/catalog/analytics` },
   ]
 
   return (

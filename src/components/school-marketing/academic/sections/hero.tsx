@@ -27,7 +27,7 @@ export function AcademicHero({ lang, dictionary }: AcademicHeroProps) {
     <section id="hero" className="bg-background min-h-[calc(100vh-3.5rem)]">
       <div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
         {/* Left: Content */}
-        <div className="space-y-6 py-12 lg:py-0 rtl:lg:order-2">
+        <div className="space-y-6 py-12 lg:py-0">
           <h1 className="font-heading text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl">
             <span className="block">{titleParts[0]}</span>
             <span className="block">{titleParts[1]}</span>
@@ -38,7 +38,7 @@ export function AcademicHero({ lang, dictionary }: AcademicHeroProps) {
               "Discover your potential through rigorous academics and innovative learning. Our comprehensive programs are designed to unlock every student's capabilities."}
           </p>
 
-          <div className="flex flex-col gap-3 sm:flex-row rtl:sm:flex-row-reverse">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href={`/${lang}/apply`}
               className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
@@ -53,13 +53,13 @@ export function AcademicHero({ lang, dictionary }: AcademicHeroProps) {
               )}
             >
               {t?.viewCurriculum || "View Curriculum"}
-              <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+              <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
             </Link>
           </div>
         </div>
 
         {/* Right: Illustration - hidden on mobile/tablet for performance */}
-        <div className="hidden items-center justify-center lg:flex lg:justify-end rtl:lg:order-1 rtl:lg:justify-start">
+        <div className="hidden items-center justify-center lg:flex lg:justify-end">
           <AcademicHeroIllustration />
         </div>
       </div>

@@ -30,12 +30,18 @@ interface Props {
 }
 
 export default async function BudgetContent({ dictionary, lang }: Props) {
+  const fd = (dictionary as any)?.finance
+  const bp = fd?.budgetPage as Record<string, string> | undefined
+  const c = fd?.common as Record<string, string> | undefined
+
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
       <div>
-        <p className="text-muted-foreground">School context not found</p>
+        <p className="text-muted-foreground">
+          {c?.schoolNotFound || "School context not found"}
+        </p>
       </div>
     )
   }
@@ -64,7 +70,7 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
     return (
       <div>
         <p className="text-muted-foreground">
-          You don't have permission to view budget
+          {c?.noPermissionBudget || "You don't have permission to view budget"}
         </p>
       </div>
     )
@@ -105,34 +111,32 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   const variance = totalBudget - totalSpent
   const utilizationRate = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 
-  const d = dictionary?.finance?.budget
-
   return (
     <div className="space-y-6">
       {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
       <DashboardGrid type="stats">
         <StatsCard
-          title="Total Budget"
+          title={bp?.totalBudget || "Total Budget"}
           value={formatCurrency(totalBudget)}
-          description="Allocated budget"
+          description={bp?.allocatedBudget || "Allocated budget"}
           icon={DollarSign}
         />
         <StatsCard
-          title="Spent"
+          title={bp?.spent || "Spent"}
           value={formatCurrency(totalSpent)}
           description={`${formatPercentage(utilizationRate)} utilization`}
           icon={TrendingUp}
         />
         <StatsCard
-          title="Remaining"
+          title={bp?.remaining || "Remaining"}
           value={formatCurrency(variance)}
-          description="Available budget"
+          description={bp?.availableBudget || "Available budget"}
           icon={CircleCheck}
         />
         <StatsCard
-          title="Allocations"
+          title={bp?.allocations || "Allocations"}
           value={allocationsCount}
-          description={`${budgetsCount} active budgets`}
+          description={`${budgetsCount} ${c?.activeBudgets || "active budgets"}`}
           icon={PieChart}
         />
       </DashboardGrid>
@@ -140,19 +144,21 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
       {/* Feature Cards Grid */}
       <DashboardGrid type="features">
         <FeatureCard
-          title="Budgets"
-          description="Create and manage school budgets"
+          title={bp?.budgets || "Budgets"}
+          description={
+            bp?.createManageBudgets || "Create and manage school budgets"
+          }
           icon={PieChart}
           isPrimary
           primaryAction={{
-            label: "View Budgets",
+            label: bp?.viewBudgets || "View Budgets",
             href: `/${lang}/finance/budget/all`,
             count: budgetsCount,
           }}
           secondaryAction={
             canCreate
               ? {
-                  label: "Create Budget",
+                  label: bp?.createBudget || "Create Budget",
                   href: `/${lang}/finance/budget/new`,
                 }
               : undefined
@@ -160,17 +166,20 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
         />
         {canPencil && (
           <FeatureCard
-            title="Budget Allocations"
-            description="Allocate budget by department or category"
+            title={bp?.budgetAllocations || "Budget Allocations"}
+            description={
+              bp?.allocateByDepartment ||
+              "Allocate budget by department or category"
+            }
             icon={DollarSign}
             primaryAction={{
-              label: "View Allocations",
+              label: bp?.viewAllocations || "View Allocations",
               href: `/${lang}/finance/budget/allocations`,
             }}
             secondaryAction={
               canCreate
                 ? {
-                    label: "Allocate Funds",
+                    label: bp?.allocateFunds || "Allocate Funds",
                     href: `/${lang}/finance/budget/allocations/new`,
                   }
                 : undefined
@@ -178,59 +187,67 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
           />
         )}
         <FeatureCard
-          title="Spending Tracking"
-          description="Monitor budget utilization and spending"
+          title={bp?.spendingTracking || "Spending Tracking"}
+          description={
+            bp?.monitorUtilization || "Monitor budget utilization and spending"
+          }
           icon={TrendingUp}
           primaryAction={{
-            label: "Track Spending",
+            label: bp?.trackSpending || "Track Spending",
             href: `/${lang}/finance/budget/tracking`,
           }}
           secondaryAction={{
-            label: "Real-time View",
+            label: bp?.realTimeView || "Real-time View",
             href: `/${lang}/finance/budget/tracking/realtime`,
           }}
         />
         {canExport && (
           <FeatureCard
-            title="Variance Analysis"
-            description="Analyze budget vs actual spending"
+            title={bp?.varianceAnalysis || "Variance Analysis"}
+            description={
+              bp?.analyzeBudgetActual || "Analyze budget vs actual spending"
+            }
             icon={TriangleAlert}
             primaryAction={{
-              label: "Variance Report",
+              label: bp?.varianceReport || "Variance Report",
               href: `/${lang}/finance/budget/variance`,
             }}
             secondaryAction={{
-              label: "Budget Alerts",
+              label: bp?.budgetAlerts || "Budget Alerts",
               href: `/${lang}/finance/budget/variance/alerts`,
             }}
           />
         )}
         {canExport && (
           <FeatureCard
-            title="Budget Reports"
-            description="Generate budget analysis reports"
+            title={bp?.budgetReports || "Budget Reports"}
+            description={
+              bp?.generateBudgetReports || "Generate budget analysis reports"
+            }
             icon={BarChart}
             primaryAction={{
-              label: "View Reports",
+              label: c?.viewReports || "View Reports",
               href: `/${lang}/finance/budget/reports`,
             }}
             secondaryAction={{
-              label: "Budget Summary",
+              label: bp?.budgetSummary || "Budget Summary",
               href: `/${lang}/finance/budget/reports/summary`,
             }}
           />
         )}
         {canApprove && (
           <FeatureCard
-            title="Budget Approval"
-            description="Review and approve budget requests"
+            title={bp?.budgetApproval || "Budget Approval"}
+            description={
+              bp?.reviewApproveBudget || "Review and approve budget requests"
+            }
             icon={CircleCheck}
             primaryAction={{
-              label: "Pending Approval",
+              label: c?.pendingApproval || "Pending Approval",
               href: `/${lang}/finance/budget/approval`,
             }}
             secondaryAction={{
-              label: "Approval History",
+              label: c?.approvalHistory || "Approval History",
               href: `/${lang}/finance/budget/approval/history`,
             }}
           />

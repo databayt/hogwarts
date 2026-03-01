@@ -7,6 +7,7 @@ export const classroomBaseSchema = z.object({
   roomName: z.string().min(1, "Room name is required"),
   typeId: z.string().min(1, "Room type is required"),
   capacity: z.number().int().min(1, "Capacity must be at least 1"),
+  gradeId: z.string().optional(),
 })
 
 export const classroomCreateSchema = classroomBaseSchema

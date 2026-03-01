@@ -22,6 +22,15 @@ export async function getDiscounts(schoolId: string): Promise<ActionResponse> {
     const discounts = await db.discount.findMany({
       where: { schoolId },
       orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        code: true,
+        type: true,
+        value: true,
+        description: true,
+        isActive: true,
+        schoolId: true,
+      },
     })
 
     return createActionResponse(discounts)

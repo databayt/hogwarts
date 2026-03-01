@@ -40,9 +40,10 @@ function levelLabel(level: string, lang: Locale): string {
 interface Props {
   subjects: CatalogSubjectItem[]
   lang: Locale
+  subdomain?: string
 }
 
-export function CatalogSubjectsGrid({ subjects, lang }: Props) {
+export function CatalogSubjectsGrid({ subjects, lang, subdomain }: Props) {
   const { dictionary } = useDictionary()
   const cat = dictionary?.school?.subjects?.catalog as
     | Record<string, string>
@@ -71,7 +72,11 @@ export function CatalogSubjectsGrid({ subjects, lang }: Props) {
           return (
             <Link
               key={subject.id}
-              href={`/${lang}/subjects/${subject.slug}`}
+              href={
+                subdomain
+                  ? `/${lang}/s/${subdomain}/subjects/${subject.slug}`
+                  : `/${lang}/subjects/${subject.slug}`
+              }
               className="hover:bg-muted/50 flex items-center gap-3 overflow-hidden rounded-lg border transition-colors"
             >
               <SubjectThumb

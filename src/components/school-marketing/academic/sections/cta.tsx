@@ -31,7 +31,7 @@ export function AcademicCTA({ lang, dictionary }: AcademicCTAProps) {
             "Explore our rigorous academic programs designed to prepare students for success in higher education and beyond."}
         </p>
 
-        <div className="flex flex-col justify-center gap-4 sm:flex-row rtl:sm:flex-row-reverse">
+        <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <Link
             href={`/${lang}/apply`}
             className={cn(buttonVariants({ size: "lg" }), "gap-2")}

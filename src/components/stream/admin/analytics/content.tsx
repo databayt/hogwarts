@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+// TODO: No corresponding page.tsx route exists for this component (stream analytics page missing)
 import { useEffect, useState } from "react"
 import { BookOpen, DollarSign, TrendingUp, Users } from "lucide-react"
 import {

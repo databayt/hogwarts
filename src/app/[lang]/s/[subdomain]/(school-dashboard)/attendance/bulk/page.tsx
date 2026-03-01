@@ -3,6 +3,7 @@
 
 import { type Metadata } from "next"
 import Link from "next/link"
+import { auth } from "@/auth"
 import { Barcode, Clock, MapPin, Pencil, QrCode, Upload } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -72,7 +73,21 @@ const methods = [
 ]
 
 export default async function Page({ params }: Props) {
-  const { lang, subdomain } = await params
+  const [{ lang, subdomain }, session] = await Promise.all([params, auth()])
+
+  // Staff only
+  const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
+  if (!staffRoles.includes(session?.user?.role ?? "")) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <h2>Access Denied</h2>
+        <p className="text-muted-foreground">
+          You do not have permission to access bulk attendance.
+        </p>
+      </div>
+    )
+  }
+
   const basePath = `/${lang}/s/${subdomain}/attendance`
 
   // Define method metadata

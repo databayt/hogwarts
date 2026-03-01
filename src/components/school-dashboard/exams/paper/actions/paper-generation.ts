@@ -270,7 +270,7 @@ export async function generateExamPaper(
       questions,
       config: config as unknown as ExamPaperData["config"],
       metadata: {
-        locale: "en", // TODO: Get from user preferences
+        locale: (school.preferredLanguage ?? "ar") as "ar" | "en",
         generatedAt: new Date(),
         generatedBy: userId,
         versionCode: input.versionCode,
@@ -662,7 +662,7 @@ export async function getPaperData(
       questions,
       config: config as unknown as ExamPaperData["config"],
       metadata: {
-        locale: "en",
+        locale: (school.preferredLanguage ?? "ar") as "ar" | "en",
         generatedAt: new Date(),
         generatedBy: userId,
         versionCode,

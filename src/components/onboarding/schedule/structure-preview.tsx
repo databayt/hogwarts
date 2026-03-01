@@ -3,14 +3,21 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cn } from "@/lib/utils"
-import type { TimetableStructure } from "@/components/school-dashboard/timetable/structures"
+import type {
+  StructurePeriod,
+  TimetableStructure,
+} from "@/components/school-dashboard/timetable/structures"
 import { formatWorkingDays } from "@/components/school-dashboard/timetable/structures"
 
 interface StructurePreviewProps {
   structure: TimetableStructure
-  selected?: boolean
-  onSelect?: () => void
-  compact?: boolean
+  badge?: "best-match" | "custom" | null
+  periodsOverride?: StructurePeriod[]
+  schoolStartOverride?: string
+  schoolEndOverride?: string
+  periodsPerDayOverride?: number
+  dictionary?: any
+  lang?: string
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -23,75 +30,82 @@ const TYPE_COLORS: Record<string, string> = {
 
 export function StructurePreview({
   structure,
-  selected,
-  onSelect,
-  compact,
+  badge,
+  periodsOverride,
+  schoolStartOverride,
+  schoolEndOverride,
+  periodsPerDayOverride,
+  dictionary,
+  lang = "en",
 }: StructurePreviewProps) {
+  const dict = dictionary || {}
+  const periods = periodsOverride ?? structure.periods
+  const schoolStart = schoolStartOverride ?? structure.schoolStart
+  const schoolEnd = schoolEndOverride ?? structure.schoolEnd
+  const periodsPerDay = periodsPerDayOverride ?? structure.periodsPerDay
+  const name = lang === "ar" ? structure.name : structure.nameEn
+  const description =
+    lang === "ar" ? structure.description : structure.descriptionEn
+
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        "w-full rounded-lg border-2 p-4 text-start transition-colors",
-        selected
-          ? "border-primary bg-primary/5"
-          : "border-border hover:border-primary/50"
-      )}
-    >
+    <div className="border-primary bg-primary/5 w-full rounded-lg border-2 p-4">
       <div className="mb-3 flex items-start justify-between">
         <div>
-          <h4 className="font-semibold">{structure.nameEn}</h4>
-          <p className="text-muted-foreground text-sm">
-            {structure.descriptionEn}
-          </p>
+          <h4 className="font-semibold">{name}</h4>
+          <p className="text-muted-foreground text-sm">{description}</p>
         </div>
-        {structure.isDefault && (
-          <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
-            Recommended
+        {badge === "best-match" && (
+          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2 py-0.5 text-xs font-medium">
+            {dict.bestMatch || "Best Match"}
+          </span>
+        )}
+        {badge === "custom" && (
+          <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-2 py-0.5 text-xs font-medium">
+            {dict.customSchedule || "Custom"}
           </span>
         )}
       </div>
 
       <div className="text-muted-foreground mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-        <span>{structure.periodsPerDay} periods/day</span>
         <span>
-          {structure.schoolStart} - {structure.schoolEnd}
+          {periodsPerDay} {dict.periodsDay || "periods/day"}
+        </span>
+        <span>
+          {schoolStart} - {schoolEnd}
         </span>
         <span>{formatWorkingDays(structure.workingDays)}</span>
       </div>
 
-      {!compact && (
-        <div className="flex gap-0.5">
-          {structure.periods.map((period, i) => {
-            const totalMinutes = structure.periods.reduce(
-              (sum, p) => sum + p.durationMinutes,
-              0
-            )
-            const widthPercent = (period.durationMinutes / totalMinutes) * 100
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "flex items-center justify-center rounded border text-[10px]",
-                  TYPE_COLORS[period.type] || TYPE_COLORS.class
-                )}
-                style={{
-                  width: `${widthPercent}%`,
-                  minWidth: period.type === "class" ? "28px" : "16px",
-                  height: "28px",
-                }}
-                title={`${period.name} (${period.startTime}-${period.endTime})`}
-              >
-                {period.type === "class" && (
-                  <span className="truncate px-0.5">
-                    {period.name.replace("Period ", "P")}
-                  </span>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </button>
+      <div className="flex gap-0.5">
+        {periods.map((period, i) => {
+          const totalMinutes = periods.reduce(
+            (sum, p) => sum + p.durationMinutes,
+            0
+          )
+          const widthPercent = (period.durationMinutes / totalMinutes) * 100
+          return (
+            <div
+              key={i}
+              className={cn(
+                "flex items-center justify-center rounded border text-[10px]",
+                TYPE_COLORS[period.type] || TYPE_COLORS.class
+              )}
+              style={{
+                width: `${widthPercent}%`,
+                minWidth: period.type === "class" ? "28px" : "16px",
+                height: "28px",
+              }}
+              title={`${period.name} (${period.startTime}-${period.endTime})`}
+            >
+              {period.type === "class" && (
+                <span className="truncate px-0.5">
+                  {period.name.replace("Period ", "P")}
+                </span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }

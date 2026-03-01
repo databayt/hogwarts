@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -23,77 +23,56 @@ export const InfiniteMovingCards = ({
   pauseOnHover?: boolean
   className?: string
 }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const scrollerRef = React.useRef<HTMLUListElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Duplicate items in React instead of DOM cloning
+  // This ensures items stay in sync when dictionary loads asynchronously
+  const duplicatedItems = useMemo(() => [...items, ...items], [items])
 
   useEffect(() => {
-    addAnimation()
-  }, [])
-  const [start, setStart] = useState(false)
-  function addAnimation() {
-    if (containerRef.current && scrollerRef.current) {
-      const scrollerContent = Array.from(scrollerRef.current.children)
+    if (!containerRef.current) return
 
-      scrollerContent.forEach((item) => {
-        const duplicatedItem = item.cloneNode(true)
-        if (scrollerRef.current) {
-          scrollerRef.current.appendChild(duplicatedItem)
-        }
-      })
+    // Detect RTL from document direction
+    const isRTL = document.documentElement.dir === "rtl"
 
-      getDirection()
-      getSpeed()
-      setStart(true)
-    }
-  }
-  const getDirection = () => {
-    if (containerRef.current) {
-      if (direction === "left") {
-        containerRef.current.style.setProperty(
-          "--animation-direction",
-          "forwards"
-        )
-      } else {
-        containerRef.current.style.setProperty(
-          "--animation-direction",
-          "reverse"
-        )
-      }
-    }
-  }
-  const getSpeed = () => {
-    if (containerRef.current) {
-      if (speed === "fast") {
-        containerRef.current.style.setProperty("--animation-duration", "20s")
-      } else if (speed === "normal") {
-        containerRef.current.style.setProperty("--animation-duration", "40s")
-      } else {
-        containerRef.current.style.setProperty("--animation-duration", "80s")
-      }
-    }
-  }
+    // In RTL, flip the physical scroll direction so cards flow naturally
+    const effectiveDirection = isRTL
+      ? direction === "left"
+        ? "right"
+        : "left"
+      : direction
+
+    containerRef.current.style.setProperty(
+      "--animation-direction",
+      effectiveDirection === "left" ? "forwards" : "reverse"
+    )
+
+    const duration =
+      speed === "fast" ? "20s" : speed === "normal" ? "40s" : "80s"
+    containerRef.current.style.setProperty("--animation-duration", duration)
+  }, [direction, speed, items])
+
   return (
     <div
       ref={containerRef}
+      dir="ltr"
       className={cn(
         "scroller relative z-20 max-w-7xl overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]",
         className
       )}
     >
       <ul
-        ref={scrollerRef}
         className={cn(
-          "flex w-max min-w-full shrink-0 flex-nowrap gap-4 py-4",
-          start && "animate-scroll",
+          "animate-scroll flex w-max min-w-full shrink-0 flex-nowrap gap-4 py-4",
           pauseOnHover && "hover:[animation-play-state:paused]"
         )}
       >
-        {items.map((item) => (
+        {duplicatedItems.map((item, idx) => (
           <li
             className="relative w-[350px] max-w-full shrink-0 rounded-2xl border border-b-0 border-zinc-200 bg-[linear-gradient(180deg,#fafafa,#f5f5f5)] px-8 py-6 md:w-[450px] dark:border-zinc-700 dark:bg-[linear-gradient(180deg,#27272a,#18181b)]"
-            key={item.name}
+            key={`${item.name}-${idx}`}
           >
-            <blockquote>
+            <blockquote dir="auto">
               <div
                 aria-hidden="true"
                 className="user-select-none pointer-events-none absolute -start-0.5 -top-0.5 -z-1 h-[calc(100%_+_4px)] w-[calc(100%_+_4px)]"

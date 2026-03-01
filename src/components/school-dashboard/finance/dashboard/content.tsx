@@ -13,6 +13,9 @@ import {
   Wallet,
 } from "lucide-react"
 
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+
 import {
   getDashboardStats,
   getFinancialAlerts,
@@ -37,6 +40,11 @@ export async function FinanceDashboardContent({
     return <div>Unauthorized</div>
   }
 
+  const dictionary = await getDictionary(lang as Locale)
+  const fd = (dictionary as any)?.finance
+  const dp = fd?.dashboardPage as Record<string, string> | undefined
+  const c = fd?.common as Record<string, string> | undefined
+
   const userRole = session.user.role || "USER"
 
   // Fetch all lab data in parallel
@@ -52,85 +60,85 @@ export async function FinanceDashboardContent({
     const allKPIs: FinancialKPI[] = [
       {
         id: "total-revenue",
-        title: "Total Revenue",
+        title: dp?.totalRevenue || "Total Revenue",
         value: stats.totalRevenue,
         change: 12,
         changeType: "increase",
         icon: "💰",
         color: "green",
-        description: "Total invoiced amount",
+        description: dp?.totalInvoicedAmount || "Total invoiced amount",
         trend: stats.revenuesTrend.slice(-7),
       },
       {
         id: "collected-revenue",
-        title: "Collected Revenue",
+        title: dp?.collectedRevenue || "Collected Revenue",
         value: stats.collectedRevenue,
         change: stats.collectionRate > 75 ? 5 : -5,
         changeType: stats.collectionRate > 75 ? "increase" : "decrease",
         icon: "✅",
         color: "blue",
-        description: `${stats.collectionRate.toFixed(1)}% collection rate`,
+        description: `${stats.collectionRate.toFixed(1)}% ${dp?.collectionRate || "collection rate"}`,
       },
       {
         id: "total-expenses",
-        title: "Total Expenses",
+        title: dp?.totalExpenses || "Total Expenses",
         value: stats.totalExpenses,
         change: 3,
         changeType: "increase",
         icon: "💸",
         color: "red",
-        description: "All expenses this period",
+        description: dp?.allExpensesPeriod || "All expenses this period",
       },
       {
         id: "net-profit",
-        title: "Net Profit",
+        title: dp?.netProfit || "Net Profit",
         value: stats.netProfit,
         change: stats.profitMargin,
         changeType: stats.netProfit > 0 ? "increase" : "decrease",
         icon: "📈",
         color: stats.netProfit > 0 ? "green" : "red",
-        description: `${stats.profitMargin.toFixed(1)}% profit margin`,
+        description: `${stats.profitMargin.toFixed(1)}% ${dp?.profitMargin || "profit margin"}`,
         trend: stats.profitTrend.slice(-7),
       },
       {
         id: "cash-balance",
-        title: "Cash Balance",
+        title: dp?.cashBalance || "Cash Balance",
         value: stats.cashBalance,
         change: 8,
         changeType: "increase",
         icon: "🏦",
         color: "purple",
-        description: `${stats.cashRunway} months runway`,
+        description: `${stats.cashRunway} ${dp?.monthsRunway || "months runway"}`,
       },
       {
         id: "outstanding-invoices",
-        title: "Outstanding",
+        title: dp?.outstanding || "Outstanding",
         value: stats.outstandingRevenue,
         change: stats.overdueInvoices,
         changeType: stats.overdueInvoices > 0 ? "increase" : "neutral",
         icon: "⏰",
         color: "yellow",
-        description: `${stats.overdueInvoices} overdue invoices`,
+        description: `${stats.overdueInvoices} ${dp?.overdueInvoices || "overdue invoices"}`,
       },
       {
         id: "students-paid",
-        title: "Students Paid",
+        title: dp?.studentsPaid || "Students Paid",
         value: `${stats.studentsWithPayments}/${stats.totalStudents}`,
         change: (stats.studentsWithPayments / stats.totalStudents) * 100,
         changeType: "neutral",
         icon: "👥",
         color: "blue",
-        description: "Fee payment status",
+        description: dp?.feePaymentStatus || "Fee payment status",
       },
       {
         id: "payroll-expense",
-        title: "Payroll",
+        title: dp?.payroll || "Payroll",
         value: stats.totalPayroll,
         change: 0,
         changeType: "neutral",
         icon: "💼",
         color: "orange",
-        description: `${stats.payrollProcessed} processed, ${stats.pendingPayroll} pending`,
+        description: `${stats.payrollProcessed} ${dp?.processedPending || "processed, pending".split(", ")[0]}, ${stats.pendingPayroll} ${(dp?.processedPending || "processed, pending").split(", ")[1] || "pending"}`,
       },
     ]
 
@@ -166,10 +174,11 @@ export async function FinanceDashboardContent({
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          Financial Dashboard
+          {dp?.financialDashboard || "Financial Dashboard"}
         </h1>
         <p className="text-muted-foreground">
-          Overview of your institution's financial performance
+          {dp?.overviewDescription ||
+            "Overview of your institution's financial performance"}
         </p>
       </div>
 
@@ -223,33 +232,37 @@ export async function FinanceDashboardContent({
 
       {/* Budget Overview - Only for Admin/Accountant */}
       {hasFullAccess && stats.budgetCategories.length > 0 && (
-        <BudgetOverview categories={stats.budgetCategories} locale={lang} />
+        <BudgetOverview
+          categories={stats.budgetCategories}
+          locale={lang}
+          dict={dp}
+        />
       )}
 
       {/* Footer Stats */}
       <div className="grid gap-4 border-t pt-6 md:grid-cols-4">
         <StatCard
-          title="Invoice Collection"
+          title={dp?.invoiceCollection || "Invoice Collection"}
           value={`${stats.paidInvoices}/${stats.totalInvoices}`}
-          description="Invoices paid"
+          description={dp?.invoicesPaid || "Invoices paid"}
           icon={<Receipt className="h-4 w-4" />}
         />
         <StatCard
-          title="Budget Utilization"
+          title={dp?.budgetUtilization || "Budget Utilization"}
           value={`${((stats.budgetUsed / (stats.budgetUsed + stats.budgetRemaining)) * 100).toFixed(0)}%`}
-          description="Of allocated budget"
+          description={dp?.ofAllocatedBudget || "Of allocated budget"}
           icon={<DollarSign className="h-4 w-4" />}
         />
         <StatCard
-          title="Active Students"
+          title={dp?.activeStudents || "Active Students"}
           value={stats.totalStudents}
-          description="Enrolled students"
+          description={dp?.enrolledStudents || "Enrolled students"}
           icon={<Users className="h-4 w-4" />}
         />
         <StatCard
-          title="Bank Accounts"
+          title={dp?.bankAccounts || "Bank Accounts"}
           value={stats.bankAccounts.length}
-          description="Active accounts"
+          description={dp?.activeAccounts || "Active accounts"}
           icon={<Building className="h-4 w-4" />}
         />
       </div>
@@ -284,6 +297,7 @@ function StatCard({
 function BudgetOverview({
   categories,
   locale = "ar",
+  dict,
 }: {
   categories: {
     category: string
@@ -293,10 +307,13 @@ function BudgetOverview({
     percentage: number
   }[]
   locale?: string
+  dict?: Record<string, string>
 }) {
   return (
     <div className="rounded-lg border p-6">
-      <h3 className="mb-4 text-lg font-semibold">Budget Overview</h3>
+      <h3 className="mb-4 text-lg font-semibold">
+        {dict?.budgetOverview || "Budget Overview"}
+      </h3>
       <div className="space-y-3">
         {categories.slice(0, 5).map((cat) => (
           <div key={cat.category} className="space-y-1">

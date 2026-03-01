@@ -29,12 +29,17 @@ interface Props {
 }
 
 export default async function WalletContent({ dictionary, lang }: Props) {
+  const fd = (dictionary as any)?.finance
+  const c = fd?.common as Record<string, string> | undefined
+
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
       <div>
-        <p className="text-muted-foreground">School context not found</p>
+        <p className="text-muted-foreground">
+          {c?.schoolNotFound || "School context not found"}
+        </p>
       </div>
     )
   }
@@ -63,7 +68,7 @@ export default async function WalletContent({ dictionary, lang }: Props) {
     return (
       <div>
         <p className="text-muted-foreground">
-          You don't have permission to view wallet
+          {c?.noPermissionWallet || "You don't have permission to view wallet"}
         </p>
       </div>
     )
@@ -101,54 +106,54 @@ export default async function WalletContent({ dictionary, lang }: Props) {
     }
   }
 
-  const d = dictionary?.finance?.wallet as any
+  const wp = fd?.walletPage as Record<string, string> | undefined
 
   return (
     <div className="space-y-6">
       <DashboardGrid type="stats">
         <StatsCard
-          title={d?.stats?.totalBalance || "Total Balance"}
+          title={wp?.totalBalance || "Total Balance"}
           value={formatCurrency(totalBalance)}
-          description={d?.stats?.allWallets || "Across all wallets"}
+          description={wp?.acrossAllWallets || "Across all wallets"}
           icon={DollarSign}
         />
         <StatsCard
-          title={d?.stats?.activeWallets || "Active Wallets"}
+          title={wp?.activeWallets || "Active Wallets"}
           value={walletsCount}
-          description={`${d?.stats?.school || "School"} & ${d?.stats?.parent || "parent wallets"}`}
+          description={`${wp?.schoolWallets || "School"} & ${wp?.parentWallets || "parent wallets"}`}
           icon={Wallet}
         />
         <StatsCard
-          title={d?.stats?.transactions || "Transactions"}
+          title={wp?.transactions || "Transactions"}
           value={transactionsCount}
-          description={d?.stats?.allTime || "All time transactions"}
+          description={wp?.allTimeTransactions || "All time transactions"}
           icon={TrendingUp}
         />
         <StatsCard
-          title={d?.stats?.topups || "Total Top-ups"}
+          title={wp?.totalTopUps || "Total Top-ups"}
           value={formatCurrency(totalTopups)}
-          description={d?.stats?.lifetime || "Lifetime top-ups"}
+          description={wp?.lifetimeTopUps || "Lifetime top-ups"}
           icon={CircleArrowUp}
         />
       </DashboardGrid>
 
       <DashboardGrid type="features">
         <FeatureCard
-          title={d?.sections?.wallets || "All Wallets"}
+          title={wp?.allWallets || "All Wallets"}
           description={
-            d?.sections?.walletsDesc || "View and manage all wallet accounts"
+            wp?.viewManageWallets || "View and manage all wallet accounts"
           }
           icon={Wallet}
           isPrimary
           primaryAction={{
-            label: d?.actions?.viewWallets || "View Wallets",
+            label: wp?.viewWallets || "View Wallets",
             href: `/${lang}/finance/wallet/all`,
             count: walletsCount,
           }}
           secondaryAction={
             canCreate
               ? {
-                  label: d?.actions?.createWallet || "Create Wallet",
+                  label: wp?.createWallet || "Create Wallet",
                   href: `/${lang}/finance/wallet/new`,
                 }
               : undefined
@@ -156,35 +161,35 @@ export default async function WalletContent({ dictionary, lang }: Props) {
         />
         {canProcess && (
           <FeatureCard
-            title={d?.sections?.topup || "Top-up Wallet"}
+            title={wp?.topUpWallet || "Top-up Wallet"}
             description={
-              d?.sections?.topupDesc || "Add funds to parent or school wallets"
+              wp?.addFundsToWallets || "Add funds to parent or school wallets"
             }
             icon={CircleArrowUp}
             primaryAction={{
-              label: d?.actions?.topup || "Top-up",
+              label: wp?.topUp || "Top-up",
               href: `/${lang}/finance/wallet/topup`,
             }}
             secondaryAction={{
-              label: d?.actions?.bulkTopup || "Bulk Top-up",
+              label: wp?.bulkTopUp || "Bulk Top-up",
               href: `/${lang}/finance/wallet/topup/bulk`,
             }}
           />
         )}
         <FeatureCard
-          title={d?.sections?.transactions || "Transactions"}
+          title={wp?.transactions || "Transactions"}
           description={
-            d?.sections?.transactionsDesc || "View wallet transaction history"
+            wp?.viewTransactionHistory || "View wallet transaction history"
           }
           icon={TrendingUp}
           primaryAction={{
-            label: d?.actions?.viewTransactions || "View Transactions",
+            label: wp?.viewTransactions || "View Transactions",
             href: `/${lang}/finance/wallet/transactions`,
           }}
           secondaryAction={
             canExport
               ? {
-                  label: d?.actions?.export || "Export",
+                  label: fd?.export || "Export",
                   href: `/${lang}/finance/wallet/transactions/export`,
                 }
               : undefined
@@ -192,51 +197,50 @@ export default async function WalletContent({ dictionary, lang }: Props) {
         />
         {canProcess && (
           <FeatureCard
-            title={d?.sections?.refunds || "Refunds"}
+            title={wp?.refunds || "Refunds"}
             description={
-              d?.sections?.refundsDesc ||
-              "Process wallet refunds and adjustments"
+              wp?.processRefunds || "Process wallet refunds and adjustments"
             }
             icon={CircleArrowDown}
             primaryAction={{
-              label: d?.actions?.processRefund || "Process Refund",
+              label: wp?.processRefund || "Process Refund",
               href: `/${lang}/finance/wallet/refund`,
             }}
             secondaryAction={{
-              label: d?.actions?.refundHistory || "Refund History",
+              label: wp?.refundHistory || "Refund History",
               href: `/${lang}/finance/wallet/refund/history`,
             }}
           />
         )}
         <FeatureCard
-          title={d?.sections?.parentWallets || "Parent Wallets"}
+          title={wp?.parentWallets || "Parent Wallets"}
           description={
-            d?.sections?.parentWalletsDesc || "Manage parent wallet accounts"
+            wp?.manageParentWallets || "Manage parent wallet accounts"
           }
           icon={Users}
           primaryAction={{
-            label: d?.actions?.viewParents || "View Parent Wallets",
+            label: wp?.viewParentWallets || "View Parent Wallets",
             href: `/${lang}/finance/wallet/parents`,
           }}
           secondaryAction={{
-            label: d?.actions?.statements || "Statements",
+            label: wp?.statements || "Statements",
             href: `/${lang}/finance/wallet/parents/statements`,
           }}
         />
         {canExport && (
           <FeatureCard
-            title={d?.sections?.reports || "Wallet Reports"}
+            title={wp?.walletReports || "Wallet Reports"}
             description={
-              d?.sections?.reportsDesc ||
+              wp?.generateWalletReports ||
               "Generate wallet balance and transaction reports"
             }
             icon={DollarSign}
             primaryAction={{
-              label: d?.actions?.reports || "View Reports",
+              label: c?.viewReports || "View Reports",
               href: `/${lang}/finance/wallet/reports`,
             }}
             secondaryAction={{
-              label: d?.actions?.balanceSheet || "Balance Sheet",
+              label: wp?.balanceSheet || "Balance Sheet",
               href: `/${lang}/finance/wallet/reports/balance`,
             }}
           />

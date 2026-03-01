@@ -16,21 +16,29 @@ import type {
 
 /**
  * Generates an exam by selecting questions based on template distribution
- * Uses a smart selection algorithm that balances randomization with requirements
+ * Uses a smart selection algorithm that balances randomization with requirements.
+ *
+ * When catalogQuestions are provided, they serve as a fallback pool:
+ * school QBank is tried first, catalog fills unfilled slots.
  */
 export function generateExamQuestions(
   availableQuestions: QuestionBankDTO[],
   distribution: TemplateDistribution,
   bloomDistribution?: BloomDistribution,
   isRandomized = false,
-  seed?: string
+  seed?: string,
+  catalogQuestions?: QuestionBankDTO[]
 ): GenerationAlgorithmResult {
   const selectedQuestions: QuestionBankDTO[] = []
   const missingCategories: string[] = []
+  const catalogUsed: string[] = [] // Track which catalog questions were used
   const rng = seed ? seededRandom(seed) : Math.random
 
   // Group questions by type, difficulty, and Bloom level
   const questionMap = groupQuestionsByCategories(availableQuestions)
+  const catalogMap = catalogQuestions
+    ? groupQuestionsByCategories(catalogQuestions)
+    : null
 
   // First pass: Fill distribution requirements
   for (const [questionType, difficulties] of Object.entries(distribution)) {
@@ -40,13 +48,7 @@ export function generateExamQuestions(
       const key = `${questionType}-${difficulty}`
       const availableInCategory = questionMap.get(key) || []
 
-      if (availableInCategory.length < count) {
-        missingCategories.push(
-          `${questionType} (${difficulty}): need ${count}, have ${availableInCategory.length}`
-        )
-      }
-
-      // Select questions from this category
+      // Select from school QBank first
       const selected = selectQuestionsFromCategory(
         availableInCategory,
         count,
@@ -61,6 +63,42 @@ export function generateExamQuestions(
         const idx = availableInCategory.findIndex((aq) => aq.id === q.id)
         if (idx !== -1) availableInCategory.splice(idx, 1)
       })
+
+      // Catalog fallback: fill remaining slots
+      const remaining = count - selected.length
+      if (remaining > 0 && catalogMap) {
+        const catalogInCategory = catalogMap.get(key) || []
+        const catalogSelected = selectQuestionsFromCategory(
+          catalogInCategory,
+          remaining,
+          isRandomized,
+          rng
+        )
+
+        // Mark catalog questions with a source tag
+        catalogSelected.forEach((q) => {
+          catalogUsed.push(q.id)
+        })
+        selectedQuestions.push(...catalogSelected)
+
+        // Remove from catalog pool
+        catalogSelected.forEach((q) => {
+          const idx = catalogInCategory.findIndex((aq) => aq.id === q.id)
+          if (idx !== -1) catalogInCategory.splice(idx, 1)
+        })
+
+        // Still missing after catalog fallback?
+        const stillMissing = remaining - catalogSelected.length
+        if (stillMissing > 0) {
+          missingCategories.push(
+            `${questionType} (${difficulty}): need ${count}, have ${selected.length + catalogSelected.length}`
+          )
+        }
+      } else if (selected.length < count && !catalogMap) {
+        missingCategories.push(
+          `${questionType} (${difficulty}): need ${count}, have ${availableInCategory.length}`
+        )
+      }
     }
   }
 
@@ -88,6 +126,7 @@ export function generateExamQuestions(
       actualCount: selectedQuestions.length,
       distributionMet: missingCategories.length === 0,
       missingCategories,
+      catalogQuestionsUsed: catalogUsed,
     },
   }
 }

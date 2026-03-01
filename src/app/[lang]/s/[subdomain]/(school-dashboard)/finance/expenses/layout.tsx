@@ -17,13 +17,29 @@ export default async function ExpensesLayout({ children, params }: Props) {
   const d = dictionary?.finance?.expenses
 
   // Define expenses page navigation
+  const n = d?.navigation
   const expensesPages: PageNavItem[] = [
-    { name: "Overview", href: `/${lang}/finance/expenses` },
-    { name: "Submit Expense", href: `/${lang}/finance/expenses/submit` },
-    { name: "Pending Approval", href: `/${lang}/finance/expenses/pending` },
-    { name: "Approved", href: `/${lang}/finance/expenses/approved` },
-    { name: "Reports", href: `/${lang}/finance/expenses/reports` },
-    { name: "Categories", href: `/${lang}/finance/expenses/categories` },
+    { name: n?.overview || "Overview", href: `/${lang}/finance/expenses` },
+    {
+      name: n?.submit || "Submit Expense",
+      href: `/${lang}/finance/expenses/submit`,
+    },
+    {
+      name: n?.pending || "Pending Approval",
+      href: `/${lang}/finance/expenses/pending`,
+    },
+    {
+      name: n?.approved || "Approved",
+      href: `/${lang}/finance/expenses/approved`,
+    },
+    {
+      name: n?.reports || "Reports",
+      href: `/${lang}/finance/expenses/reports`,
+    },
+    {
+      name: n?.categories || "Categories",
+      href: `/${lang}/finance/expenses/categories`,
+    },
   ]
 
   return (

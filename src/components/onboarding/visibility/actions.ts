@@ -26,7 +26,7 @@ export async function updateVisibility(
     })
 
     revalidatePath(`/onboarding/${schoolId}/visibility`)
-    return createActionResponse(branding)
+    return createActionResponse({ id: branding.id })
   } catch (error) {
     return createActionResponse(undefined, error)
   }

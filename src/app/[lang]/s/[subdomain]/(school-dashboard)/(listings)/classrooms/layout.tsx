@@ -12,31 +12,32 @@ interface Props {
 }
 
 export default async function ClassroomsLayout({ children, params }: Props) {
-  const { lang } = await params
+  const { lang, subdomain } = await params
   const dictionary = await getDictionary(lang as Locale)
-  const d = dictionary?.school?.classes
+  const d = dictionary?.school?.classrooms
+
+  const base = `/${lang}/s/${subdomain}/classrooms`
 
   const classroomPages: PageNavItem[] = [
-    { name: d?.navigation?.all || "All", href: `/${lang}/classrooms` },
     {
       name: d?.navigation?.rooms || "Rooms",
-      href: `/${lang}/classrooms/rooms`,
+      href: base,
     },
     {
       name: d?.navigation?.configure || "Configure",
-      href: `/${lang}/classrooms/configure`,
+      href: `${base}/configure`,
     },
     {
       name: d?.navigation?.capacity || "Capacity",
-      href: `/${lang}/classrooms/capacity`,
+      href: `${base}/capacity`,
+    },
+    {
+      name: d?.navigation?.subjects || "Subjects",
+      href: `${base}/subjects`,
     },
     {
       name: d?.navigation?.schedule || "Schedule",
-      href: `/${lang}/classrooms/schedule`,
-    },
-    {
-      name: d?.navigation?.settings || "Settings",
-      href: `/${lang}/classrooms/settings`,
+      href: `${base}/schedule`,
     },
   ]
 

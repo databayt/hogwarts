@@ -12,10 +12,7 @@ import { db } from "@/lib/db"
  *
  * Note: schoolId is optional — individuals can enroll without a school.
  */
-export async function checkCatalogEnrollment(
-  catalogSubjectId: string,
-  schoolId: string | null
-) {
+export async function checkCatalogEnrollment(catalogSubjectId: string) {
   const session = await auth()
   if (!session?.user?.id) {
     return false
@@ -26,7 +23,6 @@ export async function checkCatalogEnrollment(
       userId: session.user.id,
       catalogSubjectId,
       isActive: true,
-      ...(schoolId ? { schoolId } : {}),
     },
   })
 

@@ -56,6 +56,9 @@ model CatalogQuestion {
   // School mirrors (adopted by schools into their QuestionBank)
   schoolMirrors QuestionBank[] @relation("CatalogQuestionMirror")
 
+  // Exam junction (which catalog exams include this question)
+  catalogExamQuestions CatalogExamQuestion[]
+
   // Pricing for PAID visibility
   price    Decimal? @db.Decimal(8, 2)
   currency String?  @default("USD")
@@ -71,4 +74,127 @@ model CatalogQuestion {
   @@index([contributedBy])
   @@index([contributedSchoolId])
   @@map("catalog_questions")
+}
+
+// ============================================================================
+// CATALOG EXAM QUESTION JUNCTION
+// ============================================================================
+// Links CatalogExam to CatalogQuestion with ordering and points.
+// Replaces the legacy CatalogExam.questions Json field.
+
+model CatalogExamQuestion {
+  id              String @id @default(cuid())
+  catalogExamId   String
+  catalogQuestionId String
+  order           Int
+  points          Decimal @db.Decimal(5, 2)
+
+  // Relations
+  catalogExam     CatalogExam     @relation(fields: [catalogExamId], references: [id], onDelete: Cascade)
+  catalogQuestion CatalogQuestion @relation(fields: [catalogQuestionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([catalogExamId, order])
+  @@unique([catalogExamId, catalogQuestionId])
+  @@index([catalogExamId])
+  @@index([catalogQuestionId])
+  @@map("catalog_exam_questions")
+}
+
+// ============================================================================
+// CATALOG EXAM TEMPLATE (NO schoolId — platform-wide)
+// ============================================================================
+// Reusable exam blueprints at catalog level, mirroring ExamTemplate structure.
+
+model CatalogExamTemplate {
+  id               String  @id @default(cuid())
+  catalogSubjectId String
+  name             String
+  description      String? @db.Text
+  lang             String  @default("ar")
+
+  examType    String // midterm, final, chapter_test, quiz, practice, diagnostic
+  duration    Int // Minutes
+  totalMarks  Decimal @db.Decimal(6, 2)
+
+  // Distribution rules (same format as ExamTemplate)
+  distribution      Json // {"MULTIPLE_CHOICE": {"EASY": 5, "MEDIUM": 3}}
+  bloomDistribution Json? // {"REMEMBER": 4, "UNDERSTAND": 3}
+
+  gradeRange String?
+  levels     SchoolLevel[]
+
+  // Community contribution
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus   @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  // Engagement metrics
+  usageCount Int @default(0)
+
+  status ContentStatus @default(PUBLISHED)
+  tags   String[]      @default([])
+
+  // Relations
+  catalogSubject CatalogSubject @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
+
+  // School mirrors (adopted templates)
+  schoolMirrors ExamTemplate[] @relation("CatalogExamTemplateMirror")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([catalogSubjectId])
+  @@index([examType])
+  @@index([status])
+  @@index([approvalStatus, visibility])
+  @@index([contributedBy])
+  @@index([contributedSchoolId])
+  @@map("catalog_exam_templates")
+}
+
+// ============================================================================
+// CATALOG EXAM BLUEPRINT
+// ============================================================================
+// Persists the 8 subject-category blueprints (STEM_MATH, LANGUAGE_ARTS, etc.)
+// with question type weights, Bloom weights, difficulty curves, and exam type configs.
+
+model CatalogExamBlueprint {
+  id       String @id @default(cuid())
+  category String @unique // STEM_MATH, STEM_SCIENCE, LANGUAGE_ARTS, etc.
+  name     String
+  description String? @db.Text
+
+  // Question type weights per category (JSON: {"MULTIPLE_CHOICE": 0.25, "SHORT_ANSWER": 0.20, ...})
+  questionTypeWeights Json
+
+  // Bloom's taxonomy weights (JSON: {"REMEMBER": 0.15, "UNDERSTAND": 0.20, ...})
+  bloomWeights Json
+
+  // Difficulty curves by school level (JSON: {"ELEMENTARY": {"EASY": 0.50, "MEDIUM": 0.35, "HARD": 0.15}, ...})
+  difficultyCurves Json
+
+  // Exam type configurations (JSON: {"final": {"duration": [90, 150], "marks": [80, 100], ...}, ...})
+  examTypeConfigs Json
+
+  // Question templates for this category (JSON array of template objects)
+  questionTemplates Json? // [{text: "...", bloomLevel: "APPLY", type: "MCQ"}, ...]
+
+  // MCQ option generators (JSON)
+  mcqOptionGenerators Json?
+
+  // Subject classification rules (JSON: regex patterns to match subjects to this category)
+  classificationRules Json?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@map("catalog_exam_blueprints")
 }

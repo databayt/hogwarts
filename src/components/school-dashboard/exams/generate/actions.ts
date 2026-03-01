@@ -329,12 +329,46 @@ export async function createTemplate(
 
     const validated = examTemplateSchema.parse(data)
 
-    const template = await db.examTemplate.create({
-      data: {
-        ...validated,
-        schoolId,
-        createdBy: userId,
-      },
+    // Resolve catalog subject from school subject
+    const subject = await db.subject.findFirst({
+      where: { id: validated.subjectId, schoolId },
+      select: { catalogSubjectId: true },
+    })
+
+    // Dual-write: catalog first, then school mirror
+    const template = await db.$transaction(async (tx) => {
+      let catalogExamTemplateId: string | undefined
+
+      // Create in catalog if subject has catalog mapping
+      if (subject?.catalogSubjectId) {
+        const catalogTemplate = await tx.catalogExamTemplate.create({
+          data: {
+            catalogSubjectId: subject.catalogSubjectId,
+            name: validated.name,
+            description: validated.description,
+            examType: "custom",
+            duration: validated.duration,
+            totalMarks: validated.totalMarks,
+            distribution: validated.distribution as any,
+            bloomDistribution: validated.bloomDistribution ?? undefined,
+            contributedBy: userId,
+            contributedSchoolId: schoolId,
+            approvalStatus: "APPROVED",
+            visibility: "PUBLIC",
+            status: "PUBLISHED",
+          },
+        })
+        catalogExamTemplateId = catalogTemplate.id
+      }
+
+      return tx.examTemplate.create({
+        data: {
+          ...validated,
+          schoolId,
+          createdBy: userId,
+          catalogExamTemplateId,
+        },
+      })
     })
 
     revalidatePath("/exams/generate/templates")

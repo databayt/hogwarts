@@ -114,10 +114,230 @@ const SCHOOL_LEVEL_TO_CATALOG: Record<string, string[]> = {
   both: ["ELEMENTARY", "MIDDLE", "HIGH"],
 }
 
+// ============================================================================
+// Year Level defaults (filtered by schoolLevel)
+// ============================================================================
+
+const YEAR_LEVEL_DEFAULTS = [
+  {
+    name: "KG1",
+    slug: "kg1",
+    levelOrder: 1,
+    schoolLevels: ["primary", "both"],
+  },
+  {
+    name: "KG2",
+    slug: "kg2",
+    levelOrder: 2,
+    schoolLevels: ["primary", "both"],
+  },
+  {
+    name: "Grade 1",
+    slug: "grade-1",
+    levelOrder: 3,
+    schoolLevels: ["primary", "both"],
+  },
+  {
+    name: "Grade 2",
+    slug: "grade-2",
+    levelOrder: 4,
+    schoolLevels: ["primary", "both"],
+  },
+  {
+    name: "Grade 3",
+    slug: "grade-3",
+    levelOrder: 5,
+    schoolLevels: ["primary", "both"],
+  },
+  {
+    name: "Grade 4",
+    slug: "grade-4",
+    levelOrder: 6,
+    schoolLevels: ["primary", "both"],
+  },
+  {
+    name: "Grade 5",
+    slug: "grade-5",
+    levelOrder: 7,
+    schoolLevels: ["primary", "both"],
+  },
+  {
+    name: "Grade 6",
+    slug: "grade-6",
+    levelOrder: 8,
+    schoolLevels: ["primary", "both"],
+  },
+  {
+    name: "Grade 7",
+    slug: "grade-7",
+    levelOrder: 9,
+    schoolLevels: ["secondary", "both"],
+  },
+  {
+    name: "Grade 8",
+    slug: "grade-8",
+    levelOrder: 10,
+    schoolLevels: ["secondary", "both"],
+  },
+  {
+    name: "Grade 9",
+    slug: "grade-9",
+    levelOrder: 11,
+    schoolLevels: ["secondary", "both"],
+  },
+  {
+    name: "Grade 10",
+    slug: "grade-10",
+    levelOrder: 12,
+    schoolLevels: ["secondary", "both"],
+  },
+  {
+    name: "Grade 11",
+    slug: "grade-11",
+    levelOrder: 13,
+    schoolLevels: ["secondary", "both"],
+  },
+  {
+    name: "Grade 12",
+    slug: "grade-12",
+    levelOrder: 14,
+    schoolLevels: ["secondary", "both"],
+  },
+]
+
+// ============================================================================
+// Department defaults (6 universal)
+// ============================================================================
+
+const DEPARTMENT_DEFAULTS = [
+  { name: "Languages", slug: "languages" },
+  { name: "Sciences", slug: "sciences" },
+  { name: "Humanities", slug: "humanities" },
+  { name: "Religion", slug: "religion" },
+  { name: "ICT", slug: "ict" },
+  { name: "Arts & Sports", slug: "arts-sports" },
+]
+
+// ============================================================================
+// Score Range defaults (9 entries: A+ through F)
+// ============================================================================
+
+const SCORE_RANGE_DEFAULTS = [
+  { grade: "A+", minScore: 95, maxScore: 100, gpa: 4.0 },
+  { grade: "A", minScore: 90, maxScore: 94, gpa: 3.75 },
+  { grade: "B+", minScore: 85, maxScore: 89, gpa: 3.5 },
+  { grade: "B", minScore: 80, maxScore: 84, gpa: 3.0 },
+  { grade: "C+", minScore: 75, maxScore: 79, gpa: 2.5 },
+  { grade: "C", minScore: 70, maxScore: 74, gpa: 2.0 },
+  { grade: "D+", minScore: 65, maxScore: 69, gpa: 1.5 },
+  { grade: "D", minScore: 60, maxScore: 64, gpa: 1.0 },
+  { grade: "F", minScore: 0, maxScore: 59, gpa: 0.0 },
+]
+
+// ============================================================================
+// Curriculum inference
+// ============================================================================
+
+/**
+ * Infer curriculum from country + schoolType.
+ * International schools always get us-k12.
+ * Known countries get their national curriculum.
+ * Unknown countries fall back to us-k12 as baseline.
+ */
+function inferCurriculum(country: string, schoolType?: string | null): string {
+  if (schoolType === "international") return "us-k12"
+  const map: Record<string, string> = {
+    US: "us-k12",
+    GB: "british",
+    SD: "national",
+    SA: "national",
+    EG: "national",
+    AE: "national",
+    QA: "national",
+    JO: "national",
+  }
+  return map[country] || "us-k12"
+}
+
+// ============================================================================
+// setupDefaultsForSchool — YearLevels, Departments, ScoreRanges
+// ============================================================================
+
+/**
+ * Auto-provision YearLevels, Departments, and ScoreRanges for a new school.
+ * Idempotent — skips if records already exist.
+ */
+export async function setupDefaultsForSchool(
+  schoolId: string,
+  schoolLevel: string = "both"
+) {
+  const results = { yearLevels: 0, departments: 0, scoreRanges: 0 }
+
+  // 1. YearLevels (filtered by schoolLevel)
+  const existingYearLevels = await db.yearLevel.count({ where: { schoolId } })
+  if (existingYearLevels === 0) {
+    const applicable = YEAR_LEVEL_DEFAULTS.filter((yl) =>
+      yl.schoolLevels.includes(schoolLevel)
+    )
+    for (const yl of applicable) {
+      await db.yearLevel.create({
+        data: {
+          schoolId,
+          levelName: yl.name,
+          levelOrder: yl.levelOrder,
+        },
+      })
+      results.yearLevels++
+    }
+  }
+
+  // 2. Departments
+  const existingDepts = await db.department.count({ where: { schoolId } })
+  if (existingDepts === 0) {
+    for (const dept of DEPARTMENT_DEFAULTS) {
+      await db.department.create({
+        data: {
+          schoolId,
+          departmentName: dept.name,
+        },
+      })
+      results.departments++
+    }
+  }
+
+  // 3. ScoreRanges
+  const existingRanges = await db.scoreRange.count({ where: { schoolId } })
+  if (existingRanges === 0) {
+    for (const range of SCORE_RANGE_DEFAULTS) {
+      await db.scoreRange.create({
+        data: {
+          schoolId,
+          grade: range.grade,
+          minScore: range.minScore,
+          maxScore: range.maxScore,
+        },
+      })
+      results.scoreRanges++
+    }
+  }
+
+  return results
+}
+
+// ============================================================================
+// setupCatalogForSchool — AcademicLevels, Grades, Streams, Subject Selections
+// ============================================================================
+
 /**
  * Auto-setup catalog for a new school.
  * Creates AcademicLevels, AcademicGrades, AcademicStreams, and
  * SchoolSubjectSelection records linking all applicable catalog subjects.
+ *
+ * Uses progressive fallback for catalog matching:
+ * 1. country + curriculum + schoolType filter → exact match
+ * 2. country + curriculum → broad match
+ * 3. country="*" + curriculum → universal (IB, British worldwide)
+ * 4. US + us-k12 → K-12 baseline fallback
  *
  * Respects School.schoolLevel to only create relevant levels/grades.
  * Called during school onboarding or manually from SaaS dashboard.
@@ -126,7 +346,8 @@ export async function setupCatalogForSchool(
   schoolId: string,
   options?: {
     country?: string
-    system?: string
+    curriculum?: string
+    schoolType?: string
     skipIfExists?: boolean
   }
 ) {
@@ -145,13 +366,22 @@ export async function setupCatalogForSchool(
   // Read school's actual country and level classification
   const school = await db.school.findUnique({
     where: { id: schoolId },
-    select: { schoolLevel: true, country: true },
+    select: {
+      schoolLevel: true,
+      country: true,
+      schoolType: true,
+      curriculum: true,
+    },
   })
 
   // Use school's country (ISO code), then options override, then fallback
   const country = school?.country || options?.country || "US"
-  // Default to ClickView US K-12 curriculum; other curricula can be specified via options
-  const system = options?.system || "clickview"
+  const schoolType = school?.schoolType || options?.schoolType || undefined
+  // Infer curriculum from country+schoolType, allow school/options override
+  const curriculum =
+    school?.curriculum ||
+    options?.curriculum ||
+    inferCurriculum(country, schoolType)
   const allowedLevels =
     SCHOOL_LEVEL_TO_CATALOG[school?.schoolLevel ?? "both"] ??
     SCHOOL_LEVEL_TO_CATALOG.both
@@ -159,25 +389,20 @@ export async function setupCatalogForSchool(
     allowedLevels.includes(l.level)
   )
 
-  // Get all published catalog subjects for this country/system
-  const catalogSubjects = await db.catalogSubject.findMany({
-    where: {
-      status: "PUBLISHED",
-      country,
-      system,
-    },
-    select: {
-      id: true,
-      name: true,
-      levels: true,
-      grades: true,
-    },
-  })
+  // Progressive fallback for catalog subjects
+  const catalogSubjects = await findCatalogSubjects(
+    country,
+    curriculum,
+    schoolType
+  )
 
   if (catalogSubjects.length === 0) {
+    console.warn(
+      `[setupCatalogForSchool] No catalog subjects found after all fallbacks for school ${schoolId} (country=${country}, curriculum=${curriculum})`
+    )
     return {
       skipped: true,
-      message: "No catalog subjects found for this country/system",
+      message: "No catalog subjects found after all fallback attempts",
     }
   }
 
@@ -364,6 +589,94 @@ export async function setupCatalogForSchool(
   })
 
   return result
+}
+
+/**
+ * Progressive fallback catalog subject finder.
+ * Tries increasingly broad queries until subjects are found.
+ */
+async function findCatalogSubjects(
+  country: string,
+  curriculum: string,
+  schoolType?: string
+) {
+  const selectFields = {
+    id: true,
+    name: true,
+    levels: true,
+    grades: true,
+  } as const
+
+  // Step 1: Exact match (country + curriculum + schoolType filter)
+  if (schoolType) {
+    const exact = await db.catalogSubject.findMany({
+      where: {
+        status: "PUBLISHED",
+        country,
+        curriculum,
+        schoolTypes: { has: schoolType },
+      },
+      select: selectFields,
+    })
+    if (exact.length > 0) {
+      console.log(
+        `[setupCatalog] Exact match: ${exact.length} subjects (country=${country}, curriculum=${curriculum}, schoolType=${schoolType})`
+      )
+      return exact
+    }
+  }
+
+  // Step 2: Broad match (country + curriculum, ignore schoolType)
+  const broad = await db.catalogSubject.findMany({
+    where: {
+      status: "PUBLISHED",
+      country,
+      curriculum,
+    },
+    select: selectFields,
+  })
+  if (broad.length > 0) {
+    console.log(
+      `[setupCatalog] Broad match: ${broad.length} subjects (country=${country}, curriculum=${curriculum})`
+    )
+    return broad
+  }
+
+  // Step 3: Universal match (country="*" + curriculum, e.g. IB worldwide)
+  const universal = await db.catalogSubject.findMany({
+    where: {
+      status: "PUBLISHED",
+      country: "*",
+      curriculum,
+    },
+    select: selectFields,
+  })
+  if (universal.length > 0) {
+    console.log(
+      `[setupCatalog] Universal match: ${universal.length} subjects (country=*, curriculum=${curriculum})`
+    )
+    return universal
+  }
+
+  // Step 4: Baseline fallback (US + us-k12)
+  if (country !== "US" || curriculum !== "us-k12") {
+    const fallback = await db.catalogSubject.findMany({
+      where: {
+        status: "PUBLISHED",
+        country: "US",
+        curriculum: "us-k12",
+      },
+      select: selectFields,
+    })
+    if (fallback.length > 0) {
+      console.warn(
+        `[setupCatalog] Fallback to US K-12: ${fallback.length} subjects (requested country=${country}, curriculum=${curriculum})`
+      )
+      return fallback
+    }
+  }
+
+  return []
 }
 
 /**

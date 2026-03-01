@@ -249,6 +249,7 @@ export async function getSchoolBySubdomain(subdomain: string): Promise<{
         email: true,
         website: true,
         timezone: true,
+        preferredLanguage: true,
         planType: true,
         maxStudents: true,
         maxTeachers: true,

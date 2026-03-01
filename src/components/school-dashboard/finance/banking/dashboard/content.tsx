@@ -28,12 +28,17 @@ export async function BankingDashboardContent({
   dictionary,
   lang,
 }: BankingDashboardContentProps) {
+  const fd = (dictionary as any)?.finance
+  const bd = fd?.bankingDashboard as Record<string, string> | undefined
+
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">School context not found</p>
+        <p className="text-muted-foreground">
+          {bd?.schoolContextNotFound || "School context not found"}
+        </p>
       </div>
     )
   }
@@ -51,7 +56,8 @@ export async function BankingDashboardContent({
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="text-muted-foreground">
-          You don't have permission to view banking
+          {bd?.noPermissionBanking ||
+            "You don't have permission to view banking"}
         </p>
       </div>
     )
@@ -72,7 +78,7 @@ export async function BankingDashboardContent({
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="text-muted-foreground">
-          {dictionary?.noAccounts ||
+          {bd?.noAccountsFound ||
             "No accounts found. Please connect a bank account."}
         </p>
       </div>
@@ -92,7 +98,7 @@ export async function BankingDashboardContent({
           accounts={accountsData}
           totalBanks={accounts.totalBanks}
           totalCurrentBalance={accounts.totalCurrentBalance}
-          dictionary={dictionary}
+          dictionary={bd}
         />
 
         <DashboardMainContent
@@ -100,7 +106,7 @@ export async function BankingDashboardContent({
           transactions={account?.transactions || []}
           accountId={accountId}
           currentPage={currentPage}
-          dictionary={dictionary}
+          dictionary={bd}
         />
       </Suspense>
     </div>

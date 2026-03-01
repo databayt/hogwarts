@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { type Metadata } from "next"
+import { auth } from "@/auth"
 import { SearchParams } from "nuqs/server"
 
 import { type Locale } from "@/components/internationalization/config"
@@ -29,11 +30,25 @@ interface Props {
 
 export default async function Page({ params, searchParams }: Props) {
   // Parallel data fetching
-  const [{ lang }, dictionary, sp] = await Promise.all([
+  const [{ lang }, dictionary, sp, session] = await Promise.all([
     params,
     getDictionary((await params).lang),
     searchParams,
+    auth(),
   ])
+
+  // Staff only
+  const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
+  if (!staffRoles.includes(session?.user?.role ?? "")) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <h2>Access Denied</h2>
+        <p className="text-muted-foreground">
+          You do not have permission to access attendance reports.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <ReportsContent

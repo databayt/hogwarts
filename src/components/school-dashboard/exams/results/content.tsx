@@ -2,12 +2,15 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import Link from "next/link"
+import { auth } from "@/auth"
+import { format } from "date-fns"
 import { Award, Download, FileBarChart, TrendingUp } from "lucide-react"
 import { type SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
@@ -20,9 +23,160 @@ interface Props {
   searchParams: Promise<SearchParams>
 }
 
+// Helper to get student IDs for the current user (student or guardian)
+async function getStudentScope(
+  role: string | undefined,
+  userId: string | undefined,
+  schoolId: string
+): Promise<{ studentIds: string[]; classIds: string[] } | null> {
+  if (!userId) return null
+
+  if (role === "STUDENT") {
+    const student = await db.student.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+    if (!student) return null
+    const classes = await db.studentClass.findMany({
+      where: { studentId: student.id, schoolId },
+      select: { classId: true },
+    })
+    return {
+      studentIds: [student.id],
+      classIds: classes.map((c) => c.classId),
+    }
+  }
+
+  if (role === "GUARDIAN") {
+    const guardian = await db.guardian.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+    if (!guardian) return null
+    const studentGuardians = await db.studentGuardian.findMany({
+      where: { guardianId: guardian.id, schoolId },
+      select: { studentId: true },
+    })
+    const childIds = studentGuardians.map((sg) => sg.studentId)
+    const classes = await db.studentClass.findMany({
+      where: { studentId: { in: childIds }, schoolId },
+      select: { classId: true },
+    })
+    return {
+      studentIds: childIds,
+      classIds: [...new Set(classes.map((c) => c.classId))],
+    }
+  }
+
+  return null
+}
+
 export default async function ResultsContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+  const session = await auth()
+  const role = session?.user?.role
+  const isStudentOrGuardian = ["STUDENT", "GUARDIAN"].includes(role || "")
 
+  // For students/guardians, show their own results directly
+  if (isStudentOrGuardian && schoolId) {
+    const scope = await getStudentScope(role, session?.user?.id, schoolId)
+    if (!scope) return null
+
+    const results = await db.examResult.findMany({
+      where: {
+        schoolId,
+        studentId: { in: scope.studentIds },
+      },
+      include: {
+        student: { select: { givenName: true, surname: true } },
+        exam: {
+          select: {
+            title: true,
+            examDate: true,
+            totalMarks: true,
+            subject: { select: { subjectName: true, lang: true } },
+            class: { select: { name: true, lang: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    })
+
+    const r = dictionary?.results
+
+    return (
+      <div className="space-y-6">
+        {results.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <FileBarChart className="text-muted-foreground mb-4 h-12 w-12" />
+              <h3 className="mb-2 text-lg font-semibold">
+                {r?.messages?.noResults ||
+                  (lang === "ar" ? "لا توجد نتائج بعد" : "No results yet")}
+              </h3>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-3">
+            {await Promise.all(
+              results.map(async (result) => {
+                const subjectName = result.exam.subject?.subjectName
+                  ? await getDisplayText(
+                      result.exam.subject.subjectName,
+                      (result.exam.subject.lang || "ar") as SupportedLanguage,
+                      lang,
+                      schoolId!
+                    )
+                  : ""
+
+                return (
+                  <Card key={result.id}>
+                    <CardContent className="flex items-center justify-between p-4">
+                      <div>
+                        <p className="font-medium">{result.exam.title}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {role === "GUARDIAN" &&
+                            `${result.student.givenName} ${result.student.surname} - `}
+                          {subjectName} -{" "}
+                          {format(result.exam.examDate, "MMM d, yyyy")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-end">
+                          <p className="text-2xl font-bold">
+                            {result.percentage.toFixed(0)}%
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {result.marksObtained}/{result.exam.totalMarks}
+                          </p>
+                        </div>
+                        {result.grade && (
+                          <Badge
+                            variant={
+                              result.percentage >= 80
+                                ? "default"
+                                : result.percentage >= 50
+                                  ? "secondary"
+                                  : "destructive"
+                            }
+                          >
+                            {result.grade}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Admin/Teacher view — existing behavior
   // Fetch completed exams with results
   let examsWithResults: Array<{
     id: string

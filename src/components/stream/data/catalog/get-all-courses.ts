@@ -59,7 +59,7 @@ export async function getAllCatalogCourses(
   // Build where clause — show ALL published ClickView subjects (matching subjects page)
   const where: Prisma.CatalogSubjectWhereInput = {
     status: "PUBLISHED",
-    system: "clickview",
+    curriculum: "us-k12",
     ...(params.title
       ? {
           name: {

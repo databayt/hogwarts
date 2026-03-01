@@ -27,6 +27,10 @@ interface CatalogBookSeed {
   summary: string
   coverColor: string
   copies: number
+  publisher?: string
+  publicationYear?: number
+  language?: string
+  pageCount?: number
 }
 
 // ============================================================================
@@ -247,6 +251,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "دراسة تحليلية للمعلقات السبع",
     coverColor: "#3B82F6",
     copies: 4,
+    publisher: "دار المعارف",
+    publicationYear: 2005,
+    language: "العربية",
+    pageCount: 320,
   },
   {
     title: "الكامل في اللغة والأدب",
@@ -257,6 +265,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "موسوعة اللغة والأدب",
     coverColor: "#3B82F6",
     copies: 2,
+    publisher: "دار الكتب العلمية",
+    publicationYear: 1997,
+    language: "العربية",
+    pageCount: 648,
   },
   {
     title: "ألف ليلة وليلة",
@@ -267,6 +279,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "حكايات ألف ليلة وليلة",
     coverColor: "#3B82F6",
     copies: 5,
+    publisher: "دار صادر",
+    publicationYear: 2008,
+    language: "العربية",
+    pageCount: 1200,
   },
   {
     title: "كليلة ودمنة",
@@ -277,6 +293,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "حكايات الحكمة والأخلاق",
     coverColor: "#3B82F6",
     copies: 4,
+    publisher: "دار الساقي",
+    publicationYear: 2014,
+    language: "العربية",
+    pageCount: 256,
   },
   {
     title: "مقدمة ابن خلدون",
@@ -287,6 +307,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "أساس علم الاجتماع",
     coverColor: "#3B82F6",
     copies: 3,
+    publisher: "دار الفكر",
+    publicationYear: 2001,
+    language: "العربية",
+    pageCount: 880,
   },
   {
     title: "طوق الحمامة",
@@ -297,6 +321,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "فلسفة الحب عند العرب",
     coverColor: "#3B82F6",
     copies: 3,
+    publisher: "دار الآفاق الجديدة",
+    publicationYear: 2010,
+    language: "العربية",
+    pageCount: 192,
   },
   // Islamic Studies (7)
   {
@@ -308,6 +336,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "قصص الأنبياء من القرآن",
     coverColor: "#059669",
     copies: 5,
+    publisher: "دار ابن كثير",
+    publicationYear: 2010,
+    language: "العربية",
+    pageCount: 480,
   },
   {
     title: "السيرة النبوية",
@@ -318,6 +350,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "حياة النبي صلى الله عليه وسلم",
     coverColor: "#059669",
     copies: 4,
+    publisher: "دار الكتاب العربي",
+    publicationYear: 1990,
+    language: "العربية",
+    pageCount: 752,
   },
   {
     title: "تفسير ابن كثير",
@@ -328,6 +364,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "تفسير القرآن بالمأثور",
     coverColor: "#059669",
     copies: 3,
+    publisher: "دار طيبة",
+    publicationYear: 1999,
+    language: "العربية",
+    pageCount: 2400,
   },
   {
     title: "الأربعون النووية",
@@ -338,6 +378,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "أحاديث جامعة لأصول الدين",
     coverColor: "#059669",
     copies: 5,
+    publisher: "دار ابن حزم",
+    publicationYear: 2003,
+    language: "العربية",
+    pageCount: 96,
   },
   {
     title: "فقه السنة",
@@ -348,6 +392,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "الفقه الإسلامي الميسر",
     coverColor: "#059669",
     copies: 3,
+    publisher: "دار الفتح",
+    publicationYear: 1995,
+    language: "العربية",
+    pageCount: 920,
   },
   {
     title: "حصن المسلم",
@@ -358,6 +406,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "الأذكار والأدعية اليومية",
     coverColor: "#059669",
     copies: 5,
+    publisher: "مؤسسة الجريسي",
+    publicationYear: 2018,
+    language: "العربية",
+    pageCount: 160,
   },
   {
     title: "الرحيق المختوم",
@@ -368,6 +420,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "أفضل كتب السيرة النبوية",
     coverColor: "#059669",
     copies: 4,
+    publisher: "دار السلام",
+    publicationYear: 2002,
+    language: "العربية",
+    pageCount: 544,
   },
   // English (8)
   {
@@ -379,6 +435,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Start your English journey",
     coverColor: "#10B981",
     copies: 5,
+    publisher: "Longman",
+    publicationYear: 2019,
+    language: "English",
+    pageCount: 224,
   },
   {
     title: "English Grammar in Use",
@@ -389,6 +449,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Essential English grammar",
     coverColor: "#10B981",
     copies: 4,
+    publisher: "Cambridge University Press",
+    publicationYear: 2019,
+    language: "English",
+    pageCount: 380,
   },
   {
     title: "Oxford Picture Dictionary",
@@ -399,6 +463,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Visual English-Arabic dictionary",
     coverColor: "#10B981",
     copies: 4,
+    publisher: "Oxford University Press",
+    publicationYear: 2016,
+    language: "English",
+    pageCount: 304,
   },
   {
     title: "English Vocabulary in Use",
@@ -409,6 +477,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Essential English vocabulary",
     coverColor: "#10B981",
     copies: 3,
+    publisher: "Cambridge University Press",
+    publicationYear: 2017,
+    language: "English",
+    pageCount: 312,
   },
   {
     title: "Stories for Young Readers",
@@ -419,6 +491,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Easy English stories",
     coverColor: "#10B981",
     copies: 5,
+    publisher: "Pro Lingua Associates",
+    publicationYear: 2004,
+    language: "English",
+    pageCount: 128,
   },
   {
     title: "English Conversation Practice",
@@ -429,6 +505,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Speak English confidently",
     coverColor: "#10B981",
     copies: 3,
+    publisher: "McGraw-Hill",
+    publicationYear: 2012,
+    language: "English",
+    pageCount: 198,
   },
   {
     title: "English Writing Skills",
@@ -439,6 +519,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Master English writing",
     coverColor: "#10B981",
     copies: 3,
+    publisher: "Educators Publishing Service",
+    publicationYear: 2004,
+    language: "English",
+    pageCount: 176,
   },
   {
     title: "English Phonics",
@@ -449,6 +533,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "English pronunciation guide",
     coverColor: "#10B981",
     copies: 4,
+    publisher: "Jolly Learning Ltd",
+    publicationYear: 2012,
+    language: "English",
+    pageCount: 144,
   },
   // Quran Sciences (1)
   {
@@ -460,6 +548,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "تفسير مختصر للقرآن",
     coverColor: "#14B8A6",
     copies: 3,
+    publisher: "دار الحديث",
+    publicationYear: 2001,
+    language: "العربية",
+    pageCount: 848,
   },
   // Fantasy - Harry Potter (7)
   {
@@ -472,6 +564,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "The beginning of Harry's magical journey",
     coverColor: "#7C3AED",
     copies: 5,
+    publisher: "Bloomsbury",
+    publicationYear: 1997,
+    language: "English",
+    pageCount: 332,
   },
   {
     title: "Harry Potter and the Chamber of Secrets",
@@ -483,6 +579,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "The mystery of the Chamber of Secrets",
     coverColor: "#7C3AED",
     copies: 4,
+    publisher: "Bloomsbury",
+    publicationYear: 1998,
+    language: "English",
+    pageCount: 360,
   },
   {
     title: "Harry Potter and the Prisoner of Azkaban",
@@ -494,6 +594,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Secrets of the Marauder's Map",
     coverColor: "#7C3AED",
     copies: 4,
+    publisher: "Bloomsbury",
+    publicationYear: 1999,
+    language: "English",
+    pageCount: 468,
   },
   {
     title: "Harry Potter and the Goblet of Fire",
@@ -505,6 +609,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "The Triwizard Tournament",
     coverColor: "#7C3AED",
     copies: 3,
+    publisher: "Bloomsbury",
+    publicationYear: 2000,
+    language: "English",
+    pageCount: 636,
   },
   {
     title: "Harry Potter and the Order of the Phoenix",
@@ -516,6 +624,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Dumbledore's Army rises",
     coverColor: "#7C3AED",
     copies: 3,
+    publisher: "Bloomsbury",
+    publicationYear: 2003,
+    language: "English",
+    pageCount: 870,
   },
   {
     title: "Harry Potter and the Half-Blood Prince",
@@ -527,6 +639,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "The Half-Blood Prince's secrets",
     coverColor: "#7C3AED",
     copies: 3,
+    publisher: "Bloomsbury",
+    publicationYear: 2005,
+    language: "English",
+    pageCount: 652,
   },
   {
     title: "Harry Potter and the Deathly Hallows",
@@ -538,6 +654,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "The Battle of Hogwarts",
     coverColor: "#7C3AED",
     copies: 3,
+    publisher: "Bloomsbury",
+    publicationYear: 2007,
+    language: "English",
+    pageCount: 759,
   },
   // K-12 Classics (8)
   {
@@ -550,6 +670,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Alice's journey through Wonderland",
     coverColor: "#6366F1",
     copies: 4,
+    publisher: "Macmillan",
+    publicationYear: 1865,
+    language: "English",
+    pageCount: 96,
   },
   {
     title: "The Wonderful Wizard of Oz",
@@ -561,6 +685,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Dorothy's adventure in Oz",
     coverColor: "#6366F1",
     copies: 4,
+    publisher: "George M. Hill Company",
+    publicationYear: 1900,
+    language: "English",
+    pageCount: 148,
   },
   {
     title: "The Secret Garden",
@@ -572,6 +700,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "The magic of a secret garden",
     coverColor: "#6366F1",
     copies: 4,
+    publisher: "Frederick A. Stokes",
+    publicationYear: 1911,
+    language: "English",
+    pageCount: 256,
   },
   {
     title: "Adventures of Huckleberry Finn",
@@ -583,6 +715,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Adventures on the Mississippi",
     coverColor: "#6366F1",
     copies: 3,
+    publisher: "Chatto & Windus",
+    publicationYear: 1884,
+    language: "English",
+    pageCount: 366,
   },
   {
     title: "Robinson Crusoe",
@@ -593,6 +729,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Survival on a deserted island",
     coverColor: "#6366F1",
     copies: 3,
+    publisher: "W. Taylor",
+    publicationYear: 1719,
+    language: "English",
+    pageCount: 304,
   },
   {
     title: "Treasure Island",
@@ -604,6 +744,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Pirates and buried treasure",
     coverColor: "#6366F1",
     copies: 4,
+    publisher: "Cassell and Company",
+    publicationYear: 1883,
+    language: "English",
+    pageCount: 240,
   },
   {
     title: "A Christmas Carol",
@@ -615,6 +759,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Scrooge's Christmas transformation",
     coverColor: "#6366F1",
     copies: 4,
+    publisher: "Chapman & Hall",
+    publicationYear: 1843,
+    language: "English",
+    pageCount: 132,
   },
   // K-12 Children's (4)
   {
@@ -627,6 +775,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "A caterpillar's colorful journey",
     coverColor: "#F472B6",
     copies: 5,
+    publisher: "World Publishing Company",
+    publicationYear: 1969,
+    language: "English",
+    pageCount: 26,
   },
   {
     title: "Heidi",
@@ -638,6 +790,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Life in the Swiss Alps",
     coverColor: "#F472B6",
     copies: 4,
+    publisher: "Sterling Children's Books",
+    publicationYear: 1881,
+    language: "English",
+    pageCount: 288,
   },
   {
     title: "One Fish, Two Fish, Red Fish, Blue Fish",
@@ -649,6 +805,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Dr. Seuss counting fun",
     coverColor: "#F472B6",
     copies: 5,
+    publisher: "Random House",
+    publicationYear: 1960,
+    language: "English",
+    pageCount: 64,
   },
   {
     title: "Hop on Pop",
@@ -660,6 +820,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "First steps in reading",
     coverColor: "#F472B6",
     copies: 5,
+    publisher: "Random House",
+    publicationYear: 1963,
+    language: "English",
+    pageCount: 72,
   },
   // K-12 Young Adult (5)
   {
@@ -672,6 +836,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "A genius child's magical rebellion",
     coverColor: "#7C3AED",
     copies: 4,
+    publisher: "Jonathan Cape",
+    publicationYear: 1988,
+    language: "English",
+    pageCount: 240,
   },
   {
     title: "The BFG",
@@ -683,6 +851,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "The Big Friendly Giant",
     coverColor: "#7C3AED",
     copies: 4,
+    publisher: "Jonathan Cape",
+    publicationYear: 1982,
+    language: "English",
+    pageCount: 208,
   },
   {
     title: "The Book Thief",
@@ -694,6 +866,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Words and courage in wartime",
     coverColor: "#7C3AED",
     copies: 3,
+    publisher: "Knopf Books",
+    publicationYear: 2005,
+    language: "English",
+    pageCount: 552,
   },
   {
     title: "Hatchet",
@@ -705,6 +881,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Wilderness survival adventure",
     coverColor: "#7C3AED",
     copies: 4,
+    publisher: "Bradbury Press",
+    publicationYear: 1987,
+    language: "English",
+    pageCount: 195,
   },
   {
     title: "Island of the Blue Dolphins",
@@ -716,6 +896,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Alone on an island",
     coverColor: "#7C3AED",
     copies: 3,
+    publisher: "Houghton Mifflin",
+    publicationYear: 1960,
+    language: "English",
+    pageCount: 184,
   },
   // K-12 Science & Math (4)
   {
@@ -728,6 +912,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Comprehensive biology textbook",
     coverColor: "#8B5CF6",
     copies: 3,
+    publisher: "Pearson",
+    publicationYear: 2020,
+    language: "English",
+    pageCount: 1488,
   },
   {
     title: "Chemistry",
@@ -739,6 +927,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "The central science of chemistry",
     coverColor: "#8B5CF6",
     copies: 3,
+    publisher: "Pearson",
+    publicationYear: 2017,
+    language: "English",
+    pageCount: 1248,
   },
   {
     title: "Physics",
@@ -750,6 +942,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Physics with real-world applications",
     coverColor: "#8B5CF6",
     copies: 3,
+    publisher: "Pearson",
+    publicationYear: 2014,
+    language: "English",
+    pageCount: 1056,
   },
   {
     title: "Divergent",
@@ -761,6 +957,10 @@ const BOOKS: CatalogBookSeed[] = [
     summary: "Choosing your faction",
     coverColor: "#7C3AED",
     copies: 3,
+    publisher: "Katherine Tegen Books",
+    publicationYear: 2011,
+    language: "English",
+    pageCount: 487,
   },
 ]
 
@@ -827,6 +1027,10 @@ export async function seedCatalogBooks(
             summary: bookData.summary,
             coverColor: bookData.coverColor,
             coverUrl: coverData?.coverUrl || undefined,
+            publisher: bookData.publisher || undefined,
+            publicationYear: bookData.publicationYear || undefined,
+            language: bookData.language || undefined,
+            pageCount: bookData.pageCount || undefined,
             rating: Math.round(Math.random() * 2 + 3),
             ratingCount: Math.floor(Math.random() * 50 + 5),
             approvalStatus: "APPROVED",
@@ -857,16 +1061,72 @@ export async function seedCatalogBooks(
         })
 
         if (!existing) {
-          await prisma.schoolBookSelection.create({
-            data: {
-              schoolId,
-              catalogBookId,
-              totalCopies: bookData.copies,
-              availableCopies: bookData.copies,
-              isActive: true,
+          // Get full catalog book data for Book row creation
+          const catalogBook = await prisma.catalogBook.findUnique({
+            where: { id: catalogBookId },
+            select: {
+              title: true,
+              author: true,
+              genre: true,
+              description: true,
+              summary: true,
+              coverUrl: true,
+              coverColor: true,
+              rating: true,
+              videoUrl: true,
+              isbn: true,
+              publisher: true,
+              publicationYear: true,
+              language: true,
+              pageCount: true,
+              gradeLevel: true,
             },
           })
-          selectionCount++
+
+          if (catalogBook) {
+            // Check if a Book row already exists for this catalog book in this school
+            const existingBook = await prisma.book.findFirst({
+              where: { schoolId, catalogBookId },
+            })
+
+            await prisma.schoolBookSelection.create({
+              data: {
+                schoolId,
+                catalogBookId,
+                totalCopies: bookData.copies,
+                availableCopies: bookData.copies,
+                isActive: true,
+              },
+            })
+
+            if (!existingBook) {
+              await prisma.book.create({
+                data: {
+                  schoolId,
+                  catalogBookId,
+                  title: catalogBook.title,
+                  author: catalogBook.author,
+                  genre: catalogBook.genre,
+                  description: catalogBook.description ?? "",
+                  summary: catalogBook.summary ?? "",
+                  coverUrl: catalogBook.coverUrl ?? "",
+                  coverColor: catalogBook.coverColor,
+                  rating: Math.round(catalogBook.rating),
+                  totalCopies: bookData.copies,
+                  availableCopies: bookData.copies,
+                  videoUrl: catalogBook.videoUrl,
+                  isbn: catalogBook.isbn,
+                  publisher: catalogBook.publisher,
+                  publicationYear: catalogBook.publicationYear,
+                  language: catalogBook.language,
+                  pageCount: catalogBook.pageCount,
+                  gradeLevel: catalogBook.gradeLevel,
+                },
+              })
+            }
+
+            selectionCount++
+          }
         }
       } catch {
         // Skip duplicates

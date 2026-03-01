@@ -4,7 +4,7 @@
 /**
  * Cleanup Sudanese Catalog
  *
- * Removes all CatalogSubject records where country="SD" and system="national"
+ * Removes all CatalogSubject records where country="SD" and curriculum="national"
  * along with their cascaded CatalogChapter, CatalogLesson, and
  * SchoolSubjectSelection records.
  *
@@ -22,7 +22,7 @@ async function main() {
 
     // Find all Sudanese catalog subjects
     const sdSubjects = await prisma.catalogSubject.findMany({
-      where: { country: "SD", system: "national" },
+      where: { country: "SD", curriculum: "national" },
       select: { id: true, name: true, slug: true },
     })
 

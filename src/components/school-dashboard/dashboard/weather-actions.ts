@@ -71,7 +71,8 @@ function capitalizeDescription(description: string): string {
  * @returns Weather data or null if unavailable
  */
 export async function getWeatherData(
-  units: "metric" | "imperial" = "metric"
+  units: "metric" | "imperial" = "metric",
+  locale: string = "en"
 ): Promise<WeatherData | null> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return null
@@ -127,7 +128,7 @@ export async function getWeatherData(
         // Map current weather
         const currentWeather = data.current.weather[0]
         const current: WeatherCondition = {
-          day: new Date().toLocaleDateString("en-US", { weekday: "long" }),
+          day: new Date().toLocaleDateString(locale, { weekday: "long" }),
           condition: mapCondition(currentWeather.id),
           conditionLabel: capitalizeDescription(currentWeather.description),
           temperature: Math.round(data.current.temp),
@@ -146,7 +147,7 @@ export async function getWeatherData(
             const date = new Date(day.dt * 1000)
             const dayWeather = day.weather[0]
             return {
-              day: date.toLocaleDateString("en-US", { weekday: "short" }),
+              day: date.toLocaleDateString(locale, { weekday: "short" }),
               condition: mapCondition(dayWeather.id),
               temp: Math.round(day.temp.day),
             }
@@ -174,7 +175,8 @@ export async function getWeatherData(
  * @returns Fresh weather data or null
  */
 export async function refreshWeather(
-  units: "metric" | "imperial" = "metric"
+  units: "metric" | "imperial" = "metric",
+  locale: string = "en"
 ): Promise<WeatherData | null> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return null
@@ -183,5 +185,5 @@ export async function refreshWeather(
   const cacheKey = `weather:${schoolId}:${units}`
   cache.invalidate(cacheKey)
 
-  return getWeatherData(units)
+  return getWeatherData(units, locale)
 }

@@ -26,11 +26,13 @@ import {
 } from "@/components/ui/select"
 import { useModal } from "@/components/atom/modal/context"
 import { ErrorToast } from "@/components/atom/toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   createClassroom,
   getClassroom,
   getClassroomTypes,
+  getGrades,
   updateClassroom,
 } from "./actions"
 import { classroomCreateSchema } from "./validation"
@@ -46,6 +48,9 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
   const isEdit = !!modal.id
   const [isPending, startTransition] = useTransition()
   const [types, setTypes] = useState<{ id: string; name: string }[]>([])
+  const [grades, setGrades] = useState<{ id: string; name: string }[]>([])
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classrooms
 
   const form = useForm<FormData>({
     resolver: zodResolver(classroomCreateSchema),
@@ -53,12 +58,16 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
       roomName: "",
       typeId: "",
       capacity: 30,
+      gradeId: undefined,
     },
   })
 
-  // Load classroom types
+  // Load classroom types and grades
   useEffect(() => {
-    getClassroomTypes().then(setTypes)
+    Promise.all([getClassroomTypes(), getGrades()]).then(([t, g]) => {
+      setTypes(t)
+      setGrades(g)
+    })
   }, [])
 
   // Load existing data for edit
@@ -70,6 +79,7 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
           roomName: data.roomName,
           typeId: data.typeId,
           capacity: data.capacity,
+          gradeId: data.gradeId ?? undefined,
         })
       }
     })
@@ -97,7 +107,7 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
           name="roomName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Room Name</FormLabel>
+              <FormLabel>{d?.roomName || "Room Name"}</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., A101" {...field} />
               </FormControl>
@@ -111,11 +121,11 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
           name="typeId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Room Type</FormLabel>
+              <FormLabel>{d?.type || "Room Type"}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={d?.selectType || "Select type"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -133,10 +143,43 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
 
         <FormField
           control={form.control}
+          name="gradeId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{d?.gradeOptional || "Grade (optional)"}</FormLabel>
+              <Select
+                onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
+                value={field.value || "none"}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={d?.sharedNoGrade || "Shared (no grade)"}
+                    />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">
+                    {d?.sharedNoGrade || "Shared (no grade)"}
+                  </SelectItem>
+                  {grades.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>
+                      {g.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="capacity"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Capacity</FormLabel>
+              <FormLabel>{d?.capacity || "Capacity"}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -151,7 +194,11 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
         />
 
         <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? "Saving..." : isEdit ? "Update" : "Create"}
+          {isPending
+            ? d?.saving || "Saving..."
+            : isEdit
+              ? d?.update || "Update"
+              : d?.create || "Create"}
         </Button>
       </form>
     </Form>

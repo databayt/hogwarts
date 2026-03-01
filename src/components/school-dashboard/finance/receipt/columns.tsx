@@ -26,11 +26,14 @@ import {
 
 import { ExpenseReceipt } from "./types"
 
-export function getColumns(): ColumnDef<ExpenseReceipt>[] {
+export function getColumns(
+  fd?: Record<string, any> | null,
+  rp?: Record<string, string> | null
+): ColumnDef<ExpenseReceipt>[] {
   return [
     {
       accessorKey: "fileName",
-      header: "File Name",
+      header: rp?.fileName || "File Name",
       cell: ({ row }) => {
         const receipt = row.original
         return (
@@ -42,27 +45,27 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
     },
     {
       accessorKey: "merchantName",
-      header: "Merchant",
+      header: rp?.merchant || "Merchant",
       cell: ({ row }) => {
         const merchantName = row.getValue("merchantName") as string | null
-        return merchantName || <span className="text-muted-foreground">—</span>
+        return merchantName || <span className="text-muted-foreground">--</span>
       },
     },
     {
       accessorKey: "transactionDate",
-      header: "Date",
+      header: fd?.date || "Date",
       cell: ({ row }) => {
         const date = row.getValue("transactionDate") as Date | null
         return date ? (
           format(new Date(date), "PP")
         ) : (
-          <span className="text-muted-foreground">—</span>
+          <span className="text-muted-foreground">--</span>
         )
       },
     },
     {
       accessorKey: "transactionAmount",
-      header: "Amount",
+      header: fd?.amount || "Amount",
       cell: ({ row }) => {
         const amount = row.getValue("transactionAmount") as number | null
         const currency = row.original.currency || "USD"
@@ -71,21 +74,33 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
             {currency} {amount.toFixed(2)}
           </span>
         ) : (
-          <span className="text-muted-foreground">—</span>
+          <span className="text-muted-foreground">--</span>
         )
       },
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: fd?.status || "Status",
       cell: ({ row }) => {
         const status = row.getValue("status") as string
 
         const statusConfig = {
-          pending: { label: "Pending", variant: "secondary" as const },
-          processing: { label: "Processing", variant: "default" as const },
-          processed: { label: "Processed", variant: "default" as const },
-          error: { label: "Error", variant: "destructive" as const },
+          pending: {
+            label: fd?.pending || "Pending",
+            variant: "secondary" as const,
+          },
+          processing: {
+            label: rp?.processing || "Processing",
+            variant: "default" as const,
+          },
+          processed: {
+            label: rp?.processed || "Processed",
+            variant: "default" as const,
+          },
+          error: {
+            label: fd?.error || "Error",
+            variant: "destructive" as const,
+          },
         }
 
         const config =
@@ -97,7 +112,7 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
     },
     {
       accessorKey: "uploadedAt",
-      header: "Uploaded",
+      header: rp?.uploaded || "Uploaded",
       cell: ({ row }) => {
         const date = row.getValue("uploadedAt") as Date
         return format(new Date(date), "PP")
@@ -112,12 +127,12 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">{rp?.openMenu || "Open menu"}</span>
                 <Ellipsis className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{fd?.actions || "Actions"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
@@ -126,7 +141,7 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
                 }}
               >
                 <Eye className="me-2 h-4 w-4" />
-                View Details
+                {rp?.viewDetails || "View Details"}
               </DropdownMenuItem>
               {receipt.status === "error" && (
                 <DropdownMenuItem
@@ -136,7 +151,7 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
                   }}
                 >
                   <RefreshCw className="me-2 h-4 w-4" />
-                  Retry Extraction
+                  {rp?.retryExtraction || "Retry Extraction"}
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
@@ -148,7 +163,7 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
                 }}
               >
                 <Trash2 className="me-2 h-4 w-4" />
-                Delete
+                {fd?.delete || "Delete"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

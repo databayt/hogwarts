@@ -23,7 +23,7 @@ export async function updateSchoolDescription(
 
     const validated = descriptionSchema.parse(data)
 
-    const updatedSchool = await db.school.update({
+    await db.school.update({
       where: { id: schoolId },
       data: {
         schoolType: validated.schoolType,
@@ -33,7 +33,7 @@ export async function updateSchoolDescription(
     })
 
     revalidatePath(`/onboarding/${schoolId}/description`)
-    return createActionResponse(updatedSchool)
+    return createActionResponse({ id: schoolId })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createActionResponse(undefined, {

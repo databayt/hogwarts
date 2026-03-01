@@ -42,6 +42,9 @@ interface Props {
 }
 
 export function SettingsContent({ dictionary, lang }: Props) {
+  const fd = (dictionary as any)?.finance
+  const is = fd?.invoiceSettings as Record<string, string> | undefined
+
   const [logo, setLogo] = useState<string>("")
   const [signatureData, setSignatureData] = useState<TSignatureData>({
     name: "",
@@ -70,7 +73,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
       const url = files[0].cdnUrl || files[0].url
       setLogo(url)
       setShowLogoUploader(false)
-      toast.success("Logo uploaded successfully")
+      toast.success(is?.logoUploaded || "Logo uploaded successfully")
     }
   }
 
@@ -87,7 +90,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
         image: url,
       }))
       setShowSignatureUploader(false)
-      toast.success("Signature uploaded successfully")
+      toast.success(is?.signatureUploaded || "Signature uploaded successfully")
     }
   }
 
@@ -128,11 +131,11 @@ export function SettingsContent({ dictionary, lang }: Props) {
       })
 
       if (response.status === 200) {
-        SuccessToast("Settings saved successfully")
+        SuccessToast(is?.settingsSaved || "Settings saved successfully")
         fetchData()
       }
     } catch (error) {
-      ErrorToast("Something went wrong")
+      ErrorToast(is?.somethingWentWrong || "Something went wrong")
     } finally {
       setIsLoading(false)
     }
@@ -143,7 +146,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
         {/**Invoice Logo */}
         <AccordionItem value="Invoice-Logo">
           <AccordionTrigger className="cursor-pointer text-base font-semibold">
-            Invoice Logo
+            {is?.invoiceLogo || "Invoice Logo"}
           </AccordionTrigger>
           <AccordionContent>
             <form
@@ -172,7 +175,9 @@ export function SettingsContent({ dictionary, lang }: Props) {
                   </div>
                 ) : (
                   <div className="flex aspect-video h-20 items-center justify-center rounded-lg border-2 border-dotted">
-                    <p className="text-muted-foreground text-center">No Logo</p>
+                    <p className="text-muted-foreground text-center">
+                      {is?.noLogo || "No Logo"}
+                    </p>
                   </div>
                 )}
               </div>
@@ -184,10 +189,14 @@ export function SettingsContent({ dictionary, lang }: Props) {
                 disabled={isLoading}
               >
                 <Upload className="me-2 h-4 w-4" />
-                {logo ? "Change Logo" : "Upload Logo"}
+                {logo
+                  ? is?.changeLogo || "Change Logo"
+                  : is?.uploadLogo || "Upload Logo"}
               </Button>
               <Button className="w-fit" disabled={isLoading || !logo}>
-                {isLoading ? "Please wait..." : "Save"}
+                {isLoading
+                  ? is?.pleaseWait || "Please wait..."
+                  : is?.save || "Save"}
               </Button>
             </form>
           </AccordionContent>
@@ -196,7 +205,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
         {/***Signature in invoice */}
         <AccordionItem value="Signature-invoice">
           <AccordionTrigger className="cursor-pointer text-base font-semibold">
-            Invoice Signature
+            {is?.invoiceSignature || "Invoice Signature"}
           </AccordionTrigger>
           <AccordionContent>
             <form
@@ -205,7 +214,9 @@ export function SettingsContent({ dictionary, lang }: Props) {
             >
               <Input
                 type="text"
-                placeholder="Enter your signature name"
+                placeholder={
+                  is?.enterSignatureName || "Enter your signature name"
+                }
                 value={signatureData.name}
                 onChange={onChangeSignature}
                 name="name"
@@ -236,7 +247,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
                 ) : (
                   <div className="flex aspect-video h-20 items-center justify-center rounded-lg border-2 border-dotted">
                     <p className="text-muted-foreground text-center">
-                      No Signature
+                      {is?.noSignature || "No Signature"}
                     </p>
                   </div>
                 )}
@@ -249,7 +260,9 @@ export function SettingsContent({ dictionary, lang }: Props) {
                 disabled={isLoading}
               >
                 <Upload className="me-2 h-4 w-4" />
-                {signatureData.image ? "Change Signature" : "Upload Signature"}
+                {signatureData.image
+                  ? is?.changeSignature || "Change Signature"
+                  : is?.uploadSignature || "Upload Signature"}
               </Button>
               <Button
                 className="w-fit"
@@ -257,7 +270,9 @@ export function SettingsContent({ dictionary, lang }: Props) {
                   isLoading || !signatureData.image || !signatureData.name
                 }
               >
-                {isLoading ? "Please wait..." : "Save"}
+                {isLoading
+                  ? is?.pleaseWait || "Please wait..."
+                  : is?.save || "Save"}
               </Button>
             </form>
           </AccordionContent>
@@ -268,7 +283,9 @@ export function SettingsContent({ dictionary, lang }: Props) {
       <Dialog open={showLogoUploader} onOpenChange={setShowLogoUploader}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Upload Invoice Logo</DialogTitle>
+            <DialogTitle>
+              {is?.uploadInvoiceLogo || "Upload Invoice Logo"}
+            </DialogTitle>
           </DialogHeader>
           <FileUploader
             category="IMAGE"
@@ -291,7 +308,9 @@ export function SettingsContent({ dictionary, lang }: Props) {
       >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Upload Signature</DialogTitle>
+            <DialogTitle>
+              {is?.uploadSignature || "Upload Signature"}
+            </DialogTitle>
           </DialogHeader>
           <FileUploader
             category="IMAGE"

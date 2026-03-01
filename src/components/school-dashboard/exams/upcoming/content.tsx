@@ -3,6 +3,7 @@
 
 import type { ElementType } from "react"
 import Link from "next/link"
+import { auth } from "@/auth"
 import { addDays, differenceInDays, format } from "date-fns"
 import {
   BookOpen,
@@ -52,6 +53,43 @@ export default async function UpcomingExamsContent({
   catalogSubjectId,
 }: Props) {
   const { schoolId } = await getTenantContext()
+  const session = await auth()
+  const role = session?.user?.role
+
+  // For students/guardians, scope to enrolled classes
+  let enrolledClassIds: string[] | null = null
+  if (schoolId && role === "STUDENT") {
+    const student = await db.student.findFirst({
+      where: { userId: session?.user?.id, schoolId },
+      select: { id: true },
+    })
+    if (student) {
+      const classes = await db.studentClass.findMany({
+        where: { studentId: student.id, schoolId },
+        select: { classId: true },
+      })
+      enrolledClassIds = classes.map((c) => c.classId)
+    }
+  } else if (schoolId && role === "GUARDIAN") {
+    const guardian = await db.guardian.findFirst({
+      where: { userId: session?.user?.id, schoolId },
+      select: { id: true },
+    })
+    if (guardian) {
+      const sgs = await db.studentGuardian.findMany({
+        where: { guardianId: guardian.id, schoolId },
+        select: { studentId: true },
+      })
+      const classes = await db.studentClass.findMany({
+        where: {
+          studentId: { in: sgs.map((sg) => sg.studentId) },
+          schoolId,
+        },
+        select: { classId: true },
+      })
+      enrolledClassIds = [...new Set(classes.map((c) => c.classId))]
+    }
+  }
 
   let upcomingExams: Array<{
     id: string
@@ -79,6 +117,7 @@ export default async function UpcomingExamsContent({
         status: { in: ["PLANNED", "IN_PROGRESS"] },
         examDate: { gte: today },
         ...(catalogSubjectId ? { catalogSubjectId } : {}),
+        ...(enrolledClassIds ? { classId: { in: enrolledClassIds } } : {}),
       },
       include: {
         class: { select: { name: true, lang: true } },
@@ -314,11 +353,13 @@ export default async function UpcomingExamsContent({
               {d?.empty?.description ||
                 "There are no exams scheduled in the near future."}
             </p>
-            <Button asChild>
-              <Link href={`/${lang}/exams/new`}>
-                {d?.actions?.scheduleExam || "Schedule an Exam"}
-              </Link>
-            </Button>
+            {!["STUDENT", "GUARDIAN"].includes(role || "") && (
+              <Button asChild>
+                <Link href={`/${lang}/exams/new`}>
+                  {d?.actions?.scheduleExam || "Schedule an Exam"}
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (

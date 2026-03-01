@@ -2,13 +2,31 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState, useTransition } from "react"
+import { useCallback, useState, useTransition } from "react"
 import Link from "next/link"
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import {
   BookOpen,
   ChevronDown,
   ChevronRight,
   GraduationCap,
+  GripVertical,
   Layers,
   Loader2,
   Pencil,
@@ -65,6 +83,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { CatalogImageUpload } from "@/components/saas-dashboard/catalog/image-upload"
+import { createLessonVideo } from "@/components/saas-dashboard/catalog/video-actions"
 import { LessonVideoManager } from "@/components/saas-dashboard/catalog/video-manager"
 import { Shell as PageContainer } from "@/components/table/shell"
 
@@ -73,8 +92,11 @@ import {
   createCatalogLesson,
   deleteCatalogChapter,
   deleteCatalogLesson,
+  reorderCatalogChapters,
+  reorderCatalogLessons,
   updateCatalogChapter,
   updateCatalogLesson,
+  updateCatalogSubject,
 } from "./actions"
 
 // ---------------------------------------------------------------------------
@@ -112,7 +134,7 @@ interface Subject {
   levels: string[]
   status: string
   country: string
-  system: string
+  curriculum: string
   description: string | null
   color: string | null
   imageKey: string | null
@@ -160,6 +182,15 @@ export function CatalogDetail({ subject, lang }: Props) {
   const [chapters, setChapters] = useState<Chapter[]>(subject.chapters)
   const [isPending, startTransition] = useTransition()
 
+  // Local state for hero display (updates immediately after edit)
+  const [heroDisplay, setHeroDisplay] = useState({
+    name: subject.name,
+    description: subject.description,
+    color: subject.color,
+    levels: subject.levels,
+    department: subject.department,
+  })
+
   // Chapter dialog state
   const [isChapterDialogOpen, setIsChapterDialogOpen] = useState(false)
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null)
@@ -184,11 +215,177 @@ export function CatalogDetail({ subject, lang }: Props) {
   const [lessonDuration, setLessonDuration] = useState("")
   const [lessonObjectives, setLessonObjectives] = useState("")
   const [lessonStatus, setLessonStatus] = useState<string>("DRAFT")
+  const [lessonVideoUrl, setLessonVideoUrl] = useState("")
+  const [lessonVideoTitle, setLessonVideoTitle] = useState("")
 
   // Video dialog state
   const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false)
   const [videoLessonId, setVideoLessonId] = useState<string | null>(null)
   const [videoLessonName, setVideoLessonName] = useState("")
+
+  // Subject edit dialog state
+  const [isSubjectEditOpen, setIsSubjectEditOpen] = useState(false)
+  const [subjectName, setSubjectName] = useState(subject.name)
+  const [subjectSlug, setSubjectSlug] = useState(subject.slug)
+  const [subjectDepartment, setSubjectDepartment] = useState(subject.department)
+  const [subjectDescription, setSubjectDescription] = useState(
+    subject.description ?? ""
+  )
+  const [subjectColor, setSubjectColor] = useState(subject.color ?? "#f3f4f6")
+  const [subjectCountry, setSubjectCountry] = useState(subject.country)
+  const [subjectCurriculum, setSubjectCurriculum] = useState(subject.curriculum)
+  const [subjectLevels, setSubjectLevels] = useState<string[]>(subject.levels)
+  const [subjectStatus, setSubjectStatus] = useState(subject.status)
+
+  // Drag-and-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  // ==========================================
+  // SUBJECT EDIT HANDLER
+  // ==========================================
+
+  const handleEditSubject = () => {
+    setSubjectName(subject.name)
+    setSubjectSlug(subject.slug)
+    setSubjectDepartment(subject.department)
+    setSubjectDescription(subject.description ?? "")
+    setSubjectColor(subject.color ?? "#f3f4f6")
+    setSubjectCountry(subject.country)
+    setSubjectCurriculum(subject.curriculum)
+    setSubjectLevels(subject.levels)
+    setSubjectStatus(subject.status)
+    setIsSubjectEditOpen(true)
+  }
+
+  const handleSaveSubject = () => {
+    if (!subjectName.trim()) {
+      toast.error("Subject name is required")
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        const formData = new FormData()
+        formData.set("name", subjectName.trim())
+        formData.set("slug", subjectSlug)
+        formData.set("department", subjectDepartment)
+        formData.set("description", subjectDescription)
+        formData.set("color", subjectColor)
+        formData.set("country", subjectCountry)
+        formData.set("curriculum", subjectCurriculum)
+        formData.set("status", subjectStatus)
+        for (const level of subjectLevels) {
+          formData.append("levels", level)
+        }
+
+        const result = await updateCatalogSubject(subject.id, formData)
+        if (!result.success) {
+          toast.error("Failed to update subject")
+          return
+        }
+
+        setHeroDisplay({
+          name: subjectName.trim(),
+          description: subjectDescription || null,
+          color: subjectColor,
+          levels: subjectLevels,
+          department: subjectDepartment,
+        })
+        toast.success(t?.success?.updated || "Subject updated")
+        setIsSubjectEditOpen(false)
+      } catch {
+        toast.error("Failed to update subject")
+      }
+    })
+  }
+
+  function toggleSubjectLevel(level: string) {
+    setSubjectLevels((prev) =>
+      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]
+    )
+  }
+
+  // ==========================================
+  // REORDER HANDLERS
+  // ==========================================
+
+  const handleReorderChapters = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+
+      setChapters((prev) => {
+        const oldIndex = prev.findIndex((c) => c.id === active.id)
+        const newIndex = prev.findIndex((c) => c.id === over.id)
+        const reordered = arrayMove(prev, oldIndex, newIndex)
+        const withPositions = reordered.map((ch, i) => ({
+          ...ch,
+          sequenceOrder: i,
+        }))
+
+        // Persist to server
+        startTransition(async () => {
+          try {
+            await reorderCatalogChapters(
+              subject.id,
+              withPositions.map((c) => ({
+                id: c.id,
+                position: c.sequenceOrder,
+              }))
+            )
+          } catch {
+            toast.error("Failed to save order")
+          }
+        })
+
+        return withPositions
+      })
+    },
+    [subject.id]
+  )
+
+  const handleReorderLessons = useCallback(
+    (chapterId: string, event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+
+      setChapters((prev) =>
+        prev.map((ch) => {
+          if (ch.id !== chapterId) return ch
+          const oldIndex = ch.lessons.findIndex((l) => l.id === active.id)
+          const newIndex = ch.lessons.findIndex((l) => l.id === over.id)
+          const reordered = arrayMove(ch.lessons, oldIndex, newIndex)
+          const withPositions = reordered.map((l, i) => ({
+            ...l,
+            sequenceOrder: i,
+          }))
+
+          // Persist to server
+          startTransition(async () => {
+            try {
+              await reorderCatalogLessons(
+                chapterId,
+                withPositions.map((l) => ({
+                  id: l.id,
+                  position: l.sequenceOrder,
+                }))
+              )
+            } catch {
+              toast.error("Failed to save order")
+            }
+          })
+
+          return { ...ch, lessons: withPositions }
+        })
+      )
+    },
+    []
+  )
 
   // ==========================================
   // CHAPTER HANDLERS
@@ -314,6 +511,8 @@ export function CatalogDetail({ subject, lang }: Props) {
     setLessonDuration("")
     setLessonObjectives("")
     setLessonStatus("DRAFT")
+    setLessonVideoUrl("")
+    setLessonVideoTitle("")
     setIsLessonDialogOpen(true)
   }
 
@@ -330,6 +529,8 @@ export function CatalogDetail({ subject, lang }: Props) {
     )
     setLessonObjectives(lesson.objectives ?? "")
     setLessonStatus(lesson.status)
+    setLessonVideoUrl("")
+    setLessonVideoTitle("")
     setIsLessonDialogOpen(true)
   }
 
@@ -420,7 +621,34 @@ export function CatalogDetail({ subject, lang }: Props) {
                 : c
             )
           )
+          // Create inline video if URL provided
+          if (lessonVideoUrl.trim()) {
+            try {
+              await createLessonVideo({
+                catalogLessonId: result.lesson.id,
+                title: lessonVideoTitle.trim() || lessonName.trim(),
+                videoUrl: lessonVideoUrl.trim(),
+              })
+            } catch {
+              toast.error("Lesson created but video failed to save")
+            }
+          }
+
           toast.success(t?.success?.created || "Lesson created")
+        }
+
+        // For edited lessons, also create video if URL provided
+        if (editingLesson && lessonVideoUrl.trim()) {
+          try {
+            await createLessonVideo({
+              catalogLessonId: editingLesson.id,
+              title: lessonVideoTitle.trim() || lessonName.trim(),
+              videoUrl: lessonVideoUrl.trim(),
+            })
+            toast.success("Video added")
+          } catch {
+            toast.error("Lesson updated but video failed to save")
+          }
         }
 
         setIsLessonDialogOpen(false)
@@ -476,20 +704,35 @@ export function CatalogDetail({ subject, lang }: Props) {
           Catalog
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-foreground">{subject.name}</span>
+        <span className="text-foreground">{heroDisplay.name}</span>
       </nav>
 
       {/* Hero */}
       <div
         className="mb-6 rounded-lg p-6"
-        style={{ backgroundColor: subject.color ?? "#f3f4f6" }}
+        style={{ backgroundColor: heroDisplay.color ?? "#f3f4f6" }}
       >
-        <h1 className="mb-2 text-2xl font-bold text-white">{subject.name}</h1>
-        {subject.description && (
-          <p className="text-sm text-white/80">{subject.description}</p>
-        )}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="mb-2 text-2xl font-bold text-white">
+              {heroDisplay.name}
+            </h1>
+            {heroDisplay.description && (
+              <p className="text-sm text-white/80">{heroDisplay.description}</p>
+            )}
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="bg-white/20 text-white hover:bg-white/30"
+            onClick={handleEditSubject}
+          >
+            <Pencil className="me-2 size-3.5" />
+            Edit Subject
+          </Button>
+        </div>
         <div className="mt-3 flex gap-2">
-          {subject.levels.map((level) => (
+          {heroDisplay.levels.map((level) => (
             <Badge
               key={level}
               variant="secondary"
@@ -499,7 +742,7 @@ export function CatalogDetail({ subject, lang }: Props) {
             </Badge>
           ))}
           <Badge variant="secondary" className="bg-white/20 text-white">
-            {subject.department}
+            {heroDisplay.department}
           </Badge>
         </div>
       </div>
@@ -575,27 +818,40 @@ export function CatalogDetail({ subject, lang }: Props) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-1">
-            {chapters.map((chapter) => (
-              <ChapterItem
-                key={chapter.id}
-                chapter={chapter}
-                isPending={isPending}
-                onEditChapter={handleEditChapter}
-                onDeleteChapter={handleDeleteChapter}
-                onCreateLesson={handleCreateLesson}
-                onEditLesson={handleEditLesson}
-                onDeleteLesson={handleDeleteLesson}
-                onManageVideos={handleManageVideos}
-              />
-            ))}
-            {chapters.length === 0 && (
-              <p className="text-muted-foreground py-8 text-center text-sm">
-                No chapters yet. Click &quot;Add Chapter&quot; to build the
-                curriculum structure.
-              </p>
-            )}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleReorderChapters}
+          >
+            <SortableContext
+              items={chapters.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-1">
+                {chapters.map((chapter) => (
+                  <SortableChapterItem
+                    key={chapter.id}
+                    chapter={chapter}
+                    isPending={isPending}
+                    sensors={sensors}
+                    onEditChapter={handleEditChapter}
+                    onDeleteChapter={handleDeleteChapter}
+                    onCreateLesson={handleCreateLesson}
+                    onEditLesson={handleEditLesson}
+                    onDeleteLesson={handleDeleteLesson}
+                    onManageVideos={handleManageVideos}
+                    onReorderLessons={handleReorderLessons}
+                  />
+                ))}
+                {chapters.length === 0 && (
+                  <p className="text-muted-foreground py-8 text-center text-sm">
+                    No chapters yet. Click &quot;Add Chapter&quot; to build the
+                    curriculum structure.
+                  </p>
+                )}
+              </div>
+            </SortableContext>
+          </DndContext>
         </CardContent>
       </Card>
 
@@ -792,6 +1048,39 @@ export function CatalogDetail({ subject, lang }: Props) {
                 rows={2}
               />
             </div>
+
+            {/* Inline Video */}
+            <div className="space-y-2 rounded-md border p-3">
+              <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                Quick Add Video (optional)
+              </Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="lesson-video-title" className="text-xs">
+                    Video Title
+                  </Label>
+                  <Input
+                    id="lesson-video-title"
+                    value={lessonVideoTitle}
+                    onChange={(e) => setLessonVideoTitle(e.target.value)}
+                    placeholder="Video title (or uses lesson name)"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="lesson-video-url" className="text-xs">
+                    Video URL
+                  </Label>
+                  <Input
+                    id="lesson-video-url"
+                    value={lessonVideoUrl}
+                    onChange={(e) => setLessonVideoUrl(e.target.value)}
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="h-8 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -826,200 +1115,426 @@ export function CatalogDetail({ subject, lang }: Props) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Subject Edit Dialog */}
+      <Dialog open={isSubjectEditOpen} onOpenChange={setIsSubjectEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Subject</DialogTitle>
+            <DialogDescription>
+              Update subject details for the global catalog.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] space-y-4 overflow-y-auto py-4">
+            <div className="space-y-2">
+              <Label htmlFor="es-name">Name *</Label>
+              <Input
+                id="es-name"
+                value={subjectName}
+                onChange={(e) => setSubjectName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="es-slug">Slug</Label>
+              <Input
+                id="es-slug"
+                value={subjectSlug}
+                onChange={(e) => setSubjectSlug(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="es-department">Department *</Label>
+              <Input
+                id="es-department"
+                value={subjectDepartment}
+                onChange={(e) => setSubjectDepartment(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="es-description">Description</Label>
+              <Textarea
+                id="es-description"
+                value={subjectDescription}
+                onChange={(e) => setSubjectDescription(e.target.value)}
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="es-color">Color</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    id="es-color"
+                    value={subjectColor}
+                    onChange={(e) => setSubjectColor(e.target.value)}
+                    className="h-9 w-12 cursor-pointer rounded border"
+                  />
+                  <Input
+                    value={subjectColor}
+                    onChange={(e) => setSubjectColor(e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={subjectStatus} onValueChange={setSubjectStatus}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="es-country">Country</Label>
+                <Input
+                  id="es-country"
+                  value={subjectCountry}
+                  onChange={(e) => setSubjectCountry(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="es-curriculum">Curriculum</Label>
+                <Input
+                  id="es-curriculum"
+                  value={subjectCurriculum}
+                  onChange={(e) => setSubjectCurriculum(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Levels *</Label>
+              <div className="flex gap-2">
+                {(["ELEMENTARY", "MIDDLE", "HIGH"] as const).map((level) => (
+                  <Button
+                    key={level}
+                    type="button"
+                    variant={
+                      subjectLevels.includes(level) ? "default" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => toggleSubjectLevel(level)}
+                  >
+                    {level}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsSubjectEditOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveSubject} disabled={isPending}>
+              {isPending && <Loader2 className="me-2 size-4 animate-spin" />}
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Chapter Item
+// Sortable Chapter Item (with drag-and-drop)
 // ---------------------------------------------------------------------------
 
-interface ChapterItemProps {
+interface SortableChapterItemProps {
   chapter: Chapter
   isPending: boolean
+  sensors: ReturnType<typeof useSensors>
   onEditChapter: (chapter: Chapter) => void
   onDeleteChapter: (id: string) => void
   onCreateLesson: (chapterId: string) => void
   onEditLesson: (lesson: Lesson, chapterId: string) => void
   onDeleteLesson: (lessonId: string, chapterId: string) => void
   onManageVideos: (lesson: Lesson) => void
+  onReorderLessons: (chapterId: string, event: DragEndEvent) => void
 }
 
-function ChapterItem({
+function SortableChapterItem({
   chapter,
   isPending,
+  sensors,
   onEditChapter,
   onDeleteChapter,
   onCreateLesson,
   onEditLesson,
   onDeleteLesson,
   onManageVideos,
-}: ChapterItemProps) {
+  onReorderLessons,
+}: SortableChapterItemProps) {
   const [open, setOpen] = useState(false)
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: chapter.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="hover:bg-muted flex items-center gap-2 rounded-md px-3 py-2">
-        <CollapsibleTrigger className="flex flex-1 items-center gap-2 text-sm">
-          {open ? (
-            <ChevronDown className="h-4 w-4 shrink-0" />
-          ) : (
-            <ChevronRight className="h-4 w-4 shrink-0" />
-          )}
-          <span className="font-medium">{chapter.name}</span>
-          <Badge variant="outline" className="ms-auto text-xs">
-            {chapter.lessons.length} lessons
-          </Badge>
-          <Badge
-            variant={chapter.status === "PUBLISHED" ? "default" : "secondary"}
-            className="text-xs"
+    <div ref={setNodeRef} style={style}>
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <div className="hover:bg-muted flex items-center gap-2 rounded-md px-3 py-2">
+          <button
+            {...attributes}
+            {...listeners}
+            className="hover:bg-muted-foreground/10 cursor-grab rounded p-0.5 active:cursor-grabbing"
+            type="button"
           >
-            {chapter.status}
-          </Badge>
-        </CollapsibleTrigger>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={(e) => {
-              e.stopPropagation()
-              onEditChapter(chapter)
-            }}
-            disabled={isPending}
-          >
-            <Pencil className="size-3.5" />
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={(e) => e.stopPropagation()}
-                disabled={isPending}
-              >
-                <Trash2 className="text-destructive size-3.5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Delete &quot;{chapter.name}&quot;?
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will delete the chapter and all its lessons. This action
-                  cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onDeleteChapter(chapter.id)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </div>
-      <CollapsibleContent>
-        <div className="ms-6 space-y-0.5 border-s py-1 ps-4">
-          {chapter.lessons.map((lesson) => (
-            <div
-              key={lesson.id}
-              className="text-muted-foreground group flex items-center gap-2 py-1 text-sm"
+            <GripVertical className="text-muted-foreground h-4 w-4" />
+          </button>
+          <CollapsibleTrigger className="flex flex-1 items-center gap-2 text-sm">
+            {open ? (
+              <ChevronDown className="h-4 w-4 shrink-0" />
+            ) : (
+              <ChevronRight className="h-4 w-4 shrink-0" />
+            )}
+            <span className="font-medium">{chapter.name}</span>
+            <Badge variant="outline" className="ms-auto text-xs">
+              {chapter.lessons.length} lessons
+            </Badge>
+            <Badge
+              variant={chapter.status === "PUBLISHED" ? "default" : "secondary"}
+              className="text-xs"
             >
-              <BookOpen className="h-3.5 w-3.5 shrink-0" />
-              <span>{lesson.name}</span>
-              {lesson.durationMinutes && (
-                <span className="text-xs">{lesson.durationMinutes} min</span>
-              )}
-              <Badge
-                variant={
-                  lesson.status === "PUBLISHED" ? "default" : "secondary"
-                }
-                className="ms-auto text-xs"
-              >
-                {lesson.status}
-              </Badge>
-              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
+              {chapter.status}
+            </Badge>
+          </CollapsibleTrigger>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => {
+                e.stopPropagation()
+                onEditChapter(chapter)
+              }}
+              disabled={isPending}
+            >
+              <Pencil className="size-3.5" />
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative h-6 w-6"
-                  onClick={() => onManageVideos(lesson)}
-                  disabled={isPending}
-                  title="Manage videos"
-                >
-                  <Video className="size-3" />
-                  {(lesson._count?.videos ?? 0) > 0 && (
-                    <span className="bg-primary text-primary-foreground absolute -end-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-bold">
-                      {lesson._count!.videos}
-                    </span>
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => onEditLesson(lesson, chapter.id)}
+                  className="h-7 w-7"
+                  onClick={(e) => e.stopPropagation()}
                   disabled={isPending}
                 >
-                  <Pencil className="size-3" />
+                  <Trash2 className="text-destructive size-3.5" />
                 </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      disabled={isPending}
-                    >
-                      <Trash2 className="text-destructive size-3" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        Delete &quot;{lesson.name}&quot;?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently delete this lesson. This action
-                        cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => onDeleteLesson(lesson.id, chapter.id)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          ))}
-          {chapter.lessons.length === 0 && (
-            <p className="text-muted-foreground py-2 text-xs">No lessons yet</p>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-1 h-7 text-xs"
-            onClick={() => onCreateLesson(chapter.id)}
-            disabled={isPending}
-          >
-            <Plus className="me-1 size-3" />
-            Add Lesson
-          </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Delete &quot;{chapter.name}&quot;?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will delete the chapter and all its lessons. This
+                    action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => onDeleteChapter(chapter.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+        <CollapsibleContent>
+          <div className="ms-6 space-y-0.5 border-s py-1 ps-4">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={(e) => onReorderLessons(chapter.id, e)}
+            >
+              <SortableContext
+                items={chapter.lessons.map((l) => l.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {chapter.lessons.map((lesson) => (
+                  <SortableLessonItem
+                    key={lesson.id}
+                    lesson={lesson}
+                    chapterId={chapter.id}
+                    isPending={isPending}
+                    onEditLesson={onEditLesson}
+                    onDeleteLesson={onDeleteLesson}
+                    onManageVideos={onManageVideos}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+            {chapter.lessons.length === 0 && (
+              <p className="text-muted-foreground py-2 text-xs">
+                No lessons yet
+              </p>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-1 h-7 text-xs"
+              onClick={() => onCreateLesson(chapter.id)}
+              disabled={isPending}
+            >
+              <Plus className="me-1 size-3" />
+              Add Lesson
+            </Button>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Sortable Lesson Item
+// ---------------------------------------------------------------------------
+
+interface SortableLessonItemProps {
+  lesson: Lesson
+  chapterId: string
+  isPending: boolean
+  onEditLesson: (lesson: Lesson, chapterId: string) => void
+  onDeleteLesson: (lessonId: string, chapterId: string) => void
+  onManageVideos: (lesson: Lesson) => void
+}
+
+function SortableLessonItem({
+  lesson,
+  chapterId,
+  isPending,
+  onEditLesson,
+  onDeleteLesson,
+  onManageVideos,
+}: SortableLessonItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: lesson.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="text-muted-foreground group flex items-center gap-2 py-1 text-sm"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="hover:bg-muted-foreground/10 cursor-grab rounded p-0.5 active:cursor-grabbing"
+        type="button"
+      >
+        <GripVertical className="h-3 w-3" />
+      </button>
+      <BookOpen className="h-3.5 w-3.5 shrink-0" />
+      <span>{lesson.name}</span>
+      {lesson.durationMinutes && (
+        <span className="text-xs">{lesson.durationMinutes} min</span>
+      )}
+      <Badge
+        variant={lesson.status === "PUBLISHED" ? "default" : "secondary"}
+        className="ms-auto text-xs"
+      >
+        {lesson.status}
+      </Badge>
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative h-6 w-6"
+          onClick={() => onManageVideos(lesson)}
+          disabled={isPending}
+          title="Manage videos"
+        >
+          <Video className="size-3" />
+          {(lesson._count?.videos ?? 0) > 0 && (
+            <span className="bg-primary text-primary-foreground absolute -end-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-bold">
+              {lesson._count!.videos}
+            </span>
+          )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={() => onEditLesson(lesson, chapterId)}
+          disabled={isPending}
+        >
+          <Pencil className="size-3" />
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              disabled={isPending}
+            >
+              <Trash2 className="text-destructive size-3" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Delete &quot;{lesson.name}&quot;?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete this lesson. This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => onDeleteLesson(lesson.id, chapterId)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
   )
 }

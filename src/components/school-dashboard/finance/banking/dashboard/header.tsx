@@ -31,7 +31,10 @@ export function DashboardHeader({
     <header className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">
-          {dictionary?.welcome || "Welcome back"}, {user?.name || "Guest"}
+          {dictionary?.welcome || "Welcome back"},{" "}
+          {user?.name ||
+            (dictionary as Record<string, string>)?.guest ||
+            "Guest"}
         </h1>
         <p className="text-muted-foreground">
           {dictionary?.subtitle ||

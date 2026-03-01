@@ -6,6 +6,9 @@
  * Create a new certificate configuration
  */
 
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+
 import type { Locale } from "@/components/internationalization/config"
 import { CertificateConfigForm } from "@/components/school-dashboard/exams/certificates/config-form"
 
@@ -18,6 +21,11 @@ interface NewConfigPageProps {
 
 export default async function NewConfigPage({ params }: NewConfigPageProps) {
   const { lang } = await params
+
+  const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams/certificates`)
+  }
   const isRtl = lang === "ar"
 
   return (

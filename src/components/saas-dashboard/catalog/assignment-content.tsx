@@ -17,6 +17,7 @@ import { Shell as PageContainer } from "@/components/table/shell"
 
 import type { CatalogAssignmentRow } from "./assignment-columns"
 import { AssignmentTable } from "./assignment-table"
+import { CreateAssignmentDialog } from "./create-assignment-dialog"
 
 interface Props {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -69,6 +70,11 @@ export async function AssignmentContent({ lang }: Props) {
 
   return (
     <PageContainer>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Assignments</h2>
+        <CreateAssignmentDialog />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

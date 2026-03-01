@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+// TODO: Implement enhanced banking content — currently a placeholder.
 /**
  * Banking Content - Enhanced (Placeholder)
  *
