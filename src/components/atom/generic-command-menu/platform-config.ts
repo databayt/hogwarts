@@ -190,16 +190,6 @@ export const platformSearchConfig: SearchConfig = {
       breadcrumb: ["Platform"],
     },
     {
-      id: "lessons",
-      title: "Lessons",
-      type: "navigation",
-      href: "/lessons",
-      icon: BookOpen,
-      roles: ["ADMIN", "STAFF", "TEACHER"],
-      keywords: ["curriculum", "teaching", "periods"],
-      breadcrumb: ["Platform"],
-    },
-    {
       id: "exams",
       title: "Exams",
       type: "navigation",

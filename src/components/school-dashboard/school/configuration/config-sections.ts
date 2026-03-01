@@ -8,6 +8,7 @@ import {
   DollarSign,
   Eye,
   Gavel,
+  Globe,
   MapPin,
   Palette,
   Percent,
@@ -96,5 +97,11 @@ export const CONFIG_SECTIONS: ConfigSection[] = [
     icon: Crown,
     iconColor: "text-yellow-500",
     route: "plan",
+  },
+  {
+    key: "domain",
+    icon: Globe,
+    iconColor: "text-teal-500",
+    route: "domain",
   },
 ]

@@ -453,6 +453,10 @@
           "title": "الهيكل الأكاديمي",
           "description": "السنوات والفصول والدرجات والجدول"
         },
+        "domain": {
+          "title": "النطاق المخصص",
+          "description": "طلب نطاق مخصص لمدرستك"
+        },
         "configured": "مكتمل",
         "incomplete": "غير مكتمل",
         "notSet": "غير محدد",
@@ -1911,87 +1915,6 @@
         "totalMarks": "الدرجة الكلية",
         "createTemplate": "إنشاء قالب",
         "templateDescription": "إنشاء قالب امتحان جديد"
-      }
-    },
-    "lessons": {
-      "title": "الدروس",
-      "description": "تخطيط وإدارة الدروس",
-      "navigation": {
-        "all": "الكل",
-        "create": "إنشاء",
-        "curriculum": "المنهج",
-        "resources": "الموارد",
-        "templates": "القوالب",
-        "analytics": "التحليلات",
-        "settings": "الإعدادات"
-      },
-      "create": {
-        "title": "إنشاء خطة درس",
-        "description": "سيتم تنفيذ نموذج إنشاء خطة الدرس هنا."
-      },
-      "curriculum": {
-        "title": "خريطة المنهج",
-        "description": "سيتم إدارة مواءمة وخريطة معايير المنهج هنا."
-      },
-      "resources": {
-        "title": "موارد الدروس",
-        "description": "سيتم إدارة مكتبة الموارد مع المواد والمرفقات هنا."
-      },
-      "templates": {
-        "title": "قوالب الدروس",
-        "description": "سيتم إدارة قوالب خطط الدروس القابلة لإعادة الاستخدام هنا."
-      },
-      "analytics": {
-        "title": "تحليلات الدروس",
-        "description": "سيتم عرض تحليلات الاستخدام ومقاييس فعالية الدروس هنا."
-      },
-      "settings": {
-        "title": "إعدادات الدروس",
-        "description": "ستكون الإعدادات الافتراضية للقوالب وأذونات المشاركة وتكوينات الوحدة متاحة هنا."
-      },
-      "class": "الفصل",
-      "teacher": "المعلم",
-      "subject": "المادة",
-      "date": "التاريخ",
-      "startTime": "وقت البداية",
-      "endTime": "وقت النهاية",
-      "status": "الحالة",
-      "time": "الوقت",
-      "allLessons": "جميع الدروس",
-      "addNewLesson": "إضافة درس جديد",
-      "search": "بحث",
-      "export": "تصدير",
-      "reset": "إعادة تعيين",
-      "statuses": {
-        "planned": "مخطط",
-        "inProgress": "قيد التنفيذ",
-        "completed": "مكتمل",
-        "cancelled": "ملغي"
-      },
-      "detail": {
-        "back": "رجوع",
-        "details": "تفاصيل الدرس",
-        "overview": "نظرة عامة",
-        "materials": "المواد",
-        "description": "الوصف",
-        "date": "التاريخ",
-        "time": "الوقت",
-        "status": "الحالة",
-        "objectives": "الأهداف",
-        "materialsLabel": "المواد التعليمية",
-        "activities": "الأنشطة",
-        "assessment": "التقييم",
-        "notes": "ملاحظات",
-        "createdAt": "تاريخ الإنشاء",
-        "updatedAt": "آخر تحديث",
-        "errorTitle": "خطأ",
-        "notFound": "الدرس غير موجود",
-        "noDescription": "لا يوجد وصف",
-        "noObjectives": "لا توجد أهداف",
-        "noMaterials": "لا توجد مواد",
-        "noActivities": "لا توجد أنشطة",
-        "noAssessment": "لا يوجد تقييم",
-        "noNotes": "لا توجد ملاحظات"
       }
     },
     "events": {

@@ -78,7 +78,6 @@ model Class {
   timetables       Timetable[]
   exams            Exam[]
   results          Result[]
-  lessons          Lesson[]
   dependentCourses Class[]        @relation("CoursePrerequisites")
   classTeachers    ClassTeacher[] // Co-teaching support
   feeStructures    FeeStructure[] // Fees module relation

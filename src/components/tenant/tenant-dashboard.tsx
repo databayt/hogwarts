@@ -103,10 +103,10 @@ export default function TenantDashboard({
       color: "bg-green-500",
     },
     {
-      title: "Schedule Lesson",
-      description: "Plan a new lesson",
+      title: "View Timetable",
+      description: "Check class schedule",
       icon: Calendar,
-      href: "/lessons/new",
+      href: "/timetable",
       color: "bg-purple-500",
     },
     {

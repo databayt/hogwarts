@@ -5,12 +5,11 @@ import { notFound } from "next/navigation"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
+import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { CatalogContentSections } from "@/components/school-dashboard/listings/subjects/catalog-content-sections"
 import { CatalogDetailContent } from "@/components/school-dashboard/listings/subjects/catalog-detail"
-import { SchoolCatalogCustomization } from "@/components/school-dashboard/listings/subjects/catalog/school-catalog-customization"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
@@ -258,30 +257,6 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
     }),
   ])
 
-  // Query content overrides for this school
-  const { schoolId } = await getTenantContext()
-  const overrides = schoolId
-    ? await db.schoolContentOverride.findMany({
-        where: { schoolId },
-        select: {
-          catalogChapterId: true,
-          catalogLessonId: true,
-          isHidden: true,
-        },
-      })
-    : []
-
-  const hiddenChapterIds = new Set(
-    overrides
-      .filter((o) => o.catalogChapterId && o.isHidden)
-      .map((o) => o.catalogChapterId!)
-  )
-  const hiddenLessonIds = new Set(
-    overrides
-      .filter((o) => o.catalogLessonId && o.isHidden)
-      .map((o) => o.catalogLessonId!)
-  )
-
   const heroImageUrl = getCatalogImageUrl(subject.bannerUrl, null, "original")
   const subjectImageUrl = getCatalogImageUrl(
     subject.thumbnailKey,
@@ -338,6 +313,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
   return (
     <>
       <PageHeadingSetter title="" />
+      <BreadcrumbTitle title={subject.name} />
       <CatalogDetailContent
         subject={{
           name: subject.name,
@@ -356,21 +332,6 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
           ratingCount: subject.ratingCount,
         }}
         chapters={chapters}
-        lang={lang}
-      />
-      <SchoolCatalogCustomization
-        chapters={subject.chapters.map((ch) => ({
-          id: ch.id,
-          name: ch.name,
-          isHidden: hiddenChapterIds.has(ch.id),
-          lessons: ch.lessons.map((l) => ({
-            id: l.id,
-            name: l.name,
-            isHidden: hiddenLessonIds.has(l.id),
-            videoCount: l.videoCount,
-          })),
-        }))}
-        catalogSubjectId={subject.id}
         lang={lang}
       />
       <CatalogContentSections

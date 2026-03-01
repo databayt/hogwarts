@@ -12,11 +12,11 @@ import { logger } from "@/lib/logger"
 const domainRequestSchema = z.object({
   domain: z
     .string()
-    .min(3, "Domain must be at least 3 characters")
-    .max(63, "Domain must be less than 63 characters")
+    .min(4, "Domain must be at least 4 characters")
+    .max(253, "Domain must be less than 253 characters")
     .regex(
-      /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/,
-      "Invalid domain format. Use lowercase letters, numbers, and hyphens only."
+      /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/,
+      "Enter a valid domain like comboni.com"
     ),
   notes: z.string().optional(),
 })
@@ -39,12 +39,16 @@ export async function createDomainRequest(formData: FormData) {
     const rawData = Object.fromEntries(formData)
     const validated = domainRequestSchema.parse(rawData)
 
-    // Check if domain is already taken
-    const existingSchool = await db.school.findFirst({
-      where: { domain: validated.domain },
+    // Check if domain is already requested by another school
+    const takenRequest = await db.domainRequest.findFirst({
+      where: {
+        domain: validated.domain,
+        status: { in: ["pending", "approved", "verified"] },
+        schoolId: { not: session.user.schoolId },
+      },
     })
 
-    if (existingSchool) {
+    if (takenRequest) {
       return { success: false, error: "This domain is already taken" }
     }
 
@@ -81,6 +85,7 @@ export async function createDomainRequest(formData: FormData) {
     })
 
     revalidatePath("/settings/domain")
+    revalidatePath("/school/configuration")
     return { success: true, data: domainRequest }
   } catch (error) {
     logger.error(
@@ -149,6 +154,7 @@ export async function cancelDomainRequest(requestId: string) {
     })
 
     revalidatePath("/settings/domain")
+    revalidatePath("/school/configuration")
     return { success: true }
   } catch (error) {
     logger.error(
@@ -179,13 +185,10 @@ export async function approveDomainRequest(requestId: string) {
       return { success: false, error: "Request not found" }
     }
 
-    // Update the school's domain
-    await db.school.update({
-      where: { id: request.schoolId },
-      data: { domain: request.domain },
-    })
-
-    // Update the request status
+    // Only update the request status — do NOT overwrite School.domain
+    // (School.domain is the subdomain slug used for routing)
+    // The custom domain → subdomain mapping is handled via Redis
+    // (custom-domain:{host} → subdomain) managed by the operator
     await db.domainRequest.update({
       where: { id: requestId },
       data: {

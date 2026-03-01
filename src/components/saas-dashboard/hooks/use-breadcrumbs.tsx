@@ -48,7 +48,6 @@ export function useBreadcrumbs() {
       { pattern: /\/parents\/([^\/\?]+)$/, api: "parents" },
       { pattern: /\/classrooms\/([^\/\?]+)$/, api: "classes" },
       { pattern: /\/subjects\/([^\/\?]+)$/, api: "subjects" },
-      { pattern: /\/lessons\/([^\/\?]+)$/, api: "lessons" },
       { pattern: /\/announcements\/([^\/\?]+)$/, api: "announcements" },
       { pattern: /\/assignments\/([^\/\?]+)$/, api: "assignments" },
       { pattern: /\/events\/([^\/\?]+)$/, api: "events" },
@@ -115,7 +114,7 @@ export function useBreadcrumbs() {
       const path = `/${finalSegments.slice(0, index + 1).join("/")}`
       const isIdSegment =
         index === finalSegments.length - 1 &&
-        /^(?:[a-z0-9]{10,}|\w{6,})$/i.test(segment)
+        /^(?:[a-z0-9]{10,}|[\w-]{6,})$/i.test(segment)
       const title = isIdSegment
         ? (resolvedTitle ?? "\u00A0")
         : segment.charAt(0).toUpperCase() + segment.slice(1)

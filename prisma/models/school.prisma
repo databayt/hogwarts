@@ -154,9 +154,6 @@ model School {
   books         Book[]
   borrowRecords BorrowRecord[]
 
-  // Lesson relations
-  lessons Lesson[]
-
   // Student management relations
   studentBatches      StudentBatch[]
   batches             Batch[]

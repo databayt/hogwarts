@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import Image from "next/image"
-import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -13,7 +12,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { getSubjectImage } from "./image-map"
 
 interface TopicCardProps {
-  /** Lesson ID for linking */
+  /** Lesson ID */
   id: string
   /** Lesson title */
   title: string
@@ -48,10 +47,7 @@ function TopicCardInner({
   const imageUrl = getSubjectImage(subjectName)
 
   return (
-    <Link
-      href={`/${lang}/lessons/${id}`}
-      className={cn("group block", className)}
-    >
+    <div className={cn("group block", className)}>
       <div className="bg-muted relative aspect-video overflow-hidden rounded-lg">
         <Image
           src={imageUrl}
@@ -77,7 +73,7 @@ function TopicCardInner({
           )}
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
 

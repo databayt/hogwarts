@@ -60,7 +60,6 @@ import { seedGamification } from "./gamification"
 import { seedGrades } from "./grades"
 import { seedWellness } from "./health"
 import { seedInvoices } from "./invoices"
-import { seedLessons } from "./lessons"
 import { seedLibrary } from "./library"
 import { seedMessaging } from "./messages"
 import { seedNotifications } from "./notifications"
@@ -221,10 +220,6 @@ async function main() {
 
     await measureDuration("Stream Enrollments", () =>
       seedStreamEnrollments(prisma, school.id, students)
-    )
-
-    await measureDuration("Lessons", () =>
-      seedLessons(prisma, school.id, classes)
     )
 
     await measureDuration("Library (with borrow records)", () =>

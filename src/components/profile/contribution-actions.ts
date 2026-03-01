@@ -295,48 +295,35 @@ async function fetchTeacherActivities(
 
   if (!teacher) return
 
-  const [attendanceMarked, gradesPublished, lessonsCreated] = await Promise.all(
-    [
-      // Attendance marked by teacher
-      db.attendance.findMany({
-        where: {
-          schoolId,
-          markedBy: teacher.id,
-          markedAt: { gte: startDate, lte: endDate },
-        },
-        select: { markedAt: true },
-      }),
+  const [attendanceMarked, gradesPublished] = await Promise.all([
+    // Attendance marked by teacher
+    db.attendance.findMany({
+      where: {
+        schoolId,
+        markedBy: teacher.id,
+        markedAt: { gte: startDate, lte: endDate },
+      },
+      select: { markedAt: true },
+    }),
 
-      // Grades published by teacher
-      db.result.findMany({
-        where: {
-          schoolId,
-          gradedBy: teacher.id,
-          gradedAt: { gte: startDate, lte: endDate },
-        },
-        select: { gradedAt: true },
-      }),
-
-      // Lessons created
-      db.lesson.findMany({
-        where: {
-          schoolId,
-          createdAt: { gte: startDate, lte: endDate },
-          // Note: Lesson model doesn't have teacherId, using class relation would require join
-        },
-        select: { createdAt: true },
-      }),
-    ]
-  )
+    // Grades published by teacher
+    db.result.findMany({
+      where: {
+        schoolId,
+        gradedBy: teacher.id,
+        gradedAt: { gte: startDate, lte: endDate },
+      },
+      select: { gradedAt: true },
+    }),
+  ])
 
   // Add to map
-  attendanceMarked.forEach((a) =>
+  attendanceMarked.forEach((a: { markedAt: Date }) =>
     addActivity(map, a.markedAt, "attendance_taken")
   )
-  gradesPublished.forEach((g) =>
-    addActivity(map, g.gradedAt, "grade_published")
-  )
-  lessonsCreated.forEach((l) => addActivity(map, l.createdAt, "lesson_created"))
+  gradesPublished.forEach((g) => {
+    if (g.gradedAt) addActivity(map, g.gradedAt, "grade_published")
+  })
 }
 
 /**

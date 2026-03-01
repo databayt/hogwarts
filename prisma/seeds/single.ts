@@ -51,7 +51,6 @@ import { seedGamification } from "./gamification"
 import { seedGrades } from "./grades"
 import { seedWellness } from "./health"
 import { seedInvoices } from "./invoices"
-import { seedLessons } from "./lessons"
 import { seedLibrary } from "./library"
 import { seedMessaging } from "./messages"
 import { seedNotifications } from "./notifications"
@@ -510,13 +509,6 @@ const SEEDS: Record<string, SeedEntry> = {
       const students = await resolveStudents(prisma, schoolId)
       await seedStreamCourses(prisma, schoolId, subjects, adminUsers)
       await seedStreamEnrollments(prisma, schoolId, students)
-    },
-  },
-  lessons: {
-    description: "Lessons for classes",
-    run: async (prisma, schoolId) => {
-      const classes = await resolveClasses(prisma, schoolId)
-      await seedLessons(prisma, schoolId, classes)
     },
   },
   library: {

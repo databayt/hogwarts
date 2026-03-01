@@ -453,6 +453,10 @@
           "title": "Academic Structure",
           "description": "Years, terms, grading, and schedule"
         },
+        "domain": {
+          "title": "Custom Domain",
+          "description": "Request a custom domain for your school"
+        },
         "configured": "Configured",
         "incomplete": "Incomplete",
         "notSet": "Not Set",
@@ -1903,87 +1907,6 @@
         "totalMarks": "Total Marks",
         "createTemplate": "Create Template",
         "templateDescription": "Create a new exam template"
-      }
-    },
-    "lessons": {
-      "title": "Lessons",
-      "description": "Plan and manage your lessons",
-      "navigation": {
-        "all": "All",
-        "create": "Create",
-        "curriculum": "Curriculum",
-        "resources": "Resources",
-        "templates": "Templates",
-        "analytics": "Analytics",
-        "settings": "Settings"
-      },
-      "create": {
-        "title": "Create Lesson Plan",
-        "description": "Lesson plan creation form will be implemented here."
-      },
-      "curriculum": {
-        "title": "Curriculum Mapping",
-        "description": "Curriculum standards alignment and mapping will be managed here."
-      },
-      "resources": {
-        "title": "Lesson Resources",
-        "description": "Resource library with materials and attachments will be managed here."
-      },
-      "templates": {
-        "title": "Lesson Templates",
-        "description": "Reusable lesson plan templates will be managed here."
-      },
-      "analytics": {
-        "title": "Lesson Analytics",
-        "description": "Usage analytics and lesson effectiveness metrics will be displayed here."
-      },
-      "settings": {
-        "title": "Lesson Settings",
-        "description": "Template defaults, sharing permissions, and module configurations will be available here."
-      },
-      "class": "Class",
-      "teacher": "Teacher",
-      "subject": "Subject",
-      "date": "Date",
-      "startTime": "Start Time",
-      "endTime": "End Time",
-      "status": "Status",
-      "time": "Time",
-      "allLessons": "All Lessons",
-      "addNewLesson": "Add New Lesson",
-      "search": "Search",
-      "export": "Export",
-      "reset": "Reset",
-      "statuses": {
-        "planned": "Planned",
-        "inProgress": "In Progress",
-        "completed": "Completed",
-        "cancelled": "Cancelled"
-      },
-      "detail": {
-        "back": "Back",
-        "details": "Lesson Details",
-        "overview": "Overview",
-        "materials": "Materials",
-        "description": "Description",
-        "date": "Date",
-        "time": "Time",
-        "status": "Status",
-        "objectives": "Objectives",
-        "materialsLabel": "Learning Materials",
-        "activities": "Activities",
-        "assessment": "Assessment",
-        "notes": "Notes",
-        "createdAt": "Created",
-        "updatedAt": "Last Updated",
-        "errorTitle": "Error",
-        "notFound": "Lesson not found",
-        "noDescription": "No description",
-        "noObjectives": "No objectives defined",
-        "noMaterials": "No materials defined",
-        "noActivities": "No activities defined",
-        "noAssessment": "No assessment defined",
-        "noNotes": "No notes"
       }
     },
     "events": {

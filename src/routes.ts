@@ -276,8 +276,6 @@ export const roleRoutes: Record<string, Role[]> = {
   "/classrooms/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/timetable": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/timetable/*": ["ADMIN", "TEACHER", "DEVELOPER"],
-  "/lessons": ["ADMIN", "TEACHER", "DEVELOPER"],
-  "/lessons/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/exams": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
   "/exams/*": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
   "/grades": ["ADMIN", "TEACHER", "DEVELOPER"],

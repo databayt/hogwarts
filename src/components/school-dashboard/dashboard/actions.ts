@@ -3347,40 +3347,31 @@ async function getTeacherResourceUsage(
   })
   const classIds = teacherClasses.map((c) => c.id)
 
-  const [lessonsThisWeek, ungradedWork, studentCount, attendanceMarked] =
-    await Promise.all([
-      // Lessons this week for teacher's classes
-      db.lesson.count({
-        where: {
-          schoolId,
-          classId: { in: classIds },
-          lessonDate: { gte: weekStart, lt: weekEnd },
-        },
-      }),
-      // Ungraded submissions
-      db.assignmentSubmission.count({
-        where: {
-          schoolId,
-          status: "SUBMITTED",
-          assignment: { class: { teacherId: teacher.id } },
-        },
-      }),
-      // Total students in teacher's classes
-      db.studentClass.count({
-        where: { class: { teacherId: teacher.id, schoolId } },
-      }),
-      // Attendance records marked this week for teacher's classes
-      db.attendance.count({
-        where: {
-          schoolId,
-          classId: { in: classIds },
-          date: { gte: weekStart, lt: weekEnd },
-        },
-      }),
-    ])
+  const [ungradedWork, studentCount, attendanceMarked] = await Promise.all([
+    // Ungraded submissions
+    db.assignmentSubmission.count({
+      where: {
+        schoolId,
+        status: "SUBMITTED",
+        assignment: { class: { teacherId: teacher.id } },
+      },
+    }),
+    // Total students in teacher's classes
+    db.studentClass.count({
+      where: { class: { teacherId: teacher.id, schoolId } },
+    }),
+    // Attendance records marked this week for teacher's classes
+    db.attendance.count({
+      where: {
+        schoolId,
+        classId: { in: classIds },
+        date: { gte: weekStart, lt: weekEnd },
+      },
+    }),
+  ])
 
-  // Estimate attendance completion (marked / expected)
-  const expectedAttendance = lessonsThisWeek * studentCount
+  // Estimate attendance completion
+  const expectedAttendance = studentCount * 5 // Approximate: 5 school days
   const attendancePercentage =
     expectedAttendance > 0
       ? Math.round((attendanceMarked / expectedAttendance) * 100)
@@ -3389,7 +3380,7 @@ async function getTeacherResourceUsage(
   return [
     {
       name: "Lessons This Week",
-      used: lessonsThisWeek,
+      used: 0,
       limit: 24,
       unit: "lessons",
     },
@@ -4717,8 +4708,6 @@ async function getTeacherChartData(
     return getDefaultTeacherChartData()
   }
 
-  // Get lessons for the last 4 weeks (lessons are linked via class, not directly to teacher)
-  const fourWeeksAgo = subDays(new Date(), 28)
   const teacherClasses = await db.class.findMany({
     where: { teacherId: teacher.id, schoolId },
     select: { id: true, name: true },
@@ -4726,28 +4715,8 @@ async function getTeacherChartData(
 
   const classIds = teacherClasses.map((c) => c.id)
 
-  const lessons =
-    classIds.length > 0
-      ? await db.lesson.findMany({
-          where: {
-            classId: { in: classIds },
-            schoolId,
-            lessonDate: { gte: fourWeeksAgo },
-          },
-          select: { lessonDate: true },
-          orderBy: { lessonDate: "asc" },
-        })
-      : []
-
-  // Group lessons by week
+  // Placeholder weekly lessons data (legacy Lesson model removed)
   const weeklyLessons: number[] = [0, 0, 0, 0]
-  lessons.forEach((l) => {
-    const daysAgo = differenceInDays(new Date(), l.lessonDate)
-    const weekIndex = Math.floor(daysAgo / 7)
-    if (weekIndex < 4 && weekIndex >= 0) {
-      weeklyLessons[3 - weekIndex]++
-    }
-  })
 
   // Get grading progress (assignments by teacher)
   const assignments = await db.assignment.findMany({

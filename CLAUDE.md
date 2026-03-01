@@ -323,6 +323,7 @@ push                      # Full checklist → commit → push → Vercel
 12. **Port 3000 Only** - ALWAYS use port 3000 for dev server; kill existing processes with `lsof -ti:3000 | xargs kill -9` before starting
 13. **Central .env Only** - NEVER create `.env.local`, `.env.development`, or any `.env.x` files; all env vars go in central `.env`
 14. **Seeding** - NEVER run `pnpm db:seed`. Always `pnpm db:seed:single <name>`. Full seed = 60-120s waste.
+15. **Subdomain Paths** - Middleware rewrites `school.localhost:3000/en/...` → `/en/s/school/...` internally. Client-facing paths (redirects, links, `href`) must use `/${lang}/path` **without** `/s/${subdomain}/`. Never add `/s/${subdomain}/` in `redirect()`, `router.push()`, or `<Link href>`.
 
 ---
 

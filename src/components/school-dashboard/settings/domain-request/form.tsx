@@ -128,11 +128,16 @@ export function DomainRequestForm({
 
   return (
     <div className="space-y-6">
-      {/* Current Domain */}
+      {/* Current Subdomain (read-only context) */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Domain</CardTitle>
-          <CardDescription>Your school's current subdomain</CardDescription>
+          <CardTitle>Current Subdomain</CardTitle>
+          <CardDescription>
+            Your school is accessible at{" "}
+            <code className="font-mono text-xs">
+              {currentDomain}.databayt.org
+            </code>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
@@ -141,6 +146,10 @@ export function DomainRequestForm({
               {currentDomain}.databayt.org
             </code>
           </div>
+          <p className="text-muted-foreground mt-2 text-xs">
+            Use a custom domain below to access your school from your own
+            domain.
+          </p>
         </CardContent>
       </Card>
 
@@ -150,31 +159,26 @@ export function DomainRequestForm({
           <CardHeader>
             <CardTitle>Request Custom Domain</CardTitle>
             <CardDescription>
-              Request a custom subdomain for your school
+              Connect your own domain to your school
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="domain">Desired Domain</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="domain"
-                    name="domain"
-                    type="text"
-                    placeholder="myschool"
-                    pattern="^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$"
-                    required
-                    disabled={isPending}
-                    className="font-mono"
-                  />
-                  <span className="text-muted-foreground text-sm">
-                    .databayt.org
-                  </span>
-                </div>
+                <Label htmlFor="domain">Custom Domain</Label>
+                <Input
+                  id="domain"
+                  name="domain"
+                  type="text"
+                  placeholder="comboni.com"
+                  pattern="^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$"
+                  required
+                  disabled={isPending}
+                  className="font-mono"
+                />
                 <p className="text-muted-foreground text-xs">
-                  Use lowercase letters, numbers, and hyphens only. 3-63
-                  characters.
+                  Enter your full domain name (e.g. comboni.com,
+                  myschool.edu.sd)
                 </p>
               </div>
 
@@ -239,7 +243,7 @@ export function DomainRequestForm({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <code className="font-mono text-sm">
-                        {request.domain}.databayt.org
+                        {request.domain}
                       </code>
                       {getStatusBadge(request.status)}
                     </div>

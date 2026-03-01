@@ -164,18 +164,17 @@ function GuardianOverview({
 }: {
   children: ChildSummary[]
   basePath: string
-  d: Record<string, unknown> | undefined
+  d: Dict | undefined
 }) {
   return (
     <div className="space-y-6">
       <div>
         <h2>
-          {d?.dashboards?.guardian
-            ?.title || "Your Children's Attendance"}
+          {d?.dashboards?.guardian?.title || "Your Children's Attendance"}
         </h2>
         <p className="text-muted-foreground text-sm">
-          {d?.dashboards?.guardian
-            ?.description || "Monitor and track attendance records"}
+          {d?.dashboards?.guardian?.description ||
+            "Monitor and track attendance records"}
         </p>
       </div>
 
@@ -195,8 +194,7 @@ function GuardianOverview({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {(d?.stats as Record<string, string>)?.attendanceRate ||
-                "Avg. Rate"}
+              {d?.stats?.attendanceRate || "Avg. Rate"}
             </CardTitle>
             <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>
@@ -247,8 +245,7 @@ function GuardianOverview({
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-sm">
-                  {(d?.stats as Record<string, string>)?.attendanceRate ||
-                    "Attendance Rate"}
+                  {d?.stats?.attendanceRate || "Attendance Rate"}
                 </span>
                 <span className="font-semibold">
                   {child.stats.attendanceRate}%
@@ -356,18 +353,15 @@ function StudentOverview({
   }
   records: StudentRecord[]
   basePath: string
-  d: Record<string, unknown> | undefined
+  d: Dict | undefined
 }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2>
-          {d?.dashboards?.student
-            ?.title || "Your Attendance Portal"}
-        </h2>
+        <h2>{d?.dashboards?.student?.title || "Your Attendance Portal"}</h2>
         <p className="text-muted-foreground text-sm">
-          {d?.dashboards?.student
-            ?.description || "Check in and view your attendance records"}
+          {d?.dashboards?.student?.description ||
+            "Check in and view your attendance records"}
         </p>
       </div>
 
@@ -376,8 +370,7 @@ function StudentOverview({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {(d?.stats as Record<string, string>)?.attendanceRate ||
-                "Attendance Rate"}
+              {d?.stats?.attendanceRate || "Attendance Rate"}
             </CardTitle>
             <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>

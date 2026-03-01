@@ -23,44 +23,58 @@ export default async function EditorLayout({ children, params }: Props) {
   const { schoolId } = await getTenantContext()
 
   // Fetch school data for dynamic descriptions
-  const [school, branding, yearCount, termCount, discountCount] =
-    await Promise.all([
-      schoolId
-        ? db.school.findUnique({
-            where: { id: schoolId },
-            select: {
-              name: true,
-              preferredLanguage: true,
-              schoolType: true,
-              schoolLevel: true,
-              city: true,
-              state: true,
-              country: true,
-              logoUrl: true,
-              planType: true,
-              maxStudents: true,
-              maxTeachers: true,
-              tuitionFee: true,
-              currency: true,
-              paymentSchedule: true,
-            },
-          })
-        : null,
-      schoolId
-        ? db.schoolBranding.findUnique({
-            where: { schoolId },
-            select: {
-              primaryColor: true,
-              isPubliclyListed: true,
-              allowSelfEnrollment: true,
-              informationSharing: true,
-            },
-          })
-        : null,
-      schoolId ? db.schoolYear.count({ where: { schoolId } }) : 0,
-      schoolId ? db.term.count({ where: { schoolId } }) : 0,
-      schoolId ? db.discount.count({ where: { schoolId, isActive: true } }) : 0,
-    ])
+  const [
+    school,
+    branding,
+    yearCount,
+    termCount,
+    discountCount,
+    pendingDomainRequest,
+  ] = await Promise.all([
+    schoolId
+      ? db.school.findUnique({
+          where: { id: schoolId },
+          select: {
+            name: true,
+            preferredLanguage: true,
+            schoolType: true,
+            schoolLevel: true,
+            city: true,
+            state: true,
+            country: true,
+            domain: true,
+            logoUrl: true,
+            planType: true,
+            maxStudents: true,
+            maxTeachers: true,
+            tuitionFee: true,
+            currency: true,
+            paymentSchedule: true,
+          },
+        })
+      : null,
+    schoolId
+      ? db.schoolBranding.findUnique({
+          where: { schoolId },
+          select: {
+            primaryColor: true,
+            isPubliclyListed: true,
+            allowSelfEnrollment: true,
+            informationSharing: true,
+          },
+        })
+      : null,
+    schoolId ? db.schoolYear.count({ where: { schoolId } }) : 0,
+    schoolId ? db.term.count({ where: { schoolId } }) : 0,
+    schoolId ? db.discount.count({ where: { schoolId, isActive: true } }) : 0,
+    schoolId
+      ? db.domainRequest.findFirst({
+          where: { schoolId, status: { in: ["pending", "approved"] } },
+          select: { domain: true, status: true },
+          orderBy: { createdAt: "desc" },
+        })
+      : null,
+  ])
 
   const SECTION_KEYS = [
     "title",
@@ -75,6 +89,7 @@ export default async function EditorLayout({ children, params }: Props) {
     "discount",
     "legal",
     "plan",
+    "domain",
   ] as const
 
   // Build dynamic descriptions from live data
@@ -128,6 +143,14 @@ export default async function EditorLayout({ children, params }: Props) {
           : "No active discounts"
       case "legal":
         return school.planType ? `${school.planType} plan` : null
+      case "domain": {
+        if (pendingDomainRequest) {
+          const status =
+            pendingDomainRequest.status === "pending" ? "Pending" : "Active"
+          return `${status}: ${pendingDomainRequest.domain}`
+        }
+        return "No custom domain"
+      }
       default:
         return null
     }

@@ -98,7 +98,7 @@ export function getQuickActionsByRole(
           iconName: "Calendar",
           label: "Schedule",
           description: "View your timetable",
-          href: "/lessons",
+          href: "/timetable",
         },
       ]
 
@@ -121,7 +121,7 @@ export function getQuickActionsByRole(
           iconName: "Calendar",
           label: "Schedule",
           description: "View class schedule",
-          href: "/lessons",
+          href: "/timetable",
         },
         {
           iconName: "Chat",
@@ -281,9 +281,9 @@ export function getSecondaryQuickActions(
         },
         {
           iconName: "Book",
-          label: "Lessons",
-          description: "View lessons",
-          href: "/lessons",
+          label: "Subjects",
+          description: "View subjects",
+          href: "/subjects",
         },
       ]
 
@@ -303,9 +303,9 @@ export function getSecondaryQuickActions(
         },
         {
           iconName: "FileText",
-          label: "Lessons",
-          description: "View lesson plans",
-          href: "/lessons",
+          label: "Subjects",
+          description: "View subjects",
+          href: "/subjects",
         },
         {
           iconName: "Gear",

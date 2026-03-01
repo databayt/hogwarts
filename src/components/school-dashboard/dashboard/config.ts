@@ -215,9 +215,9 @@ export function getQuickActionsByRole(
         },
         {
           iconName: "ClipboardList",
-          label: "Lessons",
-          href: `${baseUrl}/lessons`,
-          description: "Plan lessons",
+          label: "Subjects",
+          href: `${baseUrl}/subjects`,
+          description: "View subjects",
         },
       ]
 
