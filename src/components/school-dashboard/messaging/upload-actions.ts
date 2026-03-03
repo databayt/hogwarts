@@ -180,11 +180,11 @@ export async function uploadMessageAttachment(
       },
     })
 
-    // 9. Generate thumbnail for images (optional - skip if no imagekit)
+    // 9. Generate thumbnail for images (optional)
     let thumbnailUrl: string | undefined
     if (category === "image") {
       // For now, we'll skip thumbnail generation
-      // Could be added later with ImageKit or similar service
+      // Could be added later with Sharp processing
     }
 
     // 10. Return result

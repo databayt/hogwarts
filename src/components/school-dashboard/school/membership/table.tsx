@@ -1,21 +1,27 @@
 "use client"
 
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { Ban, Download, ShieldCheck } from "lucide-react"
 
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
+import {
+  BulkActionsToolbar,
+  type BulkAction,
+} from "@/components/table/bulk-actions-toolbar"
 import { DataTable } from "@/components/table/data-table"
 import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { bulkSuspend, exportMembersCSV, inviteMember } from "./actions"
+import { bulkActivate, bulkSuspend, exportMembersCSV } from "./actions"
 import { ApprovalSection } from "./approval-section"
 import { getMemberColumns, type MemberRow } from "./columns"
 import { GradeAssignDialog } from "./grade-assign-dialog"
+import { InviteDialog } from "./invite-dialog"
 import { RoleChangeDialog } from "./role-change-dialog"
 import { StatusChangeDialog } from "./status-change-dialog"
 import type { MembershipRequestRow, UnifiedMember } from "./types"
@@ -37,10 +43,17 @@ export function MembershipTable({
   lang,
   t,
 }: MembershipTableProps) {
+  const BATCH_SIZE = 20
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [searchValue, setSearchValue] = useState("")
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
+
+  // Reset visible count when search changes
+  useEffect(() => {
+    setVisibleCount(BATCH_SIZE)
+  }, [searchValue])
 
   // Dialog states
   const [roleChangeMember, setRoleChangeMember] = useState<MemberRow | null>(
@@ -54,11 +67,7 @@ export function MembershipTable({
   const [statusAction, setStatusAction] = useState<
     "suspend" | "activate" | "remove" | null
   >(null)
-
-  // Invite state
   const [showInvite, setShowInvite] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState("")
-  const [inviteRole, setInviteRole] = useState("STAFF")
 
   // Convert members to rows with formatted dates
   const data: MemberRow[] = useMemo(() => {
@@ -79,6 +88,12 @@ export function MembershipTable({
       ),
     }))
   }, [members, searchValue, lang])
+
+  const visibleData = useMemo(
+    () => data.slice(0, visibleCount),
+    [data, visibleCount]
+  )
+  const hasMore = visibleCount < data.length
 
   const handleRefresh = useCallback(() => {
     startTransition(() => {
@@ -110,6 +125,15 @@ export function MembershipTable({
     setStatusAction("remove")
   }, [])
 
+  // Build grade options for column filter
+  const gradeOptions = useMemo(() => {
+    const unique = new Map<string, string>()
+    for (const m of members) {
+      if (m.gradeName) unique.set(m.gradeName, m.gradeName)
+    }
+    return Array.from(unique.values()).map((g) => ({ label: g, value: g }))
+  }, [members])
+
   // Columns
   const columns = useMemo(
     () => [
@@ -123,6 +147,7 @@ export function MembershipTable({
         canManage,
         t,
         lang,
+        gradeOptions,
       }),
     ],
     [
@@ -134,15 +159,16 @@ export function MembershipTable({
       canManage,
       t,
       lang,
+      gradeOptions,
     ]
   )
 
   const { table } = useDataTable<MemberRow>({
-    data,
+    data: visibleData,
     columns,
     pageCount: 1,
     initialState: {
-      pagination: { pageIndex: 0, pageSize: data.length || 20 },
+      pagination: { pageIndex: 0, pageSize: visibleData.length || 20 },
       columnVisibility: { joinedAtStr: false },
     },
   })
@@ -156,34 +182,67 @@ export function MembershipTable({
     return ""
   }, [])
 
-  // Invite handler
-  const handleInvite = useCallback(async () => {
-    if (!inviteEmail) return
-    const result = await inviteMember({
-      email: inviteEmail,
-      role: inviteRole as
-        | "ADMIN"
-        | "TEACHER"
-        | "STUDENT"
-        | "GUARDIAN"
-        | "ACCOUNTANT"
-        | "STAFF",
-    })
-    if (result.success) {
-      setShowInvite(false)
-      setInviteEmail("")
-      handleRefresh()
-    }
-  }, [inviteEmail, inviteRole, handleRefresh])
-
-  // Bulk suspend selected
-  const handleBulkSuspend = useCallback(async () => {
-    const selected = table.getSelectedRowModel().rows.map((r) => r.original.id)
-    if (selected.length === 0) return
-    await bulkSuspend({ userIds: selected })
-    table.toggleAllPageRowsSelected(false)
-    handleRefresh()
-  }, [table, handleRefresh])
+  // Bulk actions for BulkActionsToolbar
+  const bulkActions: BulkAction<MemberRow>[] = useMemo(
+    () => [
+      {
+        id: "bulk-suspend",
+        label: t.bulkSuspend || "Suspend",
+        icon: <Ban className="h-4 w-4" />,
+        variant: "destructive" as const,
+        onClick: async (rows) => {
+          const ids = rows.map((r) => r.id)
+          const result = await bulkSuspend({ userIds: ids })
+          if (result.success) {
+            SuccessToast(
+              `${result.data?.count || 0} ${t.memberSuspended || "members suspended"}`
+            )
+            table.toggleAllPageRowsSelected(false)
+            handleRefresh()
+          }
+        },
+      },
+      {
+        id: "bulk-activate",
+        label: t.bulkActivate || "Activate",
+        icon: <ShieldCheck className="h-4 w-4" />,
+        variant: "default" as const,
+        onClick: async (rows) => {
+          const ids = rows.map((r) => r.id)
+          const result = await bulkActivate({ userIds: ids })
+          if (result.success) {
+            SuccessToast(
+              `${result.data?.count || 0} ${t.memberActivated || "members activated"}`
+            )
+            table.toggleAllPageRowsSelected(false)
+            handleRefresh()
+          }
+        },
+      },
+      {
+        id: "bulk-export",
+        label: t.export || "Export",
+        icon: <Download className="h-4 w-4" />,
+        variant: "outline" as const,
+        onClick: async (rows) => {
+          const header = "Name,Email,Role,Status"
+          const csvRows = rows.map(
+            (r) =>
+              `"${r.name}","${r.email || ""}","${r.role}","${r.memberStatus}"`
+          )
+          const csv = [header, ...csvRows].join("\n")
+          const blob = new Blob([csv], { type: "text/csv" })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = "members-selected.csv"
+          a.click()
+          URL.revokeObjectURL(url)
+        },
+      },
+    ],
+    [t, table, handleRefresh]
+  )
 
   return (
     <div className="space-y-6">
@@ -203,22 +262,9 @@ export function MembershipTable({
         searchValue={searchValue}
         onSearchChange={setSearchValue}
         searchPlaceholder={t.searchMembers || "Search members..."}
-        onCreate={canManage ? () => setShowInvite(!showInvite) : undefined}
+        onCreate={canManage ? () => setShowInvite(true) : undefined}
         getCSV={handleGetCSV}
         entityName="members"
-        additionalActions={
-          canManage && table.getSelectedRowModel().rows.length > 0 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBulkSuspend}
-              disabled={isPending}
-            >
-              {t.bulkSuspend || "Bulk Suspend"} (
-              {table.getSelectedRowModel().rows.length})
-            </Button>
-          ) : undefined
-        }
         translations={{
           search: t.searchMembers || "Search members...",
           create: t.inviteMember || "Invite",
@@ -233,45 +279,37 @@ export function MembershipTable({
         }}
       />
 
-      {/* Inline invite form */}
-      {showInvite && (
-        <div className="flex items-center gap-2 rounded-lg border p-3">
-          <Input
-            placeholder={t.emailPlaceholder || "Email address"}
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            className="max-w-xs"
-            type="email"
-          />
-          <select
-            value={inviteRole}
-            onChange={(e) => setInviteRole(e.target.value)}
-            className="border-input bg-background rounded-md border px-3 py-2 text-sm"
-          >
-            <option value="STAFF">Staff</option>
-            <option value="TEACHER">Teacher</option>
-            <option value="ADMIN">Admin</option>
-            <option value="ACCOUNTANT">Accountant</option>
-            <option value="STUDENT">Student</option>
-            <option value="GUARDIAN">Guardian</option>
-          </select>
-          <Button size="sm" onClick={handleInvite} disabled={!inviteEmail}>
-            {t.sendInvite || "Send Invite"}
-          </Button>
+      {/* DataTable */}
+      <DataTable
+        table={table}
+        isLoading={isPending}
+        paginationMode="load-more"
+      />
+
+      {hasMore && (
+        <div className="flex justify-center py-2">
           <Button
-            size="sm"
             variant="ghost"
-            onClick={() => setShowInvite(false)}
+            className="hover:underline"
+            onClick={() => setVisibleCount((c) => c + BATCH_SIZE)}
           >
-            {t.cancel || "Cancel"}
+            {t.seeMore || "See More"}
           </Button>
         </div>
       )}
 
-      {/* DataTable */}
-      <DataTable table={table} isLoading={isPending} />
+      {/* Bulk Actions Toolbar */}
+      {canManage && (
+        <BulkActionsToolbar table={table} actions={bulkActions} lang={lang} />
+      )}
 
       {/* Dialogs */}
+      <InviteDialog
+        open={showInvite}
+        onOpenChange={setShowInvite}
+        onSuccess={handleRefresh}
+        t={t}
+      />
       <RoleChangeDialog
         member={roleChangeMember}
         open={!!roleChangeMember}

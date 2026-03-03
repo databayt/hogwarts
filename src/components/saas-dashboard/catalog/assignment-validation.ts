@@ -26,7 +26,7 @@ export const catalogAssignmentSchema = z.object({
   approvalStatus: z
     .enum(["PENDING", "APPROVED", "REJECTED"])
     .default("PENDING"),
-  visibility: z.enum(["PRIVATE", "SCHOOL", "PUBLIC"]).default("PUBLIC"),
+  visibility: z.enum(["PRIVATE", "SCHOOL", "PUBLIC", "PAID"]).default("PUBLIC"),
 })
 
 export type CatalogAssignmentInput = z.infer<typeof catalogAssignmentSchema>

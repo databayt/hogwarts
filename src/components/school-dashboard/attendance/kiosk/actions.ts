@@ -198,9 +198,9 @@ export async function processKioskCheck(
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    // Get student with their current class
-    const student = await db.student.findUnique({
-      where: { id: studentId },
+    // Get student with their current class (scoped by schoolId)
+    const student = await db.student.findFirst({
+      where: { id: studentId, schoolId },
       include: {
         studentClasses: {
           where: { schoolId },

@@ -64,6 +64,9 @@ export async function ConfigureContent({ dictionary, lang }: Props) {
     )
   }
 
+  if (!result.data) {
+    return null
+  }
   const { grades, roomTypes } = result.data
 
   if (roomTypes.length === 0) {

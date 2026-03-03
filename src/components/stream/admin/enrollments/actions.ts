@@ -88,11 +88,12 @@ export async function bulkEnrollStudents(data: {
     return { success: false, enrolled: 0, message: "Subject not found" }
   }
 
-  // Get existing enrollments to skip duplicates
+  // Get existing enrollments to skip duplicates (scoped to current school)
   const existing = await db.enrollment.findMany({
     where: {
       catalogSubjectId: data.catalogSubjectId,
       userId: { in: data.userIds },
+      schoolId,
     },
     select: { userId: true },
   })

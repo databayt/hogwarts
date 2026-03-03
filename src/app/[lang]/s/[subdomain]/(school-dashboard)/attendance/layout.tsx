@@ -16,14 +16,14 @@ interface Props {
 const STAFF_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
 
 export default async function AttendanceLayout({ children, params }: Props) {
-  const [{ lang, subdomain }, session] = await Promise.all([params, auth()])
+  const [{ lang }, session] = await Promise.all([params, auth()])
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.attendance
 
   const role = session?.user?.role ?? ""
   const isStaff = STAFF_ROLES.includes(role)
 
-  const basePath = `/${lang}/s/${subdomain}/attendance`
+  const basePath = `/${lang}/attendance`
 
   // Role-based tab visibility:
   // - Overview: always visible
@@ -34,7 +34,11 @@ export default async function AttendanceLayout({ children, params }: Props) {
   // - Settings: admin/developer only
   const attendancePages: PageNavItem[] = [
     { name: d?.overview || "Overview", href: basePath, exact: true },
-    { name: d?.mark || "Mark", href: `${basePath}/manual`, hidden: !isStaff },
+    {
+      name: d?.manual || "Manual",
+      href: `${basePath}/manual`,
+      hidden: !isStaff,
+    },
     {
       name: d?.navQrCode || "QR Code",
       href: `${basePath}/qr-code`,

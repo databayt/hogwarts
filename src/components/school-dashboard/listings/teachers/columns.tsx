@@ -159,7 +159,11 @@ export const getTeacherColumns = (
             </Avatar>
             <div className="flex flex-col">
               <Link
-                href={`/${lang}/teachers/${teacher.id}`}
+                href={
+                  teacher.userId
+                    ? `/${lang}/profile/${teacher.userId}`
+                    : `/${lang}/teachers/${teacher.id}`
+                }
                 className="font-medium hover:underline"
               >
                 {teacher.name}
@@ -383,7 +387,11 @@ export const getTeacherColumns = (
               {/* View Profile */}
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/${lang}/teachers/${teacher.id}`}
+                  href={
+                    teacher.userId
+                      ? `/${lang}/profile/${teacher.userId}`
+                      : `/${lang}/teachers/${teacher.id}`
+                  }
                   className="flex items-center gap-2"
                 >
                   <Eye className="h-4 w-4" />

@@ -16,7 +16,8 @@ import { Input } from "@/components/ui/input"
 
 import { useTaskStore } from "../utils/store"
 
-export default function NewSectionDialog() {
+export default function NewSectionDialog({ dictionary }: { dictionary?: any }) {
+  const k = dictionary?.operator?.kanban
   const addCol = useTaskStore((state) => state.addCol)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -34,14 +35,14 @@ export default function NewSectionDialog() {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="secondary" size="lg" className="w-full">
-          ＋ Add New Section
+          {k?.addNewSection || "\uFF0B Add New Section"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Section</DialogTitle>
+          <DialogTitle>{k?.addSectionTitle || "Add New Section"}</DialogTitle>
           <DialogDescription>
-            What section you want to add today?
+            {k?.addSectionDescription || "What section you want to add today?"}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -53,7 +54,7 @@ export default function NewSectionDialog() {
             <Input
               id="title"
               name="title"
-              placeholder="Section title..."
+              placeholder={k?.sectionTitlePlaceholder || "Section title..."}
               className="col-span-4"
             />
           </div>
@@ -61,7 +62,7 @@ export default function NewSectionDialog() {
         <DialogFooter>
           <DialogTrigger asChild>
             <Button type="submit" size="sm" form="todo-form">
-              Add Section
+              {k?.addSection || "Add Section"}
             </Button>
           </DialogTrigger>
         </DialogFooter>

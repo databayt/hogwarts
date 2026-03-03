@@ -8,12 +8,7 @@
 
 import type { ExamPaperTemplate } from "@prisma/client"
 
-import {
-  ClassicTemplate,
-  CustomTemplate,
-  FormalTemplate,
-  ModernTemplate,
-} from "../../templates"
+import { ComposableDocument } from "../../templates/composable"
 import type { ExamPaperData } from "../types"
 
 // ============================================================================
@@ -28,22 +23,22 @@ export interface TemplateComponent {
 
 export const TEMPLATE_REGISTRY: Record<ExamPaperTemplate, TemplateComponent> = {
   CLASSIC: {
-    component: ClassicTemplate,
+    component: ComposableDocument,
     name: "كلاسيكي أكاديمي",
     description: "تنسيق الاختبار التقليدي مع رأس المدرسة والأسئلة المرقمة",
   },
   MODERN: {
-    component: ModernTemplate,
+    component: ComposableDocument,
     name: "حديث بسيط",
     description: "تخطيط نظيف وواسع مع زخارف قليلة",
   },
   FORMAL: {
-    component: FormalTemplate,
+    component: ComposableDocument,
     name: "رسمي",
     description: "نمط الاختبار الحكومي مع تنسيق صارم وعلامات مائية",
   },
   CUSTOM: {
-    component: CustomTemplate,
+    component: ComposableDocument,
     name: "مخصص",
     description: "يستخدم ألوان العلامة التجارية للمدرسة والتنسيق المخصص",
   },
@@ -80,6 +75,8 @@ export function getAllTemplates(): Array<{
 // Exports
 // ============================================================================
 
+export { ComposableDocument } from "../../templates/composable"
+/** @deprecated Use ComposableDocument instead */
 export {
   ClassicTemplate,
   CustomTemplate,

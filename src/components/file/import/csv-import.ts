@@ -57,6 +57,29 @@ const teacherCsvSchema = z.object({
   qualification: z.string().optional(),
 })
 
+const staffCsvSchema = z.object({
+  givenName: z.string().min(1, "Given name is required"),
+  surname: z.string().min(1, "Surname is required"),
+  emailAddress: z.string().email("Invalid email"),
+  employeeId: z.string().optional(),
+  position: z.string().optional(),
+  department: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  gender: z.string().optional(),
+  employmentType: z
+    .enum(["FULL_TIME", "PART_TIME", "CONTRACT", "TEMPORARY"])
+    .optional(),
+})
+
+const guardianCsvSchema = z.object({
+  givenName: z.string().min(1, "Given name is required"),
+  surname: z.string().min(1, "Surname is required"),
+  emailAddress: z.string().email().optional(),
+  phoneNumber: z.string().optional(),
+  guardianType: z.string().optional(),
+  studentId: z.string().optional(),
+})
+
 interface ImportResult {
   success: boolean
   imported: number
@@ -602,6 +625,404 @@ class CsvImportService {
     ]
     return sample.join("\n")
   }
+
+  /**
+   * Import staff from CSV
+   */
+  async importStaff(
+    csvContent: string,
+    schoolId: string
+  ): Promise<ImportResult> {
+    const result: ImportResult = {
+      success: false,
+      imported: 0,
+      failed: 0,
+      errors: [],
+      warnings: [],
+    }
+
+    try {
+      const rows = this.parseCSV(csvContent)
+
+      for (let i = 0; i < rows.length; i++) {
+        const rowNumber = i + 2
+        try {
+          const validated = staffCsvSchema.parse(rows[i])
+
+          // Validate phone number
+          const validationErrors = []
+          if (validated.phoneNumber) {
+            const phoneValidation = validatePhoneFormat(
+              validated.phoneNumber,
+              "phoneNumber"
+            )
+            if (!phoneValidation.isValid) {
+              validationErrors.push(...phoneValidation.errors)
+            }
+          }
+
+          if (validationErrors.length > 0) {
+            result.errors.push({
+              row: rowNumber,
+              error: "Validation failed",
+              details: createRowErrorMessage(rowNumber, validationErrors),
+              data: rows[i],
+            })
+            result.failed++
+            continue
+          }
+
+          // Check duplicate by email
+          const existingUser = await db.user.findFirst({
+            where: { email: validated.emailAddress, schoolId },
+          })
+          if (existingUser) {
+            result.errors.push({
+              row: rowNumber,
+              error: formatDuplicateError(
+                "email",
+                validated.emailAddress,
+                "user"
+              ),
+              details: `This email address is already registered. Each staff member must have a unique email.`,
+              data: validated,
+            })
+            result.failed++
+            continue
+          }
+
+          // Check duplicate by employeeId if provided
+          if (validated.employeeId) {
+            const existingStaff = await db.staffMember.findFirst({
+              where: { schoolId, employeeId: validated.employeeId },
+            })
+            if (existingStaff) {
+              result.errors.push({
+                row: rowNumber,
+                error: formatDuplicateError(
+                  "employeeId",
+                  validated.employeeId,
+                  "staff member"
+                ),
+                details: `This employee ID is already registered. Please use a unique employee ID.`,
+                data: validated,
+              })
+              result.failed++
+              continue
+            }
+          }
+
+          // Create user account
+          const defaultPassword = await hash(
+            `staff${validated.employeeId || validated.emailAddress}`,
+            10
+          )
+          const user = await db.user.create({
+            data: {
+              username: `${validated.givenName} ${validated.surname}`,
+              email: validated.emailAddress,
+              password: defaultPassword,
+              role: "STAFF",
+              schoolId,
+            },
+          })
+
+          // Find department if provided
+          let departmentId: string | undefined
+          if (validated.department) {
+            const department = await db.department.findFirst({
+              where: { schoolId, departmentName: validated.department },
+            })
+            if (department) {
+              departmentId = department.id
+            }
+          }
+
+          // Create staff member record
+          const staffMember = await db.staffMember.create({
+            data: {
+              userId: user.id,
+              schoolId,
+              employeeId: validated.employeeId || undefined,
+              givenName: validated.givenName,
+              surname: validated.surname,
+              emailAddress: validated.emailAddress,
+              gender: validated.gender || undefined,
+              position: validated.position || undefined,
+              departmentId,
+              employmentType: validated.employmentType || "FULL_TIME",
+            },
+          })
+
+          // Add phone number if provided
+          if (validated.phoneNumber) {
+            await db.staffPhoneNumber.create({
+              data: {
+                staffMemberId: staffMember.id,
+                schoolId,
+                phoneNumber: validated.phoneNumber,
+                isPrimary: true,
+              },
+            })
+          }
+
+          result.imported++
+
+          logger.info("Staff member imported successfully", {
+            action: "staff_import",
+            schoolId,
+            employeeId: validated.employeeId,
+            row: rowNumber,
+          })
+        } catch (error) {
+          if (error instanceof ZodError) {
+            const formattedError = formatZodError(error)
+            result.errors.push({
+              row: rowNumber,
+              error: "Schema validation failed",
+              details: formattedError.formattedMessage,
+              data: rows[i],
+            })
+          } else {
+            result.errors.push({
+              row: rowNumber,
+              error: error instanceof Error ? error.message : "Unknown error",
+              details: error instanceof Error ? error.stack : undefined,
+              data: rows[i],
+            })
+          }
+          result.failed++
+        }
+      }
+
+      result.success = result.imported > 0
+      return result
+    } catch (error) {
+      logger.error(
+        "Staff import failed",
+        error instanceof Error ? error : new Error("Unknown error"),
+        { action: "staff_import_error", schoolId }
+      )
+      throw error
+    }
+  }
+
+  /**
+   * Import guardians from CSV
+   */
+  async importGuardians(
+    csvContent: string,
+    schoolId: string
+  ): Promise<ImportResult> {
+    const result: ImportResult = {
+      success: false,
+      imported: 0,
+      failed: 0,
+      errors: [],
+      warnings: [],
+    }
+
+    try {
+      const rows = this.parseCSV(csvContent)
+
+      for (let i = 0; i < rows.length; i++) {
+        const rowNumber = i + 2
+        try {
+          const validated = guardianCsvSchema.parse(rows[i])
+
+          // Validate phone number
+          const validationErrors = []
+          if (validated.phoneNumber) {
+            const phoneValidation = validatePhoneFormat(
+              validated.phoneNumber,
+              "phoneNumber"
+            )
+            if (!phoneValidation.isValid) {
+              validationErrors.push(...phoneValidation.errors)
+            }
+          }
+
+          if (validationErrors.length > 0) {
+            result.errors.push({
+              row: rowNumber,
+              error: "Validation failed",
+              details: createRowErrorMessage(rowNumber, validationErrors),
+              data: rows[i],
+            })
+            result.failed++
+            continue
+          }
+
+          // Check duplicate by email if provided
+          if (validated.emailAddress) {
+            const existingGuardian = await db.guardian.findFirst({
+              where: { schoolId, emailAddress: validated.emailAddress },
+            })
+            if (existingGuardian) {
+              result.errors.push({
+                row: rowNumber,
+                error: formatDuplicateError(
+                  "email",
+                  validated.emailAddress,
+                  "guardian"
+                ),
+                details: `This email is already registered as a guardian. Each guardian must have a unique email.`,
+                data: validated,
+              })
+              result.failed++
+              continue
+            }
+          }
+
+          // Create user account
+          const defaultPassword = await hash("parent123", 10)
+          const email =
+            validated.emailAddress || `guardian-${Date.now()}-${i}@school.local`
+          const user = await db.user.create({
+            data: {
+              username: `${validated.givenName} ${validated.surname}`,
+              email,
+              password: defaultPassword,
+              role: "GUARDIAN",
+              schoolId,
+            },
+          })
+
+          // Create guardian record
+          const guardian = await db.guardian.create({
+            data: {
+              userId: user.id,
+              schoolId,
+              givenName: validated.givenName,
+              surname: validated.surname,
+              emailAddress: validated.emailAddress || undefined,
+            },
+          })
+
+          // Add phone number if provided
+          if (validated.phoneNumber) {
+            await db.guardianPhoneNumber.create({
+              data: {
+                guardianId: guardian.id,
+                schoolId,
+                phoneNumber: validated.phoneNumber,
+                isPrimary: true,
+              },
+            })
+          }
+
+          // Link to student if studentId provided
+          if (validated.studentId) {
+            const student = await db.student.findFirst({
+              where: { schoolId, studentId: validated.studentId },
+            })
+
+            if (student) {
+              // Get or create guardian type
+              const typeName = validated.guardianType || "guardian"
+              let guardianType = await db.guardianType.findFirst({
+                where: { schoolId, name: typeName },
+              })
+              if (!guardianType) {
+                guardianType = await db.guardianType.create({
+                  data: { schoolId, name: typeName },
+                })
+              }
+
+              await db.studentGuardian.create({
+                data: {
+                  studentId: student.id,
+                  guardianId: guardian.id,
+                  schoolId,
+                  guardianTypeId: guardianType.id,
+                  isPrimary: true,
+                },
+              })
+            } else {
+              result.warnings?.push({
+                row: rowNumber,
+                warning: `Student with ID "${validated.studentId}" not found. Guardian created but not linked.`,
+              })
+            }
+          }
+
+          result.imported++
+
+          logger.info("Guardian imported successfully", {
+            action: "guardian_import",
+            schoolId,
+            email: validated.emailAddress,
+            row: rowNumber,
+          })
+        } catch (error) {
+          if (error instanceof ZodError) {
+            const formattedError = formatZodError(error)
+            result.errors.push({
+              row: rowNumber,
+              error: "Schema validation failed",
+              details: formattedError.formattedMessage,
+              data: rows[i],
+            })
+          } else {
+            result.errors.push({
+              row: rowNumber,
+              error: error instanceof Error ? error.message : "Unknown error",
+              details: error instanceof Error ? error.stack : undefined,
+              data: rows[i],
+            })
+          }
+          result.failed++
+        }
+      }
+
+      result.success = result.imported > 0
+      return result
+    } catch (error) {
+      logger.error(
+        "Guardian import failed",
+        error instanceof Error ? error : new Error("Unknown error"),
+        { action: "guardian_import_error", schoolId }
+      )
+      throw error
+    }
+  }
+
+  generateStaffTemplate(): string {
+    const headers = [
+      "givenName",
+      "surname",
+      "emailAddress",
+      "employeeId",
+      "position",
+      "department",
+      "phoneNumber",
+      "gender",
+      "employmentType",
+    ]
+    const sample = [
+      headers.join(","),
+      "Ahmed,Hassan,ahmed.hassan@school.edu,STF001,Accountant,Finance,+1234567890,male,FULL_TIME",
+      "Fatima,Ali,fatima.ali@school.edu,STF002,Librarian,Library,+0987654321,female,PART_TIME",
+    ]
+    return sample.join("\n")
+  }
+
+  generateGuardianTemplate(): string {
+    const headers = [
+      "givenName",
+      "surname",
+      "emailAddress",
+      "phoneNumber",
+      "guardianType",
+      "studentId",
+    ]
+    const sample = [
+      headers.join(","),
+      "Mohammed,Ahmed,mohammed@example.com,+1234567890,father,STD001",
+      "Sara,Hassan,sara@example.com,+0987654321,mother,STD002",
+    ]
+    return sample.join("\n")
+  }
 }
 
 // Singleton instance (not exported — "use server" only allows async function exports)
@@ -614,9 +1035,21 @@ export async function importStudents(csvContent: string, schoolId: string) {
 export async function importTeachers(csvContent: string, schoolId: string) {
   return csvImportService.importTeachers(csvContent, schoolId)
 }
+export async function importStaff(csvContent: string, schoolId: string) {
+  return csvImportService.importStaff(csvContent, schoolId)
+}
+export async function importGuardians(csvContent: string, schoolId: string) {
+  return csvImportService.importGuardians(csvContent, schoolId)
+}
 export async function generateStudentTemplate() {
   return csvImportService.generateStudentTemplate()
 }
 export async function generateTeacherTemplate() {
   return csvImportService.generateTeacherTemplate()
+}
+export async function generateStaffTemplate() {
+  return csvImportService.generateStaffTemplate()
+}
+export async function generateGuardianTemplate() {
+  return csvImportService.generateGuardianTemplate()
 }

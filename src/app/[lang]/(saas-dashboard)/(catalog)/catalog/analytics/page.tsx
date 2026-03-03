@@ -16,7 +16,12 @@ export default async function CatalogAnalyticsPage({ params }: Props) {
 
   return (
     <>
-      <PageHeadingSetter title="Catalog Analytics" />
+      <PageHeadingSetter
+        title={
+          dictionary?.saas?.catalog?.navigation?.analytics ||
+          "Catalog Analytics"
+        }
+      />
       <AnalyticsContent dictionary={dictionary} lang={lang} />
     </>
   )

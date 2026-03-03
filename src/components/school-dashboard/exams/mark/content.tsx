@@ -5,6 +5,7 @@
 
 import Link from "next/link"
 import { auth } from "@/auth"
+import type { Prisma } from "@prisma/client"
 import { CircleAlert, CircleCheck, Clock, FileText, Plus } from "lucide-react"
 
 import { db } from "@/lib/db"
@@ -14,6 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { BulkAutoGradeDialog } from "./bulk-auto-grade-dialog"
+import { CSVImportDialog } from "./csv-import-dialog"
 import { MarkingTable } from "./table"
 
 export async function MarkingContent({
@@ -27,17 +30,39 @@ export async function MarkingContent({
 }) {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role
 
   if (!schoolId) {
     return <div>{dictionary.common?.unauthorized || "Unauthorized"}</div>
   }
 
-  // Fetch all submissions that need grading
+  // TEACHER scoping: only see submissions for their classes
+  let teacherClassIds: string[] | null = null
+  if (role === "TEACHER") {
+    const teacher = await db.teacher.findFirst({
+      where: { userId: session?.user?.id, schoolId },
+      select: { id: true },
+    })
+    if (teacher) {
+      const classes = await db.class.findMany({
+        where: { teacherId: teacher.id, schoolId },
+        select: { id: true },
+      })
+      teacherClassIds = classes.map((c) => c.id)
+    }
+  }
+
+  // Build scoped query
+  const where: Prisma.StudentAnswerWhereInput = {
+    schoolId,
+    ...(examId ? { examId } : {}),
+    // Teacher sees only their classes' exam submissions
+    ...(teacherClassIds ? { exam: { classId: { in: teacherClassIds } } } : {}),
+  }
+
+  // Fetch submissions scoped by role
   const submissions = await db.studentAnswer.findMany({
-    where: {
-      schoolId,
-      ...(examId ? { examId } : {}),
-    },
+    where,
     include: {
       student: true,
       question: true,
@@ -46,7 +71,7 @@ export async function MarkingContent({
     orderBy: {
       submittedAt: "desc",
     },
-    take: 100, // Limit to 100 most recent submissions for performance
+    take: 100,
   })
 
   // Calculate statistics
@@ -62,13 +87,36 @@ export async function MarkingContent({
     (s) => s.markingResult && s.markingResult.status === "COMPLETED"
   ).length
 
+  // Count auto-gradable pending submissions (MCQ/TF/FIB without completed result)
+  const AUTO_GRADABLE_TYPES = new Set([
+    "MULTIPLE_CHOICE",
+    "TRUE_FALSE",
+    "FILL_BLANK",
+  ])
+  const pendingAutoGradable = submissions.filter(
+    (s) =>
+      AUTO_GRADABLE_TYPES.has(s.question.questionType) &&
+      (!s.markingResult || s.markingResult.status !== "COMPLETED")
+  ).length
+
   const dict = dictionary.marking
+  const canManage = ["DEVELOPER", "ADMIN", "TEACHER"].includes(
+    session?.user?.role || ""
+  )
 
   return (
     <div className="space-y-6">
       {/* Header Actions */}
       <div className="flex items-center justify-between">
-        <div></div>
+        <div className="flex items-center gap-2">
+          {canManage && (
+            <BulkAutoGradeDialog
+              pendingAutoGradable={pendingAutoGradable}
+              totalPending={notStarted + inProgress}
+            />
+          )}
+          {canManage && examId && <CSVImportDialog examId={examId} />}
+        </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link href={`/${locale}/exams/mark/questions`}>

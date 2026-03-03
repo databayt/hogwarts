@@ -2,7 +2,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { auth } from "@/auth"
 import { Pencil } from "lucide-react"
 
 import { db } from "@/lib/db"
@@ -22,6 +23,12 @@ interface Props {
 
 export default async function TemplateDetailPage({ params }: Props) {
   const { lang, id } = await params
+
+  const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams`)
+  }
+
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 

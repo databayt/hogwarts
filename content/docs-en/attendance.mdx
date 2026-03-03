@@ -5,424 +5,448 @@ description: "Complete guide to the attendance management module - track and man
 
 ## Overview
 
-The Attendance module provides a comprehensive, production-ready system for tracking student attendance. It supports multiple tracking methods, parent engagement features, early warning systems for chronic absenteeism, and flexible reporting capabilities.
+The Attendance module provides a comprehensive system for tracking student attendance. It supports multiple tracking methods (manual, QR code, barcode, bulk upload, geofence), parent engagement features, early warning systems for chronic absenteeism, policy enforcement, and flexible reporting with CSV/Excel/PDF export.
 
 ### Module Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         ENTRY POINTS                                     │
+│                         ENTRY POINTS                                    │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  Platform: /s/[subdomain]/attendance → Overview Dashboard               │
-│  Parent:   /parent/attendance        → Parent Portal View               │
+│  Staff:    /attendance          → Overview Dashboard (today's stats)    │
+│  Student:  /attendance          → Student/Guardian Overview             │
+│  Guardian: /attendance          → Student/Guardian Overview             │
+│  Parent:   /parent/attendance   → Redirects to /attendance/records      │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                      TAKING ATTENDANCE                                   │
-├──────────────┬──────────────┬──────────────┬────────────────────────────┤
-│    Manual    │   QR Code    │   Barcode    │      Bulk Upload           │
-│  /manual     │  /qr-code    │  /barcode    │     /bulk-upload           │
-└──────┬───────┴──────┬───────┴──────┬───────┴────────────┬───────────────┘
-       │              │              │                    │
-       └──────────────┴──────────────┴────────────────────┘
+│                      TAKING ATTENDANCE                                  │
+├──────────┬──────────┬──────────┬────────────┬──────────┬───────────────┤
+│  Manual  │ QR Code  │ Barcode  │ Bulk Upload│ Geofence │ Master Gate   │
+│ /manual  │ /qr-code │ /barcode │/bulk-upload│   /geo   │  (action)     │
+└────┬─────┴────┬─────┴────┬─────┴──────┬─────┴────┬─────┴───────┬──────┘
+     └──────────┴──────────┴────────────┴──────────┴─────────────┘
                                     │
-                                    ▼
-                    ┌───────────────────────────────┐
-                    │   Period Selector (optional)  │
-                    │   Auto-detects current period │
-                    │   from timetable integration  │
+                    ┌───────────────┴───────────────┐
+                    │  Smart Period Detection        │
+                    │  getCurrentPeriod() auto-picks │
+                    │  class from timetable          │
                     └───────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│              actions.ts: markAttendance() / markPeriodAttendance()      │
+│    actions/core.ts: markAttendance() / markSingleAttendance()          │
+│    actions/periods.ts: markPeriodAttendance()                          │
+│    Auto-excuse: checks AbsenceIntention (approved) → EXCUSED           │
+│    Soft delete: deletedAt field, restore capability                     │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                           ┌─────────┴─────────┐
-                          │  Status = ABSENT? │
+                          │  Status = ABSENT?  │
                           └─────────┬─────────┘
                                     │ YES
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │              triggerAbsenceNotification()                               │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────────┐  │
-│  │   Email     │  │    SMS      │  │      In-app Notification        │  │
-│  │  (Resend)   │  │  (Twilio)   │  │        (Parent Portal)          │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────────────┘  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────────┐ │
+│  │  In-app     │  │    SMS      │  │      Email                      │ │
+│  │ Notification│  │  (Twilio)   │  │     (Resend)                    │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    PARENT EXCUSE WORKFLOW                               │
-├─────────────────────────────────────────────────────────────────────────┤
-│  1. Parent receives notification                                        │
-│  2. Views absence in parent portal → excuse-form.tsx                    │
-│  3. Submits excuse with reason + attachments → submitExcuse()           │
-│  4. Teacher/Admin reviews → excuse-review.tsx → reviewExcuse()          │
-│  5. Status: APPROVED → Attendance updated to EXCUSED                    │
-│             REJECTED → Remains unexcused                                │
-└─────────────────────────────────────────────────────────────────────────┘
+                    ┌───────────────┴───────────────┐
+                    ▼                               ▼
+┌──────────────────────────────┐  ┌──────────────────────────────────────┐
+│   PARENT EXCUSE WORKFLOW     │  │       POLICY ENGINE                  │
+│ 1. Notification received     │  │  evaluatePolicies()                  │
+│ 2. View in /excuses          │  │  getPolicyTriggers()                 │
+│ 3. submitExcuse()            │  │  createPolicyExemption()             │
+│ 4. Staff reviews             │  │  Auto-trigger interventions          │
+│ 5. APPROVED → EXCUSED        │  │  based on absence thresholds         │
+│    REJECTED → unexcused      │  └──────────────────────────────────────┘
+└──────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                     EARLY WARNING SYSTEM                                │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  getStudentsAtRisk() → Groups by US DoE Risk Levels:                    │
-│  ┌────────────────┬────────────────┬────────────────┬────────────────┐  │
-│  │  Satisfactory  │    At-Risk     │   Moderately   │    Severely    │  │
-│  │     ≥95%       │   90-94.9%     │  Chronic 80-89%│  Chronic <80%  │  │
-│  └────────────────┴────────────────┴────────────────┴────────────────┘  │
-│                                    │                                    │
-│                                    ▼                                    │
-│              intervention-tracker.tsx → Create/Track/Escalate           │
-│              14 intervention types • 5 statuses • Priority 1-4          │
+│  getStudentsAtRisk() → Groups by US DoE Risk Levels:                   │
+│  ┌────────────────┬────────────────┬────────────────┬────────────────┐ │
+│  │  Satisfactory  │    At-Risk     │   Moderately   │    Severely    │ │
+│  │     ≥95%       │   90-94.9%     │  Chronic 80-89%│  Chronic <80%  │ │
+│  └────────────────┴────────────────┴────────────────┴────────────────┘ │
+│                                    │                                   │
+│              /interventions → Create/Track/Escalate                    │
+│              14 intervention types • 5 statuses • Priority 1-4         │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      REPORTING & ANALYTICS                              │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  /analytics → charts.tsx (trends, breakdowns, period analysis)          │
-│  /reports   → content.tsx (filterable table with export)                │
-│                                    │                                    │
-│                      export-button.tsx                                  │
-│              ┌─────────┬─────────────┬─────────────┐                    │
-│              │   CSV   │    Excel    │     PDF     │                    │
-│              │         │  (5 sheets) │  (branded)  │                    │
-│              └─────────┴─────────────┴─────────────┘                    │
+│  /analytics → 7 tabs (Summary, Calendar, Trends, Patterns,            │
+│               Methods, Classes, At Risk) with Recharts                 │
+│  /reports   → Filterable table (class, date, status, student)         │
+│                                    │                                   │
+│              export-button.tsx                                          │
+│              ┌─────────┬─────────────┬─────────────┐                   │
+│              │   CSV   │    Excel    │     PDF     │                   │
+│              │         │  (5 sheets) │  (branded)  │                   │
+│              └─────────┴─────────────┴─────────────┘                   │
+│                                                                        │
+│  /compliance → Compliance dashboard + scheduled reports                │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Features
 
-| Feature                  | Status         | Description                                        |
-| ------------------------ | -------------- | -------------------------------------------------- |
-| Manual Attendance        | **Production** | Mark attendance for classes with student lists     |
-| QR Code Sessions         | **Production** | Generate QR codes for students to scan             |
-| Barcode Scanning         | **Production** | Use student ID barcodes for check-in               |
-| Bulk Upload              | **Production** | Import attendance records from CSV files           |
-| Period-by-Period         | **Production** | Track attendance per timetable period              |
-| Parent Notifications     | **Production** | Real-time alerts for absences (Email + SMS)        |
-| Parent Excuse Submission | **Production** | Parents can submit excuses for absences            |
-| Early Warning System     | **Production** | Detect chronic absenteeism and track interventions |
-| Reports Export           | **Production** | CSV, Excel, and PDF export options                 |
+| Feature                  | Status         | Description                                          |
+| ------------------------ | -------------- | ---------------------------------------------------- |
+| Manual Attendance        | **Production** | Flat toolbar, smart class auto-select from timetable |
+| QR Code Sessions         | **Production** | Generate + scan tabs, session expiry                 |
+| Barcode Scanning         | **Production** | Student ID barcode + card tabs                       |
+| Bulk Upload              | **Production** | CSV/Excel import                                     |
+| Period-by-Period         | **Production** | Track per timetable period, auto-detect current      |
+| Parent Notifications     | **Production** | In-app + SMS + Email for absences                    |
+| Parent Excuse Submission | **Production** | Role-based views (staff reviews, guardians submit)   |
+| Early Warning System     | **Production** | US DoE risk levels, intervention tracking            |
+| Reports Export           | **Production** | CSV, Excel (5 sheets), PDF (branded)                 |
+| Soft Delete              | **Production** | `deletedAt` field with restore capability            |
+| Auto-Excuse              | **Production** | Approved `AbsenceIntention` → EXCUSED automatically  |
+| Locale-Aware Names       | **Production** | Student names translated via `getDisplayText()`      |
+| Geofence Tracking        | **Wired**      | Location-based attendance with live map              |
+| Master Gate Attendance   | **Wired**      | School gate entry/exit tracking                      |
+| Policy Engine            | **Wired**      | Auto-trigger interventions from absence thresholds   |
+| Compliance Reports       | **Wired**      | Scheduled compliance reporting                       |
+| Interventions Page       | **Wired**      | Dedicated intervention tracking table                |
+| Settings                 | **UI Only**    | Settings UI rendered but Save not connected          |
+| AI Predictions           | **Component**  | Risk predictions, no route page                      |
+| Gamification             | **Component**  | Leaderboards, badges, no route page                  |
+| Hall Pass                | **Component**  | Issue/track hall passes, no route page               |
+| Kiosk Mode               | **Component**  | Self-service check-in, no route page                 |
+| Absence Intentions       | **Component**  | Pre-submitted absences, no route page                |
+| Compliance Letters       | **Component**  | Letter generation, no route page                     |
+
+### Routes
+
+All routes under `src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/`:
+
+| Route            | Tab Nav | Roles             | Description                                            |
+| ---------------- | ------- | ----------------- | ------------------------------------------------------ |
+| `/`              | Yes     | All               | Staff: today's dashboard. Student/Guardian: overview   |
+| `/manual`        | Yes     | Staff             | Manual marking with flat toolbar                       |
+| `/qr-code`       | Yes     | Staff             | QR code generate + scan                                |
+| `/records`       | Yes     | Student/Guardian  | Student attendance view (staff redirected to /reports) |
+| `/excuses`       | Yes     | All               | Staff: review list. Guardian: submit + history         |
+| `/analytics`     | Yes     | Staff             | 7-tab Recharts dashboard                               |
+| `/reports`       | Yes     | Staff             | Filterable table with export                           |
+| `/settings`      | Yes     | Admin/Developer   | **UI only** -- Save button not wired                   |
+| `/barcode`       | No      | Staff             | Barcode scanning + student cards                       |
+| `/bulk-upload`   | No      | Staff             | CSV/Excel upload                                       |
+| `/bulk`          | No      | Staff             | Method picker hub (links to all methods)               |
+| `/interventions` | No      | All               | Intervention tracking table                            |
+| `/geo`           | No      | All (role-based)  | Geofence management + tracking                         |
+| `/analysis`      | No      | Admin/Teacher/Dev | Combined analytics + early warning                     |
+| `/recent`        | No      | All               | Recent activity feed                                   |
+
+**Parent portal:** `/parent/attendance` redirects to `/attendance/records`.
 
 ### File Structure
 
 ```
-src/
-├── app/[lang]/s/[subdomain]/(school-dashboard)/attendance/
-│   ├── page.tsx              # Overview dashboard
-│   ├── manual/page.tsx       # Manual attendance marking
-│   ├── qr-code/page.tsx      # QR code sessions
-│   ├── barcode/page.tsx      # Barcode scanning
-│   ├── bulk-upload/page.tsx  # CSV bulk import
-│   ├── analytics/page.tsx    # Charts and trends
-│   └── reports/page.tsx      # Filterable reports + export
+src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/
+├── layout.tsx               # PageNav with 8 role-based tabs
+├── page.tsx                 # Overview (staff) / StudentGuardianOverview
+├── error.tsx                # Error boundary
+├── loading.tsx              # Suspense skeleton
+├── manual/page.tsx          # Manual attendance marking
+├── qr-code/page.tsx         # QR code sessions
+├── barcode/page.tsx         # Barcode scanning
+├── records/page.tsx         # Student/guardian view
+├── excuses/page.tsx         # Excuse submission/review
+├── analytics/page.tsx       # 7-tab analytics dashboard
+├── reports/page.tsx         # Filterable reports + export
+├── settings/page.tsx        # Settings UI (not wired)
+├── bulk/page.tsx            # Method picker hub
+├── bulk-upload/page.tsx     # CSV upload
+├── interventions/page.tsx   # Intervention tracking
+├── geo/page.tsx             # Geofence management
+├── analysis/page.tsx        # Combined analytics + early warning
+└── recent/page.tsx          # Recent activity feed
+
+src/components/school-dashboard/attendance/
+├── content.tsx              # Manual marking UI (client component)
+├── actions.ts               # Barrel re-export from 12 sub-modules
+├── table.tsx                # Attendance data table
+├── columns.tsx              # Column definitions
+├── validation.ts            # Root Zod schemas
+├── security.ts              # QR_CODE_SECRET (lazy check)
+├── error-boundary.tsx       # Client error boundary
+├── loading-skeleton.tsx     # Skeleton loaders
+├── empty-state.tsx          # Empty states
+├── tracking.tsx             # Standalone tracking widget
+├── attendance-stats-display.tsx
 │
-├── components/platform/attendance/
-│   ├── content.tsx           # Overview dashboard content
-│   ├── actions.ts            # Server actions (~4000 lines, 30+ functions)
-│   ├── validation.ts         # Zod schemas for all forms
-│   ├── types.ts              # TypeScript type definitions
-│   ├── tracking.tsx          # Manual attendance marking UI
-│   │
-│   ├── qr-code/
-│   │   ├── content.tsx       # QR code session management
-│   │   ├── qr-generator.tsx  # QR code generation
-│   │   ├── qr-scanner.tsx    # Student QR scanning
-│   │   └── actions.ts        # QR-specific server actions
-│   │
-│   ├── barcode/
-│   │   ├── content.tsx       # Barcode scanning UI
-│   │   └── barcode-scanner.tsx
-│   │
-│   ├── bulk-upload/
-│   │   ├── content.tsx       # CSV import UI
-│   │   └── upload-form.tsx
-│   │
-│   ├── period/
-│   │   ├── period-selector.tsx    # Period dropdown with timetable
-│   │   └── current-period.tsx     # Current period indicator
-│   │
-│   ├── early-warning/
-│   │   ├── content.tsx            # Early warning dashboard
-│   │   ├── at-risk-list.tsx       # Students by risk level
-│   │   └── intervention-tracker.tsx
-│   │
-│   ├── excuses/
-│   │   ├── excuse-form.tsx        # Parent excuse submission
-│   │   ├── excuse-review.tsx      # Teacher/admin review
-│   │   └── actions.ts
-│   │
-│   ├── analytics/
-│   │   ├── content.tsx            # Analytics dashboard
-│   │   └── charts.tsx             # Recharts visualizations
-│   │
-│   └── reports/
-│       ├── content.tsx            # Reports page
-│       ├── export-button.tsx      # CSV/Excel/PDF dropdown
-│       ├── pdf-generator.tsx      # @react-pdf/renderer
-│       └── excel-generator.ts     # xlsx library
+├── authorization.ts         # RBAC permission matrix + role helpers
+├── actions/                 # 12 server action sub-modules (~67 actions)
+│   ├── helpers.ts           # getTeacherClassIds(), getClassIdsByGrade()
+│   ├── core.ts              # markAttendance, getAttendanceList, soft delete
+│   ├── analytics.ts         # Stats, trends, patterns, calendar, risk
+│   ├── periods.ts           # Period tracking, getCurrentPeriod
+│   ├── qr.ts                # QR session management
+│   ├── identifiers.ts       # Barcode/RFID identifiers
+│   ├── excuses.ts           # Excuse submit/review
+│   ├── interventions.ts     # Intervention CRUD + escalation
+│   ├── bulk.ts              # Upload, reports, CSV export
+│   ├── dashboard.ts         # Today's dashboard, early warning
+│   ├── policy.ts            # Policy evaluation, triggers, exemptions
+│   ├── master.ts            # School gate entry/exit
+│   ├── compliance.ts        # Compliance dashboard + reports
+│   └── records.ts           # Student/guardian own attendance
 │
-└── components/platform/parent-portal/attendance/
-    ├── view.tsx                   # Parent attendance view
-    └── excuse-form.tsx            # Parent excuse submission
+├── core/
+│   └── attendance-context.tsx  # React context (method, records, stats)
+│
+├── overview/
+│   ├── content.tsx           # Staff overview dashboard
+│   └── student-guardian-overview.tsx
+│
+├── qr-code/
+│   ├── content.tsx           # QR generate + scan tabs
+│   ├── qr-generator.tsx
+│   └── qr-scanner.tsx
+│
+├── barcode/
+│   ├── content.tsx           # Barcode scan + cards tabs
+│   └── barcode-scanner.tsx
+│
+├── period/
+│   ├── period-selector.tsx   # Period dropdown
+│   └── current-period.tsx    # Current period indicator
+│
+├── excuses/
+│   ├── content.tsx           # Role-based excuse view
+│   ├── excuse-form.tsx       # Guardian submission
+│   └── excuse-review.tsx     # Staff review list
+│
+├── analytics/
+│   ├── content.tsx           # 7-tab analytics (Recharts)
+│   ├── charts.tsx            # Chart components
+│   └── calendar-view.tsx     # Calendar heatmap
+│
+├── reports/
+│   ├── content.tsx           # Filterable table
+│   ├── export-button.tsx     # CSV/Excel/PDF dropdown
+│   ├── pdf-generator.tsx     # @react-pdf/renderer
+│   └── excel-generator.ts    # xlsx library
+│
+├── interventions/
+│   ├── content.tsx           # Intervention tracking table
+│   └── tiers/                # Tiered interventions (component only)
+│
+├── shared/
+│   ├── types.ts              # Shared TypeScript types
+│   ├── utils.ts              # Shared utilities
+│   ├── hooks.ts              # Shared hooks
+│   └── validation.ts         # Shared Zod schemas
+│
+│── # Components without route pages:
+├── ai/                       # AI risk predictions
+├── gamification/             # Leaderboards, badges
+├── hall-pass/                # Hall pass issuance
+├── kiosk/                    # Self-service kiosk
+├── letters/                  # Compliance letters
+├── intentions/               # Absence intentions
+└── geofencee/                # Geofence architecture docs
+
+src/components/school-dashboard/parent-portal/attendance/
+└── content.tsx               # ParentAttendanceContent
 ```
+
+## Role-Based Access Control
+
+All attendance server actions enforce RBAC via `authorization.ts`. Teachers are scoped to their assigned classes only.
+
+### Permission Matrix
+
+| Action                 | DEVELOPER |   ADMIN    |     TEACHER     |   STAFF    | STUDENT |   GUARDIAN   |
+| ---------------------- | :-------: | :--------: | :-------------: | :--------: | :-----: | :----------: |
+| Mark attendance        |     Y     |     Y      | Y (own classes) |     Y      |    -    |      -       |
+| Read own records       |     Y     |     Y      |        -        |     -      |    Y    | Y (children) |
+| Read class records     |     Y     |     Y      | Y (own classes) |     -      |    -    |      -       |
+| Read school-wide       |     Y     |     Y      |        -        |     Y      |    -    |      -       |
+| Delete/restore         |     Y     | Y (delete) |   Y (delete)    | Y (delete) |    -    |      -       |
+| Restore (soft-deleted) |     Y     |     Y      |        -        |     -      |    -    |      -       |
+| Bulk upload            |     Y     |     Y      |        Y        |     -      |    -    |      -       |
+| Export (CSV/Excel/PDF) |     Y     |     Y      | Y (own classes) |     Y      |    -    |      -       |
+| View analytics         |     Y     |     Y      | Y (own classes) |     Y      |    -    |      -       |
+| View compliance        |     Y     |     Y      |        -        |     -      |    -    |      -       |
+| Manage settings        |     Y     |     Y      |        -        |     -      |    -    |      -       |
+| Manage excuses         |     Y     |     Y      |        Y        |     Y      |    -    |      -       |
+| Submit excuse          |     Y     |     Y      |        -        |     -      |    -    |      Y       |
+
+### Teacher Scoping
+
+Teachers see **only their assigned classes** (via `Class.teacherId` + `ClassTeacher` bridge table). This applies to:
+
+- Class selection dropdown (`getClassesForSelection()`)
+- Dashboard stats (`getTodaysDashboard()`)
+- Analytics queries (`getClassComparisonStats()`, `getStudentsAtRisk()`)
+- Follow-up students (`getFollowUpStudents()`)
+- Unmarked classes (`getUnmarkedClasses()`)
+- Reports and CSV export
+
+The helper `getTeacherClassIds()` in `actions/helpers.ts` combines primary teacher assignments and co-teacher roles from the `ClassTeacher` bridge table.
+
+### Student/Guardian Scoping
+
+- **Students** see only their own attendance via `getStudentOwnAttendance()`
+- **Guardians** see only their linked children's attendance via `getGuardianChildrenAttendance()` and `getParentAttendanceSummary()`
+
+## Grade-Based Filtering
+
+Several actions accept an optional `gradeId` parameter to filter classes by academic grade:
+
+- `getClassesForSelection({ gradeId })` -- filter class dropdown by grade
+- `getClassComparisonStats({ gradeId })` -- compare classes within a grade
+- `getStudentsAtRisk({ gradeId })` -- at-risk students in a grade
+
+The filter works through `Class.gradeId` → `AcademicGrade`, using the `getClassIdsByGrade()` helper in `actions/helpers.ts`. When combined with teacher scoping, the grade filter intersects with the teacher's class list.
 
 ## Quick Start
 
-Navigate to **Attendance** in the platform sidebar to access the module.
+Navigate to **Attendance** in the school dashboard sidebar.
 
-### Overview Dashboard
+### Overview Dashboard (Staff)
 
-The overview page displays:
+The staff overview page shows today's snapshot:
 
-- **Quick Stats** - Total records, present, absent, late counts, and overall attendance rate
-- **At-Risk Students** - Students with attendance below 90%
-- **Quick Actions** - Shortcuts to common tasks
-- **Recent Activity** - Latest attendance records
+- **Quick Stats** -- total students, marked today, present/absent/late counts, attendance rate
+- **Unmarked Classes** -- classes that haven't been marked yet today
+- **Follow-Up Needed** -- students requiring attention (chronic absence, new absences)
+- **Recent Activity** -- latest attendance events
+
+### Overview (Student/Guardian)
+
+Students and guardians see their own attendance summary with percentage, calendar view, and status breakdown.
 
 ## Taking Attendance
 
 ### Manual Attendance
 
-Mark attendance manually for a class:
+The primary attendance marking method. Navigate to **Attendance > Manual**.
 
-**01. Go to Manual page**
+**Toolbar:** Flat inline toolbar (PlatformToolbar pattern) with class selector, date picker, bulk status buttons, and Save -- all on one row.
 
-Click "Take Attendance" from the overview or navigate to Attendance → Manual
+**Smart Class Selection:** The system calls `getCurrentPeriod()` to auto-select the class matching the current timetable period. A badge shows the auto-selected period name and subject.
 
----
+**Locale-Aware Names:** Student names stored in the school's preferred language are translated on-demand via `getDisplayText()` when the user's locale differs. Translations are cached in the database.
 
-**02. Select a class**
+**Keyboard Shortcuts:**
 
-Choose the class from the dropdown
+- `P` -- Mark all present
+- `A` -- Mark all absent
+- `L` -- Mark all late
+- `Ctrl/Cmd+S` -- Save attendance
 
----
+**Steps:**
 
-**03. Select the date**
+1. Select a class (auto-selected from timetable if available)
+2. Select the date (defaults to today)
+3. Use the status dropdown per student or bulk buttons (All Present / All Absent / All Late)
+4. Click **Save Attendance** -- absent students' guardians are automatically notified
 
-Pick the date for attendance (defaults to today)
-
----
-
-**04. Select period (optional)**
-
-For period-based schools, select the specific period. The system auto-detects the current period based on timetable.
-
----
-
-**05. Mark status for each student**
-
-Use the toggle buttons to mark each student as:
-
-- **Present** (green)
-- **Absent** (red)
-- **Late** (yellow)
-
----
-
-**06. Submit**
-
-Click "Save Attendance" to record all entries. Absent students' guardians are automatically notified.
+**Auto-Excuse:** If a student has an approved `AbsenceIntention` covering the date, marking them absent automatically converts the status to `EXCUSED`.
 
 ### Period-by-Period Tracking
 
 For secondary schools with timetable-based attendance:
 
-**Current Period Indicator**
-
-Shows the current period based on school timetable with quick action to mark attendance.
-
-**Period Selector**
-
-- Lists all periods for the selected class and day
-- Shows which periods already have attendance marked
-- Highlights the current period
-- Displays subject and teacher information
-
-**Period Analytics**
-
-- View attendance patterns by period (e.g., which periods have worst attendance)
-- Subject-specific attendance reports
+- **Period Selector** -- lists all periods for the class and day, shows which are already marked, highlights current
+- **Auto-Detection** -- `getCurrentPeriod()` identifies the active period from the school timetable
+- **Period Analytics** -- view attendance patterns by period and subject
 
 ### QR Code Sessions
 
-Generate QR codes for students to scan and mark their attendance:
+Navigate to **Attendance > QR Code**.
 
-**01. Go to QR Code page**
-
-Click "QR Code Session" from overview or navigate to Attendance → QR Code
-
----
-
-**02. Select a class**
-
-Choose the class for the session
-
----
-
-**03. Configure options**
-
-Set validity period (default: 30 minutes)
-
----
-
-**04. Generate QR Code**
-
-Click "Generate" to create a unique QR code
-
----
-
-**05. Display the QR code**
-
-Students scan with their devices to check in. The system validates student enrollment and prevents duplicate scans.
+1. Select a class
+2. Set validity period (default: 30 minutes)
+3. Click **Generate** to create a unique QR code
+4. Students scan to check in -- enrollment validated, duplicates prevented
 
 ### Barcode Scanning
 
-Use student ID barcodes for quick attendance:
+Navigate to **Attendance > Barcode** (accessible via Bulk method picker).
 
-**01. Go to Barcode Scanner page**
-
-Navigate to Attendance → Barcode
-
----
-
-**02. Select a class**
-
-Choose the class for attendance
-
----
-
-**03. Scan student IDs**
-
-Use a barcode scanner or device camera to scan student ID barcodes. The system looks up the student identifier and marks attendance.
+1. Select a class
+2. Scan student ID barcodes using a scanner or device camera
+3. System looks up `StudentIdentifier` and marks attendance
 
 ### Bulk Upload
 
-Import attendance records from a CSV file:
+Navigate to **Attendance > Bulk Upload**.
 
-**01. Go to Bulk Upload page**
+1. Download the CSV template
+2. Fill in records: `studentId,date,status,checkInTime,checkOutTime,notes`
+3. Upload and review the import summary
 
-Navigate to Attendance → Bulk Upload
+### Geofence Tracking
 
----
+Navigate to `/attendance/geo`.
 
-**02. Download template**
+- Students see a location tracker
+- Admins/teachers see geofence management with live map, form, and zone list
+- Location-based check-in/check-out
 
-Get the CSV template with required columns
+### Master Gate Attendance
 
----
+School gate entry/exit tracking via server actions:
 
-**03. Fill in data**
-
-Add attendance records following the format:
-
-```csv
-studentId,date,status,checkInTime,checkOutTime,notes
-student_123,2024-01-15,PRESENT,08:00,15:00,
-student_456,2024-01-15,ABSENT,,,Medical leave
-```
-
----
-
-**04. Upload file**
-
-Select your CSV file and click "Upload"
-
----
-
-**05. Review results**
-
-Check the import summary for successful and failed records
+- `recordMasterAttendance()` -- record gate entry/exit
+- `getMasterAttendanceForDay()` -- day's gate records
+- `getPrefillFromMaster()` -- pre-fill class attendance from gate data
 
 ## Parent Engagement
 
 ### Absence Notifications
 
-When a student is marked absent, the system automatically notifies guardians:
+When a student is marked absent, `triggerAbsenceNotification()` fires:
 
-**Notification Channels:**
+- **In-app notification** -- visible in parent portal with high priority
+- **SMS** -- via Twilio (if configured and guardian has phone number)
+- **Email** -- via notification system
 
-- **In-app notification** - Visible in parent portal
-- **Email** - Detailed notification via Resend
-- **SMS** - Immediate text alert via Twilio
-
-**Notification Content:**
-
-- Student name
-- Class name
-- Date and time
-- Link to submit excuse
-
-**Multi-language Support:**
-
-- Arabic and English templates
-- Automatically uses parent's preferred language
+Notifications include student name, class, date, and use the school's `preferredLanguage`.
 
 ### Parent Excuse Submission
 
-Parents can submit excuses for their children's absences:
+Parents access the **Excuses** tab to submit and track excuses.
 
-**01. View Absence**
+**Excuse Reasons:**
 
-Parents see unexcused absences in their portal
+- Medical, Family Emergency, Religious Observance, School Activity, Transportation Issue, Weather, Other
 
----
+**Workflow:**
 
-**02. Click "Submit Excuse"**
+1. Parent sees unexcused absences
+2. Clicks "Submit Excuse" -- provides reason, description, attachments
+3. Staff reviews in the Excuses tab
+4. **Approved** → attendance updated to `EXCUSED` / **Rejected** → remains unexcused
 
-Opens the excuse submission form
+### Student/Guardian View
 
----
+Students and guardians see:
 
-**03. Select Reason**
-
-Choose from:
-
-- Medical
-- Family Emergency
-- Religious Observance
-- School Activity
-- Transportation Issue
-- Weather
-- Other
-
----
-
-**04. Provide Details**
-
-Add description and upload supporting documents (medical notes, etc.)
-
----
-
-**05. Submit**
-
-Excuse goes to teacher/admin for review
-
-**Excuse Status:**
-
-- **Pending** - Awaiting review
-- **Approved** - Attendance updated to EXCUSED
-- **Rejected** - Remains as unexcused absence
-
-### Enhanced Parent View
-
-Parents see comprehensive attendance information:
-
-- **Attendance percentage** with trend indicator
-- **Calendar view** of attendance history
-- **Status breakdown** (present, absent, late, excused)
-- **Excuse submission** for unexcused absences
-- **Notification history**
+- Attendance percentage with trend indicator
+- Calendar view of attendance history
+- Status breakdown (present, absent, late, excused)
+- Excuse submission for unexcused absences
 
 ## Early Warning System
 
 ### Chronic Absenteeism Detection
-
-The system automatically monitors student attendance and identifies at-risk students:
 
 **Risk Levels (US DoE Guidelines):**
 
@@ -433,153 +457,174 @@ The system automatically monitors student attendance and identifies at-risk stud
 | Moderately Chronic | 80-89.9%        | 10-19.9%     |
 | Severely Chronic   | Less than 80%   | ≥20%         |
 
-**Dashboard Features:**
+Dashboard features:
 
 - Students grouped by risk level
 - Trend analysis (improving/declining)
 - Class-level and school-level views
-- Automatic alerts for severely chronic students
 
 ### Intervention Tracking
 
-Track and manage interventions for at-risk students:
+Dedicated page at `/attendance/interventions` with stats, filters, search, and pagination.
 
-**Intervention Types:**
+**14 Intervention Types:**
+Parent phone call, Parent email, Parent meeting, Home visit, Counselor referral, Social worker referral, Administrator meeting, Attendance contract, Truancy referral, Community resource, Academic support, Mentorship assignment, Incentive program, Other
 
-- Parent phone call
-- Parent email
-- Parent meeting
-- Home visit
-- Counselor referral
-- Social worker referral
-- Administrator meeting
-- Attendance contract
-- Truancy referral
-- Community resource connection
-- Academic support
-- Mentorship assignment
-- Incentive program enrollment
+**5 Statuses:** Scheduled → In Progress → Completed / Cancelled / Escalated
 
-**Intervention Workflow:**
+**Workflow:**
 
-**01. Create Intervention**
+1. Create intervention -- select type, set priority (1-4), assign staff
+2. Schedule -- set date and follow-up dates
+3. Track progress -- update status and outcome
+4. Escalate if needed -- creates new intervention linked to original
 
-Select intervention type, set priority, assign staff member
+### Policy Engine
 
----
+Automated policy enforcement via `actions/policy.ts`:
 
-**02. Schedule**
+- `evaluatePolicies()` -- check student against absence thresholds
+- `getPolicyTriggers()` -- get triggered policies for a student
+- `createPolicyExemption()` -- exempt student from specific policy
+- `dismissPolicyTrigger()` -- dismiss a triggered alert
 
-Set scheduled date and any follow-up dates
+## Reports & Analytics
 
----
+### Analytics Dashboard
 
-**03. Track Progress**
+7-tab dashboard at `/attendance/analytics`:
 
-Update status: Scheduled → In Progress → Completed/Escalated
+1. **Summary** -- aggregate stats with charts
+2. **Calendar** -- heatmap calendar view
+3. **Trends** -- attendance over time
+4. **Patterns** -- day-of-week and period patterns
+5. **Methods** -- usage by marking method
+6. **Classes** -- class comparison stats
+7. **At Risk** -- students at risk by level
 
----
+### Reports
 
-**04. Document Outcome**
+Filterable table at `/attendance/reports`:
 
-Record results and next steps
+**Filters:** Class, Student, Status, Date Range, Period
 
-**Escalation:**
-Interventions can be escalated to higher levels (e.g., parent call → parent meeting → administrator meeting)
+**Export Options:**
 
-## Reports
+- **CSV** -- comma-separated values
+- **Excel** -- 5 sheets (summary, detailed records, by status, by class, by date)
+- **PDF** -- branded document with school header, statistics, and table
 
-Generate and export attendance reports:
+### Compliance Reports
 
-### Available Filters
+Server actions for scheduled compliance reporting:
 
-- **Class** - Filter by specific class
-- **Student** - Filter by individual student
-- **Status** - Filter by attendance status (Present, Absent, Late, etc.)
-- **Date Range** - Select custom date range
-- **Period** - Filter by specific period (for period-based tracking)
-
-### Export Options
-
-- **CSV** - Comma-separated values for spreadsheets
-- **Excel** - Microsoft Excel format with multiple sheets:
-  - Summary sheet with statistics
-  - Detailed records sheet
-  - Analytics by status
-  - Breakdown by class
-  - Breakdown by date
-- **PDF** - Branded printable document with:
-  - School header
-  - Statistics summary
-  - Detailed attendance table
-  - Date range and filter information
-
-### Report Types
-
-1. **Summary Report** - Overview statistics by class or student
-2. **Detailed Report** - Individual attendance records
-3. **Trend Report** - Attendance patterns over time
-4. **At-Risk Report** - Students below attendance thresholds
-5. **Intervention Report** - Intervention history and outcomes
-6. **Period Analysis** - Attendance by period/subject
+- `getComplianceDashboard()` -- compliance overview
+- `getComplianceReport()` -- detailed compliance report
+- `getScheduledReports()` -- list scheduled reports
 
 ## Settings
 
-Configure attendance module behavior:
+Settings page at `/attendance/settings` (Admin/Developer only).
 
-### General Settings
+> **Note:** The settings UI is rendered but the Save button is not connected to any server action. Settings changes are not persisted.
 
-- **Default Check-in Time** - Set standard arrival time
-- **Late Threshold** - Minutes after which students are marked late
-- **Attendance Methods** - Enable/disable specific methods
-- **Period-Based Mode** - Enable period-by-period tracking
+Displayed settings sections:
 
-### QR Code Settings
-
-- **Session Duration** - How long QR codes remain valid
-- **Location Verification** - Require GPS location on scan
-- **Single Use** - Allow multiple scans per student
-
-### Notification Settings
-
-- **Enable Email** - Send email notifications for absences
-- **Enable SMS** - Send SMS notifications for absences
-- **Notification Delay** - Wait time before sending (to allow corrections)
-
-### Early Warning Settings
-
-- **At-Risk Threshold** - Percentage below which students are flagged (default: 90%)
-- **Chronic Threshold** - Percentage for chronic absenteeism (default: 80%)
-- **Alert Recipients** - Who receives automatic alerts
+- **General** -- default check-in time, late threshold, methods, period mode
+- **QR Code** -- session duration, location verification, single use
+- **Notifications** -- email/SMS toggle, notification delay
+- **Early Warning** -- at-risk threshold (90%), chronic threshold (80%), alert recipients
+- **Security** -- advanced security options
+- **Advanced** -- additional configuration
 
 ## API Reference
 
-### Server Actions Quick Reference
+### Server Actions by Module
 
-| Action                           | Purpose                    | Key Parameters                      |
-| -------------------------------- | -------------------------- | ----------------------------------- |
-| `markAttendance()`               | Mark daily attendance      | classId, date, records[]            |
-| `markPeriodAttendance()`         | Mark period-specific       | classId, date, periodId, records[]  |
-| `getPeriodsForClass()`           | Get timetable periods      | classId, date                       |
-| `getCurrentPeriod()`             | Auto-detect current period | classId (optional)                  |
-| `getStudentsAtRisk()`            | Get at-risk students       | classId?, riskLevel?, limit?        |
-| `createIntervention()`           | Create intervention record | studentId, type, title, description |
-| `updateIntervention()`           | Update intervention status | interventionId, status, outcome?    |
-| `escalateIntervention()`         | Escalate to higher level   | interventionId, newType, notes      |
-| `submitExcuse()`                 | Parent submits excuse      | attendanceId, reason, attachments?  |
-| `reviewExcuse()`                 | Teacher reviews excuse     | excuseId, status, reviewNotes?      |
-| `triggerAbsenceNotification()`   | Send absence alerts        | studentId, classId, date            |
-| `getAttendanceReport()`          | Fetch filtered records     | filters, limit, offset              |
-| `getAttendanceStats()`           | Get statistics summary     | classId?, dateRange?                |
-| `getPeriodAttendanceAnalytics()` | Period-level analytics     | classId?, dateRange?                |
-| `getStudentDayAttendance()`      | Full day for student       | studentId, date                     |
+**67 server actions across 12 sub-modules:**
 
-### Server Actions Details
+#### Core (`actions/core.ts`) -- 10 actions
 
-The attendance module uses server actions for data operations:
+| Action                     | Roles                      | Purpose                                             |
+| -------------------------- | -------------------------- | --------------------------------------------------- |
+| `markAttendance()`         | Admin, Teacher, Staff      | Mark daily attendance (batch)                       |
+| `markSingleAttendance()`   | Admin, Teacher, Staff      | Mark single student (full options)                  |
+| `getAttendanceList()`      | All staff                  | Get class roster with status + names (locale-aware) |
+| `getClassesForSelection()` | All staff (teacher-scoped) | Classes for dropdown, accepts `gradeId`/`termId`    |
+| `quickMarkAllPresent()`    | All staff                  | One-click all present                               |
+| `checkOutStudent()`        | All staff                  | Mark departure time                                 |
+| `bulkCheckOut()`           | All staff                  | Check out entire class                              |
+| `deleteAttendance()`       | Admin, Teacher, Staff      | Soft delete (sets `deletedAt`)                      |
+| `bulkDeleteAttendance()`   | Admin, Teacher, Staff      | Bulk soft delete                                    |
+| `restoreAttendance()`      | Admin only                 | Restore soft-deleted record                         |
+
+#### Analytics (`actions/analytics.ts`) -- 8 actions
+
+| Action                      | Purpose                 |
+| --------------------------- | ----------------------- |
+| `getAttendanceStats()`      | Summary statistics      |
+| `getAttendanceTrends()`     | Trends over time        |
+| `getMethodUsageStats()`     | Usage by marking method |
+| `getDayWisePatterns()`      | Day-of-week patterns    |
+| `getCalendarData()`         | Calendar heatmap data   |
+| `getClassComparisonStats()` | Class comparison        |
+| `getStudentsAtRisk()`       | Students by risk level  |
+| `getRecentAttendance()`     | Recent records          |
+
+#### Periods (`actions/periods.ts`) -- 5 actions
+
+| Action                           | Purpose                     |
+| -------------------------------- | --------------------------- |
+| `getPeriodsForClass()`           | Timetable periods for class |
+| `getCurrentPeriod()`             | Auto-detect current period  |
+| `markPeriodAttendance()`         | Mark per-period             |
+| `getPeriodAttendanceAnalytics()` | Period-level analytics      |
+| `getStudentDayAttendance()`      | Full day for one student    |
+
+#### QR (`actions/qr.ts`) -- 3 actions
+
+`generateQRSession()`, `processQRScan()`, `getActiveQRSessions()`
+
+#### Identifiers (`actions/identifiers.ts`) -- 4 actions
+
+`addStudentIdentifier()`, `getStudentIdentifiers()`, `findStudentByIdentifier()`, `deleteStudentIdentifier()`
+
+#### Excuses (`actions/excuses.ts`) -- 6 actions
+
+`submitExcuse()`, `reviewExcuse()`, `getExcusesForStudent()`, `getPendingExcuses()`, `getExcuseById()`, `getUnexcusedAbsences()`
+
+#### Interventions (`actions/interventions.ts`) -- 8 actions
+
+`createIntervention()`, `updateIntervention()`, `escalateIntervention()`, `getStudentInterventions()`, `getActiveInterventions()`, `getAllInterventions()`, `getInterventionStats()`, `getInterventionAssignees()`
+
+#### Bulk (`actions/bulk.ts`) -- 4 actions
+
+`bulkUploadAttendance()`, `getAttendanceReport()`, `getAttendanceReportCsv()`, `getRecentBulkUploads()`
+
+#### Dashboard (`actions/dashboard.ts`) -- 7 actions
+
+`getStudentsByRiskLevel()`, `getStudentEarlyWarningDetails()`, `getTodaysDashboard()`, `getTeacherClassesToday()`, `getFollowUpStudents()`, `getUnmarkedClasses()`, `getParentAttendanceSummary()`
+
+#### Policy (`actions/policy.ts`) -- 4 actions
+
+`evaluatePolicies()`, `getPolicyTriggers()`, `createPolicyExemption()`, `dismissPolicyTrigger()`
+
+#### Master (`actions/master.ts`) -- 3 actions
+
+`recordMasterAttendance()`, `getMasterAttendanceForDay()`, `getPrefillFromMaster()`
+
+#### Compliance (`actions/compliance.ts`) -- 3 actions
+
+`getComplianceDashboard()`, `getComplianceReport()`, `getScheduledReports()`
+
+#### Records (`actions/records.ts`) -- 2 actions
+
+`getStudentOwnAttendance()`, `getGuardianChildrenAttendance()`
+
+### Key Action Signatures
 
 ```typescript
-// Mark daily attendance
+// Mark daily attendance (with auto-excuse from AbsenceIntention)
 markAttendance(input: {
   classId: string
   date: string
@@ -587,6 +632,13 @@ markAttendance(input: {
     studentId: string
     status: 'present' | 'absent' | 'late'
   }>
+})
+
+// Get attendance list (locale-aware names)
+getAttendanceList(input: {
+  classId: string
+  date: string
+  lang?: string  // translates names when locale differs from school language
 })
 
 // Mark period-specific attendance
@@ -601,55 +653,12 @@ markPeriodAttendance(input: {
   }>
 })
 
-// Get periods for a class on a specific day
-getPeriodsForClass(input: {
-  classId: string
-  date: string
-})
-
-// Get current period based on time
+// Auto-detect current period from timetable
 getCurrentPeriod(classId?: string)
 
-// Get at-risk students
-getStudentsAtRisk(input?: {
-  classId?: string
-  riskLevel?: 'AT_RISK' | 'MODERATELY_CHRONIC' | 'SEVERELY_CHRONIC'
-  limit?: number
-})
-
-// Create intervention
-createIntervention(input: {
-  studentId: string
-  type: InterventionType
-  title: string
-  description: string
-  priority?: number
-  scheduledDate?: string
-  assignedTo?: string
-})
-
-// Update intervention
-updateIntervention(input: {
-  interventionId: string
-  status?: InterventionStatus
-  outcome?: string
-  completedDate?: string
-})
-
-// Submit excuse (parent)
-submitExcuse(input: {
-  attendanceId: string
-  reason: ExcuseReason
-  description?: string
-  attachments?: string[]
-})
-
-// Review excuse (teacher/admin)
-reviewExcuse(input: {
-  excuseId: string
-  status: 'APPROVED' | 'REJECTED'
-  reviewNotes?: string
-})
+// Soft delete with restore
+deleteAttendance(attendanceId: string)
+restoreAttendance(attendanceId: string)
 ```
 
 ### Types
@@ -674,45 +683,9 @@ type AttendanceMethod =
   | "FACE_RECOGNITION"
   | "NFC"
   | "BLUETOOTH"
-
-type InterventionType =
-  | "PARENT_PHONE_CALL"
-  | "PARENT_EMAIL"
-  | "PARENT_MEETING"
-  | "HOME_VISIT"
-  | "COUNSELOR_REFERRAL"
-  | "SOCIAL_WORKER_REFERRAL"
-  | "ADMINISTRATOR_MEETING"
-  | "ATTENDANCE_CONTRACT"
-  | "TRUANCY_REFERRAL"
-  | "COMMUNITY_RESOURCE"
-  | "ACADEMIC_SUPPORT"
-  | "MENTORSHIP_ASSIGNMENT"
-  | "INCENTIVE_PROGRAM"
-  | "OTHER"
-
-type InterventionStatus =
-  | "SCHEDULED"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "CANCELLED"
-  | "ESCALATED"
-
-type ExcuseReason =
-  | "MEDICAL"
-  | "FAMILY_EMERGENCY"
-  | "RELIGIOUS"
-  | "SCHOOL_ACTIVITY"
-  | "TRANSPORTATION"
-  | "WEATHER"
-  | "OTHER"
-
-type ExcuseStatus = "PENDING" | "APPROVED" | "REJECTED"
 ```
 
 ## Database Schema
-
-The attendance module uses these Prisma models:
 
 ```prisma
 model Attendance {
@@ -728,6 +701,7 @@ model Attendance {
   notes        String?
   markedBy     String?
   markedAt     DateTime         @default(now())
+  deletedAt    DateTime?        // Soft delete
 
   // Period tracking
   periodId    String?
@@ -737,138 +711,83 @@ model Attendance {
   @@unique([schoolId, studentId, classId, date, periodId])
   @@index([schoolId, date, periodId])
 }
-
-model AttendanceExcuse {
-  id           String       @id @default(cuid())
-  schoolId     String
-  attendanceId String       @unique
-  reason       ExcuseReason
-  description  String?
-  attachments  String[]
-  status       ExcuseStatus @default(PENDING)
-  submittedBy  String
-  reviewedBy   String?
-  reviewNotes  String?
-}
-
-model AttendanceIntervention {
-  id             String             @id @default(cuid())
-  schoolId       String
-  studentId      String
-  type           InterventionType
-  title          String
-  description    String
-  outcome        String?
-  status         InterventionStatus @default(SCHEDULED)
-  priority       Int                @default(1)
-  scheduledDate  DateTime?
-  completedDate  DateTime?
-  followUpDate   DateTime?
-  initiatedBy    String
-  assignedTo     String?
-  escalatedFrom  String?
-}
-
-model QRCodeSession {
-  id          String   @id @default(cuid())
-  schoolId    String
-  classId     String
-  code        String   @unique
-  expiresAt   DateTime
-  isActive    Boolean  @default(true)
-  scanCount   Int      @default(0)
-  scannedBy   Json     @default("[]")
-}
-
-model StudentIdentifier {
-  id         String         @id @default(cuid())
-  schoolId   String
-  studentId  String
-  type       IdentifierType // BARCODE, QR_CODE, RFID_CARD, etc.
-  value      String
-  isActive   Boolean        @default(true)
-  isPrimary  Boolean        @default(false)
-}
 ```
+
+Supporting models: `AttendanceExcuse`, `AttendanceIntervention`, `QRCodeSession`, `StudentIdentifier`, `AbsenceIntention`, `PolicyTrigger`, `PolicyExemption`, `MasterAttendance`, `HallPass`, `KioskLog`, `AttendanceReward`, `StudentBadge`, `AttendanceStreak`.
 
 ## Seed Data
 
-The attendance seed creates realistic test data:
+```bash
+pnpm db:seed:single attendance
+```
+
+Creates realistic test data:
 
 - 30 days of attendance records
-- Realistic distribution: 85% present, 5% late, 8% absent, 2% excused/sick
+- Distribution: 85% present, 5% late, 8% absent, 2% excused/sick
 - Day-of-week variations (more late on Sundays, more absences mid-week)
-- Student identifiers for scanning (barcode, RFID)
-- Sample QR code sessions
-- Sample excuses with various statuses
-- Sample interventions at different stages
+- Student identifiers (barcode, RFID)
+- QR code sessions, excuses, interventions
 
-Run seed:
+## Known Issues
 
-```bash
-pnpm db:seed
-```
+### Fixed
+
+- **RBAC gaps** -- All 67 server actions now enforce role checks via `authorization.ts`
+- **Teacher class scoping** -- Teachers see only their assigned classes (primary + co-teacher)
+- **Grade filtering** -- `getClassesForSelection()`, `getClassComparisonStats()`, `getStudentsAtRisk()` accept optional `gradeId`
+- **Missing `deletedAt` filter** -- `getStudentOwnAttendance()`, `getGuardianChildrenAttendance()`, `getRecentAttendance()`, `getClassComparisonStats()`, `getTodaysDashboard()`, `getFollowUpStudents()` now exclude soft-deleted records
+- **Attendance rate formula** -- `getStudentOwnAttendance()` fixed from `present / total` to `(present + late) / total`
+- **Guardian attendance take limit** -- increased from 90 to 500 records with `schoolId` + `deletedAt` filter on nested query
+- **Null-safe subject name** -- `getStudentOwnAttendance()` uses `r.class.subject?.subjectName` to avoid crash when subject is null
+
+### Remaining
+
+1. **Settings page not wired** -- UI renders but Save button has no action. All controls use `defaultValue` with no state management.
+2. **Teacher dashboard quick-link** -- points to `/attendance/mark` which doesn't exist (should be `/manual`). See `src/components/school-dashboard/dashboard/config.ts`.
+3. **Bulk method picker** -- "Live Tracking" card has empty `href`.
+4. **Components without routes** -- AI predictions, gamification, hall-pass, kiosk, compliance letters, and absence intentions have full component implementations but no route pages exposing them.
+
+## Production Readiness
+
+| Area                   | Status   | Notes                                 |
+| ---------------------- | -------- | ------------------------------------- |
+| RBAC on all actions    | Done     | `authorization.ts` with role matrix   |
+| Teacher class scoping  | Done     | `getTeacherClassIds()` helper         |
+| Grade filtering        | Done     | `getClassIdsByGrade()` helper         |
+| Soft-delete filtering  | Done     | `deletedAt: null` on all read queries |
+| Rate formula           | Done     | `(present + late) / total` everywhere |
+| Multi-tenant isolation | Done     | `schoolId` on all queries             |
+| Absence notifications  | Done     | In-app + SMS + Email                  |
+| Parent excuse workflow | Done     | Submit/review/approve flow            |
+| Early warning system   | Done     | US DoE risk levels                    |
+| Export (CSV/Excel/PDF) | Done     | Role-gated                            |
+| Settings persistence   | Not done | UI only, save not wired               |
+| Component route pages  | Not done | 6 components lack route pages         |
 
 ## Best Practices
 
 ### For Teachers
 
 1. Mark attendance at the start of each class/period
-2. Use QR codes for quick group check-ins
-3. Add notes for excused absences
-4. Review weekly reports for patterns
-5. Respond to excuse submissions promptly
-6. Document all parent communications
+2. Let smart selection auto-pick your current class
+3. Use keyboard shortcut `P` then adjust exceptions
+4. Use `Ctrl/Cmd+S` to save quickly
+5. Review weekly reports for patterns
+6. Respond to excuse submissions promptly
 
 ### For Administrators
 
-1. Configure sensible late thresholds
-2. Monitor school-wide attendance rates
-3. Review the early warning dashboard daily
-4. Follow up on students below 80% attendance
-5. Track interventions to completion
-6. Export monthly reports for records
-7. Configure notification settings appropriately
+1. Monitor the overview dashboard daily for unmarked classes
+2. Review the At Risk tab in analytics weekly
+3. Follow up on students below 80% attendance
+4. Track interventions to completion in `/interventions`
+5. Export monthly reports for records
+6. Configure notification settings when settings page is wired
 
 ### For Parents
 
-1. Check the parent portal regularly
-2. Submit excuses promptly with documentation
-3. Respond to school communications
+1. Check attendance in the overview tab
+2. Submit excuses promptly with documentation via the Excuses tab
+3. Respond to absence notifications
 4. Work with school on intervention plans
-
-## Troubleshooting
-
-### QR Code Not Scanning
-
-- Check QR code hasn't expired
-- Ensure good lighting for camera
-- Try refreshing the page to generate new code
-- Verify student is enrolled in the class
-
-### Missing Attendance Records
-
-- Verify the correct date is selected
-- Check if student is enrolled in the class
-- Confirm school context is correct
-- For period-based, ensure correct period is selected
-
-### Bulk Upload Errors
-
-- Ensure CSV format matches template exactly
-- Check student IDs exist in the system
-- Verify dates are in YYYY-MM-DD format
-- Status must match enum values exactly
-
-### Notifications Not Sending
-
-- Verify guardian contact information is correct
-- Check notification settings are enabled
-- Review Twilio/Resend integration status
-- Check spam/junk folders for emails
-
-### Excuse Submission Issues
-
-- Ensure file uploads are under size limit
-- Verify attendance record exists for the date
-- Check parent is linked to the student

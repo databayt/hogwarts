@@ -20,6 +20,7 @@ export type UnifiedMember = {
   guardianId: string | null
   gradeName: string | null
   academicGradeId: string | null
+  contextInfo: string | null
 }
 
 export type MembershipStats = {

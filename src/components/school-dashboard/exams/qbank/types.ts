@@ -37,6 +37,8 @@ export type QuestionBankRow = {
   source: string
   timesUsed: number
   successRate: number | null
+  avgScore: number | null
+  qualityFlags: string[]
   createdAt: string
 }
 

@@ -1,52 +1,62 @@
 ---
 title: "Classrooms"
-description: "Complete guide to the classrooms module - physical room management, classroom types, seed data, timetable integration, and full integration map across all school modules"
+description: "Physical room management with role-based access, grade affinity, section generation, and full integration map across school modules"
 ---
 
 ## Overview
 
-The Classrooms module manages physical rooms across a school campus. Each classroom has a type, capacity, and building/floor location. Classrooms integrate with the timetable for slot assignments, with classes for default room assignments, and with exams for venue allocation.
+The Classrooms module manages physical rooms across a school campus. Each classroom has a type, capacity, optional grade affinity, and integrates with sections for homeroom grouping. The module supports role-based access (DEVELOPER, ADMIN full CRUD; TEACHER, STAFF read-only), a configure tab for bulk section+room generation, room detail pages with weekly timetable grids, and capacity analytics.
 
-**Current status:** Schema, seed data, and timetable integration are complete. A dropdown API endpoint exists for room selection. Full CRUD is implemented with dedicated management pages following the standard listing pattern. The facility page still has static hardcoded data not connected to the database.
+**Current status:** Schema, seed data, CRUD, room detail, section generation, capacity overview, and timetable integration are production. The schedule tab shows class timetables (not room schedules), the subjects tab is a placeholder, and the facility page remains static.
 
 ### Architecture
 
 ```
 School
  ├── classrooms[] ──→ Classroom
- │                     ├── classes[] ──→ Class (required classroomId FK)
- │                     ├── timetables[] ──→ Timetable (classroomId per slot)
+ │                     ├── gradeId? ──→ AcademicGrade (grade affinity)
+ │                     ├── sections[] ──→ Section (homeroom groups)
+ │                     ├── classes[] ──→ Class (course sections)
+ │                     ├── timetables[] ──→ Timetable (per-slot assignment)
  │                     └── constraints[] ──→ RoomConstraint
+ │
+ ├── sections[] ──→ Section
+ │                   ├── gradeId ──→ AcademicGrade (required)
+ │                   ├── classroomId? ──→ Classroom (assigned room)
+ │                   ├── homeroomTeacherId? ──→ Teacher
+ │                   └── students[] ──→ Student (homeroom roster)
  │
  ├── teachers[] ──→ Teacher
  │                   ├── classes[] ──→ Class ──→ Classroom (home room)
- │                   └── timetables[] ──→ Timetable ──→ Classroom (per-slot)
+ │                   ├── timetables[] ──→ Timetable ──→ Classroom (per-slot)
+ │                   └── homeroomSections[] ──→ Section ──→ Classroom
  │
  ├── students[] ──→ Student
- │                   └── studentClasses[] ──→ StudentClass ──→ Class ──→ Classroom
+ │                   ├── studentClasses[] ──→ StudentClass ──→ Class ──→ Classroom
+ │                   └── sectionId? ──→ Section ──→ Classroom (homeroom)
  │
- ├── exams[] ──→ Exam ──→ Class ──→ Classroom (venue)
- │
- └── maxClasses: Int (onboarding capacity number, NOT Classroom records)
-
-Separate systems (no classroom link):
-  CatalogSubject ──→ SchoolSubjectSelection ──→ AcademicGrade (no room ref)
-  Enrollment ──→ CatalogSubject (online LMS, not school classrooms)
-  Application ──→ applyingForClass (grade string, not FK)
+ └── maxClasses: Int (plan limit for classroom count)
 ```
 
 ### Key Features
 
-| Feature               | Status         | Description                                                       |
-| --------------------- | -------------- | ----------------------------------------------------------------- |
-| Classroom Schema      | **Production** | Full model with type, capacity, school-scoped uniqueness          |
-| Classroom Types       | **Production** | 8 types: classroom, lab, library, art, music, hall, sports, admin |
-| Seed Data             | **Production** | 28 rooms across 5 buildings (A-E)                                 |
-| Timetable Integration | **Production** | Slot assignment with 3 unique constraints                         |
-| Room Constraints      | **Production** | Scheduling rules, accessibility, maintenance blocks               |
-| Dropdown API          | **Production** | `GET /api/classrooms` for room selection                          |
-| CRUD UI               | **Production** | Full 6-file CRUD at `school-dashboard/listings/classrooms/`       |
-| Inventory Tracking    | **Planned**    | No asset/equipment tracking                                       |
+| Feature               | Status          | Description                                                       |
+| --------------------- | --------------- | ----------------------------------------------------------------- |
+| Classroom Schema      | **Production**  | Full model with type, capacity, grade affinity, lang              |
+| Section Model         | **Production**  | Homeroom groups within grades, linked to classrooms               |
+| Classroom Types       | **Production**  | 8 types: classroom, lab, library, art, music, hall, sports, admin |
+| Seed Data             | **Production**  | 28 rooms across 5 buildings (A-E)                                 |
+| Configure Tab         | **Production**  | Bulk section + room generation per grade                          |
+| Room Detail           | **Production**  | Detail page with timetable grid, class list, utilization          |
+| Capacity Overview     | **Production**  | Summary stats + per-room utilization table                        |
+| Tab Navigation        | **Production**  | 5 tabs: Rooms, Configure, Capacity, Subjects, Schedule            |
+| Authorization         | **Production**  | RBAC with DEVELOPER/ADMIN write, TEACHER/STAFF read               |
+| Timetable Integration | **Production**  | Slot assignment with 3 unique constraints                         |
+| Room Constraints      | **Production**  | Scheduling rules, accessibility, maintenance blocks               |
+| Dropdown API          | **Production**  | `GET /api/classrooms` for room selection                          |
+| CRUD UI               | **Production**  | Full DataTable with create/edit/delete                            |
+| Schedule Tab          | **Partial**     | Shows class timetables, not room schedules                        |
+| Subjects Tab          | **Placeholder** | Reuses classes module content                                     |
 
 ---
 
@@ -58,15 +68,19 @@ The core model representing a physical room in the school.
 
 ```prisma
 model Classroom {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   schoolId String
   typeId   String
+  gradeId  String?
   roomName String
   capacity Int
+  lang     String  @default("ar")
 
-  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  classroomType ClassroomType @relation(fields: [typeId], references: [id])
+  school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classroomType ClassroomType  @relation(fields: [typeId], references: [id])
+  grade         AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
   classes       Class[]
+  sections      Section[]
   timetables    Timetable[]
   constraints   RoomConstraint[]
 
@@ -74,19 +88,71 @@ model Classroom {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, roomName])
+  @@index([schoolId, gradeId])
   @@map("classrooms")
 }
 ```
 
-| Field      | Type     | Description                                |
-| ---------- | -------- | ------------------------------------------ |
-| `id`       | `String` | CUID primary key                           |
-| `schoolId` | `String` | Tenant isolation (multi-tenant safety)     |
-| `typeId`   | `String` | FK to ClassroomType                        |
-| `roomName` | `String` | Display name (e.g., "A101", "Physics Lab") |
-| `capacity` | `Int`    | Maximum student count                      |
+| Field      | Type      | Description                                         |
+| ---------- | --------- | --------------------------------------------------- |
+| `id`       | `String`  | CUID primary key                                    |
+| `schoolId` | `String`  | Tenant isolation (multi-tenant safety)              |
+| `typeId`   | `String`  | FK to ClassroomType                                 |
+| `gradeId`  | `String?` | Optional FK to AcademicGrade (grade affinity)       |
+| `roomName` | `String`  | Display name (e.g., "A101", "Physics Lab")          |
+| `capacity` | `Int`     | Maximum student count                               |
+| `lang`     | `String`  | Storage language for translation (`@default("ar")`) |
 
 **Unique constraint:** `@@unique([schoolId, roomName])` -- no duplicate room names within a school.
+
+**Index:** `@@index([schoolId, gradeId])` -- fast grade-filtered queries.
+
+### Section
+
+A homeroom group within a grade. Sections represent divisions like "Grade 7-A", "Grade 7-B" and link students to a specific classroom and homeroom teacher.
+
+```prisma
+model Section {
+  id        String @id @default(cuid())
+  schoolId  String
+  gradeId   String
+  name      String   // "Grade 7-A"
+  letter    String   // "A"
+  lang      String   @default("ar")
+
+  homeroomTeacherId String?
+  classroomId       String?
+  maxCapacity       Int     @default(30)
+
+  school          School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grade           AcademicGrade  @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  homeroomTeacher Teacher?       @relation("HomeroomTeacher", fields: [homeroomTeacherId], references: [id], onDelete: SetNull)
+  classroom       Classroom?     @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  students        Student[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, gradeId, letter])
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@index([schoolId, gradeId])
+  @@map("sections")
+}
+```
+
+| Field               | Type      | Description                               |
+| ------------------- | --------- | ----------------------------------------- |
+| `gradeId`           | `String`  | Required FK to AcademicGrade              |
+| `name`              | `String`  | Full name (e.g., "Grade 7-A")             |
+| `letter`            | `String`  | Section letter (e.g., "A")                |
+| `homeroomTeacherId` | `String?` | Optional FK to Teacher (homeroom teacher) |
+| `classroomId`       | `String?` | Optional FK to Classroom (assigned room)  |
+| `maxCapacity`       | `Int`     | Section student limit (`@default(30)`)    |
+
+**Relationship chain:** AcademicGrade -> Section -> Student, Section -> Classroom, Section -> Teacher (homeroom).
+
+**Unique constraints:** `[schoolId, gradeId, letter]` (one "A" per grade per school), `[schoolId, name]` (unique section name per school).
 
 ### ClassroomType
 
@@ -97,6 +163,7 @@ model ClassroomType {
   id       String @id @default(cuid())
   schoolId String
   name     String
+  lang     String @default("ar")
 
   school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classrooms Classroom[]
@@ -138,16 +205,129 @@ model RoomConstraint {
 }
 ```
 
-| Field                  | Type       | Description                                                  |
-| ---------------------- | ---------- | ------------------------------------------------------------ |
-| `allowedSubjectTypes`  | `String[]` | Restrict room to specific subject types (e.g., science labs) |
-| `strictCapacityLimit`  | `Boolean`  | Enforce hard capacity limit during scheduling                |
-| `capacityBuffer`       | `Int`      | Allow N extra students beyond capacity                       |
-| `wheelchairAccessible` | `Boolean`  | Accessibility flag                                           |
-| `hasElevatorAccess`    | `Boolean`  | Elevator access flag                                         |
-| `floorLevel`           | `Int?`     | Floor number for accessibility routing                       |
-| `reservedPeriods`      | `Json`     | `{dayOfWeek: [periodId, periodId]}` -- blocked time slots    |
-| `maintenanceBlocks`    | `Json`     | `[{dayOfWeek, periodId, reason, startDate?, endDate?}]`      |
+| Field                  | Type       | Description                                                                               |
+| ---------------------- | ---------- | ----------------------------------------------------------------------------------------- |
+| `allowedSubjectTypes`  | `String[]` | Restrict room to specific subject types (loaded but not consumed by scheduling algorithm) |
+| `strictCapacityLimit`  | `Boolean`  | Enforce hard capacity limit during scheduling                                             |
+| `capacityBuffer`       | `Int`      | Allow N extra students beyond capacity                                                    |
+| `wheelchairAccessible` | `Boolean`  | Accessibility flag                                                                        |
+| `hasElevatorAccess`    | `Boolean`  | Elevator access flag                                                                      |
+| `floorLevel`           | `Int?`     | Floor number for accessibility routing                                                    |
+| `reservedPeriods`      | `Json`     | `{dayOfWeek: [periodId, periodId]}` -- blocked time slots                                 |
+| `maintenanceBlocks`    | `Json`     | `[{dayOfWeek, periodId, reason, startDate?, endDate?}]`                                   |
+
+---
+
+## Role-Based Access
+
+Authorization is implemented in `src/components/school-dashboard/listings/classrooms/authorization.ts` using the `checkClassroomPermission()` function.
+
+### Permission Matrix
+
+| Role       | create           | read             | update           | delete           |
+| ---------- | ---------------- | ---------------- | ---------------- | ---------------- |
+| DEVELOPER  | Yes              | Yes              | Yes              | Yes              |
+| ADMIN      | Yes (own school) | Yes (own school) | Yes (own school) | Yes (own school) |
+| TEACHER    | No               | Yes (own school) | No               | No               |
+| STAFF      | No               | Yes (own school) | No               | No               |
+| STUDENT    | No               | No               | No               | No               |
+| GUARDIAN   | No               | No               | No               | No               |
+| ACCOUNTANT | No               | No               | No               | No               |
+
+### Data Paths per Role
+
+How each role reaches classroom data:
+
+**Admin** -- Direct access via classroom listing + room detail pages. Full CRUD through server actions with `assertClassroomPermission()`.
+
+**Teacher** -- Read-only listing + room names from `Timetable` (filtered by `teacherId`) + dashboard today's classes. Also reaches classrooms via `Class.classroomId` for their assigned classes. Homeroom section via `Section.homeroomTeacherId`.
+
+**Student** -- Room names from `Timetable` (filtered by `classIds` via `StudentClass`) + homeroom via `Student.sectionId -> Section.classroomId` (schema only, no UI). No direct classroom listing access.
+
+**Guardian** -- Room names from child's timetable via parent portal (`getChildTimetable()`). No direct classroom access.
+
+**Staff** -- Read-only classroom listing (same as teacher).
+
+### RBAC Gaps
+
+| Issue                                  | Description                                                                       |
+| -------------------------------------- | --------------------------------------------------------------------------------- |
+| Edit/Delete visible to read-only roles | Backend blocks TEACHER/STAFF mutations, but action buttons still render in the UI |
+| Create button visible to all           | The "Add Room" button shows for read-only roles                                   |
+| `getRoomTimetable()` skips permission  | Only checks session exists, no `assertClassroomPermission("read")`                |
+| `getGrades()` no auth check            | Returns grades for any authenticated user with tenant context                     |
+| `/api/classrooms` no auth check        | Only rate limiting + tenant context, no session/role verification                 |
+
+---
+
+## Grade-Based Features
+
+### Grade Affinity
+
+`Classroom.gradeId` optionally links a room to a specific `AcademicGrade`. When set, the room is considered "grade-assigned" (e.g., all Grade 7 sections use rooms in Building B). When `null`, the room is "Shared" -- available to any grade.
+
+Grade affinity is displayed in:
+
+- **Listing table**: Grade column shows grade name or "Shared" badge
+- **Room detail**: Grade badge in room header
+- **Capacity overview**: Grade column in utilization table
+
+### Section Generation (Configure Tab)
+
+The Configure tab (`/classrooms/configure`) bulk-creates Section + Classroom pairs per grade. This is the primary way to set up classroom-to-grade mappings.
+
+**Flow:**
+
+1. Admin selects grades and configures sections per grade, capacity per section, and room type
+2. `generateSections()` runs in a `db.$transaction()`:
+   - For each grade, determines how many new sections are needed (skips existing)
+   - Assigns section letters (A, B, C...) skipping already-used letters
+   - Creates (or upserts) a Classroom: `"Grade {N} - Room {letter}"`
+   - Creates a Section: `"Grade {N}-{letter}"` linked to the classroom
+   - Validates section capacity is less than or equal to room capacity
+3. Enforces `School.maxClasses` plan limit before creating
+
+**School defaults:** Uses `School.sectionsPerGrade` and `School.studentsPerSection` as form defaults.
+
+**Naming convention:**
+
+- Room: `"Grade {gradeNumber} - Room {letter}"` (e.g., "Grade 7 - Room A")
+- Section: `"Grade {gradeNumber}-{letter}"` (e.g., "Grade 7-A")
+
+### Grade-Based Gaps
+
+| Gap                                   | Description                                                                |
+| ------------------------------------- | -------------------------------------------------------------------------- |
+| No grade-based filtering for teachers | Teachers can't filter to "my grades" rooms                                 |
+| No "my rooms" teacher view            | No personalized room list based on timetable                               |
+| No homeroom UI                        | Student -> Section -> Classroom path exists in schema but has no UI        |
+| No section CRUD                       | Sections can only be bulk-created via Configure, no individual edit/delete |
+
+---
+
+## Tab Navigation
+
+The classroom layout (`layout.tsx`) provides 5 tabs:
+
+| Tab       | Route                   | Status          | Description                                                                                    |
+| --------- | ----------------------- | --------------- | ---------------------------------------------------------------------------------------------- |
+| Rooms     | `/classrooms`           | **Production**  | DataTable with CRUD, search, type filter                                                       |
+| Configure | `/classrooms/configure` | **Production**  | Bulk section + room generation per grade                                                       |
+| Capacity  | `/classrooms/capacity`  | **Production**  | Summary stats (total, capacity, utilization) + per-room table                                  |
+| Subjects  | `/classrooms/subjects`  | **Placeholder** | Imports from `classes/subjects/content` (class-subject assignments, not room-subject mappings) |
+| Schedule  | `/classrooms/schedule`  | **Partial**     | Shows class timetables grouped by grade, not room-specific schedules                           |
+
+### Tab Details
+
+**Rooms** -- Standard listing pattern with DataTable. Columns: room name, type, grade, capacity, class count, timetable count. Supports pagination, name search, type filter. Create/edit/delete via dialog form.
+
+**Configure** -- Server component loads grade configuration via `getGradeConfiguration()`, renders `ConfigureForm` with per-grade section count, capacity, and room type. Submits to `generateSections()` which atomically creates sections and rooms.
+
+**Capacity** -- Summary cards (total rooms, total capacity, avg capacity, avg utilization) + detailed table with per-room utilization. Utilization = `classCount / capacity` (note: this metric is classes-per-room, not time-based occupancy).
+
+**Subjects** -- Placeholder page with TODO comment. Currently imports `ClassSubjectsContent` from the classes module, showing class-subject assignments rather than room-subject mappings.
+
+**Schedule** -- Queries timetable slots for the active term, groups classes by grade, and renders `ScheduleGrid`. Shows class schedules, not room schedules (no room-centric weekly view here -- that exists in the timetable module's by-room view).
 
 ---
 
@@ -169,18 +349,7 @@ The seed creates 28 classrooms across 5 buildings with realistic capacity distri
 | D        | 1     | Library, Art Room, Music Room, Assembly Hall  | mixed     | 25-500   |
 | E        | 0-1   | Sports Hall, Football Field, Basketball Court | sports    | 50-200   |
 
-### Breakdown by Type
-
-| Type      | Count | Capacity Range | Notes                         |
-| --------- | ----- | -------------- | ----------------------------- |
-| classroom | 12    | 30-35          | Regular teaching rooms        |
-| lab       | 6     | 25-30          | Science + computer + language |
-| library   | 1     | 100            | Main library                  |
-| art       | 1     | 25             | Art studio                    |
-| music     | 1     | 30             | Music room                    |
-| hall      | 1     | 500            | Assembly hall                 |
-| sports    | 3     | 50-200         | Indoor + outdoor facilities   |
-| admin     | 3     | 10-40          | Offices and meeting spaces    |
+**Note:** The seed data includes `building` and `floor` values, but these are NOT persisted -- the Classroom model has no `building` or `floor` fields. They exist only in seed constants for documentation/reference.
 
 ### Running the Seed
 
@@ -198,7 +367,7 @@ The seed uses `upsert` operations, so it is safe to run multiple times without d
 
 Classrooms are a core dimension of the timetable. Every timetable slot assigns a room.
 
-**Double-booking prevention** -- The Timetable model has 3 unique constraints that prevent scheduling conflicts:
+**Double-booking prevention** -- The Timetable model has 3 unique constraints:
 
 ```
 @@unique([schoolId, termId, dayOfWeek, periodId, classId, weekOffset])
@@ -208,192 +377,93 @@ Classrooms are a core dimension of the timetable. Every timetable slot assigns a
 
 The third constraint ensures no room is assigned to two classes in the same period.
 
-**Timetable views** -- The timetable supports a "Room view" (`by-room/content.tsx`) that shows a room's full weekly schedule with a utilization widget, alongside "Class view" and "Teacher view".
+**Room detail timetable** -- The room detail page (`/classrooms/[id]`) has its own weekly timetable grid showing all slots for that room, with class name, subject, teacher, and grade. Utilization is calculated as `usedSlots / (teachingPeriods * workingDays)`.
 
-**Slot editor** -- The `slot-editor-dialog.tsx` filters rooms by time-slot occupancy so only available rooms appear in the dropdown.
+**Timetable room view** -- The timetable module has a dedicated "Room view" (`by-room/content.tsx`) with a full weekly schedule and utilization widget.
 
-**Auto-generation** -- The `algorithm.ts` has a `requiresLab` heuristic that routes science subjects to lab-type rooms. However, the `allowedSubjectTypes` field on `RoomConstraint` is loaded but not consumed by `isRoomAvailable()`.
+**Slot editor** -- `slot-editor-dialog.tsx` filters rooms by time-slot occupancy so only available rooms appear in the dropdown.
 
-**ClassroomInfo type** -- Used by timetable components for room data:
+**Auto-generation** -- `algorithm.ts` has a `requiresLab` heuristic that routes science subjects to lab-type rooms. The `allowedSubjectTypes` field on `RoomConstraint` is loaded but not consumed by `isRoomAvailable()`.
 
-```typescript
-interface ClassroomInfo {
-  id: string
-  name: string
-  building?: string
-  floor?: string
-  capacity: number
-  type: "regular" | "lab" | "gym" | "library" | "computer" | "music" | "art"
-  facilities?: string[]
-  isAvailable: boolean
-}
-```
+### Section
+
+Sections link students to classrooms through a homeroom model:
+
+**Path:** AcademicGrade -> Section -> Classroom (via `classroomId`)
+
+**Path:** Student -> Section -> Classroom (via `sectionId` -> `classroomId`)
+
+Sections are created via the Configure tab's `generateSections()` action, which creates both the Section and its assigned Classroom atomically.
 
 ### Classes
 
-Each `Class` model has a **required** `classroomId` field for its default/home room assignment. This makes `Class` the central hub -- Teacher, Student, and Exam all reach Classroom through Class.
+Each `Class` model has a **required** `classroomId` field for its default room assignment:
 
 ```prisma
 model Class {
-  classroomId String          // Required FK -- every class must have a room
+  classroomId String
   classroom   Classroom @relation(fields: [classroomId], references: [id])
-  // ...
 }
 ```
-
-**Ref:** `prisma/models/subjects.prisma:40-102`
-
-### Teachers
-
-There is no direct `classroomId` on the `Teacher` model. Teachers reach classrooms through two paths:
-
-- **Path A: Home room** -- Teacher → Class → Classroom. A teacher's assigned classes each have a default room.
-- **Path B: Per-slot room** -- Teacher → Timetable slot → Classroom. The actual room can vary period-by-period in the timetable.
-
-**Ref:** `prisma/models/staff.prisma`
 
 ### Students
 
-There is no direct `classroomId` on the `Student` model. Students reach classrooms through the join table:
+Students reach classrooms through two paths:
 
-**Path:** Student → StudentClass → Class → Classroom
+- **Course path:** Student -> StudentClass -> Class -> Classroom
+- **Homeroom path:** Student -> Section -> Classroom (schema only, no UI)
 
-```prisma
-model StudentClass {
-  studentId String
-  classId   String
-  // ...
-  @@unique([schoolId, studentId, classId])
-}
-```
+### Teachers
 
-**Ref:** `prisma/models/subjects.prisma:104-120`
+Teachers reach classrooms through three paths:
+
+- **Home room:** Teacher -> Class -> Classroom (assigned classes' default rooms)
+- **Per-slot room:** Teacher -> Timetable -> Classroom (actual room per period)
+- **Homeroom:** Teacher -> Section -> Classroom (via `homeroomTeacherId`)
+
+### Parent Portal
+
+Guardians see classroom information via their children's timetables:
+
+**Path:** Guardian -> Student -> Timetable -> Classroom (via `getChildTimetable()`)
 
 ### Exams
 
-There is no direct `classroomId` on the `Exam` model. The venue is resolved indirectly:
+No direct `classroomId` on the Exam model. Venue resolved via:
 
-**Path:** Exam → Class → Classroom
+**Path:** Exam -> Class -> Classroom
 
-The conflict detection system accepts an optional `classroomId` parameter and checks both timetable occupancy and other exams in the same room:
-
-1. Queries `db.timetable.findMany({ where: { classroomId, dayOfWeek } })` for timetable conflicts
-2. Queries `db.exam.findMany({ where: { class: { classroomId } } })` for exam-to-exam conflicts
-3. Returns conflicts with severity and time overlap details
-
-**Ref:** `src/components/school-dashboard/exams/manage/actions/conflict-detection.ts:261-323`
-
-### Catalog / Subjects
-
-There is no link from `CatalogSubject` to Classroom. The `SchoolSubjectSelection` bridge table connects `CatalogSubject` to `AcademicGrade` and `AcademicStream` -- it is academic-only with no room reference.
-
-To reach a classroom from catalog data, you must go through the school-scoped path: Subject → Class → Classroom.
-
-The `allowedSubjectTypes` field on `RoomConstraint` exists to restrict rooms to certain subject types, but it is mostly unused -- the auto-generation algorithm does not consume it.
-
-**Ref:** `prisma/models/catalog-bridge.prisma`
-
-### School Onboarding
-
-The capacity step in school onboarding collects a "classrooms" count but **does not create any Classroom records**. It saves the number to `School.maxClasses`:
-
-```typescript
-await db.school.update({
-  data: {
-    maxStudents: validated.studentCount,
-    maxTeachers: validated.teachers,
-    maxClasses: validated.classrooms ?? 20, // Integer capacity, not records
-  },
-})
-```
-
-Other gaps in onboarding:
-
-- The `facilities` count is collected in the form but never persisted to the database
-- The schedule step saves timetable structure with no classroom reference
-- The `createClassroom()` bulk action is a placeholder: "coming soon"
-
-**Ref:** `src/components/onboarding/capacity/actions.ts:24-31`
-
-### Admission Onboarding
-
-The admission system has **zero connection to classrooms**:
-
-- `Application.applyingForClass` is a grade-level string (e.g., "Grade 10"), not a FK to `Class` or `Classroom`
-- There is no automated student-to-class placement after an application reaches `ADMITTED` status
-- The 7-step admission flow has no classroom selection step
-
-**Ref:** `prisma/models/admission.prisma`
+Conflict detection accepts optional `classroomId` and checks timetable occupancy + exam-to-exam conflicts.
 
 ### Dashboard
 
-The school dashboard's `UpcomingClassCard` shows a "Room" field, but it uses **hardcoded mock data**:
-
-```typescript
-export interface StudentUpcomingData {
-  nextClass?: {
-    subject: string
-    time: string
-    room: string // "Room 101", "Hall A" -- not from database
-  }
-}
-```
-
-The `room` field is a plain string populated with static values like "Room 101" and "Hall A". It does not query from `Timetable` or `Classroom` tables.
-
-**Ref:** `src/components/school-dashboard/dashboard/upcoming.tsx:38-66`
+The school dashboard's `UpcomingClassCard` shows a "Room" field with **hardcoded mock data** ("Room 101", "Hall A"). Does not query from `Timetable` or `Classroom` tables.
 
 ### Facility Page
 
-The facility management page is **100% hardcoded** static data:
-
-```typescript
-// All numbers are hardcoded, not from database
-<div className="text-2xl font-bold">42</div>       // Total Facilities
-<div className="text-2xl font-bold text-green-500">35</div>  // Available
-<div className="text-2xl font-bold text-blue-500">5</div>    // In Use
-```
-
-42 facilities, 4 rooms, 4 labs, 4 equipment -- all static. Zero connection to the `Classroom` model.
-
-**Ref:** `src/components/school-dashboard/facility/content.tsx`
-
-### School Configuration
-
-The school configuration page shows the actual classroom count from the database:
-
-```typescript
-{
-  label: "Classrooms",
-  value: initialData.classroomCount, // db.classroom.count({ where: { schoolId } })
-  limit: null,  // No limit enforced (unlike students/teachers)
-  usage: null,
-}
-```
-
-Unlike students and teachers (which have `maxStudents`/`maxTeachers` limits with progress bars), classrooms have no enforced limit.
-
-**Ref:** `src/components/school-dashboard/school/configuration/capacity-section.tsx:83-93`
+The facility management page is **100% hardcoded** static data (42 facilities, static numbers). Zero connection to the `Classroom` model.
 
 ---
 
 ## Cross-Reference Table
 
-| Module         | Direct FK     | Path to Classroom                          | Status     |
-| -------------- | ------------- | ------------------------------------------ | ---------- |
-| Timetable      | `classroomId` | Direct                                     | Production |
-| Class          | `classroomId` | Direct                                     | Production |
-| RoomConstraint | `classroomId` | Direct                                     | Production |
-| Teacher        | No            | Teacher → Class/Timetable → Classroom      | Indirect   |
-| Student        | No            | Student → StudentClass → Class → Classroom | Indirect   |
-| Exam           | No            | Exam → Class → Classroom                   | Indirect   |
-| School Config  | No            | `db.classroom.count()`                     | Read-only  |
-| CatalogSubject | No            | No path (academic bridge only)             | Gap        |
-| Enrollment     | No            | Different system (LMS)                     | N/A        |
-| Application    | No            | No connection                              | Gap        |
-| Dashboard      | No            | Hardcoded mock data                        | Gap        |
-| Facility Page  | No            | Hardcoded static data                      | Gap        |
-| Onboarding     | No            | Saves count to maxClasses only             | Gap        |
+| Module           | Direct FK     | Path to Classroom                               | Status      |
+| ---------------- | ------------- | ----------------------------------------------- | ----------- |
+| Timetable        | `classroomId` | Direct                                          | Production  |
+| Class            | `classroomId` | Direct                                          | Production  |
+| Section          | `classroomId` | Direct                                          | Production  |
+| RoomConstraint   | `classroomId` | Direct                                          | Production  |
+| Teacher          | No            | Teacher -> Class/Timetable/Section -> Classroom | Indirect    |
+| Student          | No            | Student -> StudentClass -> Class -> Classroom   | Indirect    |
+| Student homeroom | No            | Student -> Section -> Classroom                 | Schema only |
+| Parent Portal    | No            | Guardian -> Student -> Timetable -> Classroom   | Indirect    |
+| Exam             | No            | Exam -> Class -> Classroom                      | Indirect    |
+| School Config    | No            | `db.classroom.count()`                          | Read-only   |
+| CatalogSubject   | No            | No path (academic bridge only)                  | Gap         |
+| Application      | No            | No connection                                   | Gap         |
+| Dashboard        | No            | Hardcoded mock data                             | Gap         |
+| Facility Page    | No            | Hardcoded static data                           | Gap         |
+| Onboarding       | No            | Saves count to maxClasses only                  | Gap         |
 
 ---
 
@@ -409,6 +479,8 @@ Returns a list of classrooms for dropdown selection (timetable slot assignment, 
 
 **Rate limiting:** API tier rate limits applied.
 
+**Auth:** No `auth()` check -- only rate limiting + tenant context. Any request with valid tenant context can list rooms.
+
 **Response:**
 
 ```json
@@ -420,90 +492,124 @@ Returns a list of classrooms for dropdown selection (timetable slot assignment, 
 }
 ```
 
-**Minimal payload:** Only `id` and `roomName` are returned since dropdowns only need identifier and display name. Capacity and type are queried separately when needed.
-
 ---
 
 ## File Structure
 
-```
-prisma/
-├── models/classrooms.prisma       # Classroom + ClassroomType models
-├── models/timetable.prisma        # RoomConstraint model (with timetable)
-├── seeds/classrooms.ts            # Seed logic (types + rooms)
-└── seeds/constants.ts             # 28 classroom definitions (lines 938-1022)
+### Components
 
-src/
-├── app/api/classrooms/route.ts    # Dropdown selection API
-├── app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/classrooms/
-│   └── page.tsx                   # Route page (mirrors component)
-└── components/school-dashboard/
-    ├── listings/classrooms/
-    │   ├── actions.ts             # Server actions (create, update, delete)
-    │   ├── columns.tsx            # DataTable column definitions
-    │   ├── content.tsx            # Server component (main UI)
-    │   ├── form.tsx               # Create/edit form (client component)
-    │   ├── table.tsx              # DataTable (client component)
-    │   └── validation.ts          # Zod schemas
-    ├── timetable/
-    │   ├── types.ts                # ClassroomInfo interface
-    │   ├── by-room/content.tsx     # Room view (weekly grid + utilization)
-    │   ├── slot-editor-dialog.tsx  # Room picker (filters by occupancy)
-    │   └── generate/algorithm.ts   # Auto-generation (requiresLab heuristic)
-    ├── exams/manage/actions/
-    │   └── conflict-detection.ts   # Exam venue conflict checks
-    ├── facility/content.tsx        # Hardcoded facility page (no DB connection)
-    ├── dashboard/upcoming.tsx      # Mock room data in upcoming cards
-    └── school/configuration/
-        └── capacity-section.tsx    # Classroom count display (read-only)
+```
+src/components/school-dashboard/listings/classrooms/
+├── actions.ts                     # Server actions: CRUD + room detail + capacity queries
+├── authorization.ts               # RBAC: checkClassroomPermission, assertClassroomPermission
+├── validation.ts                  # Zod schemas: create, update, getClassrooms
+├── content.tsx                    # Server component (main listing UI)
+├── columns.tsx                    # DataTable column definitions
+├── table.tsx                      # DataTable (client component)
+├── form.tsx                       # Create/edit form (client component)
+├── room-capacity-content.tsx      # Capacity overview tab (server component)
+├── detail/
+│   ├── content.tsx                # Room detail server component
+│   └── room-detail.tsx            # Room detail client component
+├── configure/
+│   ├── actions.ts                 # generateSections, getGradeConfiguration
+│   ├── content.tsx                # Configure tab server component
+│   ├── form.tsx                   # Configure form (client component)
+│   └── validation.ts             # Zod schemas: gradeConfig, generateSections
+├── schedule/
+│   ├── content.tsx                # Schedule tab server component
+│   └── schedule-grid.tsx          # Schedule grid (client component)
+├── __tests__/
+│   ├── actions.test.ts            # CRUD action tests
+│   └── validation.test.ts         # Schema validation tests
+└── configure/__tests__/
+    └── actions.test.ts            # Section generation tests
+```
+
+### Route Pages
+
+```
+src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/classrooms/
+├── layout.tsx                     # 5-tab PageNav (Rooms, Configure, Capacity, Subjects, Schedule)
+├── page.tsx                       # Rooms tab
+├── error.tsx                      # Error boundary
+├── loading.tsx                    # Loading skeleton
+├── configure/
+│   ├── page.tsx                   # Configure tab
+│   └── loading.tsx
+├── capacity/
+│   ├── page.tsx                   # Capacity tab
+│   └── loading.tsx
+├── subjects/
+│   ├── page.tsx                   # Placeholder (imports classes module)
+│   └── loading.tsx
+├── schedule/
+│   ├── page.tsx                   # Schedule tab
+│   └── loading.tsx
+├── create/
+│   ├── page.tsx                   # ⚠ Bug: imports CreateClassContent (creates Class, not Classroom)
+│   └── loading.tsx
+├── [id]/
+│   ├── page.tsx                   # Room detail page
+│   ├── error.tsx                  # Error boundary
+│   ├── loading.tsx
+│   └── teachers/
+│       └── loading.tsx            # ⚠ Orphaned: loading.tsx exists but no page.tsx
+```
+
+### Related Files
+
+```
+prisma/models/classrooms.prisma     # Classroom + Section + ClassroomType models
+prisma/models/timetable.prisma      # RoomConstraint model
+prisma/seeds/classrooms.ts          # Seed logic (types + rooms)
+prisma/seeds/constants.ts           # 28 classroom definitions
+src/app/api/classrooms/route.ts     # Dropdown selection API
 ```
 
 ---
 
-## Feature Gaps / Roadmap
+## Gaps / Roadmap
 
-### Onboarding → Classroom Gap
+### Critical (Route/Data Bugs)
 
-The capacity step collects a "classrooms" count but creates no Classroom records. Only an integer (`maxClasses`) is saved. A bulk-create action should generate actual Classroom records from this count.
+| #   | Issue                           | Description                                                                                                                     |
+| --- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `create/page.tsx` wrong import  | Imports `CreateClassContent` from `classes/create/content` -- creates a Class (course section), not a Classroom (physical room) |
+| 2   | `subjects/page.tsx` placeholder | Imports `ClassSubjectsContent` from classes module; shows class-subject assignments, not room-subject mappings                  |
+| 3   | `[id]/teachers/` orphaned       | Has `loading.tsx` but no `page.tsx` -- route will 404                                                                           |
+| 4   | Dashboard mock room data        | `UpcomingClassCard` shows "Room 101" as hardcoded string, not from database                                                     |
+| 5   | Facility page static            | 42 hardcoded facilities, zero connection to Classroom model                                                                     |
 
-### maxClasses Naming Mismatch
+### RBAC Gaps
 
-The onboarding form labels the field "classrooms" but it maps to `School.maxClasses` in the database. This is confusing since `maxClasses` sounds like it limits `Class` records, not `Classroom` records.
+| #   | Issue                                  | Description                                                                |
+| --- | -------------------------------------- | -------------------------------------------------------------------------- |
+| 6   | Edit/Delete visible to read-only roles | Backend blocks TEACHER/STAFF mutations, but buttons still render           |
+| 7   | Create button visible to all           | "Add Room" shows for roles that can't create                               |
+| 8   | `getRoomTimetable()` skips permission  | Checks session exists but doesn't call `assertClassroomPermission("read")` |
+| 9   | `getGrades()` no auth check            | Returns grades for any authenticated user with tenant context              |
+| 10  | `/api/classrooms` no auth check        | Only rate limiting + tenant context, no session/role verification          |
 
-### Facilities Not Persisted
+### Grade/Section Gaps
 
-The onboarding form collects a "facilities" count but it is never saved to the database. No field exists on the School model for this value.
+| #   | Issue                              | Description                                                    |
+| --- | ---------------------------------- | -------------------------------------------------------------- |
+| 11  | No grade-based classroom filtering | Teachers can't filter rooms by "my grades"                     |
+| 12  | No "my rooms" teacher view         | No personalized room list from timetable                       |
+| 13  | No homeroom UI                     | Student -> Section -> Classroom exists in schema but has no UI |
+| 14  | No section CRUD or delete/undo     | Sections can only be bulk-created, no individual management    |
 
-### Admission → Class Placement Gap
+### Schema/Feature Gaps
 
-After an application reaches `ADMITTED` status, there is no automated assignment of the student to a Class (and therefore no Classroom). The `applyingForClass` field is a grade-level string, not a FK to Class.
-
-### Dashboard Mock Data
-
-The `UpcomingClassCard` shows "Room 101", "Hall A" as hardcoded strings. It should query the student's timetable for the current period and pull the actual `Classroom.roomName`.
-
-### Facility Page Disconnected
-
-The facility management page shows 42 hardcoded facilities with static numbers. It should read from `Classroom` records and display real data.
-
-### allowedSubjectTypes Unused
-
-The `RoomConstraint.allowedSubjectTypes` field stores subject type restrictions per room, but the timetable auto-generation algorithm does not consume this data. The `isRoomAvailable()` function ignores it.
-
-### No Inventory Tracking
-
-No model for tracking equipment, furniture, or assets assigned to a room. This would require a new `ClassroomAsset` model.
-
-### No Smart Features
-
-Future capabilities not yet implemented:
-
-- QR code door labels for room check-in
-- Fingerprint/geofencing for room access
-- HVAC and lighting integration
-- Occupancy sensors
-- Room booking calendar
-
-### Classes Redesign
-
-A planned redesign of the `Class` model will more tightly link classrooms to grade sections, making the `classroomId` relationship more central to school organization.
+| #   | Issue                               | Description                                                                              |
+| --- | ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| 15  | Missing `building`/`floor` fields   | Seed data has building/floor but Classroom model doesn't                                 |
+| 16  | ClassroomInfo.type mismatch         | Timetable uses `"regular" \| "lab" \| "gym"` enum, Classroom uses freeform ClassroomType |
+| 17  | Utilization metric misleading       | Capacity tab shows `classCount / capacity` (classes per room), not time-based occupancy  |
+| 18  | Schedule tab shows class timetables | Grouped by grade/class, not room-centric weekly view                                     |
+| 19  | No room booking calendar            | No reservation system for meetings, events, etc.                                         |
+| 20  | No bulk import/export               | No CSV/Excel import for room data                                                        |
+| 21  | No exam venue override              | Exams inherit room from Class, no per-exam room override                                 |
+| 22  | `allowedSubjectTypes` unused        | Stored on RoomConstraint but not consumed by scheduling algorithm                        |
+| 23  | No inventory tracking               | No model for equipment/assets assigned to rooms                                          |

@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type React from "react"
 import Link from "next/link"
 import { auth } from "@/auth"
 import { format } from "date-fns"
@@ -13,9 +14,13 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { SupportedLanguage } from "@/components/translation/types"
+
+import { BatchIssueDialog } from "../certificates/batch-issue-dialog"
+import { StudentProgress } from "../shared/student-progress"
 
 interface Props {
   dictionary: Dictionary
@@ -82,13 +87,26 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
     const scope = await getStudentScope(role, session?.user?.id, schoolId)
     if (!scope) return null
 
+    // For guardians, fetch children names for grouping
+    let children: { id: string; name: string }[] = []
+    if (role === "GUARDIAN" && scope.studentIds.length > 1) {
+      const students = await db.student.findMany({
+        where: { id: { in: scope.studentIds }, schoolId },
+        select: { id: true, givenName: true, surname: true },
+      })
+      children = students.map((s) => ({
+        id: s.id,
+        name: `${s.givenName || ""} ${s.surname || ""}`.trim(),
+      }))
+    }
+
     const results = await db.examResult.findMany({
       where: {
         schoolId,
         studentId: { in: scope.studentIds },
       },
       include: {
-        student: { select: { givenName: true, surname: true } },
+        student: { select: { id: true, givenName: true, surname: true } },
         exam: {
           select: {
             title: true,
@@ -103,81 +121,155 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       take: 50,
     })
 
-    const r = dictionary?.results
+    const dict = dictionary?.results
+    const noResultsMsg =
+      dict?.messages?.noResults ||
+      (lang === "ar" ? "لا توجد نتائج بعد" : "No results yet")
+
+    // Pre-render all result cards (await must be at top level, not inside JSX .map)
+    const allResultCards = await Promise.all(
+      results.map(async (result) => {
+        const subjectName = result.exam.subject?.subjectName
+          ? await getDisplayText(
+              result.exam.subject.subjectName,
+              (result.exam.subject.lang || "ar") as SupportedLanguage,
+              lang,
+              schoolId!
+            )
+          : ""
+
+        return (
+          <Card key={result.id}>
+            <CardContent className="flex items-center justify-between p-4">
+              <div>
+                <p className="font-medium">{result.exam.title}</p>
+                <p className="text-muted-foreground text-sm">
+                  {role === "GUARDIAN" &&
+                    `${result.student.givenName} ${result.student.surname} - `}
+                  {subjectName} - {format(result.exam.examDate, "MMM d, yyyy")}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-end">
+                  <p className="text-2xl font-bold">
+                    {result.percentage.toFixed(0)}%
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {result.marksObtained}/{result.exam.totalMarks}
+                  </p>
+                </div>
+                {result.grade && (
+                  <Badge
+                    variant={
+                      result.percentage >= 80
+                        ? "default"
+                        : result.percentage >= 50
+                          ? "secondary"
+                          : "destructive"
+                    }
+                  >
+                    {result.grade}
+                  </Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )
+      })
+    )
+
+    // Build a map of studentId -> rendered cards for guardian child tabs
+    const cardsByStudent = new Map<string, React.ReactNode[]>()
+    results.forEach((result, i) => {
+      const sid = result.student.id
+      if (!cardsByStudent.has(sid)) cardsByStudent.set(sid, [])
+      cardsByStudent.get(sid)!.push(allResultCards[i])
+    })
+
+    // Guardian with multiple children: show tabs per child
+    if (role === "GUARDIAN" && children.length > 1) {
+      return (
+        <div className="space-y-6">
+          <StudentProgress isGuardian />
+
+          <Tabs defaultValue="all" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="all">
+                {lang === "ar" ? "الكل" : "All"} ({results.length})
+              </TabsTrigger>
+              {children.map((child) => {
+                const count = cardsByStudent.get(child.id)?.length || 0
+                return (
+                  <TabsTrigger key={child.id} value={child.id}>
+                    {child.name} ({count})
+                  </TabsTrigger>
+                )
+              })}
+            </TabsList>
+
+            <TabsContent value="all">
+              <div className="grid gap-3">
+                {allResultCards.length === 0 ? (
+                  <p className="text-muted-foreground py-8 text-center text-sm">
+                    {noResultsMsg}
+                  </p>
+                ) : (
+                  allResultCards
+                )}
+              </div>
+            </TabsContent>
+
+            {children.map((child) => (
+              <TabsContent key={child.id} value={child.id}>
+                <div className="grid gap-3">
+                  {cardsByStudent.get(child.id) || (
+                    <p className="text-muted-foreground py-8 text-center text-sm">
+                      {noResultsMsg}
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      )
+    }
 
     return (
       <div className="space-y-6">
-        {results.length === 0 ? (
+        <StudentProgress isGuardian={role === "GUARDIAN"} />
+
+        {allResultCards.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileBarChart className="text-muted-foreground mb-4 h-12 w-12" />
-              <h3 className="mb-2 text-lg font-semibold">
-                {r?.messages?.noResults ||
-                  (lang === "ar" ? "لا توجد نتائج بعد" : "No results yet")}
-              </h3>
+              <h3 className="mb-2 text-lg font-semibold">{noResultsMsg}</h3>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-3">
-            {await Promise.all(
-              results.map(async (result) => {
-                const subjectName = result.exam.subject?.subjectName
-                  ? await getDisplayText(
-                      result.exam.subject.subjectName,
-                      (result.exam.subject.lang || "ar") as SupportedLanguage,
-                      lang,
-                      schoolId!
-                    )
-                  : ""
-
-                return (
-                  <Card key={result.id}>
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">{result.exam.title}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {role === "GUARDIAN" &&
-                            `${result.student.givenName} ${result.student.surname} - `}
-                          {subjectName} -{" "}
-                          {format(result.exam.examDate, "MMM d, yyyy")}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="text-end">
-                          <p className="text-2xl font-bold">
-                            {result.percentage.toFixed(0)}%
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {result.marksObtained}/{result.exam.totalMarks}
-                          </p>
-                        </div>
-                        {result.grade && (
-                          <Badge
-                            variant={
-                              result.percentage >= 80
-                                ? "default"
-                                : result.percentage >= 50
-                                  ? "secondary"
-                                  : "destructive"
-                            }
-                          >
-                            {result.grade}
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })
-            )}
-          </div>
+          <div className="grid gap-3">{allResultCards}</div>
         )}
       </div>
     )
   }
 
-  // Admin/Teacher view — existing behavior
-  // Fetch completed exams with results
+  // Admin/Teacher view
+  // Teacher sees only their classes; Admin sees all
+  let teacherClassIds: string[] | null = null
+  if (schoolId && role === "TEACHER") {
+    const teacher = await db.teacher.findFirst({
+      where: { userId: session?.user?.id, schoolId },
+      select: { id: true },
+    })
+    if (teacher) {
+      const classes = await db.class.findMany({
+        where: { teacherId: teacher.id, schoolId },
+        select: { id: true },
+      })
+      teacherClassIds = classes.map((c) => c.id)
+    }
+  }
+
   let examsWithResults: Array<{
     id: string
     title: string
@@ -194,6 +286,8 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       where: {
         schoolId,
         status: "COMPLETED",
+        // Teacher scoping
+        ...(teacherClassIds ? { classId: { in: teacherClassIds } } : {}),
       },
       include: {
         class: { select: { name: true, lang: true } },
@@ -300,6 +394,11 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                       {r?.actions?.viewResults}
                     </Link>
                   </Button>
+                  <BatchIssueDialog
+                    examId={exam.id}
+                    examTitle={exam.title}
+                    eligibleCount={exam.totalStudents}
+                  />
                   <Button asChild variant="outline" size="sm">
                     <Link
                       href={`/${lang}/exams/certificates?examId=${exam.id}`}

@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
 
 import { deleteCatalogBook, updateCatalogBook } from "./book-actions"
@@ -81,6 +82,7 @@ interface CatalogBookDetail {
 interface Props {
   book: CatalogBookDetail
   lang: Locale
+  dictionary?: Dictionary
 }
 
 const STATUS_OPTIONS = [
@@ -91,7 +93,9 @@ const STATUS_OPTIONS = [
   "DEPRECATED",
 ] as const
 
-export function CatalogBookDetailView({ book, lang }: Props) {
+export function CatalogBookDetailView({ book, lang, dictionary }: Props) {
+  const d = dictionary?.operator?.catalog
+  const actions = dictionary?.operator?.common?.actions
   const [isPending, startTransition] = useTransition()
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleted, setIsDeleted] = useState(false)
@@ -131,13 +135,13 @@ export function CatalogBookDetailView({ book, lang }: Props) {
 
         const result = await updateCatalogBook(book.id, formData)
         if (!result.success) {
-          toast.error("Failed to update book")
+          toast.error(d?.failedToUpdate || "Failed to update book")
           return
         }
-        toast.success("Book updated")
+        toast.success(d?.bookUpdated || "Book updated")
         setIsEditOpen(false)
       } catch {
-        toast.error("Failed to update book")
+        toast.error(d?.failedToUpdate || "Failed to update book")
       }
     })
   }
@@ -146,10 +150,10 @@ export function CatalogBookDetailView({ book, lang }: Props) {
     startTransition(async () => {
       try {
         await deleteCatalogBook(book.id)
-        toast.success("Book deleted")
+        toast.success(d?.bookDeleted || "Book deleted")
         setIsDeleted(true)
       } catch {
-        toast.error("Failed to delete book")
+        toast.error(d?.failedToDelete || "Failed to delete book")
       }
     })
   }
@@ -159,9 +163,9 @@ export function CatalogBookDetailView({ book, lang }: Props) {
       <PageContainer>
         <div className="py-12 text-center">
           <p className="text-muted-foreground">
-            Book deleted.{" "}
+            {d?.bookDeleted || "Book deleted"}.{" "}
             <Link href={`/${lang}/catalog/books`} className="underline">
-              Back to books
+              {d?.backToBooks || "Back to books"}
             </Link>
           </p>
         </div>
@@ -174,7 +178,7 @@ export function CatalogBookDetailView({ book, lang }: Props) {
       {/* Breadcrumb */}
       <nav className="text-muted-foreground mb-4 text-sm">
         <Link href={`/${lang}/catalog/books`} className="hover:underline">
-          Books
+          {d?.books || "Books"}
         </Link>
         <span className="mx-2">/</span>
         <span className="text-foreground">{book.title}</span>
@@ -204,7 +208,9 @@ export function CatalogBookDetailView({ book, lang }: Props) {
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Schools Using</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.schoolsUsing || "Schools Using"}
+            </CardTitle>
             <GraduationCap className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -213,7 +219,9 @@ export function CatalogBookDetailView({ book, lang }: Props) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">School Copies</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.schoolCopies || "School Copies"}
+            </CardTitle>
             <BookOpen className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -222,7 +230,9 @@ export function CatalogBookDetailView({ book, lang }: Props) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rating</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.rating || "Rating"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -237,9 +247,10 @@ export function CatalogBookDetailView({ book, lang }: Props) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Book Details</CardTitle>
+              <CardTitle>{d?.bookDetails || "Book Details"}</CardTitle>
               <CardDescription>
-                Metadata and description for this catalog book
+                {d?.metadataDescription ||
+                  "Metadata and description for this catalog book"}
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -249,32 +260,37 @@ export function CatalogBookDetailView({ book, lang }: Props) {
                 disabled={isPending}
               >
                 <Pencil className="me-2 size-4" />
-                Edit
+                {actions?.edit || "Edit"}
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" disabled={isPending}>
                     <Trash2 className="me-2 size-4" />
-                    Delete
+                    {actions?.delete || "Delete"}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>
-                      Delete &quot;{book.title}&quot;?
+                      {(d?.deleteConfirmTitle || 'Delete "{title}"?').replace(
+                        "{title}",
+                        book.title
+                      )}
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently delete this catalog book and remove
-                      all school selections. This action cannot be undone.
+                      {d?.deleteConfirmDescription ||
+                        "This will permanently delete this catalog book and remove all school selections. This action cannot be undone."}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>
+                      {actions?.cancel || "Cancel"}
+                    </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDelete}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      Delete
+                      {actions?.delete || "Delete"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -285,46 +301,62 @@ export function CatalogBookDetailView({ book, lang }: Props) {
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-muted-foreground text-sm">ISBN</dt>
+              <dt className="text-muted-foreground text-sm">
+                {d?.isbn || "ISBN"}
+              </dt>
               <dd>{book.isbn || "—"}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-sm">Publisher</dt>
+              <dt className="text-muted-foreground text-sm">
+                {d?.publisher || "Publisher"}
+              </dt>
               <dd>{book.publisher || "—"}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground text-sm">
-                Publication Year
+                {d?.publicationYear || "Publication Year"}
               </dt>
               <dd>{book.publicationYear || "—"}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-sm">Page Count</dt>
+              <dt className="text-muted-foreground text-sm">
+                {d?.pageCount || "Page Count"}
+              </dt>
               <dd>{book.pageCount || "—"}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-sm">Language</dt>
+              <dt className="text-muted-foreground text-sm">
+                {d?.language || "Language"}
+              </dt>
               <dd>{book.language}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-sm">Visibility</dt>
+              <dt className="text-muted-foreground text-sm">
+                {d?.visibility || "Visibility"}
+              </dt>
               <dd>{book.visibility}</dd>
             </div>
             {book.description && (
               <div className="sm:col-span-2">
-                <dt className="text-muted-foreground text-sm">Description</dt>
+                <dt className="text-muted-foreground text-sm">
+                  {d?.description || "Description"}
+                </dt>
                 <dd className="whitespace-pre-wrap">{book.description}</dd>
               </div>
             )}
             {book.summary && (
               <div className="sm:col-span-2">
-                <dt className="text-muted-foreground text-sm">Summary</dt>
+                <dt className="text-muted-foreground text-sm">
+                  {d?.summary || "Summary"}
+                </dt>
                 <dd className="whitespace-pre-wrap">{book.summary}</dd>
               </div>
             )}
             {book.tags.length > 0 && (
               <div className="sm:col-span-2">
-                <dt className="text-muted-foreground mb-1 text-sm">Tags</dt>
+                <dt className="text-muted-foreground mb-1 text-sm">
+                  {d?.tags || "Tags"}
+                </dt>
                 <dd className="flex flex-wrap gap-1">
                   {book.tags.map((tag) => (
                     <Badge key={tag} variant="outline">
@@ -342,14 +374,14 @@ export function CatalogBookDetailView({ book, lang }: Props) {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Book</DialogTitle>
+            <DialogTitle>{d?.editBook || "Edit Book"}</DialogTitle>
             <DialogDescription>
-              Update the book details below.
+              {d?.updateBookDescription || "Update the book details below."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="edit-title">Title</Label>
+              <Label htmlFor="edit-title">{d?.title || "Title"}</Label>
               <Input
                 id="edit-title"
                 value={title}
@@ -357,7 +389,7 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-author">Author</Label>
+              <Label htmlFor="edit-author">{d?.author || "Author"}</Label>
               <Input
                 id="edit-author"
                 value={author}
@@ -365,7 +397,7 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-genre">Genre</Label>
+              <Label htmlFor="edit-genre">{d?.genre || "Genre"}</Label>
               <Input
                 id="edit-genre"
                 value={genre}
@@ -373,7 +405,7 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-isbn">ISBN</Label>
+              <Label htmlFor="edit-isbn">{d?.isbn || "ISBN"}</Label>
               <Input
                 id="edit-isbn"
                 value={isbn}
@@ -381,7 +413,9 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-publisher">Publisher</Label>
+              <Label htmlFor="edit-publisher">
+                {d?.publisher || "Publisher"}
+              </Label>
               <Input
                 id="edit-publisher"
                 value={publisher}
@@ -389,7 +423,9 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-pubyear">Publication Year</Label>
+              <Label htmlFor="edit-pubyear">
+                {d?.publicationYear || "Publication Year"}
+              </Label>
               <Input
                 id="edit-pubyear"
                 type="number"
@@ -398,7 +434,7 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-pages">Page Count</Label>
+              <Label htmlFor="edit-pages">{d?.pageCount || "Page Count"}</Label>
               <Input
                 id="edit-pages"
                 type="number"
@@ -407,7 +443,7 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{d?.status || "Status"}</Label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger>
                   <SelectValue />
@@ -422,7 +458,9 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-color">Cover Color</Label>
+              <Label htmlFor="edit-color">
+                {d?.coverColor || "Cover Color"}
+              </Label>
               <Input
                 id="edit-color"
                 type="color"
@@ -431,7 +469,9 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">
+                {d?.description || "Description"}
+              </Label>
               <Textarea
                 id="edit-description"
                 value={description}
@@ -440,7 +480,7 @@ export function CatalogBookDetailView({ book, lang }: Props) {
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="edit-summary">Summary</Label>
+              <Label htmlFor="edit-summary">{d?.summary || "Summary"}</Label>
               <Textarea
                 id="edit-summary"
                 value={summary}
@@ -451,11 +491,11 @@ export function CatalogBookDetailView({ book, lang }: Props) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
+              {actions?.cancel || "Cancel"}
             </Button>
             <Button onClick={handleSave} disabled={isPending}>
               {isPending && <Loader2 className="me-2 size-4 animate-spin" />}
-              Save Changes
+              {d?.saveChanges || "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

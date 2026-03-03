@@ -3,27 +3,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import {
   catalogChapterSchema,
   catalogLessonSchema,
   catalogSubjectSchema,
 } from "./validation"
-
-// ============================================================================
-// Authorization helper — DEVELOPER only, NO schoolId
-// ============================================================================
-
-async function requireDeveloper() {
-  const session = await auth()
-  if (session?.user?.role !== "DEVELOPER") {
-    throw new Error("Unauthorized: DEVELOPER role required")
-  }
-  return session
-}
 
 // ============================================================================
 // CatalogSubject CRUD

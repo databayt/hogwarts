@@ -3,16 +3,24 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState } from "react"
+import { Check, ChevronsUpDown } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -77,6 +85,8 @@ export default function AdminView({
   const [viewMode, setViewMode] = useState<ViewMode>("classroom")
   const [selectedId, setSelectedId] = useState<string>("")
   const [selectedClassroom, setSelectedClassroom] = useState<string>("")
+  const [classroomOpen, setClassroomOpen] = useState(false)
+  const [teacherOpen, setTeacherOpen] = useState(false)
 
   // Data lists for selectors
   const [teachers, setTeachers] = useState<
@@ -243,72 +253,106 @@ export default function AdminView({
   )
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-12">
       {/* Toolbar: Classroom + Teacher selectors */}
       <div className="flex items-center gap-4">
-        <Select value={selectedClassroom} onValueChange={handleClassroomSelect}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select classroom" />
-          </SelectTrigger>
-          <SelectContent>
-            {rooms.map((r) => (
-              <SelectItem key={r.id} value={r.id}>
-                {r.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={classroomOpen} onOpenChange={setClassroomOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-[180px] justify-between">
+              {selectedClassroom
+                ? rooms.find((r) => r.id === selectedClassroom)?.label
+                : "Select classroom"}
+              <ChevronsUpDown className="opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[180px] p-0">
+            <Command>
+              <CommandInput placeholder="Search..." />
+              <CommandList>
+                <CommandEmpty>No results.</CommandEmpty>
+                <CommandGroup>
+                  {rooms.map((r) => (
+                    <CommandItem
+                      key={r.id}
+                      value={r.label}
+                      onSelect={() => {
+                        handleClassroomSelect(r.id)
+                        setClassroomOpen(false)
+                      }}
+                    >
+                      {r.label}
+                      <Check
+                        className={cn(
+                          "ms-auto",
+                          selectedClassroom === r.id
+                            ? "opacity-100"
+                            : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
-        <Select value={selectedId} onValueChange={handleTeacherSelect}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue
-              placeholder={d?.navigation?.byTeacher || "Select teacher"}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {teachers.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={teacherOpen} onOpenChange={setTeacherOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-[180px] justify-between">
+              {selectedId
+                ? teachers.find((t) => t.id === selectedId)?.label
+                : d?.navigation?.byTeacher || "Select teacher"}
+              <ChevronsUpDown className="opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[180px] p-0">
+            <Command>
+              <CommandInput placeholder="Search..." />
+              <CommandList>
+                <CommandEmpty>No results.</CommandEmpty>
+                <CommandGroup>
+                  {teachers.map((t) => (
+                    <CommandItem
+                      key={t.id}
+                      value={t.label}
+                      onSelect={() => {
+                        handleTeacherSelect(t.id)
+                        setTeacherOpen(false)
+                      }}
+                    >
+                      {t.label}
+                      <Check
+                        className={cn(
+                          "ms-auto",
+                          selectedId === t.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Classroom View */}
       {viewMode === "classroom" && (
         <>
-          {entityInfo && (
-            <div className="text-muted-foreground flex items-center gap-3 text-sm">
-              <span className="text-foreground font-medium">
-                {entityInfo.name}
-              </span>
-              {entityInfo.capacity > 0 && (
-                <Badge variant="secondary">
-                  Capacity: {entityInfo.capacity}
-                </Badge>
-              )}
-              <Badge variant="outline">{slots.length} periods/week</Badge>
-            </div>
-          )}
-
           {isLoadingData || isLoading ? (
             <Skeleton className="h-96 w-full rounded-lg" />
           ) : selectedClassroom ? (
-            <Card>
-              <CardContent className="pt-4">
-                <SimpleGrid
-                  slots={slots}
-                  workingDays={workingDays}
-                  periods={periods}
-                  lunchAfterPeriod={lunchAfterPeriod}
-                  isRTL={isRTL}
-                  viewMode="room"
-                  editable={true}
-                  onSlotClick={handleSlotClick}
-                />
-              </CardContent>
-            </Card>
+            <SimpleGrid
+              slots={slots}
+              workingDays={workingDays}
+              periods={periods}
+              lunchAfterPeriod={lunchAfterPeriod}
+              isRTL={isRTL}
+              viewMode="room"
+              editable={true}
+              onSlotClick={handleSlotClick}
+            />
           ) : null}
         </>
       )}
@@ -332,20 +376,16 @@ export default function AdminView({
           {isLoadingData || isLoading ? (
             <Skeleton className="h-96 w-full rounded-lg" />
           ) : selectedId ? (
-            <Card>
-              <CardContent className="pt-4">
-                <SimpleGrid
-                  slots={slots}
-                  workingDays={workingDays}
-                  periods={periods}
-                  lunchAfterPeriod={lunchAfterPeriod}
-                  isRTL={isRTL}
-                  viewMode="teacher"
-                  editable={true}
-                  onSlotClick={handleSlotClick}
-                />
-              </CardContent>
-            </Card>
+            <SimpleGrid
+              slots={slots}
+              workingDays={workingDays}
+              periods={periods}
+              lunchAfterPeriod={lunchAfterPeriod}
+              isRTL={isRTL}
+              viewMode="teacher"
+              editable={true}
+              onSlotClick={handleSlotClick}
+            />
           ) : null}
         </>
       )}

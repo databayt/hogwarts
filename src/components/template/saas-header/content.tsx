@@ -27,8 +27,8 @@ import { MobileNav } from "@/components/template/mobile-nav"
 import { platformNav } from "@/components/template/saas-sidebar/config"
 
 export default function SaasHeader() {
-  const breadcrumbItems = useBreadcrumbs()
   const { dictionary } = useDictionary()
+  const breadcrumbItems = useBreadcrumbs(dictionary ?? undefined)
   const { isRTL, locale } = useLocale()
 
   // Transform saas-dashboard nav items for mobile menu
@@ -99,11 +99,15 @@ export default function SaasHeader() {
           <ModeSwitcher />
           <Button variant="link" size="icon" className="size-7">
             <Bell className="h-4 w-4" />
-            <span className="sr-only">Notifications</span>
+            <span className="sr-only">
+              {dictionary?.operator?.common?.notifications || "Notifications"}
+            </span>
           </Button>
           <Button variant="link" size="icon" className="size-7">
             <Mail className="h-4 w-4" />
-            <span className="sr-only">Messages</span>
+            <span className="sr-only">
+              {dictionary?.operator?.common?.messages || "Messages"}
+            </span>
           </Button>
           <UserButton variant="saas" />
         </div>

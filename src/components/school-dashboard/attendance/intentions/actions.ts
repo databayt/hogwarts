@@ -468,8 +468,8 @@ async function notifyIntentionSubmission(
   intentionId: string
 ): Promise<void> {
   try {
-    const intention = await db.absenceIntention.findUnique({
-      where: { id: intentionId },
+    const intention = await db.absenceIntention.findFirst({
+      where: { id: intentionId, schoolId },
       include: {
         student: {
           select: {
@@ -544,8 +544,8 @@ async function notifyIntentionDecision(
   status: "APPROVED" | "REJECTED"
 ): Promise<void> {
   try {
-    const intention = await db.absenceIntention.findUnique({
-      where: { id: intentionId },
+    const intention = await db.absenceIntention.findFirst({
+      where: { id: intentionId, schoolId },
       include: {
         student: { select: { givenName: true, surname: true } },
       },

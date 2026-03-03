@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -63,45 +64,22 @@ export async function submitQuestion(data: {
   explanation?: string
   tags?: string[]
   visibility?: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
-}) {
-  const { userId, schoolId } = await requireContributor()
+}): Promise<ActionResponse> {
+  try {
+    const { userId, schoolId } = await requireContributor()
 
-  // Create in catalog + auto-mirror to school's QuestionBank
-  const result = await db.$transaction(async (tx) => {
-    // 1. Create CatalogQuestion
-    const question = await tx.catalogQuestion.create({
-      data: {
-        catalogSubjectId: data.catalogSubjectId,
-        catalogChapterId: data.catalogChapterId ?? null,
-        catalogLessonId: data.catalogLessonId ?? null,
-        questionText: data.questionText,
-        questionType: data.questionType,
-        difficulty: data.difficulty,
-        bloomLevel: data.bloomLevel,
-        points: data.points,
-        options: data.options ?? undefined,
-        sampleAnswer: data.sampleAnswer ?? null,
-        explanation: data.explanation ?? null,
-        tags: data.tags ?? [],
-        contributedBy: userId,
-        contributedSchoolId: schoolId,
-        approvalStatus: "PENDING",
-        visibility: data.visibility ?? "PUBLIC",
-        status: "DRAFT",
-      },
-    })
+    if (!data.catalogSubjectId) {
+      return { success: false, error: "Subject is required" }
+    }
+    if (!data.questionText || data.questionText.trim().length === 0) {
+      return { success: false, error: "Question text is required" }
+    }
 
-    // 2. Auto-mirror to school's QuestionBank if subject is linked
-    const subject = await tx.subject.findFirst({
-      where: { schoolId, catalogSubjectId: data.catalogSubjectId },
-    })
-
-    if (subject) {
-      const mirror = await tx.questionBank.create({
+    // Create in catalog + auto-mirror to school's QuestionBank
+    const result = await db.$transaction(async (tx) => {
+      // 1. Create CatalogQuestion
+      const question = await tx.catalogQuestion.create({
         data: {
-          schoolId,
-          subjectId: subject.id,
-          catalogQuestionId: question.id,
           catalogSubjectId: data.catalogSubjectId,
           catalogChapterId: data.catalogChapterId ?? null,
           catalogLessonId: data.catalogLessonId ?? null,
@@ -114,22 +92,60 @@ export async function submitQuestion(data: {
           sampleAnswer: data.sampleAnswer ?? null,
           explanation: data.explanation ?? null,
           tags: data.tags ?? [],
-          source: "MANUAL",
-          createdBy: userId,
+          contributedBy: userId,
+          contributedSchoolId: schoolId,
+          approvalStatus: "PENDING",
+          visibility: data.visibility ?? "PUBLIC",
+          status: "DRAFT",
         },
       })
 
-      await tx.questionAnalytics.create({
-        data: { questionId: mirror.id, schoolId },
+      // 2. Auto-mirror to school's QuestionBank if subject is linked
+      const subject = await tx.subject.findFirst({
+        where: { schoolId, catalogSubjectId: data.catalogSubjectId },
       })
+
+      if (subject) {
+        const mirror = await tx.questionBank.create({
+          data: {
+            schoolId,
+            subjectId: subject.id,
+            catalogQuestionId: question.id,
+            catalogSubjectId: data.catalogSubjectId,
+            catalogChapterId: data.catalogChapterId ?? null,
+            catalogLessonId: data.catalogLessonId ?? null,
+            questionText: data.questionText,
+            questionType: data.questionType,
+            difficulty: data.difficulty,
+            bloomLevel: data.bloomLevel,
+            points: data.points,
+            options: data.options ?? undefined,
+            sampleAnswer: data.sampleAnswer ?? null,
+            explanation: data.explanation ?? null,
+            tags: data.tags ?? [],
+            source: "MANUAL",
+            createdBy: userId,
+          },
+        })
+
+        await tx.questionAnalytics.create({
+          data: { questionId: mirror.id, schoolId },
+        })
+      }
+
+      return question
+    })
+
+    revalidatePath("/subjects/catalog")
+    revalidatePath("/exams/qbank")
+    return { success: true, data: { id: result.id } }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to submit question",
     }
-
-    return question
-  })
-
-  revalidatePath("/subjects/catalog")
-  revalidatePath("/exams/qbank")
-  return { success: true, id: result.id }
+  }
 }
 
 // ============================================================================
@@ -156,29 +172,44 @@ export async function submitMaterial(data: {
     | "OTHER"
   externalUrl?: string
   tags?: string[]
-}) {
-  const { userId, schoolId } = await requireContributor()
+}): Promise<ActionResponse> {
+  try {
+    const { userId, schoolId } = await requireContributor()
 
-  const material = await db.catalogMaterial.create({
-    data: {
-      catalogSubjectId: data.catalogSubjectId,
-      catalogChapterId: data.catalogChapterId ?? null,
-      catalogLessonId: data.catalogLessonId ?? null,
-      title: data.title,
-      description: data.description ?? null,
-      type: data.type,
-      externalUrl: data.externalUrl ?? null,
-      tags: data.tags ?? [],
-      contributedBy: userId,
-      contributedSchoolId: schoolId,
-      approvalStatus: "PENDING",
-      visibility: "PUBLIC",
-      status: "DRAFT",
-    },
-  })
+    if (!data.catalogSubjectId) {
+      return { success: false, error: "Subject is required" }
+    }
+    if (!data.title || data.title.trim().length === 0) {
+      return { success: false, error: "Title is required" }
+    }
 
-  revalidatePath("/subjects/catalog")
-  return { success: true, id: material.id }
+    const material = await db.catalogMaterial.create({
+      data: {
+        catalogSubjectId: data.catalogSubjectId,
+        catalogChapterId: data.catalogChapterId ?? null,
+        catalogLessonId: data.catalogLessonId ?? null,
+        title: data.title,
+        description: data.description ?? null,
+        type: data.type,
+        externalUrl: data.externalUrl ?? null,
+        tags: data.tags ?? [],
+        contributedBy: userId,
+        contributedSchoolId: schoolId,
+        approvalStatus: "PENDING",
+        visibility: "PUBLIC",
+        status: "DRAFT",
+      },
+    })
+
+    revalidatePath("/subjects/catalog")
+    return { success: true, data: { id: material.id } }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to submit material",
+    }
+  }
 }
 
 // ============================================================================
@@ -197,32 +228,47 @@ export async function submitAssignment(data: {
   estimatedTime?: number
   assignmentType?: string
   tags?: string[]
-}) {
-  const { userId, schoolId } = await requireContributor()
+}): Promise<ActionResponse> {
+  try {
+    const { userId, schoolId } = await requireContributor()
 
-  const assignment = await db.catalogAssignment.create({
-    data: {
-      catalogSubjectId: data.catalogSubjectId,
-      catalogChapterId: data.catalogChapterId ?? null,
-      catalogLessonId: data.catalogLessonId ?? null,
-      title: data.title,
-      description: data.description ?? null,
-      instructions: data.instructions ?? null,
-      rubric: data.rubric ?? null,
-      totalPoints: data.totalPoints ?? null,
-      estimatedTime: data.estimatedTime ?? null,
-      assignmentType: data.assignmentType ?? null,
-      tags: data.tags ?? [],
-      contributedBy: userId,
-      contributedSchoolId: schoolId,
-      approvalStatus: "PENDING",
-      visibility: "PUBLIC",
-      status: "DRAFT",
-    },
-  })
+    if (!data.catalogSubjectId) {
+      return { success: false, error: "Subject is required" }
+    }
+    if (!data.title || data.title.trim().length === 0) {
+      return { success: false, error: "Title is required" }
+    }
 
-  revalidatePath("/subjects/catalog")
-  return { success: true, id: assignment.id }
+    const assignment = await db.catalogAssignment.create({
+      data: {
+        catalogSubjectId: data.catalogSubjectId,
+        catalogChapterId: data.catalogChapterId ?? null,
+        catalogLessonId: data.catalogLessonId ?? null,
+        title: data.title,
+        description: data.description ?? null,
+        instructions: data.instructions ?? null,
+        rubric: data.rubric ?? null,
+        totalPoints: data.totalPoints ?? null,
+        estimatedTime: data.estimatedTime ?? null,
+        assignmentType: data.assignmentType ?? null,
+        tags: data.tags ?? [],
+        contributedBy: userId,
+        contributedSchoolId: schoolId,
+        approvalStatus: "PENDING",
+        visibility: "PUBLIC",
+        status: "DRAFT",
+      },
+    })
+
+    revalidatePath("/subjects/catalog")
+    return { success: true, data: { id: assignment.id } }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to submit assignment",
+    }
+  }
 }
 
 // ============================================================================
@@ -233,43 +279,71 @@ export async function updateContributionVisibility(
   type: "question" | "material" | "assignment",
   id: string,
   visibility: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
-) {
-  const { userId } = await requireContributor()
+): Promise<ActionResponse> {
+  try {
+    const { userId } = await requireContributor()
 
-  if (type === "question") {
-    const item = await db.catalogQuestion.findFirst({
-      where: { id, contributedBy: userId },
-    })
-    if (!item) throw new Error("Question not found or not owned by you")
+    if (type === "question") {
+      const item = await db.catalogQuestion.findFirst({
+        where: { id, contributedBy: userId },
+      })
+      if (!item) {
+        return {
+          success: false,
+          error: "Question not found or not owned by you",
+        }
+      }
 
-    await db.catalogQuestion.update({
-      where: { id },
-      data: { visibility },
-    })
-  } else if (type === "material") {
-    const item = await db.catalogMaterial.findFirst({
-      where: { id, contributedBy: userId },
-    })
-    if (!item) throw new Error("Material not found or not owned by you")
+      await db.catalogQuestion.update({
+        where: { id },
+        data: { visibility },
+      })
+    } else if (type === "material") {
+      const item = await db.catalogMaterial.findFirst({
+        where: { id, contributedBy: userId },
+      })
+      if (!item) {
+        return {
+          success: false,
+          error: "Material not found or not owned by you",
+        }
+      }
 
-    await db.catalogMaterial.update({
-      where: { id },
-      data: { visibility },
-    })
-  } else if (type === "assignment") {
-    const item = await db.catalogAssignment.findFirst({
-      where: { id, contributedBy: userId },
-    })
-    if (!item) throw new Error("Assignment not found or not owned by you")
+      await db.catalogMaterial.update({
+        where: { id },
+        data: { visibility },
+      })
+    } else if (type === "assignment") {
+      const item = await db.catalogAssignment.findFirst({
+        where: { id, contributedBy: userId },
+      })
+      if (!item) {
+        return {
+          success: false,
+          error: "Assignment not found or not owned by you",
+        }
+      }
 
-    await db.catalogAssignment.update({
-      where: { id },
-      data: { visibility },
-    })
+      await db.catalogAssignment.update({
+        where: { id },
+        data: { visibility },
+      })
+    } else {
+      return {
+        success: false,
+        error: `Unknown content type: ${type}`,
+      }
+    }
+
+    revalidatePath("/subjects/catalog")
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to update visibility",
+    }
   }
-
-  revalidatePath("/subjects/catalog")
-  return { success: true }
 }
 
 // ============================================================================
@@ -277,37 +351,41 @@ export async function updateContributionVisibility(
 // ============================================================================
 
 export async function getMyContributions() {
-  const { userId } = await requireContributor()
+  try {
+    const { userId } = await requireContributor()
 
-  const [questions, materials, assignments] = await Promise.all([
-    db.catalogQuestion.findMany({
-      where: { contributedBy: userId },
-      include: {
-        catalogSubject: { select: { id: true, name: true } },
-        catalogChapter: { select: { id: true, name: true } },
-        catalogLesson: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    db.catalogMaterial.findMany({
-      where: { contributedBy: userId },
-      include: {
-        catalogSubject: { select: { id: true, name: true } },
-        catalogChapter: { select: { id: true, name: true } },
-        catalogLesson: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    db.catalogAssignment.findMany({
-      where: { contributedBy: userId },
-      include: {
-        catalogSubject: { select: { id: true, name: true } },
-        catalogChapter: { select: { id: true, name: true } },
-        catalogLesson: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-  ])
+    const [questions, materials, assignments] = await Promise.all([
+      db.catalogQuestion.findMany({
+        where: { contributedBy: userId },
+        include: {
+          catalogSubject: { select: { id: true, name: true } },
+          catalogChapter: { select: { id: true, name: true } },
+          catalogLesson: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      db.catalogMaterial.findMany({
+        where: { contributedBy: userId },
+        include: {
+          catalogSubject: { select: { id: true, name: true } },
+          catalogChapter: { select: { id: true, name: true } },
+          catalogLesson: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      db.catalogAssignment.findMany({
+        where: { contributedBy: userId },
+        include: {
+          catalogSubject: { select: { id: true, name: true } },
+          catalogChapter: { select: { id: true, name: true } },
+          catalogLesson: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    ])
 
-  return { questions, materials, assignments }
+    return { questions, materials, assignments }
+  } catch {
+    return { questions: [], materials: [], assignments: [] }
+  }
 }

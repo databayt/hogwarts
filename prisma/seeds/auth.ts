@@ -21,7 +21,7 @@
 
 import type { PrismaClient, UserRole } from "@prisma/client"
 
-import { ADMIN_USERS } from "./constants"
+import { ADMIN_USERS, HP_CHARACTERS } from "./constants"
 import type { UserRef } from "./types"
 import {
   generateSchoolEmail,
@@ -60,11 +60,16 @@ export async function seedAdminUsers(
         where: { email: userData.email, schoolId: userSchoolId },
       })
 
+      const bio = (userData as { bio?: string }).bio || null
+      const image = (userData as { image?: string }).image || null
+
       const user = existing
         ? await prisma.user.update({
             where: { id: existing.id },
             data: {
               username: userData.username,
+              bio,
+              image,
               password: passwordHash,
               role: userData.role as UserRole,
               emailVerified: new Date(),
@@ -74,6 +79,8 @@ export async function seedAdminUsers(
             data: {
               email: userData.email,
               username: userData.username,
+              bio,
+              image,
               password: passwordHash,
               role: userData.role as UserRole,
               schoolId: userSchoolId,
@@ -143,11 +150,21 @@ export async function seedTeacherUsers(
         update: {
           password: passwordHash,
           role: "TEACHER",
+          ...(index === 0
+            ? {
+                username: HP_CHARACTERS.teacher.nameAr,
+                bio: HP_CHARACTERS.teacher.bio,
+              }
+            : {}),
           emailVerified: new Date(),
         },
         create: {
           email,
-          username: `Teacher ${index === 0 ? "" : index}`.trim(),
+          username:
+            index === 0
+              ? HP_CHARACTERS.teacher.nameAr
+              : `Teacher ${index}`.trim(),
+          ...(index === 0 ? { bio: HP_CHARACTERS.teacher.bio } : {}),
           password: passwordHash,
           role: "TEACHER",
           schoolId,
@@ -215,11 +232,21 @@ export async function seedStudentUsers(
         update: {
           password: passwordHash,
           role: "STUDENT",
+          ...(index === 0
+            ? {
+                username: HP_CHARACTERS.student.nameAr,
+                bio: HP_CHARACTERS.student.bio,
+              }
+            : {}),
           emailVerified: new Date(),
         },
         create: {
           email,
-          username: `Student ${index === 0 ? "" : index}`.trim(),
+          username:
+            index === 0
+              ? HP_CHARACTERS.student.nameAr
+              : `Student ${index}`.trim(),
+          ...(index === 0 ? { bio: HP_CHARACTERS.student.bio } : {}),
           password: passwordHash,
           role: "STUDENT",
           schoolId,
@@ -287,11 +314,32 @@ export async function seedGuardianUsers(
         update: {
           password: passwordHash,
           role: "GUARDIAN",
+          ...(index === 0
+            ? {
+                username: HP_CHARACTERS.guardian0.nameAr,
+                bio: HP_CHARACTERS.guardian0.bio,
+              }
+            : index === 1
+              ? {
+                  username: HP_CHARACTERS.guardian1.nameAr,
+                  bio: HP_CHARACTERS.guardian1.bio,
+                }
+              : {}),
           emailVerified: new Date(),
         },
         create: {
           email,
-          username: `Parent ${index === 0 ? "" : index}`.trim(),
+          username:
+            index === 0
+              ? HP_CHARACTERS.guardian0.nameAr
+              : index === 1
+                ? HP_CHARACTERS.guardian1.nameAr
+                : `Parent ${index}`.trim(),
+          ...(index === 0
+            ? { bio: HP_CHARACTERS.guardian0.bio }
+            : index === 1
+              ? { bio: HP_CHARACTERS.guardian1.bio }
+              : {}),
           password: passwordHash,
           role: "GUARDIAN",
           schoolId,

@@ -16,7 +16,12 @@ export default async function CatalogApprovalsPage({ params }: Props) {
 
   return (
     <>
-      <PageHeadingSetter title="Content Approvals" />
+      <PageHeadingSetter
+        title={
+          dictionary?.saas?.catalog?.navigation?.approvals ||
+          "Content Approvals"
+        }
+      />
       <ApprovalContent dictionary={dictionary} lang={lang} />
     </>
   )

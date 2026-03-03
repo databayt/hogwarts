@@ -52,7 +52,7 @@ export default function SettingsContent({ dictionary, lang }: Props) {
   useEffect(() => {
     const loadSettings = async () => {
       const result = await getAdmissionSettings()
-      if (result.success) {
+      if (result.success && result.data) {
         setSettings({
           allowMultipleApplications: result.data.allowMultipleApplications,
           requireDocuments: result.data.requireDocuments,

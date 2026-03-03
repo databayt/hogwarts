@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Student Profile Achievements Tab
  * Awards, certificates, badges, and accomplishments
@@ -571,7 +568,7 @@ export function AchievementsTab({
         </CardHeader>
         <CardContent>
           <div className="relative space-y-4">
-            <div className="bg-border absolute start-4 top-0 bottom-0 w-px" />
+            <div className="bg-border absolute top-0 bottom-0 left-4 w-px" />
             {mockAchievements.slice(0, 5).map((achievement, index) => (
               <div
                 key={achievement.id}

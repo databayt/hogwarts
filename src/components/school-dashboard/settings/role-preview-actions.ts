@@ -29,8 +29,7 @@ export async function setPreviewRole(role: UserRole) {
   // Allow DEVELOPER and ADMIN to preview any role
   // Allow developer mode (stored in localStorage) to bypass this check
   if (userRole !== "DEVELOPER" && userRole !== "ADMIN") {
-    // For other users, we'll check if developer mode is enabled on the client
-    // This is handled in the client component
+    throw new Error("Insufficient permissions to preview roles")
   }
 
   // Set cookies for preview mode

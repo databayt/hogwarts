@@ -12,6 +12,7 @@ import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
+import { SeeMore } from "@/components/atom/see-more"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -203,7 +204,10 @@ function StudentsTableInner({
   // Handle view
   const handleView = useCallback(
     (student: StudentRow) => {
-      router.push(`/${lang}/students/${student.id}`)
+      const target = student.userId
+        ? `/${lang}/profile/${student.userId}`
+        : `/${lang}/students/${student.id}`
+      router.push(target)
     },
     [router, lang]
   )
@@ -367,19 +371,13 @@ function StudentsTableInner({
           )}
 
           {/* Load more for grid view */}
-          {hasMore && (
-            <div className="mt-4 flex justify-center">
-              <button
-                onClick={loadMore}
-                disabled={isLoading}
-                className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
-              >
-                {isLoading
-                  ? dictionary?.loading || "Loading..."
-                  : dictionary?.loadMore || "Load More"}
-              </button>
-            </div>
-          )}
+          <SeeMore
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onClick={loadMore}
+            label={dictionary?.loadMore || "Load More"}
+            className="mt-4"
+          />
         </>
       )}
 

@@ -3,7 +3,18 @@
 
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Calendar, Clock, FileText, Pencil, Users } from "lucide-react"
+import { auth } from "@/auth"
+import {
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Clock,
+  FileText,
+  Pencil,
+  Play,
+  Trophy,
+  Users,
+} from "lucide-react"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -21,14 +32,32 @@ interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
 }
 
+const STATUS_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  PLANNED: "outline",
+  IN_PROGRESS: "secondary",
+  COMPLETED: "default",
+  CANCELLED: "destructive",
+}
+
 export default async function Page({ params }: Props) {
   const { lang, id } = await params
-  const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const [dictionary, { schoolId }, session] = await Promise.all([
+    getDictionary(lang),
+    getTenantContext(),
+    auth(),
+  ])
 
   if (!schoolId) {
     return notFound()
   }
+
+  const role = session?.user?.role
+  const isStudent = role === "STUDENT"
+  const isGuardian = role === "GUARDIAN"
+  const canEdit = role === "ADMIN" || role === "TEACHER" || role === "DEVELOPER"
 
   const exam = await db.exam.findUnique({
     where: { id, schoolId },
@@ -47,6 +76,34 @@ export default async function Page({ params }: Props) {
     return notFound()
   }
 
+  // For students: check if they have a result for this exam
+  let studentResult: {
+    marksObtained: number
+    totalMarks: number
+    percentage: number
+    grade: string | null
+    isAbsent: boolean
+  } | null = null
+
+  if (isStudent && session?.user?.id) {
+    const student = await db.student.findFirst({
+      where: { userId: session.user.id, schoolId },
+      select: { id: true },
+    })
+    if (student) {
+      studentResult = await db.examResult.findFirst({
+        where: { examId: id, studentId: student.id, schoolId },
+        select: {
+          marksObtained: true,
+          totalMarks: true,
+          percentage: true,
+          grade: true,
+          isAbsent: true,
+        },
+      })
+    }
+  }
+
   const d = dictionary?.school?.exams
 
   return (
@@ -57,13 +114,87 @@ export default async function Page({ params }: Props) {
             title={exam.title}
             description={exam.description || d?.description || "Exam Details"}
           />
-          <Button asChild>
-            <Link href={`/${lang}/exams/${id}/edit`}>
-              <Pencil className="me-2 h-4 w-4" />
-              {d?.edit || "Edit"}
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            {isStudent && exam.status === "IN_PROGRESS" && !studentResult && (
+              <Button asChild>
+                <Link href={`/${lang}/exams/${id}/take`}>
+                  <Play className="me-2 h-4 w-4" />
+                  {d?.takeExam || "Take Exam"}
+                </Link>
+              </Button>
+            )}
+            {canEdit && (
+              <Button variant="outline" asChild>
+                <Link href={`/${lang}/exams/${id}/edit`}>
+                  <Pencil className="me-2 h-4 w-4" />
+                  {d?.edit || "Edit"}
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
+
+        {/* Student result card - shown when student has completed the exam */}
+        {isStudent && studentResult && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                {d?.yourResult || "Your Result"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {studentResult.isAbsent ? (
+                <p className="text-muted-foreground">
+                  {d?.markedAbsent || "You were marked absent for this exam."}
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-6">
+                  <div>
+                    <p className="text-muted-foreground text-sm">
+                      {d?.score || "Score"}
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {studentResult.marksObtained}/{studentResult.totalMarks}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-sm">
+                      {d?.percentage || "Percentage"}
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {studentResult.percentage.toFixed(1)}%
+                    </p>
+                  </div>
+                  {studentResult.grade && (
+                    <div>
+                      <p className="text-muted-foreground text-sm">
+                        {d?.grade || "Grade"}
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {studentResult.grade}
+                      </p>
+                    </div>
+                  )}
+                  <div className="flex items-center">
+                    <Badge
+                      variant={
+                        studentResult.percentage >= 50
+                          ? "default"
+                          : "destructive"
+                      }
+                    >
+                      <CheckCircle className="me-1 h-3 w-3" />
+                      {studentResult.percentage >= 50
+                        ? d?.passed || "Passed"
+                        : d?.failed || "Failed"}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card>
@@ -126,7 +257,8 @@ export default async function Page({ params }: Props) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <BookOpen className="h-4 w-4" />
                 {d?.subject || "Subject"}
               </CardTitle>
             </CardHeader>
@@ -144,9 +276,7 @@ export default async function Page({ params }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Badge
-                variant={exam.status === "COMPLETED" ? "default" : "secondary"}
-              >
+              <Badge variant={STATUS_VARIANTS[exam.status] || "secondary"}>
                 {exam.status}
               </Badge>
               <p className="text-muted-foreground mt-2 text-sm">
@@ -167,16 +297,19 @@ export default async function Page({ params }: Props) {
           </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{d?.statistics || "Statistics"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              {d?.totalResults || "Total Results"}: {exam._count.examResults}
-            </p>
-          </CardContent>
-        </Card>
+        {/* Statistics - only for admin/teacher */}
+        {canEdit && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{d?.statistics || "Statistics"}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm">
+                {d?.totalResults || "Total Results"}: {exam._count.examResults}
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </PageContainer>
   )

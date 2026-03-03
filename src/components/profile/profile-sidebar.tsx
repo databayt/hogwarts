@@ -1,30 +1,8 @@
 "use client"
 
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
 import Link from "next/link"
-import {
-  Award,
-  BookOpen,
-  Briefcase,
-  Building2,
-  Calendar,
-  Crown,
-  Flame,
-  GraduationCap,
-  Heart,
-  Mail,
-  MapPin,
-  Medal,
-  Phone,
-  Sparkles,
-  Star,
-  Target,
-  Trophy,
-  Users,
-  Zap,
-} from "lucide-react"
+import { MapPin } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -36,6 +14,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  OcticonBook,
+  OcticonClock,
+  OcticonGitFork,
+  OcticonOrganization,
+  OcticonPeople,
+  OcticonRepo,
+  OcticonStar,
+  OcticonStarFilled,
+  OcticonTable,
+} from "@/components/atom/icons"
 
 import type {
   Achievement,
@@ -52,16 +41,16 @@ interface ProfileSidebarProps {
 
 // Achievement badge icons mapping
 const achievementIcons: Record<string, React.ReactNode> = {
-  honor_roll: <Trophy className="size-5 text-amber-400" />,
-  perfect_attendance: <Calendar className="size-5 text-emerald-400" />,
-  science_fair: <Sparkles className="size-5 text-purple-400" />,
-  sports: <Medal className="size-5 text-blue-400" />,
-  leadership: <Crown className="size-5 text-amber-500" />,
-  academic: <Star className="size-5 text-yellow-400" />,
-  community: <Heart className="size-5 text-rose-400" />,
-  streak: <Flame className="size-5 text-orange-400" />,
-  excellence: <Award className="size-5 text-indigo-400" />,
-  participation: <Target className="size-5 text-cyan-400" />,
+  honor_roll: <OcticonStarFilled className="size-5 text-amber-400" />,
+  perfect_attendance: <OcticonClock className="size-5 text-emerald-400" />,
+  science_fair: <OcticonRepo className="size-5 text-purple-400" />,
+  sports: <OcticonStar className="size-5 text-blue-400" />,
+  leadership: <OcticonOrganization className="size-5 text-amber-500" />,
+  academic: <OcticonBook className="size-5 text-yellow-400" />,
+  community: <OcticonPeople className="size-5 text-rose-400" />,
+  streak: <OcticonGitFork className="size-5 text-orange-400" />,
+  excellence: <OcticonTable className="size-5 text-indigo-400" />,
+  participation: <OcticonStar className="size-5 text-cyan-400" />,
 }
 
 // Achievement level colors
@@ -85,20 +74,24 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           (data.grNumber as string) ||
           `@student_${(data.id as string)?.slice(-6)}`,
         role: "Student",
-        icon: <GraduationCap className="size-4" />,
+        icon: <OcticonBook className="size-4" />,
         imageSrc: (data.profilePhotoUrl as string) || "/contributors/h.jpeg",
         initials,
         stats: [
           {
             label: "subjects",
             value: 8,
-            icon: <BookOpen className="size-4" />,
+            icon: <OcticonRepo className="size-4" />,
           },
-          { label: "projects", value: 12, icon: <Target className="size-4" /> },
+          {
+            label: "projects",
+            value: 12,
+            icon: <OcticonTable className="size-4" />,
+          },
         ] as ProfileStat[],
         info: [
           {
-            icon: <Building2 className="size-4" />,
+            icon: <OcticonOrganization className="size-4" />,
             value: "Grade 10 - Section A",
           },
           {
@@ -106,7 +99,7 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
             value: (data.city as string) || "Campus",
           },
           {
-            icon: <Calendar className="size-4" />,
+            icon: <OcticonClock className="size-4" />,
             value: `Enrolled ${formatDate(data.enrollmentDate as string)}`,
           },
         ],
@@ -175,28 +168,32 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           (data.employeeId as string) ||
           `@teacher_${(data.id as string)?.slice(-6)}`,
         role: "Teacher",
-        icon: <Briefcase className="size-4" />,
+        icon: <OcticonRepo className="size-4" />,
         imageSrc: (data.profilePhotoUrl as string) || "/contributors/d.jpeg",
         initials,
         stats: [
-          { label: "classes", value: 6, icon: <Users className="size-4" /> },
+          {
+            label: "classes",
+            value: 6,
+            icon: <OcticonRepo className="size-4" />,
+          },
           {
             label: "students",
             value: 127,
-            icon: <GraduationCap className="size-4" />,
+            icon: <OcticonPeople className="size-4" />,
           },
         ] as ProfileStat[],
         info: [
           {
-            icon: <Building2 className="size-4" />,
+            icon: <OcticonOrganization className="size-4" />,
             value: "Mathematics Department",
           },
           {
-            icon: <Mail className="size-4" />,
+            icon: <OcticonBook className="size-4" />,
             value: data.emailAddress as string,
           },
           {
-            icon: <Calendar className="size-4" />,
+            icon: <OcticonClock className="size-4" />,
             value: `Joined ${formatDate((data.joiningDate as string) || (data.createdAt as string))}`,
           },
         ],
@@ -250,21 +247,32 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
         title: fullName,
         subtitle: `@parent_${(data.id as string)?.slice(-6)}`,
         role: "Parent / Guardian",
-        icon: <Heart className="size-4" />,
+        icon: <OcticonPeople className="size-4" />,
         imageSrc: (data.profilePhotoUrl as string) || "/contributors/d.jpeg",
         initials,
         stats: [
-          { label: "children", value: 3, icon: <Users className="size-4" /> },
-          { label: "events", value: 5, icon: <Calendar className="size-4" /> },
+          {
+            label: "children",
+            value: 3,
+            icon: <OcticonPeople className="size-4" />,
+          },
+          {
+            label: "events",
+            value: 5,
+            icon: <OcticonTable className="size-4" />,
+          },
         ] as ProfileStat[],
         info: [
           {
-            icon: <Mail className="size-4" />,
+            icon: <OcticonBook className="size-4" />,
             value: (data.emailAddress as string) || "parent@email.com",
           },
-          { icon: <Phone className="size-4" />, value: "+966 50 XXX XXXX" },
           {
-            icon: <Calendar className="size-4" />,
+            icon: <OcticonOrganization className="size-4" />,
+            value: "+966 50 XXX XXXX",
+          },
+          {
+            icon: <OcticonClock className="size-4" />,
             value: `Member since ${formatDate(data.createdAt as string)}`,
           },
         ],
@@ -357,13 +365,10 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
   }
 }
 
-function formatDate(
-  date: string | Date | undefined,
-  locale: string = "ar"
-): string {
+function formatDate(date: string | Date | undefined): string {
   if (!date) return "N/A"
   const d = new Date(date)
-  return d.toLocaleDateString(locale, { month: "short", year: "numeric" })
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" })
 }
 
 export default function ProfileSidebar({
@@ -371,16 +376,18 @@ export default function ProfileSidebar({
   data,
   isOwner = false,
 }: ProfileSidebarProps) {
-  const { open, isMobile } = useSidebar()
-  const useMobileLayout = isMobile || open
+  const { isMobile } = useSidebar()
+  const useMobileLayout = isMobile
   const config = getRoleConfig(role, data)
 
   return (
     <TooltipProvider>
-      <div className={`space-y-4 ${useMobileLayout ? "max-w-xs" : "w-72"}`}>
+      <div
+        className={`space-y-4 ${useMobileLayout ? "max-w-xs" : "w-full max-w-72"}`}
+      >
         {/* Profile Avatar */}
         <div className="group relative">
-          <Avatar className="border-border size-64 border-4 shadow-lg transition-transform group-hover:scale-[1.02]">
+          <Avatar className="border-border size-52 border-4 shadow-lg transition-transform group-hover:scale-[1.02] lg:size-56 xl:size-64">
             <AvatarImage
               src={config.imageSrc}
               alt={config.title}
@@ -411,10 +418,11 @@ export default function ProfileSidebar({
         </div>
 
         {/* Bio / Description */}
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          Passionate about learning and growth. Always striving for excellence
-          in academics and extracurricular activities.
-        </p>
+        {(data.bio as string) && (
+          <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+            {data.bio as string}
+          </p>
+        )}
 
         {/* Edit Profile Button - GitHub style (only for owner) */}
         {isOwner && (

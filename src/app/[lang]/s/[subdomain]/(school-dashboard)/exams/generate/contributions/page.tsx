@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+
 import type { Locale } from "@/components/internationalization/config"
 import ExamContributionsContent from "@/components/school-dashboard/exams/generate/contributions"
 
@@ -9,7 +12,12 @@ interface PageProps {
 }
 
 export default async function ContributionsPage({ params }: PageProps) {
-  await params
+  const { lang } = await params
+
+  const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams`)
+  }
 
   return (
     <div className="space-y-6">

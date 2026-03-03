@@ -82,7 +82,7 @@ export async function uploadReceipt(
 
     // 4. Upload to storage using centralized provider
     const filename = `${schoolId}/receipts/${Date.now()}-${file.name}`
-    const provider = getProvider("vercel_blob")
+    const provider = getProvider("aws_s3")
     const fileUrl = await provider.upload(file, filename, {
       contentType: file.type,
     })
@@ -345,7 +345,7 @@ export async function deleteReceipt(id: string): Promise<ServerActionResponse> {
     }
 
     // 5. Delete file from storage using centralized provider
-    const provider = getProvider("vercel_blob")
+    const provider = getProvider("aws_s3")
     await provider.delete(receipt.fileUrl)
 
     logger.info("Receipt file deleted from storage", {

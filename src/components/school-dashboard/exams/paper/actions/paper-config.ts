@@ -37,8 +37,8 @@ export async function createPaperConfig(
     }
 
     // Check if config already exists for this generated exam
-    const existing = await db.examPaperConfig.findUnique({
-      where: { generatedExamId: input.generatedExamId },
+    const existing = await db.examPaperConfig.findFirst({
+      where: { generatedExamId: input.generatedExamId, schoolId },
     })
 
     if (existing) {

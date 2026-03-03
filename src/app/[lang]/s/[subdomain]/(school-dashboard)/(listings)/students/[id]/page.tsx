@@ -1,15 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { notFound } from "next/navigation"
-import { auth } from "@/auth"
+import { notFound, redirect } from "next/navigation"
 
 import { db } from "@/lib/db"
-import { getModel } from "@/lib/prisma-guards"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getTenantContext } from "@/components/saas-dashboard/lib/tenant"
-import { StudentProfile } from "@/components/school-dashboard/listings/students/profile/student-profile"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
@@ -17,140 +12,22 @@ interface Props {
 
 export default async function StudentDetail({ params }: Props) {
   const { lang, id } = await params
-  const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
-  const studentModel = getModel("student")
-  if (!schoolId || !studentModel) return notFound()
 
-  // Get current session to determine ownership
-  const session = await auth()
-
-  // Calculate date range for attendance (last 60 days)
-  const sixtyDaysAgo = new Date()
-  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
-
-  const student = await studentModel.findFirst({
-    where: { id, schoolId },
-    include: {
-      // Academic grade (catalog integration)
-      academicGrade: {
-        include: {
-          level: true,
-          subjectSelections: {
-            include: {
-              subject: {
-                select: {
-                  id: true,
-                  subjectName: true,
-                  slug: true,
-                },
-              },
-            },
-          },
-        },
-      },
-      // Classes & Academic enrollment
-      studentClasses: {
-        include: {
-          class: {
-            include: {
-              subject: true,
-              teacher: { select: { id: true, givenName: true, surname: true } },
-            },
-          },
-        },
-      },
-      // Exam Results
-      examResults: {
-        orderBy: { createdAt: "desc" },
-        take: 20,
-        include: {
-          exam: true,
-          subject: true,
-        },
-      },
-      // Assignment Submissions
-      submissions: {
-        orderBy: { submittedAt: "desc" },
-        take: 20,
-        include: {
-          assignment: true,
-        },
-      },
-      // Guardians with contact info
-      studentGuardians: {
-        include: {
-          guardian: {
-            include: { phoneNumbers: true },
-          },
-          guardianType: true,
-        },
-      },
-      // Documents
-      documents: {
-        orderBy: { uploadedAt: "desc" },
-      },
-      // Health Records
-      healthRecords: {
-        orderBy: { recordDate: "desc" },
-      },
-      // Achievements
-      achievements: {
-        orderBy: { achievementDate: "desc" },
-      },
-      // Disciplinary Records
-      disciplinaryRecords: {
-        orderBy: { incidentDate: "desc" },
-      },
-      // Fee Records
-      feeRecords: {
-        orderBy: { dueDate: "desc" },
-      },
-      // Attendance (last 60 days)
-      attendances: {
-        where: {
-          date: { gte: sixtyDaysAgo },
-        },
-        orderBy: { date: "desc" },
-      },
-      // Year Levels for academic history
-      studentYearLevels: {
-        include: {
-          yearLevel: true,
-          schoolYear: true,
-        },
-      },
-    },
+  // Resolve userId from student record
+  const student = await db.student.findFirst({
+    where: { id },
+    select: { userId: true },
   })
 
   if (!student) return notFound()
 
-  // Fetch grade boundaries for the school's grading scheme
-  const gradeBoundaries = await db.gradeBoundary.findMany({
-    where: { schoolId },
-    orderBy: { minScore: "desc" },
-    select: { grade: true, minScore: true, maxScore: true, gpaValue: true },
-  })
+  // Redirect to unified profile if user account exists
+  if (student.userId) {
+    redirect(`/${lang}/profile/${student.userId}`)
+  }
 
-  // Check if current user is the owner of this profile
-  const isOwner = session?.user?.id === student.userId
-
-  return (
-    <div className="container py-6">
-      <StudentProfile
-        student={student}
-        dictionary={dictionary}
-        isOwner={isOwner}
-        userId={student.userId || undefined}
-        gradeBoundaries={gradeBoundaries.map((b) => ({
-          grade: b.grade,
-          minScore: Number(b.minScore),
-          maxScore: Number(b.maxScore),
-          gpaValue: b.gpaValue ? Number(b.gpaValue) : null,
-        }))}
-      />
-    </div>
-  )
+  // Fallback: student without user account
+  return notFound()
 }
 
 export const metadata = { title: "Student Profile" }

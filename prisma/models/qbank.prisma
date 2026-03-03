@@ -284,6 +284,15 @@ model ExamTemplate {
   // Example: {"REMEMBER": 4, "UNDERSTAND": 3, "APPLY": 3}
   bloomDistribution Json?
 
+  // Paper layout composition (slots + decorations + slotProps)
+  blockConfig Json?
+
+  // Scoring configuration (passingScore, gradeBoundaries)
+  scoringConfig Json?
+
+  // Print settings (pageSize, orientation, answerSheetType, layout)
+  printConfig Json?
+
   // Catalog bridge FK (adopted from catalog)
   catalogExamTemplateId String?
 
@@ -317,6 +326,7 @@ model GeneratedExam {
   examId         String // Links to Exam model
   templateId     String?
   isRandomized   Boolean @default(false)
+  isMockEligible Boolean @default(false)
   seed           String? // For reproducible randomization
   totalQuestions Int     @default(0)
 

@@ -237,19 +237,6 @@ class PerformanceOptimizer {
       return originalUrl.replace("/upload/", `/upload/${transformations}/`)
     }
 
-    // If using ImageKit
-    if (originalUrl.includes("imagekit.io")) {
-      const params = [
-        `q-${quality}`,
-        width ? `w-${width}` : "",
-        format === "auto" ? "f-auto" : `f-${format}`,
-      ]
-        .filter(Boolean)
-        .join(",")
-
-      return `${originalUrl}?tr=${params}`
-    }
-
     return originalUrl
   }
 

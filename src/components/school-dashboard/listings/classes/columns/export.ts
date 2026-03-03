@@ -16,16 +16,12 @@ export interface ClassExportData {
   id: string
   name: string
   code: string | null
-  description: string | null
   subjectName: string | null
   teacherName: string | null
   termName: string | null
-  yearLevelName: string | null
   capacity: number | null
   studentCount: number
-  schedule: string | null
   room: string | null
-  isActive: boolean
   createdAt: Date
 }
 
@@ -33,7 +29,7 @@ export interface ClassExportData {
 // Column Helpers
 // ============================================================================
 
-const { text, number, date, boolean } = createColumnHelpers<ClassExportData>()
+const { text, number, date } = createColumnHelpers<ClassExportData>()
 
 // ============================================================================
 // Export Columns
@@ -42,29 +38,12 @@ const { text, number, date, boolean } = createColumnHelpers<ClassExportData>()
 export const CLASS_EXPORT_COLUMNS: ExportColumn<ClassExportData>[] = [
   text("name", "Class Name", "اسم الفصل"),
   text("code", "Class Code", "رمز الفصل"),
-  text("description", "Description", "الوصف"),
   text("subjectName", "Subject", "المادة"),
   text("teacherName", "Teacher", "المعلم"),
   text("termName", "Term", "الفصل الدراسي"),
-  text("yearLevelName", "Year Level", "المستوى الدراسي"),
   number("capacity", "Capacity", "السعة"),
   number("studentCount", "Students", "عدد الطلاب"),
-  text("schedule", "Schedule", "الجدول"),
   text("room", "Room", "القاعة"),
-  {
-    key: "isActive",
-    header: "Active",
-    headerAr: "نشط",
-    type: "boolean",
-    align: "center",
-    format: (value, _row, locale) => {
-      const bool = Boolean(value)
-      if (locale === "ar") {
-        return bool ? "نعم" : "لا"
-      }
-      return bool ? "Yes" : "No"
-    },
-  },
   date("createdAt", "Created Date", undefined, "تاريخ الإنشاء"),
 ]
 

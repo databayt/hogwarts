@@ -126,7 +126,7 @@ export function PeriodForm({ onSuccess, lang = "en" }: PeriodFormProps) {
         closeModal()
         onSuccess?.()
       } else {
-        ErrorToast(result.error)
+        ErrorToast(result.error || "Operation failed")
       }
     })
   }

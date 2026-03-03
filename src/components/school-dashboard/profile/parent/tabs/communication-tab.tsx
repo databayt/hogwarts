@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Parent Profile Communication Tab
  * Messages with teachers, school announcements, and notifications
@@ -441,7 +438,7 @@ export function CommunicationTab({
             <CardContent className="p-4">
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
                     placeholder="Search messages..."
                     value={searchTerm}
@@ -674,7 +671,7 @@ export function CommunicationTab({
                           )}
                         </div>
                         <Button variant="ghost" size="sm">
-                          <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                          <ChevronRight className="h-4 w-4" />
                         </Button>
                       </div>
                       <p className="text-muted-foreground mt-2 text-sm">

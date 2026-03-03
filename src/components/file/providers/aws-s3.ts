@@ -14,6 +14,8 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3"
 
+import { toCloudFrontUrl } from "@/lib/cloudfront-url"
+
 import type { StorageProvider } from "../types"
 import { BaseStorageProvider, type UploadProviderOptions } from "./base"
 
@@ -87,9 +89,10 @@ export class AWSS3Provider extends BaseStorageProvider {
 
       await client.send(command)
 
-      // Return the public URL
+      // Return CloudFront URL if configured, otherwise S3 URL
       const currentRegion = process.env.AWS_REGION || "us-east-1"
-      return `https://${bucket}.s3.${currentRegion}.amazonaws.com/${path}`
+      const s3Url = `https://${bucket}.s3.${currentRegion}.amazonaws.com/${path}`
+      return toCloudFrontUrl(s3Url)
     } catch (error) {
       console.error("[AWSS3Provider] Upload error:", error)
       throw new Error(

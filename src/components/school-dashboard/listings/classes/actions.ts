@@ -68,6 +68,7 @@ import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
 import { getModelOrThrow } from "@/lib/prisma-guards"
@@ -83,14 +84,6 @@ import {
 } from "@/components/school-dashboard/listings/classes/validation"
 
 import { assertClassPermission, getAuthContext } from "./authorization"
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export type ActionResponse<T = void> =
-  | { success: true; data: T; warning?: string }
-  | { success: false; error: string }
 
 type ClassSelectResult = {
   id: string
@@ -1352,16 +1345,12 @@ export async function getClassesExportData(
       id: string
       name: string
       code: string | null
-      description: string | null
       subjectName: string | null
       teacherName: string | null
       termName: string | null
-      yearLevelName: string | null
       capacity: number | null
       studentCount: number
-      schedule: string | null
       room: string | null
-      isActive: boolean
       createdAt: Date
     }>
   >
@@ -1432,7 +1421,6 @@ export async function getClassesExportData(
       id: classItem.id,
       name: classItem.name || "",
       code: classItem.courseCode || null,
-      description: classItem.description || null,
       subjectName: classItem.subject?.subjectName || null,
       teacherName: classItem.teacher
         ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
@@ -1440,12 +1428,9 @@ export async function getClassesExportData(
       termName: classItem.term?.termNumber
         ? `Term ${classItem.term.termNumber}`
         : null,
-      yearLevelName: null, // Class model doesn't have yearLevel relation
       capacity: classItem.maxCapacity || null,
       studentCount: classItem._count.studentClasses,
-      schedule: classItem.schedule || null,
       room: classItem.classroom?.roomName || null,
-      isActive: classItem.isActive ?? true,
       createdAt: new Date(classItem.createdAt),
     }))
 
@@ -1609,8 +1594,8 @@ export async function updateSubjectTeacher(input: {
       return { success: false, error: "Assignment not found" }
     }
 
-    await classTeacherModel.update({
-      where: { id: parsed.id },
+    await classTeacherModel.updateMany({
+      where: { id: parsed.id, schoolId },
       data: { role: parsed.role },
     })
 
@@ -1673,8 +1658,8 @@ export async function removeSubjectTeacher(input: {
       return { success: false, error: "Assignment not found" }
     }
 
-    await classTeacherModel.delete({
-      where: { id },
+    await classTeacherModel.deleteMany({
+      where: { id, schoolId },
     })
 
     revalidatePath(CLASSES_PATH)
@@ -1824,7 +1809,7 @@ export async function getAvailableTeachersForClass(input: {
     const teachers = await teacherModel.findMany({
       where: {
         schoolId,
-        id: { notIn: assignedIds.length > 0 ? assignedIds : undefined },
+        ...(assignedIds.length > 0 ? { id: { notIn: assignedIds } } : {}),
       },
       select: {
         id: true,

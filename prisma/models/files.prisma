@@ -21,7 +21,7 @@ model FileMetadata {
   type     String? // Logical type: avatar, logo, certificate, receipt, etc.
 
   // Storage details
-  storageProvider StorageProvider // VERCEL_BLOB, AWS_S3, CLOUDFLARE_R2
+  storageProvider StorageProvider // AWS_S3, CLOUDFLARE_R2
   storageTier     StorageTier     @default(HOT) // HOT, WARM, COLD (for cost optimization)
   storageKey      String // Full path/key in storage provider
   storageRegion   String? // AWS region or storage location
@@ -272,9 +272,9 @@ enum FileCategory {
 
 /// Storage provider type
 enum StorageProvider {
-  VERCEL_BLOB // Vercel Blob Storage (hot storage, fast)
-  AWS_S3 // AWS S3 (warm/cold storage, cheaper)
-  CLOUDFLARE_R2 // Cloudflare R2 (S3-compatible, no egress fees)
+  VERCEL_BLOB // Legacy — kept for backward compat with existing rows
+  AWS_S3 // AWS S3 + CloudFront (primary provider)
+  CLOUDFLARE_R2 // Cloudflare R2 (S3-compatible, archive tier)
 }
 
 /// Storage tier for cost optimization

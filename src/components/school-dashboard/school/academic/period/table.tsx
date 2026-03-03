@@ -86,7 +86,7 @@ function PeriodTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast(result.error)
+          ErrorToast(result.error || "Operation failed")
         }
       } catch (e) {
         refresh()

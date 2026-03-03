@@ -85,8 +85,8 @@ export async function startExam(
     }
 
     // Update exam status
-    const updated = await db.exam.update({
-      where: { id: examId },
+    await db.exam.updateMany({
+      where: { id: examId, schoolId },
       data: {
         status: "IN_PROGRESS",
       },
@@ -97,7 +97,7 @@ export async function startExam(
 
     return {
       success: true,
-      data: { status: updated.status },
+      data: { status: "IN_PROGRESS" as const },
     }
   } catch (error) {
     console.error("Error starting exam:", error)
@@ -164,8 +164,8 @@ export async function completeExam(
     }
 
     // Update exam status
-    const updated = await db.exam.update({
-      where: { id: examId },
+    await db.exam.updateMany({
+      where: { id: examId, schoolId },
       data: {
         status: "COMPLETED",
       },
@@ -189,7 +189,7 @@ export async function completeExam(
     return {
       success: true,
       data: {
-        status: updated.status,
+        status: "COMPLETED" as const,
         autoGradedCount,
       },
     }
@@ -254,8 +254,8 @@ export async function cancelExam(
       }
     }
 
-    const updated = await db.exam.update({
-      where: { id: examId },
+    await db.exam.updateMany({
+      where: { id: examId, schoolId },
       data: {
         status: "CANCELLED",
         description: reason
@@ -269,7 +269,7 @@ export async function cancelExam(
 
     return {
       success: true,
-      data: { status: updated.status },
+      data: { status: "CANCELLED" as const },
     }
   } catch (error) {
     console.error("Error cancelling exam:", error)

@@ -2,129 +2,120 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { describe, expect, it } from "vitest"
-import { z } from "zod"
 
-// Subject validation schema tests
+import {
+  getSubjectsSchema,
+  subjectCreateSchema,
+  subjectUpdateSchema,
+} from "../validation"
+
 describe("Subject Validation Schemas", () => {
-  const subjectBaseSchema = z.object({
-    name: z.string().min(1, "Subject name is required"),
-    code: z.string().min(1, "Subject code is required"),
-    description: z.string().optional(),
-    credits: z.number().min(0).max(20).optional(),
-    departmentId: z.string().optional(),
-    isActive: z.boolean().default(true),
-  })
-
-  const subjectCreateSchema = subjectBaseSchema
-
-  const subjectUpdateSchema = subjectBaseSchema.partial().extend({
-    id: z.string().min(1, "ID is required"),
-  })
-
-  const getSubjectsSchema = z.object({
-    page: z.number().int().positive().default(1),
-    perPage: z.number().int().positive().max(100).default(20),
-    search: z.string().optional().default(""),
-    departmentId: z.string().optional(),
-    isActive: z.boolean().optional(),
-  })
-
   describe("subjectCreateSchema", () => {
-    it("validates complete subject data", () => {
-      const validData = {
-        name: "Mathematics",
-        code: "MATH101",
-        description: "Introduction to Mathematics",
-        credits: 3,
+    it("accepts valid input with subjectName and departmentId", () => {
+      const result = subjectCreateSchema.safeParse({
+        subjectName: "Mathematics",
         departmentId: "dept-123",
-        isActive: true,
-      }
-
-      const result = subjectCreateSchema.safeParse(validData)
+      })
       expect(result.success).toBe(true)
     })
 
-    it("requires name and code", () => {
-      const missingName = {
-        code: "MATH101",
-      }
-
-      const missingCode = {
-        name: "Mathematics",
-      }
-
-      expect(subjectCreateSchema.safeParse(missingName).success).toBe(false)
-      expect(subjectCreateSchema.safeParse(missingCode).success).toBe(false)
+    it("rejects missing subjectName", () => {
+      const result = subjectCreateSchema.safeParse({
+        departmentId: "dept-123",
+      })
+      expect(result.success).toBe(false)
     })
 
-    it("validates credits range", () => {
-      const validCredits = {
-        name: "Math",
-        code: "M1",
-        credits: 4,
-      }
-
-      const invalidCredits = {
-        name: "Math",
-        code: "M1",
-        credits: 25, // Over max
-      }
-
-      const negativeCredits = {
-        name: "Math",
-        code: "M1",
-        credits: -1,
-      }
-
-      expect(subjectCreateSchema.safeParse(validCredits).success).toBe(true)
-      expect(subjectCreateSchema.safeParse(invalidCredits).success).toBe(false)
-      expect(subjectCreateSchema.safeParse(negativeCredits).success).toBe(false)
+    it("rejects empty subjectName", () => {
+      const result = subjectCreateSchema.safeParse({
+        subjectName: "",
+        departmentId: "dept-123",
+      })
+      expect(result.success).toBe(false)
     })
 
-    it("applies default for isActive", () => {
-      const withoutActive = {
-        name: "Science",
-        code: "SCI101",
-      }
+    it("rejects missing departmentId", () => {
+      const result = subjectCreateSchema.safeParse({
+        subjectName: "Mathematics",
+      })
+      expect(result.success).toBe(false)
+    })
 
-      const result = subjectCreateSchema.parse(withoutActive)
-      expect(result.isActive).toBe(true)
+    it("rejects empty departmentId", () => {
+      const result = subjectCreateSchema.safeParse({
+        subjectName: "Mathematics",
+        departmentId: "",
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it("accepts optional catalogSubjectId", () => {
+      const result = subjectCreateSchema.safeParse({
+        subjectName: "Mathematics",
+        departmentId: "dept-123",
+        catalogSubjectId: "catalog-1",
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.catalogSubjectId).toBe("catalog-1")
+      }
+    })
+
+    it("accepts optional lang", () => {
+      const result = subjectCreateSchema.safeParse({
+        subjectName: "Mathematics",
+        departmentId: "dept-123",
+        lang: "en",
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.lang).toBe("en")
+      }
     })
   })
 
   describe("subjectUpdateSchema", () => {
-    it("requires id for updates", () => {
-      const withoutId = {
-        name: "Updated Subject",
-      }
-
-      const result = subjectUpdateSchema.safeParse(withoutId)
+    it("requires id", () => {
+      const result = subjectUpdateSchema.safeParse({
+        subjectName: "Updated Math",
+      })
       expect(result.success).toBe(false)
     })
 
-    it("allows partial updates with id", () => {
-      const partialUpdate = {
-        id: "subject-123",
-        description: "Updated description",
-      }
+    it("rejects empty id", () => {
+      const result = subjectUpdateSchema.safeParse({
+        id: "",
+        subjectName: "Updated Math",
+      })
+      expect(result.success).toBe(false)
+    })
 
-      const result = subjectUpdateSchema.safeParse(partialUpdate)
+    it("allows partial updates with just id", () => {
+      const result = subjectUpdateSchema.safeParse({
+        id: "subject-123",
+      })
       expect(result.success).toBe(true)
     })
 
-    it("validates credits on update", () => {
-      const validUpdate = {
+    it("allows updating subjectName only", () => {
+      const result = subjectUpdateSchema.safeParse({
         id: "subject-123",
-        credits: 5,
+        subjectName: "Advanced Mathematics",
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.subjectName).toBe("Advanced Mathematics")
       }
+    })
 
-      const invalidUpdate = {
+    it("validates subjectName when provided", () => {
+      const result = subjectUpdateSchema.safeParse({
         id: "subject-123",
-        credits: 100,
-      }
-
-      expect(subjectUpdateSchema.safeParse(validUpdate).success).toBe(true)
-      expect(subjectUpdateSchema.safeParse(invalidUpdate).success).toBe(false)
+        subjectName: "",
+      })
+      // subjectName is .partial() so empty string should be allowed through .partial()
+      // but min(1) on the base schema means it fails
+      expect(result.success).toBe(false)
     })
   })
 
@@ -134,26 +125,49 @@ describe("Subject Validation Schemas", () => {
 
       expect(result.page).toBe(1)
       expect(result.perPage).toBe(20)
-      expect(result.search).toBe("")
+      expect(result.subjectName).toBe("")
+      expect(result.departmentId).toBe("")
+      expect(result.sort).toEqual([])
     })
 
-    it("validates pagination limits", () => {
-      const tooMany = { perPage: 101 }
-      const valid = { perPage: 50 }
+    it("validates perPage max (200)", () => {
+      const tooMany = getSubjectsSchema.safeParse({ perPage: 201 })
+      const atMax = getSubjectsSchema.safeParse({ perPage: 200 })
 
-      expect(getSubjectsSchema.safeParse(tooMany).success).toBe(false)
-      expect(getSubjectsSchema.safeParse(valid).success).toBe(true)
+      expect(tooMany.success).toBe(false)
+      expect(atMax.success).toBe(true)
+    })
+
+    it("validates page is positive integer", () => {
+      const zero = getSubjectsSchema.safeParse({ page: 0 })
+      const negative = getSubjectsSchema.safeParse({ page: -1 })
+      const valid = getSubjectsSchema.safeParse({ page: 5 })
+
+      expect(zero.success).toBe(false)
+      expect(negative.success).toBe(false)
+      expect(valid.success).toBe(true)
     })
 
     it("accepts filter parameters", () => {
-      const withFilters = {
+      const result = getSubjectsSchema.safeParse({
+        subjectName: "math",
         departmentId: "dept-123",
-        isActive: true,
-        search: "math",
-      }
-
-      const result = getSubjectsSchema.safeParse(withFilters)
+      })
       expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.subjectName).toBe("math")
+        expect(result.data.departmentId).toBe("dept-123")
+      }
+    })
+
+    it("accepts sort array", () => {
+      const result = getSubjectsSchema.safeParse({
+        sort: [{ id: "subjectName", desc: false }],
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.sort).toEqual([{ id: "subjectName", desc: false }])
+      }
     })
   })
 })

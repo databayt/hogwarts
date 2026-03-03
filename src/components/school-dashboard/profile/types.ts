@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Unified Profile System Types
  * Comprehensive type definitions for all user profile types in the school-dashboard

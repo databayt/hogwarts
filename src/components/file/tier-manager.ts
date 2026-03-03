@@ -8,7 +8,7 @@
  */
 
 export type StorageTier = "HOT" | "WARM" | "COLD"
-export type StorageProvider = "VERCEL_BLOB" | "AWS_S3" | "CLOUDFLARE_R2"
+export type StorageProvider = "AWS_S3" | "CLOUDFLARE_R2"
 
 export interface TierConfig {
   // Size thresholds (in bytes)
@@ -113,13 +113,9 @@ export function determineInitialTier(fileSize: number): StorageTier {
 export function determineProvider(tier: StorageTier): StorageProvider {
   switch (tier) {
     case "HOT":
-      // Vercel Blob for fast access, small files
-      return "VERCEL_BLOB"
     case "WARM":
-      // S3 Standard for regular access
       return "AWS_S3"
     case "COLD":
-      // S3 Glacier or R2 for archival
       return process.env.USE_CLOUDFLARE_R2 === "true"
         ? "CLOUDFLARE_R2"
         : "AWS_S3"

@@ -1,7 +1,5 @@
 "use client"
 
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,7 +9,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useLocale } from "@/components/internationalization/use-locale"
 
 // Map contribution level to color class based on project's color system
 const getColorClass = (level: number) => {
@@ -50,8 +47,6 @@ const getContributionText = (level: number) => {
 }
 
 export default function GitHubContributionGraph() {
-  const { locale } = useLocale()
-
   // Generate a sample contribution data (this would normally come from an API)
   const [contributionData] = useState(() => {
     // Create a 7x52 grid (7 days per week, 52 weeks - full year)
@@ -88,7 +83,7 @@ export default function GitHubContributionGraph() {
   const getDateText = (week: number, day: number) => {
     const date = new Date()
     date.setDate(date.getDate() - ((51 - week) * 7 + (6 - day)))
-    return date.toLocaleDateString(locale, {
+    return date.toLocaleDateString("ar-SA", {
       month: "short",
       day: "numeric",
       year: "numeric",

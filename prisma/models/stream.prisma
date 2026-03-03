@@ -108,7 +108,7 @@ model StreamLesson {
   videoDuration   Float?             // Duration in seconds (auto-extracted)
   videoResolution String?            // "1920x1080" (auto-extracted)
   videoSize       Int?               // File size in bytes
-  storageProvider String?            // "vercel_blob" | "aws_s3"
+  storageProvider String?            // "aws_s3" | "cloudflare_r2"
   storageKey      String? @db.Text   // S3 key for cache invalidation
 
   chapterId String

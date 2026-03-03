@@ -1,9 +1,6 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Main Profile Router Component
- * Dynamically loads the appropriate profile component based on user role
+ * Fetches session data and renders the GitHub-style ProfileContent
  */
 
 "use client"
@@ -13,37 +10,64 @@ import { CircleAlert } from "lucide-react"
 import { useSession } from "next-auth/react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
+import OldProfileContent from "@/components/profile/content"
+import type { ProfileRole } from "@/components/profile/types"
 
-import { ParentProfileContent } from "./parent/content"
-import { StaffProfileContent } from "./staff/content"
-import { StudentProfileContent } from "./student/content"
-import { TeacherProfileContent } from "./teacher/content"
+import { getProfileBasicData } from "./actions"
+
+// Map NextAuth role to ProfileRole
+function toProfileRole(role?: string): ProfileRole {
+  switch (role) {
+    case "STUDENT":
+      return "student"
+    case "TEACHER":
+      return "teacher"
+    case "GUARDIAN":
+      return "parent"
+    case "ADMIN":
+    case "DEVELOPER":
+    case "STAFF":
+    case "ACCOUNTANT":
+      return "staff"
+    default:
+      return "staff"
+  }
+}
 
 export function ProfileContent() {
   const { dictionary, isLoading: isDictionaryLoading } = useDictionary()
   const { locale } = useLocale()
   const { data: session, status } = useSession()
-  const [profileId, setProfileId] = React.useState<string | undefined>()
+  const [profileData, setProfileData] = React.useState<Record<
+    string,
+    unknown
+  > | null>(null)
+  const [isLoadingData, setIsLoadingData] = React.useState(false)
 
-  // Extract user ID and role from session
+  // Fetch profile data when session is available
   React.useEffect(() => {
-    if (session?.user?.id) {
-      setProfileId(session.user.id)
-    }
-  }, [session])
+    if (!session?.user?.id) return
 
-  // Loading state (dictionary or session)
-  if (status === "loading" || isDictionaryLoading || !dictionary) {
+    setIsLoadingData(true)
+    getProfileBasicData(session.user.id, locale)
+      .then((result) => {
+        if (result.success) {
+          setProfileData(result.data)
+        }
+      })
+      .finally(() => setIsLoadingData(false))
+  }, [session?.user?.id, locale])
+
+  // Loading state
+  if (
+    status === "loading" ||
+    isDictionaryLoading ||
+    !dictionary ||
+    isLoadingData
+  ) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-48 w-full" />
@@ -74,85 +98,24 @@ export function ProfileContent() {
     )
   }
 
-  // Get user role - prioritize specific roles over generic USER role
-  const userRole = session.user?.role
-
-  // Render appropriate profile based on role
-  switch (userRole) {
-    case "STUDENT":
-      return (
-        <StudentProfileContent
-          studentId={profileId}
-          dictionary={dictionary}
-          lang={locale}
-          isOwner={true}
-        />
-      )
-
-    case "TEACHER":
-      return (
-        <TeacherProfileContent
-          teacherId={profileId}
-          dictionary={dictionary}
-          lang={locale}
-          isOwner={true}
-        />
-      )
-
-    case "GUARDIAN":
-      return (
-        <ParentProfileContent
-          parentId={profileId}
-          dictionary={dictionary}
-          lang={locale}
-          isOwner={true}
-        />
-      )
-
-    case "STAFF":
-    case "ACCOUNTANT":
-      return (
-        <StaffProfileContent
-          staffId={profileId}
-          dictionary={dictionary}
-          lang={locale}
-          isOwner={true}
-        />
-      )
-
-    case "ADMIN":
-    case "DEVELOPER":
-      // Admins and developers get staff profile with additional privileges
-      return (
-        <StaffProfileContent
-          staffId={profileId}
-          dictionary={dictionary}
-          lang={locale}
-          isOwner={true}
-        />
-      )
-
-    default:
-      // Fallback for USER or unknown roles
-      return (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Setup Required</CardTitle>
-              <CardDescription>
-                Your profile type has not been configured yet. Please contact
-                your administrator.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-muted-foreground space-y-2 text-sm">
-                <p>User ID: {session.user?.id}</p>
-                <p>Email: {session.user?.email}</p>
-                <p>Role: {userRole || "Not assigned"}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )
+  const profileRole = toProfileRole(session.user?.role)
+  const data = profileData || {
+    id: session.user?.id,
+    givenName: session.user?.name?.split(" ")[0] || "",
+    surname: session.user?.name?.split(" ").slice(1).join(" ") || "",
+    profilePhotoUrl: session.user?.image,
+    emailAddress: session.user?.email,
+    createdAt: new Date().toISOString(),
   }
+
+  return (
+    <OldProfileContent
+      role={profileRole}
+      data={data}
+      dictionary={dictionary}
+      lang={locale}
+      isOwner={true}
+      userId={session.user?.id}
+    />
+  )
 }

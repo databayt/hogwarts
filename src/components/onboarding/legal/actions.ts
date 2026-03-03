@@ -19,6 +19,8 @@ import { requireSchoolOwnership } from "../auth-helpers"
 
 export async function completeOnboarding(
   schoolId: string,
+  // TODO: legalData (operationalStatus, safetyFeatures) is collected but not yet persisted.
+  // Needs a ComplianceLog entry or School schema fields in a future PR.
   legalData: {
     operationalStatus: string
     safetyFeatures: string[]
@@ -26,6 +28,18 @@ export async function completeOnboarding(
 ): Promise<ActionResponse> {
   try {
     await requireSchoolOwnership(schoolId)
+
+    // Check domain exists BEFORE marking school active
+    const schoolCheck = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { domain: true },
+    })
+
+    if (!schoolCheck?.domain) {
+      throw new Error(
+        "School subdomain not configured. Please complete the subdomain step."
+      )
+    }
 
     const school = await db.school.update({
       where: { id: schoolId },
@@ -46,12 +60,6 @@ export async function completeOnboarding(
         preferredLanguage: true,
       },
     })
-
-    if (!school.domain) {
-      throw new Error(
-        "School subdomain not configured. Please complete the subdomain step."
-      )
-    }
 
     // 1. Auto-provision defaults (YearLevels, Departments, ScoreRanges)
     try {

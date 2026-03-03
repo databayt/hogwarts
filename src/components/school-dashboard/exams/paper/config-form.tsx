@@ -42,8 +42,10 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import type { CompositionConfig } from "../templates/composition"
 import { createPaperConfig, updatePaperConfig } from "./actions"
 import type { PaperConfigWithRelations } from "./actions/types"
+import { CompositionPanel, parseBlockConfig } from "./composition-panel"
 import { ANSWER_SHEET_TYPES, PAPER_LAYOUTS, PAPER_TEMPLATES } from "./types"
 import { paperConfigFormSchema } from "./validation"
 import type { PaperConfigFormInput } from "./validation"
@@ -89,6 +91,9 @@ export function ConfigForm({
     | undefined
   const [isPending, startTransition] = useTransition()
   const [previewKey, setPreviewKey] = useState(0)
+  const [composition, setComposition] = useState<CompositionConfig>(() =>
+    parseBlockConfig(existingConfig?.blockConfig)
+  )
 
   const isRTL = locale === "ar"
   const isEditing = !!existingConfig
@@ -155,14 +160,17 @@ export function ConfigForm({
   const onSubmit = (data: PaperConfigFormInput) => {
     startTransition(async () => {
       try {
+        const blockConfig = composition as unknown as Record<string, unknown>
         const result = isEditing
           ? await updatePaperConfig({
               configId: existingConfig.id,
               ...data,
+              blockConfig,
             })
           : await createPaperConfig({
               generatedExamId,
               ...data,
+              blockConfig,
             })
 
         if (result.success) {
@@ -327,6 +335,27 @@ export function ConfigForm({
                   <FormMessage />
                 </FormItem>
               )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Compose — Section Variants */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t?.compose || "Compose"}</CardTitle>
+            <CardDescription>
+              {t?.compose_desc ||
+                "Choose variants for each section of the exam paper"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CompositionPanel
+              value={composition}
+              onChange={(config) => {
+                setComposition(config)
+                triggerPreview()
+              }}
+              locale={locale}
             />
           </CardContent>
         </Card>

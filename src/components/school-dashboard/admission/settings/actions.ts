@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
 import {
@@ -12,12 +13,8 @@ import {
   type AdmissionSettingsFormData,
 } from "./validation"
 
-type ActionResult<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string }
-
 export async function getAdmissionSettings(): Promise<
-  ActionResult<AdmissionSettingsFormData>
+  ActionResponse<AdmissionSettingsFormData>
 > {
   try {
     const session = await auth()
@@ -64,13 +61,19 @@ export async function getAdmissionSettings(): Promise<
 
 export async function saveAdmissionSettings(
   data: AdmissionSettingsFormData
-): Promise<ActionResult> {
+): Promise<ActionResponse> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
       return { success: false, error: "Unauthorized" }
+    }
+
+    // RBAC: Only ADMIN and DEVELOPER can modify admission settings
+    const role = session.user.role
+    if (role !== "DEVELOPER" && role !== "ADMIN") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     // Validate input

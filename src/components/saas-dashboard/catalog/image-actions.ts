@@ -2,13 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { auth } from "@/auth"
-
 import {
   deleteCatalogImage,
   processAndUploadCatalogImage,
 } from "@/lib/catalog-image"
 import { db } from "@/lib/db"
+import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 type EntityType = "subject" | "chapter" | "lesson"
 
@@ -35,8 +34,9 @@ export async function uploadCatalogThumbnail(
   thumbnailKey?: string
   error?: string
 }> {
-  const session = await auth()
-  if (session?.user?.role !== "DEVELOPER") {
+  try {
+    await requireDeveloper()
+  } catch {
     return { status: "error", error: "Unauthorized" }
   }
 
@@ -98,8 +98,9 @@ export async function deleteCatalogThumbnail(
   entityType: EntityType,
   entityId: string
 ): Promise<{ status: "success" | "error"; error?: string }> {
-  const session = await auth()
-  if (session?.user?.role !== "DEVELOPER") {
+  try {
+    await requireDeveloper()
+  } catch {
     return { status: "error", error: "Unauthorized" }
   }
 

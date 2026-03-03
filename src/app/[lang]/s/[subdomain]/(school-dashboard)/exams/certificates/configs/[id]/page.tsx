@@ -6,7 +6,7 @@
  * Edit an existing certificate configuration
  */
 
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
@@ -24,6 +24,11 @@ interface EditConfigPageProps {
 export default async function EditConfigPage({ params }: EditConfigPageProps) {
   const { lang, id } = await params
   const session = await auth()
+
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams`)
+  }
+
   const schoolId = session?.user?.schoolId
   const isRtl = lang === "ar"
 

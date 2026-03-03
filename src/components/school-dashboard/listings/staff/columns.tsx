@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import Link from "next/link"
 import { type ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 
@@ -27,7 +28,8 @@ export type StaffColumnActions = {
 }
 
 export function getStaffColumns(
-  actions?: StaffColumnActions
+  actions?: StaffColumnActions,
+  lang?: string
 ): ColumnDef<StaffRow>[] {
   return [
     {
@@ -59,9 +61,19 @@ export function getStaffColumns(
       ),
       cell: ({ row }) => {
         const staff = row.original
+        const locale = lang || "en"
         return (
           <div className="flex flex-col">
-            <span className="font-medium">{staff.name}</span>
+            {staff.userId ? (
+              <Link
+                href={`/${locale}/profile/${staff.userId}`}
+                className="font-medium hover:underline"
+              >
+                {staff.name}
+              </Link>
+            ) : (
+              <span className="font-medium">{staff.name}</span>
+            )}
             <span className="text-muted-foreground text-sm">
               {staff.emailAddress}
             </span>

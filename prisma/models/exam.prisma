@@ -628,6 +628,11 @@ model ExamCertificateConfig {
   // [{name: string, title: string, signatureUrl?: string}]
   signatures Json
 
+  // Composition (composable template system)
+  compositionConfig Json?   // CertificateCompositionConfig
+  regionPreset      String? // "sd-national", "sa-national", etc.
+  pageSize          String  @default("A4")
+
   // Branding
   useSchoolLogo Boolean @default(true)
   customLogo    String?
@@ -788,6 +793,10 @@ model ReportCard {
   // Comments
   teacherComments   String? @db.Text
   principalComments String? @db.Text
+
+  // PDF Storage
+  pdfUrl       String?
+  thumbnailUrl String?
 
   // Status
   isPublished Boolean   @default(false)

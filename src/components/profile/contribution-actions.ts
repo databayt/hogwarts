@@ -1,7 +1,5 @@
 "use server"
 
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
 import { unstable_cache } from "next/cache"
 import { auth } from "@/auth"
 
@@ -321,7 +319,7 @@ async function fetchTeacherActivities(
   attendanceMarked.forEach((a: { markedAt: Date }) =>
     addActivity(map, a.markedAt, "attendance_taken")
   )
-  gradesPublished.forEach((g) => {
+  gradesPublished.forEach((g: { gradedAt: Date | null }) => {
     if (g.gradedAt) addActivity(map, g.gradedAt, "grade_published")
   })
 }

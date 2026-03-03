@@ -19,5 +19,15 @@ export const contentOverrideSchema = z.object({
   reason: z.string().optional(),
 })
 
+export const subjectSelectionUpdateSchema = z.object({
+  isRequired: z.boolean().optional(),
+  weeklyPeriods: z.number().int().min(0).optional(),
+  customName: z.string().optional(),
+  isActive: z.boolean().optional(),
+})
+
 export type SubjectSelectionInput = z.infer<typeof subjectSelectionSchema>
+export type SubjectSelectionUpdateInput = z.infer<
+  typeof subjectSelectionUpdateSchema
+>
 export type ContentOverrideInput = z.infer<typeof contentOverrideSchema>

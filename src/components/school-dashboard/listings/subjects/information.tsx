@@ -32,7 +32,7 @@ export function InformationStep({ form, isView }: SubjectFormStepProps) {
     const loadDepartments = async () => {
       try {
         const res = await getDepartments()
-        if (res.success) {
+        if (res.success && res.data) {
           setDepartments(res.data)
         }
       } catch (error) {

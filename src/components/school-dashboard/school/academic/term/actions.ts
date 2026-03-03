@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -17,13 +18,7 @@ import {
   type TermUpdateInput,
 } from "./validation"
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
+export type { ActionResponse }
 
 const ACADEMIC_PATH = "/school/academic"
 
@@ -35,9 +30,12 @@ export async function createTerm(
   input: TermCreateInput
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const parsed = termCreateSchema.parse(input)
@@ -99,9 +97,12 @@ export async function updateTerm(
   input: TermUpdateInput
 ): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const parsed = termUpdateSchema.parse(input)
@@ -166,9 +167,12 @@ export async function deleteTerm(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -181,6 +185,17 @@ export async function deleteTerm(input: {
 
     if (!existing) {
       return { success: false, error: "Term not found" }
+    }
+
+    // Check for dependent classes
+    const classCount = await db.class.count({
+      where: { termId: id, schoolId },
+    })
+    if (classCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete term: ${classCount} classes are assigned to it`,
+      }
     }
 
     await db.term.deleteMany({ where: { id, schoolId } })
@@ -209,26 +224,29 @@ export async function setActiveTerm(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    // Verify term exists
+    // Verify term exists and get its yearId for scoped deactivation
     const existing = await db.term.findFirst({
       where: { id, schoolId },
-      select: { id: true },
+      select: { id: true, yearId: true },
     })
 
     if (!existing) {
       return { success: false, error: "Term not found" }
     }
 
-    // Deactivate all terms in this school
+    // Deactivate all other terms in the SAME YEAR only (not across all years)
     await db.term.updateMany({
-      where: { schoolId },
+      where: { schoolId, yearId: existing.yearId, NOT: { id } },
       data: { isActive: false },
     })
 

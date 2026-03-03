@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Teacher Profile Reviews Tab
  * Student feedback, ratings, and testimonials
@@ -620,7 +617,7 @@ export function ReviewsTab({
                     <div className="flex flex-1 items-center gap-2">
                       <div className="bg-muted relative h-6 flex-1 rounded-full">
                         <div
-                          className="bg-primary absolute inset-y-0 start-0 flex items-center justify-end rounded-full pe-2"
+                          className="bg-primary absolute inset-y-0 left-0 flex items-center justify-end rounded-full pe-2"
                           style={{ width: `${(item.average / 5) * 100}%` }}
                         >
                           <span className="text-primary-foreground text-xs font-medium">

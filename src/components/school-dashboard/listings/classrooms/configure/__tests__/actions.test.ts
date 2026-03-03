@@ -22,28 +22,18 @@ vi.mock("@/lib/db", () => ({
     classroomType: {
       findMany: vi.fn(),
     },
-    class: {
+    section: {
       findMany: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
     },
     classroom: {
       upsert: vi.fn(),
+      count: vi.fn(),
     },
     school: {
       findFirst: vi.fn(),
-    },
-    subject: {
-      findFirst: vi.fn(),
-    },
-    teacher: {
-      findFirst: vi.fn(),
-    },
-    term: {
-      findFirst: vi.fn(),
-    },
-    period: {
-      findMany: vi.fn(),
+      findUnique: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -81,13 +71,13 @@ describe("Classrooms Configure Actions", () => {
           name: "Grade 1",
           gradeNumber: 1,
           maxStudents: 30,
-          _count: { classes: 3 },
+          _count: { classes: 3, sections: 3 },
         },
       ] as any)
       vi.mocked(db.classroomType.findMany).mockResolvedValue([
         { id: "rt1", name: "Standard" },
       ] as any)
-      vi.mocked(db.class.findMany).mockResolvedValue([
+      vi.mocked(db.section.findMany).mockResolvedValue([
         { gradeId: "g1", classroomId: "r1" },
         { gradeId: "g1", classroomId: "r2" },
       ] as any)
@@ -148,41 +138,13 @@ describe("Classrooms Configure Actions", () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain("authenticated")
+        expect(result.error).toBe("NOT_AUTHENTICATED")
       }
     })
 
-    it("returns error when no subjects/teachers/terms exist", async () => {
-      vi.mocked(db.class.count).mockResolvedValue(0)
-      vi.mocked(db.school.findFirst).mockResolvedValue({
-        maxClasses: 100,
-      } as any)
-      vi.mocked(db.subject.findFirst).mockResolvedValue(null)
-      vi.mocked(db.teacher.findFirst).mockResolvedValue(null)
-      vi.mocked(db.term.findFirst).mockResolvedValue(null)
-
-      const result = await generateSections({
-        grades: [
-          {
-            gradeId: "g1",
-            sections: 3,
-            capacityPerSection: 30,
-            roomType: "rt1",
-          },
-        ],
-      })
-
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error).toContain("subject")
-      }
-    })
-
-    it("returns error when exceeding class limit", async () => {
-      vi.mocked(db.class.count)
-        .mockResolvedValueOnce(95) // total class count
-        .mockResolvedValueOnce(0) // existing count for grade
-      vi.mocked(db.school.findFirst).mockResolvedValue({
+    it("returns error when exceeding classroom limit", async () => {
+      vi.mocked(db.classroom.count).mockResolvedValue(95)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
         maxClasses: 100,
       } as any)
 
@@ -199,7 +161,7 @@ describe("Classrooms Configure Actions", () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain("limit")
+        expect(result.error).toContain("Classroom limit reached")
       }
     })
   })

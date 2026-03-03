@@ -41,6 +41,11 @@ import type {
 import { calculateTotalQuestions } from "./utils"
 import { examTemplateSchema } from "./validation"
 
+interface SubjectOption {
+  id: string
+  subjectName: string | null
+}
+
 interface ExamTemplateFormProps {
   initialData?: ExamTemplateDTO
   subjectId?: string
@@ -48,6 +53,7 @@ interface ExamTemplateFormProps {
   dictionary?: Dictionary
   /** Callback fired on successful create/update - use for optimistic refresh */
   onSuccess?: () => void
+  subjects?: SubjectOption[]
 }
 
 export function ExamTemplateForm({
@@ -56,6 +62,7 @@ export function ExamTemplateForm({
   isView = false,
   dictionary,
   onSuccess,
+  subjects = [],
 }: ExamTemplateFormProps) {
   const { closeModal } = useModal()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -212,10 +219,11 @@ export function ExamTemplateForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {/* TODO: Fetch subjects from DB */}
-                    <SelectItem value="subject-1">Mathematics</SelectItem>
-                    <SelectItem value="subject-2">Science</SelectItem>
-                    <SelectItem value="subject-3">English</SelectItem>
+                    {subjects.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.subjectName || s.id}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

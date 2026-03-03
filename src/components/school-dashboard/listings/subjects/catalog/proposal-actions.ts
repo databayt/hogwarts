@@ -6,16 +6,9 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-// ============================================================================
-// Types
-// ============================================================================
-
-type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
 
 // ============================================================================
 // Authorization helper — ADMIN or DEVELOPER with schoolId
@@ -69,6 +62,12 @@ const lessonProposalDataSchema = z.object({
   durationMinutes: z.number().int().optional(),
 })
 
+const proposalSchemaByType: Record<string, z.ZodSchema> = {
+  SUBJECT: subjectProposalDataSchema,
+  CHAPTER: chapterProposalDataSchema,
+  LESSON: lessonProposalDataSchema,
+}
+
 // ============================================================================
 // Submit subject proposal
 // ============================================================================
@@ -93,7 +92,6 @@ export async function submitSubjectProposal(
     revalidatePath("/subjects")
     return { success: true, data: { id: proposal.id } }
   } catch (error) {
-    console.error("[submitSubjectProposal] Error:", error)
     return {
       success: false,
       error:
@@ -130,7 +128,6 @@ export async function submitChapterProposal(
     revalidatePath("/subjects")
     return { success: true, data: { id: proposal.id } }
   } catch (error) {
-    console.error("[submitChapterProposal] Error:", error)
     return {
       success: false,
       error:
@@ -167,7 +164,6 @@ export async function submitLessonProposal(
     revalidatePath("/subjects")
     return { success: true, data: { id: proposal.id } }
   } catch (error) {
-    console.error("[submitLessonProposal] Error:", error)
     return {
       success: false,
       error:
@@ -220,7 +216,6 @@ export async function getMyProposals(): Promise<
       })),
     }
   } catch (error) {
-    console.error("[getMyProposals] Error:", error)
     return {
       success: false,
       error:
@@ -236,13 +231,13 @@ export async function getMyProposals(): Promise<
 export async function updateProposal(
   id: string,
   data: Record<string, unknown>
-): Promise<ActionResponse<void>> {
+): Promise<ActionResponse> {
   try {
     const { schoolId } = await requireProposer()
 
     const proposal = await db.catalogProposal.findFirst({
       where: { id, schoolId },
-      select: { status: true },
+      select: { status: true, type: true },
     })
 
     if (!proposal) {
@@ -256,10 +251,20 @@ export async function updateProposal(
       }
     }
 
+    // Validate data against the appropriate schema for this proposal type
+    const schema = proposalSchemaByType[proposal.type]
+    if (!schema) {
+      return {
+        success: false,
+        error: `Unknown proposal type: ${proposal.type}`,
+      }
+    }
+    const parsed = schema.parse(data)
+
     await db.catalogProposal.update({
       where: { id },
       data: {
-        data: data as any,
+        data: parsed as any,
         status: "SUBMITTED",
         rejectionReason: null,
         reviewNotes: null,
@@ -267,9 +272,8 @@ export async function updateProposal(
     })
 
     revalidatePath("/subjects")
-    return { success: true, data: undefined }
+    return { success: true }
   } catch (error) {
-    console.error("[updateProposal] Error:", error)
     return {
       success: false,
       error:

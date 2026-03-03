@@ -126,7 +126,7 @@ export function TermForm({ onSuccess, lang = "en" }: TermFormProps) {
         closeModal()
         onSuccess?.()
       } else {
-        ErrorToast(result.error)
+        ErrorToast(result.error || "Operation failed")
       }
     })
   }

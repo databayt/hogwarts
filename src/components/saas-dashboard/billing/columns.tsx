@@ -23,26 +23,41 @@ export type InvoiceRow = {
   createdAt: string
 }
 
-export function getInvoiceColumns(lang: Locale): ColumnDef<InvoiceRow>[] {
+export function getInvoiceColumns(
+  lang: Locale,
+  dictionary?: any
+): ColumnDef<InvoiceRow>[] {
+  const c = dictionary?.operator?.billing?.columns
   return [
     {
       accessorKey: "number",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Invoice" />
+        <DataTableColumnHeader
+          column={column}
+          title={c?.invoice || "Invoice"}
+        />
       ),
-      meta: { label: "Invoice", variant: "text", placeholder: "Search number" },
+      meta: {
+        label: c?.invoice || "Invoice",
+        variant: "text",
+        placeholder: c?.searchNumber || "Search number",
+      },
     },
     {
       accessorKey: "tenantName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="School" />
+        <DataTableColumnHeader column={column} title={c?.school || "School"} />
       ),
-      meta: { label: "School", variant: "text", placeholder: "Search school" },
+      meta: {
+        label: c?.school || "School",
+        variant: "text",
+        placeholder: c?.searchSchool || "Search school",
+      },
     },
     {
       id: "period",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Period" />
+        <DataTableColumnHeader column={column} title={c?.period || "Period"} />
       ),
       cell: ({ row }) => {
         const { periodStart, periodEnd } = row.original
@@ -53,34 +68,41 @@ export function getInvoiceColumns(lang: Locale): ColumnDef<InvoiceRow>[] {
           </span>
         )
       },
-      meta: { label: "Period", variant: "text", placeholder: "e.g. 2025-01" },
+      meta: {
+        label: c?.period || "Period",
+        variant: "text",
+        placeholder: c?.periodPlaceholder || "e.g. 2025-01",
+      },
     },
     {
       accessorKey: "amount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Amount" />
+        <DataTableColumnHeader column={column} title={c?.amount || "Amount"} />
       ),
       cell: ({ getValue }) => (
         <span className="tabular-nums">
           {formatCurrency(getValue<number>() / 100, lang)}
         </span>
       ),
-      meta: { label: "Amount", variant: "number" },
+      meta: { label: c?.amount || "Amount", variant: "number" },
     },
     {
       accessorKey: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader column={column} title={c?.status || "Status"} />
       ),
       meta: {
-        label: "Status",
+        label: c?.status || "Status",
         variant: "select",
         options: [
-          { label: "Draft", value: "draft" },
-          { label: "Open", value: "open" },
-          { label: "Paid", value: "paid" },
-          { label: "Uncollectible", value: "uncollectible" },
-          { label: "Void", value: "void" },
+          { label: c?.draft || "Draft", value: "draft" },
+          { label: c?.open || "Open", value: "open" },
+          { label: c?.paid || "Paid", value: "paid" },
+          {
+            label: c?.uncollectible || "Uncollectible",
+            value: "uncollectible",
+          },
+          { label: c?.void || "Void", value: "void" },
         ],
       },
       cell: ({ getValue }) => {
@@ -93,7 +115,14 @@ export function getInvoiceColumns(lang: Locale): ColumnDef<InvoiceRow>[] {
               : v === "draft"
                 ? "outline"
                 : "destructive"
-        const label = v.charAt(0).toUpperCase() + v.slice(1)
+        const statusLabels: Record<string, string> = {
+          draft: c?.draft || "Draft",
+          open: c?.open || "Open",
+          paid: c?.paid || "Paid",
+          uncollectible: c?.uncollectible || "Uncollectible",
+          void: c?.void || "Void",
+        }
+        const label = statusLabels[v] || v.charAt(0).toUpperCase() + v.slice(1)
         return (
           <Badge
             variant={
@@ -108,9 +137,12 @@ export function getInvoiceColumns(lang: Locale): ColumnDef<InvoiceRow>[] {
     {
       accessorKey: "createdAt",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created" />
+        <DataTableColumnHeader
+          column={column}
+          title={c?.created || "Created"}
+        />
       ),
-      meta: { label: "Created", variant: "text" },
+      meta: { label: c?.created || "Created", variant: "text" },
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
           {formatDate(getValue<string>(), lang)}
@@ -119,7 +151,7 @@ export function getInvoiceColumns(lang: Locale): ColumnDef<InvoiceRow>[] {
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => <span className="sr-only">{c?.actions || "Actions"}</span>,
       cell: ({ row }) => {
         const inv = row.original as InvoiceRow
         return (
@@ -134,16 +166,20 @@ export function getInvoiceColumns(lang: Locale): ColumnDef<InvoiceRow>[] {
                     status: "paid",
                   })
                   if (result.success) {
-                    SuccessToast("Invoice marked as paid")
+                    SuccessToast(
+                      c?.invoiceMarkedPaid || "Invoice marked as paid"
+                    )
                   } else {
                     ErrorToast(result.error.message)
                   }
                 } catch (e) {
-                  ErrorToast(e instanceof Error ? e.message : "Failed")
+                  ErrorToast(
+                    e instanceof Error ? e.message : c?.failed || "Failed"
+                  )
                 }
               }}
             >
-              Mark paid
+              {c?.markPaid || "Mark paid"}
             </Button>
             <Button
               size="sm"
@@ -155,16 +191,20 @@ export function getInvoiceColumns(lang: Locale): ColumnDef<InvoiceRow>[] {
                     status: "void",
                   })
                   if (result.success) {
-                    SuccessToast("Invoice voided successfully")
+                    SuccessToast(
+                      c?.invoiceVoided || "Invoice voided successfully"
+                    )
                   } else {
                     ErrorToast(result.error.message)
                   }
                 } catch (e) {
-                  ErrorToast(e instanceof Error ? e.message : "Failed")
+                  ErrorToast(
+                    e instanceof Error ? e.message : c?.failed || "Failed"
+                  )
                 }
               }}
             >
-              Void
+              {c?.void || "Void"}
             </Button>
           </div>
         )

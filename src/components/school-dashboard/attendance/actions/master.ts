@@ -8,6 +8,10 @@ import type { AttendanceMethod, AttendanceStatus } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  canMarkAttendance,
+  isStaffRole,
+} from "@/components/school-dashboard/attendance/authorization"
 
 import type { ActionResponse } from "./core"
 
@@ -34,6 +38,9 @@ export async function recordMasterAttendance(input: {
     const session = await auth()
     if (!session?.user?.id) {
       return { success: false, error: "Authentication required" }
+    }
+    if (!canMarkAttendance(session.user.role as any)) {
+      return { success: false, error: "Unauthorized: insufficient role" }
     }
 
     const dateObj = new Date(input.date)
@@ -132,6 +139,9 @@ export async function getMasterAttendanceForDay(input: {
     if (!session?.user?.id) {
       return { success: false, error: "Authentication required" }
     }
+    if (!isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
+    }
 
     const dateObj = new Date(input.date)
 
@@ -214,6 +224,9 @@ export async function getPrefillFromMaster(input: {
     const session = await auth()
     if (!session?.user?.id) {
       return { success: false, error: "Authentication required" }
+    }
+    if (!isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
     }
 
     const dateObj = new Date(input.date)

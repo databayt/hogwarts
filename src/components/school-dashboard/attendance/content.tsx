@@ -40,9 +40,10 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 interface Props {
   dictionary?: Dictionary["school"]
+  lang?: string
 }
 
-export function AttendanceContent({ dictionary }: Props) {
+export function AttendanceContent({ dictionary, lang }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [classId, setClassId] = useState("")
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
@@ -51,6 +52,7 @@ export function AttendanceContent({ dictionary }: Props) {
   )
   const [rows, setRows] = useState<AttendanceRow[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [classesLoading, setClassesLoading] = useState(true)
 
   // Smart class selection from timetable
   const [currentPeriodInfo, setCurrentPeriodInfo] = useState<{
@@ -72,14 +74,14 @@ export function AttendanceContent({ dictionary }: Props) {
         setRows([])
         return
       }
-      const result = await getAttendanceList({ classId, date })
+      const result = await getAttendanceList({ classId, date, lang })
       if (result.success && result.data) {
         setRows(result.data.rows)
       }
     } finally {
       setIsLoading(false)
     }
-  }, [classId, date])
+  }, [classId, date, lang])
 
   useEffect(() => {
     void load()
@@ -88,32 +90,36 @@ export function AttendanceContent({ dictionary }: Props) {
   // Load classes and auto-select based on current timetable period
   useEffect(() => {
     ;(async () => {
-      const [classesRes, periodRes] = await Promise.all([
-        getClassesForSelection(),
-        getCurrentPeriod(),
-      ])
+      try {
+        const [classesRes, periodRes] = await Promise.all([
+          getClassesForSelection(),
+          getCurrentPeriod(),
+        ])
 
-      if (!classesRes.success || !classesRes.data) return
-      setClasses(classesRes.data.classes)
+        if (!classesRes.success || !classesRes.data) return
+        setClasses(classesRes.data.classes)
 
-      // Smart selection: Use current period's class if available
-      if (
-        periodRes.success &&
-        periodRes.data?.currentPeriod?.classId &&
-        classesRes.data.classes.some(
-          (c) => c.id === periodRes.data?.currentPeriod?.classId
-        )
-      ) {
-        setClassId(periodRes.data.currentPeriod.classId)
-        setCurrentPeriodInfo({
-          classId: periodRes.data.currentPeriod.classId,
-          periodName: periodRes.data.currentPeriod.periodName,
-          subjectName: periodRes.data.currentPeriod.subjectName,
-          isAutoSelected: true,
-        })
-      } else if (!classId && classesRes.data.classes[0]) {
-        // Fallback to first class if no current period
-        setClassId(classesRes.data.classes[0].id)
+        // Smart selection: Use current period's class if available
+        if (
+          periodRes.success &&
+          periodRes.data?.currentPeriod?.classId &&
+          classesRes.data.classes.some(
+            (c) => c.id === periodRes.data?.currentPeriod?.classId
+          )
+        ) {
+          setClassId(periodRes.data.currentPeriod.classId)
+          setCurrentPeriodInfo({
+            classId: periodRes.data.currentPeriod.classId,
+            periodName: periodRes.data.currentPeriod.periodName,
+            subjectName: periodRes.data.currentPeriod.subjectName,
+            isAutoSelected: true,
+          })
+        } else if (!classId && classesRes.data.classes[0]) {
+          // Fallback to first class if no current period
+          setClassId(classesRes.data.classes[0].id)
+        }
+      } finally {
+        setClassesLoading(false)
       }
     })()
   }, [])
@@ -222,132 +228,135 @@ export function AttendanceContent({ dictionary }: Props) {
   }, [onSubmit, rows])
   return (
     <AttendanceErrorBoundary>
-      {isLoading && !rows.length ? (
+      {isLoading || classesLoading ? (
         <AttendanceTableSkeleton rows={10} />
-      ) : classes.length === 0 && !isLoading ? (
+      ) : classes.length === 0 ? (
         <NoClassesEmptyState dictionary={dictionary?.attendance} />
       ) : (
-        <div className="grid gap-3">
-          <div className="bg-card rounded-lg border p-4">
-            <div className="text-muted-foreground mb-2 text-sm">
-              {dict.title}
-            </div>
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2">
-                <Select
-                  value={classId}
-                  onValueChange={(val) => {
-                    setClassId(val)
-                    // Clear auto-selected flag when user manually changes
-                    if (val !== currentPeriodInfo.classId) {
-                      setCurrentPeriodInfo((prev) => ({
-                        ...prev,
-                        isAutoSelected: false,
-                      }))
-                    }
-                  }}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="h-8 w-56">
-                    <SelectValue placeholder={dict.selectClass} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <span className="flex items-center gap-2">
-                          {c.name}
-                          {c.id === currentPeriodInfo.classId && (
-                            <Clock className="h-3 w-3 text-blue-500" />
-                          )}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {/* Smart selection indicator */}
-                {currentPeriodInfo.isAutoSelected &&
-                  classId === currentPeriodInfo.classId && (
-                    <Badge
-                      variant="secondary"
-                      className="flex h-6 items-center gap-1 bg-blue-100 text-xs text-blue-700"
-                    >
-                      <Sparkles className="h-3 w-3" />
-                      {currentPeriodInfo.periodName}
-                      {currentPeriodInfo.subjectName &&
-                        ` • ${currentPeriodInfo.subjectName}`}
-                    </Badge>
-                  )}
-              </div>
-              <Input
-                type="date"
-                className="h-8 w-44"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                disabled={isLoading}
-              />
-              <div className="ms-auto flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setRows((r) => r.map((x) => ({ ...x, status: "present" })))
-                    setChanged(() => {
-                      const next: Record<string, AttendanceRow["status"]> = {}
-                      rows.forEach((r) => {
-                        next[r.studentId] = "present"
-                      })
-                      return next
-                    })
-                  }}
-                  disabled={isLoading || rows.length === 0}
-                >
-                  {dict.allPresent || "All Present"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setRows((r) => r.map((x) => ({ ...x, status: "absent" })))
-                    setChanged(() => {
-                      const next: Record<string, AttendanceRow["status"]> = {}
-                      rows.forEach((r) => {
-                        next[r.studentId] = "absent"
-                      })
-                      return next
-                    })
-                  }}
-                  disabled={isLoading || rows.length === 0}
-                >
-                  {dict.allAbsent || "All Absent"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setRows((r) => r.map((x) => ({ ...x, status: "late" })))
-                    setChanged(() => {
-                      const next: Record<string, AttendanceRow["status"]> = {}
-                      rows.forEach((r) => {
-                        next[r.studentId] = "late"
-                      })
-                      return next
-                    })
-                  }}
-                  disabled={isLoading || rows.length === 0}
-                >
-                  {dict.allLate || "All Late"}
-                </Button>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              onClick={onSubmit}
-              disabled={submitting || isLoading || !Object.keys(changed).length}
+        <div className="space-y-3">
+          <div
+            role="toolbar"
+            aria-orientation="horizontal"
+            className="flex w-full flex-wrap items-center gap-2 p-1"
+          >
+            <Select
+              value={classId}
+              onValueChange={(val) => {
+                setClassId(val)
+                // Clear auto-selected flag when user manually changes
+                if (val !== currentPeriodInfo.classId) {
+                  setCurrentPeriodInfo((prev) => ({
+                    ...prev,
+                    isAutoSelected: false,
+                  }))
+                }
+              }}
+              disabled={isLoading}
             >
-              {submitting
-                ? "Saving..."
-                : dict.saveAttendance || "Save Attendance"}
-            </Button>
+              <SelectTrigger className="h-9 w-56">
+                <SelectValue placeholder={dict.selectClass} />
+              </SelectTrigger>
+              <SelectContent>
+                {classes.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    <span className="flex items-center gap-2">
+                      {c.name}
+                      {c.id === currentPeriodInfo.classId && (
+                        <Clock className="h-3 w-3 text-blue-500" />
+                      )}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Smart selection indicator */}
+            {currentPeriodInfo.isAutoSelected &&
+              classId === currentPeriodInfo.classId && (
+                <Badge
+                  variant="secondary"
+                  className="flex h-6 items-center gap-1 bg-blue-100 text-xs text-blue-700"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  {currentPeriodInfo.periodName}
+                  {currentPeriodInfo.subjectName &&
+                    ` • ${currentPeriodInfo.subjectName}`}
+                </Badge>
+              )}
+            <Input
+              type="date"
+              className="h-9 w-44"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              disabled={isLoading}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => {
+                  setRows((r) => r.map((x) => ({ ...x, status: "present" })))
+                  setChanged(() => {
+                    const next: Record<string, AttendanceRow["status"]> = {}
+                    rows.forEach((r) => {
+                      next[r.studentId] = "present"
+                    })
+                    return next
+                  })
+                }}
+                disabled={isLoading || rows.length === 0}
+              >
+                {dict.allPresent || "All Present"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => {
+                  setRows((r) => r.map((x) => ({ ...x, status: "absent" })))
+                  setChanged(() => {
+                    const next: Record<string, AttendanceRow["status"]> = {}
+                    rows.forEach((r) => {
+                      next[r.studentId] = "absent"
+                    })
+                    return next
+                  })
+                }}
+                disabled={isLoading || rows.length === 0}
+              >
+                {dict.allAbsent || "All Absent"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => {
+                  setRows((r) => r.map((x) => ({ ...x, status: "late" })))
+                  setChanged(() => {
+                    const next: Record<string, AttendanceRow["status"]> = {}
+                    rows.forEach((r) => {
+                      next[r.studentId] = "late"
+                    })
+                    return next
+                  })
+                }}
+                disabled={isLoading || rows.length === 0}
+              >
+                {dict.allLate || "All Late"}
+              </Button>
+              <Button
+                size="sm"
+                className="h-9"
+                onClick={onSubmit}
+                disabled={
+                  submitting || isLoading || !Object.keys(changed).length
+                }
+              >
+                {submitting
+                  ? "Saving..."
+                  : dict.saveAttendance || "Save Attendance"}
+              </Button>
+            </div>
           </div>
           {rows.length === 0 && classId && !isLoading ? (
             <NoStudentsEmptyState dictionary={dictionary?.attendance} />

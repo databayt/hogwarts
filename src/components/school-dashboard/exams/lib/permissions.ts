@@ -632,3 +632,76 @@ export async function withPermission<
     return action(...args)
   }) as T
 }
+
+/**
+ * Role-based exam tab configuration
+ * Returns the PageNav items each role should see
+ */
+export function getExamTabsForRole(
+  role: string | undefined,
+  lang: string,
+  dictionary?: Record<string, string>
+): { name: string; href: string }[] {
+  const d = dictionary || {}
+
+  const tabs = {
+    overview: { name: d.overview || "Overview", href: `/${lang}/exams` },
+    qbank: { name: d.qbank || "QBank", href: `/${lang}/exams/qbank` },
+    practice: { name: d.practice || "Practice", href: `/${lang}/exams/qbank` },
+    generate: {
+      name: d.generate || "Generate",
+      href: `/${lang}/exams/generate`,
+    },
+    mark: { name: d.mark || "Mark", href: `/${lang}/exams/mark` },
+    results: { name: d.record || "Results", href: `/${lang}/exams/result` },
+    quiz: { name: d.quiz || "Quiz", href: `/${lang}/exams/quiz` },
+    mock: { name: d.mock || "Mock", href: `/${lang}/exams/mock` },
+    upcoming: {
+      name: d.upcoming || "Upcoming",
+      href: `/${lang}/exams/upcoming`,
+    },
+  }
+
+  switch (role) {
+    case "DEVELOPER":
+    case "ADMIN":
+      return [
+        tabs.overview,
+        tabs.qbank,
+        tabs.generate,
+        tabs.mark,
+        tabs.results,
+        tabs.quiz,
+        tabs.mock,
+        tabs.upcoming,
+      ]
+    case "TEACHER":
+      return [
+        tabs.overview,
+        tabs.qbank,
+        tabs.generate,
+        tabs.mark,
+        tabs.results,
+        tabs.quiz,
+        tabs.mock,
+        tabs.upcoming,
+      ]
+    case "STUDENT":
+      return [
+        tabs.overview,
+        tabs.practice,
+        tabs.results,
+        tabs.quiz,
+        tabs.mock,
+        tabs.upcoming,
+      ]
+    case "GUARDIAN":
+      return [tabs.overview, tabs.results, tabs.upcoming]
+    case "ACCOUNTANT":
+      return [tabs.overview, tabs.results]
+    case "STAFF":
+      return [tabs.overview, tabs.upcoming]
+    default:
+      return [tabs.overview]
+  }
+}

@@ -21,6 +21,9 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
 
+import type { AnalyticsData } from "./analytics-charts"
+import { AnalyticsCharts } from "./analytics-charts"
+
 interface Props {
   dictionary: Dictionary
   lang: Locale
@@ -33,11 +36,18 @@ export default async function ResultsAnalyticsContent({
 }: Props) {
   const { schoolId } = await getTenantContext()
 
-  // Fetch overall analytics
   let totalExams = 0
   let totalResults = 0
   let overallAveragePercentage = 0
   let passRate = 0
+  let analyticsData: AnalyticsData = {
+    scoreDistribution: [],
+    gradeDistribution: [],
+    topPerformers: [],
+    bottomPerformers: [],
+    absentCount: 0,
+    totalStudents: 0,
+  }
 
   if (schoolId) {
     const [examsCount, results] = await Promise.all([
@@ -48,10 +58,12 @@ export default async function ResultsAnalyticsContent({
           percentage: true,
           isAbsent: true,
           marksObtained: true,
+          grade: true,
+          student: {
+            select: { givenName: true, surname: true },
+          },
           exam: {
-            select: {
-              passingMarks: true,
-            },
+            select: { passingMarks: true },
           },
         },
       }),
@@ -61,6 +73,8 @@ export default async function ResultsAnalyticsContent({
     totalResults = results.length
 
     const presentResults = results.filter((r) => !r.isAbsent)
+    const absentCount = results.filter((r) => r.isAbsent).length
+
     if (presentResults.length > 0) {
       overallAveragePercentage =
         presentResults.reduce((sum, r) => sum + r.percentage, 0) /
@@ -71,6 +85,65 @@ export default async function ResultsAnalyticsContent({
       ).length
       passRate = (passedCount / presentResults.length) * 100
     }
+
+    // Score distribution: 10% buckets
+    const buckets = Array.from({ length: 10 }, (_, i) => ({
+      range: `${i * 10}-${i * 10 + 10}`,
+      count: 0,
+    }))
+    for (const r of presentResults) {
+      const idx = Math.min(Math.floor(r.percentage / 10), 9)
+      buckets[idx].count++
+    }
+
+    // Grade distribution
+    const gradeMap = new Map<string, number>()
+    for (const r of presentResults) {
+      if (r.grade) {
+        gradeMap.set(r.grade, (gradeMap.get(r.grade) || 0) + 1)
+      }
+    }
+    const gradeOrder = [
+      "A+",
+      "A",
+      "A-",
+      "B+",
+      "B",
+      "B-",
+      "C+",
+      "C",
+      "C-",
+      "D+",
+      "D",
+      "D-",
+      "F",
+    ]
+    const gradeDistribution = gradeOrder
+      .filter((g) => gradeMap.has(g))
+      .map((g) => ({ grade: g, count: gradeMap.get(g)! }))
+
+    // Top/bottom performers
+    const sorted = [...presentResults].sort(
+      (a, b) => b.percentage - a.percentage
+    )
+    const toPerformer = (r: (typeof sorted)[0]) => ({
+      studentName:
+        `${r.student.givenName || ""} ${r.student.surname || ""}`.trim() ||
+        "Unknown",
+      percentage: r.percentage,
+      grade: r.grade,
+    })
+    const topPerformers = sorted.slice(0, 5).map(toPerformer)
+    const bottomPerformers = sorted.slice(-5).reverse().map(toPerformer)
+
+    analyticsData = {
+      scoreDistribution: buckets,
+      gradeDistribution,
+      topPerformers,
+      bottomPerformers,
+      absentCount,
+      totalStudents: results.length,
+    }
   }
 
   return (
@@ -80,8 +153,8 @@ export default async function ResultsAnalyticsContent({
           title="Results Analytics"
           description="Comprehensive analysis of exam performance and trends"
         />
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/${lang}/results`}>
+        <Button variant="ghost" size="sm" asChild className="w-fit">
+          <Link href={`/${lang}/exams/result`}>
             <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             Back
           </Link>
@@ -217,34 +290,12 @@ export default async function ResultsAnalyticsContent({
                   </Badge>
                 </div>
               </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Completion Rate</p>
-                  <p className="text-muted-foreground text-sm">
-                    Exams with results generated
-                  </p>
-                </div>
-                <Badge>100%</Badge>
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Placeholder for future charts */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Trends</CardTitle>
-            <CardDescription>
-              Visual analysis and charts (Coming soon)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex h-64 items-center justify-center">
-            <p className="text-muted-foreground">
-              Charts and visualizations will be implemented here
-            </p>
-          </CardContent>
-        </Card>
+        {/* Charts Section */}
+        <AnalyticsCharts data={analyticsData} />
       </div>
     </PageContainer>
   )

@@ -125,7 +125,7 @@ export function SubjectTeachers({
   const loadTeachers = async () => {
     startTransition(async () => {
       const result = await getClassSubjectTeachers({ classId })
-      if (result.success) {
+      if (result.success && result.data) {
         setTeachers(result.data)
       }
     })
@@ -134,7 +134,7 @@ export function SubjectTeachers({
   const loadAvailableTeachers = async () => {
     setIsLoadingTeachers(true)
     const result = await getAvailableTeachersForClass({ classId })
-    if (result.success) {
+    if (result.success && result.data) {
       setAvailableTeachers(result.data)
     }
     setIsLoadingTeachers(false)
@@ -163,7 +163,7 @@ export function SubjectTeachers({
         loadTeachers()
         router.refresh()
       } else {
-        ErrorToast(result.error)
+        ErrorToast(result.error || "Failed to assign teacher")
       }
     })
   }
@@ -177,7 +177,7 @@ export function SubjectTeachers({
         loadTeachers()
         router.refresh()
       } else {
-        ErrorToast(result.error)
+        ErrorToast(result.error || "Failed to remove teacher")
       }
     })
   }

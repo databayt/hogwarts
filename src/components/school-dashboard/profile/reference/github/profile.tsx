@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 import Image from "next/image"
 import Link from "next/link"
 import { Bell, ChevronDown, GitFork, Plus, Star } from "lucide-react"
@@ -118,7 +115,7 @@ export default function GitHubProfile() {
                   className="bg-[#6e68c6]"
                 />
               </div>
-              <button className="absolute end-2 bottom-2 rounded-full bg-[#0d1117] p-1 text-[#8b949e]">
+              <button className="absolute right-2 bottom-2 rounded-full bg-[#0d1117] p-1 text-[#8b949e]">
                 <svg
                   aria-hidden="true"
                   height="16"

@@ -18,69 +18,82 @@ export type AuditRow = {
   requestId?: string | null
 }
 
-export const auditColumns: ColumnDef<AuditRow>[] = [
-  {
-    accessorKey: "createdAt",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Time" />
-    ),
-    meta: { label: "Time", variant: "dateRange" },
-  },
-  {
-    accessorKey: "userEmail",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" />
-    ),
-    meta: { label: "User", variant: "text", placeholder: "email" },
-  },
-  {
-    accessorKey: "ip",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="IP" />
-    ),
-    meta: { label: "IP", variant: "text", placeholder: "ip" },
-  },
-  {
-    accessorKey: "schoolName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="School" />
-    ),
-    meta: { label: "School", variant: "text" },
-  },
-  {
-    accessorKey: "action",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Action" />
-    ),
-    meta: { label: "Action", variant: "text" },
-  },
-  {
-    accessorKey: "level",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Level" />
-    ),
-    meta: {
-      label: "Level",
-      variant: "select",
-      options: [
-        { label: "Info", value: "info" },
-        { label: "Warn", value: "warn" },
-        { label: "Error", value: "error" },
-      ],
+export function getAuditColumns(dictionary?: any): ColumnDef<AuditRow>[] {
+  const c = dictionary?.operator?.observability?.columns
+  return [
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={c?.time || "Time"} />
+      ),
+      meta: { label: c?.time || "Time", variant: "dateRange" },
     },
-  },
-  {
-    accessorKey: "requestId",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Request ID" />
-    ),
-    meta: { label: "Request ID", variant: "text", placeholder: "rid" },
-  },
-  {
-    accessorKey: "reason",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Reason" />
-    ),
-    meta: { label: "Reason", variant: "text" },
-  },
-]
+    {
+      accessorKey: "userEmail",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={c?.user || "User"} />
+      ),
+      meta: { label: c?.user || "User", variant: "text", placeholder: "email" },
+    },
+    {
+      accessorKey: "ip",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={c?.ip || "IP"} />
+      ),
+      meta: { label: c?.ip || "IP", variant: "text", placeholder: "ip" },
+    },
+    {
+      accessorKey: "schoolName",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={c?.school || "School"} />
+      ),
+      meta: { label: c?.school || "School", variant: "text" },
+    },
+    {
+      accessorKey: "action",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={c?.action || "Action"} />
+      ),
+      meta: { label: c?.action || "Action", variant: "text" },
+    },
+    {
+      accessorKey: "level",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={c?.level || "Level"} />
+      ),
+      meta: {
+        label: c?.level || "Level",
+        variant: "select",
+        options: [
+          { label: c?.info || "Info", value: "info" },
+          { label: c?.warn || "Warn", value: "warn" },
+          { label: c?.error || "Error", value: "error" },
+        ],
+      },
+    },
+    {
+      accessorKey: "requestId",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={c?.requestId || "Request ID"}
+        />
+      ),
+      meta: {
+        label: c?.requestId || "Request ID",
+        variant: "text",
+        placeholder: "rid",
+      },
+    },
+    {
+      accessorKey: "reason",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={c?.reason || "Reason"} />
+      ),
+      meta: { label: c?.reason || "Reason", variant: "text" },
+    },
+  ]
+}
+
+/** @deprecated Use getAuditColumns(dictionary) instead */
+export const auditColumns: ColumnDef<AuditRow>[] = getAuditColumns()

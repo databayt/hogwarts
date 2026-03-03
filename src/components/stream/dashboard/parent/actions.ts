@@ -62,11 +62,12 @@ export async function getChildrenProgress(): Promise<ChildProgress[]> {
     const student = sg.student
     if (!student.userId) continue
 
-    // Get enrollments for this student
+    // Get enrollments for this student (scoped to current school)
     const enrollments = await db.enrollment.findMany({
       where: {
         userId: student.userId,
         isActive: true,
+        schoolId,
       },
       include: {
         subject: {

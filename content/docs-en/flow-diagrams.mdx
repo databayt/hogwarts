@@ -1,6 +1,6 @@
 ---
 title: "Flow Diagrams"
-description: "User journey flows with ASCII diagrams and URL references"
+description: "Interactive user journey flows with URL references"
 ---
 
 ## Index
@@ -17,32 +17,13 @@ description: "User journey flows with ASCII diagrams and URL references"
 
 ## Credentials
 
-All passwords: `1234`
-
-| Role       | Email                   | School   |
-| ---------- | ----------------------- | -------- |
-| DEVELOPER  | dev@databayt.org        | Platform |
-| ADMIN      | admin@databayt.org      | Demo     |
-| TEACHER    | teacher@databayt.org    | Demo     |
-| STUDENT    | student@databayt.org    | Demo     |
-| GUARDIAN   | parent@databayt.org     | Demo     |
-| ACCOUNTANT | accountant@databayt.org | Demo     |
-| STAFF      | staff@databayt.org      | Demo     |
-| USER       | user@databayt.org       | None     |
+<TestCredentialsReference />
 
 ---
 
 ## URLs
 
-| Name               | Localhost                        | Production                                        |
-| ------------------ | -------------------------------- | ------------------------------------------------- |
-| SaaS Marketing     | localhost:3000/en                | ed.databayt.org/en                                |
-| SaaS Dashboard     | localhost:3000/en/dashboard      | ed.databayt.org/en/dashboard                      |
-| Operator Dashboard | localhost:3000/en/operator       | ed.databayt.org/en/operator (not yet implemented) |
-| Login              | localhost:3000/en/login          | ed.databayt.org/en/login                          |
-| Onboarding         | localhost:3000/en/onboarding     | ed.databayt.org/en/onboarding                     |
-| Demo School        | demo.localhost:3000/en           | demo.databayt.org/en                              |
-| Demo Dashboard     | demo.localhost:3000/en/dashboard | demo.databayt.org/en/dashboard                    |
+<UrlsReference />
 
 ---
 
@@ -50,51 +31,7 @@ All passwords: `1234`
 
 User clicks "Platform" from school marketing header.
 
-```
-┌─────────────────────────┐
-│  School Marketing Site  │
-│  (demo.databayt.org)    │
-└───────────┬─────────────┘
-            │ Click "Platform"
-            ▼
-       ┌─────────┐
-      ╱ Logged   ╲
-     ╱   In?      ╲
-     ╲            ╱
-      ╲          ╱
-       └────┬───┘
-       NO   │   YES
-    ┌───────┴───────┐
-    ▼               ▼
-┌────────┐    ┌───────────┐
-│ Login  │    │  Check    │
-│ Page   │    │ Membership│
-└───┬────┘    └─────┬─────┘
-    │               │
-    │         ┌─────┴─────┐
-    │         │           │
-    ▼         ▼           ▼
-┌────────┐ ┌────────┐ ┌──────────┐
-│  Auth  │ │Member? │ │DEVELOPER?│
-│ Success│ │  YES   │ │   YES    │
-└───┬────┘ └───┬────┘ └────┬─────┘
-    │          │           │
-    ▼          ▼           ▼
-┌────────┐ ┌────────┐ ┌────────┐
-│ Check  │ │ Role   │ │ Always │
-│Membershp│ │ Dash  │ │ Access │
-└────────┘ └────────┘ └────────┘
-
-    NO Membership → /access-denied
-```
-
-| Step | Action           | Credentials        | Localhost              | Production           |
-| ---- | ---------------- | ------------------ | ---------------------- | -------------------- |
-| 1    | Click Platform   | -                  | demo.localhost:3000/en | demo.databayt.org/en |
-| 2    | Login (if guest) | admin@databayt.org | .../en/login           | .../en/login         |
-| 3    | Membership check | ADMIN role         | -                      | -                    |
-| 4    | Dashboard        | -                  | .../en/dashboard       | .../en/dashboard     |
-| 4b   | Access Denied    | Non-member         | .../en/access-denied   | .../en/access-denied |
+<PlatformLinkFlow />
 
 > **Test Coverage**: `school-login-flow.spec.ts`, `saas-dashboard.spec.ts` (EP-013 to EP-025)
 
@@ -108,59 +45,7 @@ User clicks "Get Started" from SaaS marketing hero to create a new school.
 
 **Security**: `/onboarding` is a protected route. Unauthenticated users are redirected to `/login?callbackUrl=/onboarding`.
 
-```
-┌─────────────────────────┐
-│   SaaS Marketing Site   │
-│   (ed.databayt.org)     │
-└───────────┬─────────────┘
-            │ Click "Get Started"
-            ▼
-       ┌─────────┐
-      ╱ Logged   ╲
-     ╱   In?      ╲
-     ╲            ╱
-      ╲          ╱
-       └────┬───┘
-       NO   │   YES
-    ┌───────┴───────┐
-    ▼               ▼
-┌────────┐    ┌───────────┐
-│ Login  │    │ Onboarding│
-│ Page   │    │  Wizard   │
-└───┬────┘    └───────────┘
-    │
-    ▼
-┌────────┐
-│  Auth  │
-│ Success│
-└───┬────┘
-    │
-    ▼
-┌───────────┐
-│ Onboarding│
-│  Wizard   │
-└─────┬─────┘
-      │
-      ▼
-┌───────────────┐
-│ Create School │
-│ Assign ADMIN  │
-└───────┬───────┘
-        │
-        ▼
-┌───────────────────┐
-│ New School Dash   │
-│ (newschool.domain) │
-└───────────────────┘
-```
-
-| Step | Action            | Credentials       | Localhost                              | Production                           |
-| ---- | ----------------- | ----------------- | -------------------------------------- | ------------------------------------ |
-| 1    | Click Get Started | -                 | localhost:3000/en                      | ed.databayt.org/en                   |
-| 2    | Login (if guest)  | user@databayt.org | .../en/login                           | .../en/login                         |
-| 3    | Onboarding wizard | -                 | .../en/onboarding                      | .../en/onboarding                    |
-| 4    | Create school     | USER → ADMIN      | -                                      | -                                    |
-| 5    | New dashboard     | -                 | \{school\}.localhost:3000/en/dashboard | \{school\}.databayt.org/en/dashboard |
+<GetStartedFlow />
 
 > **Test Coverage**: `get-started.spec.ts` (OB-001 to OB-004)
 
@@ -170,50 +55,7 @@ User clicks "Get Started" from SaaS marketing hero to create a new school.
 
 User clicks "Live Demo" to explore the demo school without authentication.
 
-```
-┌─────────────────────────┐
-│  Marketing Site (any)   │
-└───────────┬─────────────┘
-            │ Click "Live Demo"
-            ▼
-┌─────────────────────────┐
-│   Opens New Tab         │
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│   Demo School Site      │
-│   (demo.databayt.org)   │
-└───────────┬─────────────┘
-            │ Click "Platform"
-            ▼
-       ┌─────────┐
-      ╱ Logged   ╲
-     ╱   In?      ╲
-     ╲            ╱
-      ╲          ╱
-       └────┬───┘
-            │ NO
-            ▼
-┌─────────────────────────┐
-│   Login Page            │
-│   (demo credentials)    │
-└───────────┬─────────────┘
-            │ Use admin@databayt.org
-            ▼
-┌─────────────────────────┐
-│   Demo Dashboard        │
-│   (explore features)    │
-└─────────────────────────┘
-```
-
-| Step | Action          | Credentials        | Localhost              | Production           |
-| ---- | --------------- | ------------------ | ---------------------- | -------------------- |
-| 1    | Click Live Demo | -                  | Any marketing page     | Any marketing page   |
-| 2    | New tab opens   | -                  | demo.localhost:3000/en | demo.databayt.org/en |
-| 3    | Click Platform  | -                  | -                      | -                    |
-| 4    | Login           | admin@databayt.org | .../en/login           | .../en/login         |
-| 5    | Demo Dashboard  | ADMIN role         | .../en/dashboard       | .../en/dashboard     |
+<LiveDemoFlow />
 
 > **Test Coverage**: `get-started.spec.ts` (OB-005 to OB-008)
 
@@ -229,58 +71,7 @@ There are two distinct login contexts with different behaviors:
 
 > **Note**: If a school member accidentally logs in on the SaaS main domain and tries to access `/dashboard`, they get `/access-denied` — the SaaS dashboard is DEVELOPER-only. This is intentional. School members should use their school's subdomain.
 
-```
-┌─────────────────────────┐
-│     Login Page          │
-│  /login?context=X       │
-└───────────┬─────────────┘
-            │ Submit credentials
-            ▼
-       ┌─────────┐
-      ╱ Valid    ╲
-     ╱  Creds?    ╲
-     ╲            ╱
-      ╲          ╱
-       └────┬───┘
-       NO   │   YES
-    ┌───────┴───────┐
-    ▼               ▼
-┌────────┐    ┌───────────┐
-│ Error  │    │  Check    │
-│ Message│    │  Context  │
-└────────┘    └─────┬─────┘
-                    │
-        ┌───────────┼───────────┐
-        ▼           ▼           ▼
-   ┌─────────┐ ┌─────────┐ ┌─────────┐
-   │context= │ │context= │ │callback │
-   │  saas   │ │ school  │ │   URL   │
-   └────┬────┘ └────┬────┘ └────┬────┘
-        │           │           │
-        ▼           ▼           ▼
-   ┌─────────┐ ┌─────────┐ ┌─────────┐
-   │DEVELOPER│ │  Stay   │ │Redirect │
-   │→ /dash  │ │  on     │ │   to    │
-   │ Others  │ │ school  │ │callback │
-   │→ stay   │ │marketing│ │   URL   │
-   └─────────┘ └─────────┘ └─────────┘
-```
-
-| Context     | Role      | Redirect                 |
-| ----------- | --------- | ------------------------ |
-| saas        | DEVELOPER | /en/dashboard            |
-| saas        | USER      | Stay on /en (marketing)  |
-| saas        | Other     | Stay on /en (marketing)  |
-| school      | Any       | Stay on school marketing |
-| callbackUrl | Any       | Redirect to callback URL |
-
-| Step | Action            | Credentials           | Localhost               | Production               |
-| ---- | ----------------- | --------------------- | ----------------------- | ------------------------ |
-| 1    | Navigate to login | -                     | localhost:3000/en/login | ed.databayt.org/en/login |
-| 2    | Enter credentials | See credentials table | -                       | -                        |
-| 3a   | DEVELOPER on SaaS | dev@databayt.org      | .../en/dashboard        | .../en/dashboard         |
-| 3b   | USER on SaaS      | user@databayt.org     | Stay on .../en          | Stay on .../en           |
-| 3c   | Any on school     | Any school member     | Stay on school          | Stay on school           |
+<LoginFlow />
 
 > **Test Coverage**: `login.spec.ts` (AUTH-001 to AUTH-022), `saas-login-flow.spec.ts`
 
@@ -292,59 +83,7 @@ Context-aware logout that preserves locale and stays on the current domain.
 
 **Key principle**: `LogoutButton` always navigates to `/{locale}` (e.g., `/en`). The proxy handles subdomain routing — on a school subdomain, `/en` is automatically rewritten to `/en/s/{subdomain}/`. This avoids double-rewrite bugs from constructing internal URL formats.
 
-```
-┌─────────────────────────┐
-│  Click Logout (Avatar)  │
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│  Extract locale from    │
-│  usePathname()          │
-│  /^\/([a-z]{2})(\/|$)/  │
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│  returnUrl = /{locale}  │
-│  (same for ALL entries) │
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│  await logout(returnUrl)│
-│  (clears session)       │
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│  window.location.href   │
-│  = /{locale}            │
-└───────────┬─────────────┘
-            │
-    ┌───────┴───────┐
-    ▼               ▼
-┌────────┐    ┌──────────┐
-│  Main  │    │  School  │
-│ Domain │    │ Subdomain│
-└───┬────┘    └────┬─────┘
-    │              │
-    ▼              ▼
-┌────────┐    ┌──────────┐
-│  /en   │    │  /en     │
-│  SaaS  │    │  Proxy → │
-│  Home  │    │  School  │
-│        │    │  Home    │
-└────────┘    └──────────┘
-```
-
-| Entry Point      | User Sees                        | returnUrl | Lands On                                 |
-| ---------------- | -------------------------------- | --------- | ---------------------------------------- |
-| SaaS Marketing   | localhost:3000/en                | /en       | localhost:3000/en (SaaS homepage)        |
-| SaaS Dashboard   | localhost:3000/en/dashboard      | /en       | localhost:3000/en (SaaS homepage)        |
-| School Marketing | demo.localhost:3000/en/about     | /en       | demo.localhost:3000/en (school homepage) |
-| School Dashboard | demo.localhost:3000/en/dashboard | /en       | demo.localhost:3000/en (school homepage) |
-| Session Expiry   | Any page                         | -         | /login?callbackUrl=\{current\}           |
+<LogoutFlow />
 
 **Rules**:
 
@@ -362,95 +101,14 @@ DEVELOPER-only SaaS dashboard access at ed.databayt.org/en/dashboard.
 
 ### Two Access Paths
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   PATH 1: Via Login Icon                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ed.databayt.org/en                                         │
-│         │                                                   │
-│         │ Click Login icon                                  │
-│         ▼                                                   │
-│  /login?context=saas                                        │
-│         │                                                   │
-│         │ Enter credentials                                 │
-│         ▼                                                   │
-│    ┌─────────┐                                              │
-│   ╱ Role?    ╲                                              │
-│  ╱           ╲                                              │
-│  ╲           ╱                                              │
-│   ╲         ╱                                               │
-│    └────┬───┘                                               │
-│    DEV  │  OTHER                                            │
-│  ┌──────┴──────┐                                            │
-│  ▼             ▼                                            │
-│ /dashboard    Stay on /en                                   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│                   PATH 2: Direct URL                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ed.databayt.org/en/dashboard (direct)                      │
-│         │                                                   │
-│         │ Protected route                                   │
-│         ▼                                                   │
-│  /login?callbackUrl=/en/dashboard                           │
-│         │                                                   │
-│         │ Enter credentials                                 │
-│         ▼                                                   │
-│    ┌─────────┐                                              │
-│   ╱ Role?    ╲                                              │
-│  ╱           ╲                                              │
-│  ╲           ╱                                              │
-│   ╲         ╱                                               │
-│    └────┬───┘                                               │
-│    DEV  │  OTHER                                            │
-│  ┌──────┴──────┐                                            │
-│  ▼             ▼                                            │
-│ /dashboard    /access-denied                                │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+<DeveloperDashboardFlow />
 
 ### Security Layers
 
-```
-Request to /dashboard
-        │
-        ▼
-┌───────────────────────────┐
-│  Layer 1: Proxy Middleware │
-│  - Extract role from JWT   │
-│  - If !DEVELOPER → block   │
-└───────────┬───────────────┘
-            │ DEVELOPER passes
-            ▼
-┌───────────────────────────┐
-│  Layer 2: Layout Server    │
-│  - Full auth() check       │
-│  - If !DEVELOPER → redirect│
-└───────────┬───────────────┘
-            │ DEVELOPER passes
-            ▼
-    Dashboard Renders ✓
-```
+The SaaS dashboard is protected by two layers:
 
-### DEVELOPER vs USER Comparison
-
-| Scenario              | DEVELOPER (dev@databayt.org) | USER (user@databayt.org) |
-| --------------------- | ---------------------------- | ------------------------ |
-| Login from SaaS       | → /dashboard                 | → Stay on /              |
-| Direct URL /dashboard | → /dashboard                 | → /access-denied         |
-| Login from school     | → Stay on school             | → Stay on school         |
-
-| Step | Action              | Credentials      | Localhost                   | Production                   |
-| ---- | ------------------- | ---------------- | --------------------------- | ---------------------------- |
-| 1a   | Login from SaaS     | dev@databayt.org | localhost:3000/en           | ed.databayt.org/en           |
-| 1b   | Direct to dashboard | dev@databayt.org | localhost:3000/en/dashboard | ed.databayt.org/en/dashboard |
-| 2    | Auth check          | DEVELOPER role   | -                           | -                            |
-| 3    | SaaS Dashboard      | -                | .../en/dashboard            | .../en/dashboard             |
+1. **Proxy Middleware** — Extracts role from JWT, blocks non-DEVELOPER at the edge
+2. **Layout Server Component** — Full `auth()` check, redirects non-DEVELOPER to `/access-denied`
 
 > **Test Coverage**: `saas-dashboard.spec.ts` (EP-017 to EP-022), `saas-login-flow.spec.ts`
 
@@ -462,99 +120,7 @@ Multi-step school creation wizard after user clicks "Get Started" and logs in.
 
 **Prerequisite**: User must be authenticated (redirected from Get Started flow).
 
-```
-┌───────────────────┐
-│  Onboarding Hub   │
-│  /en/onboarding   │
-└────────┬──────────┘
-         │ "Create a new school"
-         ▼
-┌───────────────────┐
-│  1. About School  │ ← Overview/intro
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│  2. Title         │ ← School name (required)
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│  3. Description   │ ← School description + type
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│  4. Location      │ ← Address, city, state, country
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│  5. Stand Out     │ ← Unique selling points
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│  6. Capacity      │ ← Max students + teachers
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│  7. Branding      │ ← Logo, colors (optional)
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│  8. Import        │ ← Import existing data
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│  9. Finish Setup  │ ← Final configuration
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│ 10. Join          │ ← Invite staff/teachers
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│ 11. Visibility    │ ← Public/private setting
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│ 12. Price         │ ← Tuition fees
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│ 13. Discount      │ ← Discount rules
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│ 14. Legal         │ ← Terms & privacy acceptance
-└────────┬──────────┘
-         ▼
-┌───────────────────┐
-│ 15. Subdomain     │ ← Reserve {name}.databayt.org
-└────────┬──────────┘
-         ▼
-┌───────────────────────┐
-│  Congratulations!     │
-│  USER → ADMIN role    │
-│  → School Dashboard   │
-└───────────────────────┘
-```
-
-| Step | Page            | URL Pattern                           | Required |
-| ---- | --------------- | ------------------------------------- | -------- |
-| Hub  | Onboarding Hub  | /en/onboarding                        | -        |
-| 1    | About School    | /en/onboarding/\{id\}/about-school    | No       |
-| 2    | Title           | /en/onboarding/\{id\}/title           | Yes      |
-| 3    | Description     | /en/onboarding/\{id\}/description     | No       |
-| 4    | Location        | /en/onboarding/\{id\}/location        | No       |
-| 5    | Stand Out       | /en/onboarding/\{id\}/stand-out       | No       |
-| 6    | Capacity        | /en/onboarding/\{id\}/capacity        | No       |
-| 7    | Branding        | /en/onboarding/\{id\}/branding        | No       |
-| 8    | Import          | /en/onboarding/\{id\}/import          | No       |
-| 9    | Finish Setup    | /en/onboarding/\{id\}/finish-setup    | No       |
-| 10   | Join            | /en/onboarding/\{id\}/join            | No       |
-| 11   | Visibility      | /en/onboarding/\{id\}/visibility      | No       |
-| 12   | Price           | /en/onboarding/\{id\}/price           | No       |
-| 13   | Discount        | /en/onboarding/\{id\}/discount        | No       |
-| 14   | Legal           | /en/onboarding/\{id\}/legal           | Yes      |
-| 15   | Subdomain       | /en/onboarding/\{id\}/subdomain       | Yes      |
-| Done | Congratulations | /en/onboarding/\{id\}/congratulations | -        |
+<OnboardingWizardFlow />
 
 > **Test Coverage**: `onboarding-school.spec.ts` (access control, school initialization, form steps, subdomain, complete flow, navigation)
 

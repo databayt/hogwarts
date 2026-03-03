@@ -3,12 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import type { ActionResult } from "./types"
 import {
   createYearLevelSchema,
   deleteYearLevelSchema,
@@ -21,17 +22,22 @@ import {
 
 export async function getYearLevels(
   displayLang?: "ar" | "en"
-): Promise<ActionResult> {
+): Promise<ActionResponse> {
   try {
+    const session = await auth()
+    if (!session?.user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId, role } = await getTenantContext()
 
     if (!schoolId) {
-      return { success: false, message: "School not found" }
+      return { success: false, error: "School not found" }
     }
 
     // Check permissions - ADMIN or DEVELOPER can access
     if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return { success: false, message: "Insufficient permissions" }
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const yearLevels = await db.yearLevel.findMany({
@@ -69,7 +75,7 @@ export async function getYearLevels(
     console.error("Failed to fetch year levels:", error)
     return {
       success: false,
-      message:
+      error:
         error instanceof Error ? error.message : "Failed to fetch year levels",
     }
   }
@@ -81,16 +87,21 @@ export async function getYearLevels(
 
 export async function createYearLevel(
   formData: FormData
-): Promise<ActionResult> {
+): Promise<ActionResponse> {
   try {
+    const session = await auth()
+    if (!session?.user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId, role } = await getTenantContext()
 
     if (!schoolId) {
-      return { success: false, message: "School not found" }
+      return { success: false, error: "School not found" }
     }
 
     if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return { success: false, message: "Insufficient permissions" }
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const data = {
@@ -109,7 +120,7 @@ export async function createYearLevel(
     if (existingName) {
       return {
         success: false,
-        message: "A year level with this name already exists",
+        error: "A year level with this name already exists",
       }
     }
 
@@ -121,7 +132,7 @@ export async function createYearLevel(
     if (existingOrder) {
       return {
         success: false,
-        message: `Level order ${validated.levelOrder} is already in use`,
+        error: `Level order ${validated.levelOrder} is already in use`,
       }
     }
 
@@ -137,14 +148,13 @@ export async function createYearLevel(
     revalidatePath("/students/year-levels")
     return {
       success: true,
-      message: "Year level created successfully",
       data: { yearLevel },
     }
   } catch (error) {
     console.error("Failed to create year level:", error)
     return {
       success: false,
-      message:
+      error:
         error instanceof Error ? error.message : "Failed to create year level",
     }
   }
@@ -156,16 +166,21 @@ export async function createYearLevel(
 
 export async function updateYearLevel(
   formData: FormData
-): Promise<ActionResult> {
+): Promise<ActionResponse> {
   try {
+    const session = await auth()
+    if (!session?.user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId, role } = await getTenantContext()
 
     if (!schoolId) {
-      return { success: false, message: "School not found" }
+      return { success: false, error: "School not found" }
     }
 
     if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return { success: false, message: "Insufficient permissions" }
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const levelOrderValue = formData.get("levelOrder")
@@ -186,7 +201,7 @@ export async function updateYearLevel(
     })
 
     if (!existing) {
-      return { success: false, message: "Year level not found" }
+      return { success: false, error: "Year level not found" }
     }
 
     // Check for duplicate name if changing name
@@ -201,7 +216,7 @@ export async function updateYearLevel(
       if (duplicate) {
         return {
           success: false,
-          message: "A year level with this name already exists",
+          error: "A year level with this name already exists",
         }
       }
     }
@@ -221,13 +236,14 @@ export async function updateYearLevel(
       if (duplicateOrder) {
         return {
           success: false,
-          message: `Level order ${validated.levelOrder} is already in use`,
+          error: `Level order ${validated.levelOrder} is already in use`,
         }
       }
     }
 
-    const yearLevel = await db.yearLevel.update({
-      where: { id: validated.id },
+    // Use updateMany with schoolId for defense-in-depth
+    await db.yearLevel.updateMany({
+      where: { id: validated.id, schoolId },
       data: {
         ...(validated.levelName && { levelName: validated.levelName }),
         ...(validated.lang !== undefined && {
@@ -242,14 +258,13 @@ export async function updateYearLevel(
     revalidatePath("/students/year-levels")
     return {
       success: true,
-      message: "Year level updated successfully",
-      data: { yearLevel },
+      data: null,
     }
   } catch (error) {
     console.error("Failed to update year level:", error)
     return {
       success: false,
-      message:
+      error:
         error instanceof Error ? error.message : "Failed to update year level",
     }
   }
@@ -261,16 +276,21 @@ export async function updateYearLevel(
 
 export async function deleteYearLevel(
   formData: FormData
-): Promise<ActionResult> {
+): Promise<ActionResponse> {
   try {
+    const session = await auth()
+    if (!session?.user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
     const { schoolId, role } = await getTenantContext()
 
     if (!schoolId) {
-      return { success: false, message: "School not found" }
+      return { success: false, error: "School not found" }
     }
 
     if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return { success: false, message: "Insufficient permissions" }
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const data = {
@@ -293,35 +313,36 @@ export async function deleteYearLevel(
     })
 
     if (!existing) {
-      return { success: false, message: "Year level not found" }
+      return { success: false, error: "Year level not found" }
     }
 
     // Check for dependencies
     if (existing._count.studentYearLevels > 0) {
       return {
         success: false,
-        message: `Cannot delete year level with ${existing._count.studentYearLevels} enrolled student(s). Please reassign students first.`,
+        error: `Cannot delete year level with ${existing._count.studentYearLevels} enrolled student(s). Please reassign students first.`,
       }
     }
 
     if (existing._count.batches > 0) {
       return {
         success: false,
-        message: `Cannot delete year level with ${existing._count.batches} batch(es). Please reassign batches first.`,
+        error: `Cannot delete year level with ${existing._count.batches} batch(es). Please reassign batches first.`,
       }
     }
 
-    await db.yearLevel.delete({
-      where: { id: validated.id },
+    // Use deleteMany with schoolId for defense-in-depth
+    await db.yearLevel.deleteMany({
+      where: { id: validated.id, schoolId },
     })
 
     revalidatePath("/students/year-levels")
-    return { success: true, message: "Year level deleted successfully" }
+    return { success: true }
   } catch (error) {
     console.error("Failed to delete year level:", error)
     return {
       success: false,
-      message:
+      error:
         error instanceof Error ? error.message : "Failed to delete year level",
     }
   }

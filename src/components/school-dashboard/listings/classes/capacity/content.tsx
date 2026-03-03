@@ -92,6 +92,9 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
   }
 
   const data = result.data
+  if (!data) {
+    return null
+  }
 
   // Handle empty state
   if (data.totalClasses === 0) {

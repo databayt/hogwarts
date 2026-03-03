@@ -13,6 +13,7 @@ vi.mock("@/lib/db", () => ({
     exam: {
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
       count: vi.fn(),
@@ -29,6 +30,7 @@ vi.mock("@/lib/db", () => ({
         exam: {
           create: vi.fn(),
           update: vi.fn(),
+          updateMany: vi.fn(),
           deleteMany: vi.fn(),
         },
       })
@@ -42,6 +44,13 @@ vi.mock("@/lib/tenant-context", () => ({
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+}))
+
+vi.mock("../manage/actions/conflict-detection", () => ({
+  checkExamConflicts: vi.fn().mockResolvedValue({
+    success: true,
+    data: { hasConflicts: false, conflicts: [], suggestions: [] },
+  }),
 }))
 
 describe("Exam Actions", () => {
@@ -154,7 +163,7 @@ describe("Exam Actions", () => {
         endTime: "11:00",
         classId: "class-1",
       } as any)
-      vi.mocked(db.exam.update).mockResolvedValue({} as any)
+      vi.mocked(db.exam.updateMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await updateExam({
         id: "exam-1",
@@ -216,8 +225,24 @@ describe("Exam Actions", () => {
   describe("getExams", () => {
     it("fetches exams scoped to schoolId", async () => {
       const mockExams = [
-        { id: "1", title: "Exam 1", schoolId: mockSchoolId },
-        { id: "2", title: "Exam 2", schoolId: mockSchoolId },
+        {
+          id: "1",
+          title: "Exam 1",
+          schoolId: mockSchoolId,
+          examDate: new Date(),
+          createdAt: new Date(),
+          class: { name: "Class A" },
+          subject: { subjectName: "Math" },
+        },
+        {
+          id: "2",
+          title: "Exam 2",
+          schoolId: mockSchoolId,
+          examDate: new Date(),
+          createdAt: new Date(),
+          class: { name: "Class B" },
+          subject: { subjectName: "Science" },
+        },
       ]
 
       vi.mocked(db.exam.findMany).mockResolvedValue(mockExams as any)
@@ -225,7 +250,8 @@ describe("Exam Actions", () => {
 
       const result = await getExams({})
 
-      expect(result.success).toBe(true)
+      expect(result.rows).toHaveLength(2)
+      expect(result.total).toBe(2)
     })
   })
 })

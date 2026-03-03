@@ -18,6 +18,7 @@ import { Shell as PageContainer } from "@/components/table/shell"
 
 import type { InvoiceRow } from "./columns"
 import { ExportButton } from "./export-button"
+import { ReceiptsContent } from "./receipts/content"
 import { InvoicesTable } from "./table"
 
 interface Props {
@@ -252,9 +253,10 @@ export async function BillingContent({
           </TabsContent>
 
           <TabsContent value="receipts" className="space-y-4">
-            <EmptyState
-              title={t.billing.receipts}
-              description={t.billing.receiptsDescription}
+            <ReceiptsContent
+              dictionary={dictionary}
+              lang={lang}
+              searchParams={searchParams}
             />
           </TabsContent>
         </Tabs>

@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 // import { useState } from "react";
 // import { Badge } from "@/components/ui/badge";
 // import { Button } from "@/components/ui/button";
@@ -32,7 +29,7 @@
 //     <div className="w-full">
 //       <div className="flex flex-col md:flex-row gap-4 mb-6">
 //         <div className="relative flex-1">
-//           <SearchIcon className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+//           <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
 //           <Input
 //             placeholder="Search issues..."
 //             value={searchText}

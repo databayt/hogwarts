@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Parent Profile Academic Tab
  * Consolidated academic view for all children
@@ -581,7 +578,7 @@ export function AcademicTab({
                         </span>
                       </Badge>
                       <Button variant="ghost" size="sm">
-                        <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -649,7 +646,7 @@ export function AcademicTab({
                       )}
                     </div>
                     <Button variant="ghost" size="sm">
-                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                      <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>

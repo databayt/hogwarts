@@ -44,7 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { IMAGEKIT_FOLDERS, useImageKitUpload } from "@/components/file"
+import { useUpload } from "@/components/file"
 import { Icons } from "@/components/icons"
 import { submitExcuse } from "@/components/school-dashboard/attendance/actions"
 
@@ -147,20 +147,21 @@ export function ExcuseForm({
 
   const isArabic = locale === "ar"
 
-  // ImageKit upload hook
+  // S3 upload hook
   const {
     upload,
     isUploading,
     progress,
-    error: ikError,
-    resetError,
-  } = useImageKitUpload({
-    folder: IMAGEKIT_FOLDERS.EXCUSE_ATTACHMENTS,
+    error: s3Error,
+    clearError,
+  } = useUpload({
+    category: "image",
+    folder: "excuse-attachments",
     onSuccess: (result) => {
       const newFile: UploadedFile = {
         url: result.url,
-        name: result.name,
-        type: result.fileType,
+        name: result.originalName,
+        type: result.mimeType,
         size: result.size,
       }
       setUploadedFiles((prev) => {
@@ -427,11 +428,11 @@ export function ExcuseForm({
                 </FormLabel>
 
                 {/* Upload Error */}
-                {(uploadError || ikError) && (
+                {(uploadError || s3Error) && (
                   <Alert variant="destructive" className="py-2">
                     <Icons.alertCircle className="h-4 w-4" />
                     <AlertDescription className="text-sm">
-                      {uploadError || ikError}
+                      {uploadError || s3Error}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -475,9 +476,12 @@ export function ExcuseForm({
                     <div className="text-muted-foreground flex items-center gap-2 text-sm">
                       <Icons.loader2 className="h-4 w-4 animate-spin" />
                       <span>{isArabic ? "جاري الرفع..." : "Uploading..."}</span>
-                      <span>{progress}%</span>
+                      <span>{progress?.percentage ?? 0}%</span>
                     </div>
-                    <Progress value={progress} className="h-1" />
+                    <Progress
+                      value={progress?.percentage ?? 0}
+                      className="h-1"
+                    />
                   </div>
                 )}
 

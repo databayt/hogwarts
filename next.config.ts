@@ -103,7 +103,7 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
       { protocol: "https", hostname: "www-cdn.anthropic.com", pathname: "/**" },
-      { protocol: "https", hostname: "ik.imagekit.io", pathname: "/abdout/**" },
+
       { protocol: "https", hostname: "img.clickviewapp.com", pathname: "/**" },
       { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
       {

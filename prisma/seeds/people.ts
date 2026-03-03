@@ -11,11 +11,15 @@
 import type { PrismaClient } from "@prisma/client"
 
 import {
+  BLOOD_GROUPS,
+  getEnglishGivenName,
+  getEnglishSurname,
   getRandomName,
   getRandomNeighborhood,
   getRandomSurname,
   getStudentBirthDate,
   GUARDIAN_TYPES,
+  HP_CHARACTERS,
   TEACHER_DATA,
   YEAR_LEVELS,
 } from "./constants"
@@ -108,33 +112,60 @@ export async function seedTeachers(
     const teacherData = TEACHER_DATA[index % TEACHER_DATA.length]
     const department = deptMap.get(teacherData.department)
 
+    // McGonagall = teacher@databayt.org (detect by email, not index)
+    const isHpTeacher = user.email === "teacher@databayt.org"
+    const givenName = isHpTeacher
+      ? HP_CHARACTERS.teacher.nameAr.split(" ")[0]
+      : teacherData.givenName
+    const surname = isHpTeacher
+      ? HP_CHARACTERS.teacher.nameAr.split(" ").slice(1).join(" ")
+      : teacherData.surname
+    const birthDate = isHpTeacher ? HP_CHARACTERS.teacher.birthDate : undefined
+
+    // Personal email (firstname-lastname@domain.com)
+    const personalEmail = isHpTeacher
+      ? HP_CHARACTERS.teacher.personalEmail
+      : generatePersonalEmail(
+          getEnglishGivenName(teacherData.givenName, teacherData.gender),
+          getEnglishSurname(teacherData.surname),
+          index
+        )
+
     try {
-      const teacher = await prisma.teacher.upsert({
-        where: {
-          schoolId_emailAddress: {
-            schoolId,
-            emailAddress: user.email,
-          },
-        },
-        update: {
-          givenName: teacherData.givenName,
-          surname: teacherData.surname,
-          gender: teacherData.gender,
-          userId: user.id,
-        },
-        create: {
-          schoolId,
-          userId: user.id,
-          emailAddress: user.email,
-          employeeId: generateEmployeeId(index),
-          givenName: teacherData.givenName,
-          surname: teacherData.surname,
-          gender: teacherData.gender,
-          employmentStatus: "ACTIVE",
-          employmentType: "FULL_TIME",
-          joiningDate: new Date(),
-        },
+      // Find by userId first (handles email migration from login → personal)
+      const existing = await prisma.teacher.findFirst({
+        where: { schoolId, userId: user.id },
       })
+
+      let teacher
+      if (existing) {
+        teacher = await prisma.teacher.update({
+          where: { id: existing.id },
+          data: {
+            givenName,
+            surname,
+            gender: teacherData.gender,
+            emailAddress: personalEmail,
+            ...(birthDate ? { birthDate } : {}),
+          },
+        })
+      } else {
+        teacher = await prisma.teacher.create({
+          data: {
+            schoolId,
+            userId: user.id,
+            emailAddress: personalEmail,
+            employeeId: generateEmployeeId(index),
+            givenName,
+            surname,
+            gender: teacherData.gender,
+            employmentStatus: "ACTIVE",
+            employmentType: "FULL_TIME",
+            joiningDate: new Date(),
+            ...(birthDate ? { birthDate } : {}),
+          },
+        })
+      }
 
       // Link to department if found
       if (department) {
@@ -176,7 +207,7 @@ export async function seedTeachers(
       }
       // Find existing teacher
       const existing = await prisma.teacher.findFirst({
-        where: { schoolId, emailAddress: user.email },
+        where: { schoolId, userId: user.id },
       })
       if (existing) {
         teachers.push({
@@ -572,6 +603,13 @@ export async function seedStudents(
 ): Promise<StudentRef[]> {
   const students: StudentRef[] = []
 
+  // Clear stale userId linkages so upserts by GR number don't hit unique constraint
+  // (user array order is non-deterministic, so userId may be on a different GR record)
+  await prisma.student.updateMany({
+    where: { schoolId, userId: { in: studentUsers.map((u) => u.id) } },
+    data: { userId: null },
+  })
+
   // Calculate distribution per level based on YEAR_LEVELS config
   const levelDistribution = YEAR_LEVELS.map((level) => ({
     level: yearLevels.find((yl) => yl.levelName === level.name),
@@ -595,11 +633,26 @@ export async function seedStudents(
 
     await processBatch(levelStudents, 10, async (user, batchIndex) => {
       const globalIndex = studentIndex + batchIndex
-      const gender = globalIndex % 2 === 0 ? "M" : "F"
-      const name = getRandomName(gender as "M" | "F", globalIndex)
-      const surname = getRandomSurname(globalIndex)
-      const neighborhoodName = getRandomNeighborhood(globalIndex)
-      const birthDate = getStudentBirthDate(dist.order)
+      const isHarry = user.email === "student@databayt.org"
+      const gender = isHarry ? "M" : globalIndex % 2 === 0 ? "M" : "F"
+      const name = isHarry
+        ? { ar: HP_CHARACTERS.student.nameAr.split(" ")[0], en: "Harry" }
+        : getRandomName(gender as "M" | "F", globalIndex)
+      const surname = isHarry
+        ? {
+            ar: HP_CHARACTERS.student.nameAr.split(" ").slice(1).join(" "),
+            en: "Potter",
+          }
+        : getRandomSurname(globalIndex)
+      const neighborhoodName = isHarry
+        ? HP_CHARACTERS.student.address
+        : getRandomNeighborhood(globalIndex)
+      const birthDate = isHarry
+        ? HP_CHARACTERS.student.birthDate
+        : getStudentBirthDate(dist.order)
+      const bloodGroup = isHarry
+        ? HP_CHARACTERS.student.bloodGroup
+        : BLOOD_GROUPS[globalIndex % BLOOD_GROUPS.length]
 
       try {
         const student = await prisma.student.upsert({
@@ -614,6 +667,10 @@ export async function seedStudents(
             surname: surname.ar,
             gender,
             userId: user.id,
+            bloodGroup,
+            email: isHarry
+              ? HP_CHARACTERS.student.personalEmail
+              : generatePersonalEmail(name.en, surname.en, globalIndex),
           },
           create: {
             schoolId,
@@ -623,15 +680,24 @@ export async function seedStudents(
             surname: surname.ar,
             gender,
             dateOfBirth: birthDate,
-            nationality: "SD",
+            nationality: isHarry ? HP_CHARACTERS.student.nationality : "SD",
             currentAddress: neighborhoodName,
-            city: "الخرطوم",
-            country: "SD",
+            city: isHarry ? "Little Whinging" : "الخرطوم",
+            country: isHarry ? "GB" : "SD",
             mobileNumber: generatePhone(globalIndex),
-            email: generatePersonalEmail(name.en, surname.en, globalIndex),
+            email: isHarry
+              ? HP_CHARACTERS.student.personalEmail
+              : generatePersonalEmail(name.en, surname.en, globalIndex),
             enrollmentDate: new Date(),
             status: "ACTIVE",
             studentType: "REGULAR",
+            bloodGroup,
+            emergencyContactName: isHarry
+              ? HP_CHARACTERS.student.emergencyContactName
+              : undefined,
+            medicalConditions: isHarry
+              ? HP_CHARACTERS.student.medicalNotes
+              : undefined,
           },
         })
 
@@ -687,9 +753,11 @@ export async function seedStudents(
     studentIndex += levelStudentCount
   }
 
-  // Move student@databayt.org (index 0) from KG1 to Grade 10
+  // Move student@databayt.org from initial level to Grade 10
   // Grade 10 = "الصف العاشر" (order 12, Secondary) — 16 subjects for realistic simulation
-  const primaryStudentUser = studentUsers[0]
+  const primaryStudentUser = studentUsers.find(
+    (u) => u.email === "student@databayt.org"
+  )
   if (primaryStudentUser) {
     const grade10Level = yearLevels.find((yl) => yl.levelName === "الصف العاشر")
     if (grade10Level) {
@@ -758,35 +826,59 @@ export async function seedGuardians(
       if (guardianIndex >= guardianUsers.length) continue
 
       const user = guardianUsers[guardianIndex]
-      const name = getRandomName(pair.gender as "M" | "F", guardianIndex)
+      // HP characters — detect by email, not index
+      const hpChar =
+        user.email === "parent@databayt.org"
+          ? HP_CHARACTERS.guardian0
+          : user.email === "parent1@databayt.org"
+            ? HP_CHARACTERS.guardian1
+            : null
+      const name = hpChar
+        ? { ar: hpChar.nameAr.split(" ")[0], en: hpChar.nameEn.split(" ")[0] }
+        : getRandomName(pair.gender as "M" | "F", guardianIndex)
       // Guardian shares student's surname (family name)
-      const surname = { ar: student.surname, en: student.surname }
-      const email = generateSchoolEmail("parent", guardianIndex)
+      const surname = hpChar
+        ? {
+            ar: hpChar.nameAr.split(" ").slice(1).join(" "),
+            en: hpChar.nameEn.split(" ").slice(1).join(" "),
+          }
+        : { ar: student.surname, en: student.surname }
+
+      // Personal email (firstname-lastname@domain.com)
+      const personalEmail = hpChar
+        ? hpChar.personalEmail
+        : generatePersonalEmail(name.en, surname.en, guardianIndex)
       const guardianTypeId = guardianTypeMap.get(pair.type)
 
       if (!guardianTypeId) continue
 
       try {
-        const guardian = await prisma.guardian.upsert({
-          where: {
-            schoolId_emailAddress: {
-              schoolId,
-              emailAddress: email,
-            },
-          },
-          update: {
-            givenName: name.ar,
-            surname: surname.ar,
-            userId: user.id,
-          },
-          create: {
-            schoolId,
-            userId: user.id,
-            emailAddress: email,
-            givenName: name.ar,
-            surname: surname.ar,
-          },
+        // Find by userId first (handles email migration from school → personal)
+        const existing = await prisma.guardian.findFirst({
+          where: { schoolId, userId: user.id },
         })
+
+        let guardian
+        if (existing) {
+          guardian = await prisma.guardian.update({
+            where: { id: existing.id },
+            data: {
+              givenName: name.ar,
+              surname: surname.ar,
+              emailAddress: personalEmail,
+            },
+          })
+        } else {
+          guardian = await prisma.guardian.create({
+            data: {
+              schoolId,
+              userId: user.id,
+              emailAddress: personalEmail,
+              givenName: name.ar,
+              surname: surname.ar,
+            },
+          })
+        }
 
         // Link guardian to student
         await prisma.studentGuardian.upsert({

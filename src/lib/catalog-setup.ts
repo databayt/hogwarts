@@ -74,6 +74,9 @@ const ARTS_ONLY_PATTERNS = ["philosophy", "فلسفة"]
 
 function getSubjectStreamType(subjectName: string): "SCIENCE" | "ARTS" | null {
   const lower = subjectName.toLowerCase()
+  // Exclude "physical education" before checking "physics" pattern
+  if (lower.includes("physical education") || lower.includes("تربية بدنية"))
+    return null
   if (SCIENCE_ONLY_PATTERNS.some((p) => lower.includes(p))) return "SCIENCE"
   if (ARTS_ONLY_PATTERNS.some((p) => lower.includes(p))) return "ARTS"
   return null
@@ -222,6 +225,7 @@ const DEPARTMENT_DEFAULTS = [
 // Score Range defaults (9 entries: A+ through F)
 // ============================================================================
 
+// gpa field is reserved for future use (ScoreRange schema does not yet have a gpa column)
 const SCORE_RANGE_DEFAULTS = [
   { grade: "A+", minScore: 95, maxScore: 100, gpa: 4.0 },
   { grade: "A", minScore: 90, maxScore: 94, gpa: 3.75 },
@@ -271,57 +275,69 @@ export async function setupDefaultsForSchool(
   schoolId: string,
   schoolLevel: string = "both"
 ) {
-  const results = { yearLevels: 0, departments: 0, scoreRanges: 0 }
+  // Idempotency reads outside transaction for performance
+  const [existingYearLevels, existingDepts, existingRanges] = await Promise.all(
+    [
+      db.yearLevel.count({ where: { schoolId } }),
+      db.department.count({ where: { schoolId } }),
+      db.scoreRange.count({ where: { schoolId } }),
+    ]
+  )
 
-  // 1. YearLevels (filtered by schoolLevel)
-  const existingYearLevels = await db.yearLevel.count({ where: { schoolId } })
-  if (existingYearLevels === 0) {
-    const applicable = YEAR_LEVEL_DEFAULTS.filter((yl) =>
-      yl.schoolLevels.includes(schoolLevel)
-    )
-    for (const yl of applicable) {
-      await db.yearLevel.create({
-        data: {
-          schoolId,
-          levelName: yl.name,
-          levelOrder: yl.levelOrder,
-        },
-      })
-      results.yearLevels++
-    }
+  if (existingYearLevels > 0 && existingDepts > 0 && existingRanges > 0) {
+    return { yearLevels: 0, departments: 0, scoreRanges: 0 }
   }
 
-  // 2. Departments
-  const existingDepts = await db.department.count({ where: { schoolId } })
-  if (existingDepts === 0) {
-    for (const dept of DEPARTMENT_DEFAULTS) {
-      await db.department.create({
-        data: {
-          schoolId,
-          departmentName: dept.name,
-        },
-      })
-      results.departments++
-    }
-  }
+  return db.$transaction(async (tx) => {
+    const results = { yearLevels: 0, departments: 0, scoreRanges: 0 }
 
-  // 3. ScoreRanges
-  const existingRanges = await db.scoreRange.count({ where: { schoolId } })
-  if (existingRanges === 0) {
-    for (const range of SCORE_RANGE_DEFAULTS) {
-      await db.scoreRange.create({
-        data: {
-          schoolId,
-          grade: range.grade,
-          minScore: range.minScore,
-          maxScore: range.maxScore,
-        },
-      })
-      results.scoreRanges++
+    // 1. YearLevels (filtered by schoolLevel)
+    if (existingYearLevels === 0) {
+      const applicable = YEAR_LEVEL_DEFAULTS.filter((yl) =>
+        yl.schoolLevels.includes(schoolLevel)
+      )
+      for (const yl of applicable) {
+        await tx.yearLevel.create({
+          data: {
+            schoolId,
+            levelName: yl.name,
+            levelOrder: yl.levelOrder,
+          },
+        })
+        results.yearLevels++
+      }
     }
-  }
 
-  return results
+    // 2. Departments
+    if (existingDepts === 0) {
+      for (const dept of DEPARTMENT_DEFAULTS) {
+        await tx.department.create({
+          data: {
+            schoolId,
+            departmentName: dept.name,
+          },
+        })
+        results.departments++
+      }
+    }
+
+    // 3. ScoreRanges
+    if (existingRanges === 0) {
+      for (const range of SCORE_RANGE_DEFAULTS) {
+        await tx.scoreRange.create({
+          data: {
+            schoolId,
+            grade: range.grade,
+            minScore: range.minScore,
+            maxScore: range.maxScore,
+          },
+        })
+        results.scoreRanges++
+      }
+    }
+
+    return results
+  })
 }
 
 // ============================================================================
@@ -413,7 +429,20 @@ export async function setupCatalogForSchool(
     orderBy: { levelOrder: "asc" },
   })
 
-  const yearLevelMap = new Map(yearLevels.map((yl) => [yl.levelOrder, yl.id]))
+  // Build grade-number-to-yearLevel map using YEAR_LEVEL_DEFAULTS slugs
+  // (KG1=levelOrder 1, KG2=2, Grade 1=3, ..., so raw levelOrder != grade number)
+  const yearLevelByOrder = new Map(
+    yearLevels.map((yl) => [yl.levelOrder, yl.id])
+  )
+  const gradeNumberToYearLevel = new Map<number, string>()
+  for (const ylDef of YEAR_LEVEL_DEFAULTS) {
+    const match = ylDef.slug.match(/^grade-(\d+)$/)
+    if (match) {
+      const gradeNum = parseInt(match[1], 10)
+      const ylId = yearLevelByOrder.get(ylDef.levelOrder)
+      if (ylId) gradeNumberToYearLevel.set(gradeNum, ylId)
+    }
+  }
 
   const result = await db.$transaction(async (tx) => {
     // 1. Create academic levels (filtered by schoolLevel)
@@ -454,7 +483,7 @@ export async function setupCatalogForSchool(
           data: {
             schoolId,
             levelId: levelRecord.id,
-            yearLevelId: yearLevelMap.get(grade) ?? null,
+            yearLevelId: gradeNumberToYearLevel.get(grade) ?? null,
             name: GRADE_NAMES[grade] ?? `الصف ${grade}`,
             slug: `grade-${grade}`,
             gradeNumber: grade,
@@ -742,75 +771,95 @@ export async function applyTimetableStructureForNewSchool(
   if (!structure)
     return { skipped: true, message: `Unknown structure: ${slug}` }
 
-  // Create periods
-  let createdCount = 0
-  for (const period of structure.periods) {
-    const [startHour, startMin] = period.startTime.split(":").map(Number)
-    const [endHour, endMin] = period.endTime.split(":").map(Number)
-
-    await db.period.create({
-      data: {
-        schoolId,
-        yearId,
-        name: period.name,
-        startTime: new Date(Date.UTC(1970, 0, 1, startHour, startMin)),
-        endTime: new Date(Date.UTC(1970, 0, 1, endHour, endMin)),
-      },
-    })
-    createdCount++
-  }
-
-  // Create 2 default terms within the school year
-  const now = new Date()
-  const currentYear = now.getFullYear()
-  const yearStart = now.getMonth() >= 8 ? currentYear : currentYear - 1
-
+  // Wrap creation in transaction for atomicity
   const existingTerms = await db.term.count({ where: { schoolId, yearId } })
-  let termId: string | undefined
 
-  if (existingTerms === 0) {
-    const term1 = await db.term.create({
-      data: {
-        schoolId,
-        yearId,
-        termNumber: 1,
-        startDate: new Date(yearStart, 8, 1), // Sep 1
-        endDate: new Date(yearStart + 1, 0, 31), // Jan 31
-        isActive: true,
-      },
-    })
-    termId = term1.id
+  return db.$transaction(async (tx) => {
+    // Create periods
+    let createdCount = 0
+    for (const period of structure.periods) {
+      const [startHour, startMin] = period.startTime.split(":").map(Number)
+      const [endHour, endMin] = period.endTime.split(":").map(Number)
 
-    await db.term.create({
-      data: {
-        schoolId,
-        yearId,
-        termNumber: 2,
-        startDate: new Date(yearStart + 1, 1, 1), // Feb 1
-        endDate: new Date(yearStart + 1, 5, 30), // Jun 30
-        isActive: false,
-      },
-    })
-  }
-
-  // Persist working days from structure definition
-  if (termId) {
-    const existingConfig = await db.schoolWeekConfig.findFirst({
-      where: { schoolId },
-    })
-    if (!existingConfig) {
-      await db.schoolWeekConfig.create({
+      await tx.period.create({
         data: {
           schoolId,
-          termId,
-          workingDays: structure.workingDays,
-          defaultLunchAfterPeriod: structure.lunchAfterPeriod,
+          yearId,
+          name: period.name,
+          startTime: new Date(Date.UTC(1970, 0, 1, startHour, startMin)),
+          endTime: new Date(Date.UTC(1970, 0, 1, endHour, endMin)),
         },
       })
+      createdCount++
     }
-  }
 
-  return { skipped: false, periods: createdCount, yearId, termId }
+    // Create 2 default terms within the school year
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const yearStart = now.getMonth() >= 8 ? currentYear : currentYear - 1
+
+    let termId: string | undefined
+
+    if (existingTerms === 0) {
+      // Determine which term should be active based on current date
+      const term1End = new Date(yearStart + 1, 0, 31) // Jan 31
+      const isNowInTerm1 = now <= term1End
+
+      const term1 = await tx.term.create({
+        data: {
+          schoolId,
+          yearId,
+          termNumber: 1,
+          startDate: new Date(yearStart, 8, 1), // Sep 1
+          endDate: term1End,
+          isActive: isNowInTerm1,
+        },
+      })
+      termId = term1.id
+
+      const term2 = await tx.term.create({
+        data: {
+          schoolId,
+          yearId,
+          termNumber: 2,
+          startDate: new Date(yearStart + 1, 1, 1), // Feb 1
+          endDate: new Date(yearStart + 1, 5, 30), // Jun 30
+          isActive: !isNowInTerm1,
+        },
+      })
+
+      // Use Term 2 id if that's the active term
+      if (!isNowInTerm1) termId = term2.id
+    }
+
+    // Resolve termId from existing terms if not freshly created
+    if (!termId) {
+      const activeTerm = await tx.term.findFirst({
+        where: { schoolId, yearId, isActive: true },
+        select: { id: true },
+      })
+      termId = activeTerm?.id
+    }
+
+    // Persist working days from structure definition
+    if (termId) {
+      const existingConfig = await tx.schoolWeekConfig.findFirst({
+        where: { schoolId },
+      })
+      if (!existingConfig) {
+        await tx.schoolWeekConfig.create({
+          data: {
+            schoolId,
+            termId,
+            workingDays: structure.workingDays,
+            defaultLunchAfterPeriod: structure.lunchAfterPeriod,
+          },
+        })
+      }
+    }
+
+    return { skipped: false, periods: createdCount, yearId, termId }
+  })
 }
 
 /**
@@ -830,7 +879,7 @@ export async function getRankedLessonVideos(
   }
 
   if (includeSchoolOnly && schoolId) {
-    whereClause.OR = [{ schoolId }, { visibility: "PUBLIC" }]
+    whereClause.schoolId = schoolId
   } else if (schoolId) {
     whereClause.OR = [{ schoolId }, { visibility: "PUBLIC" }]
   } else {
@@ -891,4 +940,15 @@ export async function recordVideoView(videoId: string) {
     where: { id: videoId },
     data: { viewCount: { increment: 1 } },
   })
+}
+
+/** @internal Exported for testing only */
+export const _testing = {
+  inferCurriculum,
+  getSubjectStreamType,
+  getDefaultWeeklyPeriods,
+  findCatalogSubjects,
+  YEAR_LEVEL_DEFAULTS,
+  DEPARTMENT_DEFAULTS,
+  SCORE_RANGE_DEFAULTS,
 }

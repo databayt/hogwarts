@@ -12,11 +12,7 @@ import type { z } from "zod"
 // Storage Providers
 // ============================================================================
 
-export type StorageProvider =
-  | "vercel_blob"
-  | "aws_s3"
-  | "cloudflare_r2"
-  | "imagekit"
+export type StorageProvider = "aws_s3" | "cloudflare_r2"
 export type StorageTier = "hot" | "warm" | "cold"
 
 export interface StorageProviderConfig {

@@ -356,37 +356,6 @@ export {
 export type { FileUploaderProps, UploadedFileResult } from "./upload"
 
 // ============================================================================
-// ImageKit Upload Hook & Utilities
-// ============================================================================
-export { useImageKitUpload } from "./upload"
-export type {
-  ImageKitAuthParams,
-  ImageKitUploadProgress,
-  ImageKitUploadResult,
-  UseImageKitUploadOptions,
-  UseImageKitUploadReturn,
-} from "./upload"
-
-// ImageKit utilities from providers
-export {
-  IMAGEKIT_FOLDERS,
-  BOOK_COVER_PRESETS,
-  IMAGE_TRANSFORMATIONS,
-  getUrlEndpoint,
-  getImagekitUrl,
-  getBookCoverUrl,
-  getAuthenticationParameters,
-  uploadToImageKit,
-  deleteFromImageKit,
-  getImageKitFileDetails,
-} from "./providers"
-export type {
-  TransformationOptions,
-  ImageKitUploadOptions,
-  ImageKitUploadResult as ImageKitDirectUploadResult,
-} from "./providers"
-
-// ============================================================================
 // Export Module
 // ============================================================================
 export {
@@ -468,8 +437,12 @@ export {
   // Domain-specific CSV Import
   importStudents,
   importTeachers,
+  importStaff,
+  importGuardians,
   generateStudentTemplate,
   generateTeacherTemplate,
+  generateStaffTemplate,
+  generateGuardianTemplate,
   // CSV Validation Helpers
   formatZodError,
   validateDateFormat,

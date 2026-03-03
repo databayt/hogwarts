@@ -17,9 +17,12 @@ export async function getUnifiedMembers(
           id: true,
           givenName: true,
           surname: true,
+          email: true,
           status: true,
           academicGradeId: true,
           academicGrade: { select: { name: true } },
+          section: { select: { name: true } },
+          _count: { select: { studentClasses: true } },
         },
       },
       teacher: {
@@ -27,7 +30,14 @@ export async function getUnifiedMembers(
           id: true,
           givenName: true,
           surname: true,
+          emailAddress: true,
           employmentStatus: true,
+          teacherDepartments: {
+            where: { isPrimary: true },
+            select: { department: { select: { departmentName: true } } },
+            take: 1,
+          },
+          _count: { select: { classes: true } },
         },
       },
       staffMember: {
@@ -35,7 +45,9 @@ export async function getUnifiedMembers(
           id: true,
           givenName: true,
           surname: true,
+          emailAddress: true,
           employmentStatus: true,
+          position: true,
         },
       },
       guardian: {
@@ -43,6 +55,8 @@ export async function getUnifiedMembers(
           id: true,
           givenName: true,
           surname: true,
+          emailAddress: true,
+          _count: { select: { studentGuardians: true } },
         },
       },
     },
@@ -86,10 +100,44 @@ export async function getUnifiedMembers(
     if (user.isSuspended) memberStatus = "suspended"
     else if (!user.emailVerified) memberStatus = "inactive"
 
+    // Resolve personal email from profile models (prefer over login email)
+    let personalEmail = user.email
+    if (user.student?.email) personalEmail = user.student.email
+    else if (user.teacher?.emailAddress)
+      personalEmail = user.teacher.emailAddress
+    else if (user.staffMember?.emailAddress)
+      personalEmail = user.staffMember.emailAddress
+    else if (user.guardian?.emailAddress)
+      personalEmail = user.guardian.emailAddress
+
+    // Build contextual info
+    let contextInfo: string | null = null
+    if (user.student) {
+      const parts: string[] = []
+      if (user.student.section?.name) parts.push(user.student.section.name)
+      else if (user.student.academicGrade?.name)
+        parts.push(user.student.academicGrade.name)
+      if (user.student._count.studentClasses > 0)
+        parts.push(`${user.student._count.studentClasses} classes`)
+      contextInfo = parts.length > 0 ? parts.join(" · ") : null
+    } else if (user.teacher) {
+      const parts: string[] = []
+      if (user.teacher._count.classes > 0)
+        parts.push(`${user.teacher._count.classes} classes`)
+      const primaryDept = user.teacher.teacherDepartments[0]
+      if (primaryDept) parts.push(primaryDept.department.departmentName)
+      contextInfo = parts.length > 0 ? parts.join(" · ") : null
+    } else if (user.staffMember) {
+      contextInfo = user.staffMember.position || null
+    } else if (user.guardian) {
+      if (user.guardian._count.studentGuardians > 0)
+        contextInfo = `${user.guardian._count.studentGuardians} children`
+    }
+
     return {
       id: user.id,
       name,
-      email: user.email,
+      email: personalEmail,
       role: user.role,
       memberStatus,
       roleSpecificStatus,
@@ -102,6 +150,7 @@ export async function getUnifiedMembers(
       guardianId: user.guardian?.id ?? null,
       gradeName: user.student?.academicGrade?.name ?? null,
       academicGradeId: user.student?.academicGradeId ?? null,
+      contextInfo,
     }
   })
 }

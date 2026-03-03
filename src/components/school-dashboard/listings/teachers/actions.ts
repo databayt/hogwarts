@@ -143,6 +143,7 @@ export async function createTeacher(
           gender: parsed.gender,
           emailAddress: parsed.emailAddress,
           birthDate: parsed.birthDate,
+          profilePhotoUrl: parsed.profilePhotoUrl || null,
           employeeId: parsed.employeeId,
           joiningDate: parsed.joiningDate,
           employmentStatus: parsed.employmentStatus || "ACTIVE",
@@ -279,6 +280,8 @@ export async function updateTeacher(
     if (typeof rest.emailAddress !== "undefined")
       data.emailAddress = rest.emailAddress
     if (typeof rest.birthDate !== "undefined") data.birthDate = rest.birthDate
+    if (typeof rest.profilePhotoUrl !== "undefined")
+      data.profilePhotoUrl = rest.profilePhotoUrl || null
     if (typeof rest.employeeId !== "undefined")
       data.employeeId = rest.employeeId
     if (typeof rest.joiningDate !== "undefined")

@@ -5,10 +5,10 @@
 import { useCallback, useEffect, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookOpen, Loader2 } from "lucide-react"
+import { BookOpen } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { SeeMore } from "@/components/atom/see-more"
 import type { CatalogCourseType } from "@/components/stream/data/catalog/get-all-courses"
 import { getAllCatalogCourses } from "@/components/stream/data/catalog/get-all-courses"
 import { SearchBar } from "@/components/stream/search-bar"
@@ -173,21 +173,12 @@ export function StreamCoursesContent({
           </div>
 
           {/* See More */}
-          {hasMore && (
-            <div className="flex justify-center">
-              <Button
-                variant="ghost"
-                className="hover:bg-transparent hover:underline"
-                onClick={loadMore}
-                disabled={isPending}
-              >
-                {isPending ? (
-                  <Loader2 className="me-2 size-4 animate-spin" />
-                ) : null}
-                {df?.seeMore || "See More"}
-              </Button>
-            </div>
-          )}
+          <SeeMore
+            hasMore={hasMore}
+            isLoading={isPending}
+            onClick={loadMore}
+            label={df?.seeMore || "See More"}
+          />
         </>
       )}
     </div>

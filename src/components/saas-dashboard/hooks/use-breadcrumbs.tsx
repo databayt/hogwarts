@@ -12,21 +12,26 @@ type BreadcrumbItem = {
   link: string
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // This allows to add custom title as well
-const routeMapping: Record<string, BreadcrumbItem[]> = {
-  "/dashboard": [{ title: "Dashboard", link: "/dashboard" }],
-  "/dashboard/employee": [
-    { title: "Dashboard", link: "/dashboard" },
-    { title: "Employee", link: "/dashboard/employee" },
-  ],
-  "/dashboard/product": [
-    { title: "Dashboard", link: "/dashboard" },
-    { title: "Product", link: "/dashboard/product" },
-  ],
-  // Add more custom mappings as needed
+function getRouteMapping(dictionary?: any): Record<string, BreadcrumbItem[]> {
+  const n = dictionary?.operator?.nav
+  return {
+    "/dashboard": [{ title: n?.dashboard || "Dashboard", link: "/dashboard" }],
+    "/dashboard/employee": [
+      { title: n?.dashboard || "Dashboard", link: "/dashboard" },
+      { title: n?.employee || "Employee", link: "/dashboard/employee" },
+    ],
+    "/dashboard/product": [
+      { title: n?.dashboard || "Dashboard", link: "/dashboard" },
+      { title: n?.product || "Product", link: "/dashboard/product" },
+    ],
+    // Add more custom mappings as needed
+  }
 }
 
-export function useBreadcrumbs() {
+export function useBreadcrumbs(dictionary?: any) {
   const pathname = usePathname()
   const [dynamicTitle, setDynamicTitle] = useState<string | null>(null)
   const providedTitle = useBreadcrumbTitle()
@@ -90,6 +95,7 @@ export function useBreadcrumbs() {
 
   const breadcrumbs = useMemo(() => {
     // Check if we have a custom mapping for this exact path
+    const routeMapping = getRouteMapping(dictionary)
     if (routeMapping[pathname]) {
       return routeMapping[pathname]
     }
@@ -124,7 +130,7 @@ export function useBreadcrumbs() {
       }
     })
     return items
-  }, [pathname, resolvedTitle])
+  }, [pathname, resolvedTitle, dictionary])
 
   return breadcrumbs
 }

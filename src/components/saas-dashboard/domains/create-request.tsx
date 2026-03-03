@@ -24,11 +24,14 @@ const schema = z.object({
   notes: z.string().optional(),
 })
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type Props = {
   tenants: Array<{ id: string; name: string }>
+  dictionary?: any
 }
 
-export function CreateDomainRequest({ tenants }: Props) {
+export function CreateDomainRequest({ tenants, dictionary }: Props) {
+  const d = dictionary?.operator?.domains?.form
   const [schoolId, setSchoolId] = React.useState(tenants[0]?.id ?? "")
   const [domain, setDomain] = React.useState("")
   const [notes, setNotes] = React.useState("")
@@ -42,14 +45,20 @@ export function CreateDomainRequest({ tenants }: Props) {
     try {
       const result = await domainCreate(parsed.data)
       if (result.success) {
-        SuccessToast("Domain request created successfully")
+        SuccessToast(
+          d?.domainRequestCreated || "Domain request created successfully"
+        )
         setDomain("")
         setNotes("")
       } else {
         ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to create request")
+      ErrorToast(
+        e instanceof Error
+          ? e.message
+          : d?.failedToCreateRequest || "Failed to create request"
+      )
     } finally {
       setSubmitting(false)
     }
@@ -59,10 +68,10 @@ export function CreateDomainRequest({ tenants }: Props) {
     <Card className="p-4">
       <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-3">
         <div className="md:col-span-1">
-          <label className="muted mb-1 block">School</label>
+          <label className="muted mb-1 block">{d?.school || "School"}</label>
           <Select value={schoolId} onValueChange={setSchoolId}>
             <SelectTrigger className="h-8">
-              <SelectValue placeholder="Select school" />
+              <SelectValue placeholder={d?.selectSchool || "Select school"} />
             </SelectTrigger>
             <SelectContent>
               {tenants.map((t) => (
@@ -74,26 +83,26 @@ export function CreateDomainRequest({ tenants }: Props) {
           </Select>
         </div>
         <div className="md:col-span-1">
-          <label className="muted mb-1 block">Domain</label>
+          <label className="muted mb-1 block">{d?.domain || "Domain"}</label>
           <Input
             className="h-8"
-            placeholder="example.school.app"
+            placeholder={d?.domainPlaceholder || "example.school.app"}
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
           />
         </div>
         <div className="md:col-span-1">
-          <label className="muted mb-1 block">Notes</label>
+          <label className="muted mb-1 block">{d?.notes || "Notes"}</label>
           <Input
             className="h-8"
-            placeholder="Optional"
+            placeholder={d?.optional || "Optional"}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
         </div>
         <div className="md:col-span-3">
           <Button size="sm" disabled={submitting || !schoolId || !domain}>
-            Create request
+            {d?.createRequest || "Create request"}
           </Button>
         </div>
       </form>

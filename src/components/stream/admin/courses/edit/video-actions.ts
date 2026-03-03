@@ -102,7 +102,24 @@ export async function updateVideoApproval(
     return { status: "error", message: "Only admins can approve videos" }
   }
 
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { status: "error", message: "Missing school context" }
+  }
+
   try {
+    // Verify video belongs to current school via lesson→chapter→course chain
+    const video = await db.lessonVideo.findFirst({
+      where: {
+        id: videoId,
+        schoolId,
+      },
+      select: { id: true },
+    })
+    if (!video) {
+      return { status: "error", message: "Video not found" }
+    }
+
     await db.lessonVideo.update({
       where: { id: videoId },
       data: { approvalStatus: status },

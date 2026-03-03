@@ -26,19 +26,25 @@ export function StaffTable({ data, pageCount, locale }: StaffTableProps) {
 
   const columns = React.useMemo(
     () =>
-      getStaffColumns({
-        onView: (staff) => {
-          router.push(`/${locale}/staff/${staff.id}`)
+      getStaffColumns(
+        {
+          onView: (staff) => {
+            const target = staff.userId
+              ? `/${locale}/profile/${staff.userId}`
+              : `/${locale}/staff/${staff.id}`
+            router.push(target)
+          },
+          onEdit: (staff) => {
+            openModal(staff.id)
+          },
+          onDelete: async (staff) => {
+            if (confirm(`Are you sure you want to delete ${staff.name}?`)) {
+              await deleteStaff(staff.id)
+            }
+          },
         },
-        onEdit: (staff) => {
-          openModal(staff.id)
-        },
-        onDelete: async (staff) => {
-          if (confirm(`Are you sure you want to delete ${staff.name}?`)) {
-            await deleteStaff(staff.id)
-          }
-        },
-      }),
+        locale
+      ),
     [router, openModal, locale]
   )
 

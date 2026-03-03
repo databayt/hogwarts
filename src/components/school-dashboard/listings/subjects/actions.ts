@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -19,14 +20,6 @@ import {
   subjectCreateSchema,
   subjectUpdateSchema,
 } from "@/components/school-dashboard/listings/subjects/validation"
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
 
 // ============================================================================
 // Mutations
@@ -286,12 +279,6 @@ type SubjectSelectResult = {
     id: string
     name: string
     lang: string
-    lessons: {
-      id: string
-      title: string
-      description: string | null
-      status: string
-    }[]
   }[]
   createdAt: Date
   updatedAt: Date
@@ -343,14 +330,6 @@ export async function getSubject(input: {
             id: true,
             name: true,
             lang: true,
-            lessons: {
-              select: {
-                id: true,
-                title: true,
-                description: true,
-                status: true,
-              },
-            },
           },
         },
         createdAt: true,

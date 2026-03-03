@@ -2,6 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+
+// TODO(production): Wire to real daily metrics (replace Math.random() generated data)
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
@@ -22,6 +24,8 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 export const description = "An interactive bar chart"
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 interface BarGraphProps {
   data?: Array<{
     date: string
@@ -30,21 +34,25 @@ interface BarGraphProps {
   }>
   title?: string
   description?: string
+  dictionary?: any
 }
 
-const chartConfig = {
-  views: {
-    label: "Page Views",
-  },
-  desktop: {
-    label: "Desktop",
-    color: "var(--primary)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--primary)",
-  },
-} satisfies ChartConfig
+function getChartConfig(dictionary?: any): ChartConfig {
+  const c = dictionary?.operator?.dashboard?.charts
+  return {
+    views: {
+      label: c?.pageViews || "Page Views",
+    },
+    desktop: {
+      label: c?.desktop || "Desktop",
+      color: "var(--primary)",
+    },
+    mobile: {
+      label: c?.mobile || "Mobile",
+      color: "var(--primary)",
+    },
+  }
+}
 
 // Generate sample data for development/demo purposes
 function generateSampleData() {
@@ -67,10 +75,19 @@ function generateSampleData() {
 
 export function BarGraph({
   data,
-  title = "Bar Chart - Interactive",
-  description: descriptionProp = "Total for the last 3 months",
+  title,
+  description: descriptionProp,
+  dictionary,
 }: BarGraphProps) {
   const { locale } = useLocale()
+  const c = dictionary?.operator?.dashboard?.charts
+  const resolvedTitle = title ?? (c?.barChartTitle || "Bar Chart - Interactive")
+  const resolvedDescription =
+    descriptionProp ?? (c?.barChartDescription || "Total for the last 3 months")
+  const chartConfig = React.useMemo(
+    () => getChartConfig(dictionary),
+    [dictionary]
+  )
   const [activeChart, setActiveChart] =
     React.useState<keyof typeof chartConfig>("desktop")
 
@@ -91,12 +108,14 @@ export function BarGraph({
     <Card className="bg-muted border-none shadow-none">
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b !p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 !py-0">
-          <CardTitle>{title}</CardTitle>
+          <CardTitle>{resolvedTitle}</CardTitle>
           <CardDescription>
             <span className="hidden @[540px]/card:block">
-              {descriptionProp}
+              {resolvedDescription}
             </span>
-            <span className="@[540px]/card:hidden">Last 3 months</span>
+            <span className="@[540px]/card:hidden">
+              {c?.last3Months || "Last 3 months"}
+            </span>
           </CardDescription>
         </div>
         <div className="flex">

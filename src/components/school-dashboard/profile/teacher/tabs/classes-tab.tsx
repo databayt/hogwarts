@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Teacher Profile Classes Tab
  * Current and past classes, student lists, and performance
@@ -446,7 +443,7 @@ export function ClassesTab({
                     <span className="text-sm font-medium">Top Performers</span>
                     <Button variant="ghost" size="sm">
                       View All
-                      <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+                      <ChevronRight className="ms-1 h-4 w-4" />
                     </Button>
                   </div>
                   <div className="space-y-2">

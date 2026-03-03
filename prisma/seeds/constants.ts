@@ -75,6 +75,118 @@ export const DEMO_SCHOOL = {
 // Common password for all seed accounts
 export const DEMO_PASSWORD = "1234"
 
+// Blood group types
+export const BLOOD_GROUPS = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "AB+",
+  "AB-",
+  "O+",
+  "O-",
+] as const
+
+// ============================================================================
+// HARRY POTTER CHARACTER MAPPING
+// ============================================================================
+
+/**
+ * Maps named accounts to Harry Potter characters.
+ * Source images are in /public/site/ -- profile-images seed uploads to S3.
+ */
+export const HP_CHARACTERS = {
+  // Admin accounts
+  dev: {
+    nameAr: "سيفيروس سنيب",
+    nameEn: "Severus Snape",
+    bio: "Potions Master and Head of Slytherin House.",
+    gender: "M" as const,
+    sourceImage: "/public/site/dumbledore.jpeg",
+    personalEmail: "severus-snape@hotmail.com",
+  },
+  admin: {
+    nameAr: "ألباس دمبلدور",
+    nameEn: "Albus Dumbledore",
+    bio: "Headmaster & Chief Warlock\nTransfiguration & Ancient Magic",
+    gender: "M" as const,
+    sourceImage: "/public/site/dumbledore.jpeg",
+    personalEmail: "albus-dumbledore@hotmail.com",
+  },
+  accountant: {
+    nameAr: "فيليوس فليتويك",
+    nameEn: "Filius Flitwick",
+    bio: "Charms Master and Head of Ravenclaw House.",
+    gender: "M" as const,
+    sourceImage: "/public/site/dumbledore.jpeg",
+    personalEmail: "filius-flitwick@hotmail.com",
+  },
+  // Teacher index 0
+  teacher: {
+    nameAr: "مينيرفا ماكغونغال",
+    nameEn: "Minerva McGonagall",
+    bio: "Deputy Headmistress and Transfiguration professor.",
+    gender: "F" as const,
+    sourceImage: "/public/site/mcgonagall.jpeg",
+    birthDate: new Date("1935-10-04"),
+    personalEmail: "minerva-mcgonagall@hotmail.com",
+  },
+  // Student index 0
+  student: {
+    nameAr: "هاري بوتر",
+    nameEn: "Harry Potter",
+    bio: "The Boy Who Lived.",
+    gender: "M" as const,
+    sourceImage: "/public/site/harry.jpg",
+    birthDate: new Date("2010-07-31"),
+    personalEmail: "harry-potter@gmail.com",
+    bloodGroup: "O+" as const,
+    nationality: "GB",
+    address: "4 Privet Drive, Little Whinging",
+    emergencyContactName: "جيمس بوتر",
+    medicalNotes: "Lightning bolt scar on forehead",
+  },
+  // Guardian index 0 (father of Harry)
+  guardian0: {
+    nameAr: "جيمس بوتر",
+    nameEn: "James Potter",
+    bio: "Gryffindor alumni. Marauder.",
+    gender: "M" as const,
+    // Reuse harry image as placeholder (james image not available)
+    sourceImage: "/public/site/harry.jpg",
+    personalEmail: "james-potter@gmail.com",
+  },
+  // Guardian index 1 (mother of Harry)
+  guardian1: {
+    nameAr: "ليلي بوتر",
+    nameEn: "Lily Potter",
+    bio: "Exceptionally gifted witch. Known for her sacrifice.",
+    gender: "F" as const,
+    // Reuse hermione image as placeholder (lily image not available)
+    sourceImage: "/public/site/hermione.jpg",
+    personalEmail: "lily-potter@gmail.com",
+  },
+  // Staff index 0
+  staff: {
+    nameAr: "روبياس هاغريد",
+    nameEn: "Rubeus Hagrid",
+    bio: "Keeper of Keys and Grounds at Hogwarts.",
+    gender: "M" as const,
+    sourceImage: "/public/site/hagrid.jpeg",
+    position: "حارس المفاتيح والأراضي",
+    personalEmail: "rubeus-hagrid@hotmail.com",
+  },
+  // user@databayt.org
+  user: {
+    nameAr: "نيفيل لونغبوتوم",
+    nameEn: "Neville Longbottom",
+    bio: "Gryffindor student. Future Herbology professor.",
+    gender: "M" as const,
+    // Reuse harry image as placeholder (neville image not available)
+    sourceImage: "/public/site/harry.jpg",
+  },
+} as const
+
 // ============================================================================
 // USER ACCOUNTS
 // ============================================================================
@@ -83,27 +195,37 @@ export const ADMIN_USERS = [
   {
     email: "dev@databayt.org",
     role: "DEVELOPER",
-    username: "المطور", // EN: "Developer"
+    username: HP_CHARACTERS.dev.nameAr,
+    bio: HP_CHARACTERS.dev.bio,
+    image: HP_CHARACTERS.dev.sourceImage.replace("/public", ""),
   },
   {
     email: "admin@databayt.org",
     role: "ADMIN",
-    username: "المدير", // EN: "Admin"
+    username: HP_CHARACTERS.admin.nameAr,
+    bio: HP_CHARACTERS.admin.bio,
+    image: HP_CHARACTERS.admin.sourceImage.replace("/public", ""),
   },
   {
     email: "accountant@databayt.org",
     role: "ACCOUNTANT",
-    username: "المحاسب", // EN: "Accountant"
+    username: HP_CHARACTERS.accountant.nameAr,
+    bio: HP_CHARACTERS.accountant.bio,
+    image: HP_CHARACTERS.accountant.sourceImage.replace("/public", ""),
   },
   {
     email: "staff@databayt.org",
     role: "STAFF",
-    username: "الموظف", // EN: "Staff"
+    username: HP_CHARACTERS.staff.nameAr,
+    bio: HP_CHARACTERS.staff.bio,
+    image: HP_CHARACTERS.staff.sourceImage.replace("/public", ""),
   },
   {
     email: "user@databayt.org",
     role: "USER",
-    username: "مستخدم جديد", // EN: "New User"
+    username: HP_CHARACTERS.user.nameAr,
+    bio: HP_CHARACTERS.user.bio,
+    image: HP_CHARACTERS.user.sourceImage.replace("/public", ""),
   },
 ]
 
@@ -1095,6 +1217,27 @@ export function getStudentBirthDate(yearLevelOrder: number): Date {
   const month = Math.floor(Math.random() * 12)
   const day = Math.floor(Math.random() * 28) + 1
   return new Date(birthYear, month, day)
+}
+
+/**
+ * Get English given name from Arabic given name
+ */
+export function getEnglishGivenName(
+  arabicName: string,
+  gender: "M" | "F"
+): string {
+  const namesAr = gender === "M" ? MALE_NAMES_AR : FEMALE_NAMES_AR
+  const namesEn = gender === "M" ? MALE_NAMES_EN : FEMALE_NAMES_EN
+  const idx = namesAr.indexOf(arabicName)
+  return idx >= 0 ? namesEn[idx] : arabicName
+}
+
+/**
+ * Get English surname from Arabic surname
+ */
+export function getEnglishSurname(arabicSurname: string): string {
+  const idx = SURNAMES_AR.indexOf(arabicSurname)
+  return idx >= 0 ? SURNAMES_EN[idx] : arabicSurname
 }
 
 /**

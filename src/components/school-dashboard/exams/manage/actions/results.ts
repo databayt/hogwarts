@@ -6,6 +6,7 @@ import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { notifyAllResultsPublished } from "@/components/school-dashboard/exams/notifications/actions"
 
 import type { ActionResponse, ExamResultRow } from "./types"
 
@@ -319,18 +320,17 @@ export async function publishResults(input: {
     }
 
     // Update exam status to indicate results are published
-    await db.exam.update({
-      where: { id: examId },
+    await db.exam.updateMany({
+      where: { id: examId, schoolId },
       data: {
         status: "COMPLETED",
-        // You might want to add a resultsPublishedAt field
       },
     })
 
-    // TODO: Send notifications if notifyStudents is true
     if (notifyStudents) {
-      // Implement notification logic here
-      // This could involve sending emails, SMS, or in-app notifications
+      notifyAllResultsPublished(examId).catch((err) =>
+        console.error("Failed to send result notifications:", err)
+      )
     }
 
     return {

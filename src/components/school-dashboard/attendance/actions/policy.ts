@@ -153,8 +153,8 @@ export async function evaluatePolicies(schoolId: string): Promise<
 
               // Create notifications for alert recipients
               if (policy.alertRecipients.length > 0) {
-                const student = await db.student.findUnique({
-                  where: { id: studentId },
+                const student = await db.student.findFirst({
+                  where: { id: studentId, schoolId },
                   select: { givenName: true, surname: true },
                 })
 

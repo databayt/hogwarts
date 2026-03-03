@@ -1,8 +1,5 @@
 "use client"
 
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 // import { Commit, Repo, Issue, PullRequest, Madrsa } from "@/components/atom/icon"; // Commented out - icon component doesn't exist
 import Link from "next/link"
 import {
@@ -16,8 +13,6 @@ import {
   School,
   TriangleAlert,
 } from "lucide-react"
-
-import { useLocale } from "@/components/internationalization/use-locale"
 
 // Temporary replacements for icon components
 const Commit = FileCode
@@ -82,17 +77,15 @@ const pullRequests = [
 // }
 
 export default function GitHubTimeline() {
-  const { isRTL } = useLocale()
-
   return (
-    <div className="relative ms-5 bg-transparent" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="relative ms-5 bg-transparent" dir="rtl">
       <div className="px-2 pt-2 pb-8">
         <div className="mb-2 flex items-center">
           <span className="mx-1 text-gray-400">2024</span>
           <div className="mx-2 mb-4 flex-1 border-gray-200" />
         </div>
         {/* Timeline vertical line */}
-        <div className="absolute end-[25px] top-10 bottom-0 z-0 w-px bg-gray-200" />
+        <div className="absolute top-10 right-[25px] bottom-0 z-0 w-px bg-gray-200" />
         <div className="relative z-10 mt-4 space-y-12">
           {/* Commits event */}
           <div className="group relative flex items-start">

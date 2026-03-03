@@ -49,6 +49,7 @@ interface QuestionBankFormProps {
   subjectId?: string
   isView?: boolean
   dictionary?: Dictionary
+  subjects?: { label: string; value: string }[]
   /** Callback fired on successful create/update - use for optimistic refresh */
   onSuccess?: () => void
 }
@@ -58,6 +59,7 @@ export function QuestionBankForm({
   subjectId,
   isView = false,
   dictionary,
+  subjects,
   onSuccess,
 }: QuestionBankFormProps) {
   // Default dictionary fallback for when component is used without i18n
@@ -199,10 +201,11 @@ export function QuestionBankForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {/* TODO: Fetch subjects from DB */}
-                    <SelectItem value="subject-1">Mathematics</SelectItem>
-                    <SelectItem value="subject-2">Science</SelectItem>
-                    <SelectItem value="subject-3">English</SelectItem>
+                    {subjects?.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

@@ -216,7 +216,7 @@ export function generatePersonalEmail(
   const domain = EMAIL_DOMAINS[index % EMAIL_DOMAINS.length]
   const cleanGivenName = givenName.toLowerCase().replace(/[^a-z]/g, "")
   const cleanSurname = surname.toLowerCase().replace(/[^a-z]/g, "")
-  return `${cleanGivenName}.${cleanSurname}${index > 0 ? index : ""}@${domain}`
+  return `${cleanGivenName}-${cleanSurname}${index > 0 ? index : ""}@${domain}`
 }
 
 /**

@@ -2,12 +2,15 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { canViewSchoolAnalytics } from "@/components/school-dashboard/attendance/authorization"
 
 import type { ActionResponse } from "./core"
+import { getClassIdsByGrade, getTeacherClassIds } from "./helpers"
 
 // ============================================================================
 // ANALYTICS
@@ -481,13 +484,22 @@ export async function getCalendarData(input: {
 export async function getClassComparisonStats(input?: {
   dateFrom?: string
   dateTo?: string
+  gradeId?: string
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return { success: false, error: "Missing school context" }
   }
 
-  const where: Prisma.AttendanceWhereInput = { schoolId }
+  const session = await auth()
+  if (
+    !session?.user?.role ||
+    !canViewSchoolAnalytics(session.user.role as any)
+  ) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
@@ -495,8 +507,34 @@ export async function getClassComparisonStats(input?: {
     if (input.dateTo) where.date.lte = new Date(input.dateTo)
   }
 
+  // Teacher scoping
+  let teacherClassIds: string[] | null = null
+  if (session.user.role === "TEACHER") {
+    teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
+  }
+
+  // Grade filter
+  if (input?.gradeId) {
+    const gradeClassIds = await getClassIdsByGrade(
+      schoolId,
+      input.gradeId,
+      teacherClassIds
+    )
+    where.classId = { in: gradeClassIds }
+  } else if (teacherClassIds) {
+    where.classId = { in: teacherClassIds }
+  }
+
+  const classWhere: {
+    schoolId: string
+    id?: { in: string[] }
+    gradeId?: string
+  } = { schoolId }
+  if (teacherClassIds) classWhere.id = { in: teacherClassIds }
+  if (input?.gradeId) classWhere.gradeId = input.gradeId
+
   const classes = await db.class.findMany({
-    where: { schoolId },
+    where: classWhere,
     select: {
       id: true,
       name: true,
@@ -506,13 +544,14 @@ export async function getClassComparisonStats(input?: {
 
   const stats = await Promise.all(
     classes.map(async (cls) => {
+      const classWhere = { ...where, classId: cls.id, deletedAt: null }
       const [total, present, late] = await Promise.all([
-        db.attendance.count({ where: { ...where, classId: cls.id } }),
+        db.attendance.count({ where: classWhere }),
         db.attendance.count({
-          where: { ...where, classId: cls.id, status: "PRESENT" },
+          where: { ...classWhere, status: "PRESENT" },
         }),
         db.attendance.count({
-          where: { ...where, classId: cls.id, status: "LATE" },
+          where: { ...classWhere, status: "LATE" },
         }),
       ])
 
@@ -536,24 +575,60 @@ export async function getStudentsAtRisk(input?: {
   threshold?: number // default 80%
   dateFrom?: string
   dateTo?: string
+  gradeId?: string
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return { success: false, error: "Missing school context" }
   }
 
+  const session = await auth()
+  if (
+    !session?.user?.role ||
+    !canViewSchoolAnalytics(session.user.role as any)
+  ) {
+    return { success: false, error: "Unauthorized" }
+  }
+
   const threshold = input?.threshold ?? 80
 
-  const where: Prisma.AttendanceWhereInput = { schoolId }
+  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
     if (input.dateFrom) where.date.gte = new Date(input.dateFrom)
     if (input.dateTo) where.date.lte = new Date(input.dateTo)
   }
 
+  // Teacher scoping
+  if (session.user.role === "TEACHER") {
+    const teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
+    if (teacherClassIds) {
+      where.classId = { in: teacherClassIds }
+    }
+  }
+
+  // Grade filter
+  if (input?.gradeId) {
+    const gradeClassIds = await getClassIdsByGrade(schoolId, input.gradeId)
+    where.classId = where.classId
+      ? {
+          in: (where.classId as any).in.filter((id: string) =>
+            gradeClassIds.includes(id)
+          ),
+        }
+      : { in: gradeClassIds }
+  }
+
   // Get all students with their attendance
+  const studentWhere: Prisma.StudentWhereInput = { schoolId }
+  if (where.classId) {
+    studentWhere.studentClasses = {
+      some: { classId: where.classId as any },
+    }
+  }
+
   const students = await db.student.findMany({
-    where: { schoolId },
+    where: studentWhere,
     select: {
       id: true,
       givenName: true,
@@ -604,7 +679,7 @@ export async function getRecentAttendance(input?: {
 
   const limit = input?.limit ?? 50
 
-  const where: Prisma.AttendanceWhereInput = { schoolId }
+  const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
   if (input?.classId) where.classId = input.classId
 
   const records = await db.attendance.findMany({

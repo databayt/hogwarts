@@ -72,6 +72,20 @@ export const getStudentColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.name} />
       ),
+      cell: ({ row }) => {
+        const student = row.original
+        if (student.userId) {
+          return (
+            <Link
+              href={`/${lang}/profile/${student.userId}`}
+              className="font-medium hover:underline"
+            >
+              {student.name}
+            </Link>
+          )
+        }
+        return <span className="font-medium">{student.name}</span>
+      },
       meta: { label: t.name, variant: "text" },
       enableColumnFilter: true,
     },
@@ -184,7 +198,15 @@ export const getStudentColumns = (
               <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href={`/${lang}/students/${student.id}`}>{t.view}</Link>
+                <Link
+                  href={
+                    student.userId
+                      ? `/${lang}/profile/${student.userId}`
+                      : `/${lang}/students/${student.id}`
+                  }
+                >
+                  {t.view}
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
               <DropdownMenuSeparator />

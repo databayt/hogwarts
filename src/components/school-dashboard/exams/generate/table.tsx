@@ -18,16 +18,23 @@ import { useDataTable } from "@/components/table/use-data-table"
 import { getTemplateColumns, type ExamTemplateRow } from "./columns"
 import { ExamTemplateForm } from "./form"
 
+interface SubjectOption {
+  id: string
+  subjectName: string | null
+}
+
 interface TemplatesTableProps {
   initialData: ExamTemplateRow[]
   total: number
   dictionary?: Dictionary
+  subjects?: SubjectOption[]
 }
 
 function TemplatesTableInner({
   initialData,
   total,
   dictionary,
+  subjects = [],
 }: TemplatesTableProps) {
   const router = useRouter()
   const columns = useMemo(() => getTemplateColumns(dictionary), [dictionary])
@@ -75,7 +82,11 @@ function TemplatesTableInner({
       </DataTableToolbar>
       <Modal
         content={
-          <ExamTemplateForm dictionary={dictionary} onSuccess={refresh} />
+          <ExamTemplateForm
+            dictionary={dictionary}
+            onSuccess={refresh}
+            subjects={subjects}
+          />
         }
       />
     </DataTable>

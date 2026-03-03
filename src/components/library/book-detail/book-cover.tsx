@@ -2,10 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import Image from "next/image"
-
-import { BookCoverImage } from "@/components/ui/imagekit-image"
 
 interface Props {
   coverUrl: string
@@ -21,14 +19,6 @@ export default function BookCover({
   author,
 }: Props) {
   const [imageError, setImageError] = useState(false)
-
-  // Check if it's an ImageKit URL
-  const isImageKitUrl = useMemo(() => {
-    if (!coverUrl) return false
-    return (
-      coverUrl.includes("ik.imagekit.io") || coverUrl.startsWith("hogwarts/")
-    )
-  }, [coverUrl])
 
   const hasValidImage =
     coverUrl && !coverUrl.includes("placeholder") && !imageError
@@ -46,30 +36,16 @@ export default function BookCover({
   return (
     <div className="book-cover-wrapper" style={{ backgroundColor: coverColor }}>
       {hasValidImage ? (
-        isImageKitUrl ? (
-          <BookCoverImage
-            src={coverUrl}
-            alt={title}
-            width={400}
-            height={600}
-            preset="detail"
-            priority
-            className="book-cover-detail-image"
-            onError={() => setImageError(true)}
-            fallback={<FallbackContent />}
-          />
-        ) : (
-          <Image
-            src={coverUrl}
-            alt={title}
-            width={400}
-            height={600}
-            className="book-cover-detail-image"
-            priority
-            unoptimized
-            onError={() => setImageError(true)}
-          />
-        )
+        <Image
+          src={coverUrl}
+          alt={title}
+          width={400}
+          height={600}
+          className="book-cover-detail-image"
+          priority
+          unoptimized
+          onError={() => setImageError(true)}
+        />
       ) : (
         <FallbackContent />
       )}

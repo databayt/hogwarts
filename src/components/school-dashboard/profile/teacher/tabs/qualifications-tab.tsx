@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Teacher Profile Qualifications Tab
  * Educational background, certifications, and professional development
@@ -611,7 +608,7 @@ export function QualificationsTab({
 
             <Button variant="outline" size="sm" className="w-full">
               View All Training
-              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>

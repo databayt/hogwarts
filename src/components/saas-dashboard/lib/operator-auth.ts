@@ -15,6 +15,18 @@ export async function requireOperator() {
   return { userId: session.user.id } as const
 }
 
+/**
+ * Like requireOperator but returns the full session.
+ * Used by catalog actions that need session.user.id for ownership fields.
+ */
+export async function requireDeveloper() {
+  const session = await auth()
+  if (session?.user?.role !== "DEVELOPER") {
+    throw new Error("Unauthorized: DEVELOPER role required")
+  }
+  return session
+}
+
 export async function logOperatorAudit(input: {
   userId: string
   schoolId?: string | null

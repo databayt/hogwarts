@@ -79,6 +79,7 @@ import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -92,14 +93,6 @@ import {
   studentCreateSchema,
   studentUpdateSchema,
 } from "@/components/school-dashboard/listings/students/validation"
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
 
 // ============================================================================
 // Constants
@@ -186,6 +179,7 @@ export async function createStudent(
           ? { dateOfBirth: new Date(parsed.dateOfBirth) }
           : {}),
         gender: parsed.gender,
+        profilePhotoUrl: parsed.profilePhotoUrl || null,
         ...(parsed.enrollmentDate
           ? { enrollmentDate: new Date(parsed.enrollmentDate) }
           : {}),
@@ -295,6 +289,8 @@ export async function updateStudent(
         ? new Date(rest.enrollmentDate)
         : null
     }
+    if (typeof rest.profilePhotoUrl !== "undefined")
+      data.profilePhotoUrl = rest.profilePhotoUrl || null
     if (typeof rest.academicGradeId !== "undefined") {
       data.academicGradeId = rest.academicGradeId || null
     }

@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Student Profile Overview Tab
  * Summary view with key highlights and statistics
@@ -196,7 +193,7 @@ export function OverviewTab({
 
             <Button variant="outline" size="sm" className="w-full">
               View All Subjects
-              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
@@ -286,7 +283,7 @@ export function OverviewTab({
             ))}
             <Button variant="outline" size="sm" className="w-full">
               View All
-              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>

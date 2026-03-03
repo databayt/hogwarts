@@ -25,6 +25,7 @@ export type { QuestionBankRow }
 
 export interface QuestionBankColumnCallbacks {
   onDelete?: (row: QuestionBankRow) => void
+  subjects?: { label: string; value: string }[]
 }
 
 const getQuestionTypeBadge = (type: string) => {
@@ -157,7 +158,11 @@ export const getQuestionBankColumns = (
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Subject" />
     ),
-    meta: { label: "Subject", variant: "text" },
+    meta: {
+      label: "Subject",
+      variant: callbacks?.subjects?.length ? "select" : "text",
+      ...(callbacks?.subjects?.length ? { options: callbacks.subjects } : {}),
+    },
     enableColumnFilter: true,
   },
   {
@@ -229,6 +234,84 @@ export const getQuestionBankColumns = (
       )
     },
     meta: { label: "Success Rate", variant: "text" },
+  },
+  {
+    accessorKey: "qualityFlags",
+    id: "quality",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Quality" />
+    ),
+    cell: ({ row }) => {
+      const flags = row.original.qualityFlags
+      if (!flags || flags.length === 0) return null
+
+      if (flags.includes("low-usage")) {
+        return (
+          <Badge variant="outline" className="text-xs text-gray-500">
+            New
+          </Badge>
+        )
+      }
+
+      if (flags.includes("good")) {
+        return (
+          <Badge
+            variant="outline"
+            className="border-emerald-300 text-xs text-emerald-600"
+          >
+            Good
+          </Badge>
+        )
+      }
+
+      if (flags.includes("moderate")) {
+        return (
+          <Badge
+            variant="outline"
+            className="border-yellow-300 text-xs text-yellow-600"
+          >
+            Moderate
+          </Badge>
+        )
+      }
+
+      if (flags.includes("too-easy")) {
+        return (
+          <Badge
+            variant="outline"
+            className="border-blue-300 text-xs text-blue-600"
+          >
+            Too Easy
+          </Badge>
+        )
+      }
+
+      if (flags.includes("too-hard")) {
+        return (
+          <Badge
+            variant="outline"
+            className="border-red-300 text-xs text-red-600"
+          >
+            Too Hard
+          </Badge>
+        )
+      }
+
+      if (flags.includes("difficulty-mismatch")) {
+        return (
+          <Badge
+            variant="outline"
+            className="border-orange-300 text-xs text-orange-600"
+          >
+            Mismatch
+          </Badge>
+        )
+      }
+
+      return null
+    },
+    meta: { label: "Quality", variant: "text" },
+    enableSorting: false,
   },
   {
     accessorKey: "createdAt",

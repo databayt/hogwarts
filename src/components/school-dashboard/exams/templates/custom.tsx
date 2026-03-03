@@ -5,6 +5,7 @@
  * Custom (Brand-Aware) Exam Paper Template
  * Reads school branding colors and applies them via PaperTheme.
  * Falls back to Classic colors when no branding is configured.
+ * @deprecated Use ComposableDocument instead — this template is kept for backwards compatibility.
  */
 
 import React from "react"

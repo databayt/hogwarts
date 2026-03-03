@@ -56,6 +56,10 @@ model AcademicGrade {
   bookSelections     SchoolBookSelection[]
   students           Student[]
 
+  // Promotion
+  promotionPolicies PromotionPolicy[]
+  promotionBatches  PromotionBatch[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

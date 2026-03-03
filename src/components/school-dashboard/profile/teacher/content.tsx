@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Teacher Profile Content Component - GitHub-Inspired Layout
  *
@@ -194,8 +191,10 @@ const generateMockTeacherProfile = (): TeacherProfile => ({
       {
         id: "dept-1",
         schoolId: "school-1",
-        departmentName: "Computer Science",
-        lang: "en",
+        name: "Computer Science",
+        code: "CS",
+        headOfDepartmentId: "teacher-2",
+        description: "Department of Computer Science and Engineering",
         createdAt: new Date("2018-01-01"),
         updatedAt: new Date(),
       },

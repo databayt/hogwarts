@@ -122,7 +122,7 @@ export async function adoptCatalogPaperTemplate(
 
     // Check if config already exists for this generated exam
     const existing = await db.examPaperConfig.findFirst({
-      where: { generatedExamId },
+      where: { generatedExamId, schoolId },
     })
     if (existing) {
       // Update existing config

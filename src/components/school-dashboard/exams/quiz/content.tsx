@@ -1,10 +1,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { BookOpen, GraduationCap, HelpCircle, Zap } from "lucide-react"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+import { getEnrolledCatalogSubjectIds } from "../lib/scope"
+import { getStudentAttempts } from "../shared/attempt-actions"
+import { AttemptHistory } from "../shared/attempt-history"
 import {
   getCatalogSubjectsForQuizFilter,
   getQuizQuestionStats,
@@ -13,10 +18,25 @@ import {
 import { QuizList } from "./list"
 
 export async function QuizContent() {
-  const [quizzes, questionStats, subjects] = await Promise.all([
-    getQuizzes(),
-    getQuizQuestionStats(),
-    getCatalogSubjectsForQuizFilter(),
+  const { schoolId } = await getTenantContext()
+  const session = await auth()
+  const role = session?.user?.role
+
+  // For students/guardians, scope to enrolled catalog subjects
+  const enrolledCatalogSubjectIds =
+    schoolId && ["STUDENT", "GUARDIAN"].includes(role || "")
+      ? await getEnrolledCatalogSubjectIds(role, session?.user?.id, schoolId)
+      : null
+
+  const isStudentOrGuardian = ["STUDENT", "GUARDIAN"].includes(role || "")
+
+  const [quizzes, questionStats, subjects, attempts] = await Promise.all([
+    getQuizzes({
+      enrolledCatalogSubjectIds: enrolledCatalogSubjectIds ?? undefined,
+    }),
+    getQuizQuestionStats(undefined, enrolledCatalogSubjectIds ?? undefined),
+    getCatalogSubjectsForQuizFilter(enrolledCatalogSubjectIds ?? undefined),
+    isStudentOrGuardian ? getStudentAttempts() : Promise.resolve([]),
   ])
 
   const totalQuestionPool = questionStats.reduce(
@@ -92,6 +112,10 @@ export async function QuizContent() {
         subjects={subjects}
         questionStats={questionStats}
       />
+
+      {isStudentOrGuardian && attempts.length > 0 && (
+        <AttemptHistory attempts={attempts} title="My Quiz Attempts" />
+      )}
     </div>
   )
 }

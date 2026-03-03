@@ -56,6 +56,7 @@ import { seedMessaging } from "./messages"
 import { seedNotifications } from "./notifications"
 import { seedPayroll } from "./payroll"
 import { seedAllPeople, seedStudentDocuments } from "./people"
+import { seedProfileImages } from "./profile-images"
 import { seedQBank } from "./qbank"
 import { seedSchoolWithBranding } from "./school"
 import { seedStaffMembers } from "./staff-members"
@@ -472,8 +473,13 @@ const SEEDS: Record<string, SeedEntry> = {
     description: "Non-teaching staff",
     run: async (prisma, schoolId) => {
       const departments = await resolveDepartments(prisma, schoolId)
-      const { adminUsers } = await resolveUsers(prisma, schoolId)
-      await seedStaffMembers(prisma, schoolId, departments, adminUsers)
+      const { adminUsers, allUsers } = await resolveUsers(prisma, schoolId)
+      // seedStaffMembers needs STAFF role user too (not just ADMIN)
+      const staffAndAdmins = [
+        ...adminUsers,
+        ...allUsers.filter((u) => u.role === "STAFF"),
+      ]
+      await seedStaffMembers(prisma, schoolId, departments, staffAndAdmins)
     },
   },
   classes: {
@@ -762,6 +768,13 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedCatalogExamTemplates(prisma)
+    },
+  },
+  "profile-images": {
+    description: "HP character avatars (Sharp/WebP → S3/CloudFront)",
+    global: true,
+    run: async (prisma) => {
+      await seedProfileImages(prisma)
     },
   },
 }

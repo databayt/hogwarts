@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -15,10 +16,6 @@ import {
   classroomUpdateSchema,
   getClassroomsSchema,
 } from "./validation"
-
-type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
 
 const CLASSROOMS_PATH = "/classrooms"
 
@@ -283,30 +280,25 @@ export async function deleteClassroom(input: {
       return { success: false, error: "Unauthorized to delete classrooms" }
     }
 
-    // Check for references
-    const refs = await db.class.count({
-      where: { classroomId: input.id, schoolId },
-    })
+    // Check for references (parallel for performance)
+    const [refs, ttRefs, constraintRefs] = await Promise.all([
+      db.class.count({ where: { classroomId: input.id, schoolId } }),
+      db.timetable.count({ where: { classroomId: input.id, schoolId } }),
+      db.roomConstraint.count({ where: { classroomId: input.id, schoolId } }),
+    ])
+
     if (refs > 0) {
       return {
         success: false,
         error: `Cannot delete: ${refs} class(es) are assigned to this room`,
       }
     }
-
-    const ttRefs = await db.timetable.count({
-      where: { classroomId: input.id, schoolId },
-    })
     if (ttRefs > 0) {
       return {
         success: false,
         error: `Cannot delete: ${ttRefs} timetable slot(s) reference this room`,
       }
     }
-
-    const constraintRefs = await db.roomConstraint.count({
-      where: { classroomId: input.id, schoolId },
-    })
     if (constraintRefs > 0) {
       return {
         success: false,
@@ -436,6 +428,15 @@ export async function getRoomTimetable(input: {
 export async function getRoomClasses(input: { roomId: string }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return []
+
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext) return []
+  try {
+    assertClassroomPermission(authContext, "read", { schoolId })
+  } catch {
+    return []
+  }
 
   return db.class.findMany({
     where: { schoolId, classroomId: input.roomId },

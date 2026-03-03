@@ -4,3 +4,5 @@
 export { StandardHeader } from "./standard"
 export { MinistryHeader } from "./ministry"
 export { MinimalHeader } from "./minimal"
+export { BilingualHeader } from "./bilingual"
+export { CenteredHeader } from "./centered"

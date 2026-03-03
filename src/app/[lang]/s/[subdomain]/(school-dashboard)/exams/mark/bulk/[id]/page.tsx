@@ -1,7 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { auth } from "@/auth"
 import { Zap } from "lucide-react"
 
 import { db } from "@/lib/db"
@@ -21,6 +22,12 @@ interface Props {
 
 export default async function BulkMarkingPage({ params }: Props) {
   const { lang, id: examId } = await params
+
+  const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams`)
+  }
+
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 

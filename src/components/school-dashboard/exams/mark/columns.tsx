@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { reviewAIGrade } from "./actions/manual-mark"
+import { AnswerKeyCell } from "./answer-key"
 import { GRADING_METHODS, MARKING_STATUS, QUESTION_TYPES } from "./config"
 import {
   formatConfidence,
@@ -69,6 +71,18 @@ export function getColumns(
               </Badge>
             </div>
           </div>
+        )
+      },
+    },
+    {
+      id: "answerKey",
+      header: "Answer Key",
+      cell: ({ row }) => {
+        return (
+          <AnswerKeyCell
+            question={row.original.question}
+            studentAnswer={row.original.answerText}
+          />
         )
       },
     },
@@ -183,14 +197,15 @@ export function getColumns(
                 <Pencil className="h-4 w-4" />
               )}
             </Button>
-            {result && result.status !== "COMPLETED" && (
+            {result && result.needsReview && result.status !== "COMPLETED" && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  // Mark as reviewed
-                  // TODO: Implement mark as reviewed action
+                onClick={async () => {
+                  await reviewAIGrade(result.id, true)
+                  window.location.reload()
                 }}
+                title={dict.aiGrading?.approve || "Approve AI Grade"}
               >
                 <CircleCheck className="h-4 w-4" />
               </Button>

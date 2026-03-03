@@ -98,7 +98,7 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
         closeModal()
         onSuccess?.()
       } else {
-        ErrorToast(result.error)
+        ErrorToast(result.error || "Operation failed")
       }
     })
   }

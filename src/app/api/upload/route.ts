@@ -132,10 +132,43 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
       })
     } else if (type === "avatar") {
+      // Update User.image
       await db.user.update({
         where: { id: session.user.id },
         data: { image: result.url },
       })
+
+      // Also update role model's profilePhotoUrl
+      const userId = session.user.id
+      const schoolId = session.user.schoolId
+      if (schoolId) {
+        await Promise.all([
+          db.teacher
+            .updateMany({
+              where: { userId, schoolId },
+              data: { profilePhotoUrl: result.url },
+            })
+            .catch(() => {}),
+          db.student
+            .updateMany({
+              where: { userId, schoolId },
+              data: { profilePhotoUrl: result.url },
+            })
+            .catch(() => {}),
+          db.staffMember
+            .updateMany({
+              where: { userId, schoolId },
+              data: { profilePhotoUrl: result.url },
+            })
+            .catch(() => {}),
+          db.guardian
+            .updateMany({
+              where: { userId, schoolId },
+              data: { profilePhotoUrl: result.url },
+            })
+            .catch(() => {}),
+        ])
+      }
 
       logger.info("User avatar updated", {
         action: "user_avatar_update",

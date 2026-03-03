@@ -143,6 +143,75 @@ export const fillBlankOptionsSchema = z.object({
 })
 
 // ============================================================================
+// COMPOSITION CONFIG SCHEMA
+// ============================================================================
+
+export const compositionSlotsSchema = z.object({
+  header: z.enum(["standard", "ministry", "minimal", "bilingual", "centered"]),
+  footer: z.enum(["standard", "disclaimer", "minimal", "grading"]),
+  studentInfo: z.enum(["standard", "bubble-id", "table", "photo"]),
+  instructions: z.enum(["standard", "compact", "rules", "sectioned"]),
+  answerSheet: z.enum(["standard", "omr", "grid"]),
+  cover: z.enum(["standard", "toc", "ministry"]),
+})
+
+export const compositionDecorationsSchema = z.object({
+  accentBar: z.object({
+    enabled: z.boolean(),
+    height: z.number().min(1).max(20).optional(),
+    colorKey: z.enum(["accent", "primary"]).optional(),
+  }),
+  watermark: z.object({
+    enabled: z.boolean(),
+    text: z.string().max(100).optional(),
+    opacity: z.number().min(0).max(1).optional(),
+  }),
+  frame: z.object({
+    enabled: z.boolean(),
+    outerWidth: z.number().min(0.5).max(5).optional(),
+    innerWidth: z.number().min(0.5).max(5).optional(),
+  }),
+})
+
+export const compositionSlotPropsSchema = z
+  .object({
+    header: z
+      .object({
+        logoSize: z.number().min(20).max(200).optional(),
+        ministryName: z.string().max(200).optional(),
+        ministryLogoUrl: z.string().url().optional(),
+      })
+      .optional(),
+    footer: z
+      .object({
+        disclaimerText: z.string().max(500).optional(),
+        gradingScale: z.string().max(200).optional(),
+      })
+      .optional(),
+    studentInfo: z
+      .object({
+        showSeatNumber: z.boolean().optional(),
+        idDigits: z.number().min(4).max(12).optional(),
+        photoSize: z.number().min(40).max(120).optional(),
+      })
+      .optional(),
+    instructions: z
+      .object({
+        wrapWithAccentBorder: z.boolean().optional(),
+      })
+      .optional(),
+  })
+  .optional()
+
+export const compositionConfigSchema = z.object({
+  slots: compositionSlotsSchema,
+  decorations: compositionDecorationsSchema,
+  slotProps: compositionSlotPropsSchema,
+})
+
+export type CompositionConfigInput = z.input<typeof compositionConfigSchema>
+
+// ============================================================================
 // VALIDATION HELPERS
 // ============================================================================
 

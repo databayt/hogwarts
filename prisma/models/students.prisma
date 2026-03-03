@@ -162,6 +162,10 @@ model Student {
   // Progress Report relations
   generatedProgressReports GeneratedProgressReport[]
 
+  // Promotion & Transcripts
+  promotionCandidates PromotionCandidate[]
+  transcripts         Transcript[]
+
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   StudentAnswer StudentAnswer[]
@@ -179,12 +183,13 @@ model Student {
 }
 
 model Guardian {
-  id           String  @id @default(cuid())
-  schoolId     String
-  givenName    String
-  surname      String
-  emailAddress String?
-  teacherId    String? @unique // Link to teacher if guardian is also a teacher
+  id              String  @id @default(cuid())
+  schoolId        String
+  givenName       String
+  surname         String
+  emailAddress    String?
+  teacherId       String? @unique // Link to teacher if guardian is also a teacher
+  profilePhotoUrl String?
 
   school           School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   teacher          Teacher?              @relation(fields: [teacherId], references: [id])

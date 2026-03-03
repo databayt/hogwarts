@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ErrorToast } from "@/components/atom/toast"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 import { assignGrade } from "./actions"
 import type { MemberRow } from "./columns"
@@ -56,6 +56,7 @@ export function GradeAssignDialog({
       })
 
       if (result.success) {
+        SuccessToast(t.gradeAssigned || "Grade assigned")
         onOpenChange(false)
         setSelectedGrade("")
         onSuccess()

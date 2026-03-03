@@ -6,16 +6,13 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertStudentPermission,
   getAuthContext,
 } from "@/components/school-dashboard/listings/students/authorization"
-
-type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
 
 /**
  * Enroll a student: set academic grade, assign to class, and optionally batch.
@@ -56,10 +53,10 @@ export async function enrollStudent(input: {
       return { success: false, error: "Student not found" }
     }
 
-    // Set academic grade on student
+    // Set academic grade on student (scoped by schoolId for defense-in-depth)
     if (academicGradeId) {
-      await db.student.update({
-        where: { id: studentId },
+      await db.student.updateMany({
+        where: { id: studentId, schoolId },
         data: { academicGradeId },
       })
 

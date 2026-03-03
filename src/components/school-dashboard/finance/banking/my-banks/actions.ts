@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResult, BankAccount } from "../types"
 
@@ -16,9 +17,13 @@ import type { ActionResult, BankAccount } from "../types"
 export const getAccounts = cache(
   async (params: { userId: string }): Promise<BankAccount[]> => {
     try {
+      const { schoolId } = await getTenantContext()
+      if (!schoolId) return []
+
       const accounts = await db.bankAccount.findMany({
         where: {
           userId: params.userId,
+          schoolId,
         },
         orderBy: { createdAt: "desc" },
       })
@@ -60,11 +65,23 @@ export async function removeBank(params: {
     }
     const user = session.user
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: "NO_SCHOOL_CONTEXT",
+          message: "Missing school context",
+        },
+      }
+    }
+
     // Verify ownership
     const account = await db.bankAccount.findFirst({
       where: {
         id: params.accountId,
         userId: user.id,
+        schoolId,
       },
     })
 
@@ -115,11 +132,23 @@ export async function syncBankData(params: {
     }
     const user = session.user
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: "NO_SCHOOL_CONTEXT",
+          message: "Missing school context",
+        },
+      }
+    }
+
     // Verify ownership
     const account = await db.bankAccount.findFirst({
       where: {
         id: params.accountId,
         userId: user.id,
+        schoolId,
       },
     })
 

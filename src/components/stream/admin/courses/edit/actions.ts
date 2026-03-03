@@ -307,9 +307,13 @@ export async function updateChapter(
   }
 ): Promise<ApiResponse> {
   try {
-    // Find chapter to get courseId for access verification
-    const chapter = await db.streamChapter.findUnique({
-      where: { id: chapterId },
+    // Find chapter scoped through course.schoolId for tenant isolation
+    const { schoolId } = await getTenantContext()
+    const chapter = await db.streamChapter.findFirst({
+      where: {
+        id: chapterId,
+        course: { schoolId: schoolId || undefined },
+      },
       select: { courseId: true },
     })
 
@@ -532,9 +536,13 @@ export async function updateLesson(
   }
 ): Promise<ApiResponse> {
   try {
-    // Find lesson to get courseId for access verification
-    const lesson = await db.streamLesson.findUnique({
-      where: { id: lessonId },
+    // Find lesson scoped through course.schoolId for tenant isolation
+    const { schoolId: lessonSchoolId } = await getTenantContext()
+    const lesson = await db.streamLesson.findFirst({
+      where: {
+        id: lessonId,
+        chapter: { course: { schoolId: lessonSchoolId || undefined } },
+      },
       select: {
         chapter: {
           select: { courseId: true },

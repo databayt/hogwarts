@@ -50,7 +50,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <AttendanceProvider initialMethod="MANUAL">
-      <AttendanceContent dictionary={dictionary.school} />
+      <AttendanceContent dictionary={dictionary.school} lang={lang} />
     </AttendanceProvider>
   )
 }

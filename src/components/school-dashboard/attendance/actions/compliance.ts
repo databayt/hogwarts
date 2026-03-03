@@ -6,6 +6,10 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  canViewSchoolAnalytics,
+  isAdminRole,
+} from "@/components/school-dashboard/attendance/authorization"
 
 import type { ActionResponse } from "./core"
 
@@ -82,6 +86,12 @@ export async function getComplianceDashboard(): Promise<
     const session = await auth()
     if (!session?.user) {
       return { success: false, error: "Unauthorized" }
+    }
+    if (!canViewSchoolAnalytics(session.user.role as any)) {
+      return {
+        success: false,
+        error: "Unauthorized: insufficient role for compliance data",
+      }
     }
 
     // 1. Get active term
@@ -224,6 +234,9 @@ export async function getComplianceReport(input?: {
     const session = await auth()
     if (!session?.user) {
       return { success: false, error: "Unauthorized" }
+    }
+    if (!canViewSchoolAnalytics(session.user.role as any)) {
+      return { success: false, error: "Unauthorized: insufficient role" }
     }
 
     // Build date filter
@@ -445,6 +458,9 @@ export async function getScheduledReports(): Promise<
     const session = await auth()
     if (!session?.user) {
       return { success: false, error: "Unauthorized" }
+    }
+    if (!isAdminRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized: admin access required" }
     }
 
     const reports = await db.attendanceReport.findMany({

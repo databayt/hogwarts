@@ -52,13 +52,18 @@ const formSchema = z.object({
   }),
 })
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export default function ProductForm({
   initialData,
   pageTitle,
+  dictionary,
 }: {
   initialData: Product | null
   pageTitle: string
+  dictionary?: any
 }) {
+  const p = dictionary?.operator?.products
   const defaultValues = {
     image: initialData?.image || "",
     name: initialData?.name || "",
@@ -119,7 +124,10 @@ export default function ProductForm({
                   <FormItem>
                     <FormLabel>Product Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter product name" {...field} />
+                      <Input
+                        placeholder={p?.enterName || "Enter product name"}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -137,16 +145,29 @@ export default function ProductForm({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select categories" />
+                          <SelectValue
+                            placeholder={
+                              p?.selectCategories || "Select categories"
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="beauty">Beauty Products</SelectItem>
-                        <SelectItem value="electronics">Electronics</SelectItem>
-                        <SelectItem value="clothing">Clothing</SelectItem>
-                        <SelectItem value="home">Home & Garden</SelectItem>
+                        <SelectItem value="beauty">
+                          {p?.categories?.beautyProducts || "Beauty Products"}
+                        </SelectItem>
+                        <SelectItem value="electronics">
+                          {p?.categories?.electronics || "Electronics"}
+                        </SelectItem>
+                        <SelectItem value="clothing">
+                          {p?.categories?.clothing || "Clothing"}
+                        </SelectItem>
+                        <SelectItem value="home">
+                          {p?.categories?.homeAndGarden || "Home & Garden"}
+                        </SelectItem>
                         <SelectItem value="sports">
-                          Sports & Outdoors
+                          {p?.categories?.sportsAndOutdoors ||
+                            "Sports & Outdoors"}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -164,7 +185,7 @@ export default function ProductForm({
                       <Input
                         type="number"
                         step="0.01"
-                        placeholder="Enter price"
+                        placeholder={p?.enterPrice || "Enter price"}
                         {...field}
                       />
                     </FormControl>
@@ -181,7 +202,9 @@ export default function ProductForm({
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter product description"
+                      placeholder={
+                        p?.enterDescription || "Enter product description"
+                      }
                       className="resize-none"
                       {...field}
                     />

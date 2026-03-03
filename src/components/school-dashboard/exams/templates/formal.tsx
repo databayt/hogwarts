@@ -6,6 +6,7 @@
  * Government exam style with double-border frame, diagonal watermark,
  * disclaimer text, and strict formal formatting.
  * Refactored to compose shared sections with PaperTheme.
+ * @deprecated Use ComposableDocument instead — this template is kept for backwards compatibility.
  */
 
 import React from "react"

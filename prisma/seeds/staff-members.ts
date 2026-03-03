@@ -10,8 +10,19 @@
 
 import type { PrismaClient } from "@prisma/client"
 
+import {
+  getEnglishGivenName,
+  getEnglishSurname,
+  HP_CHARACTERS,
+} from "./constants"
 import type { DepartmentRef, UserRef } from "./types"
-import { generatePhone, logSuccess, randomElement, randomNumber } from "./utils"
+import {
+  generatePersonalEmail,
+  generatePhone,
+  logSuccess,
+  randomElement,
+  randomNumber,
+} from "./utils"
 
 // ============================================================================
 // STAFF DATA
@@ -263,15 +274,34 @@ export async function seedStaffMembers(
 
   for (let i = 0; i < STAFF_DATA.length; i++) {
     const staff = STAFF_DATA[i]
-    const email = `${staff.emailPrefix}@demo.databayt.org`
     const employeeId = `STAFF${String(i + 1).padStart(3, "0")}`
 
     // Link first staff member to staff user account
     const userId = i === 0 && staffUser ? staffUser.id : null
 
+    // Index 0 = Hagrid
+    const isHagrid = i === 0
+    const givenName = isHagrid
+      ? HP_CHARACTERS.staff.nameAr.split(" ")[0]
+      : staff.givenName
+    const surname = isHagrid
+      ? HP_CHARACTERS.staff.nameAr.split(" ").slice(1).join(" ")
+      : staff.surname
+    const position = isHagrid ? HP_CHARACTERS.staff.position : staff.position
+
+    // Personal email (firstname-lastname@domain.com)
+    const personalEmail = isHagrid
+      ? HP_CHARACTERS.staff.personalEmail
+      : generatePersonalEmail(
+          getEnglishGivenName(staff.givenName, staff.gender),
+          getEnglishSurname(staff.surname),
+          i
+        )
+
     try {
+      // Find by employeeId first (handles email migration)
       const existing = await prisma.staffMember.findFirst({
-        where: { schoolId, emailAddress: email },
+        where: { schoolId, employeeId },
       })
 
       if (!existing) {
@@ -279,11 +309,11 @@ export async function seedStaffMembers(
           data: {
             schoolId,
             employeeId,
-            givenName: staff.givenName,
-            surname: staff.surname,
+            givenName,
+            surname,
             gender: staff.gender === "M" ? "Male" : "Female",
-            emailAddress: email,
-            position: staff.position,
+            emailAddress: personalEmail,
+            position,
             phoneNumber: generatePhone(i + 200),
             employmentStatus: "ACTIVE",
             employmentType: "FULL_TIME",
@@ -295,6 +325,18 @@ export async function seedStaffMembers(
           },
         })
         count++
+      } else {
+        // Update existing staff with personal email + HP data
+        await prisma.staffMember.update({
+          where: { id: existing.id },
+          data: {
+            givenName,
+            surname,
+            position,
+            emailAddress: personalEmail,
+            userId,
+          },
+        })
       }
     } catch {
       // Skip duplicates

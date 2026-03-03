@@ -34,6 +34,7 @@ export default async function TemplatesContent({
   const { schoolId } = await getTenantContext()
   let data: ExamTemplateRow[] = []
   let total = 0
+  let subjects: { id: string; subjectName: string | null }[] = []
 
   if (schoolId) {
     const where: Prisma.ExamTemplateWhereInput = {
@@ -63,7 +64,7 @@ export default async function TemplatesContent({
           ]
         : [{ createdAt: "desc" }]
 
-    const [rows, count] = await Promise.all([
+    const [rows, count, fetchedSubjects] = await Promise.all([
       db.examTemplate.findMany({
         where,
         orderBy,
@@ -85,6 +86,11 @@ export default async function TemplatesContent({
         },
       }),
       db.examTemplate.count({ where }),
+      db.subject.findMany({
+        where: { schoolId },
+        select: { id: true, subjectName: true },
+        orderBy: { subjectName: "asc" },
+      }),
     ])
 
     data = await Promise.all(
@@ -110,6 +116,7 @@ export default async function TemplatesContent({
       }))
     )
     total = count
+    subjects = fetchedSubjects
   }
 
   return (
@@ -126,6 +133,7 @@ export default async function TemplatesContent({
           initialData={data}
           total={total}
           dictionary={dictionary}
+          subjects={subjects}
         />
       </div>
     </PageContainer>

@@ -70,10 +70,12 @@ import { UserInfoCard } from "@/components/atom/user-info-card"
 // Flow diagram components
 import {
   AuthFlowDiagram,
+  DeveloperDashboardFlow,
   GetStartedFlow,
   LiveDemoFlow,
   LoginFlow,
   LogoutFlow,
+  OnboardingWizardFlow,
   PlatformLinkFlow,
   TestCredentialsReference,
   UrlsReference,
@@ -83,6 +85,7 @@ import { CodeTabs } from "@/components/docs/code-tabs"
 import { ComponentPreview } from "@/components/docs/component-preview"
 import { ComponentSource } from "@/components/docs/component-source"
 import { CopyButton } from "@/components/docs/copy-button"
+import { DependencyChain } from "@/components/docs/dependency-chain"
 import { DirectoryStructure } from "@/components/docs/directory-structure"
 import { ListingStructure } from "@/components/docs/listing-structure"
 import { PrismaStructure } from "@/components/docs/prisma-structure"
@@ -396,6 +399,7 @@ const mdxComponents = {
   FormField,
   FormFieldText,
   PaymentMethodSelector,
+  DependencyChain,
   DirectoryStructure,
   ListingStructure,
   Structure,
@@ -420,6 +424,8 @@ const mdxComponents = {
   LiveDemoFlow,
   LoginFlow,
   LogoutFlow,
+  DeveloperDashboardFlow,
+  OnboardingWizardFlow,
   TestCredentialsReference,
   UrlsReference,
 }

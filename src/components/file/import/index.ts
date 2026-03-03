@@ -49,8 +49,12 @@ export { Importer, type ImporterProps } from "./importer"
 export {
   importStudents,
   importTeachers,
+  importStaff,
+  importGuardians,
   generateStudentTemplate,
   generateTeacherTemplate,
+  generateStaffTemplate,
+  generateGuardianTemplate,
 } from "./csv-import"
 
 // CSV Validation Helpers

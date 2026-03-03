@@ -17,7 +17,8 @@ import { Textarea } from "@/components/ui/textarea"
 
 import { useTaskStore } from "../utils/store"
 
-export default function NewTaskDialog() {
+export default function NewTaskDialog({ dictionary }: { dictionary?: any }) {
+  const k = dictionary?.operator?.kanban
   const addTask = useTaskStore((state) => state.addTask)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -35,14 +36,14 @@ export default function NewTaskDialog() {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="secondary" size="sm">
-          ＋ Add New Todo
+          {k?.addNewTodo || "\uFF0B Add New Todo"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Todo</DialogTitle>
+          <DialogTitle>{k?.addTodoTitle || "Add New Todo"}</DialogTitle>
           <DialogDescription>
-            What do you want to get done today?
+            {k?.addTodoDescription || "What do you want to get done today?"}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -54,7 +55,7 @@ export default function NewTaskDialog() {
             <Input
               id="title"
               name="title"
-              placeholder="Todo title..."
+              placeholder={k?.todoTitlePlaceholder || "Todo title..."}
               className="col-span-4"
             />
           </div>
@@ -62,7 +63,7 @@ export default function NewTaskDialog() {
             <Textarea
               id="description"
               name="description"
-              placeholder="Description..."
+              placeholder={k?.todoDescriptionPlaceholder || "Description..."}
               className="col-span-4"
             />
           </div>
@@ -70,7 +71,7 @@ export default function NewTaskDialog() {
         <DialogFooter>
           <DialogTrigger asChild>
             <Button type="submit" size="sm" form="todo-form">
-              Add Todo
+              {k?.addTodo || "Add Todo"}
             </Button>
           </DialogTrigger>
         </DialogFooter>

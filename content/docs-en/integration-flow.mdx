@@ -7,30 +7,7 @@ description: "End-to-end dependency chain from global catalog to a working timet
 
 Every school on the platform progresses through 8 layers to reach a fully operational timetable. Each layer depends on the ones above it.
 
-```
-Layer 1: Global Catalog        (no schoolId -- platform-wide, grade-specific subjects)
-    |
-    v
-Layer 2: School Onboarding     (collects profile: type, country, capacity, schedule)
-    |                           + creates Terms, SchoolWeekConfig, Periods
-    v
-Layer 3: Academic Structure    (levels, grades, streams -- created from profile)
-    |
-    v
-Layer 4: Subject Selection     (bridge: catalog subjects --> school grades)
-    |                           + Subject.catalogSubjectId links to LMS content
-    +---> Layer 5a: Teacher Assignment    (teacher --> class --> subject)
-    |
-    +---> Layer 5b: Student Enrollment    (application --> admission --> class)
-    |
-    v
-Layer 6: Classroom Setup       (physical rooms, types, constraints)
-    |
-    v
-Layer 7: Timetable             (day x period x class x teacher x room)
-```
-
-Layers 5a and 5b are independent of each other -- teachers and students can be assigned in any order -- but both must exist before a timetable slot can be created.
+<DependencyChain />
 
 ---
 
@@ -68,14 +45,14 @@ Key points:
 
 ### Multi-Country Support
 
-Every catalog entity carries `country` and `system` fields:
+Every catalog entity carries `country` and `curriculum` fields:
 
-| Field     | Example Values                         | Purpose                      |
-| --------- | -------------------------------------- | ---------------------------- |
-| `country` | `"US"`, `"SD"`, `"GB"`, `"AE"`         | Which country's curriculum   |
-| `system`  | `"clickview"`, `"national"`, `"ib"`    | Which education system       |
-| `grades`  | `[3]`, `[7]`, etc.                     | Exact grade for this subject |
-| `levels`  | `[ELEMENTARY]`, `[MIDDLE, HIGH]`, etc. | Legacy level classification  |
+| Field        | Example Values                         | Purpose                             |
+| ------------ | -------------------------------------- | ----------------------------------- |
+| `country`    | `"US"`, `"SD"`, `"GB"`, `"AE"`         | Which country's curriculum          |
+| `curriculum` | `"us-k12"`, `"national"`, `"ib"`       | Which education system / curriculum |
+| `grades`     | `[3]`, `[7]`, etc.                     | Exact grade for this subject        |
+| `levels`     | `[ELEMENTARY]`, `[MIDDLE, HIGH]`, etc. | Legacy level classification         |
 
 ### Community Contributions
 
@@ -116,42 +93,53 @@ Onboarding collects the school profile that drives all downstream provisioning. 
 
 ### Steps That Matter for Integration
 
-| Step          | Order | Collects                                   | Feeds Into                     |
-| ------------- | ----- | ------------------------------------------ | ------------------------------ |
-| `description` | 2     | `schoolType` (public, private, british)    | Academic structure, timetable  |
-| `location`    | 3     | `country`, `city`, `state`                 | Catalog filtering, schedule    |
-| `capacity`    | 5     | `maxStudents`, `maxTeachers`, `maxClasses` | Planning capacity, not records |
-| `schedule`    | 5.5   | Timetable structure selection              | Period records, working days   |
+| Step          | Order | Collects                                             | Feeds Into                      |
+| ------------- | ----- | ---------------------------------------------------- | ------------------------------- |
+| `description` | 2     | `schoolType` (public, private, british)              | Academic structure, timetable   |
+| `location`    | 3     | `country`, `city`, `state`                           | Catalog filtering, schedule     |
+| `capacity`    | 5     | `teachers`, `sectionsPerGrade`, `studentsPerSection` | Section-based capacity planning |
+| `schedule`    | 5.5   | Timetable structure selection                        | Period records, working days    |
 
 ### What Gets Saved
 
 ```
 description step --> School.schoolType (e.g., "public", "british", "ib")
 location step    --> School.country, School.city, School.state
-capacity step    --> School.maxStudents, School.maxTeachers, School.maxClasses (integers only)
-schedule step    --> Period records + Terms + SchoolWeekConfig (via applyTimetableStructureForNewSchool)
+capacity step    --> School.sectionsPerGrade, School.studentsPerSection + computed maxClasses/maxStudents
+schedule step    --> School.curriculum (structure slug) + Period records + Terms + SchoolWeekConfig
 ```
 
 ### Capacity Step Clarification
 
-The capacity step's form labels say **"Students"**, **"Teachers"**, and **"Class Sections"**. What actually gets persisted:
+The capacity step collects section-based inputs that drive computed plan limits:
 
-| Form Label         | Saved As             | What It Means                                      |
-| ------------------ | -------------------- | -------------------------------------------------- |
-| Students           | `School.maxStudents` | Subscription/plan limit on total student records   |
-| Teachers           | `School.maxTeachers` | Subscription/plan limit on total teacher records   |
-| **Class Sections** | `School.maxClasses`  | Limits how many **`Class`** records can be created |
+**Inputs (what the form collects):**
 
-Key distinction: **"Class Sections" in the form maps to `maxClasses`** -- it limits `Class` records (course sections), NOT physical `Classroom` records. No `Classroom` records are created during onboarding, but a default `ClassroomType` is auto-created so the Configure tab works immediately.
+| Form Field           | Saved As                    | What It Means                            |
+| -------------------- | --------------------------- | ---------------------------------------- |
+| Teachers             | `School.maxTeachers`        | Total teacher headcount                  |
+| Sections per Grade   | `School.sectionsPerGrade`   | How many sections (A, B, C...) per grade |
+| Students per Section | `School.studentsPerSection` | Target class size                        |
+
+**Computed (derived from inputs):**
+
+| Computed Field | Formula                           | What It Means                               |
+| -------------- | --------------------------------- | ------------------------------------------- |
+| `maxClasses`   | `grades × sectionsPerGrade`       | Total `Class` records the school can create |
+| `maxStudents`  | `maxClasses × studentsPerSection` | Total student records the plan allows       |
+
+Key distinction: `maxClasses` limits `Class` records (course sections), NOT physical `Classroom` records. No `Classroom` records are created during onboarding, but a default `ClassroomType` is auto-created so the Configure tab works immediately.
 
 ### The Onboarding Completion Action
 
-When the user accepts terms on the legal step, `completeOnboarding()` in `legal/actions.ts` runs. It sets `isPublished: true` and `onboardingCompletedAt`, making the school live and accessible via its subdomain. It then triggers two non-blocking provisioning steps:
+When the user accepts terms on the legal step, `completeOnboarding()` in `legal/actions.ts` runs. It sets `isPublished: true` and `onboardingCompletedAt`, making the school live and accessible via its subdomain. It then triggers four non-blocking provisioning steps:
 
-1. **`setupCatalogForSchool()`** -- creates academic structure (Layer 3) and subject selections (Layer 4)
-2. **`applyTimetableStructureForNewSchool()`** -- creates the school year, terms, periods, and week config
+1. **`setupDefaultsForSchool()`** -- creates YearLevels (filtered by schoolLevel), Departments (6 universal), and ScoreRanges (A+ through F)
+2. **`setupCatalogForSchool()`** -- creates academic structure (Layer 3) and subject selections (Layer 4)
+3. **`applyTimetableStructureForNewSchool()`** -- creates the school year, terms, periods, and week config
+4. **Default `ClassroomType` upsert** -- creates a "Classroom" type so the Configure tab works immediately
 
-Both are wrapped in try/catch so that provisioning failures do not block onboarding completion.
+All are wrapped in try/catch so that provisioning failures do not block onboarding completion.
 
 The `congratulations/actions.ts` file contains `publishSchool()` as an admin-only fallback for manual re-provisioning. It calls both `setupCatalogForSchool()` and `applyTimetableStructureForNewSchool()`, each wrapped in its own try/catch so that a failure in one does not block the other.
 
@@ -170,17 +158,30 @@ This function (in `src/lib/catalog-setup.ts`) reads the selected timetable struc
 
 Schools choose from country-specific timetable structures during the schedule step. The system now includes generic structures alongside country-specific ones:
 
-| Slug             | Name               | Periods | Days    | Country | Default |
-| ---------------- | ------------------ | ------- | ------- | ------- | ------- |
-| `sd-gov-default` | Sudan Government   | 8 x 45m | Sun-Thu | SD      | Yes     |
-| `sd-private`     | Sudan Private      | 7 x 50m | Sun-Thu | SD      | No      |
-| `sd-british`     | British Curriculum | 6 x 55m | Mon-Fri | SD      | No      |
-| `sd-ib`          | IB / American      | 6 x 50m | Mon-Fri | SD      | No      |
-| `sd-half-day`    | Half Day / KG      | 5 x 40m | Sun-Thu | SD      | No      |
-| `us-standard`    | US Standard        | 7 x 50m | Mon-Fri | US      | Yes     |
-| `intl-default`   | International      | 6 x 50m | Mon-Fri | `*`     | No      |
+| Slug             | Name                     | Periods | Days    | Country | Default |
+| ---------------- | ------------------------ | ------- | ------- | ------- | ------- |
+| `sd-gov-default` | Sudan Government         | 8 x 45m | Sun-Thu | SD      | Yes     |
+| `sd-private`     | Sudan Private            | 7 x 50m | Sun-Thu | SD      | No      |
+| `sd-british`     | British Curriculum       | 6 x 55m | Mon-Fri | SD      | No      |
+| `sd-ib`          | IB / American            | 6 x 50m | Mon-Fri | SD      | No      |
+| `sd-half-day`    | Half Day / KG            | 5 x 40m | Sun-Thu | SD      | No      |
+| `gulf-standard`  | Gulf Government Standard | 7 x 45m | Sun-Thu | GULF    | Yes     |
+| `gulf-private`   | Gulf Private / Intl      | 7 x 50m | Sun-Thu | GULF    | No      |
+| `mena-standard`  | MENA Standard            | 7 x 45m | Mon-Fri | MENA    | Yes     |
+| `us-standard`    | US Standard              | 7 x 50m | Mon-Fri | US      | Yes     |
+| `intl-default`   | International Default    | 6 x 50m | Mon-Fri | `*`     | No      |
 
-`getRecommendedStructures(country, schoolType, schoolLevel)` filters by country first, then falls back to wildcard (`country: "*"`) when no country-specific match is found. This ensures any school, regardless of country, gets at least one timetable option.
+`getRecommendedStructures(country, schoolType, schoolLevel)` uses a **scoring system** to rank structures:
+
+| Signal              | Score | Example                                          |
+| ------------------- | ----- | ------------------------------------------------ |
+| Country exact match | +40   | SD school → SD structures                        |
+| Region match        | +25   | SA school → GULF structures                      |
+| Wildcard (`*`)      | +5    | Fallback for unrecognized countries              |
+| SchoolType match    | +20   | `"private"` school → structures with `"private"` |
+| SchoolLevel match   | +10   | `"secondary"` → structures with `"secondary"`    |
+
+**Thresholds:** score >= 30 = recommended, score >= 50 = auto-select. Country-to-region mapping: SA/AE/QA/KW/BH/OM → GULF; EG/JO/LB/TN/MA/DZ → MENA.
 
 ### What Happens Next
 
@@ -259,6 +260,19 @@ Level-based subject (grades: [], levels: [ELEMENTARY, MIDDLE]):
 ```
 
 Result: ~99% of relevant subjects auto-assigned. Schools start with a working curriculum immediately.
+
+### Progressive Fallback
+
+`setupCatalogForSchool()` uses a 4-step progressive fallback to find catalog subjects, ensuring every school gets content:
+
+| Step | Filter                              | Example                                   |
+| ---- | ----------------------------------- | ----------------------------------------- |
+| 1    | `country + curriculum + schoolType` | SD + national + private (exact match)     |
+| 2    | `country + curriculum`              | SD + national (ignore schoolType)         |
+| 3    | `country="*" + curriculum`          | IB worldwide, British worldwide           |
+| 4    | US + us-k12                         | Baseline fallback for unrecognized combos |
+
+The curriculum is inferred from `country + schoolType` if not explicitly set: international schools get `"us-k12"`, known countries get `"national"`, and unknown countries fall back to `"us-k12"`.
 
 ### Customization
 
@@ -449,14 +463,14 @@ Student --> StudentClass --> Class --> ClassTeacher (co-teachers)
 Student --> StudentClass --> Class --> Timetable (schedule)
 ```
 
-### Class Placement
+### Section Placement
 
-Two UI components handle placing admitted students into class sections:
+Two UI components handle placing admitted students into sections:
 
-- **Placement Dialog** (`admission/placement-dialog.tsx`) -- shown per-student after admission. Displays available classes for the student's grade with capacity badges (`enrolled/max`). Validates `maxCapacity` before placement.
-- **Bulk Placement** (`admission/bulk-placement.tsx`) -- table of all `ADMITTED` students without class placement. Select multiple students, pick a target class, and batch-assign. Prevents placing into full classes.
+- **Placement Dialog** (`admission/placement-dialog.tsx`) -- shown per-student after admission. Displays available sections for the student's grade with capacity badges (`enrolled/max`). Validates `maxCapacity` before placement.
+- **Bulk Placement** (`admission/bulk-placement.tsx`) -- table of all `ADMITTED` students without section placement. Select multiple students, pick a target section, and batch-assign. Prevents placing into full sections.
 
-Both call `placeStudentInClass(applicationId, classId)` which creates the `StudentClass` record, checks for duplicate enrollment, and triggers `syncStudentClassToEnrollment()` to auto-create a corresponding LMS `Enrollment` record.
+Both call `placeStudentInSection(applicationId, sectionId)` which validates section capacity, updates `Student.sectionId`, and auto-creates `StudentClass` records for all classes in that grade. It also triggers `syncStudentClassToEnrollment()` to auto-create corresponding LMS `Enrollment` records.
 
 ### Grade Number Extraction
 
@@ -485,12 +499,27 @@ Physical rooms are set up and configured with types, capacities, and scheduling 
 
 ### Classroom Model
 
-| Field      | Type     | Description                                |
-| ---------- | -------- | ------------------------------------------ |
-| `schoolId` | `String` | Tenant isolation                           |
-| `typeId`   | `String` | FK to ClassroomType                        |
-| `roomName` | `String` | Display name (e.g., "A101", "Physics Lab") |
-| `capacity` | `Int`    | Physical seat count for this room          |
+| Field      | Type      | Description                                   |
+| ---------- | --------- | --------------------------------------------- |
+| `schoolId` | `String`  | Tenant isolation                              |
+| `typeId`   | `String`  | FK to ClassroomType                           |
+| `gradeId`  | `String?` | FK to AcademicGrade (optional grade affinity) |
+| `roomName` | `String`  | Display name (e.g., "A101", "Physics Lab")    |
+| `capacity` | `Int`     | Physical seat count for this room             |
+
+### Section Model
+
+Sections represent homeroom groups within a grade (e.g., "Grade 7-A"). Students are placed into sections, and section membership drives class enrollment.
+
+| Field               | Type      | Description                                    |
+| ------------------- | --------- | ---------------------------------------------- |
+| `schoolId`          | `String`  | Tenant isolation                               |
+| `gradeId`           | `String`  | FK to AcademicGrade                            |
+| `name`              | `String`  | Display name (e.g., "Grade 7-A")               |
+| `letter`            | `String`  | Section letter (e.g., "A")                     |
+| `homeroomTeacherId` | `String?` | FK to Teacher (homeroom teacher)               |
+| `classroomId`       | `String?` | FK to Classroom (assigned room)                |
+| `maxCapacity`       | `Int`     | Maximum students in this section (default: 30) |
 
 ### Three Capacity Concepts
 
@@ -624,7 +653,7 @@ Classrooms have **no schema dependency** on other layers -- they can be created 
 Current state:
 
 - Unified `/classrooms` route with tabs: All, Rooms, Configure, Capacity, Subjects, Schedule, Settings
-- Auto-provisioning via Configure tab creates both `Classroom` + `Class` records atomically (wrapped in `db.$transaction`)
+- Auto-provisioning via Configure tab creates both `Classroom` + `Section` records atomically (wrapped in `db.$transaction`)
 - `maxClasses` plan limit enforced in both `createClass` and `generateSections`
 - The demo school has 28 rooms seeded across 5 buildings
 - The onboarding capacity step does **not** create `Classroom` records (only saves `maxClasses` limit)
@@ -732,18 +761,101 @@ See: [Timetable](/docs/timetable)
 
 ---
 
+## Layer 8: Exams & Assessment
+
+Exams and assessments consume the timetable layer's classes, subjects, and enrollment data to produce scored results.
+
+### Models
+
+```
+Exam > ExamSession > StudentAnswer > MarkingResult > ExamResult
+QuestionBank > GeneratedExam > GeneratedPaper
+Result (standalone grades for assignments/homework)
+```
+
+### What It Reads
+
+| Source Layer | Models Used      | Purpose                                     |
+| ------------ | ---------------- | ------------------------------------------- |
+| Layer 5a     | Class, Teacher   | Which class the exam is for, who creates it |
+| Layer 5b     | StudentClass     | Which students take the exam                |
+| Layer 4      | Subject          | Subject of the exam                         |
+| Layer 3      | Term, SchoolYear | Term-scoping for exam scheduling            |
+
+See: [Exams](/docs/exams)
+
+---
+
+## Layer 9: Grades Block
+
+The Grades block is the **academic outcomes pipeline** -- it reads from Exams (Layer 8), Grades Listing, and Academic Structure to produce certificates, report cards, transcripts, notifications, and promotion decisions.
+
+### Sub-layers
+
+| Sub-layer | Name               | Reads From                                  | Blocking? | Can Run In Parallel With |
+| --------- | ------------------ | ------------------------------------------- | --------- | ------------------------ |
+| 9a        | Certificates (PDF) | Layer 8 (ExamResult, ExamCertificateConfig) | No        | Layer 9b                 |
+| 9b        | Report Cards       | Layers 5b, 8 (enrollment + exam results)    | No        | Layers 9c, 9e            |
+| 9c        | Transcripts        | Layer 9b (report cards)                     | No        | --                       |
+| 9d        | Notifications      | Layers 9a, 9b, 9e (triggered by events)     | No        | --                       |
+| 9e        | Promotion          | Layer 9b + Attendance                       | Yes       | --                       |
+
+### Data Flow
+
+```
+ExamResult + Result (Layer 8)
+    |
+    v
+Report Card Generation (aggregate per student per term)
+    |
+    +----> Certificate PDF (composable template system)
+    +----> Transcript (multi-year aggregation)
+    +----> Notifications (grade_posted, report_ready, certificate_issued, promotion_decided)
+    +----> Promotion/Retention (year-end evaluation → Student.academicGradeId update)
+```
+
+### Certificate Composition
+
+Certificates use the same 5-layer composition architecture as exam papers:
+
+```
+Atom > Section > Variant > Composition > Document
+```
+
+7 slots: Header, Title, Recipient, Body, Scores, Signatures, Footer. 4 regional presets (SD, SA, US, MENA). Configuration stored in `ExamCertificateConfig.compositionConfig` (JSON).
+
+### Promotion Pipeline
+
+```
+Admin triggers evaluation → PromotionBatch created
+    → Per student: GPA + failed subjects + attendance → PromotionCandidate
+    → Admin reviews and overrides → Batch approved
+    → Execute: Student.academicGradeId updated, StudentYearLevel created
+    → Notifications sent
+```
+
+See: [Grades](/docs/grades)
+
+---
+
 ## Dependency Matrix
 
-| Layer | Name               | Depends On  | Blocking? | Can Run In Parallel With |
-| ----- | ------------------ | ----------- | --------- | ------------------------ |
-| 1     | Global Catalog     | Nothing     | Yes       | --                       |
-| 2     | School Onboarding  | Layer 1     | Yes       | --                       |
-| 3     | Academic Structure | Layer 2     | Yes       | --                       |
-| 4     | Subject Selection  | Layers 1, 3 | Yes       | --                       |
-| 5a    | Teacher Assignment | Layer 4     | Yes       | Layer 5b                 |
-| 5b    | Student Enrollment | Layers 3, 4 | Yes       | Layer 5a                 |
-| 6     | Classroom Setup    | Nothing\*   | Yes       | Layers 3, 4, 5a, 5b      |
-| 7     | Timetable          | All above   | --        | --                       |
+| Layer | Name               | Depends On            | Blocking? | Can Run In Parallel With |
+| ----- | ------------------ | --------------------- | --------- | ------------------------ |
+| 1     | Global Catalog     | Nothing               | Yes       | --                       |
+| 2     | School Onboarding  | Layer 1               | Yes       | --                       |
+| 3     | Academic Structure | Layer 2               | Yes       | --                       |
+| 4     | Subject Selection  | Layers 1, 3           | Yes       | --                       |
+| 5a    | Teacher Assignment | Layer 4               | Yes       | Layer 5b                 |
+| 5b    | Student Enrollment | Layers 3, 4           | Yes       | Layer 5a                 |
+| 6     | Classroom Setup    | Nothing\*             | Yes       | Layers 3, 4, 5a, 5b      |
+| 7     | Timetable          | All above             | --        | --                       |
+| 8     | Exams & Assessment | Layers 3, 4, 5a, 5b   | No        | --                       |
+| 9a    | Certificates       | Layer 8               | No        | Layer 9b                 |
+| 9b    | Report Cards       | Layers 5b, 8          | No        | Layers 9c, 9e            |
+| 9c    | Transcripts        | Layer 9b              | No        | --                       |
+| 9d    | Notifications      | Layers 9a, 9b, 9e     | No        | --                       |
+| 9e    | Promotion          | Layer 9b + Attendance | Yes       | --                       |
 
 \*Classrooms have no schema dependency on other layers, but practically rooms should be set up before timetable creation.
 
@@ -757,6 +869,9 @@ No Terms             --> No timetable slots      (termId is required)
 No Teacher Assignment --> No timetable slots     (teacherId is required)
 No Student Enrollment --> Timetable works but no students see it
 No Classrooms        --> No timetable slots      (classroomId is required)
+No Exams/Results     --> No report cards         --> No transcripts
+No Report Cards      --> No promotion evaluation (GPA required)
+No Attendance Data   --> Promotion runs without attendance check
 ```
 
 ---
@@ -771,7 +886,7 @@ Known integration issues between layers:
 | ~~`schoolLevel` not collected in UI~~            | 2 --> 3   | Fixed   | `description/form.tsx` now collects `schoolLevel` with auto-submit logic.                                                                                                                                                                       |
 | ~~`country` format mismatch~~                    | 1 --> 4   | Fixed   | All models, seeds, and validation now use ISO 2-letter codes. Mapbox returns `short_code`, onboarding validates `^[A-Z]{2}$`.                                                                                                                   |
 | ~~Head of Department not in schema~~             | 5a        | Fixed   | `TeacherDepartment.isDepartmentHead` added. Toggle UI in department content. Seeded with one head per department.                                                                                                                               |
-| ~~No auto-placement after ADMITTED~~             | 5b --> 7  | Fixed   | Placement dialog (per-student) and bulk placement (batch) UI. `placeStudentInClass` action validates capacity.                                                                                                                                  |
+| ~~No auto-placement after ADMITTED~~             | 5b --> 7  | Fixed   | Placement dialog (per-student) and bulk placement (batch) UI. `placeStudentInSection` action validates section capacity and auto-creates StudentClass records.                                                                                  |
 | ~~Classroom setup not in onboarding~~            | 2 --> 6   | Fixed   | `completeOnboarding()` now auto-creates a default `ClassroomType` ("Classroom") via upsert, removing the Configure tab blocker. Capacity step saves `maxClasses` count; rooms and sections are generated post-onboarding via the Configure tab. |
 | ~~Onboarding `facilities` not persisted~~        | 2 --> 6   | Fixed   | Removed from capacity form, validation, and types. No longer collected.                                                                                                                                                                         |
 | ~~`allowedSubjectTypes` unused~~                 | 6 --> 7   | Fixed   | Timetable algorithm now checks `RoomConstraint.allowedSubjectTypes` during slot generation.                                                                                                                                                     |
@@ -782,7 +897,7 @@ Known integration issues between layers:
 | ~~Capacity cross-validation missing~~            | 5a --> 6  | Fixed   | `createClass` and `updateClass` enforce a hard error when `maxCapacity` exceeds room `capacity`. `maxClasses` plan limit also enforced in `createClass` and `generateSections`.                                                                 |
 | ~~No Term records auto-created~~                 | 2 --> 7   | Fixed   | `applyTimetableStructureForNewSchool()` now creates 2 default Terms (Term 1: Sep-Jan, Term 2: Feb-Jun) linked to the school year.                                                                                                               |
 | ~~SchoolWeekConfig not created~~                 | 2 --> 7   | Fixed   | `applyTimetableStructureForNewSchool()` now creates a `SchoolWeekConfig` record with working days and lunch config from the selected structure.                                                                                                 |
-| ~~Only Sudan timetable structures~~              | 2         | Fixed   | Added `us-standard` (7 x 50min, Mon-Fri) and `intl-default` (6 x 50min, Mon-Fri, wildcard country). `getRecommendedStructures()` falls back to `country: "*"`.                                                                                  |
+| ~~Only Sudan timetable structures~~              | 2         | Fixed   | Now 10 structures: 5 SD, 2 GULF, 1 MENA, 1 US, 1 wildcard. `getRecommendedStructures()` uses scoring system with country/region/wildcard/schoolType/schoolLevel signals.                                                                        |
 | ~~Subjects are level-based, not grade-specific~~ | 1         | Fixed   | 62 level-based subjects replaced by ~220 grade-specific subjects. Each has `grades: [N]` and slug `us-{subject}-grade-{N}`. Chapters/lessons duplicated per grade.                                                                              |
 | ~~`Subject` model has no `catalogSubjectId`~~    | 4         | Fixed   | Optional FK `Subject.catalogSubjectId` added, bridging school-scoped classroom subjects to global LMS catalog content.                                                                                                                          |
 | ~~CatalogBook disconnected from subjects~~       | 1         | Fixed   | `CatalogBook.catalogSubjectId` now links books to grade-specific `CatalogSubject`. `SchoolBookSelection.gradeId` enables grade-scoped book assignments.                                                                                         |

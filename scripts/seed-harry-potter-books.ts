@@ -2,28 +2,33 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Seed Harry Potter Books to ImageKit and Database
+ * Seed Harry Potter Books to S3/CloudFront and Database
  *
  * This script:
- * 1. Uploads book cover images to ImageKit
- * 2. Creates book records in the database
+ * 1. Uploads book cover images to S3
+ * 2. Creates book records in the database with CloudFront URLs
  *
  * Usage: npx tsx scripts/seed-harry-potter-books.ts
  */
 
 import * as fs from "fs"
 import * as path from "path"
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { PrismaClient } from "@prisma/client"
-import ImageKit from "imagekit"
 
 const prisma = new PrismaClient()
 
-// ImageKit configuration
-const imagekit = new ImageKit({
-  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
-  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+// S3 configuration
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION || "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
 })
+
+const bucket = process.env.AWS_S3_BUCKET!
+const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN
 
 // Harry Potter books data
 const harryPotterBooks = [
@@ -94,22 +99,30 @@ const harryPotterBooks = [
   },
 ]
 
-async function uploadToImageKit(
-  filePath: string,
-  fileName: string
-): Promise<string> {
+async function uploadToS3(filePath: string, fileName: string): Promise<string> {
   const fileBuffer = fs.readFileSync(filePath)
-  const base64File = fileBuffer.toString("base64")
+  const ext = path.extname(fileName).toLowerCase()
+  const contentType =
+    ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg"
 
-  const response = await imagekit.upload({
-    file: base64File,
-    fileName: fileName.replace(/[^a-zA-Z0-9.-]/g, "-"),
-    folder: "hogwarts/library/books",
-    useUniqueFileName: true,
-  })
+  const key = `library/books/${fileName.replace(/[^a-zA-Z0-9.-]/g, "-")}`
 
-  console.log(`Uploaded: ${fileName} -> ${response.url}`)
-  return response.url
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: fileBuffer,
+      ContentType: contentType,
+      ACL: "public-read",
+    })
+  )
+
+  const url = cloudfrontDomain
+    ? `https://${cloudfrontDomain}/${key}`
+    : `https://${bucket}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`
+
+  console.log(`Uploaded: ${fileName} -> ${url}`)
+  return url
 }
 
 async function main() {
@@ -143,9 +156,9 @@ async function main() {
         continue
       }
 
-      // Upload to ImageKit
+      // Upload to S3
       console.log(`Uploading ${book.title}...`)
-      const coverUrl = await uploadToImageKit(filePath, book.localFile)
+      const coverUrl = await uploadToS3(filePath, book.localFile)
 
       // Check if book already exists
       const existingBook = await prisma.book.findFirst({

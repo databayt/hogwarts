@@ -60,6 +60,9 @@ export {
   QUESTION_CSV_HEADERS,
 } from "./csv-utils"
 
+// AI Question Generation
+export { generateQuestionsAI, saveAIGeneratedQuestions } from "./ai-generation"
+
 // Curriculum Standards Operations
 export {
   createCurriculumStandard,

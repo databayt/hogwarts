@@ -8,10 +8,18 @@ import type { AttendanceMethod, AttendanceStatus, Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { isChannelAvailable, sendAttendanceSMS } from "@/lib/notifications/sms"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  canMarkAttendance,
+  isAdminRole,
+  isStaffRole,
+} from "@/components/school-dashboard/attendance/authorization"
 import { markAttendanceSchema } from "@/components/school-dashboard/attendance/validation"
+
+import { getTeacherClassIds } from "./helpers"
 
 // ============================================================================
 // Types
@@ -188,6 +196,12 @@ export async function markAttendance(
     }
 
     const session = await auth()
+    if (!session?.user?.role || !canMarkAttendance(session.user.role as any)) {
+      return {
+        success: false,
+        error: "Unauthorized: insufficient role to mark attendance",
+      }
+    }
     const parsed = markAttendanceSchema.parse(input)
 
     const statusMap: Record<"present" | "absent" | "late", AttendanceStatus> = {
@@ -233,10 +247,9 @@ export async function markAttendance(
         },
       })
 
-      let result
       if (existing) {
-        result = await db.attendance.update({
-          where: { id: existing.id },
+        await db.attendance.updateMany({
+          where: { id: existing.id, schoolId },
           data: {
             status: finalStatus,
             markedBy: session?.user?.id,
@@ -244,7 +257,7 @@ export async function markAttendance(
           },
         })
       } else {
-        result = await db.attendance.create({
+        await db.attendance.create({
           data: {
             schoolId,
             studentId: rec.studentId,
@@ -258,7 +271,7 @@ export async function markAttendance(
           },
         })
       }
-      results.push(result)
+      results.push(rec.studentId)
 
       // Track absent students for notification (not excused ones)
       if (rec.status === "absent" && !excusedStudentIds.has(rec.studentId)) {
@@ -314,6 +327,12 @@ export async function markSingleAttendance(input: {
     }
 
     const session = await auth()
+    if (!session?.user?.role || !canMarkAttendance(session.user.role as any)) {
+      return {
+        success: false,
+        error: "Unauthorized: insufficient role to mark attendance",
+      }
+    }
 
     // Find existing daily attendance (where periodId is null)
     const existing = await db.attendance.findFirst({
@@ -326,10 +345,9 @@ export async function markSingleAttendance(input: {
       },
     })
 
-    let result
     if (existing) {
-      result = await db.attendance.update({
-        where: { id: existing.id },
+      await db.attendance.updateMany({
+        where: { id: existing.id, schoolId },
         data: {
           status: input.status,
           method: input.method,
@@ -342,7 +360,7 @@ export async function markSingleAttendance(input: {
         },
       })
     } else {
-      result = await db.attendance.create({
+      await db.attendance.create({
         data: {
           schoolId,
           studentId: input.studentId,
@@ -380,7 +398,7 @@ export async function markSingleAttendance(input: {
     }
 
     revalidatePath("/attendance")
-    return { success: true, data: { attendance: result } }
+    return { success: true, data: { attendance: { id: existing?.id } } }
   } catch (error) {
     console.error("[markSingleAttendance] Error:", error)
     return {
@@ -399,6 +417,7 @@ export async function markSingleAttendance(input: {
 export async function getAttendanceList(input: {
   classId: string
   date: string
+  lang?: string
 }): Promise<
   ActionResponse<{
     rows: Array<{
@@ -420,10 +439,11 @@ export async function getAttendanceList(input: {
       .object({
         classId: z.string().min(1),
         date: z.string().min(1),
+        lang: z.string().optional(),
       })
       .parse(input)
 
-    const [enrollments, marks] = await Promise.all([
+    const [enrollments, marks, school] = await Promise.all([
       db.studentClass.findMany({
         where: { schoolId, classId: parsed.classId },
         include: {
@@ -445,7 +465,17 @@ export async function getAttendanceList(input: {
           deletedAt: null, // Exclude soft-deleted records
         },
       }),
+      parsed.lang
+        ? db.school.findFirst({
+            where: { id: schoolId },
+            select: { preferredLanguage: true },
+          })
+        : null,
     ])
+
+    const contentLang = (school?.preferredLanguage as "ar" | "en") || "ar"
+    const displayLang = (parsed.lang as "ar" | "en") || contentLang
+    const needsTranslation = contentLang !== displayLang
 
     const statusByStudent: Record<
       string,
@@ -459,19 +489,29 @@ export async function getAttendanceList(input: {
       }
     })
 
-    const rows = enrollments.map((e) => ({
-      studentId: e.studentId,
-      name: [e.student?.givenName, e.student?.surname]
-        .filter(Boolean)
-        .join(" "),
-      status:
-        (statusByStudent[e.studentId]?.status as
-          | "present"
-          | "absent"
-          | "late") || "present",
-      checkInTime: statusByStudent[e.studentId]?.checkInTime,
-      method: statusByStudent[e.studentId]?.method,
-    }))
+    const rows = await Promise.all(
+      enrollments.map(async (e) => {
+        const rawName = [e.student?.givenName, e.student?.surname]
+          .filter(Boolean)
+          .join(" ")
+
+        const name = needsTranslation
+          ? await getDisplayText(rawName, contentLang, displayLang, schoolId)
+          : rawName
+
+        return {
+          studentId: e.studentId,
+          name,
+          status:
+            (statusByStudent[e.studentId]?.status as
+              | "present"
+              | "absent"
+              | "late") || "present",
+          checkInTime: statusByStudent[e.studentId]?.checkInTime,
+          method: statusByStudent[e.studentId]?.method,
+        }
+      })
+    )
 
     return { success: true, data: { rows } }
   } catch (error) {
@@ -487,14 +527,21 @@ export async function getAttendanceList(input: {
 }
 
 /**
- * Get classes for selection dropdown
+ * Get classes for selection dropdown.
+ * Teachers see only their assigned classes; admins see all.
+ * Accepts optional gradeId/termId for filtering.
  */
-export async function getClassesForSelection(): Promise<
+export async function getClassesForSelection(input?: {
+  gradeId?: string
+  termId?: string
+}): Promise<
   ActionResponse<{
     classes: Array<{
       id: string
       name: string
       teacher: string | null
+      gradeId: string | null
+      gradeName: string | null
     }>
   }>
 > {
@@ -504,12 +551,53 @@ export async function getClassesForSelection(): Promise<
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
+    const session = await auth()
+    if (!session?.user?.id || !session.user.role) {
+      return { success: false, error: "Authentication required" }
+    }
+
+    if (!isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const where: {
+      schoolId: string
+      id?: { in: string[] }
+      gradeId?: string
+      termId?: string
+    } = { schoolId }
+
+    // Teacher scoping: only show assigned classes
+    if (session.user.role === "TEACHER") {
+      const teacherClassIds = await getTeacherClassIds(
+        schoolId,
+        session.user.id
+      )
+      if (teacherClassIds && teacherClassIds.length > 0) {
+        where.id = { in: teacherClassIds }
+      } else if (teacherClassIds && teacherClassIds.length === 0) {
+        return { success: true, data: { classes: [] } }
+      }
+    }
+
+    // Optional grade filter
+    if (input?.gradeId) {
+      where.gradeId = input.gradeId
+    }
+
+    // Optional term filter
+    if (input?.termId) {
+      where.termId = input.termId
+    }
+
     const classes = await db.class.findMany({
-      where: { schoolId },
+      where,
       orderBy: { name: "asc" },
       select: {
         id: true,
         name: true,
+        gradeId: true,
+        grade: { select: { name: true } },
         teacher: {
           select: { givenName: true, surname: true },
         },
@@ -525,6 +613,8 @@ export async function getClassesForSelection(): Promise<
           teacher: c.teacher
             ? `${c.teacher.givenName} ${c.teacher.surname}`
             : null,
+          gradeId: c.gradeId,
+          gradeName: c.grade?.name ?? null,
         })),
       },
     }
@@ -614,9 +704,9 @@ export async function quickMarkAllPresent(input: {
       })
 
       if (existing) {
-        // Update to present
-        await db.attendance.update({
-          where: { id: existing.id },
+        // Update to present (scoped by schoolId)
+        await db.attendance.updateMany({
+          where: { id: existing.id, schoolId },
           data: {
             status: "PRESENT",
             markedBy: session.user.id,
@@ -697,8 +787,8 @@ export async function checkOutStudent(input: {
     return { success: false, error: "Already checked out" }
   }
 
-  await db.attendance.update({
-    where: { id: attendance.id },
+  await db.attendance.updateMany({
+    where: { id: attendance.id, schoolId },
     data: { checkOutTime: new Date() },
   })
 
@@ -755,6 +845,12 @@ export async function deleteAttendance(attendanceId: string): Promise<{
   if (!session?.user) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
+  if (!canMarkAttendance(session.user.role as any)) {
+    return {
+      success: false,
+      error: "Unauthorized: insufficient role to delete attendance",
+    }
+  }
 
   try {
     // Verify attendance exists and belongs to this school
@@ -770,10 +866,10 @@ export async function deleteAttendance(attendanceId: string): Promise<{
       return { success: false, error: "Attendance record not found" }
     }
 
-    // Soft delete by setting deletedAt timestamp
+    // Soft delete by setting deletedAt timestamp (scoped by schoolId)
     const now = new Date()
-    await db.attendance.update({
-      where: { id: attendanceId },
+    await db.attendance.updateMany({
+      where: { id: attendanceId, schoolId },
       data: { deletedAt: now },
     })
 
@@ -811,6 +907,13 @@ export async function bulkDeleteAttendance(attendanceIds: string[]): Promise<{
   const session = await auth()
   if (!session?.user) {
     return { success: false, deleted: 0, error: ACTION_ERRORS.UNAUTHORIZED }
+  }
+  if (!canMarkAttendance(session.user.role as any)) {
+    return {
+      success: false,
+      deleted: 0,
+      error: "Unauthorized: insufficient role",
+    }
   }
 
   try {
@@ -859,6 +962,12 @@ export async function restoreAttendance(attendanceId: string): Promise<{
   if (!session?.user) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
+  if (!isAdminRole(session.user.role as any)) {
+    return {
+      success: false,
+      error: "Unauthorized: only admins can restore attendance records",
+    }
+  }
 
   try {
     // Verify attendance exists and is soft-deleted
@@ -874,9 +983,9 @@ export async function restoreAttendance(attendanceId: string): Promise<{
       return { success: false, error: "Deleted attendance record not found" }
     }
 
-    // Restore by clearing deletedAt
-    await db.attendance.update({
-      where: { id: attendanceId },
+    // Restore by clearing deletedAt (scoped by schoolId)
+    await db.attendance.updateMany({
+      where: { id: attendanceId, schoolId },
       data: { deletedAt: null },
     })
 

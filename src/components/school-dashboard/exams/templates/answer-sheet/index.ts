@@ -3,3 +3,4 @@
 
 export { StandardAnswerSheet } from "./standard"
 export { OmrAnswerSheet } from "./omr"
+export { GridAnswerSheet } from "./grid"

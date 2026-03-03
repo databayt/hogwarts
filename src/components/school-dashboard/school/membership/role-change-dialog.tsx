@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -20,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ErrorToast } from "@/components/atom/toast"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 import { changeRole } from "./actions"
 import type { MemberRow } from "./columns"
@@ -77,6 +78,7 @@ export function RoleChangeDialog({
       })
 
       if (result.success) {
+        SuccessToast(t.roleChanged || "Role changed")
         onOpenChange(false)
         setSelectedRole("")
         setDateOfBirth("")
@@ -172,20 +174,5 @@ export function RoleChangeDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
-
-// Inline Badge since it's just used for display here
-function Badge({
-  children,
-  variant,
-}: {
-  children: React.ReactNode
-  variant?: string
-}) {
-  return (
-    <span className="bg-secondary rounded-md px-2 py-1 text-sm">
-      {children}
-    </span>
   )
 }

@@ -42,6 +42,7 @@ import {
   Users,
   Zap,
 } from "lucide-react"
+import type { SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
@@ -64,14 +65,22 @@ import type { SupportedLanguage } from "@/components/translation/types"
 
 import { ExamCardFlip } from "./exam-card-flip"
 import GuardianExamsContent from "./guardian-content"
+import { OverviewFilters } from "./overview-filters"
 import StudentExamsContent from "./student-content"
+import TeacherExamsContent from "./teacher-content"
+import { TermSelector } from "./term-selector"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
+  searchParams: Promise<SearchParams>
 }
 
-export default async function ExamsContent({ dictionary, lang }: Props) {
+export default async function ExamsContent({
+  dictionary,
+  lang,
+  searchParams,
+}: Props) {
   // Role-based routing: show persona-specific dashboards for students/guardians
   const session = await auth()
   const role = session?.user?.role
@@ -82,8 +91,75 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
   if (role === "GUARDIAN") {
     return <GuardianExamsContent dictionary={dictionary} lang={lang} />
   }
+  if (role === "TEACHER") {
+    return <TeacherExamsContent dictionary={dictionary} lang={lang} />
+  }
 
   const { schoolId } = await getTenantContext()
+
+  // Parse termId from search params for term-scoped filtering
+  const sp = await searchParams
+  const termId = typeof sp.termId === "string" ? sp.termId : undefined
+
+  // Fetch available terms for the selector
+  const terms = schoolId
+    ? await db.term.findMany({
+        where: { schoolId },
+        include: { schoolYear: { select: { yearName: true } } },
+        orderBy: { startDate: "desc" },
+      })
+    : []
+
+  const termOptions = terms.map((t) => ({
+    id: t.id,
+    label: `${t.schoolYear.yearName} - Term ${t.termNumber}`,
+    isActive: t.isActive,
+  }))
+
+  const activeTermId = terms.find((t) => t.isActive)?.id
+
+  // Resolve selected term date range for scoping
+  const selectedTerm =
+    termId && termId !== "all" ? terms.find((t) => t.id === termId) : null
+  const termDateFilter = selectedTerm
+    ? { gte: selectedTerm.startDate, lte: selectedTerm.endDate }
+    : undefined
+
+  // Parse subject/grade filters from search params
+  const subjectId = typeof sp.subjectId === "string" ? sp.subjectId : undefined
+  const gradeId = typeof sp.gradeId === "string" ? sp.gradeId : undefined
+
+  // Fetch subjects and grades for filter chips
+  const [subjectOptions, gradeOptions] = schoolId
+    ? await Promise.all([
+        db.subject
+          .findMany({
+            where: { schoolId },
+            select: { id: true, subjectName: true },
+            orderBy: { subjectName: "asc" },
+            take: 20,
+          })
+          .then((subjects) =>
+            subjects.map((s) => ({ id: s.id, label: s.subjectName || s.id }))
+          ),
+        db.academicGrade
+          .findMany({
+            where: { schoolId },
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
+            take: 15,
+          })
+          .then((grades) =>
+            grades.map((g) => ({ id: g.id, label: g.name || g.id }))
+          ),
+      ])
+    : [[], []]
+
+  // Build subject/grade filter conditions for exam queries
+  const subjectGradeWhere = {
+    ...(subjectId ? { subjectId } : {}),
+    ...(gradeId ? { class: { gradeId } } : {}),
+  }
 
   // Get comprehensive stats from all blocks
   let examsCount = 0
@@ -115,6 +191,9 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     const lastMonth = new Date()
     lastMonth.setMonth(lastMonth.getMonth() - 1)
 
+    // Build exam date filter: term-scoped or unscoped
+    const examDateWhere = termDateFilter ? { examDate: termDateFilter } : {}
+
     // Fetch all stats in parallel to minimize server response time
     // Order matches the result destructuring below for clarity
     ;[
@@ -129,41 +208,60 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
       lastMonthExamsCount,
       lastMonthQuestionsCount,
     ] = await Promise.all([
-      db.exam.count({ where: { schoolId } }),
-      db.questionBank.count({ where: { schoolId } }),
+      db.exam.count({
+        where: { schoolId, ...examDateWhere, ...subjectGradeWhere },
+      }),
+      db.questionBank.count({
+        where: { schoolId, ...(subjectId ? { subjectId } : {}) },
+      }),
       db.examTemplate.count({ where: { schoolId } }),
       db.exam.count({
         where: {
           schoolId,
           status: "IN_PROGRESS",
-          examDate: { lt: today },
+          examDate: termDateFilter ?? { lt: today },
+          ...subjectGradeWhere,
         },
       }),
       db.exam.count({
         where: {
           schoolId,
           status: { in: ["PLANNED", "IN_PROGRESS"] },
-          examDate: { gte: today },
+          examDate: termDateFilter
+            ? { gte: termDateFilter.gte, lte: termDateFilter.lte }
+            : { gte: today },
+          ...subjectGradeWhere,
         },
       }),
       db.exam.count({
         where: {
           schoolId,
           status: "COMPLETED",
+          ...examDateWhere,
+          ...subjectGradeWhere,
         },
       }),
-      db.examResult.count({ where: { schoolId } }),
+      db.examResult.count({
+        where: {
+          schoolId,
+          ...(termDateFilter ? { exam: { examDate: termDateFilter } } : {}),
+          ...(subjectId ? { exam: { subjectId } } : {}),
+        },
+      }),
       db.student.count({ where: { schoolId } }),
       db.exam.count({
         where: {
           schoolId,
           createdAt: { lt: lastMonth },
+          ...examDateWhere,
+          ...subjectGradeWhere,
         },
       }),
       db.questionBank.count({
         where: {
           schoolId,
           createdAt: { lt: lastMonth },
+          ...(subjectId ? { subjectId } : {}),
         },
       }),
     ])
@@ -173,7 +271,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
       where: {
         schoolId,
         status: { in: ["PLANNED", "IN_PROGRESS"] },
-        examDate: { gte: today },
+        examDate: termDateFilter ?? { gte: today },
+        ...subjectGradeWhere,
       },
       orderBy: { examDate: "asc" },
       select: {
@@ -295,6 +394,14 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-8">
+      {/* Filters: Term + Subject/Grade */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <OverviewFilters subjects={subjectOptions} grades={gradeOptions} />
+        {termOptions.length > 0 && (
+          <TermSelector terms={termOptions} currentTermId={activeTermId} />
+        )}
+      </div>
+
       {/* Hero Section: Card Flip + 2x2 Stats Grid */}
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         {/* Card Flip - Next Exam */}

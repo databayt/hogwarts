@@ -117,29 +117,17 @@ export const PROVIDER_CONFIG: Record<
     features: string[]
   }
 > = {
-  vercel_blob: {
-    name: "Vercel Blob",
-    maxSize: 500 * 1024 * 1024, // 500 MB
-    tier: "hot",
-    features: ["fast_access", "cdn", "automatic_cleanup"],
-  },
   aws_s3: {
     name: "AWS S3",
     maxSize: 5 * 1024 * 1024 * 1024, // 5 GB
-    tier: "warm",
-    features: ["large_files", "signed_urls", "lifecycle_policies"],
+    tier: "hot",
+    features: ["large_files", "signed_urls", "lifecycle_policies", "cdn"],
   },
   cloudflare_r2: {
     name: "Cloudflare R2",
     maxSize: 5 * 1024 * 1024 * 1024, // 5 GB
     tier: "cold",
     features: ["archive", "cost_effective", "s3_compatible"],
-  },
-  imagekit: {
-    name: "ImageKit",
-    maxSize: 50 * 1024 * 1024, // 50 MB
-    tier: "hot",
-    features: ["image_optimization", "transformations", "cdn"],
   },
 } as const
 
@@ -361,48 +349,21 @@ export const STORAGE_CONFIG = {
 
   // Storage providers
   PROVIDERS: {
-    VERCEL_BLOB: "vercel_blob",
     AWS_S3: "aws_s3",
     CLOUDFLARE_R2: "cloudflare_r2",
   },
 
-  // Provider selection rules
+  // Provider selection rules — always S3
   getProvider: (
-    fileSize: number,
-    fileType: "video" | "material" | "image"
+    _fileSize: number,
+    _fileType: "video" | "material" | "image"
   ): string => {
-    // For videos over 500MB, use extended storage if configured
-    if (
-      fileType === "video" &&
-      fileSize > STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB.video
-    ) {
-      // Check which extended provider is available
-      if (process.env.CLOUDFLARE_R2_ACCOUNT_ID)
-        return STORAGE_CONFIG.PROVIDERS.CLOUDFLARE_R2
-      if (process.env.AWS_S3_BUCKET) return STORAGE_CONFIG.PROVIDERS.AWS_S3
-
-      // No extended storage configured, reject file
-      throw new Error(
-        `Video file size (${(fileSize / (1024 * 1024)).toFixed(2)} MB) exceeds Vercel Blob limit. ` +
-          `Please configure AWS S3 or Cloudflare R2 for large video files.`
-      )
-    }
-
-    // Use Vercel Blob for small files
-    return STORAGE_CONFIG.PROVIDERS.VERCEL_BLOB
+    return STORAGE_CONFIG.PROVIDERS.AWS_S3
   },
 
-  // Get max size for file type based on available storage
+  // Get max size for file type — always extended (S3)
   getMaxSize: (fileType: "video" | "material" | "image"): number => {
-    // Check if extended storage is configured
-    const hasExtendedStorage =
-      process.env.CLOUDFLARE_R2_ACCOUNT_ID || process.env.AWS_S3_BUCKET
-
-    if (hasExtendedStorage) {
-      return STORAGE_CONFIG.MAX_SIZES.EXTENDED[fileType]
-    }
-
-    return STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB[fileType]
+    return STORAGE_CONFIG.MAX_SIZES.EXTENDED[fileType]
   },
 } as const
 

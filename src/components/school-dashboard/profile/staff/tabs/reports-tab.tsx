@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Staff Reports Tab Component
  * Displays generated reports, analytics, and documentation
@@ -419,7 +416,7 @@ export function ReportsTab({
               {/* Search and Filters */}
               <div className="flex flex-col gap-4 sm:flex-row">
                 <div className="relative flex-1">
-                  <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
                   <Input
                     placeholder="Search reports..."
                     value={searchQuery}

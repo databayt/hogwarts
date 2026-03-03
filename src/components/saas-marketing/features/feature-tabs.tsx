@@ -8,6 +8,7 @@ import { useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import Card from "@/components/atom/card"
+import { SeeMore } from "@/components/atom/see-more"
 import type { Locale } from "@/components/internationalization/config"
 
 import { FEATURES } from "./constants"
@@ -99,16 +100,12 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
       </div>
 
       {/* See more */}
-      {hasMore && !expanded && (
-        <div className="flex justify-center pb-8">
-          <button
-            onClick={() => setExpanded(true)}
-            className="text-muted-foreground hover:text-foreground underline-offset-4 transition-colors hover:underline"
-          >
-            See more
-          </button>
-        </div>
-      )}
+      <SeeMore
+        hasMore={hasMore && !expanded}
+        onClick={() => setExpanded(true)}
+        label="See more"
+        className="pb-8"
+      />
     </>
   )
 }

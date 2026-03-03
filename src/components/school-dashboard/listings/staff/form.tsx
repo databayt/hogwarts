@@ -3,7 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
+import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Camera, Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
@@ -23,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { uploadFile } from "@/components/file"
 
 import { createStaff, updateStaff } from "./actions"
 import {
@@ -46,7 +49,32 @@ export function StaffForm({
   onCancel,
 }: StaffFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [avatarUrl, setAvatarUrl] = React.useState(
+    initialData?.profilePhotoUrl || ""
+  )
+  const [isUploading, setIsUploading] = React.useState(false)
+  const fileRef = React.useRef<HTMLInputElement>(null)
   const isEdit = !!initialData?.id
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const result = await uploadFile(fd, {
+        category: "image",
+        folder: "avatars",
+      })
+      if (result.success) {
+        setAvatarUrl(result.url)
+        form.setValue("profilePhotoUrl", result.url)
+      }
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const form = useForm<StaffCreateInput>({
     resolver: zodResolver(staffCreateSchema) as any,
@@ -94,6 +122,48 @@ export function StaffForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Avatar Upload */}
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            className="relative size-20 shrink-0 overflow-hidden rounded-full border"
+            onClick={() => fileRef.current?.click()}
+            disabled={isUploading}
+          >
+            {avatarUrl ? (
+              <Image
+                src={avatarUrl}
+                alt="Photo"
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="bg-muted flex size-full items-center justify-center">
+                <Camera className="text-muted-foreground size-6" />
+              </div>
+            )}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+              <Camera className="size-5 text-white" />
+            </div>
+            {isUploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <Loader2 className="size-5 animate-spin text-white" />
+              </div>
+            )}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
+          <div>
+            <p className="text-sm font-medium">Profile Photo</p>
+            <p className="text-muted-foreground text-xs">Click to upload</p>
+          </div>
+        </div>
+
         {/* Basic Information */}
         <div className="grid grid-cols-2 gap-4">
           <FormField

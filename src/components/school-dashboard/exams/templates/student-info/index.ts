@@ -3,3 +3,5 @@
 
 export { StandardStudentInfo } from "./standard"
 export { BubbleIdStudentInfo } from "./bubble-id"
+export { TableStudentInfo } from "./table"
+export { PhotoStudentInfo } from "./photo"

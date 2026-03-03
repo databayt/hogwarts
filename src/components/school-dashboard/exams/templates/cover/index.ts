@@ -3,3 +3,4 @@
 
 export { StandardCover } from "./standard"
 export { TableOfContents } from "./toc"
+export { MinistryCover } from "./ministry"

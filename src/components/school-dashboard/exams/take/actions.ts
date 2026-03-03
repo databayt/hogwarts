@@ -183,6 +183,7 @@ export async function startExamSession(input: StartExamSessionInput) {
         const questionsWithOptions = await db.questionBank.findMany({
           where: {
             id: { in: questionOrder },
+            schoolId,
             questionType: { in: ["MULTIPLE_CHOICE", "TRUE_FALSE"] },
           },
           select: { id: true, options: true },

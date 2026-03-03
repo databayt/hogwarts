@@ -254,8 +254,8 @@ export const updateExamSecured = secureExamAction.update(
       if (typeof rest.instructions !== "undefined")
         data.instructions = rest.instructions || null
 
-      await db.exam.update({
-        where: { id },
+      await db.exam.updateMany({
+        where: { id, schoolId },
         data,
       })
 
@@ -342,8 +342,8 @@ export const deleteExamSecured = secureExamAction.delete(
         }
       }
 
-      await db.exam.delete({
-        where: { id: examId },
+      await db.exam.deleteMany({
+        where: { id: examId, schoolId },
       })
 
       revalidatePath("/exams")

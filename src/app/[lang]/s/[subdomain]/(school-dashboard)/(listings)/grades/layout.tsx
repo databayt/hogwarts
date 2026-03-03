@@ -16,11 +16,16 @@ export default async function GradesLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.grades
 
-  // Grades page navigation (5 links)
+  // Grades page navigation (7 links)
   const gradesPages: PageNavItem[] = [
     { name: d?.navAll || "All", href: `/${lang}/grades` },
     { name: d?.navGenerate || "Generate", href: `/${lang}/grades/generate` },
     { name: d?.navReports || "Reports", href: `/${lang}/grades/reports` },
+    { name: d?.navPromotion || "Promotion", href: `/${lang}/grades/promotion` },
+    {
+      name: d?.navTranscripts || "Transcripts",
+      href: `/${lang}/grades/transcripts`,
+    },
     { name: d?.navAnalytics || "Analytics", href: `/${lang}/grades/analytics` },
     { name: d?.navSettings || "Settings", href: `/${lang}/grades/settings` },
   ]

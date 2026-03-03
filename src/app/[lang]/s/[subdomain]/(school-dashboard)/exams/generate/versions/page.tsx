@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+
 import type { Locale } from "@/components/internationalization/config"
 import { VersionLibrary } from "@/components/school-dashboard/exams/generate/version-library"
 
@@ -13,7 +16,12 @@ export default async function ExamVersionsPage({
   params,
   searchParams,
 }: PageProps) {
-  await params
+  const { lang } = await params
+
+  const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams`)
+  }
   const { examId } = await searchParams
 
   if (!examId) {

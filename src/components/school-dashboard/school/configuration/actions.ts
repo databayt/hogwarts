@@ -291,6 +291,11 @@ export async function updatePlanLimits(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    // Only DEVELOPER can modify plan limits
+    if (session?.user?.role !== "DEVELOPER") {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     // Validate input
     const validatedData = planLimitsSchema.parse(data)
 

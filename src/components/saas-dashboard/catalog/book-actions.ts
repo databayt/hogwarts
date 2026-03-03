@@ -3,87 +3,129 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import { catalogBookSchema } from "./book-validation"
-
-// ============================================================================
-// Authorization helper — DEVELOPER only, NO schoolId
-// ============================================================================
-
-async function requireDeveloper() {
-  const session = await auth()
-  if (session?.user?.role !== "DEVELOPER") {
-    throw new Error("Unauthorized: DEVELOPER role required")
-  }
-  return session
-}
 
 // ============================================================================
 // CatalogBook CRUD
 // ============================================================================
 
-export async function createCatalogBook(data: FormData) {
-  await requireDeveloper()
+export async function createCatalogBook(
+  data: FormData
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    await requireDeveloper()
 
-  const raw = Object.fromEntries(data)
-  const tags = data.getAll("tags") as string[]
+    const raw = Object.fromEntries(data)
+    const tags = data.getAll("tags") as string[]
 
-  const validated = catalogBookSchema.parse({
-    ...raw,
-    tags: tags.length > 0 ? tags : [],
-    publicationYear: raw.publicationYear
-      ? Number(raw.publicationYear)
-      : undefined,
-    pageCount: raw.pageCount ? Number(raw.pageCount) : undefined,
-    digitalFileSize: raw.digitalFileSize
-      ? Number(raw.digitalFileSize)
-      : undefined,
-  })
+    const validated = catalogBookSchema.parse({
+      ...raw,
+      tags: tags.length > 0 ? tags : [],
+      publicationYear: raw.publicationYear
+        ? Number(raw.publicationYear)
+        : undefined,
+      pageCount: raw.pageCount ? Number(raw.pageCount) : undefined,
+      digitalFileSize: raw.digitalFileSize
+        ? Number(raw.digitalFileSize)
+        : undefined,
+    })
 
-  const book = await db.catalogBook.create({
-    data: validated,
-  })
+    const book = await db.catalogBook.create({
+      data: {
+        ...validated,
+        approvalStatus: "APPROVED",
+        visibility: "PUBLIC",
+        status: "PUBLISHED",
+      },
+    })
 
-  revalidatePath("/catalog/books")
-  return { success: true, book }
+    revalidatePath("/catalog/books")
+    return { success: true, data: { id: book.id } }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create catalog book",
+    }
+  }
 }
 
-export async function updateCatalogBook(id: string, data: FormData) {
-  await requireDeveloper()
+export async function updateCatalogBook(
+  id: string,
+  data: FormData
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    await requireDeveloper()
 
-  const raw = Object.fromEntries(data)
-  const tags = data.getAll("tags") as string[]
+    const existing = await db.catalogBook.findUnique({ where: { id } })
+    if (!existing) {
+      return { success: false, error: "Catalog book not found" }
+    }
 
-  const validated = catalogBookSchema.partial().parse({
-    ...raw,
-    tags: tags.length > 0 ? tags : undefined,
-    publicationYear: raw.publicationYear
-      ? Number(raw.publicationYear)
-      : undefined,
-    pageCount: raw.pageCount ? Number(raw.pageCount) : undefined,
-    digitalFileSize: raw.digitalFileSize
-      ? Number(raw.digitalFileSize)
-      : undefined,
-  })
+    const raw = Object.fromEntries(data)
+    const tags = data.getAll("tags") as string[]
 
-  const book = await db.catalogBook.update({
-    where: { id },
-    data: validated,
-  })
+    const validated = catalogBookSchema.partial().parse({
+      ...raw,
+      tags: tags.length > 0 ? tags : undefined,
+      publicationYear: raw.publicationYear
+        ? Number(raw.publicationYear)
+        : undefined,
+      pageCount: raw.pageCount ? Number(raw.pageCount) : undefined,
+      digitalFileSize: raw.digitalFileSize
+        ? Number(raw.digitalFileSize)
+        : undefined,
+    })
 
-  revalidatePath("/catalog/books")
-  revalidatePath(`/catalog/books/${id}`)
-  return { success: true, book }
+    // Strip server-controlled fields — prevent client from bypassing review
+    const { approvalStatus, visibility, status, ...safeData } = validated
+
+    const book = await db.catalogBook.update({
+      where: { id },
+      data: safeData,
+    })
+
+    revalidatePath("/catalog/books")
+    revalidatePath(`/catalog/books/${id}`)
+    return { success: true, data: { id: book.id } }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update catalog book",
+    }
+  }
 }
 
-export async function deleteCatalogBook(id: string) {
-  await requireDeveloper()
+export async function deleteCatalogBook(id: string): Promise<ActionResponse> {
+  try {
+    await requireDeveloper()
 
-  await db.catalogBook.delete({ where: { id } })
+    const existing = await db.catalogBook.findUnique({ where: { id } })
+    if (!existing) {
+      return { success: false, error: "Catalog book not found" }
+    }
 
-  revalidatePath("/catalog/books")
-  return { success: true }
+    await db.catalogBook.delete({ where: { id } })
+
+    revalidatePath("/catalog/books")
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete catalog book",
+    }
+  }
 }

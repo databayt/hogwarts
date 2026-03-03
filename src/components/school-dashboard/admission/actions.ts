@@ -24,8 +24,6 @@ import {
   type CampaignFormData,
 } from "./validation"
 
-type ActionResult<T = unknown> = ActionResponse<T>
-
 // ============================================================================
 // Campaign Actions
 // ============================================================================
@@ -36,7 +34,7 @@ export async function getCampaigns(params: {
   name?: string
   status?: string
   academicYear?: string
-}): Promise<ActionResult<{ rows: unknown[]; total: number }>> {
+}): Promise<ActionResponse<{ rows: unknown[]; total: number }>> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -72,7 +70,7 @@ export async function getCampaigns(params: {
 }
 
 export async function getCampaign(params: { id: string }): Promise<
-  ActionResult<{
+  ActionResponse<{
     id: string
     name: string
     academicYear: string
@@ -122,7 +120,7 @@ export async function getCampaign(params: { id: string }): Promise<
 
 export async function createCampaign(
   data: CampaignFormData
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResponse<{ id: string }>> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -173,7 +171,7 @@ export async function createCampaign(
 
 export async function updateCampaign(
   data: CampaignFormData & { id: string }
-): Promise<ActionResult> {
+): Promise<ActionResponse> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -224,7 +222,7 @@ export async function updateCampaign(
 
 export async function deleteCampaign(params: {
   id: string
-}): Promise<ActionResult> {
+}): Promise<ActionResponse> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -275,7 +273,7 @@ export async function getApplications(params: {
   campaignId?: string
   status?: string
   applyingForClass?: string
-}): Promise<ActionResult<{ rows: unknown[]; total: number }>> {
+}): Promise<ActionResponse<{ rows: unknown[]; total: number }>> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -318,7 +316,7 @@ export async function getApplications(params: {
 export async function updateApplicationStatus(params: {
   id: string
   status: string
-}): Promise<ActionResult> {
+}): Promise<ActionResponse> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -356,7 +354,7 @@ export async function getMeritListData(params: {
   campaignId?: string
   category?: string
   status?: string
-}): Promise<ActionResult<{ rows: unknown[]; total: number }>> {
+}): Promise<ActionResponse<{ rows: unknown[]; total: number }>> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -397,7 +395,7 @@ export async function getMeritListData(params: {
 
 export async function generateMeritList(params: {
   campaignId: string
-}): Promise<ActionResult> {
+}): Promise<ActionResponse> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -422,13 +420,15 @@ export async function generateMeritList(params: {
       ],
     })
 
-    // Update merit ranks
-    for (let i = 0; i < applications.length; i++) {
-      await db.application.update({
-        where: { id: applications[i].id },
-        data: { meritRank: i + 1 },
-      })
-    }
+    // Update merit ranks in parallel
+    await Promise.all(
+      applications.map((app, i) =>
+        db.application.update({
+          where: { id: app.id },
+          data: { meritRank: i + 1 },
+        })
+      )
+    )
 
     revalidatePath("/admission/merit")
     return { success: true, data: null }
@@ -449,7 +449,7 @@ export async function getEnrollmentData(params: {
   offerStatus?: string
   feeStatus?: string
   documentStatus?: string
-}): Promise<ActionResult<{ rows: unknown[]; total: number }>> {
+}): Promise<ActionResponse<{ rows: unknown[]; total: number }>> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -496,7 +496,7 @@ export async function getEnrollmentData(params: {
 
 export async function confirmEnrollment(params: {
   id: string
-}): Promise<ActionResult> {
+}): Promise<ActionResponse> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -744,7 +744,7 @@ export async function confirmEnrollment(params: {
 export async function recordPayment(params: {
   id: string
   paymentId: string
-}): Promise<ActionResult> {
+}): Promise<ActionResponse> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -779,7 +779,7 @@ export async function recordPayment(params: {
 export async function getAvailableSectionsForPlacement(params: {
   applyingForClass: string
 }): Promise<
-  ActionResult<
+  ActionResponse<
     Array<{
       id: string
       name: string
@@ -853,7 +853,7 @@ export const getAvailableClassesForPlacement = getAvailableSectionsForPlacement
 export async function placeStudentInSection(params: {
   applicationId: string
   sectionId: string
-}): Promise<ActionResult> {
+}): Promise<ActionResponse> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -976,14 +976,14 @@ export const placeStudentInClass =
   placeStudentInSection as unknown as (params: {
     applicationId: string
     classId: string
-  }) => Promise<ActionResult>
+  }) => Promise<ActionResponse>
 
 // ============================================================================
 // Helper Actions
 // ============================================================================
 
 export async function fetchCampaignOptions(): Promise<
-  ActionResult<{ value: string; label: string }[]>
+  ActionResponse<{ value: string; label: string }[]>
 > {
   try {
     const session = await auth()

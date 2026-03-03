@@ -1,17 +1,81 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { BookOpen, Clock, FileText, GraduationCap } from "lucide-react"
 
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-import { getCatalogSubjectsForMockFilter, getMockExams } from "./actions"
+import { getEnrolledCatalogSubjectIds } from "../lib/scope"
+import { getStudentAttempts } from "../shared/attempt-actions"
+import { AttemptHistory } from "../shared/attempt-history"
+import {
+  getCatalogSubjectsForMockFilter,
+  getMockExams,
+  getSchoolMockExams,
+} from "./actions"
 import { MockExamList } from "./list"
 
 export async function MockContent() {
-  const [exams, subjects] = await Promise.all([
-    getMockExams(),
-    getCatalogSubjectsForMockFilter(),
+  const { schoolId } = await getTenantContext()
+  const session = await auth()
+  const role = session?.user?.role
+
+  // For students/guardians, scope to enrolled catalog subjects
+  const enrolledCatalogSubjectIds =
+    schoolId && ["STUDENT", "GUARDIAN"].includes(role || "")
+      ? await getEnrolledCatalogSubjectIds(role, session?.user?.id, schoolId)
+      : null
+
+  // For school mocks, get enrolled school subject IDs (for student/guardian)
+  let enrolledSchoolSubjectIds: string[] | undefined
+  if (schoolId && ["STUDENT", "GUARDIAN"].includes(role || "")) {
+    let studentIds: string[] = []
+    if (role === "STUDENT") {
+      const student = await db.student.findFirst({
+        where: { userId: session?.user?.id, schoolId },
+        select: { id: true },
+      })
+      if (student) studentIds = [student.id]
+    } else if (role === "GUARDIAN") {
+      const guardian = await db.guardian.findFirst({
+        where: { userId: session?.user?.id, schoolId },
+        select: { id: true },
+      })
+      if (guardian) {
+        const sgs = await db.studentGuardian.findMany({
+          where: { guardianId: guardian.id, schoolId },
+          select: { studentId: true },
+        })
+        studentIds = sgs.map((sg) => sg.studentId)
+      }
+    }
+    if (studentIds.length > 0) {
+      const classes = await db.studentClass.findMany({
+        where: { studentId: { in: studentIds }, schoolId },
+        select: { class: { select: { subjectId: true } } },
+      })
+      enrolledSchoolSubjectIds = [
+        ...new Set(
+          classes.map((c) => c.class.subjectId).filter(Boolean) as string[]
+        ),
+      ]
+    }
+  }
+
+  const isStudentOrGuardian = ["STUDENT", "GUARDIAN"].includes(role || "")
+
+  const [exams, subjects, schoolMocks, attempts] = await Promise.all([
+    getMockExams({
+      enrolledCatalogSubjectIds: enrolledCatalogSubjectIds ?? undefined,
+    }),
+    getCatalogSubjectsForMockFilter(enrolledCatalogSubjectIds ?? undefined),
+    schoolId
+      ? getSchoolMockExams(schoolId, enrolledSchoolSubjectIds)
+      : Promise.resolve([]),
+    isStudentOrGuardian ? getStudentAttempts() : Promise.resolve([]),
   ])
 
   const avgDuration =
@@ -88,7 +152,15 @@ export async function MockContent() {
         </Card>
       </div>
 
-      <MockExamList exams={exams} subjects={subjects} />
+      <MockExamList
+        exams={exams}
+        subjects={subjects}
+        schoolMocks={schoolMocks}
+      />
+
+      {isStudentOrGuardian && attempts.length > 0 && (
+        <AttemptHistory attempts={attempts} title="My Mock Exam Attempts" />
+      )}
     </div>
   )
 }

@@ -1,17 +1,8 @@
 "use client"
 
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState, useTransition } from "react"
 import useSWR from "swr"
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -160,9 +151,9 @@ function generateMockData(
 // Helpers
 // ============================================================================
 
-function formatDate(dateStr: string, locale: string = "ar"): string {
+function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
-  return date.toLocaleDateString(locale, {
+  return date.toLocaleDateString("en-US", {
     weekday: "long",
     month: "short",
     day: "numeric",
@@ -295,21 +286,9 @@ export default function ActivityGraph({
         {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-foreground text-base font-semibold">
-            {graphData.totalActivities.toLocaleString()} {roleLabel} in{" "}
-            {selectedYear}
+            {graphData.totalActivities.toLocaleString()} contributions in the
+            last year
           </h3>
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="h-8 w-24 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map((year) => (
-                <SelectItem key={year} value={year} className="text-xs">
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Error indicator (subtle) */}

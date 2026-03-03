@@ -129,7 +129,7 @@ export function ConfigureForm({
         })),
       })
 
-      if (result.success) {
+      if (result.success && result.data) {
         toast.success(
           t?.success?.created ||
             `Created ${result.data.created} section${result.data.created !== 1 ? "s" : ""} with rooms`

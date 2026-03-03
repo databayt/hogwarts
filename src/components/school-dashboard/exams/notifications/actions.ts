@@ -38,8 +38,8 @@ export async function sendExamNotification(
   }
 
   // Get exam details if not provided
-  const exam = await db.exam.findUnique({
-    where: { id: data.examId },
+  const exam = await db.exam.findFirst({
+    where: { id: data.examId, schoolId },
     include: {
       class: {
         include: {
@@ -67,7 +67,7 @@ export async function sendExamNotification(
     },
   })
 
-  if (!exam || exam.schoolId !== schoolId) {
+  if (!exam) {
     throw new Error("Exam not found")
   }
 
@@ -109,15 +109,15 @@ export async function notifyExamScheduled(examId: string) {
     throw new Error("Unauthorized")
   }
 
-  const exam = await db.exam.findUnique({
-    where: { id: examId },
+  const exam = await db.exam.findFirst({
+    where: { id: examId, schoolId },
     include: {
       subject: true,
       class: true,
     },
   })
 
-  if (!exam || exam.schoolId !== schoolId) {
+  if (!exam) {
     throw new Error("Exam not found")
   }
 
@@ -147,15 +147,15 @@ export async function notifyExamReminder(examId: string, hoursUntil: number) {
     throw new Error("Unauthorized")
   }
 
-  const exam = await db.exam.findUnique({
-    where: { id: examId },
+  const exam = await db.exam.findFirst({
+    where: { id: examId, schoolId },
     include: {
       subject: true,
       class: true,
     },
   })
 
-  if (!exam || exam.schoolId !== schoolId) {
+  if (!exam) {
     throw new Error("Exam not found")
   }
 
@@ -295,15 +295,15 @@ export async function notifyRetakeAvailable(
     throw new Error("Unauthorized")
   }
 
-  const exam = await db.exam.findUnique({
-    where: { id: examId },
+  const exam = await db.exam.findFirst({
+    where: { id: examId, schoolId },
     include: {
       subject: true,
       class: true,
     },
   })
 
-  if (!exam || exam.schoolId !== schoolId) {
+  if (!exam) {
     throw new Error("Exam not found")
   }
 

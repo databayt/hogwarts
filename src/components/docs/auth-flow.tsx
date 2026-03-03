@@ -3,24 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import {
-  ArrowDown,
-  ArrowRight,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Copy,
-  ExternalLink,
-  GitBranch,
-  Key,
-  Link2,
-  Lock,
-  LogIn,
-  Shield,
-  User,
-  Users,
-  X,
-} from "lucide-react"
+import { Check, ChevronDown, ChevronRight, Copy } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -33,7 +16,6 @@ import {
 
 // Types
 type FlowStepType = "start" | "decision" | "action" | "end" | "branch"
-type FlowStatus = "success" | "error" | "warning" | "info" | "neutral"
 
 interface Credentials {
   email: string
@@ -48,8 +30,6 @@ interface FlowStepData {
   description?: string
   url?: string
   credentials?: Credentials
-  status?: FlowStatus
-  icon?: React.ReactNode
   branches?: {
     label: string
     condition: string
@@ -81,8 +61,7 @@ function CopyButton({ value }: { value: string }) {
 // URL display component
 function UrlDisplay({ url }: { url: string }) {
   return (
-    <div className="bg-muted/50 mt-2 flex items-center gap-2 rounded-md border px-3 py-1.5">
-      <Link2 className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0" />
+    <div className="bg-muted/50 mt-2 flex items-center gap-2 rounded-md px-3 py-1.5">
       <code className="text-muted-foreground flex-1 truncate font-mono text-xs">
         {url}
       </code>
@@ -94,9 +73,8 @@ function UrlDisplay({ url }: { url: string }) {
 // Credentials display component
 function CredentialsDisplay({ credentials }: { credentials: Credentials }) {
   return (
-    <div className="bg-muted/30 mt-2 space-y-1.5 rounded-md border p-3">
-      <div className="text-muted-foreground mb-2 flex items-center gap-1.5 text-xs font-medium">
-        <Key className="h-3 w-3" />
+    <div className="bg-muted/30 mt-2 space-y-1.5 rounded-md p-3">
+      <div className="text-muted-foreground mb-2 text-xs font-medium">
         Test Credentials
       </div>
       <div className="flex items-center justify-between gap-2">
@@ -125,38 +103,6 @@ function CredentialsDisplay({ credentials }: { credentials: Credentials }) {
   )
 }
 
-// Status badge component
-function StatusBadge({ status }: { status: FlowStatus }) {
-  const variants: Record<FlowStatus, { className: string; label: string }> = {
-    success: {
-      className: "bg-green-500/10 text-green-600 border-green-500/20",
-      label: "Success",
-    },
-    error: {
-      className: "bg-red-500/10 text-red-600 border-red-500/20",
-      label: "Error",
-    },
-    warning: {
-      className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-      label: "Warning",
-    },
-    info: {
-      className: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-      label: "Info",
-    },
-    neutral: { className: "bg-muted text-muted-foreground", label: "Neutral" },
-  }
-
-  return (
-    <Badge
-      variant="outline"
-      className={cn("text-xs", variants[status].className)}
-    >
-      {variants[status].label}
-    </Badge>
-  )
-}
-
 // Individual flow step component
 function FlowStep({
   step,
@@ -167,62 +113,18 @@ function FlowStep({
 }) {
   const [isOpen, setIsOpen] = useState(true)
 
-  const getStepIcon = () => {
-    if (step.icon) return step.icon
-    switch (step.type) {
-      case "start":
-        return <User className="h-4 w-4" />
-      case "decision":
-        return <GitBranch className="h-4 w-4" />
-      case "action":
-        return <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-      case "end":
-        return <Check className="h-4 w-4" />
-      default:
-        return <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-    }
-  }
-
-  const getStepColor = () => {
-    switch (step.type) {
-      case "start":
-        return "border-blue-500 bg-blue-500/10"
-      case "decision":
-        return "border-amber-500 bg-amber-500/10"
-      case "action":
-        return "border-border bg-background"
-      case "end":
-        return "border-green-500 bg-green-500/10"
-      default:
-        return "border-border bg-background"
-    }
-  }
-
   return (
     <div className="relative">
-      {/* Connector line */}
-      {!isLast && (
-        <div className="bg-border absolute start-5 top-12 bottom-0 w-px" />
-      )}
-
       {/* Step card */}
-      <div className={cn("relative rounded-lg border-2 p-4", getStepColor())}>
+      <div className="relative rounded-lg p-4">
         {/* Step header */}
-        <div className="flex items-start gap-3">
-          <div className="bg-background flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2">
-            {getStepIcon()}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h4 className="font-medium">{step.title}</h4>
-              {step.status && <StatusBadge status={step.status} />}
-            </div>
-            {step.description && (
-              <p className="text-muted-foreground mt-1 text-sm">
-                {step.description}
-              </p>
-            )}
-          </div>
+        <div>
+          <h4 className="font-medium">{step.title}</h4>
+          {step.description && (
+            <p className="text-muted-foreground mt-1 text-sm">
+              {step.description}
+            </p>
+          )}
         </div>
 
         {/* URL */}
@@ -237,7 +139,7 @@ function FlowStep({
         {step.branches && step.branches.length > 0 && (
           <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
             <CollapsibleTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full">
+              <Button variant="ghost" size="sm" className="w-full">
                 {isOpen ? (
                   <ChevronDown className="me-2 h-4 w-4" />
                 ) : (
@@ -248,11 +150,9 @@ function FlowStep({
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4 space-y-4">
               {step.branches.map((branch, idx) => (
-                <div key={idx} className="bg-muted/30 rounded-lg border p-4">
+                <div key={idx} className="bg-muted/30 rounded-lg p-4">
                   <div className="mb-3 flex items-center gap-2">
-                    <Badge variant={idx === 0 ? "default" : "secondary"}>
-                      {branch.label}
-                    </Badge>
+                    <Badge variant="secondary">{branch.label}</Badge>
                     <span className="text-muted-foreground text-xs">
                       {branch.condition}
                     </span>
@@ -273,10 +173,10 @@ function FlowStep({
         )}
       </div>
 
-      {/* Arrow to next step */}
+      {/* Connector */}
       {!isLast && (
-        <div className="flex justify-center py-2">
-          <ArrowDown className="text-muted-foreground h-5 w-5" />
+        <div className="flex justify-center py-1">
+          <span className="text-muted-foreground text-xs">|</span>
         </div>
       )}
     </div>
@@ -294,9 +194,9 @@ export function AuthFlowDiagram({
   steps: FlowStepData[]
 }) {
   return (
-    <div className="rounded-xl border p-6">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold">{title}</h3>
+    <div className="py-4">
+      <div className="mb-4">
+        <h3 className="font-semibold">{title}</h3>
         {description && (
           <p className="text-muted-foreground mt-1 text-sm">{description}</p>
         )}
@@ -328,14 +228,12 @@ export function PlatformLinkFlow() {
       description:
         "User clicks Platform link from school marketing site header",
       url: "https://demo.databayt.org/en",
-      icon: <ExternalLink className="h-4 w-4" />,
     },
     {
       id: "auth-check",
       type: "decision",
       title: "Is User Logged In?",
       description: "Check if user has an active session",
-      icon: <Shield className="h-4 w-4" />,
       branches: [
         {
           label: "NO - Guest",
@@ -376,7 +274,6 @@ export function PlatformLinkFlow() {
                       description:
                         "User is redirected to role-specific dashboard",
                       url: "https://demo.databayt.org/en/dashboard",
-                      status: "success",
                     },
                   ],
                 },
@@ -389,7 +286,6 @@ export function PlatformLinkFlow() {
                       type: "end",
                       title: "Error Message",
                       description: "Show error and allow retry",
-                      status: "error",
                     },
                   ],
                 },
@@ -431,7 +327,6 @@ export function PlatformLinkFlow() {
                                 password: "1234",
                                 role: "ADMIN",
                               },
-                              status: "success",
                             },
                           ],
                         },
@@ -451,7 +346,6 @@ export function PlatformLinkFlow() {
                                 password: "1234",
                                 role: "TEACHER",
                               },
-                              status: "success",
                             },
                           ],
                         },
@@ -470,7 +364,6 @@ export function PlatformLinkFlow() {
                                 password: "1234",
                                 role: "STUDENT",
                               },
-                              status: "success",
                             },
                           ],
                         },
@@ -487,7 +380,6 @@ export function PlatformLinkFlow() {
                       type: "end",
                       title: "Access Denied",
                       description: "User cannot access this school's dashboard",
-                      status: "error",
                     },
                   ],
                 },
@@ -517,13 +409,11 @@ export function GetStartedFlow() {
       title: 'Click "Get Started"',
       description: "User clicks Get Started button from SaaS marketing hero",
       url: "https://ed.databayt.org/en",
-      icon: <ExternalLink className="h-4 w-4" />,
     },
     {
       id: "auth-check",
       type: "decision",
       title: "Is User Logged In?",
-      icon: <Shield className="h-4 w-4" />,
       branches: [
         {
           label: "NO - Guest",
@@ -548,7 +438,6 @@ export function GetStartedFlow() {
               type: "action",
               title: "User Created/Found",
               description: "New user created with schoolId: null",
-              status: "info",
             },
             {
               id: "onboarding",
@@ -563,7 +452,6 @@ export function GetStartedFlow() {
               title: "School Created",
               description: "User becomes ADMIN, redirected to school dashboard",
               url: "https://{subdomain}.databayt.org/en/dashboard",
-              status: "success",
             },
           ],
         },
@@ -577,7 +465,6 @@ export function GetStartedFlow() {
               title: "Redirect to School",
               description: "User already has a school, go to dashboard",
               url: "https://{school}.databayt.org/en/dashboard",
-              status: "success",
             },
           ],
         },
@@ -591,7 +478,6 @@ export function GetStartedFlow() {
               title: "Continue to Onboarding",
               description: "Complete the school creation process",
               url: "https://ed.databayt.org/en/onboarding",
-              status: "info",
             },
           ],
         },
@@ -617,7 +503,6 @@ export function LiveDemoFlow() {
       title: 'Click "Live Demo"',
       description: "User clicks Live Demo button from SaaS marketing hero",
       url: "https://ed.databayt.org/en",
-      icon: <ExternalLink className="h-4 w-4" />,
     },
     {
       id: "new-tab",
@@ -667,7 +552,6 @@ export function LiveDemoFlow() {
               title: "Application Form",
               description: "Start admission application",
               url: "https://demo.databayt.org/en/apply",
-              status: "info",
             },
           ],
         },
@@ -681,7 +565,6 @@ export function LiveDemoFlow() {
               title: "Explore Pages",
               description: "Faculty, houses, events, contact",
               url: "https://demo.databayt.org/en",
-              status: "neutral",
             },
           ],
         },
@@ -707,7 +590,6 @@ export function LoginFlow() {
       title: "Visit Login Page",
       description: "User navigates to login page from any entry point",
       url: "https://ed.databayt.org/en/login",
-      icon: <LogIn className="h-4 w-4" />,
     },
     {
       id: "auth-options",
@@ -780,7 +662,6 @@ export function LoginFlow() {
                 password: "1234",
                 role: "DEVELOPER",
               },
-              status: "success",
             },
           ],
         },
@@ -799,7 +680,6 @@ export function LoginFlow() {
                 password: "1234",
                 role: "ADMIN",
               },
-              status: "success",
             },
           ],
         },
@@ -818,7 +698,6 @@ export function LoginFlow() {
                 password: "1234",
                 role: "USER",
               },
-              status: "info",
             },
           ],
         },
@@ -843,7 +722,6 @@ export function LogoutFlow() {
       type: "start",
       title: "Click Logout",
       description: "User clicks logout from avatar dropdown menu",
-      icon: <Lock className="h-4 w-4" />,
     },
     {
       id: "context-check",
@@ -861,7 +739,6 @@ export function LogoutFlow() {
               title: "Redirect to Homepage",
               description: "Session cleared, redirect to marketing homepage",
               url: "https://ed.databayt.org/en",
-              status: "success",
             },
           ],
         },
@@ -875,7 +752,6 @@ export function LogoutFlow() {
               title: "Redirect to School Site",
               description: "Session cleared, redirect to school public page",
               url: "https://demo.databayt.org/en",
-              status: "success",
             },
           ],
         },
@@ -887,6 +763,212 @@ export function LogoutFlow() {
     <AuthFlowDiagram
       title="Logout Flow"
       description="Context-aware logout with appropriate redirects"
+      steps={steps}
+    />
+  )
+}
+
+// DEVELOPER Dashboard Flow
+export function DeveloperDashboardFlow() {
+  const steps: FlowStepData[] = [
+    {
+      id: "start",
+      type: "start",
+      title: "Access SaaS Dashboard",
+      description:
+        "DEVELOPER navigates to the SaaS dashboard via login or direct URL",
+      url: "https://ed.databayt.org/en/dashboard",
+    },
+    {
+      id: "auth-method",
+      type: "decision",
+      title: "How Did User Arrive?",
+      branches: [
+        {
+          label: "Via Login Icon",
+          condition: "Click login from SaaS marketing",
+          steps: [
+            {
+              id: "login-saas",
+              type: "action",
+              title: "Login with context=saas",
+              description: "Login page knows user came from SaaS site",
+              url: "https://ed.databayt.org/en/login?context=saas",
+              credentials: {
+                email: "dev@databayt.org",
+                password: "1234",
+                role: "DEVELOPER",
+              },
+            },
+            {
+              id: "role-check-login",
+              type: "decision",
+              title: "Check Role",
+              branches: [
+                {
+                  label: "DEVELOPER",
+                  condition: "role === DEVELOPER",
+                  steps: [
+                    {
+                      id: "redirect-dash",
+                      type: "end",
+                      title: "Redirect to /dashboard",
+                      description: "Auto-redirect after login",
+                      url: "https://ed.databayt.org/en/dashboard",
+                    },
+                  ],
+                },
+                {
+                  label: "Other Role",
+                  condition: "USER, ADMIN, etc.",
+                  steps: [
+                    {
+                      id: "stay-marketing",
+                      type: "end",
+                      title: "Stay on Marketing Page",
+                      description:
+                        "Non-DEVELOPER users stay on /en after SaaS login",
+                      url: "https://ed.databayt.org/en",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: "Direct URL",
+          condition: "Navigate to /dashboard directly",
+          steps: [
+            {
+              id: "protected-route",
+              type: "action",
+              title: "Protected Route Check",
+              description: "Redirect to login with callbackUrl",
+              url: "https://ed.databayt.org/en/login?callbackUrl=/en/dashboard",
+            },
+            {
+              id: "role-check-direct",
+              type: "decision",
+              title: "Check Role After Login",
+              branches: [
+                {
+                  label: "DEVELOPER",
+                  condition: "role === DEVELOPER",
+                  steps: [
+                    {
+                      id: "access-dash",
+                      type: "end",
+                      title: "Access Dashboard",
+                      description: "Callback URL honored, dashboard renders",
+                      url: "https://ed.databayt.org/en/dashboard",
+                    },
+                  ],
+                },
+                {
+                  label: "Other Role",
+                  condition: "USER, ADMIN, etc.",
+                  steps: [
+                    {
+                      id: "access-denied",
+                      type: "end",
+                      title: "Access Denied",
+                      description: "Non-DEVELOPER redirected to /access-denied",
+                      url: "https://ed.databayt.org/en/access-denied",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ]
+
+  return (
+    <AuthFlowDiagram
+      title="DEVELOPER Dashboard Flow"
+      description="SaaS dashboard access — DEVELOPER-only with two entry paths"
+      steps={steps}
+    />
+  )
+}
+
+// Onboarding Wizard Flow
+export function OnboardingWizardFlow() {
+  const steps: FlowStepData[] = [
+    {
+      id: "hub",
+      type: "start",
+      title: "Onboarding Hub",
+      description: 'User arrives after clicking "Get Started" and logging in',
+      url: "https://ed.databayt.org/en/onboarding",
+    },
+    {
+      id: "about",
+      type: "action",
+      title: "1. About School",
+      description: "Overview and introduction",
+    },
+    {
+      id: "title",
+      type: "action",
+      title: "2. Title (Required)",
+      description: "School name — the only required field in this section",
+    },
+    {
+      id: "details",
+      type: "action",
+      title: "3-5. Description, Location, Stand Out",
+      description:
+        "School description & type, address & country, unique selling points",
+    },
+    {
+      id: "setup",
+      type: "action",
+      title: "6-9. Capacity, Branding, Import, Finish Setup",
+      description:
+        "Max students/teachers, logo & colors, data import, final configuration",
+    },
+    {
+      id: "community",
+      type: "action",
+      title: "10-11. Join, Visibility",
+      description: "Invite staff/teachers, set public or private",
+    },
+    {
+      id: "billing",
+      type: "action",
+      title: "12-13. Price, Discount",
+      description: "Tuition fees and discount rules",
+    },
+    {
+      id: "legal",
+      type: "action",
+      title: "14. Legal (Required)",
+      description: "Terms of service and privacy policy acceptance",
+    },
+    {
+      id: "subdomain",
+      type: "action",
+      title: "15. Subdomain (Required)",
+      description: "Reserve {name}.databayt.org",
+    },
+    {
+      id: "done",
+      type: "end",
+      title: "Congratulations!",
+      description:
+        "School created, user role upgraded from USER to ADMIN, redirected to new school dashboard",
+      url: "https://{subdomain}.databayt.org/en/dashboard",
+    },
+  ]
+
+  return (
+    <AuthFlowDiagram
+      title="Onboarding Wizard Flow"
+      description="15-step school creation wizard — from hub to live school"
       steps={steps}
     />
   )
@@ -946,20 +1028,17 @@ export function TestCredentialsReference() {
   ]
 
   return (
-    <div className="rounded-xl border p-6">
-      <div className="mb-4 flex items-center gap-2">
-        <Key className="h-5 w-5" />
-        <h3 className="text-lg font-semibold">Test Credentials</h3>
-      </div>
-      <p className="text-muted-foreground mb-4 text-sm">
-        Use these accounts to test different user journeys. All accounts use
-        password: <code className="bg-muted rounded px-1">1234</code>
+    <div className="py-4">
+      <h3 className="font-semibold">Test Credentials</h3>
+      <p className="text-muted-foreground mt-1 mb-4 text-sm">
+        All accounts use password:{" "}
+        <code className="bg-muted rounded px-1">1234</code>
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {credentials.map((cred) => (
           <div
             key={cred.email}
-            className="bg-muted/30 flex items-center justify-between rounded-lg border p-3"
+            className="bg-muted/30 flex items-center justify-between rounded-lg p-3"
           >
             <div>
               <div className="flex items-center gap-2">
@@ -967,7 +1046,7 @@ export function TestCredentialsReference() {
                 <CopyButton value={cred.email} />
               </div>
               <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="secondary" className="text-xs">
                   {cred.role}
                 </Badge>
                 <span>{cred.school}</span>
@@ -1016,14 +1095,11 @@ export function UrlsReference() {
   ]
 
   return (
-    <div className="rounded-xl border p-6">
-      <div className="mb-4 flex items-center gap-2">
-        <Link2 className="h-5 w-5" />
-        <h3 className="text-lg font-semibold">Key URLs</h3>
-      </div>
-      <div className="space-y-3">
+    <div className="py-4">
+      <h3 className="font-semibold">Key URLs</h3>
+      <div className="mt-4 space-y-3">
         {urls.map((item) => (
-          <div key={item.url} className="bg-muted/30 rounded-lg border p-3">
+          <div key={item.url} className="bg-muted/30 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <span className="font-medium">{item.label}</span>
               <CopyButton value={item.url} />

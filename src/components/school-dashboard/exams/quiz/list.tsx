@@ -3,10 +3,18 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState } from "react"
-import { BookOpen, Clock, FileText, Zap } from "lucide-react"
+import Link from "next/link"
+import { BookOpen, Clock, FileText, Play, Zap } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import {
   Select,
@@ -143,6 +151,14 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
                   </div>
                 )}
               </CardContent>
+              <CardFooter className="pt-0">
+                <Button asChild size="sm" className="w-full gap-1">
+                  <Link href={`mock/${quiz.id}/take`}>
+                    <Play className="h-3.5 w-3.5" />
+                    Start Quiz
+                  </Link>
+                </Button>
+              </CardFooter>
             </Card>
           ))}
         </div>

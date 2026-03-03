@@ -103,7 +103,7 @@ async function getTenants(searchParams: Props["searchParams"]) {
     catalogLevels: tenant._count.academicLevels,
     catalogGrades: tenant._count.academicGrades,
     createdAt: tenant.createdAt.toISOString(),
-    trialEndsAt: undefined,
+    trialEndsAt: undefined, // TODO: Requires School.trialEndsAt schema field
   }))
 
   return {

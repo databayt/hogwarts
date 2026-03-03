@@ -19,6 +19,8 @@
   "loadMore": "تحميل المزيد",
   "loading": "جاري التحميل...",
   "noLeadsFound": "لم يتم العثور على عملاء محتملين",
+  "noLeads": "لا يوجد عملاء محتملين",
+  "noLeadsDescription": "أنشئ عميلاً محتملاً جديداً للبدء",
   "confirmDelete": "هل أنت متأكد من حذف هذا العميل المحتمل؟",
   "leadScore": "نقاط العميل",
   "exportCSV": "تصدير CSV",
@@ -98,7 +100,8 @@
     "deleteSuccess": "تم حذف العميل المحتمل بنجاح",
     "createError": "فشل إنشاء العميل المحتمل",
     "updateError": "فشل تحديث العميل المحتمل",
-    "deleteError": "فشل حذف العميل المحتمل"
+    "deleteError": "فشل حذف العميل المحتمل",
+    "unexpectedError": "حدث خطأ غير متوقع"
   },
   "analytics": {
     "totalLeads": "إجمالي العملاء",

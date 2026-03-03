@@ -14,10 +14,17 @@ export const metadata = {
 
 interface Props {
   params: Promise<{ lang: Locale }>
+  searchParams: Promise<{
+    page?: string
+    limit?: string
+    action?: string
+    search?: string
+  }>
 }
 
-export default async function Observability({ params }: Props) {
+export default async function Observability({ params, searchParams }: Props) {
   const { lang } = await params
+  const resolvedSearchParams = await searchParams
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
@@ -30,7 +37,11 @@ export default async function Observability({ params }: Props) {
     <div className="space-y-6">
       <PageHeadingSetter title={d?.observability?.title || "Observability"} />
       <PageNav pages={observabilityPages} />
-      <ObservabilityContent dictionary={dictionary} lang={lang} />
+      <ObservabilityContent
+        dictionary={dictionary}
+        lang={lang}
+        searchParams={resolvedSearchParams}
+      />
     </div>
   )
 }

@@ -30,6 +30,8 @@ interface QuestionBankTableProps {
   perPage?: number
   dictionary?: Dictionary
   readOnly?: boolean
+  subjects?: { label: string; value: string }[]
+  subjectOptions?: { label: string; value: string }[]
 }
 
 function QuestionBankTableInner({
@@ -38,6 +40,8 @@ function QuestionBankTableInner({
   perPage = 20,
   dictionary,
   readOnly,
+  subjects,
+  subjectOptions,
 }: QuestionBankTableProps) {
   const router = useRouter()
 
@@ -89,8 +93,9 @@ function QuestionBankTableInner({
     () =>
       getQuestionBankColumns({
         onDelete: handleDelete,
+        subjects,
       }),
-    [handleDelete]
+    [handleDelete, subjects]
   )
 
   const handleLoadMore = useCallback(async () => {
@@ -115,6 +120,8 @@ function QuestionBankTableInner({
             source: q.source,
             timesUsed: q.analytics?.timesUsed || 0,
             successRate: q.analytics?.successRate || null,
+            avgScore: q.analytics?.avgScore || null,
+            qualityFlags: [],
             createdAt: q.createdAt.toISOString(),
           }))
 
@@ -202,7 +209,11 @@ function QuestionBankTableInner({
         </DataTableToolbar>
         <Modal
           content={
-            <QuestionBankForm dictionary={dictionary} onSuccess={refresh} />
+            <QuestionBankForm
+              dictionary={dictionary}
+              subjects={subjectOptions}
+              onSuccess={refresh}
+            />
           }
         />
       </DataTable>

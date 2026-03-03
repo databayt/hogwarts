@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
+import { PLAN_PRICING } from "@/components/saas-dashboard/billing/config"
 import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
 
 /**
@@ -15,14 +16,6 @@ export async function calculateMRR() {
   const now = new Date()
   const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1)
-
-  // Plan pricing (should match your actual pricing)
-  const planPricing = {
-    TRIAL: 0,
-    BASIC: 99,
-    PREMIUM: 299,
-    ENTERPRISE: 999, // This could be custom per school
-  }
 
   // Current MRR
   const activeSchools = await db.school.findMany({
@@ -39,7 +32,9 @@ export async function calculateMRR() {
   })
 
   const currentMRR = activeSchools.reduce((sum, school) => {
-    return sum + (planPricing[school.planType as keyof typeof planPricing] || 0)
+    return (
+      sum + (PLAN_PRICING[school.planType as keyof typeof PLAN_PRICING] || 0)
+    )
   }, 0)
 
   // Last month MRR for growth calculation
@@ -59,7 +54,9 @@ export async function calculateMRR() {
   })
 
   const lastMonthMRR = lastMonthSchools.reduce((sum, school) => {
-    return sum + (planPricing[school.planType as keyof typeof planPricing] || 0)
+    return (
+      sum + (PLAN_PRICING[school.planType as keyof typeof PLAN_PRICING] || 0)
+    )
   }, 0)
 
   // Calculate growth
@@ -76,7 +73,8 @@ export async function calculateMRR() {
   activeSchools.forEach((school) => {
     const planType = school.planType as keyof typeof mrrByPlan
     if (planType in mrrByPlan) {
-      mrrByPlan[planType] += planPricing[planType]
+      mrrByPlan[planType] +=
+        PLAN_PRICING[planType as keyof typeof PLAN_PRICING] || 0
     }
   })
 
@@ -110,13 +108,6 @@ export async function getMRRHistory() {
     })
   }
 
-  const planPricing = {
-    TRIAL: 0,
-    BASIC: 99,
-    PREMIUM: 299,
-    ENTERPRISE: 999,
-  }
-
   const history = await Promise.all(
     months.map(async ({ month, date }) => {
       const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1)
@@ -138,7 +129,8 @@ export async function getMRRHistory() {
 
       const mrr = schools.reduce((sum, school) => {
         return (
-          sum + (planPricing[school.planType as keyof typeof planPricing] || 0)
+          sum +
+          (PLAN_PRICING[school.planType as keyof typeof PLAN_PRICING] || 0)
         )
       }, 0)
 
@@ -156,6 +148,8 @@ export async function getMRRHistory() {
 /**
  * Calculate churn rate
  * Churn Rate = (Cancelled schools in period / Total schools at start of period) * 100
+ *
+ * TODO: Add School.deactivatedAt for accurate churn tracking (currently uses updatedAt)
  */
 export async function calculateChurnRate(period: "7d" | "30d" | "90d" = "30d") {
   await requireOperator()

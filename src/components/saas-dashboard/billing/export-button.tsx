@@ -16,13 +16,16 @@ interface ExportButtonProps {
   }
   variant?: "default" | "outline" | "ghost"
   size?: "default" | "sm" | "lg"
+  dictionary?: any
 }
 
 export function ExportButton({
   filters,
   variant = "outline",
   size = "sm",
+  dictionary,
 }: ExportButtonProps) {
+  const c = dictionary?.operator?.billing?.columns
   const [isExporting, setIsExporting] = React.useState(false)
 
   const handleExport = async () => {
@@ -55,7 +58,9 @@ export function ExportButton({
       size={size}
     >
       <Download className="me-2 h-4 w-4" />
-      {isExporting ? "Exporting..." : "Export CSV"}
+      {isExporting
+        ? c?.exporting || "Exporting..."
+        : c?.exportCSV || "Export CSV"}
     </Button>
   )
 }

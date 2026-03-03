@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -17,13 +18,7 @@ import {
   type PeriodUpdateInput,
 } from "./validation"
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
+export type { ActionResponse }
 
 const ACADEMIC_PATH = "/school/academic"
 
@@ -48,9 +43,12 @@ export async function createPeriod(
   input: PeriodCreateInput
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const parsed = periodCreateSchema.parse(input)
@@ -111,9 +109,12 @@ export async function updatePeriod(
   input: PeriodUpdateInput
 ): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const parsed = periodUpdateSchema.parse(input)
@@ -178,9 +179,12 @@ export async function deletePeriod(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -193,6 +197,17 @@ export async function deletePeriod(input: {
 
     if (!existing) {
       return { success: false, error: "Period not found" }
+    }
+
+    // Check for dependent timetable entries
+    const timetableCount = await db.timetable.count({
+      where: { periodId: id },
+    })
+    if (timetableCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete period: ${timetableCount} timetable entries reference it`,
+      }
     }
 
     await db.period.deleteMany({ where: { id, schoolId } })

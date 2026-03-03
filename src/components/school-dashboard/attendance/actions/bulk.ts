@@ -9,8 +9,14 @@ import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  canMarkAttendance,
+  canViewSchoolAnalytics,
+  isStaffRole,
+} from "@/components/school-dashboard/attendance/authorization"
 
 import { attendanceFilterSchema, bulkUploadSchema } from "../shared/validation"
+import { getTeacherClassIds } from "./helpers"
 
 /**
  * Bulk upload attendance records with atomic transaction
@@ -48,6 +54,16 @@ export async function bulkUploadAttendance(
       successful: 0,
       failed: 0,
       errors: [{ studentId: "", row: 0, error: "Not authenticated" }],
+      rolledBack: false,
+    }
+  }
+  if (!canMarkAttendance(session.user.role as any)) {
+    return {
+      successful: 0,
+      failed: 0,
+      errors: [
+        { studentId: "", row: 0, error: "Unauthorized: insufficient role" },
+      ],
       rolledBack: false,
     }
   }
@@ -207,11 +223,27 @@ export async function getAttendanceReport(
     return { success: false, error: "Missing school context" }
   }
 
+  const session = await auth()
+  if (
+    !session?.user?.role ||
+    !canViewSchoolAnalytics(session.user.role as any)
+  ) {
+    return { success: false, error: "Unauthorized" }
+  }
+
   const parsed = attendanceFilterSchema.parse(input)
 
   const where: Prisma.AttendanceWhereInput = {
     schoolId,
     deletedAt: null,
+  }
+
+  // Teacher scoping
+  if (session.user.role === "TEACHER") {
+    const teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
+    if (teacherClassIds) {
+      where.classId = { in: teacherClassIds }
+    }
   }
 
   // Apply optional filters
@@ -303,6 +335,14 @@ export async function getAttendanceReportCsv(input: {
     throw new Error("Missing school context")
   }
 
+  const session = await auth()
+  if (
+    !session?.user?.role ||
+    !canViewSchoolAnalytics(session.user.role as any)
+  ) {
+    throw new Error("Unauthorized")
+  }
+
   const schema = z.object({
     classId: z.string().optional(),
     studentId: z.string().optional(),
@@ -316,6 +356,14 @@ export async function getAttendanceReportCsv(input: {
   const where: Prisma.AttendanceWhereInput = {
     schoolId,
     deletedAt: null,
+  }
+
+  // Teacher scoping for CSV export
+  if (session.user.role === "TEACHER") {
+    const teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
+    if (teacherClassIds) {
+      where.classId = { in: teacherClassIds }
+    }
   }
 
   if (sp.classId) where.classId = sp.classId
@@ -389,6 +437,11 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
 }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return { uploads: [] }
+
+  const session = await auth()
+  if (!session?.user?.role || !isStaffRole(session.user.role as any)) {
+    return { uploads: [] }
+  }
 
   // Get most recent bulk uploads (group by date and classId)
   const recentUploads = await db.attendance.groupBy({

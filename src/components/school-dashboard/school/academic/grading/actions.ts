@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { Decimal } from "@prisma/client/runtime/library"
 import { z } from "zod"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -18,13 +19,7 @@ import {
   type ScoreRangeUpdateInput,
 } from "./validation"
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
+export type { ActionResponse }
 
 const ACADEMIC_PATH = "/school/academic"
 
@@ -36,9 +31,12 @@ export async function createScoreRange(
   input: ScoreRangeCreateInput
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const parsed = scoreRangeCreateSchema.parse(input)
@@ -111,9 +109,12 @@ export async function updateScoreRange(
   input: ScoreRangeUpdateInput
 ): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const parsed = scoreRangeUpdateSchema.parse(input)
@@ -201,9 +202,12 @@ export async function deleteScoreRange(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)

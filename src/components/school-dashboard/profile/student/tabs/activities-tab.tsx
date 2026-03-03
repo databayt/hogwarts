@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Student Profile Activities Tab
  * Extracurricular activities, clubs, and participation
@@ -348,7 +345,7 @@ export function ActivitiesTab({
                   </div>
                 </div>
                 <Button variant="ghost" size="sm">
-                  <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
 
@@ -459,7 +456,7 @@ export function ActivitiesTab({
             ))}
             <Button variant="outline" size="sm" className="w-full">
               View All Events
-              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+              <ChevronRight className="ms-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>

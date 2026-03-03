@@ -53,6 +53,7 @@ export interface CreatePaperConfigInput {
   regionPreset?: string
   customCopies?: number
   spareCopies?: number
+  blockConfig?: Record<string, unknown>
 }
 
 export interface UpdatePaperConfigInput {
@@ -81,6 +82,7 @@ export interface UpdatePaperConfigInput {
   regionPreset?: string | null
   customCopies?: number | null
   spareCopies?: number
+  blockConfig?: Record<string, unknown> | null
 }
 
 // ============================================================================

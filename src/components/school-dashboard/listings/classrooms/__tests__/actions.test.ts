@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
@@ -16,6 +17,10 @@ import {
 } from "../actions"
 
 // Mock dependencies
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
+}))
+
 vi.mock("@/lib/db", () => ({
   db: {
     classroom: {
@@ -38,6 +43,12 @@ vi.mock("@/lib/db", () => ({
     roomConstraint: {
       count: vi.fn(),
     },
+    school: {
+      findUnique: vi.fn(),
+    },
+    academicGrade: {
+      findMany: vi.fn(),
+    },
   },
 }))
 
@@ -54,6 +65,9 @@ describe("Classroom Actions", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "admin-1", role: "ADMIN", schoolId: mockSchoolId },
+    } as any)
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: mockSchoolId,
       subdomain: "test-school",
@@ -209,7 +223,9 @@ describe("Classroom Actions", () => {
           roomName: true,
           capacity: true,
           typeId: true,
+          gradeId: true,
           classroomType: { select: { id: true, name: true } },
+          grade: { select: { id: true, name: true } },
         },
       })
     })
@@ -251,6 +267,10 @@ describe("Classroom Actions", () => {
       }
 
       vi.mocked(db.classroom.create).mockResolvedValue(mockCreated as any)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        maxClasses: 100,
+      } as any)
+      vi.mocked(db.classroom.count).mockResolvedValue(5)
 
       const result = await createClassroom({
         roomName: "Room 101",
@@ -267,6 +287,7 @@ describe("Classroom Actions", () => {
           roomName: "Room 101",
           typeId: "type-1",
           capacity: 25,
+          gradeId: null,
         },
       })
     })

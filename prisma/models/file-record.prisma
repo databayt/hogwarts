@@ -28,7 +28,7 @@ model FileRecord {
   folder     String // Storage folder path
 
   // Storage details
-  storageProvider String // vercel_blob, aws_s3, cloudflare_r2, imagekit
+  storageProvider String // aws_s3, cloudflare_r2
   storageTier     String @default("hot") // hot, warm, cold
 
   // Usage tracking

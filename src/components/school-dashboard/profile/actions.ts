@@ -1,12 +1,11 @@
 "use server"
 
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -378,6 +377,147 @@ export async function uploadProfileAvatar(formData: FormData) {
   } catch (error) {
     console.error("Error uploading avatar:", error)
     return { success: false as const, error: "Failed to upload avatar" }
+  }
+}
+
+// ============================================================================
+// Profile Basic Data (for GitHub-style profile sidebar)
+// ============================================================================
+
+export async function getProfileBasicData(userId: string, lang?: string) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false as const, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false as const, error: "School context not found" }
+    }
+
+    // Fetch user with role-specific relations
+    const user = await db.user.findFirst({
+      where: { id: userId, schoolId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true,
+        role: true,
+        bio: true,
+        createdAt: true,
+        student: {
+          select: {
+            id: true,
+            givenName: true,
+            surname: true,
+            profilePhotoUrl: true,
+            grNumber: true,
+            city: true,
+            enrollmentDate: true,
+            email: true,
+          },
+        },
+        teacher: {
+          select: {
+            id: true,
+            givenName: true,
+            surname: true,
+            profilePhotoUrl: true,
+            employeeId: true,
+            emailAddress: true,
+            joiningDate: true,
+          },
+        },
+        guardian: {
+          select: {
+            id: true,
+            givenName: true,
+            surname: true,
+            emailAddress: true,
+          },
+        },
+        staffMember: {
+          select: {
+            id: true,
+            givenName: true,
+            surname: true,
+            profilePhotoUrl: true,
+            employeeId: true,
+            emailAddress: true,
+            joiningDate: true,
+            city: true,
+          },
+        },
+      },
+    })
+
+    if (!user) {
+      return { success: false as const, error: "User not found" }
+    }
+
+    // Build flat data object matching what profile-sidebar's getRoleConfig expects
+    const roleRecord =
+      user.student || user.teacher || user.guardian || user.staffMember
+    const data: Record<string, unknown> = {
+      id: roleRecord?.id || user.id,
+      givenName: roleRecord?.givenName || user.username || "",
+      surname: roleRecord?.surname || "",
+      profilePhotoUrl:
+        (user.student?.profilePhotoUrl ??
+          user.teacher?.profilePhotoUrl ??
+          user.staffMember?.profilePhotoUrl ??
+          user.image) ||
+        null,
+      emailAddress:
+        user.student?.email ??
+        user.teacher?.emailAddress ??
+        user.guardian?.emailAddress ??
+        user.staffMember?.emailAddress ??
+        user.email ??
+        "",
+      createdAt: user.createdAt.toISOString(),
+      bio: user.bio || null,
+      // Role-specific fields
+      grNumber: user.student?.grNumber,
+      city: user.student?.city ?? user.staffMember?.city,
+      enrollmentDate: user.student?.enrollmentDate?.toISOString(),
+      employeeId: user.teacher?.employeeId ?? user.staffMember?.employeeId,
+      joiningDate: (
+        user.teacher?.joiningDate ?? user.staffMember?.joiningDate
+      )?.toISOString(),
+    }
+
+    // Translate name and bio if viewing in a different language
+    const displayLang = lang || "ar"
+    if (displayLang !== "ar" && schoolId) {
+      const [translatedName, translatedBio] = await Promise.all([
+        data.givenName
+          ? getDisplayText(
+              data.givenName as string,
+              "ar",
+              displayLang as "en",
+              schoolId
+            )
+          : Promise.resolve(null),
+        data.bio
+          ? getDisplayText(
+              data.bio as string,
+              "ar",
+              displayLang as "en",
+              schoolId
+            )
+          : Promise.resolve(null),
+      ])
+      if (translatedName) data.givenName = translatedName
+      if (translatedBio) data.bio = translatedBio
+    }
+
+    return { success: true as const, data }
+  } catch (error) {
+    console.error("Error fetching profile basic data:", error)
+    return { success: false as const, error: "Failed to fetch profile data" }
   }
 }
 

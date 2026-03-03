@@ -15,6 +15,17 @@ export interface MockExamItem {
   chapterName: string | null
 }
 
+export interface SchoolMockItem {
+  id: string
+  examId: string
+  title: string
+  totalQuestions: number
+  subjectName: string
+  className: string
+  templateName: string | null
+  createdAt: string
+}
+
 export interface MockSubjectFilter {
   id: string
   name: string

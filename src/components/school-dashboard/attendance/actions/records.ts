@@ -60,12 +60,13 @@ export async function getStudentOwnAttendance(): Promise<
     const termStart =
       activeTerm?.startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
 
-    // Fetch attendance records
+    // Fetch attendance records (exclude soft-deleted)
     const records = await db.attendance.findMany({
       where: {
         studentId: student.id,
         schoolId,
         date: { gte: termStart },
+        deletedAt: null,
       },
       orderBy: { date: "desc" },
       select: {
@@ -90,7 +91,7 @@ export async function getStudentOwnAttendance(): Promise<
     const late = records.filter((r) => r.status === "LATE").length
     const excused = records.filter((r) => r.status === "EXCUSED").length
     const attendanceRate =
-      totalDays > 0 ? Math.round((present / totalDays) * 100) : 0
+      totalDays > 0 ? Math.round(((present + late) / totalDays) * 100) : 0
 
     return {
       success: true,
@@ -101,7 +102,7 @@ export async function getStudentOwnAttendance(): Promise<
           status: r.status,
           classId: r.classId,
           className: r.class
-            ? `${r.class.subject.subjectName} - ${r.class.name}`
+            ? `${r.class.subject?.subjectName ?? ""} - ${r.class.name}`
             : null,
           notes: r.notes,
         })),
@@ -184,8 +185,9 @@ export async function getGuardianChildrenAttendance(): Promise<
                   },
                 },
                 attendances: {
+                  where: { schoolId, deletedAt: null },
                   orderBy: { date: "desc" },
-                  take: 90,
+                  take: 500,
                   select: {
                     id: true,
                     date: true,

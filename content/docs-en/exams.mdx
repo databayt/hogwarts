@@ -1,138 +1,138 @@
 ---
 title: "Exams"
-description: "Complete guide to the examination management module - question bank, exam generation, auto-marking with AI, results analytics, and PDF reports"
+description: "Complete guide to the examination management module - question bank, exam generation, paper templates, auto-marking with AI, digital exam taking, results analytics, certificates, and PDF reports"
 ---
 
 ## Overview
 
-The Exams module provides a comprehensive, production-ready examination management system. It supports question banks, template-based exam generation, AI-assisted grading, and detailed analytics with PDF report generation.
+The Exams module is one of the largest blocks in the platform, spanning 18 sub-modules, 40+ routes, and ~80 component files. It covers the full exam lifecycle from question authoring through paper printing, digital taking, AI-assisted marking, analytics, certificates, and progress tracking.
 
-### Key Features
+### Module Map
 
-| Feature           | Status         | Description                                             |
-| ----------------- | -------------- | ------------------------------------------------------- |
-| Question Bank     | **Production** | Store and manage questions by subject, type, difficulty |
-| Exam Templates    | **Production** | Reusable blueprints for exam generation                 |
-| Auto-Generation   | **Production** | Generate exams from templates with smart selection      |
-| AI Question Gen   | **Beta**       | Generate questions from curriculum using AI             |
-| Auto-Marking      | **Production** | Automatic grading for MCQ, T/F, Fill Blank              |
-| AI Grading        | **Production** | AI-assisted grading for essays and short answers        |
-| OCR Processing    | **Production** | Extract text from handwritten answers                   |
-| Results Analytics | **Production** | Comprehensive performance analysis                      |
-| PDF Reports       | **Production** | Generate individual and batch result PDFs               |
-| CSV Import/Export | **Production** | Bulk operations for questions and results               |
+| Sub-Module          | Status         | Description                                                    |
+| ------------------- | -------------- | -------------------------------------------------------------- |
+| Question Bank       | **Production** | Store and manage questions by subject, type, difficulty, Bloom |
+| Psychometrics       | **Production** | Item analysis, discrimination index, distractor effectiveness  |
+| Exam Templates      | **Production** | Reusable blueprints with question distribution rules           |
+| Exam Catalog        | **Production** | Browse and import shared exam templates from catalog           |
+| Exam Blueprints     | **Production** | Regional exam structure definitions with seeds                 |
+| Auto-Generation     | **Production** | Generate exams from templates with smart selection             |
+| Version Library     | **Production** | Multiple exam versions with contribution tracking              |
+| AI Question Gen     | **Beta**       | Generate questions from curriculum using AI                    |
+| Exam Management     | **Production** | CRUD, scheduling, conflict detection, analytics dashboard      |
+| Paper Generation    | **Production** | PDF exam papers with composable template system                |
+| Composition System  | **Production** | Variant-based slot composition for paper templates             |
+| Regional Presets    | **Production** | Country-specific paper formatting (SD, SA, US, MENA)           |
+| Digital Taking      | **Production** | Online exam player with proctoring and security flags          |
+| Quick Exams         | **Production** | Lightweight teacher-created quizzes with instant take          |
+| Auto-Marking        | **Production** | Automatic grading for MCQ, T/F, Fill Blank                     |
+| AI Grading          | **Production** | AI-assisted grading for essays and short answers               |
+| OCR Processing      | **Production** | Extract text from handwritten answers via GPT-4 Vision         |
+| Bulk Marking        | **Production** | Grade entire exams at once, question-based marking view        |
+| Results & Analytics | **Production** | Performance analysis, batch PDF, CSV export                    |
+| Certificates        | **Production** | Configurable certificate generation with QR verification       |
+| Grading System      | **Production** | Grade boundaries, CGPA calculator, retake management           |
+| Progress Tracking   | **Production** | Student exam progress schedules and monitoring                 |
+| Mock Exams          | **Production** | Practice exams for students                                    |
+| Quiz Games          | **Production** | Gamified quiz format                                           |
+| Notifications       | **Production** | Exam event notifications                                       |
 
-## Quick Start
+## Architecture
 
-Navigate to **Exams** in the platform sidebar to access the module.
-
-### Dashboard Overview
-
-The exam dashboard displays:
-
-- **Stats Cards** - Total exams, upcoming, question bank size, students enrolled
-- **Progress Indicators** - Completion rate, pending marking, results generated
-- **Feature Blocks** - Quick access to Question Bank, Generate, Mark, Results
-- **Workflow Guide** - Step-by-step exam lifecycle visualization
-
-## Exam Lifecycle Flow
+### Sub-Module Directory
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    EXAM LIFECYCLE FLOW                          │
-└─────────────────────────────────────────────────────────────────┘
-
-   [1] QUESTION BANK          [2] GENERATE                [3] EXAMS
-   (/exams/qbank)            (/exams/generate)           (/exams/new)
-   ┌─────────────┐           ┌─────────────┐           ┌─────────────┐
-   │ • Add Q's   │           │ • Templates │           │ • Schedule  │
-   │ • MCQ/T-F   │───────────│ • AI Gen    │───────────│ • Assign    │
-   │ • Essay     │           │ • Distribute│           │ • Set Marks │
-   │ • Import    │           │ • Preview   │           │ • Publish   │
-   └─────────────┘           └─────────────┘           └─────────────┘
-                                                              │
-                                    ┌─────────────────────────┘
-                                    ▼
-   [4] MARKING                                          [5] RESULTS
-   (/exams/mark)                                       (/exams/result)
-   ┌─────────────┐                                    ┌─────────────┐
-   │ • Auto-Mark │                                    │ • Analytics │
-   │ • AI-Grade  │────────────────────────────────────│ • PDF Gen   │
-   │ • Manual    │                                    │ • Export    │
-   │ • Bulk Ops  │                                    │ • Reports   │
-   └─────────────┘                                    └─────────────┘
+src/components/school-dashboard/exams/
+├── certificates/      # Certificate generation, configs, verification
+├── generate/          # Exam generation, catalog, versions, contributions
+├── grading/           # Grade boundaries, CGPA, retake management
+├── lib/               # Shared: audit, permissions, security, validation
+├── manage/            # Exam CRUD, scheduling, analytics, calendar
+├── mark/              # Marking: auto, AI, manual, bulk, mobile
+├── mock/              # Mock/practice exams
+├── notifications/     # Exam event notifications
+├── paper/             # Paper generation: config, preview, PDF output
+├── progress/          # Student progress tracking
+├── qbank/             # Question bank: CRUD, import, catalog, analytics
+├── quick/             # Quick exams: create, list, take
+├── quiz/              # Quiz games
+├── results/           # Results: analytics, batch PDF, cache, export
+├── take/              # Digital exam taking: player, proctor, timer
+├── templates/         # PDF template system (atoms, sections, composition)
+└── upcoming/          # Upcoming exams view
 ```
+
+### Exam Lifecycle Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           EXAM LIFECYCLE FLOW                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  [1] QUESTION BANK        [2] GENERATE           [3] MANAGE EXAMS
+  (/exams/qbank)          (/exams/generate)       (/exams/new, /exams/[id])
+  ┌──────────────┐        ┌──────────────┐        ┌──────────────┐
+  │ • Add Q's    │        │ • Templates  │        │ • Schedule   │
+  │ • 7 Types    │────────│ • AI Gen     │────────│ • Assign     │
+  │ • Analytics  │        │ • Catalog    │        │ • Publish    │
+  │ • Import CSV │        │ • Versions   │        │ • Conflicts  │
+  └──────────────┘        └──────────────┘        └──────────────┘
+                                                         │
+                          ┌──────────────────────────────┤
+                          ▼                              ▼
+  [4] PAPER GEN          [5] DIGITAL TAKE         [6] QUICK EXAMS
+  (/exams/paper)         (/exams/[id]/take)       (/exams/quick)
+  ┌──────────────┐       ┌──────────────┐        ┌──────────────┐
+  │ • Templates  │       │ • Exam Player│        │ • Lightweight│
+  │ • Compose    │       │ • Timer      │        │ • Instant    │
+  │ • Preview    │       │ • Proctor    │        │ • No Template│
+  │ • PDF Print  │       │ • Auto-save  │        │ • Auto-grade │
+  └──────────────┘       └──────────────┘        └──────────────┘
+                                │                        │
+                                ▼                        │
+  [7] MARKING               [8] RESULTS             [9] CERTIFICATES
+  (/exams/mark)             (/exams/result)         (/exams/certificates)
+  ┌──────────────┐          ┌──────────────┐        ┌──────────────┐
+  │ • Auto-Mark  │          │ • Analytics  │        │ • Templates  │
+  │ • AI-Grade   │──────────│ • Batch PDF  │────────│ • QR Verify  │
+  │ • Manual     │          │ • CSV Export │        │ • Batch Gen  │
+  │ • Bulk Ops   │          │ • Per-Student│        │ • Revoke     │
+  └──────────────┘          └──────────────┘        └──────────────┘
+```
+
+---
 
 ## Question Bank
 
 ### Overview
 
-The Question Bank is a repository of reusable questions organized by subject, type, difficulty, and Bloom's taxonomy level.
+The Question Bank stores reusable questions organized by subject, type, difficulty, Bloom's taxonomy level, and tags. It supports 7 question types and includes psychometric analytics.
 
 ### Question Types
 
-| Type              | Description                            | Auto-Gradable |
-| ----------------- | -------------------------------------- | ------------- |
-| Multiple Choice   | Select one correct answer from options | Yes           |
-| True/False        | Binary choice questions                | Yes           |
-| Fill in the Blank | Student provides exact answer          | Yes           |
-| Short Answer      | 1-2 sentence responses                 | AI-Assisted   |
-| Essay             | Long-form written responses            | AI-Assisted   |
+| Type            | Description                            | Auto-Gradable | Template Section             |
+| --------------- | -------------------------------------- | ------------- | ---------------------------- |
+| Multiple Choice | Select one correct answer from options | Yes           | `templates/multiple-choice/` |
+| True/False      | Binary choice questions                | Yes           | `templates/true-false/`      |
+| Fill in Blank   | Student provides exact answer          | Yes           | `templates/fill-blank/`      |
+| Short Answer    | 1-2 sentence responses                 | AI-Assisted   | `templates/short-answer/`    |
+| Essay           | Long-form written responses            | AI-Assisted   | `templates/essay/`           |
+| Matching        | Match items from two columns           | Yes           | `templates/matching/`        |
+| Ordering        | Arrange items in correct sequence      | Yes           | `templates/ordering/`        |
 
-### Adding Questions
+### Psychometrics
 
-**01. Navigate to Question Bank**
+The `qbank/analytics/` module provides item-level psychometric analysis:
 
-Go to Exams → Question Bank → New Question
+- **Item Discrimination Index** - How well a question differentiates strong/weak students
+- **Distractor Analysis** - Effectiveness of wrong options in MCQ
+- **Difficulty Calibration** - Actual vs. labeled difficulty
+- **Success Rate** - Percentage of correct responses
+- **Times Used** - Usage frequency across exams
 
----
+### Catalog Integration
 
-**02. Select Subject**
-
-Choose the subject for this question
-
----
-
-**03. Select Question Type**
-
-Pick from MCQ, True/False, Fill Blank, Short Answer, or Essay
-
----
-
-**04. Enter Question Text**
-
-Write the question clearly and concisely
-
----
-
-**05. Set Difficulty & Bloom Level**
-
-- **Difficulty**: Easy, Medium, Hard
-- **Bloom Level**: Remember, Understand, Apply, Analyze, Evaluate, Create
-
----
-
-**06. Add Options/Answers**
-
-Based on question type:
-
-- **MCQ**: Add options with correct answer marked
-- **True/False**: System auto-creates True/False options
-- **Fill Blank**: Add accepted answers (case-sensitive option)
-- **Short Answer**: Provide sample answer
-- **Essay**: Add sample answer and grading rubric
-
----
-
-**07. Add Tags**
-
-Add topic tags for filtering (e.g., algebra, quadratic-equations)
-
----
-
-**08. Save**
-
-Click Create to add to the question bank
+The `qbank/catalog-tab.tsx` provides a browsable catalog of shared questions that schools can import into their local question banks.
 
 ### Bulk Import
 
@@ -141,257 +141,258 @@ Import questions from CSV:
 ```csv
 questionText,questionType,difficulty,bloomLevel,points,options,sampleAnswer,tags
 "What is 2+2?",MULTIPLE_CHOICE,EASY,REMEMBER,1,"[{""text"":""4"",""isCorrect"":true},{""text"":""3"",""isCorrect"":false}]","","math,arithmetic"
-"The Earth is flat.",TRUE_FALSE,EASY,REMEMBER,1,"[{""text"":""True"",""isCorrect"":false},{""text"":""False"",""isCorrect"":true}]","","science,geography"
-```
-
-### Question Analytics
-
-Track question performance:
-
-- **Times Used** - How often the question appears in exams
-- **Success Rate** - Percentage of students answering correctly
-- **Average Time** - Time students spend on this question
-- **Perceived Difficulty** - Actual difficulty vs. labeled difficulty
-
-## Exam Templates
-
-### Overview
-
-Templates define the structure and distribution of questions for exams. They can be reused to generate multiple exams with consistent structure.
-
-### Creating Templates
-
-**01. Navigate to Templates**
-
-Go to Exams → Generate → Templates → New Template
-
----
-
-**02. Basic Information**
-
-- **Name**: Template name (e.g., "Math Mid-Term Template")
-- **Subject**: Associated subject
-- **Duration**: Total exam time in minutes
-- **Total Marks**: Maximum score
-
----
-
-**03. Question Distribution**
-
-Define how many questions of each type and difficulty:
-
-```json
-{
-  "MULTIPLE_CHOICE": { "EASY": 5, "MEDIUM": 5, "HARD": 3 },
-  "TRUE_FALSE": { "EASY": 5 },
-  "SHORT_ANSWER": { "MEDIUM": 3, "HARD": 2 },
-  "ESSAY": { "HARD": 1 }
-}
 ```
 
 ---
-
-**04. Bloom's Distribution (Optional)**
-
-Specify cognitive level requirements:
-
-```json
-{
-  "REMEMBER": 5,
-  "UNDERSTAND": 5,
-  "APPLY": 5,
-  "ANALYZE": 3,
-  "EVALUATE": 2
-}
-```
-
----
-
-**05. Save Template**
-
-Template is now available for exam generation
-
-### Available Templates (Seeded)
-
-| Template                     | Subject          | Duration | Marks |
-| ---------------------------- | ---------------- | -------- | ----- |
-| Mathematics Mid-Term         | Mathematics      | 90 min   | 50    |
-| Physics Final Exam           | Physics          | 120 min  | 100   |
-| English Quick Quiz           | English          | 30 min   | 25    |
-| Biology Lab Assessment       | Biology          | 60 min   | 40    |
-| Computer Science Coding Test | Computer Science | 90 min   | 50    |
-| History Comprehensive Test   | History          | 75 min   | 60    |
-| Arabic Language Assessment   | Arabic           | 90 min   | 50    |
 
 ## Exam Generation
 
-### From Template
+### Templates
 
-**01. Select Template**
+Templates define the structure and distribution of questions. Managed at `/exams/generate/templates`.
 
-Choose from available templates
+**Distribution Editor** (`generate/distribution-editor.tsx`):
 
----
+- Define counts per question type and difficulty level
+- Set Bloom's taxonomy distribution
+- Visual editor with real-time pool availability
 
-**02. Preview Generation**
+### Catalog
 
-System shows:
+Browse and import shared exam templates from the platform catalog at `/exams/generate/catalog`.
 
-- Question pool availability
-- Any missing categories
-- Estimated coverage
+### Version Library
 
----
+Generate multiple versions of the same exam with different question orderings and option shuffling at `/exams/generate/versions`.
 
-**03. Generate**
+### Contributions
 
-Click Generate to create the exam with randomly selected questions
-
----
-
-**04. Review & Customize**
-
-- Reorder questions if needed
-- Replace specific questions
-- Adjust point values
-
----
-
-**05. Create Exam**
-
-Finalize and schedule the exam
+Track who contributed questions and templates at `/exams/generate/contributions`.
 
 ### Smart Selection Algorithm
-
-The generation algorithm:
 
 1. Groups questions by type and difficulty
 2. Fills distribution requirements from pool
 3. Applies Bloom's level distribution if specified
 4. Uses seeded randomization for reproducibility
-5. Prevents duplicate questions in same exam
+5. Prevents duplicate questions across versions
 
-## Marking & Grading
+---
+
+## Exam Management
+
+### Core CRUD
+
+Full exam management with scheduling, conflict detection, and analytics dashboard:
+
+- **Create** (`/exams/new`) - Form with basic info, schedule, marks config
+- **View** (`/exams/[id]`) - Exam details with results summary
+- **Edit** (`/exams/[id]/edit`) - Modify exam before administration
+- **Calendar** (`manage/calendar.tsx`) - Visual exam schedule
+- **Conflict Detection** (`manage/conflict-display.tsx`) - Detect scheduling overlaps
+
+### Analytics Dashboard
+
+`manage/analytics-dashboard.tsx` provides school-wide exam statistics:
+
+- Standards coverage mapping
+- Quick paper generation button
+- Export functionality
+
+---
+
+## Paper Generation
 
 ### Overview
 
-The marking system supports three grading methods:
+The paper generation system produces print-ready PDF exam papers using `@react-pdf/renderer`. It features a modular template architecture with composable section variants.
 
-- **Auto-Mark** - Instant grading for objective questions
-- **AI-Assisted** - AI grades subjective questions with rubrics
-- **Manual** - Teacher grades and provides feedback
+### Template Architecture
 
-### Auto-Marking
+The system has 4 layers:
 
-Automatically grades:
+**Layer 1 - Atoms** (13 primitives in `templates/atom/`):
 
-- **Multiple Choice** - Exact match with partial credit option
-- **True/False** - Boolean validation
-- **Fill in the Blank** - Matches against accepted answers (case-sensitive option)
+| Atom               | Purpose                           |
+| ------------------ | --------------------------------- |
+| `alignment-marker` | Alignment marks for scanning      |
+| `answer-line`      | Blank answer lines                |
+| `blank-slot`       | Fill-in-the-blank slots           |
+| `bubble`           | OMR bubble circles                |
+| `checkbox`         | Checkbox squares                  |
+| `divider`          | Section dividers                  |
+| `field-line`       | Student info field with underline |
+| `logo-block`       | School logo with fallback         |
+| `option-label`     | A/B/C/D option labels             |
+| `points-badge`     | Points display badge              |
+| `question-number`  | Question numbering                |
+| `type-label`       | Question type label               |
+| `watermark`        | Diagonal watermark overlay        |
 
-**How it works:**
+**Layer 2 - Question Sections** (7 types in `templates/<type>/`):
 
-```
-Student submits answer
-        ↓
-System fetches correct answer
-        ↓
-Compare and calculate score
-        ↓
-Create MarkingResult with:
-  - pointsAwarded
-  - isCorrect
-  - confidence (100% for auto)
-```
+- `multiple-choice/` - MCQ with option layout
+- `true-false/` - Binary choice rendering
+- `fill-blank/` - Blank slots with underlines
+- `short-answer/` - Answer line blocks
+- `essay/` - Extended answer space
+- `matching/` - Two-column matching
+- `ordering/` - Sequence ordering
 
-### AI-Assisted Grading
+**Layer 3 - Page Sections** (6 slot types with variants):
 
-For essays and short answers:
+| Slot         | Variants                                         |
+| ------------ | ------------------------------------------------ |
+| Header       | standard, ministry, minimal, bilingual, centered |
+| Footer       | standard, disclaimer, minimal, grading           |
+| Student Info | standard, bubble-id, table, photo                |
+| Instructions | standard, compact, rules, sectioned              |
+| Answer Sheet | standard, omr, grid                              |
+| Cover        | standard, toc, ministry                          |
 
-**01. Fetch Student Answer**
-
-Get submitted text (or OCR from image)
-
----
-
-**02. Load Rubric**
-
-Fetch grading criteria for the question
-
----
-
-**03. AI Evaluation**
-
-GPT-4o evaluates against rubric:
-
-- Criterion-by-criterion scoring
-- Detailed reasoning
-- Suggested feedback
-- Confidence score (0-1)
-
----
-
-**04. Create Result**
+**Layer 4 - Composition** (`templates/composition/`):
+The composition system dynamically assembles sections based on a `CompositionConfig`:
 
 ```typescript
-{
-  pointsAwarded: 8.5,
-  aiScore: 8.5,
-  aiConfidence: 0.87,
-  aiReasoning: "Strong thesis but weak supporting evidence...",
-  needsReview: true, // if confidence < 0.85
-  feedback: "Consider adding more examples..."
+interface CompositionConfig {
+  slots: {
+    header: "standard" | "ministry" | "minimal" | "bilingual" | "centered"
+    footer: "standard" | "disclaimer" | "minimal" | "grading"
+    studentInfo: "standard" | "bubble-id" | "table" | "photo"
+    instructions: "standard" | "compact" | "rules" | "sectioned"
+    answerSheet: "standard" | "omr" | "grid"
+    cover: "standard" | "toc" | "ministry"
+  }
+  decorations: {
+    accentBar: {
+      enabled: boolean
+      height?: number
+      colorKey?: "accent" | "primary"
+    }
+    watermark: { enabled: boolean; text?: string; opacity?: number }
+    frame: { enabled: boolean; outerWidth?: number; innerWidth?: number }
+  }
+  slotProps: {
+    /* per-slot overrides */
+  }
 }
 ```
 
----
+### ComposableDocument
 
-**05. Teacher Review**
+A single `ComposableDocument` component replaces the 4 legacy templates (Classic, Modern, Formal, Custom). It reads the composition config and renders chosen variants dynamically:
 
-If confidence is low, teacher reviews and confirms/adjusts
-
-### OCR Processing
-
-For handwritten answers:
-
-**01. Student uploads image**
-
-Photo of written response
-
----
-
-**02. OCR extraction**
-
-GPT-4 Vision extracts text
-
----
-
-**03. Confidence score**
-
-System rates extraction confidence
-
----
-
-**04. Continue to grading**
-
-Text proceeds to auto-mark or AI-grade
-
-### Bulk Operations
-
-**Bulk Auto-Grade**
-
-Grade all objective questions for an exam at once
-
-**Bulk AI-Grade**
-
-Queue all essays/short answers for AI processing
-
-**Import Marks from CSV**
-
-```csv
-studentId,questionId,pointsAwarded,feedback
-student_123,question_456,8.5,"Good analysis"
 ```
+Resolution priority:
+1. blockConfig JSON (explicit user composition) — highest
+2. Regional preset features → composition overrides
+3. DEFAULT_COMPOSITION — fallback (all "standard" variants)
+```
+
+The legacy templates still exist as deprecated files for backwards compatibility.
+
+### Compose Tab
+
+The `paper/composition-panel.tsx` provides a visual UI for selecting variants per slot:
+
+- Toggle-group per slot with bilingual labels
+- Decoration switches (accent bar, watermark, double frame)
+- Saves as `blockConfig` JSON on `ExamPaperConfig`
+
+### Regional Presets
+
+Country-specific paper formatting in `templates/presets/`:
+
+| Preset         | Key Features                                             |
+| -------------- | -------------------------------------------------------- |
+| `sd-national`  | Sudan - Ministry header, disclaimer footer, watermark    |
+| `sa-national`  | Saudi Arabia - Ministry branding, bubble-id, OMR sheets  |
+| `us-standard`  | USA - Standard layout, clean formatting                  |
+| `mena-private` | MENA private schools - Bilingual header, custom branding |
+
+### Theme System
+
+Each template style (CLASSIC, MODERN, FORMAL, CUSTOM) has a `PaperTheme`:
+
+- Colors: primary, accent, surface, text
+- Typography: font family, sizes (title, subtitle, body, small)
+- Spacing and border styles
+- Locale-aware: RTL/LTR, number style (Arabic/Latin), text alignment
+
+### Paper Config Form
+
+`paper/config-form.tsx` provides the full configuration UI:
+
+- Template selection (Classic, Modern, Formal, Custom)
+- Page setup (size, orientation, layout)
+- Toggle sections (logo, title, student info, instructions, page numbers)
+- Answer sheet type (None, Standard, Bubble/OMR)
+- Compose tab for variant selection
+- Regional preset selection
+
+---
+
+## Digital Exam Taking
+
+### Exam Player
+
+`take/exam-player.tsx` is the full-screen exam taking interface:
+
+- Question-by-question navigation (`take/question-nav.tsx`)
+- Countdown timer (`take/timer.tsx`)
+- Auto-save at regular intervals
+- Submit with validation
+
+### Proctoring
+
+`take/proctor-guard.tsx` provides exam security:
+
+- Device fingerprinting on session start
+- Security flag reporting (tab switch, copy/paste, screen capture)
+- Proctor mode configuration (per-exam)
+- Penalty calculation for retakes
+
+### Server Actions
+
+```typescript
+startExamSession(input: StartExamSessionInput)
+autoSaveAnswers(input: AutoSaveAnswersInput)
+reportSecurityFlag(input: ReportSecurityFlagInput)
+submitExamAnswers(input: SubmitExamAnswersInput)
+```
+
+---
+
+## Quick Exams
+
+Lightweight exams at `/exams/quick` for teachers who need fast quiz creation:
+
+- No template required - direct question entry
+- Instant student taking at `/exams/quick/[id]/take`
+- Auto-grading on submission
+- Simple list view with results
+
+---
+
+## Marking & Grading
+
+### Marking Methods
+
+| Method    | Use Case                                   | Confidence |
+| --------- | ------------------------------------------ | ---------- |
+| Auto-Mark | MCQ, T/F, Fill Blank, Matching             | 100%       |
+| AI-Grade  | Essays, Short Answers                      | 0-100%     |
+| Manual    | Teacher review and adjustment              | N/A        |
+| OCR + AI  | Handwritten answers (image → text → grade) | Variable   |
+
+### Marking Views
+
+- **Dashboard** (`/exams/mark`) - Overview of pending, in-progress, completed
+- **Pending** (`/exams/mark/pending`) - Exams awaiting grading
+- **Grade** (`/exams/mark/grade/[id]`) - Grade specific exam per student
+- **Bulk** (`/exams/mark/bulk/[id]`) - Grade all students at once
+- **Questions** (`/exams/mark/questions`) - Grade by question across students
+- **Mobile** (`mark/mobile-grading.tsx`) - Touch-optimized grading interface
 
 ### Marking Status Flow
 
@@ -407,31 +408,23 @@ REVIEWED (teacher reviewed AI/auto grades)
 COMPLETED (finalized - can be overridden)
 ```
 
+---
+
 ## Results & Analytics
 
 ### Results Dashboard
 
-View and manage exam results:
+`/exams/result` provides:
 
-- **Exam List** - All completed exams with stats
-- **Class Average** - Mean score per exam
-- **Pass Rate** - Percentage meeting passing marks
-- **Grade Distribution** - A/B/C/D/F breakdown
+- Exam list with stats (class average, pass rate, grade distribution)
+- Recent results at `/exams/result/recent`
+- Global analytics at `/exams/result/analytics`
 
-### Individual Results
+### Per-Exam Analytics
 
-For each student:
+`/exams/result/[id]/analytics` provides:
 
-- Total marks obtained
-- Percentage score
-- Letter grade
-- Rank in class
-- Question-by-question breakdown
-- Teacher feedback
-
-### Analytics Features
-
-**Class-Level Analytics:**
+**Class-Level:**
 
 - Average, median, mode scores
 - Standard deviation
@@ -439,50 +432,64 @@ For each student:
 - Grade distribution chart
 - Trend over time
 
-**Question-Level Analytics:**
+**Question-Level:**
 
 - Item discrimination index
 - Distractor analysis (for MCQ)
 - Most missed questions
 - Average time per question
 
-### PDF Reports
+### Batch PDF Generation
 
-Generate printable result reports:
+`/exams/result/[id]/pdf/batch` generates result PDFs for entire classes:
 
-**Templates Available:**
+- Background processing with progress tracking
+- Multiple result card templates
+- ZIP download for batch
 
-1. **Classic** - Traditional report card style
-2. **Modern** - Contemporary design with charts
-3. **Minimal** - Clean, simple layout
+### Result Caching
 
-**Report Contents:**
+`results/cache-manager.ts` caches computed results for performance.
 
-- Student information
-- School branding
-- Exam details
-- Marks breakdown
-- Grade with GPA
-- Class rank
-- Teacher comments
-- Parent signature line
-
-**Batch Generation:**
-
-- Generate PDFs for entire class
-- Progress tracking
-- ZIP download
-- Background processing for large batches
-
-### Export Options
+### Export
 
 - **CSV** - Raw data for spreadsheets
-- **Excel** - Formatted with multiple sheets
-- **PDF** - Individual or batch reports
+- **PDF** - Individual or batch result reports
 
-## Grade Boundaries
+---
 
-Configure school-specific grade boundaries:
+## Certificates
+
+### Overview
+
+Certificate system at `/exams/certificates` with full lifecycle:
+
+- **Certificate Configs** - Reusable templates with layout, colors, text
+- **Config Editor** (`/exams/certificates/configs/new`, `/exams/certificates/configs/[id]`)
+- **Generate** - Single or batch certificate generation
+- **QR Verification** - Public verification at `/exams/certificates/verify/[code]`
+- **Revocation** - Revoke certificates with reason tracking
+- **Share** - Generate shareable certificate links
+
+### Server Actions
+
+```typescript
+createCertificateConfig(input)
+updateCertificateConfig(id, input)
+generateCertificate(input) // Single
+batchGenerateCertificates(input) // Batch
+verifyCertificate(code) // Public verification
+revokeCertificate(id, reason)
+shareCertificate(id)
+```
+
+---
+
+## Grading System
+
+### Grade Boundaries
+
+School-configurable grade boundaries with GPA mapping:
 
 | Grade | Min Score | Max Score | GPA  |
 | ----- | --------- | --------- | ---- |
@@ -496,62 +503,208 @@ Configure school-specific grade boundaries:
 | D     | 60%       | 64.99%    | 1.70 |
 | F     | 0%        | 59.99%    | 0.00 |
 
+### Additional Features
+
+- **CGPA Calculator** (`grading/cgpa-calculator.ts`) - Cumulative GPA computation
+- **Grade Converter** (`grading/grade-converter.ts`) - Convert between grading scales
+- **Retake Manager** (`grading/retake-manager.tsx`) - Manage exam retakes with penalty policies
+- **Grading Config Form** (`grading/grading-config-form.tsx`) - School-level configuration
+
+---
+
+## Progress Tracking
+
+Student exam progress at `/exams/progress`:
+
+- Schedule list with upcoming/past exams
+- Progress forms for tracking preparation
+- Per-student exam history
+
+---
+
+## Mock Exams & Quiz Games
+
+### Mock Exams (`/exams/mock`)
+
+Practice exams that don't count toward grades:
+
+- Reuse real exam structures
+- Instant auto-grading
+- Student can retake unlimited times
+
+### Quiz Games (`/exams/quiz`)
+
+Gamified quiz format for classroom engagement:
+
+- Quick-fire question rounds
+- Real-time scoring
+
+---
+
+## Security & Permissions
+
+### Shared Library (`lib/`)
+
+| File                        | Purpose                                   |
+| --------------------------- | ----------------------------------------- |
+| `lib/permissions.ts`        | Role-based access control for exam routes |
+| `lib/security.ts`           | QR code signing, exam session security    |
+| `lib/audit.ts`              | Audit trail for exam modifications        |
+| `lib/secure-actions.ts`     | Wrapped actions with auth + tenant check  |
+| `lib/validation-helpers.ts` | Shared validation utilities               |
+
+---
+
 ## Routes Reference
 
-| Route                           | Purpose                   |
-| ------------------------------- | ------------------------- |
-| `/exams`                        | Main dashboard with stats |
-| `/exams/new`                    | Create new exam           |
-| `/exams/[id]`                   | View exam details         |
-| `/exams/[id]/edit`              | Edit exam                 |
-| `/exams/upcoming`               | Upcoming exams list       |
-| `/exams/qbank`                  | Question bank             |
-| `/exams/qbank/new`              | Add new question          |
-| `/exams/qbank/[id]`             | Question details          |
-| `/exams/qbank/ai-generate`      | AI question generation    |
-| `/exams/generate`               | Generation dashboard      |
-| `/exams/generate/templates`     | Manage templates          |
-| `/exams/generate/templates/new` | Create template           |
-| `/exams/mark`                   | Marking dashboard         |
-| `/exams/mark/pending`           | Pending exams             |
-| `/exams/mark/grade/[id]`        | Grade specific exam       |
-| `/exams/mark/bulk/[id]`         | Bulk grading              |
-| `/exams/result`                 | Results list              |
-| `/exams/result/[id]`            | Exam results detail       |
-| `/exams/result/analytics`       | Analytics dashboard       |
-| `/exams/result/[id]/pdf/batch`  | Batch PDF generation      |
+### Dashboard & Management
 
-## API Reference
+| Route              | Purpose                   |
+| ------------------ | ------------------------- |
+| `/exams`           | Main dashboard with stats |
+| `/exams/new`       | Create new exam           |
+| `/exams/[id]`      | View exam details         |
+| `/exams/[id]/edit` | Edit exam                 |
+| `/exams/upcoming`  | Upcoming exams list       |
 
-### Server Actions
+### Question Bank
+
+| Route                      | Purpose                        |
+| -------------------------- | ------------------------------ |
+| `/exams/qbank`             | Question bank with tabbed view |
+| `/exams/qbank/new`         | Add new question               |
+| `/exams/qbank/[id]`        | Question details + analytics   |
+| `/exams/qbank/ai-generate` | AI question generation         |
+
+### Generation
+
+| Route                            | Purpose               |
+| -------------------------------- | --------------------- |
+| `/exams/generate`                | Generation dashboard  |
+| `/exams/generate/templates`      | Manage templates      |
+| `/exams/generate/templates/new`  | Create template       |
+| `/exams/generate/templates/[id]` | Template detail/edit  |
+| `/exams/generate/catalog`        | Browse exam catalog   |
+| `/exams/generate/versions`       | Version library       |
+| `/exams/generate/contributions`  | Contribution tracking |
+
+### Paper
+
+| Route                                    | Purpose             |
+| ---------------------------------------- | ------------------- |
+| `/exams/paper/[generatedExamId]`         | Paper configuration |
+| `/exams/paper/[generatedExamId]/preview` | Paper PDF preview   |
+
+### Digital Taking & Quick Exams
+
+| Route                    | Purpose             |
+| ------------------------ | ------------------- |
+| `/exams/[id]/take`       | Digital exam player |
+| `/exams/quick`           | Quick exams list    |
+| `/exams/quick/[id]/take` | Take quick exam     |
+
+### Marking
+
+| Route                    | Purpose                |
+| ------------------------ | ---------------------- |
+| `/exams/mark`            | Marking dashboard      |
+| `/exams/mark/pending`    | Pending exams          |
+| `/exams/mark/grade/[id]` | Grade specific exam    |
+| `/exams/mark/bulk/[id]`  | Bulk grading           |
+| `/exams/mark/questions`  | Question-based marking |
+
+### Results
+
+| Route                          | Purpose              |
+| ------------------------------ | -------------------- |
+| `/exams/result`                | Results list         |
+| `/exams/result/recent`         | Recent results       |
+| `/exams/result/analytics`      | Global analytics     |
+| `/exams/result/[id]`           | Exam results detail  |
+| `/exams/result/[id]/analytics` | Per-exam analytics   |
+| `/exams/result/[id]/pdf/batch` | Batch PDF generation |
+
+### Certificates
+
+| Route                               | Purpose                |
+| ----------------------------------- | ---------------------- |
+| `/exams/certificates`               | Certificate list       |
+| `/exams/certificates/configs`       | Config templates list  |
+| `/exams/certificates/configs/new`   | Create config          |
+| `/exams/certificates/configs/[id]`  | Edit config            |
+| `/exams/certificates/verify/[code]` | Public QR verification |
+
+### Other
+
+| Route             | Purpose           |
+| ----------------- | ----------------- |
+| `/exams/progress` | Progress tracking |
+| `/exams/mock`     | Mock exams        |
+| `/exams/quiz`     | Quiz games        |
+
+---
+
+## Server Actions Reference
+
+### Question Bank (`qbank/actions.ts`)
 
 ```typescript
-// Question Bank
 createQuestion(formData: FormData)
 updateQuestion(formData: FormData)
 deleteQuestion(id: string)
 getQuestions(filters: QuestionFilters)
 duplicateQuestion(id: string)
+```
 
-// Templates
+### Question Analytics (`qbank/analytics/actions.ts`)
+
+```typescript
+getQuestionAnalytics(questionId: string)
+getQuestionPsychometrics(questionId: string)
+```
+
+### Generation (`generate/actions.ts`)
+
+```typescript
 createTemplate(data: TemplateInput)
 updateTemplate(id: string, data: TemplateInput)
 deleteTemplate(id: string)
-getTemplates(subjectId?: string)
-
-// Generation
 generateExam(templateId: string, examId: string)
 previewExamGeneration(templateId: string)
 regenerateExam(generatedExamId: string)
+```
 
-// Marking
+### Exam Management (`manage/actions.ts`)
+
+```typescript
+createExam(input)
+updateExam(id, input)
+deleteExam(id)
+getExams(filters)
+getExamDetails(id)
+```
+
+### Paper (`paper/actions/`)
+
+```typescript
+createPaperConfig(input: CreatePaperConfigInput)
+updatePaperConfig(id, input: UpdatePaperConfigInput)
+generatePaperPDF(configId: string)
+```
+
+### Marking (`mark/actions.ts`)
+
+```typescript
 autoGradeAnswer(studentAnswerId: string)
 aiGradeAnswer(studentAnswerId: string)
 manualGrade(answerId: string, points: number, feedback?: string)
 bulkGradeExam(examId: string, method: GradingMethod)
 overrideGrade(resultId: string, newScore: number, reason: string)
+```
 
-// Results
+### Results (`results/actions.ts`)
+
+```typescript
 getExamResults(examId: string, options?: ResultOptions)
 getExamAnalytics(examId: string)
 generateSinglePDF(studentId: string, examId: string, template: string)
@@ -559,7 +712,89 @@ generateBatchPDFs(examId: string, studentIds?: string[])
 exportResultsToCSV(examId: string)
 ```
 
-### Types
+### Certificates (`certificates/actions/`)
+
+```typescript
+createCertificateConfig(input)
+updateCertificateConfig(id, input)
+generateCertificate(input)
+batchGenerateCertificates(input)
+verifyCertificate(code)
+revokeCertificate(id, reason)
+shareCertificate(id)
+```
+
+### Digital Taking (`take/actions.ts`)
+
+```typescript
+startExamSession(input: StartExamSessionInput)
+autoSaveAnswers(input: AutoSaveAnswersInput)
+reportSecurityFlag(input: ReportSecurityFlagInput)
+submitExamAnswers(input: SubmitExamAnswersInput)
+```
+
+### Quick Exams (`quick/actions/`)
+
+```typescript
+createQuickExam(input)
+getQuickExams()
+submitQuickExamAnswers(input)
+```
+
+### Grading (`grading/actions.ts`)
+
+```typescript
+getGradeBoundaries(schoolId: string)
+updateGradeBoundaries(schoolId: string, boundaries)
+calculateCGPA(studentId: string)
+manageRetake(examId: string, studentId: string)
+```
+
+### Progress (`progress/actions.ts`)
+
+```typescript
+getExamProgress(studentId: string)
+updateProgressSchedule(input)
+```
+
+---
+
+## Seed Data
+
+Four seed files provide comprehensive test data:
+
+### `prisma/seeds/exams.ts`
+
+- 70+ questions across 9 subjects (Math, Physics, English, Biology, Chemistry, CS, History, Geography, Arabic)
+- All 5 core question types with real Arabic educational content
+- 8 pre-configured exam templates
+- 27 sample exams (3 per subject: Midterm, Final, Quiz)
+- Grade boundaries, rubrics, student answers, marking results
+
+### `prisma/seeds/qbank.ts`
+
+Extended question bank with additional questions and psychometric data.
+
+### `prisma/seeds/catalog-exam-templates.ts`
+
+Shared catalog exam templates for cross-school use.
+
+### `prisma/seeds/exam-blueprints.ts`
+
+Regional exam structure definitions (Sudanese national, Saudi national, etc.).
+
+Run seeds:
+
+```bash
+pnpm db:seed:single exams
+pnpm db:seed:single qbank
+pnpm db:seed:single catalog-exam-templates
+pnpm db:seed:single exam-blueprints
+```
+
+---
+
+## Key Types
 
 ```typescript
 type QuestionType =
@@ -568,6 +803,8 @@ type QuestionType =
   | "SHORT_ANSWER"
   | "ESSAY"
   | "FILL_BLANK"
+  | "MATCHING"
+  | "ORDERING"
 
 type DifficultyLevel = "EASY" | "MEDIUM" | "HARD"
 
@@ -592,198 +829,56 @@ type MarkingStatus =
   | "IN_PROGRESS"
   | "REVIEWED"
   | "COMPLETED"
+
+type ExamPaperTemplate = "CLASSIC" | "MODERN" | "FORMAL" | "CUSTOM"
+
+type ProctorMode = "NONE" | "BASIC" | "STRICT"
+
+type SecurityFlag = "TAB_SWITCH" | "COPY_PASTE" | "SCREEN_CAPTURE" | "DEVTOOLS"
 ```
 
-## Database Schema
-
-Key Prisma models:
-
-```prisma
-model QuestionBank {
-  id           String          @id @default(cuid())
-  schoolId     String
-  subjectId    String
-  questionText String
-  questionType QuestionType
-  difficulty   DifficultyLevel
-  bloomLevel   BloomLevel
-  points       Decimal
-  options      Json?           // MCQ options, fill blank answers
-  sampleAnswer String?
-  gradingRubric String?
-  tags         String[]
-  explanation  String?
-  source       QuestionSource
-
-  @@index([schoolId, subjectId])
-  @@index([schoolId, questionType, difficulty])
-}
-
-model ExamTemplate {
-  id           String  @id @default(cuid())
-  schoolId     String
-  name         String
-  subjectId    String
-  duration     Int     // minutes
-  totalMarks   Int
-  distribution Json    // question type/difficulty counts
-  bloomDistribution Json?
-  isActive     Boolean @default(true)
-
-  @@unique([schoolId, name])
-}
-
-model Exam {
-  id           String     @id @default(cuid())
-  schoolId     String
-  title        String
-  classId      String
-  subjectId    String
-  examDate     DateTime
-  duration     Int
-  totalMarks   Int
-  passingMarks Int
-  examType     ExamType
-  status       ExamStatus
-
-  @@index([schoolId, status])
-  @@index([schoolId, examDate])
-}
-
-model ExamResult {
-  id            String  @id @default(cuid())
-  schoolId      String
-  examId        String
-  studentId     String
-  marksObtained Int
-  totalMarks    Int
-  percentage    Float
-  grade         String
-  isAbsent      Boolean @default(false)
-
-  @@unique([schoolId, examId, studentId])
-}
-
-model MarkingResult {
-  id             String        @id @default(cuid())
-  schoolId       String
-  studentAnswerId String
-  examId         String
-  questionId     String
-  studentId      String
-  gradingMethod  GradingMethod
-  status         MarkingStatus
-  pointsAwarded  Decimal
-  maxPoints      Decimal
-  aiScore        Decimal?
-  aiConfidence   Float?
-  aiReasoning    String?
-  feedback       String?
-  needsReview    Boolean       @default(false)
-
-  @@unique([schoolId, studentAnswerId])
-}
-```
-
-## Seed Data
-
-The exam seed creates comprehensive test data:
-
-### Questions (70+ across 9 subjects)
-
-| Subject          | Count | Types                        |
-| ---------------- | ----- | ---------------------------- |
-| Mathematics      | 8     | MCQ, T/F, Short, Essay, Fill |
-| Physics          | 6     | MCQ, T/F, Short, Essay, Fill |
-| English          | 5     | MCQ, T/F, Short, Essay, Fill |
-| Biology          | 5     | MCQ, T/F, Short, Essay, Fill |
-| Chemistry        | 8     | MCQ, T/F, Short, Essay, Fill |
-| Computer Science | 8     | MCQ, T/F, Short, Essay, Fill |
-| History          | 6     | MCQ, T/F, Short, Essay, Fill |
-| Geography        | 6     | MCQ, T/F, Short, Essay, Fill |
-| Arabic           | 5     | MCQ, T/F, Short, Essay, Fill |
-
-### Templates (8 total)
-
-Pre-configured templates for each major subject with appropriate distributions.
-
-### Sample Exams
-
-- 27 exams (3 per subject: Midterm, Final, Quiz)
-- Various statuses: COMPLETED, PLANNED, IN_PROGRESS
-- Complete with exam results for completed exams
-
-### Additional Data
-
-- Grade boundaries (A+ to F)
-- Rubrics for essay questions
-- Question analytics
-- Student answers and marking results
-
-Run seed:
-
-```bash
-pnpm db:seed
-```
-
-## Best Practices
-
-### For Teachers
-
-1. Build a robust question bank before creating exams
-2. Use templates for consistent exam structure
-3. Tag questions thoroughly for easy filtering
-4. Review AI-graded essays, especially low-confidence ones
-5. Provide constructive feedback on essays
-6. Use analytics to identify weak areas
-
-### For Administrators
-
-1. Configure appropriate grade boundaries
-2. Monitor school-wide exam statistics
-3. Ensure adequate question bank coverage
-4. Review AI grading accuracy periodically
-5. Set up backup procedures for exam data
-
-### For Question Writing
-
-1. Write clear, unambiguous questions
-2. For MCQ, make distractors plausible
-3. Set appropriate difficulty levels
-4. Include explanations for learning
-5. Tag with relevant topics
-6. Provide comprehensive rubrics for essays
+---
 
 ## Troubleshooting
 
 ### Exam Generation Fails
 
-- Check question bank has enough questions
-- Verify distribution can be satisfied
-- Review template configuration
+- Check question bank has enough questions for the distribution
+- Verify distribution can be satisfied with current pool
+- Review template configuration matches available types
 
 ### AI Grading Issues
 
-- Ensure OpenAI API key is configured
+- Ensure OpenAI API key is configured in `.env`
 - Check rate limits aren't exceeded
 - Verify rubric exists for the question
 
-### PDF Generation Problems
+### PDF Paper Generation Problems
 
-- Check @react-pdf/renderer is installed
-- Verify school branding is configured
+- Check `@react-pdf/renderer` is installed
+- Verify school branding is configured (logo URL, colors)
+- For Arabic: ensure Rubik font is accessible
 - For batch: ensure adequate server memory
 
-### Marks Not Calculating
+### Digital Exam Taking Issues
 
-- Verify all questions are graded
-- Check grade boundaries are configured
-- Ensure student isn't marked absent
+- Verify exam status is `IN_PROGRESS`
+- Check student is enrolled in the exam's class
+- Proctor guard requires HTTPS in production
+
+### Certificate QR Not Scanning
+
+- Verify `QR_CODE_SECRET` env var is set
+- Check certificate hasn't been revoked
+- Ensure verification route is publicly accessible
+
+---
 
 ## Performance Tips
 
-1. **Caching** - Grade boundaries are cached for 30 minutes
+1. **Result Caching** - `results/cache-manager.ts` caches computed results
 2. **Batch Operations** - Use bulk grade for large classes
-3. **Indexing** - All foreign keys have indexes
-4. **Pagination** - Results are paginated for large datasets
-5. **Background Jobs** - Batch PDF runs in background
+3. **Indexing** - All foreign keys have `@@index` directives
+4. **Pagination** - Results and question bank are paginated
+5. **Background Jobs** - Batch PDF and certificate generation runs in background
+6. **Font Registration** - `templates/fonts.ts` registers fonts once (idempotent)

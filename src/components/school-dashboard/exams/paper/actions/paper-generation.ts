@@ -11,10 +11,11 @@ import React from "react"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { renderToBuffer } from "@react-pdf/renderer"
-import { put } from "@vercel/blob"
 
 import { db } from "@/lib/db"
+import { getProvider } from "@/components/file/providers/factory"
 
+import { AnswerKeyDocument } from "../../templates/answer-key-document"
 import { getVersionCode } from "../config"
 import { getTemplate } from "../templates"
 import type {
@@ -148,13 +149,14 @@ async function renderAndUploadPdf(
       : ""
     const filename = `exams/${schoolId}/${examTitle}${versionSuffix}-${Date.now()}.pdf`
 
-    const blob = await put(filename, buffer, {
-      access: "public",
+    const provider = getProvider("aws_s3")
+    const pdfBlob = new Blob([buffer], { type: "application/pdf" })
+    const url = await provider.upload(pdfBlob, filename, {
       contentType: "application/pdf",
-      addRandomSuffix: false,
+      access: "public",
     })
 
-    return blob.url
+    return url
   } catch (error) {
     console.error("PDF render/upload failed:", error)
     return undefined
@@ -351,8 +353,8 @@ export async function generateAnswerKey(
     }
 
     // Check if answer key already exists
-    const existing = await db.examAnswerKey.findUnique({
-      where: { generatedExamId: input.generatedExamId },
+    const existing = await db.examAnswerKey.findFirst({
+      where: { generatedExamId: input.generatedExamId, schoolId },
     })
 
     if (existing) {
@@ -367,19 +369,31 @@ export async function generateAnswerKey(
       }
     }
 
-    // Fetch generated exam with questions
-    const generatedExam = await db.generatedExam.findFirst({
-      where: {
-        id: input.generatedExamId,
-        schoolId,
-      },
-      include: {
-        questions: {
-          include: { question: true },
-          orderBy: { order: "asc" },
+    // Fetch generated exam with questions, exam details, and school
+    const [generatedExam, school] = await Promise.all([
+      db.generatedExam.findFirst({
+        where: {
+          id: input.generatedExamId,
+          schoolId,
         },
-      },
-    })
+        include: {
+          exam: {
+            include: {
+              class: { select: { name: true, id: true } },
+              subject: { select: { subjectName: true, id: true } },
+            },
+          },
+          questions: {
+            include: { question: true },
+            orderBy: { order: "asc" },
+          },
+        },
+      }),
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      }),
+    ])
 
     if (!generatedExam) {
       return {
@@ -454,13 +468,53 @@ export async function generateAnswerKey(
       },
     })
 
+    // Generate answer key PDF
+    let pdfUrl: string | undefined
+    try {
+      const locale = (school?.preferredLanguage === "en" ? "en" : "ar") as
+        | "en"
+        | "ar"
+      const { getThemePreset, withLocale } =
+        await import("../../templates/config")
+      const theme = withLocale(getThemePreset("CLASSIC"), locale)
+
+      const document = React.createElement(AnswerKeyDocument, {
+        exam: generatedExam.exam,
+        answers,
+        theme,
+      })
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const buffer = await renderToBuffer(document as any)
+
+      const examTitle =
+        generatedExam.exam.title?.replace(/[^a-zA-Z0-9-_]/g, "-") || "exam"
+      const filename = `exams/${schoolId}/${examTitle}-answer-key-${Date.now()}.pdf`
+
+      const provider = getProvider("aws_s3")
+      const pdfBlob = new Blob([buffer], { type: "application/pdf" })
+      pdfUrl = await provider.upload(pdfBlob, filename, {
+        contentType: "application/pdf",
+        access: "public",
+      })
+
+      // Update the answer key record with the PDF URL
+      await db.examAnswerKey.update({
+        where: { id: answerKey.id },
+        data: { pdfUrl },
+      })
+    } catch (pdfError) {
+      console.error("Answer key PDF generation failed:", pdfError)
+      // Non-fatal: the answer key data is still saved, just without PDF
+    }
+
     revalidatePath(`/exams/paper/${input.generatedExamId}`)
 
     return {
       success: true,
       data: {
         answerKeyId: answerKey.id,
-        pdfUrl: answerKey.pdfUrl ?? undefined,
+        pdfUrl,
         answers,
       },
     }

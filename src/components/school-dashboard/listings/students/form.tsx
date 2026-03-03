@@ -19,7 +19,10 @@ import {
   getStudent,
   updateStudent,
 } from "@/components/school-dashboard/listings/students/actions"
-import { createStudentCreateSchema } from "@/components/school-dashboard/listings/students/validation"
+import {
+  createStudentCreateSchema,
+  studentCreateSchema as legacyStudentCreateSchema,
+} from "@/components/school-dashboard/listings/students/validation"
 
 import { STEP_FIELDS, STEPS, TOTAL_FIELDS } from "./config"
 import { EnrollmentStep } from "./enrollment"
@@ -41,16 +44,12 @@ export function StudentCreateForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Create localized schema (memoized)
+  // Note: dictionary prop is Dictionary["school"]["students"] (subsection),
+  // but createStudentCreateSchema expects a full Dictionary with messages.validation.
+  // Use legacy schema since we don't have the full dictionary here.
   const studentCreateSchema = useMemo(() => {
-    if (!dictionary) {
-      // Fallback to legacy schema if dictionary not available
-      const { studentCreateSchema: legacySchema } = require("./validation")
-      return legacySchema
-    }
-    // Create full dictionary object for schema factory
-    const fullDict = { messages: dictionary as any } as Dictionary
-    return createStudentCreateSchema(fullDict)
-  }, [dictionary])
+    return legacyStudentCreateSchema
+  }, [])
 
   const form = useForm<z.infer<typeof studentCreateSchema>>({
     resolver: zodResolver(studentCreateSchema),

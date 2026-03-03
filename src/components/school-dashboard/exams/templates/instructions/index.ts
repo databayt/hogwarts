@@ -3,3 +3,5 @@
 
 export { StandardInstructions } from "./standard"
 export { CompactInstructions } from "./compact"
+export { RulesInstructions } from "./rules"
+export { SectionedInstructions } from "./sectioned"

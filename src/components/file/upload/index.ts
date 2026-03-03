@@ -81,16 +81,6 @@ export {
   supportsWebP,
   supportsAVIF,
 } from "./use-image-optimization"
-export {
-  useImageKitUpload,
-  IMAGEKIT_FOLDERS,
-  type ImageKitAuthParams,
-  type UploadProgress as ImageKitUploadProgress,
-  type UploadResult as ImageKitUploadResult,
-  type UseImageKitUploadOptions,
-  type UseImageKitUploadReturn,
-} from "./use-imagekit-upload"
-
 // Validation
 export {
   fileInfoSchema,

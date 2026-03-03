@@ -1,11 +1,11 @@
 ---
 title: "Timetable"
-description: "Complete guide to the timetable module - structure catalog, schedule configuration, slot management, conflict detection, and printing"
+description: "Complete guide to the timetable module - structure catalog, role-based views, slot management, AI generation, conflict detection, substitutions, templates, analytics, and export"
 ---
 
 ## Overview
 
-The Timetable module handles school schedule management end-to-end: choosing a timetable structure, configuring working days and periods, assigning weekly slots, detecting conflicts, and printing A4 timetables. All operations are tenant-scoped by `schoolId`.
+The Timetable module handles school schedule management end-to-end: choosing a timetable structure during onboarding, configuring working days and periods, assigning weekly slots, detecting conflicts, managing substitutions, AI-powered generation, PDF export, and role-specific views. All operations are tenant-scoped by `schoolId`.
 
 ### Module Flow
 
@@ -19,8 +19,9 @@ The Timetable module handles school schedule management end-to-end: choosing a t
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                 TIMETABLE STRUCTURES CATALOG                        │
-│  structures.ts → 5 curated structures (TypeScript constants)        │
+│  structures.ts → 10 curated structures (TypeScript constants)       │
 │  getRecommendedStructures(country, schoolType, schoolLevel)         │
+│  Scoring system ranks best match per school profile                 │
 └─────────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
@@ -34,44 +35,237 @@ The Timetable module handles school schedule management end-to-end: choosing a t
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    WEEKLY SLOT MANAGEMENT                            │
 │  Assign: Day + Period + Class + Teacher + Room                      │
+│  Constraints: Teacher prefs, room capacity, workload limits         │
 │  Conflicts: Teacher / Room double-booking detection                 │
-│  Views: Class view, Teacher view, Room view                         │
+│  Views: Admin, Teacher, Student, Guardian (role-routed)             │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    ADVANCED FEATURES                                 │
+│  AI Generation: 3-phase algorithm (greedy + CSP + optimization)     │
+│  Substitutions: Absence → find substitute → assign → track          │
+│  Templates: Save/apply/reuse schedule patterns across terms         │
+│  Analytics: Utilization rates, workload distribution, stats          │
+│  Export: PDF download (Arabic/English fonts), browser print          │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Permissions
 
-- Mutations (applying structures, saving schedule, creating/editing slots) require Admin, Owner, or Developer roles.
-- Read access varies by role: teachers see own classes, students see their schedule.
-- All operations are tenant-scoped by `schoolId`.
+Role-based access via `permissions-config.ts`:
+
+| Role      | Access Level | Can Modify | Can Export | Can Manage Conflicts | Can Configure Settings |
+| --------- | ------------ | ---------- | ---------- | -------------------- | ---------------------- |
+| DEVELOPER | Full         | Yes        | Yes        | Yes                  | Yes                    |
+| ADMIN     | Full         | Yes        | Yes        | Yes                  | Yes                    |
+| TEACHER   | Read + Own   | No         | Yes        | No                   | No                     |
+| STUDENT   | Read Only    | No         | Yes        | No                   | No                     |
+| GUARDIAN  | Read Only    | No         | No         | No                   | No                     |
+
+All operations are tenant-scoped by `schoolId`.
+
+### Production Readiness
+
+Traffic-light summary of the timetable module's production state:
+
+| Status         | Area                                      | Notes                                                                        |
+| -------------- | ----------------------------------------- | ---------------------------------------------------------------------------- |
+| **Working**    | Admin view (room/teacher modes)           | Selectors, grid, slot editor all functional                                  |
+| **Working**    | Student view (grade-based)                | Uses `StudentClass` enrollment chain correctly                               |
+| **Working**    | Teacher view (personal schedule)          | Stats, current/next class, full week grid                                    |
+| **Working**    | Guardian view (multi-child selector)      | Child selector UI works correctly                                            |
+| **Working**    | Structure catalog + onboarding            | 10 structures, scoring, auto-recommend                                       |
+| **Working**    | Conflict detection + resolution           | SQL-based server-side + client-side O(n^2)                                   |
+| **Working**    | Substitution workflow                     | Absence recording, substitute finder, assignment                             |
+| **Working**    | PDF export + browser print                | Arabic/English fonts, A4 styling                                             |
+| **Needs Work** | Guardian data fetch                       | `getChildTimetable()` uses `findFirst` — returns only 1 class per child      |
+| **Needs Work** | `getWeeklyTimetable()` Student branch     | References non-existent `Student.classId` field                              |
+| **Needs Work** | `getWeeklyTimetable()` Teacher branch     | Uses `user.id` as `teacherId` instead of looking up Teacher record           |
+| **Needs Work** | ACCOUNTANT/STAFF routing                  | Routed to AdminView with `editable={true}` — should be read-only             |
+| **Needs Work** | Admin view filtering                      | No class/grade filter mode — only room and teacher                           |
+| **Needs Work** | Orphaned routes                           | `by-class`, `by-teacher`, `by-room`, `templates` exist but have no nav links |
+| **Needs Work** | Schedule exceptions                       | Model + CRUD exists but timetable queries don't check exceptions             |
+| **Needs Work** | Attendance integration                    | No connection between timetable slots and attendance records                 |
+| **Broken**     | `filterTimetableByRole()` GUARDIAN branch | Compares student IDs against class IDs                                       |
+| **Broken**     | Algorithm `preventBackToBack`             | Detected but not enforced (`algorithm.ts:698-705`)                           |
+
+---
+
+## Routes and Navigation
+
+### Layout Tabs
+
+The timetable `layout.tsx` renders role-based tabs via `PageNav`:
+
+- **Admin tabs**: Overview, Analytics, Generate, Conflicts, Settings
+- **Non-admin tabs**: Today, Full Week
+
+### Route Map
+
+| Route                   | Page Component              | Access Roles                 |
+| ----------------------- | --------------------------- | ---------------------------- |
+| `/timetable`            | `TimetableContent`          | ADMIN, TEACHER, DEVELOPER    |
+| `/timetable/full`       | `TimetableContent` (full)   | ADMIN, TEACHER, DEVELOPER    |
+| `/timetable/by-class`   | `TimetableByClassContent`   | ADMIN, DEVELOPER             |
+| `/timetable/by-teacher` | `TimetableByTeacherContent` | ADMIN, DEVELOPER             |
+| `/timetable/by-room`    | `TimetableByRoomContent`    | ADMIN, DEVELOPER             |
+| `/timetable/conflicts`  | `TimetableConflictsContent` | ADMIN, DEVELOPER             |
+| `/timetable/generate`   | `GenerateTimetableContent`  | ADMIN, DEVELOPER             |
+| `/timetable/templates`  | `TemplatesContent`          | ADMIN, DEVELOPER             |
+| `/timetable/analytics`  | `TimetableAnalyticsContent` | ADMIN, DEVELOPER             |
+| `/timetable/settings`   | `TimetableSettingsContent`  | ADMIN, DEVELOPER             |
+| `/my-timetable`         | (Student/Guardian route)    | STUDENT, GUARDIAN, DEVELOPER |
+
+Every route has `error.tsx` and `loading.tsx` boundaries.
+
+**Orphaned routes**: The `by-class`, `by-teacher`, `by-room`, and `templates` routes have page components but are **not linked** in the layout tabs or sidebar navigation. They're only accessible via direct URL.
+
+### Sidebar
+
+Timetable appears in the platform sidebar for ADMIN, TEACHER, and STUDENT roles with `href: "/timetable"` and icon `clock`.
+
+---
+
+## Role-Based Experience
+
+The production entry point is `content-production.tsx` which wraps `RoleRouter` in a `SessionProvider`. The `RoleRouter` calls `getPersonalizedTimetable()` to determine `viewType` and routes to the appropriate view.
+
+### Data Flow Per Role
+
+| Role       | View Component | Data Function                                  | What They See                                         | Known Bugs                                               |
+| ---------- | -------------- | ---------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
+| DEVELOPER  | `AdminView`    | `getTimetableByRoom` / `getTimetableByTeacher` | Room/Teacher grid, editable slots, slot editor        | No class/grade filter mode                               |
+| ADMIN      | `AdminView`    | Same as DEVELOPER                              | Same as DEVELOPER                                     | Same                                                     |
+| TEACHER    | `TeacherView`  | `getTimetableByTeacher`                        | Personal schedule, workload stats, current/next class | No export button (despite `canExport` permission)        |
+| STUDENT    | `StudentView`  | `getTimetableByStudentGrade`                   | Grade-level all-subjects view, PDF export, print      | Works correctly                                          |
+| GUARDIAN   | `GuardianView` | `getChildTimetable`                            | Child selector + per-child schedule                   | **Bug**: `findFirst` returns only 1 class enrollment     |
+| ACCOUNTANT | `AdminView`    | Same as ADMIN                                  | Full admin view with edit UI                          | **Bug**: `editable={true}` despite read-only permissions |
+| STAFF      | `AdminView`    | Same as ADMIN                                  | Full admin view with edit UI                          | **Bug**: Same as ACCOUNTANT                              |
+
+### How Routing Works
+
+1. `getPersonalizedTimetable()` reads the user's role from session (`actions.ts:2400`)
+2. Role → `viewType` mapping in a switch statement (`actions.ts:2422`)
+3. ACCOUNTANT and STAFF **fall through to default** — `viewType` stays initialized as `"admin"` (`actions.ts:2415`)
+4. `RoleRouter` renders the matching view component (`role-router.tsx:132`)
+5. `AdminView` always renders `SimpleGrid` with `editable={true}` (`admin-view.tsx:353`)
+
+### ACCOUNTANT/STAFF Bug Detail
+
+The `permissions-config.ts` correctly defines ACCOUNTANT and STAFF as read-only (no `edit`, `create`, `delete` permissions). But `getPersonalizedTimetable()` has no cases for these roles, so they default to `viewType = "admin"`, and `AdminView` hardcodes `editable={true}`. The slot editor dialog opens on click and allows saves — the permission check only happens server-side in `upsertTimetableSlot()`.
+
+---
+
+## Grade-Based Filtering
+
+### Student Grade Resolution Chain
+
+The student view resolves a student's timetable through enrollment records:
+
+```
+User (session)
+  → Student (db.student.findFirst where userId)
+    → StudentClass (db.studentClass.findFirst where studentId)
+      → classId
+        → Timetable (db.timetable.findMany where classId IN [...])
+```
+
+Grade name comes from a separate chain:
+
+```
+Student → StudentYearLevel → YearLevel.levelName
+```
+
+### Where Grade Filtering Works
+
+- **`getTimetableByStudentGrade()`**: Correctly uses `StudentClass` bridge table with `findMany` to get all enrolled class IDs, then queries timetable with `classId: { in: classIds }`. This is the function used by `StudentView`.
+
+- **`getPersonalizedTimetable()` STUDENT branch**: Uses `StudentClass.findFirst` — returns only the most recent enrollment. Works for the simple case but misses multi-class enrollments.
+
+### Where Grade Filtering Is Broken
+
+- **`getWeeklyTimetable()` STUDENT branch** (`actions.ts:1377-1383`): References `Student.classId` — a field that **does not exist** on the Student model. Students are enrolled via the `StudentClass` bridge table. This always returns `undefined`, so no `classId` filter is applied and the student sees **all slots for the school**.
+
+- **`getWeeklyTimetable()` TEACHER branch** (`actions.ts:1367`): Uses `session.user.id` (User model ID) directly as `teacherId` (Teacher model ID). These are different entities — the correct approach is to look up the Teacher record by `userId` first, as `getPersonalizedTimetable()` does.
+
+- **`getChildTimetable()`** (`actions.ts:2670`): Uses `findFirst` on `StudentClass` — returns only 1 class enrollment per child. In this system, `Class = course section` (not homeroom), so a student enrolled in 6 subjects has 6 class enrollments. The guardian only sees the schedule for the most recent one.
+
+- **Admin view**: Has no class/grade filter mode at all — only room and teacher selectors. To view a specific class schedule, admins must use the orphaned `/timetable/by-class` route.
+
+---
+
+## Role-Based Views
+
+Each view component's UI features (see [Role-Based Experience](#role-based-experience) above for data flow and bugs):
+
+### Admin View (`admin-view.tsx`)
+
+- **Classroom/Teacher selectors**: Searchable comboboxes (Popover + Command) with type-to-filter
+- **Two view modes**: Classroom view (timetable by room) and Teacher view (timetable by teacher)
+- **Editable grid**: `SimpleGrid` with `editable={true}`, clicking a slot opens `SlotEditorDialog`
+- **Teacher info**: When in teacher mode, shows name, email, period count, class count badges
+
+### Teacher View (`teacher-view.tsx`)
+
+- **Personal schedule**: Automatically filtered to the logged-in teacher
+- **Workload stats**: Days/week, periods/week, total classes
+- **Current/next class card**: Real-time indicator of what's happening now
+- **Today's schedule list**: Ordered periods with subject, room, class details
+- **Full week grid**: Complete weekly view with classroom and subject filters
+
+### Student View (`student-view.tsx`)
+
+- **Grade-based schedule**: Filtered to the student's enrolled grade/class
+- **Subject/period counts**: Summary statistics
+- **Current/next class card**: Real-time schedule awareness
+- **PDF export**: Download timetable as PDF via `useTimetableExport` hook
+- **Print support**: Browser print with A4 styling
+
+### Guardian View (`guardian-view.tsx`)
+
+- **Multi-child selector**: Lists all linked children with avatars
+- **Per-child schedule**: Select a child to view their timetable
+- **Same features as student view**: Current/next class, today's schedule, full week grid
+
+### SimpleGrid (`simple-grid.tsx`)
+
+The core reusable grid component used by all views:
+
+- Props: `slots`, `workingDays`, `periods`, `lunchAfterPeriod`, `isRTL`, `viewMode`, `editable`, `onSlotClick`, `highlightToday`, `conflictSlotIds`
+- Handles RTL day reversal automatically
+- Color coding per subject via `getSubjectTailwind()`
+- Conflict highlighting with `conflictSlotIds`
+- Lunch row insertion after configured period
 
 ---
 
 ## Structure Catalog
 
-Schools don't invent their timetable structure - the ministry does. If we know the country and school type, the structure is almost deterministic. The catalog provides curated, real-world timetable structures that are auto-recommended during onboarding.
+Schools don't invent their timetable structure - the ministry does. The catalog provides curated, real-world structures auto-recommended during onboarding via a scoring system.
 
 ### Design Decisions
 
-- **TypeScript constants** (not a Prisma model) - the catalog is tiny (~5 entries), static, and has no relational data.
-- **No separate `system` field** - the extended `schoolType` covers curriculum identity (`national`, `british`, `ib`, `american`).
-- **Pure functions** - `getRecommendedStructures()` is a pure filter/sort with no database calls.
+- **TypeScript constants** (not Prisma) - the catalog is small, static, and has no relational data.
+- **Scoring system** - `getRecommendedStructures()` scores each structure against the school profile and returns ranked results.
+- **Pure functions** - no database calls for structure matching.
 
-### Available Structures
+### Available Structures (10)
 
-| Slug             | Name                     | Days    | Periods   | Times       | Matches                                  |
-| ---------------- | ------------------------ | ------- | --------- | ----------- | ---------------------------------------- |
-| `sd-gov-default` | Sudan Government Default | Sun-Thu | 8 x 45min | 07:30-14:55 | public, national                         |
-| `sd-private`     | Sudan Private            | Sun-Thu | 7 x 50min | 07:15-14:25 | private                                  |
-| `sd-british`     | British Curriculum       | Mon-Fri | 6 x 55min | 08:00-14:45 | british, international                   |
-| `sd-ib`          | IB / American            | Mon-Fri | 6 x 50min | 08:00-14:15 | ib, american                             |
-| `sd-half-day`    | Half Day / KG            | Sun-Thu | 5 x 40min | 08:00-11:55 | public, private, national (primary only) |
-
-The `sd-gov-default` structure maps directly from the existing `standard_8` template and is confirmed accurate for Sudan government schools: 8 periods x 45 minutes, Sunday-Thursday, Friday rest day.
+| Slug             | Name                     | Days    | Periods   | Times       | Region         |
+| ---------------- | ------------------------ | ------- | --------- | ----------- | -------------- |
+| `sd-gov-default` | Sudan Government Default | Sun-Thu | 8 x 45min | 07:30-14:55 | Sudan          |
+| `sd-private`     | Sudan Private            | Sun-Thu | 7 x 50min | 07:15-14:25 | Sudan          |
+| `sd-british`     | British Curriculum       | Mon-Fri | 6 x 55min | 08:00-14:45 | Sudan          |
+| `sd-ib`          | IB / American            | Mon-Fri | 6 x 50min | 08:00-14:15 | Sudan          |
+| `sd-half-day`    | Half Day / KG            | Sun-Thu | 5 x 40min | 08:00-11:55 | Sudan          |
+| `gulf-standard`  | Gulf Standard            | Sun-Thu | -         | -           | Gulf           |
+| `gulf-private`   | Gulf Private             | Sun-Thu | -         | -           | Gulf           |
+| `mena-standard`  | MENA Standard            | -       | -         | -           | MENA           |
+| `us-standard`    | US Standard              | Mon-Fri | -         | -           | United States  |
+| `intl-default`   | International Default    | Mon-Fri | -         | -           | Wildcard (`*`) |
 
 ### Legacy Template Mapping
-
-Old template names are mapped to new structure slugs for backward compatibility:
 
 | Legacy Template | Structure Slug   |
 | --------------- | ---------------- |
@@ -79,17 +273,19 @@ Old template names are mapped to new structure slugs for backward compatibility:
 | `standard_6`    | `sd-british`     |
 | `half_day`      | `sd-half-day`    |
 
-### Key Files
+### Key File
 
-| File                                                      | Purpose                                            |
-| --------------------------------------------------------- | -------------------------------------------------- |
-| `src/components/school-dashboard/timetable/structures.ts` | Types, catalog data, matcher and utility functions |
+| File                                                      | Purpose                                                   |
+| --------------------------------------------------------- | --------------------------------------------------------- |
+| `src/components/school-dashboard/timetable/structures.ts` | 10 structures, scoring system, matcher, utility functions |
 
 ### API
 
 ```typescript
 import {
+  findBestStructure,
   formatWorkingDays,
+  generatePeriods,
   getRecommendedStructures,
   getStructureBySlug,
   getStructuresByCountry,
@@ -97,16 +293,17 @@ import {
   TIMETABLE_STRUCTURES,
 } from "@/components/school-dashboard/timetable/structures"
 
-// Filter by school profile - returns matching structures, default first
+// Scored recommendations - best match first
 const structures = getRecommendedStructures("SD", "public", "both")
-// → [sd-gov-default, sd-half-day]
 
 // Look up by slug
 const structure = getStructureBySlug("sd-british")
 
+// Generate period previews for a structure
+const periods = generatePeriods(structure)
+
 // Display helper
 formatWorkingDays([0, 1, 2, 3, 4]) // → "Sun - Thu"
-formatWorkingDays([1, 2, 3, 4, 5]) // → "Mon - Fri"
 ```
 
 ---
@@ -142,14 +339,7 @@ Each structure card shows:
 | `src/components/onboarding/schedule/actions.ts`            | `getSchoolScheduleData()`, `saveScheduleChoice()` |
 | `src/components/onboarding/schedule/config.ts`             | Step constants                                    |
 | `src/components/onboarding/schedule/validation.ts`         | Zod schema                                        |
-
-### Navigation Chain
-
-```
-... → capacity → schedule → branding → ...
-```
-
-Configured in `config.client.ts` (STEP_NAVIGATION) and `config.ts` (ONBOARDING_STEPS, order 5.5).
+| `src/components/onboarding/schedule/config-row.tsx`        | Config row display component                      |
 
 ---
 
@@ -183,81 +373,297 @@ await applyTimetableStructure({
 })
 ```
 
-### Key File
+---
 
-| File                                                   | Purpose                                   |
-| ------------------------------------------------------ | ----------------------------------------- |
-| `src/components/school-dashboard/timetable/actions.ts` | `applyTimetableStructure()` server action |
+## Slot Editor Dialog
+
+The `SlotEditorDialog` (`slot-editor-dialog.tsx`) is a full-featured editor with 3 tabs:
+
+1. **Basic Info**: Day of week, period selection
+2. **Assignment**: Class, subject, teacher, classroom selection
+3. **Options**: Substitute teacher toggle, recurring slots, notes
+
+Uses zod validation and react-hook-form. Runs client-side `validateSlotPlacement()` from `utils.ts` before saving.
 
 ---
 
 ## Configure Working Days and Lunch
 
-1. Open the Timetable page.
-2. Click "Schedule settings".
-3. Choose working days (e.g., Sun-Thu or your school's pattern) and select "Lunch after period" if applicable.
-4. Save. Changes apply to the selected term and propagate to the timetable grid and printing.
+1. Open `/timetable/settings`.
+2. Choose working days (e.g., Sun-Thu or your school's pattern) and select "Lunch after period" if applicable.
+3. Save. Changes apply to the selected term and propagate to the timetable grid and printing.
 
 Notes:
 
-- Working days can vary by school and term (e.g., Friday off; Friday+Saturday off; Friday+Sunday off).
+- Working days can vary by school and term.
 - Lunch row is inserted after your chosen period in the grid and print.
 - Applying a structure automatically sets working days and lunch position.
 
 ---
 
-## Use Template (Settings Page)
+## Settings Page
 
-The timetable settings page includes a "Use Template" dialog that shows all structures from the catalog.
+The settings page (`settings/content.tsx`) provides:
 
-1. Select a school year.
-2. Click "Use Template".
-3. Browse all available structures - each shows period count, time range, and working days.
-4. Click a structure to apply it. If periods already exist, a warning confirms replacement.
-
-This replaces the previous 3-option hardcoded template dialog (`standard_8`, `standard_6`, `half_day`) with the full structure catalog.
+- **Period management**: Create, update, delete individual periods
+- **Working days configuration**: Select active school days per term
+- **Structure templates**: Apply predefined structures from the catalog, with replacement warning
+- **Copy periods**: Copy period configuration between school years
 
 ---
 
-## Add or Edit Timetable Slots
+## AI-Powered Generation
 
-1. Click "Edit slots".
-2. Pick Day, Period, Class (A/B/C/D...), Teacher, and Classroom.
-3. Save to create/update the weekly slot.
+The generate page (`generate/content.tsx`) provides automated timetable creation.
 
-Tips:
+### Algorithm (`generate/algorithm.ts`)
 
-- Use grade + section naming (e.g., Grade 1 A/B/C/D) to manage multi-class grades.
-- Teacher timetables are supported via the view switch (Class vs Teacher).
+A 3-phase approach:
+
+1. **Greedy Assignment**: Fast initial placement satisfying hard constraints
+2. **Constraint Satisfaction**: Iterative refinement to resolve violations
+3. **Optimization**: Score-based improvements (minimize gaps, balance workloads)
+
+### Configuration Options
+
+- **Hard constraints**: Enforce teacher expertise, room capacity, lunch breaks, prevent back-to-back periods
+- **Workload limits**: Max periods per day, per week, max consecutive periods
+- **Optimization preferences**: Configurable via UI toggles
+
+### UI Flow
+
+1. Select a term
+2. Toggle constraint settings
+3. Set workload limits
+4. Click "Generate" to preview results with iteration count and quality score
+5. Review generated slots
+6. Click "Apply" to write to database
+
+### Algorithm Limitations
+
+The 3-phase algorithm has known gaps:
+
+- **`preventBackToBack` detected but not enforced**: The code at `algorithm.ts:698-705` detects consecutive period conflicts but comments `// For now, allow it but flag` — no violation is returned and the slot is placed anyway.
+- **No lunch break enforcement**: The algorithm doesn't reserve lunch periods. A teacher can be assigned straight through lunch.
+- **No multi-period blocks**: Double periods (e.g., 2-hour lab sessions) aren't supported. Each slot is a single period.
+- **No rotating schedules**: A/B week or day rotation patterns aren't modeled.
+- **O(n^2) optimization phase**: The optimization loop compares all slots pairwise. For large schools (500+ slots), this can be slow.
+
+### Server Actions
+
+| Action                       | Purpose                       |
+| ---------------------------- | ----------------------------- |
+| `generateTimetablePreview()` | Run algorithm, return preview |
+| `applyGeneratedTimetable()`  | Write generated results to DB |
 
 ---
 
-## Detect and Resolve Conflicts
+## Conflict Detection
 
-Conflict types:
+The conflicts page (`conflicts/content.tsx`) provides a dedicated UI for finding and resolving scheduling conflicts.
 
-- Teacher conflict: Same teacher assigned to two classes at the same time.
-- Room conflict: Same room assigned to two classes at the same time.
+### Conflict Types
 
-Workflow:
+- **Teacher conflict**: Same teacher assigned to two classes at the same time
+- **Room conflict**: Same room assigned to two classes at the same time
 
-1. In the header, check the conflict counter. Click it to open the Conflicts drawer.
-2. Each conflict lists the affected classes. Click "Suggest for teacher" or "Suggest for room" to fetch free slots.
-3. Click "Apply" on a suggestion to pre-fill the Slot Editor with that day/period.
-4. Save the slot to resolve the conflict.
+### Detection
+
+Server-side detection via `detectTimetableConflicts()` uses SQL `GROUP BY` + `HAVING` for efficient O(conflicts) performance. Client-side `detectConflicts()` in `utils.ts` provides O(n^2) detection for preview/validation.
+
+### Resolution Workflow
+
+1. Select a term and click "Scan"
+2. View teacher and room conflicts with affected classes
+3. Click "Suggest" to find free slots for resolution
+4. Click "Apply" to pre-fill the Slot Editor with the suggestion
+5. Save the slot to resolve the conflict
+
+The `conflicts-drawer.tsx` component also provides a drawer overlay from the main timetable view.
 
 ---
 
-## Print (A4)
+## Constraint Validation
 
-- The Timetable page supports A4 printing with page-break helpers and row-split prevention.
-- Use browser print (Ctrl/Cmd + P). Choose A4 portrait. Dark UI accents are stripped for readability.
+### Teacher Constraints
+
+Per-teacher scheduling preferences stored in `TeacherConstraint` model:
+
+- `maxPeriodsPerDay`, `maxPeriodsPerWeek`, `minFreePeriods`, `maxConsecutivePeriods`
+- `dayPreferences` (JSON), `periodPreferences` (JSON)
+- `enforceSubjectMatch`, `lunchBreakRequired`
+
+Unavailable blocks tracked separately in `TeacherUnavailableBlock` (supports recurring and date-specific).
+
+### Room Constraints
+
+Per-room constraints stored in `RoomConstraint` model:
+
+- `allowedSubjectTypes`, `strictCapacityLimit`, `capacityBuffer`
+- Accessibility flags
+- `reservedPeriods` (JSON), `maintenanceBlocks` (JSON)
+
+### Validation Functions
+
+| Action                         | Purpose                            |
+| ------------------------------ | ---------------------------------- |
+| `validateTeacherConstraints()` | Check teacher prefs/limits         |
+| `validateRoomConstraints()`    | Check room capacity/restrictions   |
+| `validateSlotConstraints()`    | Combined teacher + room validation |
+| `previewMoveConstraints()`     | Preview violations before moving   |
+
+Violations are returned with `error` or `warning` severity.
+
+---
+
+## Substitutions
+
+The substitutions sub-module (`substitutions/`) manages teacher absences and substitute assignments.
+
+### Components
+
+| File                    | Purpose                      |
+| ----------------------- | ---------------------------- |
+| `content.tsx`           | Main substitution management |
+| `absence-form.tsx`      | Record teacher absences      |
+| `substitute-finder.tsx` | Find available substitutes   |
+| `substitution-list.tsx` | View substitution records    |
+
+### Server Actions
+
+| Action                         | Purpose                               |
+| ------------------------------ | ------------------------------------- |
+| `createTeacherAbsence()`       | Record a teacher absence              |
+| `updateTeacherAbsence()`       | Update absence details                |
+| `getTeacherAbsences()`         | List absences                         |
+| `findAvailableSubstitutes()`   | Find teachers free during the period  |
+| `assignSubstitute()`           | Assign a substitute teacher           |
+| `respondToSubstitution()`      | Confirm or decline assignment         |
+| `getSubstitutionRecords()`     | List all substitution records         |
+| `cancelSubstitution()`         | Cancel a substitution                 |
+| `getMyUpcomingSubstitutions()` | Current user's upcoming substitutions |
+| `getSlotsNeedingSubstitutes()` | Find unresolved absences              |
+
+### Prisma Models
+
+- `TeacherAbsence`: Absence records with approval workflow (PENDING/APPROVED/REJECTED/CANCELLED)
+- `SubstitutionRecord`: Links absence to original slot and substitute teacher (PENDING/CONFIRMED/DECLINED/COMPLETED/CANCELLED)
+
+---
+
+## Templates
+
+The templates sub-module (`templates/`) allows saving and reusing schedule patterns.
+
+### Components
+
+| File                         | Purpose                      |
+| ---------------------------- | ---------------------------- |
+| `content.tsx`                | Template list and management |
+| `create-template-dialog.tsx` | Create new template dialog   |
+| `apply-template-dialog.tsx`  | Apply template to term       |
+
+### Server Actions
+
+| Action                     | Purpose                        |
+| -------------------------- | ------------------------------ |
+| `listTimetableTemplates()` | List all templates             |
+| `createTemplateFromTerm()` | Save current term as template  |
+| `applyTemplateToTerm()`    | Apply template to another term |
+| `deleteTemplate()`         | Delete a template              |
+| `setDefaultTemplate()`     | Set a template as default      |
+
+### Prisma Models
+
+- `TimetableTemplate`: Reusable templates with version, slot patterns (JSON), working days, rotation type, statistics
+- `TemplateApplication`: Audit trail of when templates are applied, with options used and results
+
+---
+
+## Analytics
+
+The analytics page (`analytics/content.tsx`) provides scheduling statistics:
+
+- **Summary stats**: Total slots, teachers, rooms, classes
+- **Utilization rates**: Room utilization, teacher workload distribution
+- **Reports**: Via `analytics-reports.tsx` component
+
+Server action: `getTimetableAnalytics()` returns computed stats.
+
+---
+
+## Schedule Exceptions
+
+Manage holidays, events, and modified schedules:
+
+| Action                      | Purpose            |
+| --------------------------- | ------------------ |
+| `getScheduleExceptions()`   | List exceptions    |
+| `createScheduleException()` | Create exception   |
+| `updateScheduleException()` | Update exception   |
+| `deleteScheduleException()` | Delete exception   |
+| `copyScheduleSettings()`    | Copy between terms |
+
+The `ScheduleException` model supports date ranges, class/teacher scoping, replacement slots (JSON), and recurrence via iCal RRULE format.
+
+---
+
+## Export and Print
+
+### PDF Export
+
+Uses `@react-pdf/renderer` with registered fonts:
+
+- **Rubik** for Arabic text
+- **Inter** for English text
+
+The `useTimetableExport` hook generates a PDF blob and creates a download link. The `timetable-pdf.tsx` component renders the grid as a styled PDF document with subject color coding via `getSubjectHex()`.
+
+### Browser Print
+
+- `print.css` provides A4 styling with page-break helpers and row-split prevention
+- Dark UI accents are stripped for readability
+- Use browser print (Ctrl/Cmd + P), choose A4 portrait
+
+---
+
+## By-Class / By-Teacher / By-Room Views
+
+Dedicated admin pages for viewing timetables from different perspectives:
+
+| View       | Component            | Features                                   |
+| ---------- | -------------------- | ------------------------------------------ |
+| By Class   | `by-class/content`   | Term + class selectors, day-labeled layout |
+| By Teacher | `by-teacher/content` | Term + teacher selectors                   |
+| By Room    | `by-room/content`    | Term + room selectors, utilization bar     |
+
+---
+
+## Integration Points
+
+The timetable module should connect with other school modules but currently operates in isolation for most.
+
+### Attendance (Not Connected)
+
+The attendance module records daily/period attendance independently. There is no pre-population of attendance records from timetable slots — teachers must manually select classes and students each period. The timetable knows which teacher is in which room at which period, but this information isn't used to auto-populate attendance forms.
+
+### Exams (Not Connected)
+
+Exams are scheduled independently with their own date/time fields. There's no check against the timetable for conflicts — an exam can be scheduled during an existing timetable slot without warning.
+
+### Schedule Exceptions (Partial)
+
+The `ScheduleException` model and CRUD actions exist (`getScheduleExceptions`, `createScheduleException`, `updateScheduleException`, `deleteScheduleException`). However, timetable query functions (`getTimetableByRoom`, `getTimetableByTeacher`, `getWeeklyTimetable`, etc.) **do not check schedule exceptions**. A holiday or modified schedule won't affect what the grid displays.
+
+### Substitutions (Partial)
+
+The substitution workflow is complete: absence recording, substitute finder, assignment, confirmation/decline. However, the timetable **views don't reflect substitutions** — if Teacher A is absent and Teacher B is substituting, the grid still shows Teacher A's name.
 
 ---
 
 ## Extended School Types
 
-The `SchoolCategory` type was extended to include curriculum-based types alongside the original ownership-based types:
+The `SchoolCategory` type includes both ownership-based and curriculum-based types:
 
 | Type            | Category   | Description                  |
 | --------------- | ---------- | ---------------------------- |
@@ -275,11 +681,278 @@ These values are used by `getRecommendedStructures()` to match the right timetab
 
 ---
 
+## Prisma Models
+
+### Core Models (`timetable.prisma`)
+
+| Model                     | Table                        | Purpose                                                                                                                  |
+| ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `Timetable`               | `timetables`                 | Core slot: day + period + class + teacher + room. 3 unique constraints (class, teacher, room per day+period). 8 indexes. |
+| `TeacherConstraint`       | `teacher_constraints`        | Per-teacher scheduling limits and preferences                                                                            |
+| `TeacherUnavailableBlock` | `teacher_unavailable_blocks` | Specific unavailable blocks (recurring or date-specific)                                                                 |
+| `RoomConstraint`          | `room_constraints`           | Room capacity, subject type, accessibility constraints                                                                   |
+| `TimetableTemplate`       | `timetable_templates`        | Reusable schedule patterns with versioning                                                                               |
+| `TemplateApplication`     | `template_applications`      | Audit trail of template applications                                                                                     |
+| `ScheduleException`       | `schedule_exceptions`        | Holidays, events, modified schedules                                                                                     |
+| `TeacherAbsence`          | `teacher_absences`           | Absence records with approval workflow                                                                                   |
+| `SubstitutionRecord`      | `substitution_records`       | Substitute teacher assignments                                                                                           |
+
+### Schedule Model (`schedule.prisma`)
+
+| Model              | Table                 | Purpose                                |
+| ------------------ | --------------------- | -------------------------------------- |
+| `SchoolWeekConfig` | `school_week_configs` | Working days and lunch config per term |
+
+`Period`, `SchoolYear`, and `Term` models are in `academic-structure.prisma`.
+
+---
+
 ## Multi-Tenant Safety
 
 - Every action/query includes `schoolId` from the tenant context (subdomain/session/impersonation).
 - Data changes affect only the current school and selected term.
 - `applyTimetableStructure()` scopes all Period and SchoolWeekConfig records by `schoolId`.
+- All 9 timetable Prisma models include `schoolId` with `@@index([schoolId])`.
+
+---
+
+## Technical Reference
+
+### Server Actions (70+ functions)
+
+Organized by category:
+
+**Selection/Lookup**
+
+| Action                         | Purpose                  |
+| ------------------------------ | ------------------------ |
+| `getTermsForSelection()`       | Terms dropdown           |
+| `getClassesForSelection()`     | Classes dropdown         |
+| `getTeachersForSelection()`    | Teachers dropdown        |
+| `getRoomsForSelection()`       | Rooms dropdown           |
+| `getSubjectsForSlotEditor()`   | Subjects for slot editor |
+| `getTeachersForSlotEditor()`   | Teachers for slot editor |
+| `getGradeLevelsForSelection()` | Grade levels dropdown    |
+| `getSchoolYearsForSelection()` | School years dropdown    |
+
+**CRUD**
+
+| Action                     | Purpose                   |
+| -------------------------- | ------------------------- |
+| `upsertTimetableSlot()`    | Create or update a slot   |
+| `moveTimetableSlot()`      | Move slot to new position |
+| `deleteTimetableSlot()`    | Delete a slot             |
+| `upsertSchoolWeekConfig()` | Save week config          |
+
+**Queries**
+
+| Action                         | Purpose                           |
+| ------------------------------ | --------------------------------- |
+| `getWeeklyTimetable()`         | Full weekly grid with filters     |
+| `getScheduleConfig()`          | Schedule config for a term        |
+| `getTimetableByClass()`        | Slots by class                    |
+| `getTimetableByStudentGrade()` | Student's grade-based timetable   |
+| `getTimetableByGradeLevel()`   | Timetable by grade level          |
+| `getTimetableByTeacher()`      | Teacher schedule + workload       |
+| `getTimetableByRoom()`         | Room schedule                     |
+| `getTimetableAnalytics()`      | Summary analytics                 |
+| `suggestFreeSlots()`           | Available slot recommendations    |
+| `getActiveTerm()`              | Current active term               |
+| `getPersonalizedTimetable()`   | Role-based personalized data      |
+| `getGuardianChildren()`        | Guardian's linked children        |
+| `getChildTimetable()`          | Specific child's timetable        |
+| `getTodaySchedule()`           | Today's schedule for current user |
+
+**Period Management**
+
+| Action                      | Purpose                        |
+| --------------------------- | ------------------------------ |
+| `createPeriod()`            | Create new period              |
+| `updatePeriod()`            | Update period details          |
+| `deletePeriod()`            | Delete period                  |
+| `copyPeriodsToYear()`       | Copy periods across years      |
+| `createDefaultPeriods()`    | Legacy: create default periods |
+| `getPeriodsForTerm()`       | List periods for a term        |
+| `applyTimetableStructure()` | Apply predefined structure     |
+
+**Import**
+
+| Action                   | Purpose                                          |
+| ------------------------ | ------------------------------------------------ |
+| `importTimetableSlots()` | Bulk import with validation + conflict detection |
+
+### REST APIs
+
+| Endpoint                   | Method | Purpose                     |
+| -------------------------- | ------ | --------------------------- |
+| `/api/timetable`           | GET    | Weekly timetable grid       |
+| `/api/timetable/slot`      | POST   | Upsert a single slot        |
+| `/api/timetable/conflicts` | GET    | Detect scheduling conflicts |
+| `/api/timetable/suggest`   | GET    | Find free slots             |
+| `/api/schedule`            | GET    | Get schedule configuration  |
+| `/api/schedule/config`     | POST   | Upsert school week config   |
+
+All endpoints are `force-dynamic` and support public access via `domain` parameter for local testing.
+
+### Validation
+
+All inputs are validated with Zod schemas in `validation.ts`:
+
+- `dayOfWeekSchema`, `weekOffsetSchema`, `cuidSchema`, `workingDaysSchema`
+- Schemas for every server action input
+
+### Configuration Constants (`config.ts`)
+
+- `DAYS_OF_WEEK`, `SUBJECT_COLORS` (hex map), `GRID_PALETTE` (5 pastel colors)
+- Day labels (EN/AR), `CLASSROOM_TYPES`, `PERIOD_TYPES`
+- `WORKLOAD_LIMITS`, `GRID_SETTINGS`, `EXPORT_FORMATS`, `VIEW_MODES`
+- `DEFAULT_SETTINGS`, `VALIDATION_RULES`, `ANALYTICS_METRICS`, `QUICK_ACTIONS`
+
+### Local Testing Without Subdomains
+
+Pass a school domain to the public fallbacks:
+
+- Terms: `GET /api/terms?domain=khartoum`
+- Timetable: `GET /api/timetable?domain=khartoum&weekOffset=0`
+
+Available demo domains (seeded): `khartoum`, `omdurman`, `portsudan`, `wadmadani`.
+
+---
+
+## Component Inventory
+
+### Core (`src/components/school-dashboard/timetable/`)
+
+| File                           | Type   | Purpose                                            |
+| ------------------------------ | ------ | -------------------------------------------------- |
+| `content.tsx`                  | Shared | Re-exports `TimetableContent` from production      |
+| `content-production.tsx`       | Client | Production entry: `SessionProvider` + `RoleRouter` |
+| `slot-editor-dialog.tsx`       | Client | 3-tab slot editor with zod + react-hook-form       |
+| `schedule-settings-dialog.tsx` | Client | Schedule settings dialog                           |
+| `conflicts-drawer.tsx`         | Client | Conflict display drawer                            |
+| `visual-builder.tsx`           | Client | Visual drag-and-drop builder                       |
+| `import-export.tsx`            | Client | Import/export UI                                   |
+| `analytics-reports.tsx`        | Client | Analytics reporting                                |
+
+### Views (`views/`)
+
+| File                | Type   | Purpose                                     |
+| ------------------- | ------ | ------------------------------------------- |
+| `role-router.tsx`   | Client | Routes to correct view by role              |
+| `admin-view.tsx`    | Client | Admin: searchable selectors + editable grid |
+| `teacher-view.tsx`  | Client | Teacher: personal schedule + stats          |
+| `student-view.tsx`  | Client | Student: grade schedule + PDF export        |
+| `guardian-view.tsx` | Client | Guardian: multi-child selector              |
+| `simple-grid.tsx`   | Client | Core reusable grid (all views)              |
+| `preview.tsx`       | Client | Preview with random data                    |
+
+### Sub-features
+
+| Directory        | Components                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| `by-class/`      | `content.tsx` - class-filtered view                                                 |
+| `by-teacher/`    | `content.tsx` - teacher-filtered view                                               |
+| `by-room/`       | `content.tsx` - room-filtered view with utilization bar                             |
+| `analytics/`     | `content.tsx` - dashboard stats                                                     |
+| `conflicts/`     | `content.tsx` - conflict scanner with resolution                                    |
+| `generate/`      | `content.tsx` + `algorithm.ts` - AI generation                                      |
+| `settings/`      | `content.tsx` - period CRUD, structure application                                  |
+| `templates/`     | `content.tsx`, `create-template-dialog.tsx`, `apply-template-dialog.tsx`            |
+| `substitutions/` | `content.tsx`, `absence-form.tsx`, `substitute-finder.tsx`, `substitution-list.tsx` |
+| `export/`        | `use-timetable-export.ts`, `timetable-pdf.tsx`                                      |
+
+### Utilities
+
+| File                    | Purpose                                   |
+| ----------------------- | ----------------------------------------- |
+| `actions.ts`            | 70+ server actions (~5800 lines)          |
+| `types.ts`              | All TypeScript interfaces (322 lines)     |
+| `structures.ts`         | 10 structures + scoring (1173 lines)      |
+| `config.ts`             | Constants and settings (280 lines)        |
+| `constants.ts`          | Presets and enums                         |
+| `validation.ts`         | Zod schemas for all inputs                |
+| `permissions.ts`        | Server-side permission guards             |
+| `permissions-config.ts` | Client-safe role/permission matrix        |
+| `utils.ts`              | Color, time, conflict detection utilities |
+| `fallback-data.ts`      | Demo/fallback timetable data              |
+| `seed-utils.ts`         | Seeding utilities                         |
+
+### Hooks
+
+| Hook                           | Purpose                       |
+| ------------------------------ | ----------------------------- |
+| `use-timetable-permissions.ts` | Client-side permission checks |
+| `use-media-query.ts`           | Media query detection         |
+| `use-mobile.tsx`               | Mobile detection              |
+| `use-toast.ts`                 | Toast notifications           |
+
+### Tests
+
+| File                                     | Purpose                  |
+| ---------------------------------------- | ------------------------ |
+| `actions.test.ts`                        | Server action unit tests |
+| `isolation.test.ts`                      | Multi-tenant isolation   |
+| `weekly.test.ts`                         | Weekly timetable tests   |
+| `__tests__/production-readiness.test.ts` | Production readiness     |
+| `__tests__/validation.test.ts`           | Validation schema tests  |
+
+---
+
+## i18n Coverage
+
+Both `school-en.json` and `school-ar.json` include the `timetable` key with translations for:
+
+- Navigation labels (all tabs)
+- Day names (7 days)
+- Core labels (period, break, lunch, times, subject, teacher, room)
+- Actions (view, create, edit, print, export)
+- Student view (class schedule, download, PDF, print, subjects, periods)
+- Generate section (constraints, workload limits, optimization, results)
+- Conflicts section (scan, teacher/room conflicts, resolution)
+- By-class, by-teacher, by-room sections
+- Templates and analytics sections
+
+---
+
+## Known Issues
+
+### Critical
+
+Issues that produce incorrect data or security-relevant behavior in production.
+
+| #   | Issue                                                                                                                                                                                                                          | Location                                | Impact                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- | ------------------------------------ |
+| 1   | `getChildTimetable()` uses `findFirst` on `StudentClass` — returns only 1 class enrollment per child. Since Class = course section, a student in 6 subjects has 6 enrollments. Guardian sees only 1.                           | `actions.ts:2670`                       | Guardian sees incomplete schedule    |
+| 2   | `getWeeklyTimetable()` Student branch reads `Student.classId` — a field that does not exist on the Student model. Students enroll via `StudentClass` bridge table. Result: `classId` is always `undefined`, no filter applied. | `actions.ts:1378-1383`                  | Students see all school slots        |
+| 3   | `getWeeklyTimetable()` Teacher branch uses `session.user.id` (User ID) as `teacherId` (Teacher ID). These are different entities. The Teacher record must be looked up by `userId` first.                                      | `actions.ts:1367`                       | Teachers see no data (ID mismatch)   |
+| 4   | `filterTimetableByRole()` GUARDIAN branch compares `childId` (student ID) against `item.classId` (class ID) — mixing entity types. The comment says `// Assuming childId might be classId`.                                    | `permissions.ts:149-153`                | Guardian filter always returns empty |
+| 5   | ACCOUNTANT and STAFF are routed to `AdminView` with `editable={true}` because `getPersonalizedTimetable()` has no cases for these roles (falls through to default `viewType = "admin"`).                                       | `actions.ts:2415`, `admin-view.tsx:353` | Read-only roles see edit UI          |
+
+### High
+
+Issues that cause significant functionality gaps.
+
+| #   | Issue                                                                                                                                      | Impact                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| 6   | Admin view has only room and teacher selector modes — no class/grade filter. Admins must use orphaned `/timetable/by-class` route.         | Hard to find a specific class schedule     |
+| 7   | Routes `by-class`, `by-teacher`, `by-room`, `templates` have page components but no navigation links in layout tabs or sidebar.            | Features exist but are undiscoverable      |
+| 8   | `ScheduleException` records are not checked by timetable query functions. Holidays and modified schedules don't affect the displayed grid. | Schedule exceptions have no effect         |
+| 9   | `SubstitutionRecord` is not reflected in timetable views. When a substitute is assigned, the grid still shows the original teacher.        | Substitutions are invisible to users       |
+| 10  | No attendance integration — timetable slots aren't used to pre-populate attendance records.                                                | Teachers manually select class each period |
+
+### Medium
+
+Issues that affect maintainability, performance, or edge cases.
+
+| #   | Issue                                                                                                                         | Location               |
+| --- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 11  | `preventBackToBack` constraint is detected but not enforced — code comments `// For now, allow it but flag`                   | `algorithm.ts:698-705` |
+| 12  | No lunch break enforcement in the generation algorithm                                                                        | `algorithm.ts`         |
+| 13  | `actions.ts` at ~5800 lines with 80+ functions is a candidate for splitting into domain-specific files                        | `actions.ts`           |
+| 14  | Multiple sequential `await` calls in `getPersonalizedTimetable()` — periods, week config, and term info could be parallelized | `actions.ts:2400+`     |
+| 15  | Seed data limited to 5 pre-built structures for Sudan — other regions have placeholder structures without period definitions  | `structures.ts`        |
+| 16  | Audit logging writes to `console.log` in dev only — no production audit trail for timetable changes                           | `permissions.ts:210`   |
+| 17  | `templates/page.tsx` passes `termId=""` with a TODO to get it from active term context                                        | `templates/page.tsx`   |
 
 ---
 
@@ -290,37 +963,8 @@ These values are used by `getRecommendedStructures()` to match the right timetab
 - **No recommended structures**: The school's country/schoolType may not match any catalog entries. All structures are still available under "Other options".
 - **Empty suggestions**: The teacher/room may be fully occupied for selected days; try another day or adjust schedule settings.
 - **Legacy templates**: Old `standard_8`/`standard_6`/`half_day` names still work via the legacy mapping.
-
----
-
-## Technical Reference
-
-### Server Actions
-
-| Action                       | Purpose                                         |
-| ---------------------------- | ----------------------------------------------- |
-| `applyTimetableStructure()`  | Create periods from structure catalog           |
-| `createDefaultPeriods()`     | Legacy: create periods from hardcoded templates |
-| `upsertSchoolWeekConfig()`   | Save working days and lunch config              |
-| `getScheduleConfig()`        | Read current config for a term                  |
-| `getPeriodsForTerm()`        | List periods for a term                         |
-| `detectTimetableConflicts()` | Find teacher/room conflicts                     |
-| `suggestFreeSlots()`         | Recommend available slots                       |
-| `upsertTimetableSlot()`      | Create or update a weekly slot                  |
-
-### REST APIs
-
-- Schedule config: `GET /api/schedule?termId=...`, `POST /api/schedule/config`
-- Weekly data: `GET /api/timetable?termId=...&weekOffset=0|1&classId=...&teacherId=...`
-- Conflicts: `GET /api/timetable/conflicts?termId=...`
-- Suggestions: `GET /api/timetable/suggest?termId=...&teacherId=...&classroomId=...`
-- Slot upsert: `POST /api/timetable/slot`
-
-### Local Testing Without Subdomains
-
-If tenant context (subdomain/session) isn't available locally, you can pass a school domain to the public fallbacks:
-
-- Terms: `GET /api/terms?domain=khartoum`
-- Timetable: `GET /api/timetable?domain=khartoum&weekOffset=0`
-
-Available demo domains (seeded): `khartoum`, `omdurman`, `portsudan`, `wadmadani`.
+- **Active term required**: The role router requires an active term matching the current date range. If no term is active, the view won't load data.
+- **Guardian sees empty or partial schedule**: This is known issue #1 — `getChildTimetable()` uses `findFirst` and returns only 1 class enrollment. Until fixed, guardians will see an incomplete schedule.
+- **ACCOUNTANT/STAFF can edit slots**: This is known issue #5 — these roles are routed to AdminView with `editable={true}`. The server action `upsertTimetableSlot()` has its own permission check, but the UI is misleading. Until the routing is fixed, edits from these roles will fail server-side.
+- **Student sees all school slots via API**: If using `getWeeklyTimetable()` directly (e.g., via `/api/timetable`), the Student branch references a non-existent `Student.classId` field, so no class filter is applied. The production `StudentView` component uses `getTimetableByStudentGrade()` instead, which works correctly.
+- **Teacher sees empty timetable via API**: If using `getWeeklyTimetable()` directly, the Teacher branch uses `user.id` as `teacherId`. Since these are different IDs (User vs Teacher model), no slots match. The production `TeacherView` component uses `getTimetableByTeacher()` with the correct teacher ID lookup.

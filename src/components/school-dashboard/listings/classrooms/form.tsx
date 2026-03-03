@@ -94,7 +94,7 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
       if (result.success) {
         onSuccess?.()
       } else {
-        ErrorToast(result.error)
+        ErrorToast(result.error || "Failed to save classroom")
       }
     })
   }

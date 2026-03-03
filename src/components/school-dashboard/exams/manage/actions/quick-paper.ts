@@ -41,20 +41,12 @@ export async function createGeneratedExamForPaper(
     }
 
     // Check if a GeneratedExam already exists for this exam
-    const existing = await db.generatedExam.findUnique({
-      where: { examId },
-      select: { id: true, schoolId: true },
+    const existing = await db.generatedExam.findFirst({
+      where: { examId, schoolId },
+      select: { id: true },
     })
 
     if (existing) {
-      // Verify it belongs to the same school
-      if (existing.schoolId !== schoolId) {
-        return {
-          success: false,
-          error: "Exam not found",
-          code: "NOT_FOUND",
-        }
-      }
       return { success: true, data: { generatedExamId: existing.id } }
     }
 

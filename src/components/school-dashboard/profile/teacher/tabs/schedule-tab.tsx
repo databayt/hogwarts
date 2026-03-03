@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Teacher Profile Schedule Tab
  * Weekly schedule, timetable, and office hours
@@ -413,7 +410,7 @@ export function ScheduleTab({
                   size="sm"
                   onClick={() => setCurrentWeek(addDays(weekStart, -7))}
                 >
-                  <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <span className="px-2 text-sm font-medium">
                   {format(weekStart, "MMM dd")} -{" "}
@@ -424,7 +421,7 @@ export function ScheduleTab({
                   size="sm"
                   onClick={() => setCurrentWeek(addDays(weekStart, 7))}
                 >
-                  <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
               <div className="flex gap-1">
@@ -498,7 +495,7 @@ export function ScheduleTab({
                           <div
                             key={slot.id}
                             className={cn(
-                              "absolute start-0 end-0 mx-1 overflow-hidden rounded-md p-1 text-white",
+                              "absolute right-0 left-0 mx-1 overflow-hidden rounded-md p-1 text-white",
                               slot.color
                             )}
                             style={getSlotStyle(slot)}

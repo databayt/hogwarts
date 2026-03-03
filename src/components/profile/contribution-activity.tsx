@@ -1,7 +1,5 @@
 "use client"
 
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState } from "react"
 import {
   BookOpen,
@@ -20,13 +18,14 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { ProfileRole } from "./types"
 
 interface ContributionActivityProps {
   role: ProfileRole
   data?: Record<string, unknown>
+  selectedYear?: number
+  onYearChange?: (year: number) => void
 }
 
 interface ActivityItem {
@@ -56,8 +55,7 @@ interface ActivityItem {
 // Generate activity items based on role
 function generateActivityForRole(
   role: ProfileRole,
-  year: number,
-  locale: string = "ar"
+  year: number
 ): Map<string, ActivityItem[]> {
   const activities = new Map<string, ActivityItem[]>()
   const currentDate = new Date()
@@ -68,7 +66,7 @@ function generateActivityForRole(
     const date = new Date(year, month, 1)
     if (date > currentDate) continue
 
-    const monthKey = date.toLocaleDateString(locale, {
+    const monthKey = date.toLocaleDateString("en-US", {
       month: "long",
       year: "numeric",
     })
@@ -265,17 +263,19 @@ function generateActivityForRole(
 export default function ContributionActivity({
   role,
   data,
+  selectedYear: selectedYearProp,
+  onYearChange,
 }: ContributionActivityProps) {
-  const { locale } = useLocale()
   const currentYear = new Date().getFullYear()
-  const [selectedYear, setSelectedYear] = useState(currentYear)
+  const [internalYear, setInternalYear] = useState(currentYear)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
 
-  const years = Array.from({ length: 6 }, (_, i) => currentYear - i)
+  const selectedYear = selectedYearProp ?? internalYear
+  const setSelectedYear = onYearChange ?? setInternalYear
 
   const activities = useMemo(() => {
-    return generateActivityForRole(role, selectedYear, locale)
-  }, [role, selectedYear, locale])
+    return generateActivityForRole(role, selectedYear)
+  }, [role, selectedYear])
 
   const toggleExpand = (id: string) => {
     setExpandedItems((prev) => {
@@ -298,24 +298,11 @@ export default function ContributionActivity({
 
   return (
     <div className="border-border space-y-4 rounded-lg border p-6">
-      {/* Header with year selector */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-foreground text-base font-semibold">
           {roleLabels[role]}
         </h3>
-        <div className="flex gap-1">
-          {years.map((year) => (
-            <Button
-              key={year}
-              variant={selectedYear === year ? "default" : "ghost"}
-              size="sm"
-              className="h-7 px-3 text-xs"
-              onClick={() => setSelectedYear(year)}
-            >
-              {year}
-            </Button>
-          ))}
-        </div>
       </div>
 
       {/* Activity timeline */}

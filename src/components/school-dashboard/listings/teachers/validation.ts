@@ -10,6 +10,7 @@ export const teacherBaseSchema = z.object({
   gender: z.enum(["male", "female"]).optional(),
   emailAddress: z.string().email("Valid email is required"),
   birthDate: z.coerce.date().optional(),
+  profilePhotoUrl: z.string().optional(),
 })
 
 // Employment details schema

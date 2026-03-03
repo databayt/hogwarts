@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Profile GitHub Layout Component
  * GitHub-style profile layout with left sidebar and main content area
@@ -213,7 +210,7 @@ export function ProfileGitHubLayout({
               </AvatarFallback>
             </Avatar>
             {profile.isOnline && (
-              <div className="border-background absolute end-8 bottom-8 h-10 w-10 rounded-full border-4 bg-green-500" />
+              <div className="border-background absolute right-8 bottom-8 h-10 w-10 rounded-full border-4 bg-green-500" />
             )}
           </div>
 

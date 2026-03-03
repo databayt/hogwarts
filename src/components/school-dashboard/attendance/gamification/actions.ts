@@ -94,7 +94,7 @@ export async function processAttendancePoints(
     if (status === "ABSENT") {
       // Reset streak on absence
       await db.attendanceStreak.upsert({
-        where: { studentId },
+        where: { schoolId_studentId: { schoolId, studentId } },
         create: {
           schoolId,
           studentId,
@@ -111,7 +111,7 @@ export async function processAttendancePoints(
 
     // Get or create streak record
     const streak = await db.attendanceStreak.upsert({
-      where: { studentId },
+      where: { schoolId_studentId: { schoolId, studentId } },
       create: {
         schoolId,
         studentId,
@@ -138,7 +138,7 @@ export async function processAttendancePoints(
     // Update longest streak if needed
     if (streak.currentStreak > streak.longestStreak) {
       await db.attendanceStreak.update({
-        where: { studentId },
+        where: { schoolId_studentId: { schoolId, studentId } },
         data: { longestStreak: streak.currentStreak },
       })
     }
@@ -198,7 +198,7 @@ export async function processAttendancePoints(
 
     // Check for badge qualifications
     const updatedStreak = await db.attendanceStreak.findUnique({
-      where: { studentId },
+      where: { schoolId_studentId: { schoolId, studentId } },
     })
 
     if (updatedStreak) {
@@ -451,7 +451,7 @@ export async function getStudentGamificationStats(
         take: 20,
       }),
       db.attendanceStreak.findUnique({
-        where: { studentId },
+        where: { schoolId_studentId: { schoolId, studentId } },
       }),
       db.studentBadge.findMany({
         where: { schoolId, studentId },

@@ -16,7 +16,12 @@ export default async function CatalogMaterialsPage({ params }: Props) {
 
   return (
     <>
-      <PageHeadingSetter title="Catalog Materials" />
+      <PageHeadingSetter
+        title={
+          dictionary?.saas?.catalog?.navigation?.materials ||
+          "Catalog Materials"
+        }
+      />
       <MaterialContent dictionary={dictionary} lang={lang} />
     </>
   )

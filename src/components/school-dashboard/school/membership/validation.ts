@@ -58,3 +58,7 @@ export const inviteMemberSchema = z.object({
 export const bulkSuspendSchema = z.object({
   userIds: z.array(z.string().min(1)).min(1),
 })
+
+export const bulkActivateSchema = z.object({
+  userIds: z.array(z.string().min(1)).min(1),
+})

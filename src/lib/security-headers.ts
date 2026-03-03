@@ -109,8 +109,8 @@ export function getCSPHeader(nonce?: string) {
       "blob:",
       "https://*.cloudinary.com",
       "https://res.cloudinary.com",
-      "https://imagekit.io",
-      "https://*.imagekit.io",
+      "https://*.amazonaws.com",
+      "https://*.cloudfront.net",
     ],
     "font-src": ["'self'", "https://fonts.gstatic.com"],
     "connect-src": [

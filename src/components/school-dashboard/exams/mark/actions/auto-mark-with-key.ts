@@ -66,8 +66,8 @@ export async function getOrCreateAnswerKey(
     }
 
     // Try to get existing answer key
-    const existingKey = await db.examAnswerKey.findUnique({
-      where: { generatedExamId },
+    const existingKey = await db.examAnswerKey.findFirst({
+      where: { generatedExamId, schoolId },
     })
 
     if (existingKey) {
@@ -538,7 +538,7 @@ export async function refreshAnswerKey(
 
     // Delete existing key
     await db.examAnswerKey.deleteMany({
-      where: { generatedExamId },
+      where: { generatedExamId, schoolId },
     })
 
     // Regenerate

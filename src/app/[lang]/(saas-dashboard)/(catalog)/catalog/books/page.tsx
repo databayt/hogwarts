@@ -21,7 +21,9 @@ export default async function CatalogBooksPage({ params }: Props) {
 
   return (
     <>
-      <PageHeadingSetter title="Catalog Books" />
+      <PageHeadingSetter
+        title={dictionary?.saas?.catalog?.navigation?.books || "Catalog Books"}
+      />
       <CatalogBookContent dictionary={dictionary} lang={lang} />
     </>
   )

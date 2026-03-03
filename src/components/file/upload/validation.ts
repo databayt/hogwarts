@@ -104,9 +104,7 @@ export const uploadOptionsSchema = z.object({
   ] as const),
   type: z.string().optional(),
   folder: z.string().optional(),
-  provider: z
-    .enum(["vercel_blob", "aws_s3", "cloudflare_r2", "imagekit"] as const)
-    .optional(),
+  provider: z.enum(["aws_s3", "cloudflare_r2"] as const).optional(),
   tier: z.enum(["hot", "warm", "cold"] as const).optional(),
   access: z.enum(["public", "private"] as const).optional(),
   metadata: z.record(z.string(), z.string()).optional(),

@@ -28,6 +28,7 @@ const updateInvoiceStatusSchema = z.object({
 
 // ============= Invoice Actions =============
 
+// NOTE: Manual override by design for bank transfers — operators can mark invoices as paid
 export async function invoiceUpdateStatus(input: {
   id: string
   status: "paid" | "void" | "open" | "uncollectible"

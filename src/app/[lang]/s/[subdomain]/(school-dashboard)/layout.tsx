@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
@@ -43,7 +43,19 @@ export default async function PlatformLayout({
   }
 
   const school = result.data
-  const serverRole = session?.user?.role
+
+  // MEMBERSHIP GUARD — only school members and DEVELOPERs can access dashboard
+  if (!session?.user) {
+    redirect(`/${lang}/login`)
+  }
+  if (
+    session.user.role !== "DEVELOPER" &&
+    session.user.schoolId !== school.id
+  ) {
+    redirect(`/${lang}/access-denied`)
+  }
+
+  const serverRole = session.user.role
   const isRTL = checkIsRTL(lang as Locale)
 
   return (

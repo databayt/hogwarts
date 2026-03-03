@@ -53,15 +53,19 @@ export function OperatorSalesTable({
 
   // Translations
   const t = {
-    search:
-      dictionary?.search ||
-      (lang === "ar" ? "بحث في العملاء المحتملين..." : "Search leads..."),
-    create: dictionary?.create || (lang === "ar" ? "إنشاء" : "Create"),
-    export: dictionary?.export || (lang === "ar" ? "تصدير" : "Export"),
-    reset: dictionary?.reset || (lang === "ar" ? "إعادة تعيين" : "Reset"),
+    search: dictionary?.search || "Search leads...",
+    create: dictionary?.create || "Create",
+    export: dictionary?.export || "Export",
+    reset: dictionary?.reset || "Reset",
     deleteSuccess:
       dictionary?.messages?.deleteSuccess || "Lead deleted successfully",
     deleteError: dictionary?.messages?.deleteError || "Failed to delete lead",
+    noLeads: dictionary?.noLeads || "No leads",
+    noLeadsDescription:
+      dictionary?.noLeadsDescription || "Create a new lead to get started",
+    loadMore: dictionary?.loadMore || "Load More",
+    loading: dictionary?.loading || "Loading...",
+    deleteConfirm: dictionary?.deleteConfirm || "Delete {name}?",
   }
 
   // View mode (table/grid)
@@ -147,8 +151,7 @@ export function OperatorSalesTable({
   const handleDelete = useCallback(
     async (lead: LeadRow) => {
       try {
-        const deleteMsg =
-          lang === "ar" ? `حذف ${lead.name}؟` : `Delete ${lead.name}?`
+        const deleteMsg = t.deleteConfirm.replace("{name}", lead.name)
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
 
@@ -168,7 +171,7 @@ export function OperatorSalesTable({
         toast.error(e instanceof Error ? e.message : t.deleteError)
       }
     },
-    [optimisticRemove, refresh, lang, t.deleteSuccess, t.deleteError]
+    [optimisticRemove, refresh, t.deleteConfirm, t.deleteSuccess, t.deleteError]
   )
 
   // Handle edit
@@ -237,12 +240,8 @@ export function OperatorSalesTable({
         <>
           {data.length === 0 && !isLoading ? (
             <GridEmptyState
-              title={lang === "ar" ? "لا يوجد عملاء محتملين" : "No leads"}
-              description={
-                lang === "ar"
-                  ? "أنشئ عميلاً محتملاً جديداً"
-                  : "Create a new lead to get started"
-              }
+              title={t.noLeads}
+              description={t.noLeadsDescription}
               icon={
                 <Image
                   src="/anthropic/users.svg"
@@ -280,15 +279,13 @@ export function OperatorSalesTable({
                 onClick={loadMore}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {dictionary?.loadMore || "Load More"}
+                {t.loadMore}
               </button>
             </div>
           )}
           {isLoading && (
             <div className="flex justify-center py-4">
-              <span className="text-muted-foreground">
-                {dictionary?.loading || "Loading..."}
-              </span>
+              <span className="text-muted-foreground">{t.loading}</span>
             </div>
           )}
         </>

@@ -28,7 +28,7 @@ export const catalogBookSchema = z.object({
   status: z
     .enum(["DRAFT", "REVIEW", "PUBLISHED", "ARCHIVED", "DEPRECATED"])
     .default("DRAFT"),
-  visibility: z.enum(["PRIVATE", "SCHOOL", "PUBLIC"]).default("PUBLIC"),
+  visibility: z.enum(["PRIVATE", "SCHOOL", "PUBLIC", "PAID"]).default("PUBLIC"),
   approvalStatus: z
     .enum(["PENDING", "APPROVED", "REJECTED"])
     .default("PENDING"),

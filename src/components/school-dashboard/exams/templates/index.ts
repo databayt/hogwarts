@@ -76,21 +76,31 @@ export { QuestionGroup } from "./question-group"
 
 // Header Sections
 export { MinimalHeader, MinistryHeader, StandardHeader } from "./header"
+export { BilingualHeader } from "./header/bilingual"
+export { CenteredHeader } from "./header/centered"
 
 // Footer Sections
 export { DisclaimerFooter, StandardFooter } from "./footer"
+export { MinimalFooter } from "./footer/minimal"
+export { GradingFooter } from "./footer/grading"
 
 // Student Info Sections
 export { BubbleIdStudentInfo, StandardStudentInfo } from "./student-info"
+export { TableStudentInfo } from "./student-info/table"
+export { PhotoStudentInfo } from "./student-info/photo"
 
 // Instructions Sections
 export { CompactInstructions, StandardInstructions } from "./instructions"
+export { RulesInstructions } from "./instructions/rules"
+export { SectionedInstructions } from "./instructions/sectioned"
 
 // Answer Sheet Sections
 export { OmrAnswerSheet, StandardAnswerSheet } from "./answer-sheet"
+export { GridAnswerSheet } from "./answer-sheet/grid"
 
 // Cover Sections
 export { StandardCover, TableOfContents } from "./cover"
+export { MinistryCover } from "./cover/ministry"
 
 // Layouts
 export { BookletLayout } from "./layouts/booklet"
@@ -104,8 +114,35 @@ export type { RegionPreset } from "./presets"
 // Validation
 export { paperThemeSchema, regionPresetSchema } from "./validation"
 
-// Full Template Components
+// Composition System
+export type {
+  CompositionConfig,
+  HeaderVariant,
+  FooterVariant,
+  StudentInfoVariant,
+  InstructionsVariant,
+  AnswerSheetVariant,
+  CoverVariant,
+  SlotName,
+} from "./composition"
+export {
+  DEFAULT_COMPOSITION,
+  resolveComposition,
+  VARIANT_REGISTRY,
+} from "./composition"
+
+// Fonts
+export { ensureFontsRegistered } from "./fonts"
+
+// Composable Document
+export { ComposableDocument } from "./composable"
+
+// Full Template Components (deprecated — use ComposableDocument)
+/** @deprecated Use ComposableDocument instead */
 export { ClassicTemplate } from "./classic"
+/** @deprecated Use ComposableDocument instead */
 export { ModernTemplate } from "./modern"
+/** @deprecated Use ComposableDocument instead */
 export { FormalTemplate } from "./formal"
+/** @deprecated Use ComposableDocument instead */
 export { CustomTemplate } from "./custom"

@@ -176,6 +176,7 @@ export async function createParent(
         surname: parsed.surname,
         emailAddress: parsed.emailAddress || null,
         userId: parsed.userId || null,
+        profilePhotoUrl: parsed.profilePhotoUrl || null,
       },
     })
 
@@ -243,6 +244,8 @@ export async function updateParent(
     if (typeof rest.emailAddress !== "undefined")
       data.emailAddress = rest.emailAddress || null
     if (typeof rest.userId !== "undefined") data.userId = rest.userId || null
+    if (typeof rest.profilePhotoUrl !== "undefined")
+      data.profilePhotoUrl = rest.profilePhotoUrl || null
 
     // Update parent (using updateMany for tenant safety)
     const guardianModel = getModelOrThrow("guardian")

@@ -1121,9 +1121,9 @@ export async function moveTimetableSlot(input: {
     }
   }
 
-  // Perform the move
-  const updatedSlot = await db.timetable.update({
-    where: { id: input.slotId },
+  // Perform the move (defense-in-depth: scope by schoolId)
+  await db.timetable.updateMany({
+    where: { id: input.slotId, schoolId },
     data: {
       dayOfWeek: input.targetDayOfWeek,
       periodId: input.targetPeriodId,
@@ -1152,7 +1152,7 @@ export async function moveTimetableSlot(input: {
 
   return {
     success: true,
-    slotId: updatedSlot.id,
+    slotId: input.slotId,
     warnings,
     errors: [],
   }
@@ -2376,9 +2376,9 @@ export async function setActiveTerm(input: { termId: string }) {
     data: { isActive: false },
   })
 
-  // Activate the selected term
-  await db.term.update({
-    where: { id: input.termId },
+  // Activate the selected term (defense-in-depth: scope by schoolId)
+  await db.term.updateMany({
+    where: { id: input.termId, schoolId },
     data: { isActive: true },
   })
 
@@ -2935,20 +2935,26 @@ export async function upsertTeacherConstraints(input: {
     },
   })
 
-  const constraint = existing
-    ? await db.teacherConstraint.update({
-        where: { id: existing.id },
-        data,
-      })
-    : await db.teacherConstraint.create({ data })
+  let constraintId: string
+  if (existing) {
+    // Defense-in-depth: scope update by schoolId
+    await db.teacherConstraint.updateMany({
+      where: { id: existing.id, schoolId },
+      data,
+    })
+    constraintId = existing.id
+  } else {
+    const constraint = await db.teacherConstraint.create({ data })
+    constraintId = constraint.id
+  }
 
   await logTimetableAction("configure_settings", {
     entityType: "teacher_constraint",
-    entityId: constraint.id,
+    entityId: constraintId,
     changes: input,
   })
 
-  return { id: constraint.id }
+  return { id: constraintId }
 }
 
 /**
@@ -3106,20 +3112,26 @@ export async function upsertRoomConstraints(input: {
     },
   })
 
-  const constraint = existing
-    ? await db.roomConstraint.update({
-        where: { id: existing.id },
-        data,
-      })
-    : await db.roomConstraint.create({ data })
+  let constraintId: string
+  if (existing) {
+    // Defense-in-depth: scope update by schoolId
+    await db.roomConstraint.updateMany({
+      where: { id: existing.id, schoolId },
+      data,
+    })
+    constraintId = existing.id
+  } else {
+    const constraint = await db.roomConstraint.create({ data })
+    constraintId = constraint.id
+  }
 
   await logTimetableAction("configure_settings", {
     entityType: "room_constraint",
-    entityId: constraint.id,
+    entityId: constraintId,
     changes: input,
   })
 
-  return { id: constraint.id }
+  return { id: constraintId }
 }
 
 // ============================================================================
@@ -3279,9 +3291,9 @@ export async function applyTemplateToTerm(input: {
   const session = await auth()
   const userId = session?.user?.id
 
-  // Get template
-  const template = await db.timetableTemplate.findUnique({
-    where: { id: input.templateId },
+  // Get template (defense-in-depth: scope by schoolId)
+  const template = await db.timetableTemplate.findFirst({
+    where: { id: input.templateId, schoolId },
     select: { slotPatterns: true, workingDays: true },
   })
 
@@ -4210,8 +4222,9 @@ export async function updatePeriod(input: {
     }
   }
 
-  await db.period.update({
-    where: { id: input.periodId },
+  // Defense-in-depth: scope update by schoolId
+  await db.period.updateMany({
+    where: { id: input.periodId, schoolId },
     data: updateData,
   })
 
@@ -4615,8 +4628,15 @@ export async function updateTermDates(input: {
     throw new Error("Start date must be before end date")
   }
 
-  const term = await db.term.update({
-    where: { id: input.termId },
+  // Verify ownership (defense-in-depth)
+  const existing = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+  })
+  if (!existing) throw new Error("Term not found")
+
+  // Defense-in-depth: scope update by schoolId
+  await db.term.updateMany({
+    where: { id: input.termId, schoolId },
     data: {
       startDate: input.startDate,
       endDate: input.endDate,
@@ -4632,7 +4652,7 @@ export async function updateTermDates(input: {
     },
   })
 
-  return term
+  return { success: true }
 }
 
 /**
@@ -4757,8 +4777,9 @@ export async function updateScheduleException(input: {
     throw new Error("Start date must be before or equal to end date")
   }
 
-  const exception = await db.scheduleException.update({
-    where: { id: input.id },
+  // Defense-in-depth: scope update by schoolId
+  await db.scheduleException.updateMany({
+    where: { id: input.id, schoolId },
     data: {
       exceptionType: input.exceptionType,
       title: input.title,
@@ -4775,10 +4796,10 @@ export async function updateScheduleException(input: {
   await logTimetableAction("update_schedule_exception", {
     entityId: input.id,
     entityType: "scheduleException",
-    metadata: { title: exception.title },
+    metadata: { title: input.title },
   })
 
-  return exception
+  return { success: true }
 }
 
 /**
@@ -4797,8 +4818,9 @@ export async function deleteScheduleException(input: { id: string }) {
 
   if (!existing) throw new Error("Schedule exception not found")
 
-  await db.scheduleException.delete({
-    where: { id: input.id },
+  // Defense-in-depth: scope delete by schoolId
+  await db.scheduleException.deleteMany({
+    where: { id: input.id, schoolId },
   })
 
   await logTimetableAction("delete_schedule_exception", {
@@ -5039,12 +5061,10 @@ export async function updateTeacherAbsence(input: {
   if (input.reason !== undefined) updateData.reason = input.reason
   if (input.absenceType) updateData.absenceType = input.absenceType
 
-  const absence = await db.teacherAbsence.update({
-    where: { id: input.id },
+  // Defense-in-depth: scope update by schoolId
+  await db.teacherAbsence.updateMany({
+    where: { id: input.id, schoolId },
     data: updateData,
-    include: {
-      teacher: { select: { givenName: true, surname: true } },
-    },
   })
 
   await logTimetableAction("update_schedule_exception", {
@@ -5053,7 +5073,7 @@ export async function updateTeacherAbsence(input: {
     metadata: { changes: updateData },
   })
 
-  return { success: true, absence }
+  return { success: true }
 }
 
 /**
@@ -5380,13 +5400,10 @@ export async function respondToSubstitution(input: {
     updateData.declineReason = input.declineReason
   }
 
-  const substitution = await db.substitutionRecord.update({
-    where: { id: input.id },
+  // Defense-in-depth: scope update by schoolId
+  await db.substitutionRecord.updateMany({
+    where: { id: input.id, schoolId },
     data: updateData,
-    include: {
-      substituteTeacher: { select: { givenName: true, surname: true } },
-      originalTeacher: { select: { givenName: true, surname: true } },
-    },
   })
 
   await logTimetableAction("update_schedule_exception", {
@@ -5398,7 +5415,7 @@ export async function respondToSubstitution(input: {
     },
   })
 
-  return { success: true, substitution }
+  return { success: true }
 }
 
 /**
@@ -5526,8 +5543,9 @@ export async function cancelSubstitution(input: {
     throw new Error("Cannot cancel a completed substitution")
   }
 
-  const substitution = await db.substitutionRecord.update({
-    where: { id: input.id },
+  // Defense-in-depth: scope update by schoolId
+  await db.substitutionRecord.updateMany({
+    where: { id: input.id, schoolId },
     data: {
       status: "CANCELLED",
       notes: input.reason
@@ -5542,7 +5560,7 @@ export async function cancelSubstitution(input: {
     metadata: { reason: input.reason },
   })
 
-  return { success: true, substitution }
+  return { success: true }
 }
 
 /**

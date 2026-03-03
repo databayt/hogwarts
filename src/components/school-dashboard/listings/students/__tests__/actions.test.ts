@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
@@ -12,6 +13,10 @@ import {
   getStudents,
   updateStudent,
 } from "../actions"
+
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
+}))
 
 // Mock dependencies - actions use getModelOrThrow which requires findFirst method
 vi.mock("@/lib/db", () => ({
@@ -32,6 +37,24 @@ vi.mock("@/lib/db", () => ({
     yearLevel: {
       findFirst: vi.fn(),
     },
+    studentClass: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    attendance: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    examResult: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    feeAssignment: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    assignmentSubmission: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    studentYearLevel: {
+      count: vi.fn().mockResolvedValue(0),
+    },
     $transaction: vi.fn(),
   },
 }))
@@ -49,6 +72,9 @@ describe("Student Actions", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user-1", schoolId: mockSchoolId, role: "ADMIN" },
+    } as any)
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: mockSchoolId,
       subdomain: "test-school",
@@ -73,12 +99,13 @@ describe("Student Actions", () => {
         givenName: "John",
         surname: "Doe",
         gender: "male",
+        dateOfBirth: "2010-05-15",
       })
 
       expect(result.success).toBe(true)
     })
 
-    it("returns error when not authenticated (no schoolId)", async () => {
+    it("returns error when no schoolId in tenant context", async () => {
       vi.mocked(getTenantContext).mockResolvedValue({
         schoolId: null as any,
         subdomain: "test",
@@ -93,7 +120,7 @@ describe("Student Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("school")
+      expect(result.error).toBe("MISSING_SCHOOL")
     })
   })
 

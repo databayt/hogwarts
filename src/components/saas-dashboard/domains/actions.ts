@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import dns from "dns/promises"
 import { revalidatePath } from "next/cache"
 import type { DomainRequest } from "@prisma/client"
 import { z } from "zod"
@@ -345,16 +346,48 @@ export async function getDomains(input: {
 // ============= Helper Functions =============
 
 /**
- * Verify DNS records for a domain
- * TODO: Implement actual DNS verification
+ * Verify DNS records for a domain.
+ * Checks CNAME → VERCEL_CNAME_TARGET, then falls back to A record → PLATFORM_IPS.
  */
 async function verifyDNSRecords(domain: string): Promise<boolean> {
-  // This would typically:
-  // 1. Check for proper A/CNAME records
-  // 2. Verify TXT records for ownership
-  // 3. Check SSL certificate validity
-  // 4. Ensure domain points to our infrastructure
+  const cnameTarget = process.env.VERCEL_CNAME_TARGET
+  const platformIps = process.env.PLATFORM_IPS
 
-  // For now, return a mock result
-  return Math.random() > 0.5
+  if (!cnameTarget && !platformIps) {
+    console.warn(
+      "[dns-verify] Neither VERCEL_CNAME_TARGET nor PLATFORM_IPS configured"
+    )
+    return false
+  }
+
+  try {
+    // Check CNAME records
+    if (cnameTarget) {
+      try {
+        const cnames = await dns.resolveCname(domain)
+        if (cnames.some((c) => c === cnameTarget || c === `${cnameTarget}.`)) {
+          return true
+        }
+      } catch {
+        // CNAME not found — fall through to A record check
+      }
+    }
+
+    // Fallback: check A records
+    if (platformIps) {
+      try {
+        const allowedIps = platformIps.split(",").map((ip) => ip.trim())
+        const addresses = await dns.resolve4(domain)
+        if (addresses.some((addr) => allowedIps.includes(addr))) {
+          return true
+        }
+      } catch {
+        // A record resolution failed
+      }
+    }
+
+    return false
+  } catch {
+    return false
+  }
 }

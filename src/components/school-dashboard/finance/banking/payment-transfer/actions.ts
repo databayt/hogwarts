@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResult, BankAccount } from "../types"
 import { transferSchema } from "./validation"
@@ -18,9 +19,13 @@ import { transferSchema } from "./validation"
 export const getAccounts = cache(
   async (params: { userId: string }): Promise<BankAccount[]> => {
     try {
+      const { schoolId } = await getTenantContext()
+      if (!schoolId) return []
+
       const accounts = await db.bankAccount.findMany({
         where: {
           userId: params.userId,
+          schoolId,
         },
         orderBy: { createdAt: "desc" },
       })
@@ -68,6 +73,17 @@ export async function createTransfer(
     }
     const user = session.user
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: "NO_SCHOOL_CONTEXT",
+          message: "School context not found",
+        },
+      }
+    }
+
     // Parse form data
     const rawData = {
       fromAccountId: formData.get("fromAccountId") as string,
@@ -96,6 +112,7 @@ export async function createTransfer(
       where: {
         id: data.fromAccountId,
         userId: user.id,
+        schoolId,
       },
     })
 
@@ -126,6 +143,7 @@ export async function createTransfer(
         where: {
           id: data.toAccountId,
           userId: user.id,
+          schoolId,
         },
       })
 
@@ -140,22 +158,11 @@ export async function createTransfer(
       }
     } else if (data.recipientEmail) {
       // External transfer to another user - must be in same school
-      const schoolId = session.user.schoolId
-      if (!schoolId) {
-        return {
-          success: false,
-          error: {
-            code: "NO_SCHOOL_CONTEXT",
-            message: "School context not found",
-          },
-        }
-      }
-
       const recipient = await db.user.findUnique({
         where: {
           email_schoolId: {
             email: data.recipientEmail,
-            schoolId: schoolId,
+            schoolId,
           },
         },
       })
@@ -174,6 +181,7 @@ export async function createTransfer(
       toAccount = await db.bankAccount.findFirst({
         where: {
           userId: recipient.id,
+          schoolId,
         },
         orderBy: { createdAt: "asc" },
       })
@@ -186,18 +194,6 @@ export async function createTransfer(
             message: "Recipient has no default account",
           },
         }
-      }
-    }
-
-    // Get schoolId for multi-tenant support
-    const schoolId = session.user.schoolId
-    if (!schoolId) {
-      return {
-        success: false,
-        error: {
-          code: "NO_SCHOOL_CONTEXT",
-          message: "School context not found",
-        },
       }
     }
 
@@ -289,8 +285,12 @@ export async function createTransfer(
 export const getRecentTransfers = cache(
   async (params: { userId: string; limit?: number }): Promise<any[]> => {
     try {
+      const { schoolId } = await getTenantContext()
+      if (!schoolId) return []
+
       const transfers = await db.transaction.findMany({
         where: {
+          schoolId,
           bankAccount: {
             userId: params.userId,
           },

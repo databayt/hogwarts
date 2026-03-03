@@ -209,7 +209,8 @@
     "mediumConfidence": "Medium confidence - review suggested",
     "lowConfidence": "Low confidence - review required",
     "poorConfidence": "Very low confidence - manual grading recommended",
-    "needsReview": "This grade needs teacher review"
+    "needsReview": "This grade needs teacher review",
+    "approve": "Approve AI Grade"
   },
 
   "ocr": {

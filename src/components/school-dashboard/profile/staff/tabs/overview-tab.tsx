@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Staff Profile Overview Tab
  * Summary view with work metrics and key highlights
@@ -340,7 +337,7 @@ export function OverviewTab({
               </span>
               <Button variant="outline" size="sm">
                 View All
-                <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+                <ChevronRight className="ms-1 h-4 w-4" />
               </Button>
             </CardTitle>
           </CardHeader>
@@ -379,7 +376,7 @@ export function OverviewTab({
               </span>
               <Button variant="outline" size="sm">
                 View All
-                <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+                <ChevronRight className="ms-1 h-4 w-4" />
               </Button>
             </CardTitle>
           </CardHeader>

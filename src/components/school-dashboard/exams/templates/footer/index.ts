@@ -3,3 +3,5 @@
 
 export { StandardFooter } from "./standard"
 export { DisclaimerFooter } from "./disclaimer"
+export { MinimalFooter } from "./minimal"
+export { GradingFooter } from "./grading"

@@ -7,15 +7,12 @@ import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertClassroomPermission, getAuthContext } from "../authorization"
 import { generateSectionsSchema } from "./validation"
-
-type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
 
 export type GradeConfig = {
   gradeId: string

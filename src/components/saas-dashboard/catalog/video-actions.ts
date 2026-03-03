@@ -3,25 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3"
 
 import { invalidateCache } from "@/lib/cloudfront"
 import { db } from "@/lib/db"
+import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import { lessonVideoSchema } from "./video-validation"
-
-// ============================================================================
-// Authorization helper — DEVELOPER only, NO schoolId
-// ============================================================================
-
-async function requireDeveloper() {
-  const session = await auth()
-  if (session?.user?.role !== "DEVELOPER") {
-    throw new Error("Unauthorized: DEVELOPER role required")
-  }
-  return session
-}
 
 // ============================================================================
 // S3 client (lazy singleton)

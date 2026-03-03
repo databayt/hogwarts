@@ -7,8 +7,13 @@ import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  isAdminRole,
+  isStaffRole,
+} from "@/components/school-dashboard/attendance/authorization"
 
 import type { ActionResponse } from "./core"
+import { getTeacherClassIds } from "./helpers"
 import type { AttendanceRiskLevel } from "./interventions"
 
 interface StudentRiskData {
@@ -66,16 +71,40 @@ export async function getStudentsByRiskLevel(input?: {
       return { success: false, error: "Missing school context" }
     }
 
+    const session = await auth()
+    if (!session?.user?.role || !isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
+    }
+
     // Default to current school year (last 90 days if not specified)
     const dateFrom = input?.dateFrom
       ? new Date(input.dateFrom)
       : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     const dateTo = input?.dateTo ? new Date(input.dateTo) : new Date()
 
+    // Teacher scoping
+    let teacherClassIds: string[] | null = null
+    if (session.user.role === "TEACHER") {
+      teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
+    }
+
     // Get all students with their attendance
     const where: Prisma.StudentWhereInput = { schoolId }
     if (input?.classId) {
       where.studentClasses = { some: { classId: input.classId } }
+    } else if (teacherClassIds) {
+      where.studentClasses = {
+        some: { classId: { in: teacherClassIds } },
+      }
+    }
+
+    const attendanceWhere: Prisma.AttendanceWhereInput = {
+      date: { gte: dateFrom, lte: dateTo },
+      schoolId,
+      deletedAt: null,
+    }
+    if (teacherClassIds) {
+      attendanceWhere.classId = { in: teacherClassIds }
     }
 
     const students = await db.student.findMany({
@@ -89,10 +118,7 @@ export async function getStudentsByRiskLevel(input?: {
           include: { class: { select: { id: true, name: true } } },
         },
         attendances: {
-          where: {
-            date: { gte: dateFrom, lte: dateTo },
-            schoolId,
-          },
+          where: attendanceWhere,
           orderBy: { date: "desc" },
           select: { status: true, date: true },
         },
@@ -233,6 +259,11 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return { success: false, error: "Missing school context" }
+    }
+
+    const session = await auth()
+    if (!session?.user?.role || !isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Get last 90 days of attendance
@@ -481,6 +512,11 @@ export async function getTodaysDashboard(): Promise<
       return { success: false, error: "Missing school context" }
     }
 
+    const session = await auth()
+    if (!session?.user?.role || !isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
+    }
+
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const dayNames = [
@@ -493,9 +529,20 @@ export async function getTodaysDashboard(): Promise<
       "Saturday",
     ]
 
-    // Get all classes with student counts
+    // Teacher scoping
+    let teacherClassIds: string[] | null = null
+    if (session.user.role === "TEACHER") {
+      teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
+    }
+
+    // Get classes with student counts (scoped for teachers)
+    const classWhere: { schoolId: string; id?: { in: string[] } } = {
+      schoolId,
+    }
+    if (teacherClassIds) classWhere.id = { in: teacherClassIds }
+
     const classes = await db.class.findMany({
-      where: { schoolId },
+      where: classWhere,
       select: {
         id: true,
         name: true,
@@ -503,12 +550,16 @@ export async function getTodaysDashboard(): Promise<
       },
     })
 
-    // Get today's attendance records
+    // Get today's attendance records (scoped)
+    const attendanceWhere: Prisma.AttendanceWhereInput = {
+      schoolId,
+      date: today,
+      deletedAt: null,
+    }
+    if (teacherClassIds) attendanceWhere.classId = { in: teacherClassIds }
+
     const todayAttendance = await db.attendance.findMany({
-      where: {
-        schoolId,
-        date: today,
-      },
+      where: attendanceWhere,
       select: {
         id: true,
         classId: true,
@@ -542,12 +593,16 @@ export async function getTodaysDashboard(): Promise<
     const threeDaysAgo = new Date(today)
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
 
+    const absenceWhere: Prisma.AttendanceWhereInput = {
+      schoolId,
+      status: "ABSENT",
+      date: { gte: threeDaysAgo, lte: today },
+      deletedAt: null,
+    }
+    if (teacherClassIds) absenceWhere.classId = { in: teacherClassIds }
+
     const recentAbsences = await db.attendance.findMany({
-      where: {
-        schoolId,
-        status: "ABSENT",
-        date: { gte: threeDaysAgo, lte: today },
-      },
+      where: absenceWhere,
       select: {
         studentId: true,
         date: true,
@@ -809,6 +864,17 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
       return { success: false, error: "Missing school context" }
     }
 
+    const session = await auth()
+    if (!session?.user?.role || !isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // Teacher scoping
+    let teacherClassIds: string[] | null = null
+    if (session.user.role === "TEACHER") {
+      teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
+    }
+
     const limit = input?.limit || 20
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -827,12 +893,18 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
     const sevenDaysAgo = new Date(today)
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
+    const followUpAbsenceWhere: Prisma.AttendanceWhereInput = {
+      schoolId,
+      status: "ABSENT",
+      date: { gte: sevenDaysAgo, lte: today },
+      deletedAt: null,
+    }
+    if (teacherClassIds) {
+      followUpAbsenceWhere.classId = { in: teacherClassIds }
+    }
+
     const recentAbsences = await db.attendance.findMany({
-      where: {
-        schoolId,
-        status: "ABSENT",
-        date: { gte: sevenDaysAgo, lte: today },
-      },
+      where: followUpAbsenceWhere,
       select: {
         studentId: true,
         date: true,
@@ -977,6 +1049,15 @@ export async function getUnmarkedClasses(): Promise<
     if (!session?.user?.id) {
       return { success: false, error: "Authentication required" }
     }
+    if (!isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // Teacher scoping
+    let teacherClassIds: string[] | null = null
+    if (session.user.role === "TEACHER") {
+      teacherClassIds = await getTeacherClassIds(schoolId, session.user.id)
+    }
 
     // Get today's date and day of week
     const today = new Date()
@@ -999,13 +1080,21 @@ export async function getUnmarkedClasses(): Promise<
       }
     }
 
-    // Get today's timetable entries for the active term
+    // Get today's timetable entries for the active term (scoped for teachers)
+    const timetableWhere: {
+      schoolId: string
+      termId: string
+      dayOfWeek: number
+      classId?: { in: string[] }
+    } = {
+      schoolId,
+      termId: activeTerm.id,
+      dayOfWeek,
+    }
+    if (teacherClassIds) timetableWhere.classId = { in: teacherClassIds }
+
     const timetableEntries = await db.timetable.findMany({
-      where: {
-        schoolId,
-        termId: activeTerm.id,
-        dayOfWeek,
-      },
+      where: timetableWhere,
       include: {
         period: {
           select: {

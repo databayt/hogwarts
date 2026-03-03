@@ -11,7 +11,7 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { IMAGEKIT_FOLDERS, useImageKitUpload } from "@/components/file"
+import { uploadFile } from "@/components/file"
 
 // ============================================================================
 // Types
@@ -22,6 +22,7 @@ interface Props {
   onChange: (url: string) => void
   accept?: "image" | "video" | "document"
   placeholder?: string
+  schoolId?: string
 }
 
 const ACCEPT_TYPES = {
@@ -43,31 +44,20 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 // ============================================================================
 
 /**
- * ImageKit-powered file upload component for library book images
- * Uploads directly to ImageKit CDN with optimizations
+ * S3/CloudFront file upload component for library book images
  */
 export default function FileUpload({
   value,
   onChange,
   accept = "image",
   placeholder,
+  schoolId,
 }: Props) {
   const [showUploader, setShowUploader] = useState(!value)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-
-  // ImageKit upload hook
-  const { upload, progress, isUploading, error } = useImageKitUpload({
-    folder: IMAGEKIT_FOLDERS.LIBRARY_BOOKS,
-    onSuccess: (result) => {
-      onChange(result.url)
-      setShowUploader(false)
-      setPreviewUrl(null)
-      toast.success("File uploaded successfully to ImageKit")
-    },
-    onError: (err) => {
-      toast.error(err)
-    },
-  })
+  const [isUploading, setIsUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [error, setError] = useState<string | null>(null)
 
   // Handle file drop
   const onDrop = useCallback(
@@ -88,10 +78,39 @@ export default function FileUpload({
         setPreviewUrl(objectUrl)
       }
 
-      // Upload to ImageKit
-      await upload(file)
+      // Upload via S3
+      setIsUploading(true)
+      setProgress(0)
+      setError(null)
+
+      try {
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("category", accept === "image" ? "image" : accept)
+        formData.append("folder", "library/books")
+        if (schoolId) formData.append("schoolId", schoolId)
+
+        const result = await uploadFile(formData)
+        if (result.success) {
+          onChange(result.url)
+          setShowUploader(false)
+          setPreviewUrl(null)
+          toast.success("File uploaded successfully")
+        } else {
+          const msg = result.error || "Upload failed"
+          setError(msg)
+          toast.error(msg)
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Upload failed"
+        setError(msg)
+        toast.error(msg)
+      } finally {
+        setIsUploading(false)
+        setProgress(100)
+      }
     },
-    [upload]
+    [accept, onChange, schoolId]
   )
 
   // Dropzone configuration
@@ -252,9 +271,6 @@ export default function FileUpload({
                   </p>
                   <p className="text-muted-foreground mb-2 text-sm">
                     Max file size: 10MB
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    Files are uploaded to ImageKit CDN
                   </p>
                 </>
               )}

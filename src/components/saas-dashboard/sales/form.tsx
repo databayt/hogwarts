@@ -65,56 +65,59 @@ export function OperatorLeadForm({
   const currentId = modal.id || undefined
   const isEditing = !!currentId
 
-  // Translations
+  // Translations from dictionary
+  const f = dictionary?.form
   const t = {
-    title: isEditing ? "Edit Lead" : "Create Lead",
-    name: "Name",
-    email: "Email",
-    phone: "Phone",
-    company: "Company",
-    title_field: "Job Title",
-    website: "Website",
-    linkedin: "LinkedIn",
-    leadType: "Lead Type",
-    industry: "Industry",
-    location: "Location",
-    status: "Status",
-    source: "Source",
-    priority: "Priority",
-    score: "Score",
-    notes: "Notes",
-    save: "Save",
-    cancel: "Cancel",
-    creating: "Creating...",
-    updating: "Updating...",
+    title: isEditing
+      ? f?.editTitle || "Edit Lead"
+      : f?.createTitle || "Create Lead",
+    name: f?.name || "Name",
+    email: f?.email || "Email",
+    phone: f?.phone || "Phone",
+    company: f?.company || "Company",
+    title_field: f?.jobTitle || "Job Title",
+    website: f?.website || "Website",
+    linkedin: f?.linkedin || "LinkedIn",
+    leadType: f?.leadType || "Lead Type",
+    industry: f?.industry || "Industry",
+    location: f?.location || "Location",
+    status: f?.status || "Status",
+    source: f?.source || "Source",
+    priority: f?.priority || "Priority",
+    score: f?.score || "Score",
+    notes: f?.notes || "Notes",
+    save: f?.save || "Save",
+    cancel: f?.cancel || "Cancel",
+    creating: f?.creating || "Creating...",
+    updating: f?.updating || "Updating...",
     // Status options
-    NEW: "New",
-    CONTACTED: "Contacted",
-    QUALIFIED: "Qualified",
-    PROPOSAL: "Proposal",
-    NEGOTIATION: "Negotiation",
-    CLOSED_WON: "Closed Won",
-    CLOSED_LOST: "Closed Lost",
-    ARCHIVED: "Archived",
+    NEW: dictionary?.status?.NEW || "New",
+    CONTACTED: dictionary?.status?.CONTACTED || "Contacted",
+    QUALIFIED: dictionary?.status?.QUALIFIED || "Qualified",
+    PROPOSAL: dictionary?.status?.PROPOSAL || "Proposal",
+    NEGOTIATION: dictionary?.status?.NEGOTIATION || "Negotiation",
+    CLOSED_WON: dictionary?.status?.CLOSED_WON || "Closed Won",
+    CLOSED_LOST: dictionary?.status?.CLOSED_LOST || "Closed Lost",
+    ARCHIVED: dictionary?.status?.ARCHIVED || "Archived",
     // Source options
-    MANUAL: "Manual",
-    IMPORT: "Import",
-    WEBSITE: "Website",
-    REFERRAL: "Referral",
-    SOCIAL_MEDIA: "Social Media",
-    EMAIL_CAMPAIGN: "Email Campaign",
-    COLD_CALL: "Cold Call",
-    CONFERENCE: "Conference",
-    PARTNER: "Partner",
+    MANUAL: dictionary?.source?.MANUAL || "Manual",
+    IMPORT: dictionary?.source?.IMPORT || "Import",
+    WEBSITE: dictionary?.source?.WEBSITE || "Website",
+    REFERRAL: dictionary?.source?.REFERRAL || "Referral",
+    SOCIAL_MEDIA: dictionary?.source?.SOCIAL_MEDIA || "Social Media",
+    EMAIL_CAMPAIGN: dictionary?.source?.EMAIL_CAMPAIGN || "Email Campaign",
+    COLD_CALL: dictionary?.source?.COLD_CALL || "Cold Call",
+    CONFERENCE: dictionary?.source?.CONFERENCE || "Conference",
+    PARTNER: dictionary?.source?.PARTNER || "Partner",
     // Priority options
-    LOW: "Low",
-    MEDIUM: "Medium",
-    HIGH: "High",
-    URGENT: "Urgent",
+    LOW: dictionary?.priority?.LOW || "Low",
+    MEDIUM: dictionary?.priority?.MEDIUM || "Medium",
+    HIGH: dictionary?.priority?.HIGH || "High",
+    URGENT: dictionary?.priority?.URGENT || "Urgent",
     // Type options
-    SCHOOL: "School",
-    PARTNERSHIP: "Partnership",
-    OTHER: "Other",
+    SCHOOL: dictionary?.type?.SCHOOL || "School",
+    PARTNERSHIP: dictionary?.type?.PARTNERSHIP || "Partnership",
+    OTHER: dictionary?.type?.OTHER || "Other",
   }
 
   const form = useForm<LeadFormValues>({
@@ -184,8 +187,8 @@ export function OperatorLeadForm({
 
       if (res?.success) {
         const successMsg = isEditing
-          ? "Lead updated successfully"
-          : "Lead created successfully"
+          ? dictionary?.messages?.updateSuccess || "Lead updated successfully"
+          : dictionary?.messages?.createSuccess || "Lead created successfully"
         toast.success(successMsg)
         closeModal()
         if (onSuccess) {
@@ -196,12 +199,16 @@ export function OperatorLeadForm({
       } else {
         const errorMsg =
           res?.error ||
-          (isEditing ? "Failed to update lead" : "Failed to create lead")
+          (isEditing
+            ? dictionary?.messages?.updateError || "Failed to update lead"
+            : dictionary?.messages?.createError || "Failed to create lead")
         toast.error(errorMsg)
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      toast.error("An unexpected error occurred")
+      toast.error(
+        dictionary?.messages?.unexpectedError || "An unexpected error occurred"
+      )
     }
   }
 

@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Student Profile Connections Tab
  * Social connections, followers, and network
@@ -314,7 +311,7 @@ export function ConnectionsTab({
       <Card>
         <CardContent className="p-4">
           <div className="relative">
-            <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
             <Input
               placeholder="Search connections..."
               value={searchQuery}
@@ -369,7 +366,7 @@ export function ConnectionsTab({
                             </AvatarFallback>
                           </Avatar>
                           {connection.isOnline && (
-                            <div className="border-background absolute end-0 bottom-0 h-3 w-3 rounded-full border-2 bg-green-500" />
+                            <div className="border-background absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 bg-green-500" />
                           )}
                         </div>
                         <div className="flex-1">
@@ -466,7 +463,7 @@ export function ConnectionsTab({
                           </AvatarFallback>
                         </Avatar>
                         {connection.isOnline && (
-                          <div className="border-background absolute end-0 bottom-0 h-2.5 w-2.5 rounded-full border-2 bg-green-500" />
+                          <div className="border-background absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2 bg-green-500" />
                         )}
                       </div>
                       <div className="flex-1">
@@ -507,7 +504,7 @@ export function ConnectionsTab({
                           )}
                       </div>
                       <Button variant="ghost" size="sm">
-                        <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}

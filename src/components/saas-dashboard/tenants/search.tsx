@@ -9,7 +9,8 @@ import { parseAsString, useQueryState } from "nuqs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-export function TenantsSearch() {
+export function TenantsSearch({ dictionary }: { dictionary?: any }) {
+  const t = dictionary?.operator?.tenants
   const [value, setValue] = React.useState("")
   const [search, setSearch] = useQueryState(
     "search",
@@ -43,14 +44,14 @@ export function TenantsSearch() {
   return (
     <div className="flex items-center gap-2">
       <Input
-        placeholder="Search name or domain"
+        placeholder={t?.searchPlaceholder || "Search name or domain"}
         className="h-8 w-40 lg:w-56"
         value={value}
         onChange={onChange}
       />
       {value && (
         <Button
-          aria-label="Clear search"
+          aria-label={t?.clearSearch || "Clear search"}
           variant="ghost"
           size="icon"
           className="h-8 w-8"

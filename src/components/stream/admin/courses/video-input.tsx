@@ -175,7 +175,7 @@ export function VideoInput({
         thumbnailDataUrl: meta?.thumbnailDataUrl,
         videoDuration: meta?.duration,
         videoResolution: meta ? `${meta.width}x${meta.height}` : undefined,
-        storageProvider: url.includes("s3.") ? "aws_s3" : "vercel_blob",
+        storageProvider: "aws_s3",
       })
     },
     [onChange, extractMetadataFromUrl]

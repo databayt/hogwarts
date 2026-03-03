@@ -3,29 +3,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-
-// ============================================================================
-// Authorization helper — DEVELOPER only, NO schoolId needed
-// ============================================================================
-
-async function requireDeveloper() {
-  const session = await auth()
-  if (session?.user?.role !== "DEVELOPER") {
-    throw new Error("Unauthorized: DEVELOPER role required")
-  }
-  return session
-}
+import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 // ============================================================================
 // Types
 // ============================================================================
-
-type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
 
 export type ProposalReviewItem = {
   id: string
@@ -81,7 +66,6 @@ export async function getProposalsForReview(
       })),
     }
   } catch (error) {
-    console.error("[getProposalsForReview] Error:", error)
     return {
       success: false,
       error:
@@ -131,66 +115,66 @@ export async function approveProposal(
 
     switch (proposal.type) {
       case "SUBJECT": {
-        const baseSlug = generateSlug(data.name || "untitled")
-        // Ensure slug uniqueness
-        let slug = baseSlug
-        let attempt = 0
-        while (await db.catalogSubject.findUnique({ where: { slug } })) {
-          attempt++
-          slug = `${baseSlug}-${attempt}`
-        }
+        // Wrap all subject operations in a transaction for atomicity
+        catalogEntityId = await db.$transaction(async (tx) => {
+          const baseSlug = generateSlug(data.name || "untitled")
+          let slug = baseSlug
+          let attempt = 0
+          while (await tx.catalogSubject.findUnique({ where: { slug } })) {
+            attempt++
+            slug = `${baseSlug}-${attempt}`
+          }
 
-        const subject = await db.catalogSubject.create({
-          data: {
-            name: data.name,
-            slug,
-            department: data.department || "",
-            description: data.description || null,
-            grades: data.grades || [],
-            levels: data.levels || [],
-            country: data.country || "SD",
-            status: "PUBLISHED",
-          },
-        })
-        catalogEntityId = subject.id
-
-        // Auto-bridge: create SchoolSubjectSelection for the proposing school
-        // Find a grade to link (use first available grade in the school)
-        const firstGrade = await db.academicGrade.findFirst({
-          where: { schoolId: proposal.schoolId },
-          select: { id: true },
-        })
-
-        if (firstGrade) {
-          await db.schoolSubjectSelection.create({
+          const subject = await tx.catalogSubject.create({
             data: {
-              schoolId: proposal.schoolId,
-              catalogSubjectId: catalogEntityId,
-              gradeId: firstGrade.id,
-              isRequired: false,
-              isActive: true,
+              name: data.name,
+              slug,
+              department: data.department || "",
+              description: data.description || null,
+              grades: data.grades || [],
+              levels: data.levels || [],
+              country: data.country || "SD",
+              status: "PUBLISHED",
             },
           })
-        }
 
-        // Auto-create school Subject with catalogSubjectId FK
-        // Find school's first department (or create if none)
-        const schoolDept = await db.department.findFirst({
-          where: { schoolId: proposal.schoolId },
-          select: { id: true },
-        })
-
-        if (schoolDept) {
-          await db.subject.create({
-            data: {
-              schoolId: proposal.schoolId,
-              subjectName: data.name,
-              departmentId: schoolDept.id,
-              catalogSubjectId: catalogEntityId,
-            },
+          // Auto-bridge: create SchoolSubjectSelection for the proposing school
+          const firstGrade = await tx.academicGrade.findFirst({
+            where: { schoolId: proposal.schoolId },
+            select: { id: true },
           })
-        }
 
+          if (firstGrade) {
+            await tx.schoolSubjectSelection.create({
+              data: {
+                schoolId: proposal.schoolId,
+                catalogSubjectId: subject.id,
+                gradeId: firstGrade.id,
+                isRequired: false,
+                isActive: true,
+              },
+            })
+          }
+
+          // Auto-create school Subject with catalogSubjectId FK
+          const schoolDept = await tx.department.findFirst({
+            where: { schoolId: proposal.schoolId },
+            select: { id: true },
+          })
+
+          if (schoolDept) {
+            await tx.subject.create({
+              data: {
+                schoolId: proposal.schoolId,
+                subjectName: data.name,
+                departmentId: schoolDept.id,
+                catalogSubjectId: subject.id,
+              },
+            })
+          }
+
+          return subject.id
+        })
         break
       }
       case "CHAPTER": {
@@ -289,7 +273,6 @@ export async function approveProposal(
     revalidatePath("/catalog/proposals")
     return { success: true, data: { catalogEntityId } }
   } catch (error) {
-    console.error("[approveProposal] Error:", error)
     return {
       success: false,
       error:
@@ -305,12 +288,12 @@ export async function approveProposal(
 export async function rejectProposal(
   id: string,
   rejectionReason: string
-): Promise<ActionResponse<void>> {
+): Promise<ActionResponse> {
   try {
     const session = await requireDeveloper()
     const userId = session.user?.id
 
-    if (!rejectionReason.trim()) {
+    if (!rejectionReason || !rejectionReason.trim()) {
       return { success: false, error: "Rejection reason is required" }
     }
 
@@ -341,9 +324,8 @@ export async function rejectProposal(
     })
 
     revalidatePath("/catalog/proposals")
-    return { success: true, data: undefined }
+    return { success: true }
   } catch (error) {
-    console.error("[rejectProposal] Error:", error)
     return {
       success: false,
       error:

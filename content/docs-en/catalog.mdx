@@ -73,7 +73,7 @@ CatalogSubject (~220 grade-specific subjects)
     > CatalogLesson (~4000 lessons)
 ```
 
-These define the curriculum structure. No school owns them -- they belong to the platform. Each entity carries `country` and `system` fields for multi-country support.
+These define the curriculum structure. No school owns them -- they belong to the platform. Each entity carries `country` and `curriculum` fields for multi-country support.
 
 ### 2. Content Layer (user-contributed)
 
@@ -103,45 +103,56 @@ Bridge tables connect schools to the catalog without duplicating data.
 
 Schools configure their curriculum profile in settings:
 
-| Config Field  | On School Model            | Examples                                 | Purpose          |
-| ------------- | -------------------------- | ---------------------------------------- | ---------------- |
-| `country`     | Already exists (`String?`) | "US", "SD", "GB", "AE"                   | Country code     |
-| `system`      | Already exists (`String?`) | "clickview", "national", "british", "ib" | Education system |
-| `schoolLevel` | Already exists (`String?`) | "elementary", "middle", "high", "k12"    | Levels covered   |
+| Config Field  | On School Model            | Examples                              | Purpose                 |
+| ------------- | -------------------------- | ------------------------------------- | ----------------------- |
+| `country`     | Already exists (`String?`) | "US", "SD", "GB", "AE"                | Country code            |
+| `curriculum`  | Already exists (`String?`) | "us-k12", "national", "british", "ib" | Curriculum / ed. system |
+| `schoolLevel` | Already exists (`String?`) | "elementary", "middle", "high", "k12" | Levels covered          |
 
 ### Auto-Assignment Flow (`setupCatalogForSchool()`)
 
-1. Read school's `country` + `system` + `schoolLevel`
-2. Query `CatalogSubject WHERE country AND system`
+1. Read school's `country` + `curriculum` + `schoolLevel`
+2. Use progressive fallback to find matching `CatalogSubject` records
 3. For each subject, check `subject.grades` array first (grade-specific subjects with explicit grade numbers)
 4. Fall back to level-based mapping only if `grades` array is empty
 5. Create `SchoolSubjectSelection` bridge records for all matching subjects mapped to the correct `AcademicGrade`
 6. School dashboard immediately shows the right subjects
+
+### Progressive Fallback
+
+The function uses a 4-step progressive fallback to find catalog subjects, ensuring every school gets content:
+
+| Step | Filter                              | Example                                   |
+| ---- | ----------------------------------- | ----------------------------------------- |
+| 1    | `country + curriculum + schoolType` | SD + national + private (exact match)     |
+| 2    | `country + curriculum`              | SD + national (ignore schoolType)         |
+| 3    | `country="*" + curriculum`          | IB worldwide, British worldwide           |
+| 4    | US + us-k12                         | Baseline fallback for unrecognized combos |
 
 With grade-specific subjects (the new default), this produces a **1:1 mapping** between catalog subjects and academic grades -- "Math Grade 3" maps directly to the school's Grade 3. The old level-based subjects had N:1 mapping where "Elementary Math" would map to grades 1 through 6.
 
 ```typescript
 import { setupCatalogForSchool } from "@/lib/catalog-setup"
 
-// US K-12 school (ClickView curriculum) -- default
-await setupCatalogForSchool(schoolId, { country: "US", system: "clickview" })
+// US K-12 school -- default
+await setupCatalogForSchool(schoolId, { country: "US", curriculum: "us-k12" })
 
 // International school in UAE (IB curriculum)
-await setupCatalogForSchool(schoolId, { country: "AE", system: "ib" })
+await setupCatalogForSchool(schoolId, { country: "AE", curriculum: "ib" })
 
 // British school
-await setupCatalogForSchool(schoolId, { country: "GB", system: "british" })
+await setupCatalogForSchool(schoolId, { country: "GB", curriculum: "british" })
 ```
 
 **Example configurations:**
 
-| School Type         | Config                                 | Subjects Auto-Assigned       |
-| ------------------- | -------------------------------------- | ---------------------------- |
-| US K-12 (demo)      | `country: "US"`, `system: "clickview"` | ~220 grade-specific subjects |
-| International (UAE) | `country: "AE"`, `system: "ib"`        | IB curriculum subjects       |
-| British school      | `country: "GB"`, `system: "british"`   | UK National Curriculum       |
+| School Type         | Config                                   | Subjects Auto-Assigned       |
+| ------------------- | ---------------------------------------- | ---------------------------- |
+| US K-12 (demo)      | `country: "US"`, `curriculum: "us-k12"`  | ~220 grade-specific subjects |
+| International (UAE) | `country: "AE"`, `curriculum: "ib"`      | IB curriculum subjects       |
+| British school      | `country: "GB"`, `curriculum: "british"` | UK National Curriculum       |
 
-The function defaults to `system: "clickview"` when no system is specified. Schools can also **browse** the full catalog and add subjects from other systems.
+The curriculum defaults to `"us-k12"` (inferred from `country + schoolType` when not explicitly set). International schools always get `"us-k12"`, known countries get `"national"`, and unknown countries fall back to `"us-k12"`. Schools can also **browse** the full catalog and add subjects from other curricula.
 
 ## ClickView K-12 Hierarchy (First Curriculum Set)
 
@@ -156,7 +167,7 @@ The first complete curriculum set replicates ClickView's exact US K-12 hierarchy
 | High       | 23               | 10-12  | ~69                     | ~237              | ~1,092           |
 | **Total**  | **62**           |        | **~220**                | **~800**          | **~4,000**       |
 
-All subjects use `country: "US"`, `system: "clickview"`. Each subject has `grades: [N]` (single grade number) instead of spanning multiple grades.
+All subjects use `country: "US"`, `curriculum: "us-k12"`. Each subject has `grades: [N]` (single grade number) instead of spanning multiple grades.
 
 **Slug convention:** `us-{subject-slug}-grade-{N}` (e.g., `us-math-grade-3`, `us-chemistry-grade-11`)
 
@@ -253,11 +264,12 @@ This pattern already exists for `LessonVideo` (has `approvalStatus`, `visibility
 
 ### Visibility Tiers
 
-| Tier    | Who Sees It                          |
-| ------- | ------------------------------------ |
-| PRIVATE | Only uploader's school               |
-| SCHOOL  | Any school using that subject (free) |
-| PUBLIC  | Anyone (free or paid)                |
+| Tier    | Who Sees It                                     |
+| ------- | ----------------------------------------------- |
+| PRIVATE | Only uploader's school                          |
+| SCHOOL  | Any school using that subject (free)            |
+| PUBLIC  | Anyone (free)                                   |
+| PAID    | Anyone who pays (requires `price` + `currency`) |
 
 ### Engagement Ranking
 
@@ -319,35 +331,42 @@ When admission places a student into a class, the free-text `applyingForClass` f
 
 #### CatalogSubject
 
-| Field         | Type          | Description                                                   |
-| ------------- | ------------- | ------------------------------------------------------------- |
-| id            | String        | Primary key (cuid)                                            |
-| name          | String        | Subject name                                                  |
-| slug          | String        | URL-safe unique slug                                          |
-| lang          | String        | Content language (default "ar")                               |
-| description   | String?       | Subject description                                           |
-| department    | String        | Grouping (e.g. "Sciences")                                    |
-| levels        | SchoolLevel[] | ELEMENTARY, MIDDLE, HIGH                                      |
-| grades        | Int[]         | Explicit grade numbers (e.g., `[3]` for grade-specific)       |
-| country       | String        | Country code (default "SD")                                   |
-| system        | String        | Curriculum system (default "national")                        |
-| clickviewId   | String?       | ClickView topic ID (e.g., "GxAzY0z")                          |
-| clickviewUrl  | String?       | Full ClickView URL for reference                              |
-| imageKey      | String?       | Local path or external URL (direct fallback when no CDN)      |
-| thumbnailKey  | String?       | S3 key prefix for processed WebP variants (sm/md/lg/original) |
-| color         | String?       | Hex background color                                          |
-| iconUrl       | String?       | Icon URL                                                      |
-| bannerUrl     | String?       | Banner image URL                                              |
-| tags          | String[]      | Searchable tags                                               |
-| status        | ContentStatus | DRAFT > REVIEW > PUBLISHED > ARCHIVED                         |
-| gradeRange    | String?       | e.g. "1-12", "7-12"                                           |
-| totalChapters | Int           | Denormalized count                                            |
-| totalLessons  | Int           | Denormalized count                                            |
-| totalContent  | Int           | Total videos + attachments                                    |
-| usageCount    | Int           | How many schools use this                                     |
-| averageRating | Float         | Engagement metric                                             |
-| ratingCount   | Int           | Number of ratings                                             |
-| sortOrder     | Int           | Display order                                                 |
+| Field          | Type          | Description                                                   |
+| -------------- | ------------- | ------------------------------------------------------------- |
+| id             | String        | Primary key (cuid)                                            |
+| name           | String        | Subject name                                                  |
+| slug           | String        | URL-safe unique slug                                          |
+| lang           | String        | Content language (default "ar")                               |
+| description    | String?       | Subject description                                           |
+| objectives     | String[]      | Learning objectives                                           |
+| prerequisites  | String?       | Prerequisite topics/skills                                    |
+| targetAudience | String?       | Target audience description                                   |
+| department     | String        | Grouping (e.g. "Sciences")                                    |
+| levels         | SchoolLevel[] | ELEMENTARY, MIDDLE, HIGH                                      |
+| grades         | Int[]         | Explicit grade numbers (e.g., `[3]` for grade-specific)       |
+| country        | String        | Country code (default "SD")                                   |
+| curriculum     | String        | Curriculum identifier (default "national")                    |
+| schoolTypes    | String[]      | Applicable school types (empty = all)                         |
+| concept        | String?       | Image lookup key (e.g., "math", "science")                    |
+| clickviewId    | String?       | ClickView topic ID (e.g., "GxAzY0z")                          |
+| clickviewUrl   | String?       | Full ClickView URL for reference                              |
+| imageKey       | String?       | Local path or external URL (direct fallback when no CDN)      |
+| thumbnailKey   | String?       | S3 key prefix for processed WebP variants (sm/md/lg/original) |
+| color          | String?       | Hex background color                                          |
+| iconUrl        | String?       | Icon URL                                                      |
+| bannerUrl      | String?       | Banner image URL                                              |
+| tags           | String[]      | Searchable tags                                               |
+| status         | ContentStatus | DRAFT > REVIEW > PUBLISHED > ARCHIVED                         |
+| gradeRange     | String?       | e.g. "1-12", "7-12"                                           |
+| price          | Decimal?      | Subject price for PAID visibility                             |
+| currency       | String?       | Payment currency                                              |
+| totalChapters  | Int           | Denormalized count                                            |
+| totalLessons   | Int           | Denormalized count                                            |
+| totalContent   | Int           | Total videos + attachments                                    |
+| usageCount     | Int           | How many schools use this                                     |
+| averageRating  | Float         | Engagement metric                                             |
+| ratingCount    | Int           | Number of ratings                                             |
+| sortOrder      | Int           | Display order                                                 |
 
 #### CatalogChapter
 
@@ -404,28 +423,42 @@ When admission places a student into a class, the free-text `applyingForClass` f
 
 Exams at subject, chapter, or lesson level.
 
-| Field           | Type          | Description                                  |
-| --------------- | ------------- | -------------------------------------------- |
-| id              | String        | Primary key                                  |
-| subjectId       | String        | FK to CatalogSubject                         |
-| chapterId       | String?       | FK to CatalogChapter (null = whole subject)  |
-| lessonId        | String?       | FK to CatalogLesson (for quizzes)            |
-| title           | String        | Exam title                                   |
-| description     | String?       | Exam description                             |
-| lang            | String        | Content language (default "ar")              |
-| examType        | String        | midterm, final, chapter_test, quiz, practice |
-| durationMinutes | Int?          | Time limit                                   |
-| totalMarks      | Int?          | Maximum marks                                |
-| passingMarks    | Int?          | Passing threshold                            |
-| totalQuestions  | Int?          | Number of questions                          |
-| questions       | Json?         | Question data                                |
-| distribution    | Json?         | Mark distribution                            |
-| gradeRange      | String?       | Grade applicability                          |
-| levels          | SchoolLevel[] | Level applicability                          |
-| status          | ContentStatus | Publication status (default DRAFT)           |
-| tags            | String[]      | Searchable tags                              |
-| usageCount      | Int           | Engagement metric                            |
-| averageScore    | Float         | Average score across attempts                |
+| Field               | Type              | Description                                      |
+| ------------------- | ----------------- | ------------------------------------------------ |
+| id                  | String            | Primary key                                      |
+| subjectId           | String            | FK to CatalogSubject                             |
+| chapterId           | String?           | FK to CatalogChapter (null = whole subject)      |
+| lessonId            | String?           | FK to CatalogLesson (for quizzes)                |
+| title               | String            | Exam title                                       |
+| description         | String?           | Exam description                                 |
+| lang                | String            | Content language (default "ar")                  |
+| examType            | String            | midterm, final, chapter_test, quiz, practice     |
+| durationMinutes     | Int?              | Time limit                                       |
+| totalMarks          | Int?              | Maximum marks                                    |
+| passingMarks        | Int?              | Passing threshold                                |
+| totalQuestions      | Int?              | Number of questions                              |
+| questions           | Json?             | Legacy: use CatalogExamQuestion junction instead |
+| distribution        | Json?             | Question distribution (e.g., type x difficulty)  |
+| bloomDistribution   | Json?             | Bloom's taxonomy distribution                    |
+| gradeRange          | String?           | Grade applicability                              |
+| levels              | SchoolLevel[]     | Level applicability                              |
+| status              | ContentStatus     | Publication status (default DRAFT)               |
+| tags                | String[]          | Searchable tags                                  |
+| contributedBy       | String?           | userId who created it                            |
+| contributedSchoolId | String?           | School that contributed                          |
+| approvalStatus      | ApprovalStatus    | PENDING, APPROVED, REJECTED                      |
+| approvedBy          | String?           | Who approved                                     |
+| approvedAt          | DateTime?         | When approved                                    |
+| rejectionReason     | String?           | Why rejected                                     |
+| visibility          | ContentVisibility | PRIVATE, SCHOOL, PUBLIC, PAID                    |
+| variantOf           | String?           | Parent CatalogExam id (for exam variants)        |
+| variantLabel        | String?           | Variant name (e.g., "Version A", "Easy")         |
+| price               | Decimal?          | Price for PAID visibility                        |
+| currency            | String?           | Payment currency (default "USD")                 |
+| usageCount          | Int               | Engagement metric                                |
+| averageScore        | Float             | Average score across attempts                    |
+| qualityScore        | Float             | Quality metric                                   |
+| ratingCount         | Int               | Number of ratings                                |
 
 ### New Content Models
 
@@ -433,30 +466,34 @@ Exams at subject, chapter, or lesson level.
 
 Global question pool linked to catalog hierarchy. Follows same pattern as school-scoped `QuestionBank` but without `schoolId`:
 
-| Field               | Type                  | Description                                                  |
-| ------------------- | --------------------- | ------------------------------------------------------------ |
-| id                  | String                | Primary key (cuid)                                           |
-| catalogSubjectId    | String?               | Subject-level question                                       |
-| catalogChapterId    | String?               | Chapter-level question                                       |
-| catalogLessonId     | String?               | Lesson-level question                                        |
-| questionText        | String                | Question text                                                |
-| questionType        | QuestionType          | MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY, FILL_BLANK |
-| difficulty          | DifficultyLevel       | EASY, MEDIUM, HARD                                           |
-| bloomLevel          | BloomLevel            | REMEMBER through CREATE                                      |
-| points              | Decimal               | Default 1                                                    |
-| options             | Json?                 | Answer options for MCQ/T-F                                   |
-| sampleAnswer        | String?               | Model answer                                                 |
-| explanation         | String?               | Why this answer is correct                                   |
-| tags                | String[]              | Searchable tags                                              |
-| contributedBy       | String                | userId who created it                                        |
-| contributedSchoolId | String?               | School that contributed                                      |
-| approvalStatus      | ContentApprovalStatus | PENDING, APPROVED, REJECTED                                  |
-| approvedBy          | String?               | Who approved                                                 |
-| visibility          | String                | PRIVATE, SCHOOL, PUBLIC                                      |
-| usageCount          | Int                   | Times used in exams                                          |
-| averageScore        | Float                 | Average score when used                                      |
-| qualityScore        | Float                 | Psychometric quality score                                   |
-| status              | ContentStatus         | DRAFT, PUBLISHED, etc.                                       |
+| Field               | Type              | Description                                                  |
+| ------------------- | ----------------- | ------------------------------------------------------------ |
+| id                  | String            | Primary key (cuid)                                           |
+| catalogSubjectId    | String?           | Subject-level question                                       |
+| catalogChapterId    | String?           | Chapter-level question                                       |
+| catalogLessonId     | String?           | Lesson-level question                                        |
+| questionText        | String            | Question text                                                |
+| questionType        | QuestionType      | MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY, FILL_BLANK |
+| difficulty          | DifficultyLevel   | EASY, MEDIUM, HARD                                           |
+| bloomLevel          | BloomLevel        | REMEMBER through CREATE                                      |
+| points              | Decimal           | Default 1                                                    |
+| options             | Json?             | Answer options for MCQ/T-F                                   |
+| sampleAnswer        | String?           | Model answer                                                 |
+| explanation         | String?           | Why this answer is correct                                   |
+| tags                | String[]          | Searchable tags                                              |
+| contributedBy       | String?           | userId who created it                                        |
+| contributedSchoolId | String?           | School that contributed                                      |
+| approvalStatus      | ApprovalStatus    | PENDING, APPROVED, REJECTED                                  |
+| approvedBy          | String?           | Who approved                                                 |
+| approvedAt          | DateTime?         | When approved                                                |
+| rejectionReason     | String?           | Why rejected                                                 |
+| visibility          | ContentVisibility | PRIVATE, SCHOOL, PUBLIC, PAID                                |
+| price               | Decimal?          | Price for PAID visibility                                    |
+| currency            | String?           | Payment currency (default "USD")                             |
+| usageCount          | Int               | Times used in exams                                          |
+| averageScore        | Float             | Average score when used                                      |
+| qualityScore        | Float             | Psychometric quality score                                   |
+| status              | ContentStatus     | DRAFT, PUBLISHED, etc.                                       |
 
 ```prisma
 model CatalogQuestion {
@@ -476,11 +513,17 @@ model CatalogQuestion {
   tags             String[] @default([])
 
   // Contribution tracking
-  contributedBy       String
+  contributedBy       String?
   contributedSchoolId String?
-  approvalStatus      ContentApprovalStatus @default(PENDING)
+  approvalStatus      ApprovalStatus    @default(PENDING)
   approvedBy          String?
-  visibility          String @default("PUBLIC")
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  // Pricing for PAID visibility
+  price    Decimal? @db.Decimal(8, 2)
+  currency String?  @default("USD")
 
   // Engagement
   usageCount       Int   @default(0)
@@ -497,6 +540,8 @@ model CatalogQuestion {
   @@index([catalogLessonId])
   @@index([approvalStatus, visibility])
   @@index([questionType, difficulty])
+  @@index([contributedBy])
+  @@index([contributedSchoolId])
   @@map("catalog_questions")
 }
 ```
@@ -505,29 +550,35 @@ model CatalogQuestion {
 
 Global materials attached at any catalog level:
 
-| Field               | Type                  | Description                                     |
-| ------------------- | --------------------- | ----------------------------------------------- |
-| id                  | String                | Primary key (cuid)                              |
-| catalogSubjectId    | String?               | Subject-level material                          |
-| catalogChapterId    | String?               | Chapter-level material                          |
-| catalogLessonId     | String?               | Lesson-level material                           |
-| title               | String                | Material title                                  |
-| description         | String?               | Description                                     |
-| lang                | String                | Content language (default "en")                 |
-| type                | String                | textbook, worksheet, syllabus, guide, reference |
-| fileUrl             | String                | File URL                                        |
-| thumbnailKey        | String?               | Thumbnail image key                             |
-| fileSize            | Int?                  | File size in bytes                              |
-| fileType            | String?               | pdf, doc, ppt                                   |
-| author              | String?               | Author name                                     |
-| publisher           | String?               | Publisher name                                  |
-| contributedBy       | String                | userId who created it                           |
-| contributedSchoolId | String?               | School that contributed                         |
-| approvalStatus      | ContentApprovalStatus | PENDING, APPROVED, REJECTED                     |
-| visibility          | String                | PRIVATE, SCHOOL, PUBLIC                         |
-| downloadCount       | Int                   | Engagement metric                               |
-| averageRating       | Float                 | Quality metric                                  |
-| status              | ContentStatus         | DRAFT, PUBLISHED, etc.                          |
+| Field               | Type              | Description                                       |
+| ------------------- | ----------------- | ------------------------------------------------- |
+| id                  | String            | Primary key (cuid)                                |
+| catalogSubjectId    | String?           | Subject-level material                            |
+| catalogChapterId    | String?           | Chapter-level material                            |
+| catalogLessonId     | String?           | Lesson-level material                             |
+| title               | String            | Material title                                    |
+| description         | String?           | Description                                       |
+| lang                | String            | Content language (default "ar")                   |
+| type                | MaterialType      | TEXTBOOK, SYLLABUS, WORKSHEET, PRESENTATION, etc. |
+| fileUrl             | String?           | File URL (optional for external-only resources)   |
+| fileKey             | String?           | S3 key for uploaded files                         |
+| fileSize            | Int?              | File size in bytes                                |
+| mimeType            | String?           | MIME type (e.g., "application/pdf")               |
+| pageCount           | Int?              | Page count for documents                          |
+| externalUrl         | String?           | External link (for non-uploaded resources)        |
+| tags                | String[]          | Searchable tags                                   |
+| contributedBy       | String?           | userId who created it                             |
+| contributedSchoolId | String?           | School that contributed                           |
+| approvalStatus      | ApprovalStatus    | PENDING, APPROVED, REJECTED                       |
+| approvedBy          | String?           | Who approved                                      |
+| approvedAt          | DateTime?         | When approved                                     |
+| rejectionReason     | String?           | Why rejected                                      |
+| visibility          | ContentVisibility | PRIVATE, SCHOOL, PUBLIC, PAID                     |
+| downloadCount       | Int               | Download count                                    |
+| averageRating       | Float             | Quality metric                                    |
+| ratingCount         | Int               | Number of ratings                                 |
+| usageCount          | Int               | Times used by schools                             |
+| status              | ContentStatus     | DRAFT, PUBLISHED, etc.                            |
 
 ```prisma
 model CatalogMaterial {
@@ -538,26 +589,36 @@ model CatalogMaterial {
 
   title            String
   description      String? @db.Text
-  lang             String  @default("en")
-  type             String  // textbook, worksheet, syllabus, guide, reference
-  fileUrl          String  @db.Text
-  thumbnailKey     String?
-  fileSize         Int?
-  fileType         String? // pdf, doc, ppt
-  author           String?
-  publisher        String?
+  lang             String  @default("ar")
+  type             MaterialType @default(OTHER)
+
+  // File metadata
+  fileUrl   String?
+  fileKey   String?  // S3 key
+  fileSize  Int?     // bytes
+  mimeType  String?
+  pageCount Int?
+
+  // External link
+  externalUrl String?
+
+  tags   String[]      @default([])
+  status ContentStatus @default(DRAFT)
 
   // Contribution tracking
-  contributedBy       String
+  contributedBy       String?
   contributedSchoolId String?
-  approvalStatus      ContentApprovalStatus @default(PENDING)
-  visibility          String @default("PUBLIC")
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
 
   // Engagement
-  downloadCount    Int   @default(0)
-  averageRating    Float @default(0)
-
-  status           ContentStatus @default(DRAFT)
+  usageCount    Int   @default(0)
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+  downloadCount Int   @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -567,6 +628,7 @@ model CatalogMaterial {
   @@index([catalogLessonId])
   @@index([approvalStatus, visibility])
   @@index([type])
+  @@index([contributedBy])
   @@map("catalog_materials")
 }
 ```
@@ -575,26 +637,32 @@ model CatalogMaterial {
 
 Reusable assignment templates at any catalog level:
 
-| Field               | Type                  | Description                                        |
-| ------------------- | --------------------- | -------------------------------------------------- |
-| id                  | String                | Primary key (cuid)                                 |
-| catalogSubjectId    | String?               | Subject-level assignment                           |
-| catalogChapterId    | String?               | Chapter-level assignment                           |
-| catalogLessonId     | String?               | Lesson-level assignment                            |
-| title               | String                | Assignment title                                   |
-| description         | String?               | Description                                        |
-| lang                | String                | Content language (default "en")                    |
-| type                | String                | homework, project, lab_report, essay, presentation |
-| totalPoints         | Int?                  | Maximum points                                     |
-| instructions        | String?               | Detailed instructions                              |
-| rubric              | Json?                 | Grading rubric                                     |
-| contributedBy       | String                | userId who created it                              |
-| contributedSchoolId | String?               | School that contributed                            |
-| approvalStatus      | ContentApprovalStatus | PENDING, APPROVED, REJECTED                        |
-| visibility          | String                | PRIVATE, SCHOOL, PUBLIC                            |
-| usageCount          | Int                   | Times used by schools                              |
-| averageRating       | Float                 | Quality metric                                     |
-| status              | ContentStatus         | DRAFT, PUBLISHED, etc.                             |
+| Field               | Type              | Description                                 |
+| ------------------- | ----------------- | ------------------------------------------- |
+| id                  | String            | Primary key (cuid)                          |
+| catalogSubjectId    | String?           | Subject-level assignment                    |
+| catalogChapterId    | String?           | Chapter-level assignment                    |
+| catalogLessonId     | String?           | Lesson-level assignment                     |
+| title               | String            | Assignment title                            |
+| description         | String?           | Description                                 |
+| lang                | String            | Content language (default "ar")             |
+| assignmentType      | String?           | homework, project, lab, essay, presentation |
+| totalPoints         | Decimal?          | Maximum points                              |
+| estimatedTime       | Int?              | Estimated time in minutes                   |
+| instructions        | String?           | Detailed instructions                       |
+| rubric              | String?           | Grading rubric (text)                       |
+| tags                | String[]          | Searchable tags                             |
+| contributedBy       | String?           | userId who created it                       |
+| contributedSchoolId | String?           | School that contributed                     |
+| approvalStatus      | ApprovalStatus    | PENDING, APPROVED, REJECTED                 |
+| approvedBy          | String?           | Who approved                                |
+| approvedAt          | DateTime?         | When approved                               |
+| rejectionReason     | String?           | Why rejected                                |
+| visibility          | ContentVisibility | PRIVATE, SCHOOL, PUBLIC, PAID               |
+| usageCount          | Int               | Times used by schools                       |
+| averageRating       | Float             | Quality metric                              |
+| ratingCount         | Int               | Number of ratings                           |
+| status              | ContentStatus     | DRAFT, PUBLISHED, etc.                      |
 
 ```prisma
 model CatalogAssignment {
@@ -605,23 +673,31 @@ model CatalogAssignment {
 
   title            String
   description      String? @db.Text
-  lang             String  @default("en")
-  type             String  // homework, project, lab_report, essay, presentation
-  totalPoints      Int?
+  lang             String  @default("ar")
   instructions     String? @db.Text
-  rubric           Json?
+  rubric           String? @db.Text  // Grading rubric
+
+  // Assignment metadata
+  totalPoints     Decimal? @db.Decimal(5, 2)
+  estimatedTime   Int?     // minutes
+  assignmentType  String?  // homework, project, lab, essay, presentation
+
+  tags   String[]      @default([])
+  status ContentStatus @default(DRAFT)
 
   // Contribution tracking
-  contributedBy       String
+  contributedBy       String?
   contributedSchoolId String?
-  approvalStatus      ContentApprovalStatus @default(PENDING)
-  visibility          String @default("PUBLIC")
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
 
   // Engagement
-  usageCount       Int   @default(0)
-  averageRating    Float @default(0)
-
-  status           ContentStatus @default(DRAFT)
+  usageCount    Int   @default(0)
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -630,8 +706,161 @@ model CatalogAssignment {
   @@index([catalogChapterId])
   @@index([catalogLessonId])
   @@index([approvalStatus, visibility])
-  @@index([type])
+  @@index([contributedBy])
   @@map("catalog_assignments")
+}
+```
+
+#### CatalogExamQuestion (Exam-Question Junction)
+
+Links `CatalogExam` to `CatalogQuestion` with ordering and custom points. Replaces the legacy `CatalogExam.questions` JSON field.
+
+| Field             | Type    | Description                           |
+| ----------------- | ------- | ------------------------------------- |
+| id                | String  | Primary key (cuid)                    |
+| catalogExamId     | String  | FK to CatalogExam                     |
+| catalogQuestionId | String  | FK to CatalogQuestion                 |
+| order             | Int     | Question order within the exam        |
+| points            | Decimal | Points for this question in this exam |
+
+```prisma
+model CatalogExamQuestion {
+  id                String  @id @default(cuid())
+  catalogExamId     String
+  catalogQuestionId String
+  order             Int
+  points            Decimal @db.Decimal(5, 2)
+
+  catalogExam     CatalogExam     @relation(fields: [catalogExamId], references: [id], onDelete: Cascade)
+  catalogQuestion CatalogQuestion @relation(fields: [catalogQuestionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([catalogExamId, order])
+  @@unique([catalogExamId, catalogQuestionId])
+  @@map("catalog_exam_questions")
+}
+```
+
+#### CatalogExamTemplate (Reusable Exam Blueprints)
+
+Subject-level reusable exam blueprints that define question type distributions, Bloom's taxonomy weights, and exam metadata. Schools can adopt these templates to generate exams.
+
+| Field               | Type              | Description                                  |
+| ------------------- | ----------------- | -------------------------------------------- |
+| id                  | String            | Primary key (cuid)                           |
+| catalogSubjectId    | String            | FK to CatalogSubject                         |
+| name                | String            | Template name                                |
+| description         | String?           | Template description                         |
+| lang                | String            | Content language (default "ar")              |
+| examType            | String            | midterm, final, chapter_test, quiz, practice |
+| duration            | Int               | Duration in minutes                          |
+| totalMarks          | Decimal           | Total marks                                  |
+| distribution        | Json              | Question distribution (type x difficulty)    |
+| bloomDistribution   | Json?             | Bloom's taxonomy weights                     |
+| gradeRange          | String?           | Grade applicability                          |
+| levels              | SchoolLevel[]     | Level applicability                          |
+| contributedBy       | String?           | userId who created it                        |
+| contributedSchoolId | String?           | School that contributed                      |
+| approvalStatus      | ApprovalStatus    | PENDING, APPROVED, REJECTED                  |
+| visibility          | ContentVisibility | PRIVATE, SCHOOL, PUBLIC, PAID                |
+| usageCount          | Int               | Times adopted by schools                     |
+| status              | ContentStatus     | Publication status                           |
+
+#### CatalogExamBlueprint (Subject-Category Blueprints)
+
+Persists 8 subject-category blueprints (STEM_MATH, LANGUAGE_ARTS, etc.) with question type weights, Bloom weights, difficulty curves, and exam type configurations.
+
+| Field               | Type    | Description                                                         |
+| ------------------- | ------- | ------------------------------------------------------------------- |
+| id                  | String  | Primary key (cuid)                                                  |
+| category            | String  | Unique category key (e.g., STEM_MATH, LANGUAGE_ARTS)                |
+| name                | String  | Human-readable name                                                 |
+| description         | String? | Category description                                                |
+| questionTypeWeights | Json    | `{"MULTIPLE_CHOICE": 0.25, "SHORT_ANSWER": 0.20, ...}`              |
+| bloomWeights        | Json    | `{"REMEMBER": 0.15, "UNDERSTAND": 0.20, ...}`                       |
+| difficultyCurves    | Json    | `{"ELEMENTARY": {"EASY": 0.50, "MEDIUM": 0.35, "HARD": 0.15}, ...}` |
+| examTypeConfigs     | Json    | `{"final": {"duration": [90, 150], "marks": [80, 100], ...}, ...}`  |
+| questionTemplates   | Json?   | Template objects for auto-generation                                |
+| mcqOptionGenerators | Json?   | MCQ distractor generation rules                                     |
+| classificationRules | Json?   | Regex patterns to match subjects to this category                   |
+| isActive            | Boolean | Whether this blueprint is active                                    |
+
+#### CatalogPaperTemplate (Exam Paper Templates)
+
+Platform-wide exam paper templates with composable building blocks for header, footer, student info, instructions, and answer sheets.
+
+| Field                 | Type              | Description                                    |
+| --------------------- | ----------------- | ---------------------------------------------- |
+| id                    | String            | Primary key (cuid)                             |
+| name                  | String            | Template name                                  |
+| lang                  | String            | Content language (default "ar")                |
+| template              | String            | Base template: CLASSIC, MODERN, FORMAL, CUSTOM |
+| layout                | String            | SINGLE_COLUMN, TWO_COLUMN, BOOKLET             |
+| answerSheetType       | String            | NONE, SEPARATE, BUBBLE                         |
+| showSchoolLogo        | Boolean           | Include school logo in header                  |
+| showExamTitle         | Boolean           | Include exam title                             |
+| showInstructions      | Boolean           | Include instructions section                   |
+| showStudentInfo       | Boolean           | Include student info section                   |
+| showQuestionNumbers   | Boolean           | Number questions                               |
+| showPointsPerQuestion | Boolean           | Show point values                              |
+| shuffleQuestions      | Boolean           | Randomize question order                       |
+| shuffleOptions        | Boolean           | Randomize MCQ option order                     |
+| blockConfig           | Json?             | Composable block configuration array           |
+| contributedBy         | String?           | userId who created it                          |
+| contributedSchoolId   | String?           | School that contributed                        |
+| approvalStatus        | ApprovalStatus    | PENDING, APPROVED, REJECTED                    |
+| visibility            | ContentVisibility | PRIVATE, SCHOOL, PUBLIC, PAID                  |
+| usageCount            | Int               | Times used                                     |
+| status                | ContentStatus     | Publication status                             |
+
+#### CatalogProposal (School-Initiated Curriculum Proposals)
+
+Schools can propose new subjects, chapters, or lessons to be added to the catalog. Reviewed by SaaS admins.
+
+| Field           | Type           | Description                                                |
+| --------------- | -------------- | ---------------------------------------------------------- |
+| id              | String         | Primary key (cuid)                                         |
+| schoolId        | String         | FK to School (has schoolId -- school-scoped)               |
+| proposedBy      | String         | userId who proposed                                        |
+| type            | ProposalType   | SUBJECT, CHAPTER, LESSON                                   |
+| status          | ProposalStatus | DRAFT, SUBMITTED, IN_REVIEW, APPROVED, REJECTED, PUBLISHED |
+| data            | Json           | Proposal payload (varies by type)                          |
+| parentSubjectId | String?        | CatalogSubject ID (for chapter proposals)                  |
+| parentChapterId | String?        | CatalogChapter ID (for lesson proposals)                   |
+| reviewedBy      | String?        | Who reviewed                                               |
+| reviewedAt      | DateTime?      | When reviewed                                              |
+| reviewNotes     | String?        | Reviewer notes                                             |
+| rejectionReason | String?        | Why rejected                                               |
+| catalogEntityId | String?        | Created catalog entity ID (after approval)                 |
+
+```prisma
+model CatalogProposal {
+  id         String         @id @default(cuid())
+  schoolId   String
+  proposedBy String
+  type       ProposalType
+  status     ProposalStatus @default(DRAFT)
+
+  data Json
+
+  parentSubjectId String?
+  parentChapterId String?
+
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  rejectionReason String?
+  catalogEntityId String?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, status])
+  @@index([status])
+  @@map("catalog_proposals")
 }
 ```
 
@@ -703,7 +932,7 @@ resourceCount     Int @default(0)  // ClickView resource count
 #### New Field on School
 
 ```prisma
-system  String?  // Education system: "clickview", "national", "british", "ib"
+curriculum  String?  // Curriculum: "us-k12", "national", "british", "ib" (inferred from country + schoolType)
 ```
 
 #### Optional Catalog FKs on Existing School-Scoped Models
@@ -881,7 +1110,11 @@ ContentStatus: DRAFT, REVIEW, PUBLISHED, ARCHIVED, DEPRECATED
 SchoolLevel: ELEMENTARY, MIDDLE, HIGH
 StreamType: GENERAL, SCIENCE, ARTS, COMMERCE, TECHNICAL, RELIGIOUS
 VideoVisibility: PRIVATE, SCHOOL, PUBLIC
-ContentApprovalStatus: PENDING, APPROVED, REJECTED
+ApprovalStatus: PENDING, APPROVED, REJECTED
+ContentVisibility: PRIVATE, SCHOOL, PUBLIC, PAID
+MaterialType: TEXTBOOK, SYLLABUS, REFERENCE, STUDY_GUIDE, PROJECT, WORKSHEET, PRESENTATION, LESSON_NOTES, VIDEO_GUIDE, LAB_MANUAL, OTHER
+ProposalType: SUBJECT, CHAPTER, LESSON
+ProposalStatus: DRAFT, SUBMITTED, IN_REVIEW, APPROVED, REJECTED, PUBLISHED
 EnrollmentStatus: PENDING, ACTIVE, COMPLETED, CANCELLED, EXPIRED
 GradingSystem: PERCENTAGE, GPA_4, GPA_5, LETTER, CGPA, CCE, CBSE, ICSE
 QuestionType: MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY, FILL_BLANK
@@ -994,6 +1227,8 @@ The `src/components/stream/data/catalog/` directory provides adapter functions t
 | `getCatalogLessonWithProgress` | `get-lesson-with-progress.ts` | `CatalogLessonWithProgress`   |
 | `checkCatalogEnrollment`       | `check-enrollment.ts`         | `boolean`                     |
 | `getCatalogUserCertificates`   | `get-certificates.ts`         | `CatalogCertificate[]`        |
+| `getCatalogDashboardData`      | `get-dashboard-data.ts`       | Dashboard analytics shape     |
+| `getCatalogLessonContent`      | `get-lesson-content.ts`       | Lesson content with materials |
 | `adminGetCatalogCourse`        | `admin-get-course.ts`         | Admin course shape            |
 | `adminGetCatalogLesson`        | `admin-get-lesson.ts`         | Admin lesson shape            |
 
@@ -1026,7 +1261,7 @@ Key behavior:
 - **Non-blocking**: logs failures but never throws -- class enrollment succeeds even if LMS sync fails
 - **Idempotent**: uses upsert on `[userId, catalogSubjectId]` -- safe to call multiple times
 - **Skips gracefully**: if the class's subject has no `catalogSubjectId`, no enrollment is created
-- **Wired into**: `placeStudentInClass()` (admission) and class enrollment actions
+- **Wired into**: `placeStudentInSection()` (admission) and class enrollment actions
 
 ## Lesson Progress and Certificates
 
@@ -1129,10 +1364,10 @@ const questions = await db.catalogQuestion.findMany({
 
 The catalog currently ships with the ClickView US K-12 curriculum as the default. The Sudanese national curriculum has been removed and will be re-added in the future as a separate curriculum set.
 
-| Curriculum        | Country | System    | Subjects | Source                  | Status                  |
-| ----------------- | ------- | --------- | -------- | ----------------------- | ----------------------- |
-| ClickView US K-12 | US      | clickview | ~220     | `master-inventory.json` | Active                  |
-| Sudanese National | SD      | national  | --       | `topic-constants.ts`    | Removed (future re-add) |
+| Curriculum        | Country | Curriculum Field | Subjects | Source                  | Status                  |
+| ----------------- | ------- | ---------------- | -------- | ----------------------- | ----------------------- |
+| ClickView US K-12 | US      | us-k12           | ~220     | `master-inventory.json` | Active                  |
+| Sudanese National | SD      | national         | --       | `topic-constants.ts`    | Removed (future re-add) |
 
 ### Seed Commands
 
@@ -1151,7 +1386,7 @@ pnpm db:seed:single academic-catalog   # Bridge tables for demo school
    - Elementary entry (grades 1-6) --> 6 grade-specific subjects
    - Middle entry (grades 7-9) --> 3 grade-specific subjects
    - High entry (grades 10-12) --> 3 grade-specific subjects
-3. CatalogSubjects (~220 records, country: "US", system: "clickview")
+3. CatalogSubjects (~220 records, country: "US", curriculum: "us-k12")
    - Each has grades: [N] (single grade number)
    - Each has a description
 4. CatalogChapters (~800 -- duplicated under each grade-specific subject)
@@ -1249,10 +1484,11 @@ The 62 original ClickView entries below are each expanded into grade-specific su
 ```
 prisma/
   models/
-    catalog.prisma              # CatalogSubject, CatalogChapter, CatalogLesson, CatalogExam
-    catalog-question.prisma     # NEW: CatalogQuestion (global QBank)
-    catalog-material.prisma     # NEW: CatalogMaterial (books, syllabi, guides)
-    catalog-assignment.prisma   # NEW: CatalogAssignment (homework templates)
+    catalog.prisma              # CatalogSubject, CatalogChapter, CatalogLesson, CatalogExam, CatalogPaperTemplate
+    catalog-question.prisma     # CatalogQuestion, CatalogExamQuestion, CatalogExamTemplate, CatalogExamBlueprint
+    catalog-material.prisma     # CatalogMaterial (books, syllabi, guides)
+    catalog-assignment.prisma   # CatalogAssignment (homework templates)
+    catalog-proposal.prisma     # CatalogProposal (school-initiated proposals)
     lesson-content.prisma       # LessonVideo, LessonAttachment (already global)
     enrollment.prisma           # Enrollment, LessonProgress, SubjectCertificate
     academic-structure.prisma   # AcademicLevel, AcademicGrade, AcademicStream
@@ -1277,6 +1513,14 @@ src/
       catalog/[subjectId]/
         page.tsx                # Subject detail + chapter/lesson tree
         error.tsx               # Error boundary
+      analytics/page.tsx        # Catalog analytics dashboard
+      approvals/page.tsx        # Content approval queue
+      assignments/page.tsx      # CatalogAssignment management
+      books/page.tsx            # CatalogBook listing
+      books/[bookId]/page.tsx   # Book detail
+      materials/page.tsx        # CatalogMaterial management
+      proposals/page.tsx        # CatalogProposal review queue
+      questions/page.tsx        # CatalogQuestion management
 
   components/saas-dashboard/catalog/
     content.tsx                 # Server: list subjects with stats cards
@@ -1287,6 +1531,25 @@ src/
     table.tsx                   # DataTable with search
     image-actions.ts            # Upload/delete thumbnail server actions
     image-upload.tsx            # Dropzone upload UI with preview
+    analytics/content.tsx       # Analytics dashboard
+    approvals/content.tsx       # Approval queue UI
+    approvals/actions.ts        # Approval server actions
+    assignments/content.tsx     # Assignment listing
+    assignments/actions.ts      # Assignment CRUD
+    books/content.tsx           # Book management
+    books/actions.ts            # Book CRUD
+    materials/content.tsx       # Material listing
+    materials/actions.ts        # Material CRUD
+    proposals/content.tsx       # Proposal review queue
+    proposals/actions.ts        # Proposal review actions
+    questions/content.tsx       # Question bank management
+    questions/actions.ts        # Question CRUD
+    questions/columns.tsx       # Question table columns
+    videos/content.tsx          # Video management
+    videos/actions.ts           # Video approval actions
+    create-subject-dialog.tsx   # Create subject dialog
+    create-chapter-dialog.tsx   # Create chapter dialog
+    create-lesson-dialog.tsx    # Create lesson dialog
 
   app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/subjects/
     layout.tsx                  # Passthrough layout
@@ -1300,6 +1563,10 @@ src/
       high/page.tsx             # High school subjects
     [slug]/
       page.tsx                  # Subject detail (CatalogDetailContent)
+      chapters/page.tsx         # Chapter listing for subject
+      materials/page.tsx        # Materials for subject
+    contribute/page.tsx         # Contribute content to catalog
+    contributions/page.tsx      # View own contributions
 
   components/school-dashboard/listings/subjects/
     content.tsx                 # Server: subjects browse with image resolution
@@ -1312,12 +1579,19 @@ src/
       content.tsx               # Server: catalog selection with grades
       actions.ts                # Server: toggle selection, toggle override
       subject-picker.tsx        # Client: subject selection grid with search
+    contribution-actions.ts     # Server: contribute content actions
+    propose.tsx                 # Client: propose new catalog content
+    contribute-form.tsx         # Client: contribution submission form
+    overrides.tsx               # Client: content override management
+    customization.tsx           # Client: school customization panel
 
   components/stream/data/catalog/   # Catalog adapter layer
     get-all-courses.ts
     get-course.ts
     get-course-sidebar-data.ts
     get-lesson-with-progress.ts
+    get-dashboard-data.ts
+    get-lesson-content.ts
     check-enrollment.ts
     get-certificates.ts
     admin-get-course.ts

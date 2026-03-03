@@ -363,6 +363,12 @@ model School {
   MarkingResult         MarkingResult[]
   GradeOverride         GradeOverride[]
 
+  // Promotion & Transcripts
+  promotionPolicies    PromotionPolicy[]
+  promotionBatches     PromotionBatch[]
+  promotionCandidates  PromotionCandidate[]
+  transcripts          Transcript[]
+
   @@map("schools")
 }
 
@@ -418,6 +424,9 @@ model SchoolYear {
   periods           Period[]
   terms             Term[]
   studentYearLevels StudentYearLevel[]
+
+  // Promotion
+  promotionBatches PromotionBatch[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

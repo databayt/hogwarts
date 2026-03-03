@@ -13,12 +13,12 @@ import {
   fetchCampaignOptions,
   generateMeritList,
   getApplications,
-  getAvailableClassesForPlacement,
+  getAvailableSectionsForPlacement,
   getCampaign,
   getCampaigns,
   getEnrollmentData,
   getMeritListData,
-  placeStudentInClass,
+  placeStudentInSection,
   recordPayment,
   updateApplicationStatus,
   updateCampaign,
@@ -56,6 +56,11 @@ vi.mock("@/lib/db", () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
+    },
+    section: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
     },
     class: {
       findMany: vi.fn(),
@@ -64,9 +69,11 @@ vi.mock("@/lib/db", () => ({
     studentClass: {
       findFirst: vi.fn(),
       create: vi.fn(),
+      upsert: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
+      create: vi.fn(),
       update: vi.fn(),
     },
     yearLevel: {
@@ -84,6 +91,7 @@ vi.mock("@/lib/db", () => ({
     feeAssignment: {
       upsert: vi.fn(),
     },
+    $transaction: vi.fn(),
   },
 }))
 
@@ -155,6 +163,8 @@ describe("Admission Actions", () => {
       success: true,
       data: validCampaignData,
     } as any)
+    // Make $transaction invoke the callback with db as the tx client
+    vi.mocked(db.$transaction).mockImplementation(async (cb: any) => cb(db))
   })
 
   // =========================================================================
@@ -168,7 +178,7 @@ describe("Admission Actions", () => {
       const result = await getCampaigns({})
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Unauthorized")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("returns Unauthorized when schoolId is missing from session", async () => {
@@ -177,7 +187,7 @@ describe("Admission Actions", () => {
       const result = await createCampaign(validCampaignData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Unauthorized")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("returns Unauthorized for every action when not authenticated", async () => {
@@ -196,14 +206,14 @@ describe("Admission Actions", () => {
         getEnrollmentData({}),
         confirmEnrollment({ id: "a-1" }),
         recordPayment({ id: "a-1", paymentId: "pay-1" }),
-        getAvailableClassesForPlacement({ applyingForClass: "Grade 1" }),
-        placeStudentInClass({ applicationId: "a-1", classId: "cls-1" }),
+        getAvailableSectionsForPlacement({ applyingForClass: "Grade 1" }),
+        placeStudentInSection({ applicationId: "a-1", sectionId: "sec-1" }),
         fetchCampaignOptions(),
       ])
 
       for (const result of results) {
         expect(result.success).toBe(false)
-        expect(result.error).toBe("Unauthorized")
+        expect(result.error).toBe("UNAUTHORIZED")
       }
     })
   })
@@ -831,7 +841,8 @@ describe("Admission Actions", () => {
       const result = await confirmEnrollment({ id: "a-1" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Student is already enrolled in another school")
+      // The throw inside $transaction propagates to the outer catch
+      expect(result.error).toBe("Failed to confirm enrollment")
     })
 
     it("creates StudentYearLevel when matching YearLevel and SchoolYear exist", async () => {
@@ -920,18 +931,45 @@ describe("Admission Actions", () => {
       )
     })
 
-    it("skips student creation when userId is null", async () => {
+    it("creates guest user and student when userId is null", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         ...mockApplication,
         userId: null,
       } as any)
       vi.mocked(db.application.update).mockResolvedValue({} as any)
+      vi.mocked(db.user.create).mockResolvedValue({
+        id: "guest-user-1",
+      } as any)
+      vi.mocked(db.student.findUnique).mockResolvedValue(null)
+      vi.mocked(db.student.create).mockResolvedValue({
+        id: "student-new",
+        schoolId: SCHOOL_ID,
+      } as any)
+      vi.mocked(db.yearLevel.findFirst).mockResolvedValue(null)
+      vi.mocked(db.user.findUnique).mockResolvedValue({
+        role: "STUDENT",
+      } as any)
+      vi.mocked(db.feeStructure.findMany).mockResolvedValue([])
 
       const result = await confirmEnrollment({ id: "a-1" })
 
       expect(result.success).toBe(true)
-      expect(db.student.create).not.toHaveBeenCalled()
-      expect(db.student.findUnique).not.toHaveBeenCalled()
+      // Guest user created with application email
+      expect(db.user.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          email: mockApplication.email,
+          role: "STUDENT",
+          schoolId: SCHOOL_ID,
+        }),
+      })
+      // Application linked to guest user
+      expect(db.application.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { userId: "guest-user-1" },
+        })
+      )
+      // Student created for guest user
+      expect(db.student.create).toHaveBeenCalled()
     })
   })
 
@@ -975,37 +1013,41 @@ describe("Admission Actions", () => {
   // getAvailableClassesForPlacement
   // =========================================================================
 
-  describe("getAvailableClassesForPlacement", () => {
-    it("returns classes with enrollment counts", async () => {
-      vi.mocked(db.class.findMany).mockResolvedValue([
+  describe("getAvailableSectionsForPlacement", () => {
+    it("returns sections with enrollment counts", async () => {
+      vi.mocked(db.section.findMany).mockResolvedValue([
         {
-          id: "cls-1",
+          id: "sec-1",
           name: "5A",
           maxCapacity: 30,
-          _count: { studentClasses: 25 },
+          _count: { students: 25 },
         },
         {
-          id: "cls-2",
+          id: "sec-2",
           name: "5B",
-          maxCapacity: null,
-          _count: { studentClasses: 10 },
+          maxCapacity: 35,
+          _count: { students: 10 },
         },
       ] as any)
 
-      const result = await getAvailableClassesForPlacement({
+      const result = await getAvailableSectionsForPlacement({
         applyingForClass: "Grade 5",
       })
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(2)
       expect(result.data?.[0]).toEqual({
-        id: "cls-1",
+        id: "sec-1",
         name: "5A",
         enrolledStudents: 25,
         maxCapacity: 30,
       })
-      // Default maxCapacity of 50 when null
-      expect(result.data?.[1].maxCapacity).toBe(50)
+      expect(result.data?.[1]).toEqual({
+        id: "sec-2",
+        name: "5B",
+        enrolledStudents: 10,
+        maxCapacity: 35,
+      })
     })
   })
 
@@ -1013,7 +1055,7 @@ describe("Admission Actions", () => {
   // placeStudentInClass
   // =========================================================================
 
-  describe("placeStudentInClass", () => {
+  describe("placeStudentInSection", () => {
     const setupPlacementMocks = () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         status: "ADMITTED",
@@ -1023,32 +1065,31 @@ describe("Admission Actions", () => {
       } as any)
       vi.mocked(db.student.findFirst).mockResolvedValue({
         id: "student-1",
+        sectionId: null,
       } as any)
-      vi.mocked(db.class.findFirst).mockResolvedValue({
-        id: "cls-1",
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        id: "sec-1",
         name: "5A",
+        gradeId: null,
         maxCapacity: 30,
-        _count: { studentClasses: 20 },
+        _count: { students: 20 },
       } as any)
-      vi.mocked(db.studentClass.findFirst).mockResolvedValue(null)
-      vi.mocked(db.studentClass.create).mockResolvedValue({} as any)
+      vi.mocked(db.student.update).mockResolvedValue({} as any)
     }
 
-    it("places student in class successfully", async () => {
+    it("places student in section successfully", async () => {
       setupPlacementMocks()
 
-      const result = await placeStudentInClass({
+      const result = await placeStudentInSection({
         applicationId: "a-1",
-        classId: "cls-1",
+        sectionId: "sec-1",
       })
 
       expect(result.success).toBe(true)
-      expect(db.studentClass.create).toHaveBeenCalledWith({
-        data: {
-          schoolId: SCHOOL_ID,
-          studentId: "student-1",
-          classId: "cls-1",
-        },
+      // Student.update is called inside $transaction
+      expect(db.student.update).toHaveBeenCalledWith({
+        where: { id: "student-1" },
+        data: { sectionId: "sec-1" },
       })
     })
 
@@ -1060,14 +1101,14 @@ describe("Admission Actions", () => {
         lastName: "Doe",
       } as any)
 
-      const result = await placeStudentInClass({
+      const result = await placeStudentInSection({
         applicationId: "a-1",
-        classId: "cls-1",
+        sectionId: "sec-1",
       })
 
       expect(result.success).toBe(false)
       expect(result.error).toBe(
-        "Only admitted students can be placed in classes"
+        "Only admitted students can be placed in sections"
       )
     })
 
@@ -1079,9 +1120,9 @@ describe("Admission Actions", () => {
         lastName: "Doe",
       } as any)
 
-      const result = await placeStudentInClass({
+      const result = await placeStudentInSection({
         applicationId: "a-1",
-        classId: "cls-1",
+        sectionId: "sec-1",
       })
 
       expect(result.success).toBe(false)
@@ -1097,9 +1138,9 @@ describe("Admission Actions", () => {
       } as any)
       vi.mocked(db.student.findFirst).mockResolvedValue(null)
 
-      const result = await placeStudentInClass({
+      const result = await placeStudentInSection({
         applicationId: "a-1",
-        classId: "cls-1",
+        sectionId: "sec-1",
       })
 
       expect(result.success).toBe(false)
@@ -1108,7 +1149,7 @@ describe("Admission Actions", () => {
       )
     })
 
-    it("rejects placement when class is at full capacity", async () => {
+    it("rejects placement when section is at full capacity", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         status: "ADMITTED",
         userId: "user-student",
@@ -1117,24 +1158,26 @@ describe("Admission Actions", () => {
       } as any)
       vi.mocked(db.student.findFirst).mockResolvedValue({
         id: "student-1",
+        sectionId: null,
       } as any)
-      vi.mocked(db.class.findFirst).mockResolvedValue({
-        id: "cls-1",
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        id: "sec-1",
         name: "5A",
+        gradeId: null,
         maxCapacity: 30,
-        _count: { studentClasses: 30 },
+        _count: { students: 30 },
       } as any)
 
-      const result = await placeStudentInClass({
+      const result = await placeStudentInSection({
         applicationId: "a-1",
-        classId: "cls-1",
+        sectionId: "sec-1",
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Class "5A" is at full capacity (30/30)')
+      expect(result.error).toBe('Section "5A" is at full capacity (30/30)')
     })
 
-    it("rejects duplicate enrollment in the same class", async () => {
+    it("rejects placement when student already in this section", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         status: "ADMITTED",
         userId: "user-student",
@@ -1143,39 +1186,38 @@ describe("Admission Actions", () => {
       } as any)
       vi.mocked(db.student.findFirst).mockResolvedValue({
         id: "student-1",
+        sectionId: "sec-1",
       } as any)
-      vi.mocked(db.class.findFirst).mockResolvedValue({
-        id: "cls-1",
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        id: "sec-1",
         name: "5A",
+        gradeId: null,
         maxCapacity: 30,
-        _count: { studentClasses: 20 },
-      } as any)
-      vi.mocked(db.studentClass.findFirst).mockResolvedValue({
-        id: "existing-enrollment",
+        _count: { students: 20 },
       } as any)
 
-      const result = await placeStudentInClass({
+      const result = await placeStudentInSection({
         applicationId: "a-1",
-        classId: "cls-1",
+        sectionId: "sec-1",
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Jane Doe is already enrolled in "5A"')
+      expect(result.error).toBe('Jane Doe is already in "5A"')
     })
 
     it("returns error when application not found", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue(null)
 
-      const result = await placeStudentInClass({
+      const result = await placeStudentInSection({
         applicationId: "nonexistent",
-        classId: "cls-1",
+        sectionId: "sec-1",
       })
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Application not found")
     })
 
-    it("returns error when class not found", async () => {
+    it("returns error when section not found", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         status: "ADMITTED",
         userId: "user-student",
@@ -1184,16 +1226,17 @@ describe("Admission Actions", () => {
       } as any)
       vi.mocked(db.student.findFirst).mockResolvedValue({
         id: "student-1",
+        sectionId: null,
       } as any)
-      vi.mocked(db.class.findFirst).mockResolvedValue(null)
+      vi.mocked(db.section.findFirst).mockResolvedValue(null)
 
-      const result = await placeStudentInClass({
+      const result = await placeStudentInSection({
         applicationId: "a-1",
-        classId: "nonexistent",
+        sectionId: "nonexistent",
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Class not found")
+      expect(result.error).toBe("Section not found")
     })
   })
 

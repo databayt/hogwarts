@@ -2,12 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-
-import { BookCoverImage } from "@/components/ui/imagekit-image"
 
 import type { Book } from "../types"
 
@@ -18,15 +16,6 @@ interface Props {
 export default function BookCard({ book }: Props) {
   const { lang } = useParams()
   const [imageError, setImageError] = useState(false)
-
-  // Check if it's a valid ImageKit URL
-  const isImageKitUrl = useMemo(() => {
-    if (!book.coverUrl) return false
-    return (
-      book.coverUrl.includes("ik.imagekit.io") ||
-      book.coverUrl.startsWith("hogwarts/")
-    )
-  }, [book.coverUrl])
 
   const hasValidImage =
     book.coverUrl && !book.coverUrl.includes("placeholder") && !imageError
@@ -52,26 +41,14 @@ export default function BookCard({ book }: Props) {
           style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
         >
           {hasValidImage ? (
-            isImageKitUrl ? (
-              <BookCoverImage
-                src={book.coverUrl}
-                alt={book.title}
-                fill
-                preset="card"
-                className="object-cover"
-                onError={() => setImageError(true)}
-                fallback={<FallbackContent />}
-              />
-            ) : (
-              <Image
-                src={book.coverUrl}
-                alt={book.title}
-                fill
-                className="object-cover"
-                unoptimized
-                onError={() => setImageError(true)}
-              />
-            )
+            <Image
+              src={book.coverUrl}
+              alt={book.title}
+              fill
+              className="object-cover"
+              unoptimized
+              onError={() => setImageError(true)}
+            />
           ) : (
             <FallbackContent />
           )}

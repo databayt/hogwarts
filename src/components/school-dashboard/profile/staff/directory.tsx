@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Staff Directory Component
  * Browse and search all staff profiles
@@ -263,7 +260,7 @@ export function StaffDirectoryContent({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
-            <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
             <Input
               placeholder="Search by name, email, designation, or employee ID..."
               value={searchQuery}
@@ -408,7 +405,7 @@ export function StaffDirectoryContent({
                   <Link href={`/profile/staff/${staff.id}`}>
                     <Button size="sm" variant="ghost">
                       View
-                      <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+                      <ChevronRight className="ms-1 h-4 w-4" />
                     </Button>
                   </Link>
                 </div>

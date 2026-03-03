@@ -66,7 +66,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
   useEffect(() => {
     const loadCatalog = async () => {
       const res = await getCatalogSubjectsForPicker()
-      if (res.success) {
+      if (res.success && res.data) {
         setCatalogOptions(res.data)
       }
     }

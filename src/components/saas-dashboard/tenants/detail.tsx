@@ -28,6 +28,7 @@ type TenantDetailProps = {
   domain: string
   planType: string
   isActive: boolean
+  dictionary?: any
 }
 
 export function TenantDetail({
@@ -36,7 +37,10 @@ export function TenantDetail({
   domain,
   planType,
   isActive,
+  dictionary,
 }: TenantDetailProps) {
+  const d = dictionary?.operator?.tenants?.detail
+  const cs = dictionary?.operator?.common?.status
   const [open, setOpen] = React.useState(false)
   const [owners, setOwners] = React.useState<
     Array<{ id: string; email: string }>
@@ -87,12 +91,18 @@ export function TenantDetail({
     try {
       const result = await tenantStartImpersonation({ tenantId, reason })
       if (result.success) {
-        SuccessToast("Impersonation started successfully")
+        SuccessToast(
+          d?.impersonationStarted || "Impersonation started successfully"
+        )
       } else {
         ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to impersonate")
+      ErrorToast(
+        e instanceof Error
+          ? e.message
+          : d?.failedToImpersonate || "Failed to impersonate"
+      )
     }
   }
   const onStopImpersonate = async () => {
@@ -100,13 +110,17 @@ export function TenantDetail({
     try {
       const result = await tenantStopImpersonation({ reason })
       if (result.success) {
-        SuccessToast("Impersonation stopped successfully")
+        SuccessToast(
+          d?.impersonationStopped || "Impersonation stopped successfully"
+        )
       } else {
         ErrorToast(result.error.message)
       }
     } catch (e) {
       ErrorToast(
-        e instanceof Error ? e.message : "Failed to stop impersonation"
+        e instanceof Error
+          ? e.message
+          : d?.failedToStopImpersonation || "Failed to stop impersonation"
       )
     }
   }
@@ -116,12 +130,16 @@ export function TenantDetail({
     try {
       const result = await tenantToggleActive({ tenantId, reason })
       if (result.success) {
-        SuccessToast("Status toggled successfully")
+        SuccessToast(d?.statusToggled || "Status toggled successfully")
       } else {
         ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to toggle status")
+      ErrorToast(
+        e instanceof Error
+          ? e.message
+          : d?.failedToToggleStatus || "Failed to toggle status"
+      )
     }
   }
   const onChangePlan = async () => {
@@ -135,12 +153,16 @@ export function TenantDetail({
         reason,
       })
       if (result.success) {
-        SuccessToast("Plan changed successfully")
+        SuccessToast(d?.planChanged || "Plan changed successfully")
       } else {
         ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to change plan")
+      ErrorToast(
+        e instanceof Error
+          ? e.message
+          : d?.failedToChangePlan || "Failed to change plan"
+      )
     }
   }
   const onEndTrial = async () => {
@@ -148,12 +170,16 @@ export function TenantDetail({
     try {
       const result = await tenantEndTrial({ tenantId, reason })
       if (result.success) {
-        SuccessToast("Trial ended successfully")
+        SuccessToast(d?.trialEnded || "Trial ended successfully")
       } else {
         ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to end trial")
+      ErrorToast(
+        e instanceof Error
+          ? e.message
+          : d?.failedToEndTrial || "Failed to end trial"
+      )
     }
   }
 
@@ -161,41 +187,50 @@ export function TenantDetail({
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="sm">
-          Details
+          {d?.details || "Details"}
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>Tenant details</SheetTitle>
+          <SheetTitle>{d?.tenantDetails || "Tenant details"}</SheetTitle>
         </SheetHeader>
         <div className="mt-4 space-y-4">
           <Card className="p-4 text-sm">
             <div className="font-medium">{name}</div>
             <div className="text-muted-foreground">{domain}</div>
             <div className="mt-2 flex gap-4">
-              <span className="text-xs">Plan: {planType}</span>
               <span className="text-xs">
-                Status: {isActive ? "Active" : "Inactive"}
+                {d?.plan || "Plan"}: {planType}
+              </span>
+              <span className="text-xs">
+                {d?.status || "Status"}:{" "}
+                {isActive ? cs?.active || "Active" : cs?.inactive || "Inactive"}
               </span>
             </div>
           </Card>
           <Card className="p-4 text-sm">
-            <div className="mb-2 font-medium">Billing</div>
+            <div className="mb-2 font-medium">{d?.billing || "Billing"}</div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="text-muted-foreground text-xs">Plan</div>
+                <div className="text-muted-foreground text-xs">
+                  {d?.plan || "Plan"}
+                </div>
                 <div className="font-medium">
                   {billing?.planType ?? planType}
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs">Outstanding</div>
+                <div className="text-muted-foreground text-xs">
+                  {d?.outstanding || "Outstanding"}
+                </div>
                 <div className="font-medium tabular-nums">
                   ${((billing?.outstandingCents ?? 0) / 100).toFixed(2)}
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs">Trial ends</div>
+                <div className="text-muted-foreground text-xs">
+                  {d?.trialEnds || "Trial ends"}
+                </div>
                 <div className="font-medium">
                   {billing?.trialEndsAt
                     ? new Date(billing.trialEndsAt).toLocaleDateString()
@@ -204,7 +239,7 @@ export function TenantDetail({
               </div>
               <div>
                 <div className="text-muted-foreground text-xs">
-                  Next invoice
+                  {d?.nextInvoice || "Next invoice"}
                 </div>
                 <div className="font-medium">
                   {billing?.nextInvoiceDate
@@ -215,15 +250,25 @@ export function TenantDetail({
             </div>
           </Card>
           <Card className="p-4 text-sm">
-            <div className="mb-2 font-medium">Recent Invoices</div>
+            <div className="mb-2 font-medium">
+              {d?.recentInvoices || "Recent Invoices"}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="px-2 py-1 text-start">Invoice</th>
-                    <th className="px-2 py-1 text-start">Status</th>
-                    <th className="px-2 py-1 text-start">Amount</th>
-                    <th className="px-2 py-1 text-start">Date</th>
+                    <th className="px-2 py-1 text-start">
+                      {d?.invoice || "Invoice"}
+                    </th>
+                    <th className="px-2 py-1 text-start">
+                      {d?.status || "Status"}
+                    </th>
+                    <th className="px-2 py-1 text-start">
+                      {d?.amount || "Amount"}
+                    </th>
+                    <th className="px-2 py-1 text-start">
+                      {d?.date || "Date"}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -245,7 +290,7 @@ export function TenantDetail({
                         className="text-muted-foreground px-2 py-2"
                         colSpan={4}
                       >
-                        No invoices found
+                        {d?.noInvoicesFound || "No invoices found"}
                       </td>
                     </tr>
                   )}
@@ -255,9 +300,11 @@ export function TenantDetail({
           </Card>
 
           <Card className="p-4 text-sm">
-            <div className="mb-2 font-medium">Owners</div>
+            <div className="mb-2 font-medium">{d?.owners || "Owners"}</div>
             {owners.length === 0 ? (
-              <div className="text-muted-foreground">No owners found</div>
+              <div className="text-muted-foreground">
+                {d?.noOwnersFound || "No owners found"}
+              </div>
             ) : (
               <ul className="list-disc ps-5">
                 {owners.map((o) => (
@@ -268,22 +315,28 @@ export function TenantDetail({
           </Card>
 
           <Card className="p-4 text-sm">
-            <div className="mb-2 font-medium">Usage</div>
+            <div className="mb-2 font-medium">{d?.usage || "Usage"}</div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <div className="text-muted-foreground text-xs">Students</div>
+                <div className="text-muted-foreground text-xs">
+                  {d?.students || "Students"}
+                </div>
                 <div className="text-lg font-semibold">
                   {metrics?.students ?? 0}
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs">Teachers</div>
+                <div className="text-muted-foreground text-xs">
+                  {d?.teachers || "Teachers"}
+                </div>
                 <div className="text-lg font-semibold">
                   {metrics?.teachers ?? 0}
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs">Classes</div>
+                <div className="text-muted-foreground text-xs">
+                  {d?.classes || "Classes"}
+                </div>
                 <div className="text-lg font-semibold">
                   {metrics?.classes ?? 0}
                 </div>
@@ -293,19 +346,19 @@ export function TenantDetail({
 
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={onImpersonate}>
-              Start impersonation
+              {d?.startImpersonation || "Start impersonation"}
             </Button>
             <Button size="sm" variant="outline" onClick={onStopImpersonate}>
-              Stop impersonation
+              {d?.stopImpersonation || "Stop impersonation"}
             </Button>
             <Button size="sm" variant="secondary" onClick={onToggleActive}>
-              {isActive ? "Suspend" : "Activate"}
+              {isActive ? d?.suspend || "Suspend" : d?.activate || "Activate"}
             </Button>
             <Button size="sm" variant="outline" onClick={onChangePlan}>
-              Change plan
+              {d?.changePlan || "Change plan"}
             </Button>
             <Button size="sm" variant="outline" onClick={onEndTrial}>
-              End trial
+              {d?.endTrial || "End trial"}
             </Button>
           </div>
         </div>

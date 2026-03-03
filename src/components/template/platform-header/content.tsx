@@ -46,8 +46,8 @@ export default function PlatformHeader({
   lang,
   serverRole,
 }: PlatformHeaderProps = {}) {
-  const breadcrumbItems = useBreadcrumbs()
   const { dictionary } = useDictionary()
+  const breadcrumbItems = useBreadcrumbs(dictionary ?? undefined)
   const { isRTL, locale } = useLocale()
   const clientRole = useCurrentRole() as Role | undefined
   const role = clientRole ?? (serverRole as Role | undefined)
@@ -174,7 +174,7 @@ export default function PlatformHeader({
           />
         </div>
       </header>
-      <ImpersonationBanner />
+      <ImpersonationBanner dictionary={dictionary ?? undefined} />
     </div>
   )
 }

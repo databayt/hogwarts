@@ -2,10 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import Image from "next/image"
-
-import { BookCoverImage } from "@/components/ui/imagekit-image"
 
 // ============================================================================
 // Types
@@ -21,10 +19,6 @@ interface BookCoverProps {
   priority?: boolean
   className?: string
   textSize?: "sm" | "md" | "lg"
-  /** Use ImageKit transformations for optimization */
-  useImageKit?: boolean
-  /** ImageKit preset (thumbnail, card, detail, original) */
-  preset?: "thumbnail" | "card" | "detail" | "original"
 }
 
 // ============================================================================
@@ -41,8 +35,6 @@ export function BookCover({
   priority = false,
   className = "",
   textSize = "md",
-  useImageKit = true,
-  preset = "card",
 }: BookCoverProps) {
   const [imageError, setImageError] = useState(false)
 
@@ -51,14 +43,6 @@ export function BookCover({
     md: { title: "text-base", author: "text-sm" },
     lg: { title: "text-lg", author: "text-sm" },
   }
-
-  // Check if the URL is from ImageKit
-  const isImageKitUrl = useMemo(() => {
-    if (!coverUrl) return false
-    return (
-      coverUrl.includes("ik.imagekit.io") || coverUrl.startsWith("hogwarts/")
-    )
-  }, [coverUrl])
 
   // Fallback content when no image or error
   const FallbackContent = () => (
@@ -79,25 +63,6 @@ export function BookCover({
     return <FallbackContent />
   }
 
-  // Use ImageKit component for ImageKit URLs when enabled
-  if (useImageKit && isImageKitUrl) {
-    return (
-      <BookCoverImage
-        src={coverUrl}
-        alt={title}
-        width={width}
-        height={height}
-        preset={preset}
-        priority={priority}
-        className={`h-full w-full object-cover ${className}`}
-        onError={() => setImageError(true)}
-        fallback={<FallbackContent />}
-      />
-    )
-  }
-
-  // External URLs (Open Library, etc.) bypass Next.js image proxy
-  // to avoid NAT64/private-IP blocking in /_next/image
   return (
     <Image
       src={coverUrl}

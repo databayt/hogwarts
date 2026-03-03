@@ -24,6 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
   approveProposal,
@@ -55,10 +57,14 @@ const statusVariant: Record<
 function ProposalReviewRow({
   proposal,
   onRefresh,
+  dictionary,
 }: {
   proposal: ProposalReviewItem
   onRefresh: () => void
+  dictionary?: Dictionary
 }) {
+  const d = dictionary?.operator?.catalog
+  const actions = dictionary?.operator?.common?.actions
   const [isPending, startTransition] = useTransition()
   const [rejectionReason, setRejectionReason] = useState("")
   const [showReject, setShowReject] = useState(false)
@@ -72,7 +78,10 @@ function ProposalReviewRow({
     startTransition(async () => {
       const res = await approveProposal(proposal.id, reviewNotes || undefined)
       if (res.success) {
-        toast.success("Proposal approved and published to catalog")
+        toast.success(
+          d?.approvedAndPublished ||
+            "Proposal approved and published to catalog"
+        )
         onRefresh()
       } else {
         toast.error(res.error)
@@ -82,13 +91,15 @@ function ProposalReviewRow({
 
   const handleReject = () => {
     if (!rejectionReason.trim()) {
-      toast.error("Please provide a rejection reason")
+      toast.error(
+        d?.rejectionReasonRequired || "Please provide a rejection reason"
+      )
       return
     }
     startTransition(async () => {
       const res = await rejectProposal(proposal.id, rejectionReason)
       if (res.success) {
-        toast.success("Proposal rejected")
+        toast.success(d?.proposalRejected || "Proposal rejected")
         setShowReject(false)
         setRejectionReason("")
         onRefresh()
@@ -101,7 +112,9 @@ function ProposalReviewRow({
   return (
     <>
       <TableRow>
-        <TableCell className="font-medium">{data.name || "Untitled"}</TableCell>
+        <TableCell className="font-medium">
+          {data.name || d?.untitled || "Untitled"}
+        </TableCell>
         <TableCell>
           <Badge variant="outline" className="capitalize">
             {proposal.type.toLowerCase()}
@@ -121,14 +134,16 @@ function ProposalReviewRow({
           {canReview && (
             <div className="flex items-center gap-2">
               <Input
-                placeholder="Review notes (optional)"
+                placeholder={
+                  d?.reviewNotesPlaceholder || "Review notes (optional)"
+                }
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
                 className="h-8 w-40"
                 disabled={isPending}
               />
               <Button size="sm" onClick={handleApprove} disabled={isPending}>
-                Approve
+                {actions?.approve || "Approve"}
               </Button>
               <Button
                 size="sm"
@@ -136,7 +151,7 @@ function ProposalReviewRow({
                 onClick={() => setShowReject(!showReject)}
                 disabled={isPending}
               >
-                Reject
+                {actions?.reject || "Reject"}
               </Button>
             </div>
           )}
@@ -148,7 +163,9 @@ function ProposalReviewRow({
           <TableCell colSpan={7}>
             <div className="flex items-center gap-2 py-2">
               <Textarea
-                placeholder="Rejection reason (required)"
+                placeholder={
+                  d?.rejectionReasonPlaceholder || "Rejection reason (required)"
+                }
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={2}
@@ -161,7 +178,7 @@ function ProposalReviewRow({
                 onClick={handleReject}
                 disabled={isPending}
               >
-                Confirm Reject
+                {d?.confirmReject || "Confirm Reject"}
               </Button>
               <Button
                 size="sm"
@@ -172,7 +189,7 @@ function ProposalReviewRow({
                 }}
                 disabled={isPending}
               >
-                Cancel
+                {actions?.cancel || "Cancel"}
               </Button>
             </div>
           </TableCell>
@@ -186,7 +203,16 @@ function ProposalReviewRow({
 // Main content component
 // ============================================================================
 
-export function ProposalReviewContent() {
+interface ProposalReviewContentProps {
+  dictionary?: Dictionary
+  lang?: Locale
+}
+
+export function ProposalReviewContent({
+  dictionary,
+  lang,
+}: ProposalReviewContentProps) {
+  const d = dictionary?.operator?.catalog
   const [proposals, setProposals] = useState<ProposalReviewItem[]>([])
   const [statusFilter, setStatusFilter] = useState("SUBMITTED")
   const [isLoading, setIsLoading] = useState(true)
@@ -197,7 +223,7 @@ export function ProposalReviewContent() {
       statusFilter === "ALL" ? undefined : statusFilter
     )
     if (res.success) {
-      setProposals(res.data)
+      setProposals(res.data ?? [])
     }
     setIsLoading(false)
   }
@@ -211,9 +237,12 @@ export function ProposalReviewContent() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Catalog Proposals</h2>
+          <h2 className="text-lg font-semibold">
+            {d?.proposals || "Catalog Proposals"}
+          </h2>
           <p className="text-muted-foreground text-sm">
-            Review subject/chapter/lesson proposals from schools
+            {d?.proposalsDescription ||
+              "Review subject/chapter/lesson proposals from schools"}
           </p>
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -221,36 +250,47 @@ export function ProposalReviewContent() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All</SelectItem>
-            <SelectItem value="SUBMITTED">Submitted</SelectItem>
-            <SelectItem value="IN_REVIEW">In Review</SelectItem>
-            <SelectItem value="APPROVED">Approved</SelectItem>
-            <SelectItem value="REJECTED">Rejected</SelectItem>
-            <SelectItem value="PUBLISHED">Published</SelectItem>
+            <SelectItem value="ALL">{d?.statusAll || "All"}</SelectItem>
+            <SelectItem value="SUBMITTED">
+              {d?.statusSubmitted || "Submitted"}
+            </SelectItem>
+            <SelectItem value="IN_REVIEW">
+              {d?.statusInReview || "In Review"}
+            </SelectItem>
+            <SelectItem value="APPROVED">
+              {d?.statusApproved || "Approved"}
+            </SelectItem>
+            <SelectItem value="REJECTED">
+              {d?.statusRejected || "Rejected"}
+            </SelectItem>
+            <SelectItem value="PUBLISHED">
+              {d?.statusPublished || "Published"}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {isLoading ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
-          Loading proposals...
+          {d?.loadingProposals || "Loading proposals..."}
         </p>
       ) : proposals.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
-          No proposals found for the selected filter.
+          {d?.noProposalsForFilter ||
+            "No proposals found for the selected filter."}
         </p>
       ) : (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>School</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{d?.name || "Name"}</TableHead>
+                <TableHead>{d?.type || "Type"}</TableHead>
+                <TableHead>{d?.department || "Department"}</TableHead>
+                <TableHead>{d?.school || "School"}</TableHead>
+                <TableHead>{d?.status || "Status"}</TableHead>
+                <TableHead>{d?.submitted || "Submitted"}</TableHead>
+                <TableHead>{d?.actions || "Actions"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -259,6 +299,7 @@ export function ProposalReviewContent() {
                   key={p.id}
                   proposal={p}
                   onRefresh={loadProposals}
+                  dictionary={dictionary}
                 />
               ))}
             </TableBody>

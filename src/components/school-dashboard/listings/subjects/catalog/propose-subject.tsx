@@ -252,7 +252,7 @@ export function ProposeSubjectPanel() {
   const loadProposals = async () => {
     const res = await getMyProposals()
     if (res.success) {
-      setProposals(res.data)
+      setProposals(res.data ?? [])
     }
   }
 

@@ -3,18 +3,16 @@
 
 import Link from "next/link"
 import {
-  BarChart3,
-  BookOpen,
-  ClipboardList,
+  Clock,
   FileText,
-  GraduationCap,
-  Key,
+  Hash,
   Plus,
   Printer,
   Sparkles,
-  Zap,
+  Wand2,
 } from "lucide-react"
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
@@ -26,127 +24,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import type { SupportedLanguage } from "@/components/translation/types"
 
-const EXAM_PRESETS = [
-  {
-    id: "midterm",
-    icon: BookOpen,
-    template: "FORMAL",
-    duration: 60,
-    groupByType: true,
-    en: {
-      title: "Midterm",
-      description: "Standard midterm exam with formal layout",
-    },
-    ar: {
-      title: "اختبار نصفي",
-      description: "اختبار نصفي بتنسيق رسمي",
-    },
-  },
-  {
-    id: "final",
-    icon: GraduationCap,
-    template: "FORMAL",
-    duration: 120,
-    groupByType: true,
-    en: {
-      title: "Final",
-      description: "Comprehensive final exam with formal layout",
-    },
-    ar: {
-      title: "اختبار نهائي",
-      description: "اختبار نهائي شامل بتنسيق رسمي",
-    },
-  },
-  {
-    id: "quiz",
-    icon: ClipboardList,
-    template: "MODERN",
-    duration: 20,
-    groupByType: false,
-    en: {
-      title: "Quiz",
-      description: "Short quiz with modern clean layout",
-    },
-    ar: {
-      title: "اختبار قصير",
-      description: "اختبار قصير بتنسيق عصري",
-    },
-  },
-  {
-    id: "pop-quiz",
-    icon: Zap,
-    template: "CLASSIC",
-    duration: 10,
-    groupByType: false,
-    en: {
-      title: "Pop Quiz",
-      description: "Quick surprise quiz with classic layout",
-    },
-    ar: {
-      title: "اختبار مفاجئ",
-      description: "اختبار سريع مفاجئ بتنسيق كلاسيكي",
-    },
-  },
-] as const
-
-interface PresetProps {
-  lang: Locale
-}
-
-export function QuickGeneratePresets({ lang }: PresetProps) {
-  const isAr = lang === "ar"
-
-  return (
-    <div className="space-y-3">
-      <div>
-        <h3 className="font-semibold tracking-tight">
-          {isAr ? "إنشاء سريع" : "Quick Generate"}
-        </h3>
-        <p className="text-muted-foreground text-sm">
-          {isAr
-            ? "اختر نموذجاً جاهزاً لإنشاء اختبار بسرعة"
-            : "Pick a preset to quickly generate an exam"}
-        </p>
-      </div>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {EXAM_PRESETS.map((preset) => {
-          const Icon = preset.icon
-          const label = isAr ? preset.ar : preset.en
-          const href = `/${lang}/exams/generate/templates/new?preset=${preset.id}&template=${preset.template}&duration=${preset.duration}&groupByType=${preset.groupByType}`
-
-          return (
-            <Link key={preset.id} href={href} className="group">
-              <Card className="group-hover:border-primary/50 group-hover:bg-accent/50 h-full transition-colors">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <Badge variant="secondary">{preset.template}</Badge>
-                  </div>
-                  <CardTitle className="pt-2 text-base">
-                    {label.title}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    {label.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Badge variant="outline" className="text-xs">
-                    {preset.duration} {isAr ? "دقيقة" : "min"}
-                  </Badge>
-                </CardContent>
-              </Card>
-            </Link>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
+import type { TemplateDistribution } from "./types"
+import { calculateTotalQuestions } from "./utils"
 
 interface Props {
   dictionary: Dictionary
@@ -156,275 +40,323 @@ interface Props {
 export default async function GenerateContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
 
-  // Get stats
-  let questionCount = 0
-  let templateCount = 0
-  let generatedExamCount = 0
+  let templates: {
+    id: string
+    name: string
+    subjectName: string
+    duration: number
+    totalMarks: number
+    totalQuestions: number
+    timesUsed: number
+    isActive: boolean
+  }[] = []
+
+  let generatedExams: {
+    id: string
+    examTitle: string
+    templateName: string | null
+    subjectName: string
+    totalQuestions: number
+    createdAt: string
+    examId: string
+  }[] = []
 
   if (schoolId) {
-    ;[questionCount, templateCount, generatedExamCount] = await Promise.all([
-      db.questionBank.count({ where: { schoolId } }),
-      db.examTemplate.count({ where: { schoolId } }),
-      db.generatedExam.count({ where: { schoolId } }),
+    const [templateRows, generatedRows] = await Promise.all([
+      db.examTemplate.findMany({
+        where: { schoolId, isActive: true },
+        orderBy: { updatedAt: "desc" },
+        take: 12,
+        include: {
+          subject: { select: { subjectName: true, lang: true } },
+          _count: { select: { generatedExams: true } },
+        },
+      }),
+      db.generatedExam.findMany({
+        where: { schoolId },
+        orderBy: { createdAt: "desc" },
+        take: 12,
+        include: {
+          exam: {
+            select: {
+              title: true,
+              subject: { select: { subjectName: true, lang: true } },
+            },
+          },
+          template: { select: { name: true } },
+        },
+      }),
     ])
+
+    templates = await Promise.all(
+      templateRows.map(async (t) => ({
+        id: t.id,
+        name: t.name,
+        subjectName: t.subject?.subjectName
+          ? await getDisplayText(
+              t.subject.subjectName,
+              (t.subject.lang || "ar") as SupportedLanguage,
+              lang,
+              schoolId
+            )
+          : lang === "ar"
+            ? "غير محدد"
+            : "Unknown",
+        duration: t.duration,
+        totalMarks: Number(t.totalMarks),
+        totalQuestions: calculateTotalQuestions(
+          t.distribution as TemplateDistribution
+        ),
+        timesUsed: t._count.generatedExams,
+        isActive: t.isActive,
+      }))
+    )
+
+    generatedExams = await Promise.all(
+      generatedRows.map(async (g) => ({
+        id: g.id,
+        examTitle: g.exam.title,
+        templateName: g.template?.name || null,
+        subjectName: g.exam.subject?.subjectName
+          ? await getDisplayText(
+              g.exam.subject.subjectName,
+              (g.exam.subject.lang || "ar") as SupportedLanguage,
+              lang,
+              schoolId
+            )
+          : lang === "ar"
+            ? "غير محدد"
+            : "Unknown",
+        totalQuestions: g.totalQuestions,
+        createdAt: g.createdAt.toISOString(),
+        examId: g.examId,
+      }))
+    )
   }
 
+  const isAr = lang === "ar"
+
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dictionary.generate.stats.questions}
-            </CardTitle>
-            <BookOpen className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{questionCount}</div>
-            <p className="text-muted-foreground text-xs">
-              {dictionary.generate.stats.inQuestionBank}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dictionary.generate.stats.templates}
-            </CardTitle>
-            <FileText className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{templateCount}</div>
-            <p className="text-muted-foreground text-xs">
-              {dictionary.generate.stats.reusableBlueprints}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dictionary.generate.stats.generated}
-            </CardTitle>
-            <BarChart3 className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{generatedExamCount}</div>
-            <p className="text-muted-foreground text-xs">
-              {dictionary.generate.stats.examsCreated}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Generate Presets */}
-      <QuickGeneratePresets lang={lang} />
-
-      {/* Action Cards */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              {dictionary.generate.cards.questionBank.title}
-            </CardTitle>
-            <CardDescription>
-              {dictionary.generate.cards.questionBank.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
+    <div className="space-y-8">
+      {/* Section 1: Templates Grid */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">
+              {isAr ? "قوالب الاختبارات" : "Exam Templates"}
+            </h2>
             <p className="text-muted-foreground text-sm">
-              {dictionary.generate.cards.questionBank.details}
+              {isAr
+                ? "قوالب قابلة لإعادة الاستخدام لإنشاء الاختبارات"
+                : "Reusable blueprints for exam generation"}
             </p>
-            <div className="flex gap-2">
-              <Button asChild>
-                <Link href={`/${lang}/exams/qbank`}>
-                  <BookOpen className="me-2 h-4 w-4" />
-                  {dictionary.generate.actions.viewQuestions}
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href={`/${lang}/exams/qbank/new`}>
+          </div>
+          <Button asChild>
+            <Link href={`/${lang}/exams/generate/template-wizard`}>
+              <Wand2 className="me-2 h-4 w-4" />
+              {isAr ? "قالب جديد" : "New Template"}
+            </Link>
+          </Button>
+        </div>
+
+        {templates.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <FileText className="text-muted-foreground mb-4 h-10 w-10" />
+              <p className="text-muted-foreground mb-4 text-sm">
+                {isAr
+                  ? "لا توجد قوالب بعد. أنشئ أول قالب للبدء."
+                  : "No templates yet. Create your first template to get started."}
+              </p>
+              <Button asChild variant="outline">
+                <Link href={`/${lang}/exams/generate/template-wizard`}>
                   <Plus className="me-2 h-4 w-4" />
-                  {dictionary.generate.actions.addQuestion}
+                  {isAr ? "إنشاء قالب" : "Create Template"}
                 </Link>
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {templates.map((t) => (
+              <Link
+                key={t.id}
+                href={`/${lang}/exams/generate/templates/${t.id}`}
+                className="group"
+              >
+                <Card className="group-hover:border-primary/50 h-full transition-colors">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="line-clamp-1 text-base">
+                        {t.name}
+                      </CardTitle>
+                      <Badge variant="secondary" className="shrink-0 text-xs">
+                        {t.subjectName}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
+                      <span className="flex items-center gap-1">
+                        <Hash className="h-3.5 w-3.5" />
+                        {t.totalQuestions} {isAr ? "سؤال" : "Q"}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {t.duration} {isAr ? "د" : "min"}
+                      </span>
+                      <span>
+                        {t.totalMarks} {isAr ? "درجة" : "marks"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground text-xs">
+                        {isAr ? "استخدم" : "Used"} {t.timesUsed}{" "}
+                        {isAr ? "مرة" : "times"}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        asChild
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Link
+                          href={`/${lang}/exams/generate/template-wizard?configId=${t.id}`}
+                        >
+                          {isAr ? "تخصيص" : "Customize"}
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
-              {dictionary.generate.cards.aiGeneration.title}
-            </CardTitle>
-            <CardDescription>
-              {dictionary.generate.cards.aiGeneration.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              {dictionary.generate.cards.aiGeneration.details}
-            </p>
-            <Button asChild variant="secondary">
-              <Link href={`/${lang}/exams/qbank/ai-generate`}>
-                <Sparkles className="me-2 h-4 w-4" />
-                {dictionary.generate.actions.generateWithAI}
+        {templates.length > 0 && (
+          <div className="flex justify-center">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/${lang}/exams/generate/templates`}>
+                {isAr ? "عرض الكل" : "View All Templates"}
               </Link>
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        )}
+      </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {dictionary.generate.cards.examTemplates.title}
-            </CardTitle>
-            <CardDescription>
-              {dictionary.generate.cards.examTemplates.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
+      <Separator />
+
+      {/* Section 2: Generated Exams Grid */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">
+              {isAr ? "الاختبارات المُنشأة" : "Generated Exams"}
+            </h2>
             <p className="text-muted-foreground text-sm">
-              {dictionary.generate.cards.examTemplates.details}
+              {isAr
+                ? "اختبارات جاهزة للطباعة أو الاستخدام كاختبار تجريبي"
+                : "Exams ready to print or use as mock exams"}
             </p>
-            <div className="flex gap-2">
-              <Button asChild>
-                <Link href={`/${lang}/exams/generate/templates`}>
-                  <FileText className="me-2 h-4 w-4" />
-                  {dictionary.generate.actions.viewTemplates}
+          </div>
+          <Button asChild variant="secondary">
+            <Link href={`/${lang}/exams/generate/exam-wizard`}>
+              <Sparkles className="me-2 h-4 w-4" />
+              {isAr ? "إنشاء اختبار" : "Generate Exam"}
+            </Link>
+          </Button>
+        </div>
+
+        {generatedExams.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Sparkles className="text-muted-foreground mb-4 h-10 w-10" />
+              <p className="text-muted-foreground mb-4 text-sm">
+                {isAr
+                  ? "لا توجد اختبارات مُنشأة. أنشئ قالبًا أولاً ثم ولّد اختبارًا."
+                  : "No generated exams yet. Create a template first, then generate an exam."}
+              </p>
+              <Button asChild variant="outline">
+                <Link href={`/${lang}/exams/generate/exam-wizard`}>
+                  <Sparkles className="me-2 h-4 w-4" />
+                  {isAr ? "إنشاء اختبار" : "Generate Exam"}
                 </Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link href={`/${lang}/exams/generate/templates/new`}>
-                  <Plus className="me-2 h-4 w-4" />
-                  {dictionary.generate.actions.createTemplate}
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {generatedExams.map((g) => (
+              <Card key={g.id} className="h-full">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="line-clamp-1 text-base">
+                      {g.examTitle}
+                    </CardTitle>
+                    <Badge variant="outline" className="shrink-0 text-xs">
+                      {g.subjectName}
+                    </Badge>
+                  </div>
+                  {g.templateName && (
+                    <CardDescription className="text-xs">
+                      {isAr ? "من قالب:" : "Template:"} {g.templateName}
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
+                    <span className="flex items-center gap-1">
+                      <Hash className="h-3.5 w-3.5" />
+                      {g.totalQuestions} {isAr ? "سؤال" : "Q"}
+                    </span>
+                    <span className="text-xs">
+                      {new Date(g.createdAt).toLocaleDateString(
+                        isAr ? "ar-SA" : "en-US",
+                        { month: "short", day: "numeric" }
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 flex-1 text-xs"
+                      asChild
+                    >
+                      <Link href={`/${lang}/exams/paper/${g.id}/preview`}>
+                        <Printer className="me-1 h-3 w-3" />
+                        {isAr ? "طباعة" : "Print"}
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 flex-1 text-xs"
+                      asChild
+                    >
+                      <Link href={`/${lang}/exams/${g.examId}`}>
+                        {isAr ? "التفاصيل" : "Details"}
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              {dictionary.generate.cards.analytics.title}
-            </CardTitle>
-            <CardDescription>
-              {dictionary.generate.cards.analytics.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              {dictionary.generate.cards.analytics.details}
-            </p>
-            <Button asChild variant="outline">
-              <Link href={`/${lang}/exams/generate/analytics`}>
-                <BarChart3 className="me-2 h-4 w-4" />
-                {dictionary.generate.actions.viewAnalytics}
+        {generatedExams.length > 0 && (
+          <div className="flex justify-center">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/${lang}/exams/generate/list`}>
+                {isAr ? "عرض الكل" : "View All Generated Exams"}
               </Link>
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Exam Paper Print Card */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Printer className="h-5 w-5" />
-              {lang === "ar" ? "طباعة أوراق الامتحان" : "Print Exam Papers"}
-            </CardTitle>
-            <CardDescription>
-              {lang === "ar"
-                ? "إنشاء أوراق امتحان جاهزة للطباعة مع مفاتيح الإجابة"
-                : "Generate print-ready exam papers with answer keys"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              {lang === "ar"
-                ? "قم بتحويل الامتحانات المُنشأة إلى أوراق PDF جاهزة للطباعة. اختر من بين قوالب متعددة، أنشئ نسخًا مختلفة، واطبع مفاتيح الإجابة للمصححين."
-                : "Convert generated exams into print-ready PDF papers. Choose from multiple templates, create different versions, and print answer keys for markers."}
-            </p>
-            <div className="flex gap-2">
-              <Button asChild>
-                <Link href={`/${lang}/exams/generate/list`}>
-                  <Printer className="me-2 h-4 w-4" />
-                  {lang === "ar"
-                    ? "اختيار امتحان للطباعة"
-                    : "Select Exam to Print"}
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href={`/${lang}/exams/generate/list`}>
-                  <Key className="me-2 h-4 w-4" />
-                  {lang === "ar"
-                    ? "إنشاء مفاتيح الإجابة"
-                    : "Generate Answer Keys"}
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Start Guide */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{dictionary.generate.quickStart.title}</CardTitle>
-          <CardDescription>
-            {dictionary.generate.quickStart.description}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ol className="space-y-4">
-            <li className="flex gap-4">
-              <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-                1
-              </div>
-              <div>
-                <h3 className="font-medium">
-                  {dictionary.generate.quickStart.step1.title}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {dictionary.generate.quickStart.step1.description}
-                </p>
-              </div>
-            </li>
-            <li className="flex gap-4">
-              <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-                2
-              </div>
-              <div>
-                <h3 className="font-medium">
-                  {dictionary.generate.quickStart.step2.title}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {dictionary.generate.quickStart.step2.description}
-                </p>
-              </div>
-            </li>
-            <li className="flex gap-4">
-              <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-                3
-              </div>
-              <div>
-                <h3 className="font-medium">
-                  {dictionary.generate.quickStart.step3.title}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {dictionary.generate.quickStart.step3.description}
-                </p>
-              </div>
-            </li>
-          </ol>
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </section>
     </div>
   )
 }

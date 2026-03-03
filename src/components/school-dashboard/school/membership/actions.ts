@@ -7,6 +7,8 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
+import { sendEmail } from "@/lib/email"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertMembershipPermission, getAuthContext } from "./authorization"
@@ -14,6 +16,7 @@ import {
   activateMemberSchema,
   approveMemberRequestSchema,
   assignGradeSchema,
+  bulkActivateSchema,
   bulkSuspendSchema,
   changeRoleSchema,
   inviteMemberSchema,
@@ -137,6 +140,16 @@ export async function changeRole(
       }
     })
 
+    // Notify user of role change (fire-and-forget)
+    dispatchNotification({
+      schoolId,
+      userId: parsed.userId,
+      type: "system_alert",
+      title: "Role Changed",
+      body: `Your role has been changed to ${parsed.newRole}.`,
+      actorId: authContext.userId,
+    }).catch(console.error)
+
     revalidatePath("/school/membership")
     return { success: true, data: { id: parsed.userId } }
   } catch (error) {
@@ -258,6 +271,17 @@ export async function suspendMember(
       }
     })
 
+    // Notify suspended user (fire-and-forget)
+    dispatchNotification({
+      schoolId,
+      userId: parsed.userId,
+      type: "system_alert",
+      title: "Account Suspended",
+      body: "Your account has been suspended. Contact your school administrator for details.",
+      priority: "high",
+      actorId: authContext.userId,
+    }).catch(console.error)
+
     revalidatePath("/school/membership")
     return { success: true }
   } catch (error) {
@@ -321,6 +345,16 @@ export async function activateMember(
         })
       }
     })
+
+    // Notify activated user (fire-and-forget)
+    dispatchNotification({
+      schoolId,
+      userId: parsed.userId,
+      type: "system_alert",
+      title: "Account Activated",
+      body: "Your account has been activated. You can now access the platform.",
+      actorId: authContext.userId,
+    }).catch(console.error)
 
     revalidatePath("/school/membership")
     return { success: true }
@@ -402,6 +436,17 @@ export async function removeMember(
       }
     }
 
+    // Notify BEFORE removal (fire-and-forget) since they lose schoolId after
+    dispatchNotification({
+      schoolId,
+      userId: parsed.userId,
+      type: "system_alert",
+      title: "Removed from School",
+      body: "You have been removed from this school.",
+      priority: "high",
+      actorId: authContext.userId,
+    }).catch(console.error)
+
     // Soft removal: unlink from school, reset to USER role
     await db.user.update({
       where: { id: parsed.userId },
@@ -472,6 +517,18 @@ export async function approveMemberRequest(
       }
     })
 
+    // Notify approved user (fire-and-forget)
+    if (request.userId) {
+      dispatchNotification({
+        schoolId,
+        userId: request.userId,
+        type: "account_created",
+        title: "Membership Approved",
+        body: "Your membership request has been approved. Welcome!",
+        actorId: authContext.userId,
+      }).catch(console.error)
+    }
+
     revalidatePath("/school/membership")
     return { success: true }
   } catch (error) {
@@ -517,6 +574,20 @@ export async function rejectMemberRequest(
         reviewedAt: new Date(),
       },
     })
+
+    // Notify rejected user if linked (fire-and-forget)
+    if (request.userId) {
+      dispatchNotification({
+        schoolId,
+        userId: request.userId,
+        type: "system_alert",
+        title: "Membership Request Rejected",
+        body: parsed.reason
+          ? `Your membership request was rejected: ${parsed.reason}`
+          : "Your membership request was rejected.",
+        actorId: authContext.userId,
+      }).catch(console.error)
+    }
 
     revalidatePath("/school/membership")
     return { success: true }
@@ -565,17 +636,39 @@ export async function inviteMember(
       where: { email: parsed.email },
     })
 
-    const request = await db.membershipRequest.create({
+    const [request, school] = await Promise.all([
+      db.membershipRequest.create({
+        data: {
+          schoolId,
+          email: parsed.email,
+          name: parsed.name,
+          requestedRole: parsed.role,
+          userId: existingUser?.id,
+          joinMethod: "INVITATION",
+          status: "PENDING",
+        },
+      }),
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { name: true, domain: true },
+      }),
+    ])
+
+    // Send invitation email (fire-and-forget)
+    const schoolName = school?.name || "School Portal"
+    const subdomain = school?.domain || ""
+    sendEmail({
+      to: parsed.email,
+      subject: `Invitation to join ${schoolName}`,
+      template: "invitation",
       data: {
-        schoolId,
-        email: parsed.email,
-        name: parsed.name,
-        requestedRole: parsed.role,
-        userId: existingUser?.id,
-        joinMethod: "INVITATION",
-        status: "PENDING",
+        schoolName,
+        role: parsed.role,
+        portalUrl: subdomain
+          ? `https://${subdomain}.databayt.org`
+          : "https://ed.databayt.org",
       },
-    })
+    }).catch(console.error)
 
     revalidatePath("/school/membership")
     return { success: true, data: { id: request.id } }
@@ -613,17 +706,110 @@ export async function bulkSuspend(
     // Filter out own userId
     const targetIds = parsed.userIds.filter((id) => id !== authContext.userId)
 
-    const result = await db.user.updateMany({
+    const users = await db.user.findMany({
       where: { id: { in: targetIds }, schoolId },
-      data: { isSuspended: true },
+      include: { student: true, teacher: true, staffMember: true },
     })
 
+    let count = 0
+    for (const user of users) {
+      await db.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { isSuspended: true },
+        })
+        if (user.student) {
+          await tx.student.update({
+            where: { id: user.student.id },
+            data: { status: "SUSPENDED" },
+          })
+        }
+        if (user.teacher) {
+          await tx.teacher.update({
+            where: { id: user.teacher.id },
+            data: { employmentStatus: "suspended" },
+          })
+        }
+        if (user.staffMember) {
+          await tx.staffMember.update({
+            where: { id: user.staffMember.id },
+            data: { employmentStatus: "suspended" },
+          })
+        }
+      })
+      count++
+    }
+
     revalidatePath("/school/membership")
-    return { success: true, data: { count: result.count } }
+    return { success: true, data: { count } }
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to bulk suspend",
+    }
+  }
+}
+
+// --- Bulk Activate ---
+export async function bulkActivate(
+  input: z.infer<typeof bulkActivateSchema>
+): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    try {
+      assertMembershipPermission(authContext, "bulk_action", schoolId)
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const parsed = bulkActivateSchema.parse(input)
+
+    const users = await db.user.findMany({
+      where: { id: { in: parsed.userIds }, schoolId },
+      include: { student: true, teacher: true, staffMember: true },
+    })
+
+    let count = 0
+    for (const user of users) {
+      await db.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { isSuspended: false },
+        })
+        if (user.student) {
+          await tx.student.update({
+            where: { id: user.student.id },
+            data: { status: "ACTIVE" },
+          })
+        }
+        if (user.teacher) {
+          await tx.teacher.update({
+            where: { id: user.teacher.id },
+            data: { employmentStatus: "active" },
+          })
+        }
+        if (user.staffMember) {
+          await tx.staffMember.update({
+            where: { id: user.staffMember.id },
+            data: { employmentStatus: "active" },
+          })
+        }
+      })
+      count++
+    }
+
+    revalidatePath("/school/membership")
+    return { success: true, data: { count } }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to bulk activate",
     }
   }
 }
@@ -652,13 +838,22 @@ export async function exportMembersCSV(): Promise<ActionResponse<string>> {
         role: true,
         isSuspended: true,
         createdAt: true,
+        student: { select: { givenName: true, surname: true } },
+        teacher: { select: { givenName: true, surname: true } },
+        staffMember: { select: { givenName: true, surname: true } },
+        guardian: { select: { givenName: true, surname: true } },
       },
       orderBy: { createdAt: "desc" },
     })
 
     const header = "Name,Email,Role,Status,Joined"
     const rows = users.map((u) => {
-      const name = u.username || ""
+      const profile = u.student || u.teacher || u.staffMember || u.guardian
+      const name = profile
+        ? [profile.givenName, profile.surname].filter(Boolean).join(" ") ||
+          u.username ||
+          ""
+        : u.username || ""
       const status = u.isSuspended ? "Suspended" : "Active"
       return `"${name}","${u.email || ""}","${u.role}","${status}","${u.createdAt.toISOString()}"`
     })

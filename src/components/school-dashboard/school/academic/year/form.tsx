@@ -102,7 +102,7 @@ export function SchoolYearForm({
         closeModal()
         onSuccess?.()
       } else {
-        ErrorToast(result.error)
+        ErrorToast(result.error || "Operation failed")
       }
     })
   }

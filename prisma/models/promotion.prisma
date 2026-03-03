@@ -1,0 +1,165 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+// ========== PROMOTION / RETENTION ==========
+// Year-end automated evaluation with admin review and execution
+
+enum PromotionBatchStatus {
+  DRAFT
+  EVALUATING
+  READY_FOR_REVIEW
+  APPROVED
+  EXECUTING
+  COMPLETED
+  CANCELLED
+}
+
+enum PromotionDecision {
+  PROMOTE
+  RETAIN
+  CONDITIONAL
+  GRADUATE
+  MANUAL_REVIEW
+}
+
+model PromotionPolicy {
+  id       String @id @default(cuid())
+  schoolId String
+
+  gradeId String // AcademicGrade FK
+
+  // Criteria
+  minOverallGPA        Decimal? @db.Decimal(3, 2)
+  minOverallPercentage Float?
+  maxFailedSubjects    Int      @default(2)
+  minAttendancePercent Float?   @default(75)
+  requiredSubjectIds   Json? // String[] — subjects that MUST be passed
+  autoPromote          Boolean  @default(false) // Auto-execute without admin review
+  conditionalRules     Json? // Rules for conditional promotion
+
+  // Relations
+  school School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grade  AcademicGrade @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, gradeId])
+  @@index([schoolId])
+  @@map("promotion_policies")
+}
+
+model PromotionBatch {
+  id       String @id @default(cuid())
+  schoolId String
+
+  yearId  String // SchoolYear FK
+  gradeId String // AcademicGrade FK
+
+  status PromotionBatchStatus @default(DRAFT)
+
+  // Summary counts
+  totalStudents     Int @default(0)
+  promotedCount     Int @default(0)
+  retainedCount     Int @default(0)
+  conditionalCount  Int @default(0)
+  graduatedCount    Int @default(0)
+  manualReviewCount Int @default(0)
+
+  // Audit
+  createdBy  String
+  approvedBy String?
+  approvedAt DateTime?
+  executedAt DateTime?
+
+  // Relations
+  school     School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  year       SchoolYear           @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  grade      AcademicGrade        @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  candidates PromotionCandidate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, yearId, gradeId])
+  @@index([schoolId, status])
+  @@map("promotion_batches")
+}
+
+model PromotionCandidate {
+  id       String @id @default(cuid())
+  schoolId String
+
+  batchId   String
+  studentId String
+
+  // Computed metrics
+  overallGPA        Decimal? @db.Decimal(3, 2)
+  overallPercentage Float?
+  failedSubjects    Int      @default(0)
+  attendancePercent Float?
+  subjectResults    Json? // Per-subject breakdown [{subjectId, name, grade, score, passed}]
+
+  // Decision
+  autoDecision  PromotionDecision
+  finalDecision PromotionDecision
+  overrideReason String?  @db.Text
+  overriddenBy   String?
+  conditions     String?  @db.Text // Conditions for CONDITIONAL promotion
+
+  // Execution
+  isExecuted Boolean   @default(false)
+  executedAt DateTime?
+  newGradeId String? // AcademicGrade FK for promoted grade
+
+  // Relations
+  school  School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  batch   PromotionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  student Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([batchId, studentId])
+  @@index([schoolId, batchId])
+  @@index([schoolId, studentId])
+  @@map("promotion_candidates")
+}
+
+// ========== TRANSCRIPTS ==========
+// Multi-year academic records
+
+model Transcript {
+  id       String @id @default(cuid())
+  schoolId String
+
+  studentId   String
+  studentName String // Frozen snapshot
+
+  // Frozen academic data
+  transcriptData Json // [{yearName, terms: [{termName, subjects: [...], termGPA}], yearGPA}]
+  cumulativeGPA  Decimal? @db.Decimal(3, 2)
+  totalCredits   Decimal? @db.Decimal(5, 1)
+
+  // PDF Storage
+  pdfUrl       String?
+  thumbnailUrl String?
+
+  // Verification
+  transcriptNumber String @unique
+  verificationCode String @unique
+
+  // Audit
+  generatedBy String
+
+  // Relations
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, studentId])
+  @@index([verificationCode])
+  @@map("transcripts")
+}

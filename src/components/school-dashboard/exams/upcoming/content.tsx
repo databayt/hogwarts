@@ -29,6 +29,9 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { SupportedLanguage } from "@/components/translation/types"
 
+import type { CalendarExam } from "./calendar-view"
+import { ViewToggle } from "./view-toggle"
+
 // Short labels for exam types - keep badges compact
 const examTypeLabels: Record<string, string> = {
   MIDTERM: "Mid",
@@ -363,29 +366,47 @@ export default async function UpcomingExamsContent({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8">
-          <ExamSection
-            title={d?.sections?.today || "Today's Exams"}
-            exams={todayExams}
-            icon={CircleAlert}
-            urgent
-          />
-          <ExamSection
-            title={d?.sections?.tomorrow || "Tomorrow"}
-            exams={tomorrowExams}
-            icon={Clock}
-          />
-          <ExamSection
-            title={d?.sections?.thisWeek || "This Week"}
-            exams={thisWeekExams}
-            icon={Calendar}
-          />
-          <ExamSection
-            title={d?.sections?.later || "Coming Up"}
-            exams={laterExams}
-            icon={BookOpen}
-          />
-        </div>
+        <ViewToggle
+          exams={upcomingExams.map(
+            (e): CalendarExam => ({
+              id: e.id,
+              title: e.title,
+              examDate: e.examDate.toISOString(),
+              startTime: e.startTime,
+              endTime: e.endTime,
+              duration: e.duration,
+              examType: e.examType,
+              className: e.className,
+              subjectName: e.subjectName,
+              totalMarks: e.totalMarks,
+            })
+          )}
+          listView={
+            <div className="space-y-8">
+              <ExamSection
+                title={d?.sections?.today || "Today's Exams"}
+                exams={todayExams}
+                icon={CircleAlert}
+                urgent
+              />
+              <ExamSection
+                title={d?.sections?.tomorrow || "Tomorrow"}
+                exams={tomorrowExams}
+                icon={Clock}
+              />
+              <ExamSection
+                title={d?.sections?.thisWeek || "This Week"}
+                exams={thisWeekExams}
+                icon={Calendar}
+              />
+              <ExamSection
+                title={d?.sections?.later || "Coming Up"}
+                exams={laterExams}
+                icon={BookOpen}
+              />
+            </div>
+          }
+        />
       )}
     </div>
   )

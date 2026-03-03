@@ -56,6 +56,7 @@ export const parentBaseSchema = z.object({
     .optional()
     .or(z.literal("")),
   userId: z.string().optional(),
+  profilePhotoUrl: z.string().optional(),
 })
 
 export const parentCreateSchema = parentBaseSchema

@@ -166,8 +166,13 @@ export async function requireSchoolOwnership(
       }
     }
 
-    // For onboarding, be permissive if user is authenticated
-    // This allows users to complete onboarding flow
+    // After recovery, verify access to THIS specific school
+    if (authContext.schoolId !== targetSchoolId) {
+      throw new TenantError(
+        "Access denied to this school",
+        "CROSS_TENANT_ACCESS_DENIED"
+      )
+    }
   }
 
   return authContext

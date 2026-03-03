@@ -268,8 +268,8 @@ export async function updateExam(
       }
     }
 
-    await db.exam.update({
-      where: { id },
+    await db.exam.updateMany({
+      where: { id, schoolId },
       data,
     })
 

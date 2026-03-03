@@ -1,6 +1,3 @@
-// Copyright (c) 2025-present databayt
-// Licensed under SSPL-1.0 -- see LICENSE for details
-
 /**
  * Staff Profile Tasks Tab
  * Task management, assignments, and workflow tracking
@@ -410,7 +407,7 @@ export function TasksTab({
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-2">
             <div className="relative min-w-[200px] flex-1">
-              <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder="Search tasks..."
                 value={searchTerm}

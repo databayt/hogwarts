@@ -19,6 +19,8 @@
   "loadMore": "Load More",
   "loading": "Loading...",
   "noLeadsFound": "No leads found",
+  "noLeads": "No leads",
+  "noLeadsDescription": "Create a new lead to get started",
   "confirmDelete": "Are you sure you want to delete this lead?",
   "leadScore": "Lead Score",
   "exportCSV": "Export CSV",
@@ -98,7 +100,8 @@
     "deleteSuccess": "Lead deleted successfully",
     "createError": "Failed to create lead",
     "updateError": "Failed to update lead",
-    "deleteError": "Failed to delete lead"
+    "deleteError": "Failed to delete lead",
+    "unexpectedError": "An unexpected error occurred"
   },
   "analytics": {
     "totalLeads": "Total Leads",

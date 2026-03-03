@@ -80,7 +80,11 @@ export function ExportButton({
       if (result.success && result.data) {
         setData(result.data as StudentExportData[])
       } else {
-        setError("error" in result ? result.error : "Failed to fetch data")
+        setError(
+          "error" in result
+            ? (result.error ?? "Failed to fetch data")
+            : "Failed to fetch data"
+        )
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch data")

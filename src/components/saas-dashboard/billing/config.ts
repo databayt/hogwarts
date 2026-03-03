@@ -189,6 +189,17 @@ export const MAX_RECEIPT_FILE_SIZE = 5 * 1024 * 1024
 export const INVOICE_NUMBER_PREFIX = "INV-"
 
 /**
+ * Plan pricing in USD/month.
+ * TODO(production): Replace with Stripe price lookup via price IDs
+ */
+export const PLAN_PRICING: Record<string, number> = {
+  TRIAL: 0,
+  BASIC: 99,
+  PREMIUM: 299,
+  ENTERPRISE: 999,
+} as const
+
+/**
  * Default invoice due days
  */
 export const DEFAULT_INVOICE_DUE_DAYS = 30

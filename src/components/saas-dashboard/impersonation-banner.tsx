@@ -7,7 +7,14 @@ import { useEffect, useState } from "react"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { tenantStopImpersonation } from "@/components/saas-dashboard/tenants/actions"
 
-export default function ImpersonationBanner() {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+export default function ImpersonationBanner({
+  dictionary,
+}: {
+  dictionary?: any
+}) {
+  const i = dictionary?.operator?.impersonation
   const [schoolId, setSchoolId] = useState<string | null>(null)
   const [expiresAt, setExpiresAt] = useState<number | null>(null)
 
@@ -38,10 +45,16 @@ export default function ImpersonationBanner() {
   return (
     <div className="flex items-center justify-between gap-3 bg-amber-100 px-3 py-2 text-amber-900 dark:bg-amber-900/20 dark:text-amber-100">
       <div className="text-xs">
-        Impersonating: <span className="font-semibold">{schoolId}</span>
+        {i?.impersonating || "Impersonating:"}{" "}
+        <span className="font-semibold">{schoolId}</span>
         {expiresAt && (
           <span className="ms-2">
-            (expires {new Date(expiresAt).toLocaleTimeString()})
+            (
+            {(i?.expires || "expires {time}").replace(
+              "{time}",
+              new Date(expiresAt).toLocaleTimeString()
+            )}
+            )
           </span>
         )}
       </div>
@@ -53,7 +66,9 @@ export default function ImpersonationBanner() {
               reason: "manual stop via banner",
             })
             if (result.success) {
-              SuccessToast("Impersonation stopped successfully")
+              SuccessToast(
+                i?.impersonationStopped || "Impersonation stopped successfully"
+              )
               setSchoolId(null)
               window.location.reload() // Reload to clear impersonation state
             } else {
@@ -61,12 +76,14 @@ export default function ImpersonationBanner() {
             }
           } catch (e) {
             ErrorToast(
-              e instanceof Error ? e.message : "Failed to stop impersonation"
+              e instanceof Error
+                ? e.message
+                : i?.failedToStop || "Failed to stop impersonation"
             )
           }
         }}
       >
-        Stop impersonation
+        {i?.stopImpersonation || "Stop impersonation"}
       </button>
     </div>
   )

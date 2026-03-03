@@ -169,7 +169,7 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
       if (result.success && result.data?.yearLevels) {
         setYearLevels(result.data.yearLevels as unknown as YearLevel[])
       } else if (!result.success) {
-        setError(result.message || "Failed to load year levels")
+        setError(result.error || "Failed to load year levels")
       }
     } catch (err) {
       const message =
@@ -220,14 +220,14 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
 
       const result = await createYearLevel(formData)
       if (result.success) {
-        toast.success(result.message || "Year level created successfully")
+        toast.success("Year level created successfully")
         setNewLevelName("")
         setNewLevelLang("ar")
         setNewLevelOrder("")
         setIsCreateDialogOpen(false)
         fetchYearLevels()
       } else {
-        toast.error(result.message || "Failed to create year level")
+        toast.error(result.error || "Failed to create year level")
       }
     })
   }
@@ -244,14 +244,14 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
 
       const result = await updateYearLevel(formData)
       if (result.success) {
-        toast.success(result.message || "Year level updated successfully")
+        toast.success("Year level updated successfully")
         setEditingLevel(null)
         setNewLevelName("")
         setNewLevelLang("ar")
         setNewLevelOrder("")
         fetchYearLevels()
       } else {
-        toast.error(result.message || "Failed to update year level")
+        toast.error(result.error || "Failed to update year level")
       }
     })
   }
@@ -263,10 +263,10 @@ export function YearLevelsContent({ dictionary, lang }: Props) {
 
       const result = await deleteYearLevel(formData)
       if (result.success) {
-        toast.success(result.message || "Year level deleted successfully")
+        toast.success("Year level deleted successfully")
         fetchYearLevels()
       } else {
-        toast.error(result.message || "Failed to delete year level")
+        toast.error(result.error || "Failed to delete year level")
       }
       setDeleteDialog({ ...deleteDialog, open: false })
     })

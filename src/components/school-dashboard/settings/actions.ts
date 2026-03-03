@@ -46,6 +46,10 @@ export async function updateUserRole(formData: FormData) {
     const session = await auth()
     const { schoolId, role: currentUserRole } = await getTenantContext()
 
+    if (!schoolId) {
+      return { success: false, message: "Missing school context" }
+    }
+
     // Check permissions - only ADMIN or DEVELOPER can change roles
     if (currentUserRole !== "DEVELOPER" && currentUserRole !== "ADMIN") {
       throw new Error("Insufficient permissions to update user roles")
@@ -67,7 +71,7 @@ export async function updateUserRole(formData: FormData) {
     await db.user.update({
       where: {
         id: validated.userId,
-        schoolId: schoolId || undefined,
+        schoolId,
       },
       data: {
         role: validated.role,
@@ -92,6 +96,10 @@ export async function getSchoolUsers() {
   try {
     const { schoolId, role } = await getTenantContext()
 
+    if (!schoolId) {
+      return { success: false, users: [], message: "Missing school context" }
+    }
+
     // Check permissions
     if (role !== "DEVELOPER" && role !== "ADMIN") {
       throw new Error("Insufficient permissions to view users")
@@ -99,7 +107,7 @@ export async function getSchoolUsers() {
 
     const users = await db.user.findMany({
       where: {
-        schoolId: schoolId || undefined,
+        schoolId,
       },
       select: {
         id: true,
@@ -135,6 +143,10 @@ export async function createUser(formData: FormData) {
     const session = await auth()
     const { schoolId, role } = await getTenantContext()
 
+    if (!schoolId) {
+      return { success: false, message: "Missing school context" }
+    }
+
     // Check permissions
     if (role !== "DEVELOPER" && role !== "ADMIN") {
       throw new Error("Insufficient permissions to create users")
@@ -150,7 +162,7 @@ export async function createUser(formData: FormData) {
     const existingUser = await db.user.findFirst({
       where: {
         email: data.email,
-        schoolId: schoolId || undefined,
+        schoolId,
       },
     })
 
@@ -164,7 +176,7 @@ export async function createUser(formData: FormData) {
         username: data.username,
         email: data.email,
         role: data.role,
-        schoolId: schoolId || undefined,
+        schoolId,
       },
     })
 
@@ -186,6 +198,10 @@ export async function updateUserStatus(formData: FormData) {
   try {
     const { schoolId, role } = await getTenantContext()
 
+    if (!schoolId) {
+      return { success: false, message: "Missing school context" }
+    }
+
     // Check permissions
     if (role !== "DEVELOPER" && role !== "ADMIN") {
       throw new Error("Insufficient permissions to update user status")
@@ -202,7 +218,7 @@ export async function updateUserStatus(formData: FormData) {
     await db.user.update({
       where: {
         id: validated.userId,
-        schoolId: schoolId || undefined,
+        schoolId,
       },
       data: {
         // You might want to add an isActive field to your User model
@@ -230,6 +246,10 @@ export async function deleteUser(userId: string) {
   try {
     const { schoolId, role } = await getTenantContext()
 
+    if (!schoolId) {
+      return { success: false, message: "Missing school context" }
+    }
+
     // Check permissions
     if (role !== "DEVELOPER" && role !== "ADMIN") {
       throw new Error("Insufficient permissions to delete users")
@@ -245,7 +265,7 @@ export async function deleteUser(userId: string) {
     await db.user.delete({
       where: {
         id: userId,
-        schoolId: schoolId || undefined,
+        schoolId,
       },
     })
 
@@ -365,6 +385,14 @@ export async function getRoleStatistics() {
   try {
     const { schoolId, role } = await getTenantContext()
 
+    if (!schoolId) {
+      return {
+        success: false,
+        statistics: [],
+        message: "Missing school context",
+      }
+    }
+
     if (role !== "DEVELOPER" && role !== "ADMIN") {
       throw new Error("Insufficient permissions")
     }
@@ -372,7 +400,7 @@ export async function getRoleStatistics() {
     const stats = await db.user.groupBy({
       by: ["role"],
       where: {
-        schoolId: schoolId || undefined,
+        schoolId,
       },
       _count: {
         role: true,
