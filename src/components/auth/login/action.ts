@@ -173,7 +173,7 @@ export const login = async (
   // Extract locale from callbackUrl or default to 'ar'
   const redirectLocale = callbackUrl?.match(/\/(ar|en)(\/|$|\?)/)
     ? callbackUrl.match(/\/(ar|en)(\/|$|\?)/)?.[1]
-    : "ar"
+    : locale || "ar"
 
   let finalRedirectUrl: string
 

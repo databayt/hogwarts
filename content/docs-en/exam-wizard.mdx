@@ -1,0 +1,332 @@
+---
+title: "Exam Wizard"
+description: "Developer reference for the Exam Wizard and Certificate Wizard systems - template creation, exam generation, certificate issuance, state management, and shared infrastructure"
+---
+
+## Overview
+
+Two wizard systems, each with two phases:
+
+**Exam Wizard** (exam paper creation)
+
+- **Phase 1 - Create Template**: Design exam paper layout (slots, variants, scoring, print settings) → saves `ExamTemplate`
+- **Phase 2 - Generate Exam**: Consume a template, select questions from bank, configure paper → saves `GeneratedExam` + `ExamPaperConfig`
+
+**Certificate Wizard** (certificate creation)
+
+- **Phase 1 - Create Template**: Design certificate composition (slots, decorations, text, signatures) → saves `ExamCertificateConfig`
+- **Phase 2 - Generate Certificates**: Consume a config, issue certificates to students (single/batch) → saves `ExamCertificate`
+
+---
+
+## Architecture
+
+```
+Exam Wizard                          Certificate Wizard
+===========                          ==================
+
+Phase 1: Template                    Phase 1: Template
+┌─────────────────┐                  ┌─────────────────┐
+│ template-wizard/ │                  │  cert-wizard/    │
+│ (full-screen)   │                  │  (full-screen)   │
+│                 │                  │                  │
+│ Gallery → Info  │                  │ Gallery → Info   │
+│ → Layout → Q   │                  │ → 7 Slots →     │
+│ → Scoring →    │                  │ Decorations →   │
+│ Print → Preview│                  │ Print → Preview  │
+└────────┬────────┘                  └────────┬────────┘
+         │ saves                              │ saves
+         ▼                                    ▼
+   ExamTemplate                      ExamCertificateConfig
+         │                                    │
+         │ consumed by                        │ consumed by
+         ▼                                    ▼
+Phase 2: Generate                    Phase 2: Issue
+┌─────────────────┐                  ┌─────────────────┐
+│  exam-wizard/   │                  │  certificates/   │
+│  (full-screen)  │                  │  (dashboard)     │
+│                 │                  │                  │
+│ Template → Exam │                  │ Single issue     │
+│ → Questions →  │                  │ Batch issue      │
+│ Config → Preview│                  │ Share + verify   │
+└────────┬────────┘                  └────────┬────────┘
+         │ saves                              │ saves
+         ▼                                    ▼
+   GeneratedExam                      ExamCertificate
+   ExamPaperConfig
+```
+
+### Route Group Separation
+
+- **Phase 1 + Exam Phase 2**: `(exam-wizard)/` route group — full-screen, no dashboard chrome
+- **Cert Phase 2**: `(school-dashboard)/exams/certificates/` — within dashboard layout
+- **Auth guard**: ADMIN, DEVELOPER, TEACHER only
+
+---
+
+## Route Map
+
+| Phase   | URL Pattern                                         | Page File                                                          | Purpose                     |
+| ------- | --------------------------------------------------- | ------------------------------------------------------------------ | --------------------------- |
+| Exam P1 | `/{lang}/exams/generate/template-wizard`            | `(exam-wizard)/exams/generate/template-wizard/page.tsx`            | New exam template           |
+| Exam P1 | `/{lang}/exams/generate/template-wizard/{configId}` | `(exam-wizard)/exams/generate/template-wizard/[configId]/page.tsx` | Edit exam template          |
+| Exam P2 | `/{lang}/exams/generate/exam-wizard`                | `(exam-wizard)/exams/generate/exam-wizard/page.tsx`                | Generate exam from template |
+| Cert P1 | `/{lang}/exams/certificates/cert-wizard`            | `(exam-wizard)/exams/certificates/cert-wizard/page.tsx`            | New cert template           |
+| Cert P1 | `/{lang}/exams/certificates/cert-wizard/{configId}` | `(exam-wizard)/exams/certificates/cert-wizard/[configId]/page.tsx` | Edit cert template          |
+| Cert P2 | `/{lang}/exams/certificates`                        | `(school-dashboard)/exams/certificates/page.tsx`                   | Manage + issue certs        |
+| Cert P2 | `/{lang}/exams/certificates/verify/{code}`          | `(school-dashboard)/exams/certificates/verify/[code]/page.tsx`     | Public verification         |
+
+---
+
+## File Tree
+
+```
+# ─── ROUTES ──────────────────────────────────────────────────────────────
+
+src/app/[lang]/s/[subdomain]/(exam-wizard)/
+  layout.tsx                                    # Auth guard (ADMIN/DEVELOPER/TEACHER), full-screen <main>
+
+  # EXAM WIZARD - Phase 1: Create Template
+  exams/generate/template-wizard/
+    page.tsx                                    # Fetches subjects + grades -> TemplateWizardClient
+    [configId]/page.tsx                         # Fetches template + subjects + grades -> TemplateWizardClient (edit mode)
+
+  # EXAM WIZARD - Phase 2: Generate Exam
+  exams/generate/exam-wizard/
+    page.tsx                                    # Fetches templates + exams + classes + questions -> ExamWizardClient
+
+  # CERTIFICATE WIZARD - Phase 1: Create Template
+  exams/certificates/cert-wizard/
+    page.tsx                                    # Fetches tenant + dictionary -> CertWizardClient
+    [configId]/page.tsx                         # Fetches config from DB -> CertWizardClient (edit mode)
+
+# ─── CERTIFICATE MANAGEMENT (Phase 2: Issue) ────────────────────────────
+
+src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/certificates/
+  page.tsx                                      # -> CertificateContent (role-based views)
+  error.tsx                                     # Error boundary
+  configs/
+    page.tsx                                    # Config list table
+    new/page.tsx                                # -> CertificateConfigForm (non-wizard fallback)
+    [id]/page.tsx                               # -> CertificateConfigForm (edit)
+  verify/[code]/page.tsx                        # Public certificate verification (no auth)
+
+
+# ─── SHARED WIZARD INFRASTRUCTURE ────────────────────────────────────────
+
+src/components/school-dashboard/exams/wizard/
+  types.ts                                     # TemplateWizardState, WizardAction (18 types), StepDefinition
+  context/wizard-provider.tsx                  # WizardProvider + useWizard() hook
+  layout/wizard-shell.tsx                      # Shared shell: top bar, sidebar nav, progress, prev/next
+  hooks/
+    use-wizard-state.ts                        # useReducer + localStorage draft persistence
+    use-wizard-steps.ts                        # Dynamic step list based on state
+  atoms/
+    index.ts                                   # Barrel: WizardCard, VariantThumbnail, GalleryCard, GradeRow, mockups
+    wizard-card.tsx                            # Selectable card with CVA variants (idle/selected/disabled)
+    variant-thumbnail.tsx                      # Clickable thumbnail button with label overlay
+    gallery-card.tsx                           # Larger gallery card for preset selection
+    grade-row.tsx                              # Color-coded grade boundary row + getTier() helper
+    mini-paper-mockup.tsx                      # CSS-only paper previews (6 slots x variants) + FullPaperMockup
+
+
+# ─── EXAM WIZARD - Phase 1: Template Creation ────────────────────────────
+
+  template-wizard/
+    client.tsx                                 # Entry: WizardProvider + WizardShell + step router + draft resume
+    actions.ts                                 # saveTemplate() server action -> ExamTemplate
+    steps/
+      gallery-step.tsx                         # Step 1: Regional preset (SD/SA/US/MENA) or blank
+      info-step.tsx                            # Step 2: Name, subjects, grades, exam type, duration, marks, Q types
+      layout-step.tsx                          # Step 3: 6-slot variant picker (header/studentInfo/instructions/answerSheet/cover/footer)
+      variant-step.tsx                         # Alt: Single-slot carousel picker with arrows + dots
+      question-type-step.tsx                   # Dynamic steps: Difficulty distribution (easy/medium/hard) per Q type
+      scoring-step.tsx                         # Passing score + grade boundaries (add/remove/reset)
+      footer-print-step.tsx                    # Footer variant + decorations (accent/watermark/frame) + print config
+      preview-step.tsx                         # Summary cards + mockup + save button
+
+
+# ─── EXAM WIZARD - Phase 2: Exam Generation ──────────────────────────────
+
+  exam-wizard/
+    types.ts                                   # ExamWizardState, ExamWizardAction (10 types), option types
+    hooks.ts                                   # examWizardReducer + getExamWizardSteps()
+    actions.ts                                 # createExamFromWizard() -> Exam + GeneratedExam + ExamPaperConfig
+    client.tsx                                 # Entry: own inline shell (no shared WizardShell)
+    steps/
+      select-template-step.tsx                 # Step 1: Template card grid
+      select-exam-step.tsx                     # Step 2: New exam form or pick existing PLANNED exam
+      question-bank-step.tsx                   # Step 3: Auto-fill + filters + manual select
+      paper-config-step.tsx                    # Step 4: Style, page size, versions, toggles
+      preview-step.tsx                         # Step 5: Summary + generate button
+
+
+# ─── CERTIFICATE WIZARD - Phase 1: Template Creation ─────────────────────
+
+  cert-wizard/
+    types.ts                                   # CertWizardState, CertWizardAction (17 types), CertDecorationConfig
+    actions.ts                                 # saveCertificateComposition() -> ExamCertificateConfig
+    client.tsx                                 # Entry: CertWizardProvider + CertWizardShell + step router
+    context/cert-wizard-provider.tsx           # CertWizardProvider + useCertWizard() hook
+    layout/cert-wizard-shell.tsx               # Shell (close navigates to /exams/certificates)
+    hooks/
+      use-cert-wizard-state.ts                 # certWizardReducer + localStorage drafts
+      use-cert-wizard-steps.ts                 # 12 fixed steps with bilingual labels
+    atoms/
+      index.ts                                 # Barrel: MiniCertMockup, FullCertMockup, FullCertMockupFromState
+      mini-cert-mockup.tsx                     # CSS-only cert previews (7 slots x 4 variants each)
+      full-cert-mockup.tsx                     # Full cert mockup with decorations (border/seal/watermark/ribbon)
+    steps/
+      gallery-step.tsx                         # Step 1: Regional preset selection
+      info-step.tsx                            # Step 2: Name, type, theme, bilingual text, eligibility, signatures
+      cert-slot-step.tsx                       # Generic slot variant picker (reused by 7 thin wrapper steps)
+      header-step.tsx                          # Step 3: -> CertSlotStep("header") [crest/ministry/bilingual/minimal]
+      title-step.tsx                           # Step 4: -> CertSlotStep("title") [elegant/modern/classic/arabic-calligraphy]
+      recipient-step.tsx                       # Step 5: -> CertSlotStep("recipient") [centered/underline/framed/photo]
+      body-step.tsx                            # Step 6: -> CertSlotStep("body") [achievement/report-summary/transcript/custom]
+      scores-step.tsx                          # Step 7: -> CertSlotStep("scores") [badge-row/table-grid/gauge/hidden]
+      signatures-step.tsx                      # Step 8: -> CertSlotStep("signatures") [dual/triple/single/stamps]
+      footer-step.tsx                          # Step 9: -> CertSlotStep("footer") [verification/minimal/dated/numbered]
+      decorations-step.tsx                     # Step 10: Border, corners, seal, watermark, ribbon (each w/ toggle + config)
+      print-step.tsx                           # Step 11: Page size (A4/Letter), orientation (landscape/portrait)
+      preview-step.tsx                         # Step 12: Summary + full mockup + save button
+
+
+# ─── CERTIFICATE MANAGEMENT (Phase 2: Issue & Manage) ────────────────────
+
+src/components/school-dashboard/exams/certificates/
+  index.ts                                     # Barrel exports
+  content.tsx                                  # Server component: Admin sees dashboard + tabs; Student sees gallery
+  config-list.tsx                              # Template table with edit (-> cert-wizard/{id}) and delete
+  config-form.tsx                              # Traditional form fallback (non-wizard config editor)
+  certificate-list.tsx                         # Issued certificates table (share/revoke/view)
+  batch-issue-dialog.tsx                       # AlertDialog for batch-issuing from exam results
+  validation.ts                                # 7 Zod schemas for all certificate operations
+  actions/
+    index.ts                                   # 12 server actions: CRUD + generate + batch + share + verify + revoke
+    types.ts                                   # ActionResponse<T>, input/output types, CertificateConfigSummary
+```
+
+---
+
+## Wizard Steps
+
+### Exam Phase 1: Template Steps (dynamic count)
+
+| #   | Step ID           | Component        | Description                                                                   |
+| --- | ----------------- | ---------------- | ----------------------------------------------------------------------------- |
+| 1   | gallery           | GalleryStep      | Regional preset (SD, SA, US, MENA) or blank                                   |
+| 2   | info              | InfoStep         | Name, subjects, grades, exam type, duration, marks, question types            |
+| 3   | layout            | LayoutStep       | 6 slots: header, studentInfo, instructions, answerSheet, cover, footer        |
+| 4+  | question-\{type\} | QuestionTypeStep | Dynamic — one per selected Q type, difficulty distribution (easy/medium/hard) |
+| N-2 | scoring           | ScoringStep      | Passing score, grade boundaries (add/remove/reset-to-defaults)                |
+| N-1 | footer-print      | FooterPrintStep  | Footer variant + decorations (accent bar/watermark/frame) + print settings    |
+| N   | preview           | PreviewStep      | 4 summary cards + paper mockup + save (creates/updates ExamTemplate)          |
+
+### Exam Phase 2: Generation Steps (fixed 5)
+
+| #   | Step ID      | Component          | Description                                                                 |
+| --- | ------------ | ------------------ | --------------------------------------------------------------------------- |
+| 1   | template     | SelectTemplateStep | Pick from school's saved templates                                          |
+| 2   | exam         | SelectExamStep     | Create new exam or pick existing PLANNED exam                               |
+| 3   | questions    | QuestionBankStep   | Auto-fill matching questions + manual select with filters                   |
+| 4   | paper-config | PaperConfigStep    | Style (classic/modern/formal/custom), page size, versions (1-5), toggles    |
+| 5   | preview      | PreviewStep        | Summary + generate (creates GeneratedExam + ExamPaperConfig in transaction) |
+
+### Certificate Phase 1: Template Steps (fixed 12)
+
+| #   | Step ID     | Component       | Description                                                                                        |
+| --- | ----------- | --------------- | -------------------------------------------------------------------------------------------------- |
+| 1   | gallery     | GalleryStep     | Regional preset selection                                                                          |
+| 2   | info        | InfoStep        | Name, type (6 options), theme, bilingual title/body, eligibility, signatures                       |
+| 3   | header      | HeaderStep      | Slot picker: crest / ministry / bilingual / minimal                                                |
+| 4   | title       | TitleStep       | Slot picker: elegant / modern / classic / arabic-calligraphy                                       |
+| 5   | recipient   | RecipientStep   | Slot picker: centered / underline / framed / photo                                                 |
+| 6   | body        | BodyStep        | Slot picker: achievement / report-summary / transcript / custom                                    |
+| 7   | scores      | ScoresStep      | Slot picker: badge-row / table-grid / gauge / hidden                                               |
+| 8   | signatures  | SignaturesStep  | Slot picker: dual / triple / single / stamps                                                       |
+| 9   | footer      | FooterStep      | Slot picker: verification / minimal / dated / numbered                                             |
+| 10  | decorations | DecorationsStep | 5 toggles: border (style+width), corners, seal (position), watermark (text+opacity), ribbon (text) |
+| 11  | print       | PrintStep       | Page size (A4/Letter), orientation (landscape/portrait)                                            |
+| 12  | preview     | PreviewStep     | Summary + full cert mockup + save (creates/updates ExamCertificateConfig)                          |
+
+### Certificate Phase 2: Issue (dashboard UI, not wizard steps)
+
+- **Single issue**: `generateCertificate()` — checks eligibility, calculates rank, generates verification code
+- **Batch issue**: `batchGenerateCertificates()` via `BatchIssueDialog` — issues to all eligible students for an exam
+- **Share**: `shareCertificate()` — generates public share token
+- **Verify**: `verifyCertificate()` — public endpoint, no auth required
+- **Revoke**: `revokeCertificate()` — soft revoke with reason
+
+---
+
+## State Management
+
+All wizard phases use the same pattern:
+
+```
+useReducer(reducer, INITIAL_STATE)
+  + localStorage persistence (keyed by schoolId)
+  + draft resume dialog on mount
+  + Context provider for child access
+```
+
+| Wizard       | State Type            | Action Count | Context                                  | Storage Key                  |
+| ------------ | --------------------- | ------------ | ---------------------------------------- | ---------------------------- |
+| Exam Phase 1 | `TemplateWizardState` | 18 actions   | `WizardProvider` / `useWizard()`         | `wizard-template-{schoolId}` |
+| Exam Phase 2 | `ExamWizardState`     | 10 actions   | None (self-contained)                    | None                         |
+| Cert Phase 1 | `CertWizardState`     | 17 actions   | `CertWizardProvider` / `useCertWizard()` | `cert-wizard-{schoolId}`     |
+
+---
+
+## Shared Infrastructure
+
+| Component                             | File                                     | Used By                                      |
+| ------------------------------------- | ---------------------------------------- | -------------------------------------------- |
+| `WizardShell`                         | `wizard/layout/wizard-shell.tsx`         | Exam Phase 1, Cert Phase 1                   |
+| `WizardCard`                          | `wizard/atoms/wizard-card.tsx`           | All wizards                                  |
+| `VariantThumbnail`                    | `wizard/atoms/variant-thumbnail.tsx`     | Exam Phase 1, Cert Phase 1                   |
+| `GalleryCard`                         | `wizard/atoms/gallery-card.tsx`          | Exam Phase 1, Cert Phase 1                   |
+| `GradeRow`                            | `wizard/atoms/grade-row.tsx`             | Exam Phase 1                                 |
+| `MiniPaperMockup` / `FullPaperMockup` | `wizard/atoms/mini-paper-mockup.tsx`     | Exam Phase 1                                 |
+| `MiniCertMockup` / `FullCertMockup`   | `cert-wizard/atoms/mini-cert-mockup.tsx` | Cert Phase 1                                 |
+| `CertSlotStep`                        | `cert-wizard/steps/cert-slot-step.tsx`   | Cert Phase 1 (7 slot steps delegate to this) |
+
+Exam Phase 2 has its own inline shell and does NOT use the shared `WizardShell`.
+
+---
+
+## Prisma Models
+
+| Model                   | Prisma File    | Created By   | Purpose                                                                |
+| ----------------------- | -------------- | ------------ | ---------------------------------------------------------------------- |
+| `ExamTemplate`          | `qbank.prisma` | Exam Phase 1 | Template composition (blockConfig, scoringConfig, printConfig as JSON) |
+| `GeneratedExam`         | `qbank.prisma` | Exam Phase 2 | Generated exam paper from template                                     |
+| `GeneratedExamQuestion` | `qbank.prisma` | Exam Phase 2 | Question selection for generated exam                                  |
+| `ExamPaperConfig`       | `exam.prisma`  | Exam Phase 2 | Print/layout config (template style, page size, versions)              |
+| `ExamCertificateConfig` | `exam.prisma`  | Cert Phase 1 | Certificate template (compositionConfig JSON, text, signatures)        |
+| `ExamCertificate`       | `exam.prisma`  | Cert Phase 2 | Issued certificate instance (number, score, grade, share token)        |
+
+---
+
+## Server Actions
+
+| Action                       | File                                | Phase   | Creates                                                    |
+| ---------------------------- | ----------------------------------- | ------- | ---------------------------------------------------------- |
+| `saveTemplate`               | `wizard/template-wizard/actions.ts` | Exam P1 | `ExamTemplate`                                             |
+| `createExamFromWizard`       | `wizard/exam-wizard/actions.ts`     | Exam P2 | `Exam` + `GeneratedExam` + `ExamPaperConfig` (transaction) |
+| `saveCertificateComposition` | `wizard/cert-wizard/actions.ts`     | Cert P1 | `ExamCertificateConfig`                                    |
+| `generateCertificate`        | `certificates/actions/index.ts`     | Cert P2 | `ExamCertificate` (single)                                 |
+| `batchGenerateCertificates`  | `certificates/actions/index.ts`     | Cert P2 | `ExamCertificate[]` (batch)                                |
+| `shareCertificate`           | `certificates/actions/index.ts`     | Cert P2 | Updates share token                                        |
+| `verifyCertificate`          | `certificates/actions/index.ts`     | Cert P2 | Read-only verification                                     |
+| `revokeCertificate`          | `certificates/actions/index.ts`     | Cert P2 | Soft revoke                                                |
+
+---
+
+## Cross-Module Dependencies
+
+- **Exam Phase 1** imports composition types from `exams/templates/` (`VARIANT_REGISTRY`, region presets: `SD_NATIONAL`, `SA_NATIONAL`, `US_STANDARD`, `MENA_PRIVATE`)
+- **Cert Phase 1** imports composition types from `grades/templates/composition/` (`CERT_VARIANT_REGISTRY`, cert region presets)
+- Both Phase 1 wizards share atom components (`WizardCard`, `VariantThumbnail`, `GalleryCard`)
+- Cert Phase 2 (`certificates/`) is independent, only consuming `ExamCertificateConfig` records from the database

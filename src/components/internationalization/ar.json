@@ -152,7 +152,9 @@
     "orContinueWith": "أو تابع بواسطة",
     "twoFactorCode": "رمز المصادقة الثنائية",
     "confirm": "تأكيد",
-    "username": "الاسم"
+    "username": "الاسم",
+    "confirmingVerification": "جارٍ تأكيد التحقق",
+    "backToLogin": "العودة لتسجيل الدخول"
   },
   "marketing": {
     "hero": {
@@ -1676,7 +1678,8 @@
   },
   "saas": {
     "sidebar": {
-      "Dashboard": "لوحة التحكم",
+      "Overview": "نظرة عامة",
+      "Analytics": "التحليلات",
       "Kanban": "كانبان",
       "Products": "المنتجات",
       "Domains": "النطاقات",
@@ -1701,6 +1704,7 @@
     "catalog": {
       "navigation": {
         "catalog": "الكتالوج",
+        "subjects": "المواد الدراسية",
         "questions": "الأسئلة",
         "materials": "المواد",
         "assignments": "الواجبات",

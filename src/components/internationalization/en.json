@@ -152,7 +152,9 @@
     "orContinueWith": "Or continue with",
     "twoFactorCode": "Two Factor Code",
     "confirm": "Confirm",
-    "username": "Name"
+    "username": "Name",
+    "confirmingVerification": "Confirming your verification",
+    "backToLogin": "Back to login"
   },
   "marketing": {
     "hero": {
@@ -1672,7 +1674,8 @@
   },
   "saas": {
     "sidebar": {
-      "Dashboard": "Dashboard",
+      "Overview": "Overview",
+      "Analytics": "Analytics",
       "Kanban": "Kanban",
       "Products": "Products",
       "Domains": "Domains",
@@ -1697,6 +1700,7 @@
     "catalog": {
       "navigation": {
         "catalog": "Catalog",
+        "subjects": "Subjects",
         "questions": "Questions",
         "materials": "Materials",
         "assignments": "Assignments",
