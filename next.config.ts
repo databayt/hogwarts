@@ -158,14 +158,17 @@ const withMDX = createMDX()
 
 // Wrap MDX → Sentry → export
 // Sentry only active when DSN is configured (graceful no-op otherwise)
-export default withSentryConfig(withMDX(nextConfig), {
-  // Suppress source map upload warnings when SENTRY_AUTH_TOKEN is not set
-  silent: !process.env.SENTRY_AUTH_TOKEN,
+// NOTE: Sentry wrapping temporarily disabled to diagnose React Error #310
+// on Vercel. withSentryConfig patches React hooks which may cause
+// "Rendered fewer hooks than expected" in production.
+const sentryEnabled =
+  !!process.env.SENTRY_AUTH_TOKEN && !!process.env.NEXT_PUBLIC_SENTRY_DSN
 
-  // Upload source maps for better stack traces in production
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-
-  // Disable Sentry telemetry
-  telemetry: false,
-})
+export default sentryEnabled
+  ? withSentryConfig(withMDX(nextConfig), {
+      silent: !process.env.SENTRY_AUTH_TOKEN,
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      telemetry: false,
+    })
+  : withMDX(nextConfig)
