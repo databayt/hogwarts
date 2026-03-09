@@ -25,6 +25,16 @@ interface PlatformLayoutProps {
   params: Promise<{ subdomain: string; lang: string }>
 }
 
+/**
+ * IMPORTANT: Auth checks use redirect() which throws a NEXT_REDIRECT error.
+ * In Next.js 16 streaming SSR, pages can start rendering in parallel with
+ * the layout. If the layout's redirect() fires after the page content has
+ * already been streamed, the RSC payload contains both content AND a redirect
+ * error, crashing the client with React Error #310 ("Rendered fewer hooks
+ * than expected"). To prevent this, unauthenticated users are caught by
+ * middleware (fast path), and the membership mismatch check returns an
+ * inline access-denied UI instead of calling redirect().
+ */
 export default async function PlatformLayout({
   children,
   params,
@@ -45,14 +55,49 @@ export default async function PlatformLayout({
   const school = result.data
 
   // MEMBERSHIP GUARD — only school members and DEVELOPERs can access dashboard
+  // Unauthenticated: redirect to login (middleware should catch this first,
+  // but this is a safety net). redirect() is safe here because no children
+  // content will stream for unauthenticated requests.
   if (!session?.user) {
     redirect(`/${lang}/login`)
   }
+
+  // Membership mismatch: return inline access-denied UI instead of redirect()
+  // to avoid the streaming RSC conflict described above.
   if (
     session.user.role !== "DEVELOPER" &&
     session.user.schoolId !== school.id
   ) {
-    redirect(`/${lang}/access-denied`)
+    return (
+      <div
+        style={{
+          fontFamily:
+            'system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+          height: "100vh",
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <h1 style={{ fontSize: 24, fontWeight: 500, marginBottom: 16 }}>
+          Access Denied
+        </h1>
+        <p style={{ color: "#666", marginBottom: 24 }}>
+          You don&apos;t have permission to access this school&apos;s dashboard.
+        </p>
+        <a
+          href={`/${lang}`}
+          style={{
+            color: "#3b82f6",
+            textDecoration: "underline",
+          }}
+        >
+          Go to homepage
+        </a>
+      </div>
+    )
   }
 
   const serverRole = session.user.role
