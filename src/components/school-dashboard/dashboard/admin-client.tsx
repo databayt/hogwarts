@@ -37,7 +37,7 @@ import type { WeatherData } from "./weather-actions"
 // TYPES
 // ============================================================================
 
-interface AdminDashboardClientProps {
+export interface AdminDashboardClientProps {
   locale: string
   subdomain: string
   quickLookData?: QuickLookData

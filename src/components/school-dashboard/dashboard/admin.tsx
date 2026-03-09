@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getQuickLookData, type QuickLookData } from "./actions"
-import { AdminDashboardClient } from "./admin-client"
+import { AdminDashboardClientLoader } from "./admin-client-loader"
 import { getWeatherData, type WeatherData } from "./weather-actions"
 
 interface Props {
@@ -93,7 +93,7 @@ export async function AdminDashboard({
     return (
       <div className="space-y-8">
         {/* Client-side dashboard sections with interactive features */}
-        <AdminDashboardClient {...dashboardProps} />
+        <AdminDashboardClientLoader {...dashboardProps} />
       </div>
     )
   } catch (renderError) {
