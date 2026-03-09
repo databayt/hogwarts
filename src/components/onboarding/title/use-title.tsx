@@ -33,8 +33,9 @@ export function useTitle(schoolId: string): UseTitleReturn {
       const result = await getSchoolTitle(schoolId)
 
       if (result.success && result.data) {
+        const rawTitle = result.data.title || ""
         const title =
-          result.data.title === "New School" ? "" : result.data.title || ""
+          rawTitle === "New School" || rawTitle === "Untitled" ? "" : rawTitle
         const subdomain = result.data.subdomain?.startsWith("school-")
           ? ""
           : result.data.subdomain || ""

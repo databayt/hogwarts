@@ -26,13 +26,15 @@ export default function LocationContent({ dictionary }: Props) {
   const { data: locationData, loading, error } = useLocation(schoolId)
 
   // Enable/disable next button based on form completion
+  // If Mapbox token is not configured, allow skipping the location step
+  const hasMapbox = !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN
   useEffect(() => {
-    if (locationData?.address?.trim()) {
+    if (!hasMapbox || locationData?.address?.trim()) {
       enableNext()
     } else {
       disableNext()
     }
-  }, [locationData, enableNext, disableNext])
+  }, [locationData, enableNext, disableNext, hasMapbox])
 
   if (loading) {
     return (

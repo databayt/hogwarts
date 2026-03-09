@@ -37,21 +37,30 @@ export function LocationForm({
   })
 
   const { setCustomNavigation, enableNext, disableNext } = useHostValidation()
+  const hasMapbox = !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN
 
   // Enable/disable next button based on location selection
+  // If Mapbox token is not configured, allow skipping
   useEffect(() => {
-    if (locationData.address) {
+    if (!hasMapbox || locationData.address) {
       enableNext()
     } else {
       disableNext()
     }
-  }, [locationData, enableNext, disableNext])
+  }, [locationData, enableNext, disableNext, hasMapbox])
 
   // Set up custom navigation to save on next
   useEffect(() => {
     const handleNext = () => {
-      if (!locationData.address) {
+      // Skip validation if no Mapbox token or no address entered
+      if (!locationData.address && hasMapbox) {
         setError("Please select a location")
+        return
+      }
+
+      // If no address entered (Mapbox unavailable), just skip to next step
+      if (!locationData.address) {
+        router.push(`/onboarding/${schoolId}/stand-out`)
         return
       }
 
@@ -83,7 +92,7 @@ export function LocationForm({
 
     setCustomNavigation({
       onNext: handleNext,
-      nextDisabled: isPending || !locationData.address,
+      nextDisabled: isPending || (hasMapbox && !locationData.address),
     })
 
     return () => {
