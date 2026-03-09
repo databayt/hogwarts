@@ -175,17 +175,17 @@ export const LoginForm = ({
           if (data?.success) {
             form.reset()
             setSuccess(data.success)
+            // Hard redirect to force full page reload → fresh session
+            // Skip if tenant param present (handled by useEffect above)
+            if (data.redirectUrl && !tenant) {
+              window.location.href = data.redirectUrl
+            }
           }
           if (data?.twoFactor) {
             setShowTwoFactor(true)
           }
         })
-        .catch((error) => {
-          // Don't show error for redirect - this is expected behavior for successful login
-          // NextAuth throws NEXT_REDIRECT when signIn succeeds with a redirect
-          if (error?.digest?.startsWith?.("NEXT_REDIRECT")) {
-            return // Redirect is happening, no need to show error
-          }
+        .catch(() => {
           setError(
             dictionary?.messages?.toast?.error?.generic ||
               "Something went wrong"
