@@ -732,7 +732,7 @@ By submitting a pull request or otherwise contributing to this project, you agre
 3. You confirm that your contributions do not include code under licenses incompatible with SSPL-1.0 (e.g., GPL-2.0-only).
 4. You confirm that you have the right to make the contribution and grant the above rights.
 
-See [LICENSING.md](./LICENSING.md) for full licensing details.
+See [LICENSING.md](docs/LICENSING.md) for full licensing details.
 
 ### Developer Certificate of Origin (DCO)
 

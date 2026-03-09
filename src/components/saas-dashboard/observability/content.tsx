@@ -5,7 +5,6 @@ import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { EmptyState } from "@/components/saas-dashboard/common/empty-state"
-import { Shell as PageContainer } from "@/components/table/shell"
 
 import { auditColumns, type AuditRow } from "./logs-table/columns"
 import { AuditLogTable } from "./logs-table/table"
@@ -98,33 +97,19 @@ export async function ObservabilityContent({
     rows = []
   }
 
-  const totalPages = Math.ceil(total / limit)
-
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">
-            {t?.auditLogs || "Audit Logs"}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t?.recentActions || "Recent sensitive operator actions"}
-            {total > 0 &&
-              ` (${(t?.totalEntries || "${total} total").replace("${total}", String(total))}, ${(t?.pageOfPages || "page ${page} of ${totalPages}").replace("${page}", String(page)).replace("${totalPages}", String(totalPages))})`}
-          </p>
-        </div>
-        {rows.length > 0 ? (
-          <AuditLogTable data={rows} columns={auditColumns} />
-        ) : (
-          <EmptyState
-            title={t?.noAuditEntries || "No audit entries"}
-            description={
-              t?.actionsWillAppear ||
-              "Actions will be listed here as they happen."
-            }
-          />
-        )}
-      </div>
-    </PageContainer>
+    <div className="space-y-6">
+      {rows.length > 0 ? (
+        <AuditLogTable data={rows} columns={auditColumns} />
+      ) : (
+        <EmptyState
+          title={t?.noAuditEntries || "No audit entries"}
+          description={
+            t?.actionsWillAppear ||
+            "Actions will be listed here as they happen."
+          }
+        />
+      )}
+    </div>
   )
 }

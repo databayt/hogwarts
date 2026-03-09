@@ -25,7 +25,7 @@ Please read the [contributing guide](/CONTRIBUTING.md).
 Licensed under the [Server Side Public License v1 (SSPL-1.0)](./LICENSE).
 
 - **Self-hosting** for your own school or organization is permitted at no cost.
-- **Offering as a SaaS** to third parties requires a [commercial license](./LICENSING.md).
+- **Offering as a SaaS** to third parties requires a [commercial license](docs/LICENSING.md).
 - Contact **licensing@databayt.org** for commercial licensing.
 
 Some components (shadcn/ui, Radix UI) are MIT-licensed. See [NOTICE](./NOTICE) for third-party attributions.

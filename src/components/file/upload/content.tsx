@@ -256,6 +256,7 @@ export function AvatarUpload({
       variant="avatar"
       maxSize={2 * 1024 * 1024} // 2MB
       maxFiles={1}
+      optimizeImages
       className={className}
       onUploadComplete={(results) =>
         results[0] && onUploadComplete?.(results[0])
@@ -284,6 +285,7 @@ export function LogoUpload({
       folder="logos"
       maxSize={5 * 1024 * 1024} // 5MB
       maxFiles={1}
+      optimizeImages
       className={className}
       onUploadComplete={(results) =>
         results[0] && onUploadComplete?.(results[0])
@@ -313,6 +315,7 @@ export function DocumentUpload({
       folder="documents"
       maxSize={50 * 1024 * 1024} // 50MB
       maxFiles={maxFiles}
+      chunkThreshold={10 * 1024 * 1024} // 10MB
       className={className}
       onUploadComplete={onUploadComplete}
       onUploadError={onUploadError}
@@ -341,6 +344,7 @@ export function AssignmentUpload({
       folder="submissions"
       maxSize={100 * 1024 * 1024} // 100MB
       maxFiles={maxFiles}
+      chunkThreshold={10 * 1024 * 1024} // 10MB
       className={className}
       onUploadComplete={onUploadComplete}
       onUploadError={onUploadError}

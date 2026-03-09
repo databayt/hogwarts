@@ -12,7 +12,8 @@ export type PlatformNavItem = {
 
 export const platformNav: PlatformNavItem[] = [
   // Operator navigation – accessible to all authenticated users
-  { title: "Dashboard", href: "/dashboard", icon: "box" },
+  { title: "Overview", href: "/dashboard", icon: "pieChart" },
+  { title: "Analytics", href: "/analytics", icon: "trendingUp" },
   { title: "Sales", href: "/sales", icon: "sales" },
   { title: "Kanban", href: "/kanban", icon: "checkCircle" },
   { title: "Products", href: "/product", icon: "file" },
@@ -21,5 +22,4 @@ export const platformNav: PlatformNavItem[] = [
   { title: "Observability", href: "/observability", icon: "barChart" },
   { title: "Catalog", href: "/catalog", icon: "bookOpen" },
   { title: "Tenants", href: "/tenants", icon: "envelope" },
-  { title: "Profile", href: "/profile", icon: "cog" },
 ]

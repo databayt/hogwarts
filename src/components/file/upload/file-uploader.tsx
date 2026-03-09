@@ -5,6 +5,11 @@
  * Enhanced File Uploader Component
  * Modern drag-drop interface with react-dropzone
  *
+ * @deprecated Use `Uploader` from `./uploader` instead. It now supports
+ * image optimization (`optimizeImages` prop) and chunked uploads
+ * (`chunkThreshold` prop) — the features that previously required this component.
+ * This file will be removed in a future release.
+ *
  * Features:
  * - Drag and drop support
  * - Multiple file upload
@@ -58,6 +63,8 @@ export interface FileUploaderProps {
   multiple?: boolean
   /** Enable image optimization before upload */
   optimizeImages?: boolean
+  /** Auto-upload files immediately after selection (no Upload/Cancel buttons) */
+  autoUpload?: boolean
   /** Callback on successful upload */
   onUploadComplete?: (files: UploadedFileResult[]) => void
   /** Callback on upload error */
@@ -125,6 +132,7 @@ export function FileUploader({
   maxFiles = 10,
   multiple = true,
   optimizeImages = true,
+  autoUpload = false,
   onUploadComplete,
   onUploadError,
   className,
@@ -134,6 +142,8 @@ export function FileUploader({
 
   const { uploadMultiple, progress, isUploading, cancelUpload } =
     useChunkedUpload({
+      category,
+      folder,
       onSuccess: (fileId) => {
         // Handle individual file success
       },
@@ -245,6 +255,28 @@ export function FileUploader({
 
       setIsOptimizing(false)
       setFiles((prev) => [...prev, ...uploadedFiles])
+
+      // Auto-upload immediately if enabled
+      if (autoUpload) {
+        const filesToUpload = uploadedFiles.map((f) => f.file)
+        const results = await uploadMultiple(filesToUpload, category)
+        const successResults = results
+          .filter((r: any) => r.success && (r.fileId || r.id) && r.url)
+          .map((r: any) => ({
+            fileId: r.fileId || r.id,
+            url: r.url,
+            cdnUrl: r.cdnUrl,
+          }))
+
+        if (successResults.length > 0) {
+          onUploadComplete?.(successResults)
+          setFiles([])
+        }
+        const failCount = results.length - successResults.length
+        if (failCount > 0) {
+          toast.error(`Failed to upload ${failCount} file(s)`)
+        }
+      }
     },
     [
       files.length,
@@ -253,6 +285,10 @@ export function FileUploader({
       optimizeImages,
       canOptimize,
       optimizeImage,
+      autoUpload,
+      uploadMultiple,
+      category,
+      onUploadComplete,
     ]
   )
 
@@ -381,6 +417,11 @@ export function FileUploader({
                 Optimizing...
               </p>
             )}
+          </div>
+        ) : autoUpload ? (
+          <div className="flex h-full flex-col items-center justify-center p-6">
+            <Upload className="text-muted-foreground mb-2 h-8 w-8 animate-pulse" />
+            <p className="text-muted-foreground text-sm">Uploading...</p>
           </div>
         ) : (
           <div className="flex h-full flex-col justify-center p-4">

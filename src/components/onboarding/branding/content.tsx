@@ -103,26 +103,28 @@ export default function BrandingContent({ dictionary }: Props) {
               multiple={false}
               maxSize={5 * 1024 * 1024}
               optimizeImages={true}
+              autoUpload={true}
               onUploadComplete={handleUploadComplete}
               onUploadError={handleUploadError}
               className="h-full [&>div]:h-full"
             />
           ) : (
-            <div className="relative h-full overflow-hidden rounded-lg border">
-              <Image
-                src={logo}
-                alt="School logo"
-                fill
-                className="object-contain p-8"
-              />
+            <div className="relative flex h-full items-center justify-center rounded-lg border-2 border-dashed">
               <Button
                 size="icon"
-                variant="destructive"
-                className="absolute end-2 top-2"
+                variant="ghost"
+                className="absolute end-2 top-2 h-7 w-7"
                 onClick={handleRemoveLogo}
               >
                 <X className="h-4 w-4" />
               </Button>
+              <Image
+                src={logo}
+                alt="School logo"
+                width={200}
+                height={200}
+                className="object-contain"
+              />
             </div>
           )}
         </div>

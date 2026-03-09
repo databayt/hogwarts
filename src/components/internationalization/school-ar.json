@@ -2,7 +2,7 @@
   "school": {
     "dashboard": {
       "title": "نظرة عامة",
-      "welcome": "مرحباً بك في هوجوارتس",
+      "welcome": "مرحباً بك في هجورتس",
       "overview": "نظرة عامة",
       "quickStats": "إحصائيات سريعة",
       "totalStudents": "إجمالي الطلاب",
@@ -2528,7 +2528,7 @@
       "goToDashboard": "الانتقال إلى لوحة التحكم",
       "whatsYourSchoolName": "ما اسم مدرستك؟",
       "schoolNameDescription": "سيكون هذا الاسم الرسمي لمدرستك في النظام.",
-      "schoolNamePlaceholder": "مثال: مدرسة الأزهر الدولية",
+      "schoolNamePlaceholder": "اسم المدرسة",
       "unexpectedError": "حدث خطأ غير متوقع",
       "describeYourSchool": "صف مدرستك",
       "schoolDescriptionPlaceholder": "أخبرنا عن رسالة مدرستك وقيمها وما يميزها...",
@@ -2551,7 +2551,7 @@
       "primaryColor": "اللون الأساسي",
       "secondaryColor": "اللون الثانوي",
       "importData": "استيراد بيانات الطلاب",
-      "importDescription": "ارفع سجلات الطلاب الخاصة بك بصيغة Excel أو CSV.",
+      "importDescription": "ارفع سجلات طلابك بأي صيغة. يمكنك القيام بذلك أو تعديله لاحقاً.",
       "importExistingData": "استيراد بيانات الطلاب والمعلمين الموجودة",
       "uploadCSV": "رفع ملف CSV",
       "downloadTemplate": "تحميل القالب",
@@ -2621,7 +2621,7 @@
       "dataProtection": "حماية البيانات",
       "acceptTerms": "أوافق على الشروط والأحكام",
       "schoolAvailableAt": "ستكون مدرستك متاحة على:",
-      "subdomainPlaceholder": "your-school",
+      "subdomainPlaceholder": "النطاق الفرعي",
       "describeEducationModel": "صف نموذج التعليم",
       "educationModel": "في مدرستك",
       "selectSchoolTypeDescription": "اختر النوع الذي يصف بشكل أفضل نهج التعليم وهيكل الإدارة في مدرستك.",
@@ -2667,7 +2667,7 @@
       "finishSetupDescription": "راجع إعداد مدرستك وأكمل عملية الإعداد.",
       "clickNextToFinish": "انقر على التالي للإنهاء والذهاب إلى لوحة التحكم.",
       "overview": {
-        "title": "من السهل البدء\nفي هوجوارتس",
+        "title": "من السهل البدء\nفي هجورتس",
         "getStarted": "ابدأ الآن",
         "creatingSchool": "جاري إنشاء المدرسة...",
         "steps": {
@@ -3303,7 +3303,13 @@
         "noGrades": "لا توجد صفوف مُعدّة. قم بإعداد الصفوف الدراسية أولاً.",
         "upToDate": "محدّث",
         "noChanges": "جميع الصفوف لديها العدد المطلوب من الأقسام",
-        "setupTypes": "يرجى إعداد أنواع الغرف أولاً (مثل \"فصل دراسي\"، \"معمل\") في تبويب الغرف."
+        "setupTypes": "يرجى إعداد أنواع الغرف أولاً (مثل \"فصل دراسي\"، \"معمل\") في تبويب الغرف.",
+        "generateClasses": "إنشاء الحصص من الكتالوج",
+        "generateClassesDescription": "إنشاء سجلات الحصص لكل صف بناءً على اختيارات المواد من الكتالوج. يتطلب اختيارات مواد نشطة وفصل دراسي.",
+        "term": "الفصل الدراسي",
+        "selectTerm": "اختر الفصل",
+        "generatingClasses": "جارٍ الإنشاء...",
+        "generateClassesBtn": "إنشاء الحصص لجميع الصفوف"
       },
       "roomCapacity": {
         "title": "نظرة عامة على سعة الغرف",
@@ -3647,7 +3653,8 @@
         "feesUnpaid": "رسوم غير مدفوعة",
         "documentsNeeded": "وثائق مطلوبة",
         "paymentRecorded": "تم تسجيل الدفع",
-        "enrollmentConfirmed": "تم تأكيد التسجيل"
+        "enrollmentConfirmed": "تم تأكيد التسجيل",
+        "pendingPlacement": "طالب/طلاب مقبولين بحاجة لتعيين شعبة. استخدم إجراء التعيين في كل صف لتخصيصهم في شعبة."
       },
       "settings": {
         "title": "إعدادات القبول",

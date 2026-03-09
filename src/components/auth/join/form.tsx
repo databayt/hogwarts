@@ -59,7 +59,7 @@ export const RegisterForm = (props: Props) => {
     setSuccess("")
 
     startTransition(() => {
-      register(values).then((data) => {
+      register(values, lang).then((data) => {
         setError(data.error)
         setSuccess(data.success)
       })
@@ -156,7 +156,7 @@ export const RegisterForm = (props: Props) => {
 
               <div className="muted text-center">
                 <Link
-                  href="/login"
+                  href={`/${lang}/login`}
                   className="underline-offset-4 hover:underline"
                 >
                   {dictionary?.auth?.alreadyHaveAccount ||

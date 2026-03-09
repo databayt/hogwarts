@@ -56,6 +56,8 @@ interface ChunkedUploadOptions {
   chunkSize?: number // Default 5MB - balance between parallelism and memory
   maxRetries?: number // Default 3 - total attempts before failing
   retryDelay?: number // Default 1000ms - base delay for exponential backoff
+  category?: string
+  folder?: string
   onProgress?: (filename: string, progress: number) => void
   onSuccess?: (fileId: string) => void
   onError?: (error: string) => void
@@ -76,6 +78,8 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
     chunkSize = 5 * 1024 * 1024, // 5MB
     maxRetries = 3,
     retryDelay = 1000,
+    category: defaultCategory,
+    folder: defaultFolder,
     onProgress,
     onSuccess,
     onError,
@@ -160,8 +164,8 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
 
           // Direct upload avoids chunking overhead for files under threshold
           const result = await uploadFileBasic(formData, {
-            folder: "uploads",
-            category: "document",
+            folder: defaultFolder || "uploads",
+            category: (defaultCategory as any) || "document",
           })
 
           if (result.success) {

@@ -167,7 +167,7 @@ export async function CertificateContent() {
         </div>
         {canManage && (
           <Button asChild>
-            <a href="certificates/configs/new">
+            <a href="certificates/cert-wizard">
               <Plus className="me-2 h-4 w-4" />
               New Template
             </a>

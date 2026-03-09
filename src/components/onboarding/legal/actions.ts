@@ -10,6 +10,7 @@ import {
 } from "@/lib/action-response"
 import {
   applyTimetableStructureForNewSchool,
+  autoProvisionSections,
   setupCatalogForSchool,
   setupDefaultsForSchool,
 } from "@/lib/catalog-setup"
@@ -124,6 +125,20 @@ export async function completeOnboarding(
       console.error(
         `[completeOnboarding] ClassroomType creation failed for school ${schoolId}:`,
         classroomTypeError
+      )
+    }
+
+    // 5. Auto-provision classrooms and sections based on capacity settings
+    try {
+      const provisioned = await autoProvisionSections(schoolId)
+      console.log(
+        `[completeOnboarding] Auto-provisioned for school ${schoolId}:`,
+        provisioned
+      )
+    } catch (provisionError) {
+      console.error(
+        `[completeOnboarding] Section provisioning failed:`,
+        provisionError
       )
     }
 

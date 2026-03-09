@@ -146,10 +146,11 @@ export async function initializeSchoolSetup(
     )
 
     if (!schoolResult.success) {
-      return createActionResponse(undefined, {
-        message: schoolResult.error || "Failed to initialize school",
+      return {
+        success: false,
+        error: schoolResult.error || "Failed to initialize school",
         code: "SCHOOL_CREATION_FAILED",
-      })
+      }
     }
 
     revalidatePath("/onboarding")
@@ -266,13 +267,31 @@ function getNextStep(school: {
   maxStudents: number
   tuitionFee: unknown
   domain: string
+  onboardingStep: string | null
 }) {
-  if (!school.name || school.name === "New School") return "title"
+  // Use stored step if available (tracks where user actually left off)
+  if (school.onboardingStep && school.onboardingStep !== "completed") {
+    return school.onboardingStep
+  }
+  // Fallback: field-based heuristic for legacy schools without stored step
+  if (
+    !school.name ||
+    school.name === "New School" ||
+    school.name === "Untitled"
+  )
+    return "title"
   if (!school.schoolType) return "description"
   if (!school.address) return "location"
   if (!school.maxStudents) return "capacity"
   if (!school.tuitionFee) return "price"
   return "finish-setup"
+}
+
+export async function updateOnboardingStep(schoolId: string, step: string) {
+  await db.school.update({
+    where: { id: schoolId },
+    data: { onboardingStep: step },
+  })
 }
 
 export async function proceedToTitle(schoolId: string) {

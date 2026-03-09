@@ -145,7 +145,7 @@ export function Faculty() {
                             professor.name || fallbackProfessors[index]?.name
                           )}
                         </h3>
-                        <p className="text-muted-foreground">
+                        <p>
                           {String(
                             professor.title || fallbackProfessors[index]?.title
                           )}{" "}

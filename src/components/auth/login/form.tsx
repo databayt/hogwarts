@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Suspense, useEffect, useMemo, useState, useTransition } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -44,6 +44,8 @@ export const LoginForm = ({
   dictionary,
   ...props
 }: LoginFormProps) => {
+  const params = useParams()
+  const lang = params.lang as string
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl")
   const tenant = searchParams.get("tenant")
@@ -151,6 +153,7 @@ export const LoginForm = ({
       callbackUrl: finalCallbackUrl,
       context: effectiveContext,
       subdomain,
+      locale: lang,
     }
 
     console.log("📋 LOGIN FORM SUBMIT:", {

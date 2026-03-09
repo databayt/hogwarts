@@ -129,17 +129,7 @@ export default function CongratulationsContent(props: Props) {
     if (schoolData?.domain) {
       const protocol = window.location.protocol
       const rootDomain = getRootDomain()
-
-      // Handle localhost differently (no subdomain)
-      let schoolUrl: string
-      if (rootDomain.includes("localhost")) {
-        // For localhost, use path-based routing
-        schoolUrl = `${protocol}//${rootDomain}/${lang}/s/${schoolData.domain}/dashboard`
-      } else {
-        // For production/preview, use subdomain
-        schoolUrl = `${protocol}//${schoolData.domain}.${rootDomain}/${lang}/dashboard`
-      }
-
+      const schoolUrl = `${protocol}//${schoolData.domain}.${rootDomain}/${lang}/dashboard`
       window.location.href = schoolUrl
     }
   }
@@ -147,9 +137,6 @@ export default function CongratulationsContent(props: Props) {
   // Get display domain
   const getDisplayDomain = () => {
     const rootDomain = getRootDomain()
-    if (rootDomain.includes("localhost")) {
-      return `localhost:3000/${lang}/s/${schoolData?.domain}`
-    }
     return `${schoolData?.domain}.${rootDomain}`
   }
 

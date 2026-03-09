@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Uploader } from "@/components/file/upload/uploader"
 import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -139,76 +140,39 @@ export function BrandingForm({
                   "School Logo (Optional)"}
               </FormLabel>
               <FormControl>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Input
-                      {...field}
-                      placeholder={
-                        dictionary?.marketing?.onboarding?.branding
-                          ?.logoPlaceholder || "https://example.com/logo.png"
-                      }
-                      disabled={isPending}
-                    />
-                    <label htmlFor="logo-upload">
-                      <input
-                        id="logo-upload"
-                        type="file"
-                        accept="image/jpeg,image/png,image/svg+xml,image/webp"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-
-                          // Show uploading state
-                          setError("")
-
-                          try {
-                            const formData = new FormData()
-                            formData.append("file", file)
-                            formData.append("type", "logo")
-
-                            const response = await fetch("/api/upload", {
-                              method: "POST",
-                              body: formData,
-                            })
-
-                            const data = await response.json()
-
-                            if (data.success) {
-                              form.setValue("logoUrl", data.url)
-                            } else {
-                              setError(data.error || "Failed to upload logo")
-                            }
-                          } catch (err) {
-                            setError("Failed to upload logo")
-                          }
-                        }}
-                        disabled={isPending}
-                      />
-                      <Button
+                <div>
+                  {field.value ? (
+                    <div className="relative h-24 w-24">
+                      <div className="h-full w-full overflow-hidden rounded-lg border">
+                        <img
+                          src={field.value}
+                          alt="School logo"
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                      <button
                         type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={isPending}
-                        asChild
+                        className="bg-destructive text-destructive-foreground absolute -end-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full"
+                        onClick={() => form.setValue("logoUrl", "")}
                       >
-                        <span>
-                          <Icons.upload className="h-4 w-4" />
-                        </span>
-                      </Button>
-                    </label>
-                  </div>
-                  {field.value && (
-                    <div className="relative h-24 w-24 overflow-hidden rounded-lg border">
-                      <img
-                        src={field.value}
-                        alt="School logo"
-                        className="h-full w-full object-contain"
-                        onError={(e) => {
-                          ;(e.target as HTMLImageElement).style.display = "none"
-                        }}
-                      />
+                        <Icons.close className="h-3 w-3" />
+                      </button>
                     </div>
+                  ) : (
+                    <Uploader
+                      category="image"
+                      type="logo"
+                      folder="school-logos"
+                      variant="avatar"
+                      maxSize={5 * 1024 * 1024}
+                      maxFiles={1}
+                      optimizeImages
+                      disabled={isPending}
+                      onUploadComplete={(results) => {
+                        if (results[0]) form.setValue("logoUrl", results[0].url)
+                      }}
+                      onUploadError={(err) => setError(err)}
+                    />
                   )}
                 </div>
               </FormControl>

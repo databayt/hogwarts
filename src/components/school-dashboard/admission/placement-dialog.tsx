@@ -76,6 +76,9 @@ export function PlacementDialog({
 
       if (result.success) {
         toast.success(`${studentName} placed successfully`)
+        if (result.warning) {
+          toast.warning(result.warning)
+        }
         onOpenChange(false)
         setSelectedSectionId("")
         onSuccess?.()

@@ -1,45 +1,36 @@
 "use client"
 
-import * as React from "react"
 import { useRouter } from "next/navigation"
-import { CircleAlert, Lock, UserX } from "lucide-react"
-import { useSession } from "next-auth/react"
+import { CircleAlert } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { ParentProfileContent } from "../parent/content"
-import { StaffProfileContent } from "../staff/content"
-import { StudentProfileContent } from "../student/content"
-import { TeacherProfileContent } from "../teacher/content"
-import type { FilteredProfileData } from "./types"
+import ProfileContent from "../client"
+import type { ProfileRole } from "../types"
 
 interface ProfileDetailContentProps {
-  profileData: FilteredProfileData | null
-  permissionLevel: string
+  profileData: Record<string, unknown> | null
+  role: ProfileRole
+  isOwner: boolean
+  userId: string
   error?: string | null
-  dictionary: Dictionary
-  lang: Locale
+  dictionary?: Dictionary
+  lang?: Locale
 }
 
 export function ProfileDetailContent({
   profileData,
-  permissionLevel,
+  role,
+  isOwner,
+  userId,
   error,
   dictionary,
   lang,
 }: ProfileDetailContentProps) {
-  const { data: session } = useSession()
   const router = useRouter()
 
   // Error state
@@ -60,157 +51,16 @@ export function ProfileDetailContent({
     )
   }
 
-  // No permission to view
-  if (!profileData.canViewFullProfile && permissionLevel === "PUBLIC") {
-    return (
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5" />
-              Restricted Profile
-            </CardTitle>
-            <CardDescription>
-              You don't have permission to view this profile
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground text-sm">
-              This profile is private. Only authorized users can view detailed
-              information.
-            </p>
-            {profileData.username && (
-              <div className="flex items-center gap-2">
-                <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full">
-                  {profileData.image ? (
-                    <img
-                      src={profileData.image}
-                      alt={profileData.username}
-                      className="h-12 w-12 rounded-full"
-                    />
-                  ) : (
-                    <UserX className="h-6 w-6" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium">{profileData.username}</p>
-                  <p className="text-muted-foreground text-sm">
-                    {profileData.role}
-                  </p>
-                </div>
-              </div>
-            )}
-            <Button onClick={() => router.back()}>Go Back</Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  // Check if viewing own profile
-  const isOwner = session?.user?.id === profileData.id
-
-  // Render appropriate profile based on detected type
-  switch (profileData.profileType) {
-    case "STUDENT":
-      return (
-        <StudentProfileContent
-          studentId={profileData.student?.userId || profileData.id}
-          dictionary={dictionary}
-          lang={lang}
-          isOwner={isOwner}
-        />
-      )
-
-    case "TEACHER":
-      return (
-        <TeacherProfileContent
-          teacherId={profileData.teacher?.userId || profileData.id}
-          dictionary={dictionary}
-          lang={lang}
-          isOwner={isOwner}
-        />
-      )
-
-    case "GUARDIAN":
-      return (
-        <ParentProfileContent
-          parentId={profileData.guardian?.userId || profileData.id}
-          dictionary={dictionary}
-          lang={lang}
-          isOwner={isOwner}
-        />
-      )
-
-    case "STAFF":
-      return (
-        <StaffProfileContent
-          staffId={profileData.id}
-          dictionary={dictionary}
-          lang={lang}
-          isOwner={isOwner}
-        />
-      )
-
-    case "USER":
-    default:
-      // Generic user profile (no specific type assigned yet)
-      return (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Profile</CardTitle>
-              <CardDescription>Basic profile information</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {profileData.image && (
-                  <img
-                    src={profileData.image}
-                    alt={profileData.username || "User"}
-                    className="h-24 w-24 rounded-full"
-                  />
-                )}
-                <div className="space-y-2 text-sm">
-                  {profileData.username && (
-                    <p>
-                      <strong>Username:</strong> {profileData.username}
-                    </p>
-                  )}
-                  {profileData.email && (
-                    <p>
-                      <strong>Email:</strong> {profileData.email}
-                    </p>
-                  )}
-                  <p>
-                    <strong>Role:</strong> {profileData.role}
-                  </p>
-                  {profileData.createdAt && (
-                    <p>
-                      <strong>Joined:</strong>{" "}
-                      {new Date(profileData.createdAt).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-                {isOwner && (
-                  <div className="pt-4">
-                    <Alert>
-                      <CircleAlert className="h-4 w-4" />
-                      <AlertTitle>Complete Your Profile</AlertTitle>
-                      <AlertDescription>
-                        Your profile type has not been configured yet. Please
-                        contact your administrator to complete your profile
-                        setup.
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )
-  }
+  return (
+    <ProfileContent
+      role={role}
+      data={profileData}
+      dictionary={dictionary as Record<string, unknown>}
+      lang={lang}
+      isOwner={isOwner}
+      userId={userId}
+    />
+  )
 }
 
 /**

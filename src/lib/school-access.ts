@@ -235,7 +235,7 @@ export async function ensureUserSchool(
       // createdByUserId is set as @unique - prevents duplicate schools per user via DB constraint
       const school = await tx.school.create({
         data: {
-          name: "New School",
+          name: "Untitled",
           domain: uniqueDomain,
           maxStudents: 500,
           maxTeachers: 50,

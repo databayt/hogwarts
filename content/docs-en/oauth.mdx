@@ -1,0 +1,469 @@
+---
+title: "OAuth Authentication"
+description: "Google and Facebook OAuth flows - provider config, account linking, callback handling, and cross-subdomain SSO"
+---
+
+## Overview
+
+This document traces the complete OAuth authentication flow for Google and Facebook providers in Hogwarts. It covers provider configuration, the custom multi-tenant Prisma adapter, account linking, callback URL preservation, JWT/session population, and cross-subdomain cookie setup.
+
+For the overall authentication architecture, redirect logic, and entry points, see [Authentication](/docs/authentication). For email/password credential flows (registration, login, 2FA, verification, password reset), see [Credentials](/docs/credentials).
+
+**Providers**: Google (OIDC) and Facebook (OAuth 2.0 only)
+
+---
+
+## OAuth Flow
+
+```
+┌──────────┐     ┌──────────────┐     ┌───────────────┐     ┌────────────────┐
+│  User    │────>│  Social      │────>│  Store        │────>│  Redirect to   │
+│  clicks  │     │  Component   │     │  callback URL │     │  Provider      │
+│  button  │     │  onClick()   │     │  (3 layers)   │     │  (Google/FB)   │
+└──────────┘     └──────────────┘     └───────────────┘     └───────┬────────┘
+                                                                     │
+                                                                     ▼
+┌──────────┐     ┌──────────────┐     ┌───────────────┐     ┌────────────────┐
+│  Redirect│<────│  JWT issued  │<────│  Adapter      │<────│  Callback      │
+│  to      │     │  (jwt cb)    │     │  creates/     │     │  /api/auth/    │
+│  dest.   │     │              │     │  links user   │     │  callback/{p}  │
+└──────────┘     └──────────────┘     └───────────────┘     └────────────────┘
+```
+
+Two entry points use the same `<Social />` component and identical flow:
+
+- **Login form** (`/login`) - existing users
+- **Join form** (`/join`) - new users (adapter auto-creates)
+
+---
+
+## Social Component
+
+**Source**: `src/components/auth/social.tsx`
+
+Client component rendering Google and Facebook buttons in a 2-column grid. The `onClick(provider)` handler has two branches:
+
+### Tenant/Subdomain Context
+
+When the user is on a subdomain (e.g., `demo.localhost:3000`) or has a `?tenant=` URL param:
+
+1. Extracts subdomain from hostname or `tenant` search param
+2. Stores tenant info in `sessionStorage` (`oauth_tenant`, `oauth_callback_url`)
+3. Calls `signIn(provider, { callbackUrl: dashboardUrl?tenant=... })`
+
+```typescript
+// Subdomain detection
+const isProdSubdomain =
+  currentHost.endsWith(".databayt.org") && currentHost !== "ed.databayt.org"
+const isDevSubdomain =
+  currentHost.includes(".localhost") && currentHost !== "localhost"
+```
+
+### Main Domain
+
+When the user is on the main domain (`ed.databayt.org` or `localhost:3000`):
+
+1. Resolves `callbackUrl` from search params or falls back to `DEFAULT_LOGIN_REDIRECT`
+2. Triple-stores callback URL before redirect:
+   - **Server httpOnly cookie** via `POST /api/auth/store-callback` (most reliable)
+   - **sessionStorage** key `oauth_callback_intended` (lost on domain change)
+   - **Client cookie** `oauth_callback_intended` (15min TTL, `SameSite=Lax`)
+3. Adds base64-encoded `state` param with `{ callbackUrl, timestamp }`
+4. Calls `signIn(provider, { callbackUrl, redirect: true, state })`
+
+### Facebook `#_=_` Cleanup
+
+Facebook appends `#_=_` to the callback URL. The `cleanUrlHash()` function runs on component mount via `useEffect` to strip this:
+
+```typescript
+if (window.location.hash === "#_=_") {
+  const cleanUrl = window.location.href.replace(/#.*$/, "")
+  window.history.replaceState({}, document.title, cleanUrl)
+}
+```
+
+This hash is also stripped server-side in the `redirect` callback.
+
+---
+
+## Provider Configuration
+
+**Source**: `src/auth.config.ts`
+
+### Google (OIDC)
+
+```typescript
+Google({
+  clientId: env.GOOGLE_CLIENT_ID || "",
+  clientSecret: env.GOOGLE_CLIENT_SECRET || "",
+  authorization: {
+    params: {
+      prompt: "consent",
+      access_type: "offline",
+      response_type: "code",
+    },
+  },
+  profile(profile) {
+    return {
+      id: profile.sub,
+      username: profile.name,
+      email: profile.email,
+      image: profile.picture,
+      emailVerified: new Date(), // Always marked verified
+    }
+  },
+})
+```
+
+- Uses t3-env validated `env.GOOGLE_CLIENT_ID` and `env.GOOGLE_CLIENT_SECRET`
+- Forces `prompt: "consent"` and `access_type: "offline"` for refresh tokens
+- Custom `profile()` maps: `sub` to `id`, `name` to `username`, `picture` to `image`
+- `emailVerified` always set to `new Date()` (Google emails are pre-verified)
+
+### Facebook (OAuth 2.0)
+
+```typescript
+Facebook({
+  clientId: process.env.FACEBOOK_CLIENT_ID!,
+  clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+})
+```
+
+- Uses `process.env` directly (NOT t3-env `env` object — inconsistency with Google)
+- Minimal configuration — no custom `profile()` callback
+- OAuth 2.0 only (Facebook does not support OIDC)
+
+---
+
+## Multi-Tenant Prisma Adapter
+
+**Source**: `src/lib/multi-tenant-prisma-adapter.ts`
+
+### The Problem
+
+The User model has `@@unique([email, schoolId])` instead of `@unique email`. The standard Prisma adapter uses `findUnique({ where: { email } })` which fails because `email` alone is not a unique field.
+
+### The Solution
+
+`MultiTenantPrismaAdapter` wraps `PrismaAdapter` and overrides 4 methods:
+
+| Method                                              | Override Behavior                                                                                  |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `getUserByEmail(email)`                             | `findFirst({ where: { email, schoolId: null } })` — finds OAuth users not yet assigned to a school |
+| `createUser(data)`                                  | Creates with explicit `schoolId: null`, maps `name` to `username`                                  |
+| `getUserByAccount({ provider, providerAccountId })` | Lookups via Account's `@@unique([provider, providerAccountId])` with user include                  |
+| `linkAccount(account)`                              | Creates Account record linking provider to User                                                    |
+
+### Key Design Decisions
+
+- OAuth users start with `schoolId: null` — they get assigned to a school during onboarding
+- The `username` field is used instead of `name` (Prisma schema uses `username`)
+- All methods return `AdapterUser` format: `{ id, email, emailVerified, name, image }`
+
+---
+
+## Account Linking
+
+### Account Model
+
+```prisma
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+```
+
+### First OAuth Sign-In
+
+1. Adapter calls `getUserByAccount({ provider, providerAccountId })` — not found
+2. Adapter calls `getUserByEmail(email)` — checks for existing user with `schoolId: null`
+3. **If user exists**: `linkAccount()` links the OAuth provider to the existing user
+4. **If user does not exist**: `createUser()` creates a new user, then `linkAccount()`
+
+### Repeat Sign-In
+
+1. `getUserByAccount()` finds existing Account record
+2. Returns associated User — no new records created
+
+### OAuthAccountNotLinked Error
+
+When a user registered with email/password tries to sign in with OAuth using the same email, NextAuth returns `OAuthAccountNotLinked`. This is a security feature — the user must sign in with their original provider first.
+
+### Dead Code Note
+
+`getOrCreateOAuthUser()` in `src/components/auth/user.ts` is a utility function that exists but is NOT used by the actual OAuth flow. The adapter handles all user creation and linking.
+
+---
+
+## Callback URL Preservation
+
+### The Problem
+
+OAuth redirects the user to Google/Facebook, then back to `/api/auth/callback/{provider}`. The original destination URL (e.g., `/dashboard?tab=settings`) is lost during this redirect chain.
+
+### Triple-Layer Storage
+
+Before initiating the OAuth redirect, `social.tsx` stores the callback URL in three places:
+
+| Layer | Storage                                                         | Reliability | Survives OAuth Redirect? |
+| ----- | --------------------------------------------------------------- | ----------- | ------------------------ |
+| 1     | Server httpOnly cookie via `POST /api/auth/store-callback`      | Highest     | Yes                      |
+| 2     | `sessionStorage` key `oauth_callback_intended`                  | Medium      | No (different origin)    |
+| 3     | Client cookie `oauth_callback_intended` (15min, `SameSite=Lax`) | Medium      | Yes                      |
+
+### Store-Callback API
+
+**Source**: `src/app/api/auth/store-callback/route.ts`
+
+Sets an httpOnly cookie with the callback URL:
+
+```typescript
+cookieStore.set({
+  name: "oauth_callback_intended",
+  value: callbackUrl,
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 900, // 15 minutes
+  path: "/",
+})
+```
+
+### Resolution
+
+In `src/auth.ts`, `resolveCallbackUrl()` reads the callback URL back (first match wins):
+
+1. Server cookie `oauth_callback_intended` (most reliable)
+2. URL `searchParams` (`callbackUrl` or `redirect`)
+3. Regex match for `callbackUrl=...` in URL string
+4. `baseUrl` searchParams
+
+---
+
+## JWT & Session for OAuth Users
+
+**Source**: `src/auth.ts` (callbacks section)
+
+### signIn Callback
+
+Always returns `true` (allows sign-in). Performs provider-specific checks:
+
+- **Facebook**: Logs error if no email in profile (missing `email` scope)
+- **Google**: Logs warning if `email_verified` is false
+
+### jwt Callback
+
+Three triggers with different behaviors:
+
+**`trigger: "signIn"` (initial sign-in)**:
+
+- Receives `AdapterUser` with `id`, `email`, `name` — but NOT `role` or `schoolId`
+- Sets `token.id`, `token.provider`, `token.providerAccountId`
+- Only sets `token.role` / `token.schoolId` if they exist on the user object (they usually don't for OAuth)
+- Forces session update by setting `token.iat`, `token.exp`, `token.sessionToken`, `token.updatedAt`, `token.hash`
+
+**No trigger (subsequent requests)**:
+
+- Detects `!token.schoolId && token.id` — refreshes from database
+- Picks up `role` and `schoolId` once the User record is updated (e.g., after onboarding)
+
+**`trigger: "update"` (manual session refresh)**:
+
+- Loads `schoolId` and `role` from database
+- Used after onboarding creates a school and assigns the user
+
+### session Callback
+
+Copies token data into session:
+
+```typescript
+session.user.id = token.id
+session.user.role = token.role // May be undefined initially
+session.user.schoolId = token.schoolId // May be undefined initially
+```
+
+Supports preview-role cookies for role impersonation.
+
+**Key implication**: The first request after OAuth login may have an incomplete session (no `role` or `schoolId`). The JWT callback auto-refreshes from the database on the next request.
+
+---
+
+## Redirect Logic (Post-OAuth)
+
+**Source**: `src/auth.ts` (`redirect` callback)
+
+The redirect callback handles post-authentication routing. Full details in [Authentication](/docs/authentication). Brief priority order:
+
+1. **Resolve callback URL** — cookie, URL params, regex, baseUrl params
+2. **Strip Facebook `#_=_` hash**
+3. **Honor explicit relative paths** from `signIn({ redirectTo })` (skip root `/`, locale roots `/en`/`/ar`)
+4. **Subdomain detection** — `school.databayt.org` or `school.localhost:3000` → `/{locale}/dashboard`
+5. **Main domain handling** — locale paths, `?tenant=` param, school logout paths
+6. **Smart redirect** — decode JWT → look up user's school → redirect to school subdomain
+7. **Fallback** — `{baseUrl}/dashboard`
+
+### Helper Functions
+
+| Function                                    | Purpose                                  |
+| ------------------------------------------- | ---------------------------------------- |
+| `resolveCallbackUrl(url, baseUrl)`          | Multi-source callback URL resolution     |
+| `validateCallbackUrl(callbackUrl, baseUrl)` | Same-origin security check               |
+| `detectSubdomainFromHost(host)`             | Extract subdomain (null for main domain) |
+| `getSmartRedirectUrl(url, baseUrl)`         | JWT → school lookup → subdomain URL      |
+| `constructSchoolUrl(subdomain, path)`       | Environment-aware URL builder            |
+| `extractLocaleFromUrl(url)`                 | Extract `ar` or `en` (default: `ar`)     |
+
+---
+
+## Cookie Configuration (Cross-Subdomain SSO)
+
+**Source**: `src/auth.ts` (`cookies` section)
+
+All auth cookies are configured for cross-subdomain sharing:
+
+| Cookie             | Name                        | httpOnly | maxAge | Purpose           |
+| ------------------ | --------------------------- | -------- | ------ | ----------------- |
+| PKCE Code Verifier | `authjs.pkce.code_verifier` | Yes      | 15min  | OAuth PKCE flow   |
+| Session Token      | `authjs.session-token`      | Yes      | 24h    | JWT session       |
+| Callback URL       | `authjs.callback-url`       | No       | —      | NextAuth callback |
+| CSRF Token         | `authjs.csrf-token`         | Yes      | —      | CSRF protection   |
+| State              | `authjs.state`              | Yes      | —      | OAuth state param |
+| Nonce              | `authjs.nonce`              | Yes      | —      | OIDC nonce        |
+
+### Domain Configuration
+
+```typescript
+domain: process.env.NODE_ENV === "production" ? ".databayt.org" : undefined
+```
+
+- **Production**: `domain: ".databayt.org"` enables SSO across `ed.databayt.org`, `school1.databayt.org`, etc.
+- **Development**: `domain: undefined` — cookies scoped to `localhost` only (known limitation)
+- **All cookies**: `sameSite: "lax"` (required for OAuth redirects), `secure: true` in production only
+
+`trustHost: true` is set at the NextAuth config level — required for Vercel proxy environments.
+
+---
+
+## Environment Variables
+
+| Variable                 | Required           | Validation                                                          | Used By                            |
+| ------------------------ | ------------------ | ------------------------------------------------------------------- | ---------------------------------- |
+| `GOOGLE_CLIENT_ID`       | For Google OAuth   | t3-env `.optional()`, should end with `.apps.googleusercontent.com` | `auth.config.ts` via `env`         |
+| `GOOGLE_CLIENT_SECRET`   | For Google OAuth   | t3-env `.optional()`                                                | `auth.config.ts` via `env`         |
+| `FACEBOOK_CLIENT_ID`     | For Facebook OAuth | t3-env `.optional()`, should be numeric                             | `auth.config.ts` via `process.env` |
+| `FACEBOOK_CLIENT_SECRET` | For Facebook OAuth | t3-env `.optional()`                                                | `auth.config.ts` via `process.env` |
+| `AUTH_SECRET`            | Yes                | Min 32 chars                                                        | NextAuth core                      |
+| `NEXTAUTH_URL`           | Recommended        | Inferred in v5 if not set                                           | NextAuth                           |
+| `NEXT_PUBLIC_APP_URL`    | Yes                | Required by t3-env                                                  | Email links, callbacks             |
+
+Startup validation runs via `auth-config-validator.ts` at module load. Missing variables are classified as warnings (both not set) or issues (partially set).
+
+---
+
+## Error Handling
+
+**Source**: `src/components/auth/error-card.tsx`
+
+When OAuth fails, NextAuth redirects to `/error?error={code}`. The `ErrorCard` component displays a user-friendly message:
+
+| Error Code              | Message                                                | Trigger                                      |
+| ----------------------- | ------------------------------------------------------ | -------------------------------------------- |
+| `Configuration`         | There is a problem with the server configuration.      | Missing/invalid provider config              |
+| `AccessDenied`          | You do not have permission to sign in.                 | Provider denied access                       |
+| `OAuthSignin`           | Could not initiate sign in with OAuth provider.        | Failed to start OAuth flow                   |
+| `OAuthCallback`         | Error completing OAuth sign in.                        | Callback processing failed                   |
+| `OAuthCreateAccount`    | Could not create OAuth user in database.               | DB error during user creation                |
+| `OAuthAccountNotLinked` | This email is already associated with another account. | Credentials user tries OAuth with same email |
+| `Callback`              | Something went wrong with the authentication callback. | Generic callback error                       |
+| `default`               | An unexpected error occurred.                          | Any other error                              |
+
+---
+
+## Known Issues
+
+| #   | Issue                                               | Impact                                                                                                     | Location                              |
+| --- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| 1   | Facebook env vars use `process.env` directly        | Inconsistency with Google which uses t3-env `env` object                                                   | `auth.config.ts:87-88`                |
+| 2   | Facebook may not return email                       | If app lacks `email` scope or user hasn't verified email on Facebook                                       | `auth.ts` signIn callback             |
+| 3   | Facebook `#_=_` hash requires cleanup in TWO places | Client-side (`social.tsx` useEffect) and server-side (`auth.ts` redirect callback)                         | `social.tsx:13-23`, `auth.ts:706-708` |
+| 4   | New OAuth users get incomplete JWT                  | No `role`/`schoolId` until DB refresh on next request                                                      | `auth.ts` jwt callback                |
+| 5   | Cross-subdomain cookies don't work in development   | `domain: undefined` vs `.localhost` — cookies scoped to single hostname                                    | `auth.ts` cookies config              |
+| 6   | PKCE cookie loss (domain mismatch)                  | Causes OAuth callback failure when cookie domain doesn't match                                             | `auth.ts` cookies config              |
+| 7   | `getOrCreateOAuthUser` in `user.ts` is unused       | Exists but actual OAuth flow uses adapter methods — dead code                                              | `user.ts:45`                          |
+| 8   | Verbose debug logging throughout OAuth flow         | `social.tsx`, `store-callback`, `auth.ts` all have extensive console.log — should be reduced in production | Multiple files                        |
+
+---
+
+## File Map
+
+### UI
+
+| File                                 | Purpose                                 |
+| ------------------------------------ | --------------------------------------- |
+| `src/components/auth/social.tsx`     | Social login buttons (Google, Facebook) |
+| `src/components/auth/error-card.tsx` | OAuth error display                     |
+
+### Config
+
+| File                 | Purpose                                                   |
+| -------------------- | --------------------------------------------------------- |
+| `src/auth.config.ts` | Provider configuration (Google, Facebook, Credentials)    |
+| `src/auth.ts`        | Callbacks (signIn, jwt, session, redirect), cookie config |
+
+### Adapter
+
+| File                                     | Purpose                                                 |
+| ---------------------------------------- | ------------------------------------------------------- |
+| `src/lib/multi-tenant-prisma-adapter.ts` | Custom Prisma adapter for `@@unique([email, schoolId])` |
+
+### API
+
+| File                                       | Purpose                     |
+| ------------------------------------------ | --------------------------- |
+| `src/app/api/auth/store-callback/route.ts` | Callback URL cookie storage |
+| `src/app/api/auth/[...nextauth]/route.ts`  | NextAuth route handler      |
+
+### Validation
+
+| File                               | Purpose                                    |
+| ---------------------------------- | ------------------------------------------ |
+| `src/lib/auth-config-validator.ts` | Startup env validation                     |
+| `src/env.mjs`                      | t3-env schema (Google vars validated here) |
+
+### Middleware
+
+| File           | Purpose                               |
+| -------------- | ------------------------------------- |
+| `src/proxy.ts` | Edge middleware (skips `/api/auth/*`) |
+
+### Routes
+
+| File            | Purpose                                |
+| --------------- | -------------------------------------- |
+| `src/routes.ts` | `authRoutes`, `DEFAULT_LOGIN_REDIRECT` |
+
+### Models
+
+| File                        | Purpose              |
+| --------------------------- | -------------------- |
+| `prisma/models/auth.prisma` | User, Account models |
+
+### Pages
+
+| File                                   | Purpose                           |
+| -------------------------------------- | --------------------------------- |
+| `src/app/[lang]/(auth)/error/page.tsx` | Auth error page                   |
+| `src/app/[lang]/(auth)/login/page.tsx` | Login page (has Social component) |
+| `src/app/[lang]/(auth)/join/page.tsx`  | Join page (has Social component)  |

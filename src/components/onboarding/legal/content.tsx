@@ -86,12 +86,13 @@ const LegalContent = (props: Props) => {
   // Handle lab navigation from modal
   const handleGoToDashboard = () => {
     if (schoolData?.domain) {
-      // Construct the subdomain URL
       const protocol = window.location.protocol
-      const baseDomain = window.location.hostname.replace("ed.", "")
-      const schoolUrl = `${protocol}//${schoolData.domain}.${baseDomain}/dashboard`
-
-      // Redirect to the school's subdomain lab
+      const hostname = window.location.hostname
+      const isLocalhost = hostname.includes("localhost")
+      const rootDomain = isLocalhost
+        ? "localhost:3000"
+        : hostname.split(".").slice(-2).join(".")
+      const schoolUrl = `${protocol}//${schoolData.domain}.${rootDomain}/${lang}/dashboard`
       window.location.href = schoolUrl
     }
   }

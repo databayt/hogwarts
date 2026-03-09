@@ -626,7 +626,6 @@ export async function getStudents(
         orderBy,
         skip,
         take,
-        relationLoadStrategy: "join",
         include: {
           section: {
             select: { name: true },
@@ -724,7 +723,6 @@ export async function getStudentsCSV(
     const studentModel = getModelOrThrow("student")
     const students = await studentModel.findMany({
       where,
-      relationLoadStrategy: "join",
       include: {
         user: {
           select: {
@@ -883,7 +881,6 @@ export async function getStudentsExportData(
     const studentModel = getModelOrThrow("student")
     const students = await studentModel.findMany({
       where,
-      relationLoadStrategy: "join",
       include: {
         user: {
           select: {

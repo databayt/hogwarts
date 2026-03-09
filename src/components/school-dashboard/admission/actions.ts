@@ -9,6 +9,7 @@ import type { AdmissionApplicationStatus } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
 
 import { assertAdmissionPermission } from "./authorization"
@@ -327,13 +328,22 @@ export async function updateApplicationStatus(params: {
 
     assertAdmissionPermission(session.user.role, "updateStatus")
 
+    const data: Record<string, unknown> = {
+      status: params.status as AdmissionApplicationStatus,
+      reviewedAt: new Date(),
+      reviewedBy: session.user?.id,
+    }
+
+    // Auto-offer admission when selecting a student
+    if (params.status === "SELECTED") {
+      data.admissionOffered = true
+      data.offerDate = new Date()
+      data.offerExpiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+    }
+
     await db.application.update({
       where: { id: params.id, schoolId },
-      data: {
-        status: params.status as AdmissionApplicationStatus,
-        reviewedAt: new Date(),
-        reviewedBy: session.user?.id,
-      },
+      data,
     })
 
     revalidatePath("/admission")
@@ -733,8 +743,63 @@ export async function confirmEnrollment(params: {
       }
     })
 
+    // Check for suggested section placement (auto-suggest when a matching section has capacity)
+    let suggestedSectionId: string | null = null
+    let suggestedSectionName: string | null = null
+    try {
+      if (application.applyingForClass) {
+        const gradeNum = extractGradeNumber(application.applyingForClass)
+        const gradeWhere = gradeNum
+          ? {
+              OR: [
+                {
+                  grade: {
+                    name: {
+                      contains: application.applyingForClass,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                },
+                { grade: { gradeNumber: gradeNum } },
+              ],
+            }
+          : {
+              grade: {
+                name: {
+                  contains: application.applyingForClass,
+                  mode: "insensitive" as const,
+                },
+              },
+            }
+
+        const sections = await db.section.findMany({
+          where: { schoolId, ...gradeWhere },
+          select: {
+            id: true,
+            name: true,
+            maxCapacity: true,
+            _count: { select: { students: true } },
+          },
+          orderBy: { name: "asc" },
+        })
+
+        const available = sections.filter(
+          (s) => s._count.students < s.maxCapacity
+        )
+        if (available.length === 1) {
+          suggestedSectionId = available[0].id
+          suggestedSectionName = available[0].name
+        }
+      }
+    } catch {
+      // Non-critical: suggestion is best-effort
+    }
+
     revalidatePath("/admission/enrollment")
-    return { success: true, data: null }
+    return {
+      success: true,
+      data: { suggestedSectionId, suggestedSectionName },
+    }
   } catch (error) {
     console.error("[confirmEnrollment]", error)
     return { success: false, error: "Failed to confirm enrollment" }
@@ -924,6 +989,9 @@ export async function placeStudentInSection(params: {
     }
 
     // Assign student to section and create StudentClass entries
+    let noClassesForGrade = false
+    const createdClassIds: string[] = []
+
     await db.$transaction(async (tx) => {
       await tx.student.update({
         where: { id: student.id },
@@ -957,13 +1025,37 @@ export async function placeStudentInSection(params: {
               })
             )
           )
+          createdClassIds.push(...gradeClasses.map((cls) => cls.id))
+        } else {
+          noClassesForGrade = true
         }
       }
     })
 
+    // Sync LMS enrollments (non-blocking, outside transaction)
+    if (createdClassIds.length > 0) {
+      for (const classId of createdClassIds) {
+        try {
+          await syncStudentClassToEnrollment(schoolId, student.id, classId)
+        } catch {
+          // Non-blocking: logged inside syncStudentClassToEnrollment
+        }
+      }
+    }
+
     revalidatePath("/admission/enrollment")
     revalidatePath("/students")
     revalidatePath("/classrooms")
+
+    if (noClassesForGrade) {
+      return {
+        success: true,
+        data: null,
+        warning:
+          "No classes found for this grade. Student was placed in section but has no class enrollments. Create classes first in Classrooms > Configure.",
+      }
+    }
+
     return { success: true, data: null }
   } catch (error) {
     console.error("[placeStudentInSection]", error)

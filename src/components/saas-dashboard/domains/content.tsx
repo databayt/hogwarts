@@ -13,7 +13,6 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { EmptyState } from "@/components/saas-dashboard/common/empty-state"
-import { Shell as PageContainer } from "@/components/table/shell"
 
 import { domainColumns, type DomainRow } from "./columns"
 import { DomainsTable } from "./table"
@@ -138,163 +137,151 @@ export async function DomainsContent({
   ])
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <div>
-          <h2>{t?.title || "Domain Requests"}</h2>
-          <p className="muted">
-            {t?.description || "Manage custom domain requests for schools"}
-          </p>
-        </div>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t?.totalRequests || "Total Requests"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalRequests}</div>
+            <p className="text-muted-foreground text-xs">
+              {t?.allTime || "All time"}
+            </p>
+          </CardContent>
+        </Card>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t?.totalRequests || "Total Requests"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalRequests}</div>
-              <p className="text-muted-foreground text-xs">
-                {t?.allTime || "All time"}
-              </p>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t?.pendingReview || "Pending Review"}
+            </CardTitle>
+            <Badge variant="default">
+              {t?.actionRequired || "Action Required"}
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.pendingRequests}</div>
+            <p className="text-muted-foreground text-xs">
+              {t?.awaitingApproval || "Awaiting approval"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t?.pendingReview || "Pending Review"}
-              </CardTitle>
-              <Badge variant="default">
-                {t?.actionRequired || "Action Required"}
-              </Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingRequests}</div>
-              <p className="text-muted-foreground text-xs">
-                {t?.awaitingApproval || "Awaiting approval"}
-              </p>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t?.approved || "Approved"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.approvedRequests}</div>
+            <p className="text-muted-foreground text-xs">
+              {t?.readyForDNS || "Ready for DNS setup"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t?.approved || "Approved"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.approvedRequests}</div>
-              <p className="text-muted-foreground text-xs">
-                {t?.readyForDNS || "Ready for DNS setup"}
-              </p>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t?.verified || "Verified"}
+            </CardTitle>
+            <Badge variant="outline" className="text-green-600">
+              {dictionary?.operator?.common?.status?.active || "Active"}
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.verifiedRequests}</div>
+            <p className="text-muted-foreground text-xs">
+              {t?.dnsConfigured || "DNS configured"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t?.verified || "Verified"}
-              </CardTitle>
-              <Badge variant="outline" className="text-green-600">
-                {dictionary?.operator?.common?.status?.active || "Active"}
-              </Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.verifiedRequests}</div>
-              <p className="text-muted-foreground text-xs">
-                {t?.dnsConfigured || "DNS configured"}
-              </p>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t?.approvalRate || "Approval Rate"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.approvalRate}%</div>
+            <p className="text-muted-foreground text-xs">
+              {stats.approvedRequests + stats.verifiedRequests}{" "}
+              {dictionary?.operator?.tenants?.of || "of"} {stats.totalRequests}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t?.approvalRate || "Approval Rate"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.approvalRate}%</div>
-              <p className="text-muted-foreground text-xs">
-                {stats.approvedRequests + stats.verifiedRequests}{" "}
-                {dictionary?.operator?.tenants?.of || "of"}{" "}
-                {stats.totalRequests}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Domain Requests Table */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">
-              {t?.domainRequests || "Domain Requests"}
-            </h3>
-            {stats.pendingRequests > 0 && (
-              <Badge variant="default">
-                {stats.pendingRequests}{" "}
-                {t?.pendingReview?.toLowerCase() || "pending review"}
-              </Badge>
-            )}
-          </div>
-
-          {domainData.rows.length > 0 ? (
-            <DomainsTable
-              initialData={domainData.rows}
-              columns={domainColumns}
-              total={domainData.total}
-              perPage={domainData.limit}
-            />
-          ) : (
-            <EmptyState
-              title={t?.noDomainRequests || "No domain requests"}
-              description={
-                t?.domainRequestsWillAppear ||
-                "New domain requests from schools will appear here."
-              }
-            />
+      {/* Domain Requests Table */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">
+            {t?.domainRequests || "Domain Requests"}
+          </h3>
+          {stats.pendingRequests > 0 && (
+            <Badge variant="default">
+              {stats.pendingRequests}{" "}
+              {t?.pendingReview?.toLowerCase() || "pending review"}
+            </Badge>
           )}
         </div>
 
-        {/* DNS Configuration Help */}
-        {stats.approvedRequests > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                {t?.dnsConfigRequired || "DNS Configuration Required"}
-              </CardTitle>
-              <CardDescription>
-                {stats.approvedRequests}{" "}
-                {t?.dnsConfigDescription
-                  ? t.dnsConfigDescription.replace(
-                      "{count}",
-                      String(stats.approvedRequests)
-                    )
-                  : "domain(s) are approved and waiting for DNS configuration"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <p>
-                  {t?.configureDNS ||
-                    "For each approved domain, configure the following DNS records:"}
-                </p>
-                <ul className="text-muted-foreground list-inside list-disc space-y-1">
-                  <li>{t?.aRecord || "A record pointing to our IP address"}</li>
-                  <li>{t?.cnameRecord || "CNAME record for www subdomain"}</li>
-                  <li>
-                    {t?.txtRecord || "TXT record for domain verification"}
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
+        {domainData.rows.length > 0 ? (
+          <DomainsTable
+            initialData={domainData.rows}
+            columns={domainColumns}
+            total={domainData.total}
+            perPage={domainData.limit}
+          />
+        ) : (
+          <EmptyState
+            title={t?.noDomainRequests || "No domain requests"}
+            description={
+              t?.domainRequestsWillAppear ||
+              "New domain requests from schools will appear here."
+            }
+          />
         )}
       </div>
-    </PageContainer>
+
+      {/* DNS Configuration Help */}
+      {stats.approvedRequests > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              {t?.dnsConfigRequired || "DNS Configuration Required"}
+            </CardTitle>
+            <CardDescription>
+              {stats.approvedRequests}{" "}
+              {t?.dnsConfigDescription
+                ? t.dnsConfigDescription.replace(
+                    "{count}",
+                    String(stats.approvedRequests)
+                  )
+                : "domain(s) are approved and waiting for DNS configuration"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 text-sm">
+              <p>
+                {t?.configureDNS ||
+                  "For each approved domain, configure the following DNS records:"}
+              </p>
+              <ul className="text-muted-foreground list-inside list-disc space-y-1">
+                <li>{t?.aRecord || "A record pointing to our IP address"}</li>
+                <li>{t?.cnameRecord || "CNAME record for www subdomain"}</li>
+                <li>{t?.txtRecord || "TXT record for domain verification"}</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }

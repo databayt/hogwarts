@@ -7,7 +7,6 @@ import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
 
 interface Step {
   number: number
@@ -102,14 +101,7 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({
         <Separator className="w-full" />
         <div className="flex justify-end py-4">
           <Button onClick={onGetStarted} disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Skeleton className="me-2 h-4 w-4" />
-                Creating school...
-              </>
-            ) : (
-              "Get started"
-            )}
+            Get started
           </Button>
         </div>
       </div>

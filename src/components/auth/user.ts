@@ -10,13 +10,15 @@ import { db } from "@/lib/db"
 export const getUserByEmail = async (email: string) => {
   try {
     // In multi-tenant setup, we need to find users by email
-    // We'll get the first user with this email (for OAuth, this is usually what we want)
+    // When duplicates exist (NULL schoolId treated as distinct), prefer the one with a password
     const users = await db.user.findMany({
       where: { email },
-      orderBy: { createdAt: "desc" }, // Get the most recent user with this email
+      orderBy: { updatedAt: "desc" },
     })
 
-    return users[0] || null // Return the first user or null
+    // Prefer users that have a password hash (credential login needs it)
+    const withPassword = users.find((u) => u.password)
+    return withPassword || users[0] || null
   } catch (error) {
     console.error("[getUserByEmail] Database lookup failed:", error)
     return null

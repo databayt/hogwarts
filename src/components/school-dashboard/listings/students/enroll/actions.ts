@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertStudentPermission,
@@ -131,10 +132,12 @@ export async function enrollStudent(input: {
             classId,
           },
         })
-        // TODO: Call syncStudentClassToEnrollment(schoolId, studentId, classId) from
-        // "@/lib/enrollment-sync" here to create a corresponding LMS Enrollment record.
-        // This bridges the timetable/attendance StudentClass with the catalog/LMS Enrollment
-        // so that the student automatically gets access to the subject's catalog content.
+        // Sync to LMS enrollment (non-blocking)
+        try {
+          await syncStudentClassToEnrollment(schoolId, studentId, classId)
+        } catch {
+          // Non-blocking: logged inside syncStudentClassToEnrollment
+        }
       }
     }
 

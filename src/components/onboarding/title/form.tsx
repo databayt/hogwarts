@@ -129,10 +129,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                 <FormControl>
                   <Textarea
                     {...field}
-                    placeholder={
-                      dict.schoolNamePlaceholder ||
-                      "e.g., Al-Azhar International School"
-                    }
+                    placeholder={dict.schoolNamePlaceholder || "School Name"}
                     className="border-input focus:border-ring h-[80px] w-full resize-none rounded-lg border p-4 text-start text-sm transition-colors focus:outline-none sm:h-[100px] sm:p-6 sm:text-base"
                     maxLength={maxLength}
                     disabled={isPending}
@@ -166,7 +163,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                   >
                     <Input
                       {...field}
-                      placeholder={dict.subdomainPlaceholder || "your-school"}
+                      placeholder={dict.subdomainPlaceholder || "Subdomain"}
                       className="rounded-e-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       disabled={isPending}
                     />

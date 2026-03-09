@@ -54,11 +54,29 @@ export async function seedAdminUsers(
           ? null
           : schoolId
 
-      // Use findFirst + create/update to handle null schoolId correctly
-      // (Prisma upsert with composite unique can't match NULL values)
-      const existing = await prisma.user.findFirst({
-        where: { email: userData.email, schoolId: userSchoolId },
+      // For platform-level users (DEVELOPER, USER), find by email only
+      // so we catch users even after onboarding changed their schoolId.
+      // For school-scoped users, match on both email and schoolId.
+      const isPlatformUser =
+        userData.role === "DEVELOPER" || userData.role === "USER"
+
+      const allMatches = await prisma.user.findMany({
+        where: isPlatformUser
+          ? { email: userData.email }
+          : { email: userData.email, schoolId: userSchoolId },
+        orderBy: { createdAt: "asc" },
       })
+
+      // Delete duplicates if any (keep the oldest)
+      if (allMatches.length > 1) {
+        const duplicateIds = allMatches.slice(1).map((u) => u.id)
+        await prisma.user.deleteMany({ where: { id: { in: duplicateIds } } })
+        logWarning(
+          `Deleted ${duplicateIds.length} duplicate(s) for ${userData.email}`
+        )
+      }
+
+      const existing = allMatches[0] || null
 
       const bio = (userData as { bio?: string }).bio || null
       const image = (userData as { image?: string }).image || null
@@ -71,7 +89,10 @@ export async function seedAdminUsers(
               bio,
               image,
               password: passwordHash,
-              role: userData.role as UserRole,
+              // Preserve role for platform users who went through onboarding
+              ...(isPlatformUser && existing.schoolId
+                ? {} // Keep their current role (ADMIN from onboarding)
+                : { role: userData.role as UserRole }),
               emailVerified: new Date(),
             },
           })

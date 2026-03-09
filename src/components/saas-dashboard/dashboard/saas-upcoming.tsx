@@ -1,0 +1,248 @@
+"use client"
+
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useState } from "react"
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { AnthropicIcons } from "@/components/icons"
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface SaasUpcomingProps {
+  locale: string
+  trialExpirations?: number
+  pendingDomains?: number
+  activeAlerts?: number
+  upcomingRenewals?: number
+  className?: string
+}
+
+// ============================================================================
+// COMPONENT — Same flip card pattern as school Upcoming
+// ============================================================================
+
+export function SaasUpcoming({
+  locale,
+  trialExpirations = 3,
+  pendingDomains = 2,
+  activeAlerts = 1,
+  upcomingRenewals = 5,
+  className,
+}: SaasUpcomingProps) {
+  const [isFlipped, setIsFlipped] = useState(false)
+
+  const title = "Platform Status"
+  const subtitle =
+    activeAlerts > 0
+      ? `${activeAlerts} active alert${activeAlerts !== 1 ? "s" : ""}`
+      : "All systems operational"
+
+  const badge =
+    activeAlerts > 0
+      ? {
+          label: `${activeAlerts} alert${activeAlerts !== 1 ? "s" : ""}`,
+          variant: "destructive" as const,
+        }
+      : undefined
+
+  const details = [
+    {
+      label: "Trial Expirations",
+      value: `${trialExpirations}`,
+      highlight: trialExpirations > 0,
+    },
+    {
+      label: "Pending Domains",
+      value: `${pendingDomains}`,
+      highlight: false,
+    },
+    {
+      label: "Active Alerts",
+      value: `${activeAlerts}`,
+      highlight: activeAlerts > 0,
+    },
+    {
+      label: "Upcoming Renewals",
+      value: `${upcomingRenewals}`,
+      highlight: false,
+    },
+  ]
+
+  return (
+    <div
+      className={cn(
+        "group relative h-[320px] w-full max-w-[280px] [perspective:2000px] lg:max-w-[320px]",
+        className
+      )}
+      onMouseEnter={() => setIsFlipped(true)}
+      onMouseLeave={() => setIsFlipped(false)}
+    >
+      <div
+        className={cn(
+          "relative h-full w-full",
+          "[transform-style:preserve-3d]",
+          "transition-all duration-700",
+          isFlipped
+            ? "[transform:rotateY(180deg)]"
+            : "[transform:rotateY(0deg)]"
+        )}
+      >
+        {/* Front of card */}
+        <div
+          className={cn(
+            "absolute inset-0 h-full w-full",
+            "[transform:rotateY(0deg)] [backface-visibility:hidden]",
+            "overflow-hidden rounded-2xl",
+            "bg-card",
+            "border",
+            "shadow-sm",
+            "transition-all duration-700",
+            "group-hover:shadow-lg",
+            isFlipped ? "opacity-0" : "opacity-100"
+          )}
+        >
+          <div className="from-muted/50 to-background relative h-full overflow-hidden bg-gradient-to-b">
+            {/* Pulsing circles animation */}
+            <div className="absolute inset-0 flex items-start justify-center pt-24">
+              <div className="relative flex h-[100px] w-[200px] items-center justify-center">
+                {[...Array(10)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "absolute h-[50px] w-[50px]",
+                      "rounded-[140px]",
+                      "animate-pulse",
+                      "opacity-20",
+                      "bg-primary/30"
+                    )}
+                    style={{
+                      animationDelay: `${i * 0.3}s`,
+                      transform: `scale(${1 + i * 0.2})`,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute start-0 end-0 bottom-0 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1.5">
+                <h3 className="text-foreground text-lg leading-snug font-semibold tracking-tighter transition-all duration-500 ease-out group-hover:translate-y-[-4px]">
+                  {title}
+                </h3>
+                <p className="text-muted-foreground line-clamp-2 text-sm tracking-tight transition-all delay-[50ms] duration-500 ease-out group-hover:translate-y-[-4px]">
+                  {subtitle}
+                </p>
+              </div>
+              <div className="group/icon relative">
+                <div
+                  className={cn(
+                    "absolute inset-[-8px] rounded-lg transition-opacity duration-300",
+                    "from-primary/20 via-primary/10 bg-gradient-to-br to-transparent"
+                  )}
+                />
+                {badge ? (
+                  <Badge
+                    variant={badge.variant}
+                    className="relative z-10 text-xs"
+                  >
+                    {badge.label}
+                  </Badge>
+                ) : (
+                  <AnthropicIcons.Redo className="text-primary relative z-10 h-4 w-4 transition-transform duration-300 group-hover/icon:scale-110 group-hover/icon:-rotate-12" />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Back of card */}
+        <div
+          className={cn(
+            "absolute inset-0 h-full w-full",
+            "[transform:rotateY(180deg)] [backface-visibility:hidden]",
+            "flex flex-col rounded-2xl border p-6",
+            "from-muted/50 to-background bg-gradient-to-b",
+            "shadow-sm",
+            "transition-all duration-700",
+            "group-hover:shadow-lg",
+            !isFlipped ? "opacity-0" : "opacity-100"
+          )}
+        >
+          <div className="flex-1 space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-foreground text-lg leading-snug font-semibold tracking-tight transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
+                {title}
+              </h3>
+              <p className="text-muted-foreground line-clamp-2 text-sm tracking-tight transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
+                {subtitle}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {details.map((detail, index) => (
+                <div
+                  key={detail.label}
+                  className="flex items-center justify-between text-sm transition-all duration-500"
+                  style={{
+                    transform: isFlipped
+                      ? "translateX(0)"
+                      : "translateX(-10px)",
+                    opacity: isFlipped ? 1 : 0,
+                    transitionDelay: `${index * 100 + 200}ms`,
+                  }}
+                >
+                  <span className="text-muted-foreground">{detail.label}</span>
+                  <span
+                    className={cn(
+                      "text-foreground font-medium",
+                      detail.highlight && "text-destructive"
+                    )}
+                  >
+                    {detail.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 border-t pt-6">
+            <Link
+              href={`/${locale}/observability`}
+              className={cn(
+                "group/start relative",
+                "flex items-center justify-between",
+                "-m-3 rounded-xl p-3",
+                "transition-all duration-300",
+                "bg-muted/50",
+                "hover:bg-primary/10",
+                "hover:scale-[1.02]"
+              )}
+            >
+              <span className="text-foreground group-hover/start:text-primary text-sm font-medium transition-colors duration-300">
+                View Observability
+              </span>
+              <div className="group/icon relative">
+                <div
+                  className={cn(
+                    "absolute inset-[-6px] rounded-lg transition-all duration-300",
+                    "from-primary/20 via-primary/10 bg-gradient-to-br to-transparent",
+                    "scale-90 opacity-0 group-hover/start:scale-100 group-hover/start:opacity-100"
+                  )}
+                />
+                <ArrowRight className="text-primary relative z-10 h-4 w-4 transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110 rtl:rotate-180 rtl:group-hover/start:-translate-x-0.5" />
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

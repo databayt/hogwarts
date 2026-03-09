@@ -7,6 +7,8 @@ description: "Multi-tenant authentication for school management with OAuth and C
 
 Our authentication system is built on Next.js App Router with Auth.js (NextAuth v5), specifically designed for multi-tenant school management. It supports OAuth providers (Google, Facebook), email/password credentials, two-factor authentication, and seamless cross-subdomain single sign-on.
 
+For detailed email/password credential flows (registration, login with 2FA, email verification, password reset, token system, and brute force protection), see [Credentials Authentication](/docs/credentials). For Google and Facebook OAuth flows (provider config, account linking, callback handling, cross-subdomain SSO), see [OAuth Authentication](/docs/oauth).
+
 ## Login & Logout Flow
 
 This section documents the **four entry points** for authentication and their corresponding flows.
@@ -67,7 +69,7 @@ User clicks Login icon in header
 │    YES → /{locale}/dashboard (operator) │
 │  Has schoolId?                          │
 │    YES → {school}.databayt.org/dashboard│
-│    NO  → /{locale}/onboarding           │
+│    NO  → /{locale} (homepage)            │
 └─────────────────────────────────────────┘
 ```
 
@@ -94,7 +96,7 @@ User clicks "Get Started"
            │
            ▼
 ┌─────────────────────┐
-│   /onboarding       │ ◄── 16-step wizard
+│   /onboarding       │ ◄── 15-step wizard
 │   (School creation) │
 └─────────────────────┘
 ```
@@ -118,7 +120,7 @@ User visits: school.databayt.org/login
 │    YES → /{locale}/dashboard (operator) │
 │  Has schoolId?                          │
 │    YES → {school}.databayt.org/dashboard│
-│    NO  → /{locale}/onboarding           │
+│    NO  → /{locale} (homepage)            │
 └─────────────────────────────────────────┘
 ```
 
@@ -244,7 +246,7 @@ Tested on: **https://ed.databayt.org/en** (2025-12-17) - Full E2E Test Suite
 | TEACHER   | ed.databayt.org   | `{school}.databayt.org/{locale}/dashboard` | ✅ Implemented |
 | STUDENT   | ed.databayt.org   | `{school}.databayt.org/{locale}/dashboard` | ✅ Implemented |
 | GUARDIAN  | ed.databayt.org   | `{school}.databayt.org/{locale}/dashboard` | ✅ Implemented |
-| USER      | ed.databayt.org   | `/{locale}/onboarding`                     | ✅ Implemented |
+| USER      | ed.databayt.org   | `/{locale}` (homepage)                     | ✅ Implemented |
 | ADMIN     | demo.databayt.org | `demo.databayt.org/{locale}/dashboard`     | ✅ Implemented |
 | TEACHER   | demo.databayt.org | `demo.databayt.org/{locale}/dashboard`     | ✅ Implemented |
 | STUDENT   | demo.databayt.org | `demo.databayt.org/{locale}/dashboard`     | ✅ Implemented |
@@ -370,21 +372,32 @@ User Request → Edge Middleware (proxy.ts)
 
 For testing and development, the following seed accounts are available:
 
-| Role       | Email                     | Password | Access Level                 |
-| ---------- | ------------------------- | -------- | ---------------------------- |
-| DEVELOPER  | `dev@databayt.org`        | `1234`   | Platform admin (all schools) |
-| ADMIN      | `admin@databayt.org`      | `1234`   | School administrator         |
-| ACCOUNTANT | `accountant@databayt.org` | `1234`   | School finance access        |
-| STAFF      | `staff@databayt.org`      | `1234`   | Limited school access        |
-| TEACHER    | `teacher@databayt.org`    | `1234`   | School teacher               |
-| STUDENT    | `student@databayt.org`    | `1234`   | Student access               |
-| GUARDIAN   | `parent@databayt.org`     | `1234`   | Parent/guardian              |
+| Role       | Email                     | Password | Access Level                          |
+| ---------- | ------------------------- | -------- | ------------------------------------- |
+| DEVELOPER  | `dev@databayt.org`        | `1234`   | Platform admin (all schools)          |
+| USER       | `user@databayt.org`       | `1234`   | Fresh user for onboarding testing     |
+| USER       | `applicant@databayt.org`  | `1234`   | Fresh user for admission flow testing |
+| ADMIN      | `admin@databayt.org`      | `1234`   | School administrator (demo school)    |
+| ACCOUNTANT | `accountant@databayt.org` | `1234`   | School finance access (demo school)   |
+| STAFF      | `staff@databayt.org`      | `1234`   | Limited school access (demo school)   |
+| TEACHER    | `teacher@databayt.org`    | `1234`   | School teacher (demo school)          |
+| STUDENT    | `student@databayt.org`    | `1234`   | Student access (demo school)          |
+| GUARDIAN   | `parent@databayt.org`     | `1234`   | Parent/guardian (demo school)         |
+
+**Bulk Accounts** (all tied to demo school):
+
+- `teacher1@databayt.org` through `teacher99@databayt.org` (100 teachers)
+- `student1@databayt.org` through `student999@databayt.org` (1000 students)
+- `parent1@databayt.org` through `parent1999@databayt.org` (2000 guardians)
 
 **Notes:**
 
 - DEVELOPER has no schoolId (platform-wide access)
+- USER accounts have no schoolId (for onboarding/application testing)
 - All other roles are scoped to the demo school
 - Run `pnpm db:seed:single users` to create these accounts
+- Reset test user: `pnpm db:reset-test-user` (resets `user@databayt.org` to fresh state)
+- Reset test applicant: `pnpm db:reset-test-applicant` (resets `applicant@databayt.org`)
 - Seed data defined in `prisma/seeds/constants.ts`
 
 ### Implementation Details
@@ -395,41 +408,41 @@ For testing and development, the following seed accounts are available:
 - `src/components/auth/login/action.ts` - Role-based redirect logic
 - `src/components/auth/user-button.tsx` - Avatar sizing to match header icons
 
-**Redirect Logic (login/action.ts):**
+**Redirect Logic (login/action.ts → auth.ts redirect callback):**
+
+The redirect decision is a 5-step priority chain implemented across the credentials login action and the NextAuth redirect callback:
 
 ```typescript
-// Extract locale from callbackUrl or default to 'ar'
-const locale = callbackUrl?.match(/^\/(ar|en)\//)
-  ? callbackUrl.match(/^\/(ar|en)\//)?.[1]
-  : "ar"
+// Step 1: Callback URL (from cookie → URL params → baseUrl params)
+// Preserved across OAuth redirects via httpOnly cookie
+const callbackUrl = await resolveCallbackUrl(url, baseUrl)
+if (callbackUrl) return validateCallbackUrl(callbackUrl, baseUrl)
 
-if (existingUser.role === "DEVELOPER") {
-  // DEVELOPER → Platform operator dashboard (main domain)
-  finalRedirectUrl = `/${locale}/dashboard`
-} else if (existingUser.schoolId) {
-  // User has a school → look up school subdomain and redirect there
-  const school = await db.school.findUnique({
-    where: { id: existingUser.schoolId },
-    select: { domain: true },
-  })
-
-  if (school?.domain) {
-    // Redirect to school subdomain dashboard
-    // The /dashboard is role-aware - UI adapts based on user role
-    const baseUrl =
-      process.env.NODE_ENV === "production"
-        ? `https://${school.domain}.databayt.org`
-        : `http://${school.domain}.localhost:3000`
-    finalRedirectUrl = `${baseUrl}/${locale}/dashboard`
-  } else {
-    // Fallback: if school domain not found, go to locale homepage
-    finalRedirectUrl = `/${locale}`
-  }
-} else {
-  // No school → onboarding (user needs to create/join a school)
-  finalRedirectUrl = `/${locale}/onboarding`
+// Step 2: Explicit relative path from signIn({ redirectTo })
+// e.g., DEVELOPER → "/en/dashboard", USER → "/en" (homepage)
+if (url.startsWith("/") && !url.match(/^\/(en|ar)\/?$/)) {
+  return `${baseUrl}${url}`
 }
+
+// Step 3: Subdomain detection → school dashboard
+const subdomain = detectSubdomainFromHost(host)
+if (subdomain) return constructSchoolUrl(subdomain, `/${locale}/dashboard`)
+
+// Step 4: Smart redirect - decode JWT → look up school → redirect
+const token = await getToken({ req, secret: process.env.AUTH_SECRET })
+if (token?.role === "DEVELOPER") return `${baseUrl}/dashboard`
+if (token?.schoolId) {
+  const domain = await getSchoolDomain(token.schoolId)
+  if (domain) return constructSchoolUrl(domain, `/${locale}/dashboard`)
+}
+
+// Step 5: Fallback → main domain dashboard
+return `${baseUrl}/dashboard`
 ```
+
+**Credentials login action** also includes brute force protection (5 failures / 15 min) and audit logging via `src/lib/audit-log.ts`.
+
+> **Note:** Users without a school (USER role) are redirected to `/{locale}` (homepage), not `/onboarding`. Onboarding is only reachable via explicit callbackUrl from the "Get Started" button.
 
 ---
 
@@ -448,7 +461,7 @@ This section maps **every possible way** a user can enter, authenticate, and exi
 │  └── Any login → Platform Admin Dashboard (all schools access)                  │
 │                                                                                  │
 │  🏫 SCHOOL OWNER/PRINCIPAL (New)                                                 │
-│  └── "Get Started" → Login/Join → Onboarding (16 steps) → School Created        │
+│  └── "Get Started" → Login/Join → Onboarding (15 steps) → School Created        │
 │                                                                                  │
 │  👨‍🎓 POTENTIAL CLIENT (Student/Parent applying)                                   │
 │  └── School Page → "Apply" → Login/Join → Application Form → Submitted          │
@@ -536,7 +549,7 @@ This section maps **every possible way** a user can enter, authenticate, and exi
            │                             ▼                               │
            │  ┌─────────────────────────────────────────────────────┐   │
            │  │ Q2: Does user have schoolId?                        │   │
-           │  │     NO  → Onboarding (create/join school)           │   │
+           │  │     NO  → Homepage (onboarding via "Get Started")   │   │
            │  │     YES → Continue                                  │   │
            │  └─────────────────────────────────────────────────────┘   │
            │                             │                               │
@@ -556,7 +569,7 @@ This section maps **every possible way** a user can enter, authenticate, and exi
 ┌─────────────────┐           ┌─────────────────────┐           ┌─────────────────┐
 │  PLATFORM ADMIN │           │     ONBOARDING      │           │ SCHOOL DASHBOARD │
 │   DASHBOARD     │           │                     │           │                  │
-│                 │           │  16-step wizard:    │           │  Role-specific:  │
+│                 │           │  15-step wizard:    │           │  Role-specific:  │
 │  • All schools  │           │  • School info      │           │  • ADMIN: Full   │
 │  • Impersonate  │           │  • Branding         │           │  • TEACHER: Class│
 │  • Analytics    │           │  • Calendar         │           │  • STUDENT: My   │
@@ -725,7 +738,7 @@ This flow covers all scenarios when clicking the "Platform" link from a school m
 │     └── User has no schoolId → /onboarding                                   │
 │     └── Callback URL matches → proceed to onboarding                         │
 │                                                                              │
-│  7. Onboarding: 16-step wizard                                               │
+│  7. Onboarding: 15-step wizard                                               │
 │     └── School name, subdomain                                               │
 │     └── Branding (logo, colors)                                              │
 │     └── Academic year setup                                                  │
@@ -881,18 +894,23 @@ This flow covers all scenarios when clicking the "Platform" link from a school m
 
 ### Current Implementation Status
 
-| Feature                   | Status         | Notes                                   |
-| ------------------------- | -------------- | --------------------------------------- |
-| OAuth Login (Google)      | ✅ Working     | Profile callback, multi-tenant adapter  |
-| OAuth Login (Facebook)    | ✅ Working     | Fixed with custom adapter               |
-| Credentials Login         | ✅ Working     | Email verification required             |
-| Get Started → Onboarding  | ✅ Working     | Protected route, callback URL preserved |
-| School Dashboard Redirect | ✅ Working     | Based on schoolId lookup                |
-| Developer Platform Access | ✅ Working     | SaaS dashboard with routes              |
-| Application Flow          | ✅ Working     | Admission module completed              |
-| School Join Codes         | 🔲 Not Started | Planned feature                         |
-| Invitation System         | 🔲 Not Started | Planned feature                         |
-| Impersonation Mode        | ✅ Working     | Cookie-based impersonation              |
+| Feature                   | Status     | Notes                                           |
+| ------------------------- | ---------- | ----------------------------------------------- |
+| OAuth Login (Google)      | ✅ Working | Profile callback, multi-tenant adapter          |
+| OAuth Login (Facebook)    | ✅ Working | Fixed with custom adapter                       |
+| Credentials Login         | ✅ Working | Email verification required                     |
+| Get Started → Onboarding  | ✅ Working | Protected route, callback URL preserved         |
+| School Dashboard Redirect | ✅ Working | Based on schoolId lookup                        |
+| Developer Platform Access | ✅ Working | SaaS dashboard with routes                      |
+| Application Flow          | ✅ Working | Admission module completed                      |
+| School Join Codes         | ✅ Working | 6-char codes, self-enrollment toggle            |
+| Invitation System         | 🔶 Partial | MembershipRequest model, pending admin approval |
+| Impersonation Mode        | ✅ Working | Cookie-based impersonation                      |
+| Preview Mode              | ✅ Working | Cookie + localStorage role preview              |
+| Brute Force Protection    | ✅ Working | 5 failures / 15 min threshold, audit log        |
+| Membership Management     | ✅ Working | Role changes, approvals, suspensions            |
+| Email Service (Resend)    | ✅ Working | Bilingual en/ar, 2FA + reset + verification     |
+| Custom Domain Support     | ✅ Working | Redis-backed proxy resolution                   |
 
 ### Recommended Improvements
 
@@ -933,7 +951,7 @@ The authentication system is designed from the ground up for multi-tenant school
 │                       ▼                                         │
 │              ┌─────────────────┐                                │
 │              │   Onboarding    │                                │
-│              │ (16 steps)      │                                │
+│              │ (15 steps)      │                                │
 │              └────────┬────────┘                                │
 │                       │                                         │
 │                       ▼                                         │
@@ -984,6 +1002,23 @@ enum UserRole {
 }
 ```
 
+### Role Hierarchy
+
+Numeric hierarchy from `src/lib/school-access.ts` - higher number = more permissions:
+
+| Role       | Level | Description                          |
+| ---------- | ----- | ------------------------------------ |
+| USER       | 1     | Default authenticated user           |
+| STUDENT    | 2     | Can view own data                    |
+| GUARDIAN   | 3     | Can view linked student data         |
+| STAFF      | 4     | General school staff                 |
+| ACCOUNTANT | 5     | Finance access                       |
+| TEACHER    | 6     | Academic data access                 |
+| ADMIN      | 7     | Full school management               |
+| DEVELOPER  | 8     | Platform admin (bypasses all checks) |
+
+This hierarchy must stay in sync with the `roleRoutes` matrix in `src/routes.ts`.
+
 ## User Registration Options
 
 Schools have **flexibility** in how they manage user accounts:
@@ -1017,13 +1052,15 @@ Admin → Import CSV → Bulk creation with roles → Send credentials
 - Pre-assigned roles
 - Works for users without email access
 
-### Option 3: Invitation System (Coming Soon)
+### Option 3: Invitation System (Partially Working)
 
-Admin invites specific users:
+Admin invites specific users via MembershipRequest:
 
 ```
-Admin → Generate invite link → User clicks → OAuth or Credentials → Linked to school
+Admin → Generate invite → User clicks → OAuth or Credentials → Linked to school
 ```
+
+**Status**: MembershipRequest model exists. Join codes with `allowSelfEnrollment: false` create pending requests. Full invitation link flow is planned.
 
 **Benefits**:
 
@@ -1031,75 +1068,184 @@ Admin → Generate invite link → User clicks → OAuth or Credentials → Link
 - Pre-assigned roles
 - Combines admin control with user convenience
 
-### Option 4: School Join Codes (Coming Soon)
+### Option 4: School Join Codes (Working)
 
-Simple codes for easy joining:
+6-character alphanumeric codes for self-enrollment:
 
 ```
-Student → Enter code "HOGWARTS-2024" → Sign up → Auto-linked as STUDENT
+Student → Enter code "ABC123" → Sign up → Auto-linked as STAFF
 ```
+
+**Implementation details** (see `src/lib/join-code.ts` and `src/lib/school-access.ts`):
+
+- **6-character codes** using unambiguous 28-char alphabet (`ABCDEFGHJKMNPQRSTUVWXYZ2345679` - no 0/O, 1/I/L)
+- **481M possible codes** (28^6) with collision-resistant generation (5 retry attempts)
+- **Self-enrollment toggle** via `SchoolBranding.allowSelfEnrollment`:
+  - Enabled: user is linked directly (USER → STAFF promotion)
+  - Disabled: creates a pending `MembershipRequest` for admin approval
+- **Guards**: user must not already belong to a school, school must be active
+- **Join flow**: `joinSchoolByCode()` in `src/lib/school-access.ts`
 
 **Benefits**:
 
 - Easy to share (print, announce, etc.)
 - No individual invitations needed
-- Admin sets default role
+- Admin controls self-enrollment via toggle
 
 ## Architecture
 
 ### Core Files
 
-| File                                     | Purpose                                                   |
-| ---------------------------------------- | --------------------------------------------------------- |
-| `src/auth.ts`                            | NextAuth configuration, JWT callbacks, session management |
-| `src/auth.config.ts`                     | OAuth provider configurations with profile logging        |
-| `src/lib/multi-tenant-prisma-adapter.ts` | Custom Prisma adapter for multi-tenant OAuth              |
-| `src/proxy.ts`                           | Route protection, subdomain detection                     |
-| `src/routes.ts`                          | Public/protected route definitions                        |
-| `src/lib/tenant-context.ts`              | School context retrieval                                  |
-| `src/lib/school-access.ts`               | School ownership and access control                       |
-| `src/lib/auth-logger.ts`                 | Centralized auth logging utility                          |
-| `src/lib/auth-config-validator.ts`       | Environment configuration validation                      |
-| `src/app/api/debug-auth/route.ts`        | Debug endpoint for checking auth state                    |
+| File                                       | Purpose                                                   |
+| ------------------------------------------ | --------------------------------------------------------- |
+| `src/auth.ts`                              | NextAuth configuration, JWT callbacks, session management |
+| `src/auth.config.ts`                       | OAuth provider configurations with profile logging        |
+| `src/lib/multi-tenant-prisma-adapter.ts`   | Custom Prisma adapter for multi-tenant OAuth              |
+| `src/proxy.ts`                             | Route protection, subdomain detection                     |
+| `src/routes.ts`                            | Public/protected route definitions                        |
+| `src/lib/tenant-context.ts`                | School context retrieval (3-tier caching)                 |
+| `src/lib/school-access.ts`                 | School ownership, access control, join codes              |
+| `src/lib/audit-log.ts`                     | Login attempt logging, brute force detection              |
+| `src/lib/join-code.ts`                     | 6-char join code generation and validation                |
+| `src/lib/auth-logger.ts`                   | Centralized auth logging utility                          |
+| `src/lib/auth-config-validator.ts`         | Environment configuration validation                      |
+| `src/components/auth/mail.ts`              | Email service (Resend API, bilingual en/ar)               |
+| `src/components/auth/tokens.ts`            | Token generation (2FA, password reset, verification)      |
+| `src/components/auth/use-preview-role.ts`  | Preview mode hooks (3 hooks)                              |
+| `src/components/auth/tenant-login.tsx`     | School subdomain login component                          |
+| `src/components/auth/admin-auth-guard.tsx` | Admin route protection component                          |
+| `src/components/auth/cookie-debug.tsx`     | Cookie debugging component                                |
+| `src/app/api/debug-auth/route.ts`          | Debug endpoint for checking auth state                    |
 
 ### Component Structure
 
 ```
 src/components/auth/
-├── login/          # Login form and action
-├── join/           # Registration form and action
-├── reset/          # Password reset request
-├── password/       # Password change
-├── verification/   # Email verification, 2FA
-├── setting/        # User settings
-├── user.ts         # User database queries
-├── social.tsx      # OAuth buttons
-├── role-gate.tsx   # Role-based access control
-└── validation.ts   # Zod schemas
+├── __tests__/                    # Test suite
+│   ├── a11y.test.tsx             # Accessibility tests (6 tests)
+│   ├── join/action.test.ts       # Registration tests (12 tests)
+│   ├── login/action.test.ts      # Login flow tests (24 tests)
+│   ├── tokens.test.ts            # Token generation tests (16 tests)
+│   ├── user.test.ts              # User utility tests (22 tests)
+│   └── validation.test.ts        # Zod schema tests (49 tests)
+├── error/                        # Error display
+│   ├── error-card.tsx            # Error card component
+│   └── form-error.tsx            # Inline form error
+├── join/                         # Registration
+│   ├── action.ts                 # Join server action
+│   └── form.tsx                  # Registration form
+├── login/                        # Login
+│   ├── action.ts                 # Login action (brute force protected)
+│   └── form.tsx                  # Login form
+├── password/                     # Password management
+│   ├── action.ts                 # Password change action
+│   ├── form.tsx                  # Password change form
+│   └── token.ts                  # Password reset token queries
+├── reset/                        # Password reset
+│   ├── action.ts                 # Reset request action
+│   └── form.tsx                  # Reset request form
+├── setting/                      # User settings
+│   └── action.ts                 # Settings update action
+├── verification/                 # Email verification & 2FA
+│   ├── 2f-confirmation.ts        # 2FA confirmation queries
+│   ├── 2f-token.ts               # 2FA token queries
+│   ├── action.ts                 # Verification action
+│   ├── form.tsx                  # Verification form
+│   └── verificiation-token.ts    # Email verification token queries
+├── account.ts                    # Account queries
+├── admin-action.ts               # Admin auth actions
+├── admin-auth-guard.tsx          # Admin route protection
+├── auth.ts                       # Auth utility re-exports
+├── back-button.tsx               # Navigation back button
+├── card-wrapper.tsx              # Auth card wrapper
+├── cookie-debug.tsx              # Cookie debugging component
+├── debug-auth.tsx                # Debug auth display
+├── error-card.tsx                # Standalone error card
+├── form-error.tsx                # Form error message
+├── form-success.tsx              # Form success message
+├── header.tsx                    # Auth page header
+├── login-button.tsx              # Login trigger button
+├── logout-action.ts              # Logout server action
+├── logout-button.tsx             # Logout UI button
+├── mail.ts                       # Email service (Resend API)
+├── password.ts                   # Password utility
+├── prisma-adapter.ts             # Multi-tenant Prisma adapter
+├── role-gate.tsx                 # Role-based access control
+├── social.tsx                    # OAuth buttons (Google, Facebook)
+├── tenant-login-redirect.tsx     # Tenant-aware login redirect
+├── tenant-login.tsx              # School subdomain login
+├── tokens.ts                     # Token generation (2FA, reset, verify)
+├── use-current-role.ts           # Current role hook
+├── use-current-user.ts           # Current user hook
+├── use-preview-role.ts           # Preview mode hooks (3 hooks)
+├── user-button.tsx               # User avatar/menu button
+├── user-info.tsx                 # User info display
+├── user.ts                       # User database queries
+└── validation.ts                 # Zod schemas
 ```
 
 ## Session Management
 
 ### Extended Session
 
+**JWT Token Fields** (populated in `src/auth.ts` jwt callback):
+
 ```typescript
-session.user = {
-  id: string;
-  email: string;
-  role: UserRole;
-  schoolId: string | null;  // Multi-tenant key
-  isPlatformAdmin: boolean;
+token = {
+  id: string              // User ID
+  role: UserRole           // User role
+  schoolId: string | null  // Multi-tenant key
+  provider: string         // OAuth provider (google, facebook, credentials)
+  providerAccountId: string // OAuth provider account ID
+  sessionToken: string     // Cache-busting session token
+  updatedAt: number        // Timestamp for forced refresh detection
+  hash: string             // Cache-busting hash
+  iat: number              // Issued at (Unix timestamp)
+  exp: number              // Expires at (Unix timestamp, +24h)
 }
 ```
+
+**Session Fields** (populated in session callback):
+
+```typescript
+session.user = {
+  id: string
+  email: string
+  role: UserRole           // From token, or preview role if active
+  schoolId: string | null  // Multi-tenant key
+  isPreviewMode: boolean   // True when preview role cookie is active
+}
+```
+
+**Preview Mode**: When `preview-mode` and `preview-role` cookies are set, the session callback overrides `role` with the preview role and sets `isPreviewMode: true`. This allows admins to test the UI as other roles without changing their actual role.
 
 ### Tenant Context
 
 ```typescript
 import { getTenantContext } from "@/lib/tenant-context"
 
-const { schoolId, role, isPlatformAdmin } = await getTenantContext()
-// Priority: impersonation cookie → subdomain → session
+const { schoolId, requestId, role, isPlatformAdmin } = await getTenantContext()
+// Priority: impersonation cookie → x-subdomain header → session
 ```
+
+**`TenantContext` type:**
+
+```typescript
+type TenantContext = {
+  schoolId: string | null
+  requestId: string | null // x-vercel-id or x-request-id or crypto.randomUUID()
+  role: UserRole | null
+  isPlatformAdmin: boolean // true when role === "DEVELOPER"
+}
+```
+
+**3-Tier Caching** for subdomain → schoolId resolution:
+
+1. **In-memory Map** (per-instance, 1 min TTL) - fastest
+2. **Redis** (shared across serverless instances, 5 min TTL) - via Upstash
+3. **Database** (last resort, wrapped in circuit breaker) - writes back to both caches
+
+Redis is lazily initialized and optional. If Upstash credentials are missing, falls back to in-memory only.
 
 ## Multi-Tenant Prisma Adapter
 
@@ -1151,8 +1297,8 @@ Understanding where users end up after login is critical for the multi-tenant ex
 
 | User State     | Entry Point                 | Has School?     | Redirect Destination              |
 | -------------- | --------------------------- | --------------- | --------------------------------- |
-| New OAuth user | `ed.databayt.org/login`     | No              | `/onboarding` (create school)     |
-| New OAuth user | `school.databayt.org/login` | No              | `/onboarding` or join flow        |
+| New OAuth user | `ed.databayt.org/login`     | No              | `/{locale}` (homepage)            |
+| New OAuth user | `school.databayt.org/login` | No              | `/{locale}` or join flow          |
 | Existing user  | `ed.databayt.org/login`     | Yes             | `{school}.databayt.org/dashboard` |
 | Existing user  | `school.databayt.org/login` | Yes (same)      | `/dashboard`                      |
 | Existing user  | `other.databayt.org/login`  | Yes (different) | Error or join flow                |
@@ -1185,8 +1331,9 @@ User visits: ed.databayt.org
                     │
                     ▼
          ┌─────────────────────┐
-         │    Onboarding       │ ◄── 16-step wizard
-         │ (Create new school) │
+         │    Homepage          │ ◄── No school, stays on marketing
+         │ (Get Started → 15   │
+         │  step wizard)       │
          └──────────┬──────────┘
                     │
                     ▼
@@ -1272,7 +1419,7 @@ Returning OAuth user visits any login
 │ User has schoolId?                      │
 ├─────────────────────────────────────────┤
 │ YES → Redirect to school dashboard      │
-│ NO  → Redirect to onboarding            │
+│ NO  → Redirect to homepage              │
 └─────────────────────────────────────────┘
 ```
 
@@ -1299,8 +1446,8 @@ callbacks: {
       }
     }
 
-    // 3. No school - send to onboarding
-    return `${baseUrl}/onboarding`
+    // 3. No school - send to homepage (onboarding via "Get Started" only)
+    return `${baseUrl}/`
   }
 }
 ```
@@ -1687,6 +1834,168 @@ Common causes:
 - Always include schoolId in where clause
 - Use getTenantContext()
 
+## Join Code System
+
+Schools can generate 6-character join codes for easy member enrollment.
+
+### Code Generation
+
+```typescript
+import { generateUniqueJoinCode } from "@/lib/join-code"
+
+const code = await generateUniqueJoinCode()
+// e.g., "ABC123" - 6 chars from ABCDEFGHJKMNPQRSTUVWXYZ2345679
+```
+
+- **28-char unambiguous alphabet** (excludes 0/O, 1/I/L to avoid confusion)
+- **481M possible codes** (28^6) with 5-retry collision resistance
+- Codes are stored on `School.joinCode` (`@@unique`)
+
+### Join Flow
+
+```
+User enters code → joinSchoolByCode(userId, code)
+  │
+  ├── Code valid + allowSelfEnrollment: true
+  │     → User linked to school, USER → STAFF promotion
+  │
+  └── Code valid + allowSelfEnrollment: false
+        → MembershipRequest created (PENDING status)
+        → Admin must approve before user gains access
+```
+
+### Self-Enrollment Toggle
+
+Controlled by `SchoolBranding.allowSelfEnrollment`:
+
+- **Enabled**: Users with valid code are immediately linked to school
+- **Disabled**: Valid code creates a pending membership request for admin review
+
+## Membership Management
+
+The membership system handles role changes, approvals, and join requests.
+
+### MembershipRequest Model
+
+```
+MembershipRequest {
+  schoolId, userId, email, requestedRole, joinMethod, status
+}
+```
+
+- **Join methods**: `JOIN_CODE`, `INVITATION` (planned), `APPLICATION`
+- **Status**: `PENDING` → `APPROVED` | `REJECTED`
+- **Compound unique**: `@@unique([schoolId, email])` prevents duplicate requests
+
+## Brute Force Protection
+
+Login attempts are tracked and rate-limited via `src/lib/audit-log.ts`.
+
+### How It Works
+
+```typescript
+import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
+
+// Before credential validation:
+const blocked = await isBruteForceBlocked(email)
+if (blocked) return { error: "Too many login attempts. Try again later." }
+
+// After credential validation:
+await logLoginAttempt({ email, success: true / false, failureReason, ip })
+```
+
+- **Threshold**: 5 failed attempts within 15 minutes → blocked
+- **Scope**: Per-email (IP-based blocking is supported but not enforced by default)
+- **Storage**: `LoginAttempt` model with `email`, `success`, `failureReason`, `ip`, `timestamp`
+- **Recovery**: Block automatically lifts after 15 minutes of no failed attempts
+
+### Audit Log
+
+General-purpose audit logging for security-sensitive operations:
+
+```typescript
+import { logAudit } from "@/lib/audit-log"
+
+await logAudit({
+  action: "ROLE_CHANGE",
+  entityType: "User",
+  entityId: userId,
+  previousValue: { role: "STAFF" },
+  newValue: { role: "TEACHER" },
+})
+```
+
+Auto-captures `userId` and `schoolId` from the current session.
+
+## Email Service
+
+Authentication emails (2FA codes, password resets, email verification) are sent via Resend API.
+
+### Configuration
+
+- **Provider**: [Resend](https://resend.com) (`RESEND_API_KEY` env var)
+- **Sender**: `noreply@databayt.org`
+- **Bilingual**: All emails support English and Arabic (with RTL `dir="rtl"` for Arabic)
+
+### Email Types
+
+| Function                  | Purpose             | Expiry   |
+| ------------------------- | ------------------- | -------- |
+| `sendTwoFactorTokenEmail` | 6-digit 2FA code    | 5 min    |
+| `sendPasswordResetEmail`  | Password reset link | 1 hour   |
+| `sendVerificationEmail`   | Email confirmation  | 24 hours |
+
+### Usage
+
+```typescript
+import { sendPasswordResetEmail } from "@/components/auth/mail"
+
+await sendPasswordResetEmail(email, token, locale) // locale: "en" | "ar"
+```
+
+## Preview Mode
+
+Preview mode allows admins to see the UI as a different role without changing their actual role.
+
+### Implementation
+
+- **Storage**: `preview-mode` and `preview-role` cookies + localStorage
+- **Session override**: The session callback in `src/auth.ts` checks for preview cookies and overrides the role in the session object
+- **Flag**: `session.user.isPreviewMode = true` when active
+
+### Hooks (from `src/components/auth/use-preview-role.ts`)
+
+| Hook               | Returns                                                     | Purpose                             |
+| ------------------ | ----------------------------------------------------------- | ----------------------------------- |
+| `useEffectiveRole` | `UserRole`                                                  | Preview role if active, else actual |
+| `useIsPreviewMode` | `boolean`                                                   | Whether preview mode is active      |
+| `useRoleInfo`      | `{ actualRole, previewRole, effectiveRole, isPreviewMode }` | Full role context                   |
+
+## Edge Middleware Auth
+
+The edge middleware (`src/proxy.ts`) performs lightweight JWT decoding for route protection without hitting the database.
+
+### Flow
+
+```
+Request → Edge Middleware
+  │
+  ├── Decode JWT (lightweight, no DB call)
+  ├── Extract: role, schoolId
+  ├── Check roleRoutes matrix for route access
+  ├── Detect subdomain (custom domain → Redis lookup)
+  ├── Set x-subdomain header for downstream
+  │
+  └── PASS → Next.js renders page
+      FAIL → Redirect to /login or /unauthorized
+```
+
+### Custom Domain Support
+
+Custom domains are resolved via Redis key `custom-domain:${host}` → subdomain, handled in `src/proxy.ts`.
+
+---
+
 ## Roadmap
 
 ### Completed
@@ -1696,21 +2005,27 @@ Common causes:
 3. **Configuration validation** - Environment vars validated at startup
 4. **OAuth profile logging** - Google & Facebook callbacks log profile data
 5. **Multi-tenant Prisma adapter** - Custom adapter handles `@@unique([email, schoolId])` constraint for OAuth
+6. **School join codes** - 6-char codes with self-enrollment toggle
+7. **Membership management** - MembershipRequest model, role changes, approvals
+8. **Preview mode** - Cookie-based role preview for admin testing
+9. **Brute force protection** - 5 failures / 15 min with audit logging
+10. **Email service** - Resend API with bilingual en/ar templates
 
 ### Short-term (P1)
 
-5. **Invitation system** - Schools invite users with pre-assigned roles
-6. **School join codes** - Simple codes like "HOGWARTS-2024" for easy joining
+11. **Full invitation system** - Email-based invite links with pre-assigned roles
+12. **Bulk user creation** - CSV import for students/teachers
 
 ### Medium-term (P2)
 
-7. **Bulk user creation** - CSV import for students/teachers
+13. **Multi-school users** - Users belonging to multiple schools with school switcher
+14. **Advanced RBAC** - Custom permission sets beyond role hierarchy
 
 ## Testing
 
 ### E2E Test Coverage (Playwright)
 
-Comprehensive end-to-end tests for all authentication flows. Located in `tests/auth/`.
+Comprehensive end-to-end tests for all authentication flows. Tests are organized in epic-based structure under `tests/`.
 
 #### Test Files
 
@@ -1770,7 +2085,7 @@ const baseURL = isProduction
 
 ### Unit Test Coverage
 
-The authentication module has **123 unit tests** covering:
+The authentication module has **129 unit tests** covering:
 
 | Test File              | Tests | Description                                          |
 | ---------------------- | ----- | ---------------------------------------------------- |
@@ -1779,6 +2094,7 @@ The authentication module has **123 unit tests** covering:
 | `tokens.test.ts`       | 16    | Token generation (2FA, password reset, verification) |
 | `login/action.test.ts` | 24    | Login flow with 2FA and smart redirect               |
 | `join/action.test.ts`  | 12    | Registration and multi-tenant isolation              |
+| `a11y.test.tsx`        | 6     | Accessibility compliance for auth components         |
 
 ### Running Auth Tests
 
@@ -1798,8 +2114,9 @@ pnpm test src/components/auth/__tests__ --watch
 The test suite documents multi-tenant considerations:
 
 1. ~~**`getUserByEmail` not tenant-scoped**~~ - **FIXED**: Custom `MultiTenantPrismaAdapter` queries with `{ email, schoolId: null }` for OAuth users
-2. **OAuth users created without schoolId** - By design: New OAuth users exist in limbo until onboarding completes
-3. **Registration lacks school context** - By design: Users join schools through onboarding or invitation flow
+2. **`getUserByEmail` uses `findMany` + prefers password user** - By design: Uses `findMany` (not `findUnique`) because of composite `@@unique([email, schoolId])`. Prefers the user with a password hash for credentials login. This is intentional to support multi-tenant OAuth where the same email can exist in multiple schools.
+3. **OAuth users created without schoolId** - By design: New OAuth users exist in limbo until onboarding completes
+4. **Registration lacks school context** - By design: Users join schools through onboarding or invitation flow
 
 See [ISSUE.md](/src/components/auth/ISSUE.md) for current test status.
 

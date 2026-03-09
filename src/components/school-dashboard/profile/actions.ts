@@ -1,6 +1,6 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, unstable_cache } from "next/cache"
 import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 import { z } from "zod"
@@ -9,27 +9,23 @@ import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-// ============================================================================
-// Validation Schemas
-// ============================================================================
-
-const updateProfileSchema = z.object({
-  displayName: z.string().min(1),
-  avatarUrl: z.string().url().optional().or(z.literal("")),
-  locale: z.enum(["ar", "en"]).default("ar"),
-})
-
-const updateBioSchema = z.object({
-  bio: z.string().max(500).optional(),
-})
-
-const updateSettingsSchema = z.object({
-  theme: z.enum(["light", "dark", "system"]).optional(),
-  language: z.enum(["ar", "en"]).optional(),
-  allowMessages: z.boolean().optional(),
-  emailNotifications: z.boolean().optional(),
-  pushNotifications: z.boolean().optional(),
-})
+import type {
+  ActivityType,
+  ContributionDataPoint,
+  ContributionGraphData,
+  ContributionSummary,
+  GetContributionDataParams,
+  GetContributionDataResult,
+  ProfileRole,
+} from "./types"
+import { ACTIVITY_LABELS } from "./types"
+import {
+  pinnedItemSchema,
+  updateBioSchema,
+  updateGitHubProfileSchema,
+  updateProfileSchema,
+  updateSettingsSchema,
+} from "./validation"
 
 // ============================================================================
 // Profile Fetching Actions
@@ -406,6 +402,12 @@ export async function getProfileBasicData(userId: string, lang?: string) {
         image: true,
         role: true,
         bio: true,
+        website: true,
+        timezone: true,
+        pronouns: true,
+        socialLinks: true,
+        statusEmoji: true,
+        statusMessage: true,
         createdAt: true,
         student: {
           select: {
@@ -457,7 +459,7 @@ export async function getProfileBasicData(userId: string, lang?: string) {
       return { success: false as const, error: "User not found" }
     }
 
-    // Build flat data object matching what profile-sidebar's getRoleConfig expects
+    // Build flat data object matching what sidebar's getRoleConfig expects
     const roleRecord =
       user.student || user.teacher || user.guardian || user.staffMember
     const data: Record<string, unknown> = {
@@ -487,6 +489,13 @@ export async function getProfileBasicData(userId: string, lang?: string) {
       joiningDate: (
         user.teacher?.joiningDate ?? user.staffMember?.joiningDate
       )?.toISOString(),
+      // GitHub-style fields
+      website: user.website,
+      timezone: user.timezone,
+      pronouns: user.pronouns,
+      socialLinks: user.socialLinks,
+      statusEmoji: user.statusEmoji,
+      statusMessage: user.statusMessage,
     }
 
     // Translate name and bio if viewing in a different language
@@ -525,22 +534,6 @@ export async function getProfileBasicData(userId: string, lang?: string) {
 // GitHub-Style Profile Actions
 // ============================================================================
 
-const updateGitHubProfileSchema = z.object({
-  bio: z.string().max(500).optional(),
-  website: z.string().url().optional().or(z.literal("")),
-  timezone: z.string().optional(),
-  statusEmoji: z.string().max(10).optional(),
-  statusMessage: z.string().max(100).optional(),
-  pronouns: z.string().max(50).optional(),
-  socialLinks: z
-    .object({
-      github: z.string().url().optional().or(z.literal("")),
-      twitter: z.string().url().optional().or(z.literal("")),
-      linkedin: z.string().url().optional().or(z.literal("")),
-    })
-    .optional(),
-})
-
 export async function updateGitHubProfile(
   input: z.infer<typeof updateGitHubProfileSchema>
 ) {
@@ -555,6 +548,9 @@ export async function updateGitHubProfile(
     await db.user.update({
       where: { id: session.user.id },
       data: {
+        ...(parsed.displayName !== undefined && {
+          username: parsed.displayName,
+        }),
         bio: parsed.bio || null,
         website: parsed.website || null,
         timezone: parsed.timezone || null,
@@ -579,26 +575,6 @@ export async function updateGitHubProfile(
 // ============================================================================
 // Pinned Items Actions
 // ============================================================================
-
-const pinnedItemSchema = z.object({
-  itemType: z.enum([
-    "COURSE",
-    "SUBJECT",
-    "PROJECT",
-    "ACHIEVEMENT",
-    "CERTIFICATE",
-    "CLASS",
-    "CHILD",
-    "DEPARTMENT",
-    "PUBLICATION",
-    "TASK",
-  ]),
-  itemId: z.string(),
-  title: z.string(),
-  description: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-  isPublic: z.boolean().default(true),
-})
 
 export async function getPinnedItems(userId?: string) {
   try {
@@ -690,170 +666,449 @@ export async function updatePinnedItems(
   }
 }
 
-// ============================================================================
-// Contribution Data Actions
-// ============================================================================
-
-export interface ContributionDay {
-  date: string
-  count: number
-  level: 0 | 1 | 2 | 3 | 4
-  details: {
-    attendance?: number
-    assignments?: number
-    achievements?: number
-    activities?: number
+/**
+ * Map UserRole to ProfileRole
+ */
+function mapUserRoleToProfileRole(role: string): ProfileRole | null {
+  switch (role) {
+    case "STUDENT":
+      return "student"
+    case "TEACHER":
+      return "teacher"
+    case "GUARDIAN":
+      return "parent"
+    case "STAFF":
+    case "ADMIN":
+    case "ACCOUNTANT":
+      return "staff"
+    default:
+      return null
   }
 }
 
-export async function getContributionData(userId?: string, year?: number) {
+function getYearDateRange(year: number): { startDate: Date; endDate: Date } {
+  const startDate = new Date(year, 0, 1)
+  const endDate = new Date(year, 11, 31)
+  return { startDate, endDate }
+}
+
+function formatDateKey(date: Date): string {
+  return date.toISOString().split("T")[0]
+}
+
+function initializeContributionMap(
+  startDate: Date,
+  endDate: Date
+): Map<string, ContributionDataPoint> {
+  const map = new Map<string, ContributionDataPoint>()
+  const current = new Date(startDate)
+
+  while (current <= endDate) {
+    const dateKey = formatDateKey(current)
+    map.set(dateKey, {
+      date: dateKey,
+      count: 0,
+      level: 0,
+      activities: [],
+    })
+    current.setDate(current.getDate() + 1)
+  }
+
+  return map
+}
+
+function addActivity(
+  map: Map<string, ContributionDataPoint>,
+  date: Date,
+  type: ActivityType,
+  count: number = 1
+): void {
+  const dateKey = formatDateKey(date)
+  const day = map.get(dateKey)
+  if (!day) return
+
+  day.count += count
+
+  const existing = day.activities.find((a) => a.type === type)
+  if (existing) {
+    existing.count += count
+  } else {
+    day.activities.push({
+      type,
+      count,
+      label: ACTIVITY_LABELS[type],
+    })
+  }
+}
+
+function calculateIntensityLevels(
+  map: Map<string, ContributionDataPoint>
+): void {
+  const counts = Array.from(map.values())
+    .map((c) => c.count)
+    .filter((c) => c > 0)
+    .sort((a, b) => a - b)
+
+  if (counts.length === 0) return
+
+  const p25 = counts[Math.floor(counts.length * 0.25)] || 1
+  const p50 = counts[Math.floor(counts.length * 0.5)] || 2
+  const p75 = counts[Math.floor(counts.length * 0.75)] || 4
+
+  for (const day of map.values()) {
+    if (day.count === 0) {
+      day.level = 0
+    } else if (day.count <= p25) {
+      day.level = 1
+    } else if (day.count <= p50) {
+      day.level = 2
+    } else if (day.count <= p75) {
+      day.level = 3
+    } else {
+      day.level = 4
+    }
+  }
+}
+
+function calculateSummary(
+  contributions: ContributionDataPoint[]
+): ContributionSummary {
+  const activeDays = contributions.filter((c) => c.count > 0).length
+  const totalDays = contributions.length
+
+  let currentStreak = 0
+  let longestStreak = 0
+  let tempStreak = 0
+
+  const sorted = [...contributions].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  )
+
+  for (const day of sorted) {
+    if (day.count > 0) {
+      currentStreak++
+    } else {
+      break
+    }
+  }
+
+  for (const day of contributions) {
+    if (day.count > 0) {
+      tempStreak++
+      if (tempStreak > longestStreak) {
+        longestStreak = tempStreak
+      }
+    } else {
+      tempStreak = 0
+    }
+  }
+
+  const totalActivities = contributions.reduce((sum, c) => sum + c.count, 0)
+  const averagePerDay = activeDays > 0 ? totalActivities / totalDays : 0
+
+  const peakDay = contributions.reduce(
+    (max, c) => (c.count > (max?.count || 0) ? c : max),
+    null as ContributionDataPoint | null
+  )
+
+  return {
+    activeDays,
+    longestStreak,
+    currentStreak,
+    averagePerDay: Math.round(averagePerDay * 100) / 100,
+    peakDay: peakDay ? { date: peakDay.date, count: peakDay.count } : null,
+  }
+}
+
+async function fetchStudentActivities(
+  studentId: string,
+  schoolId: string,
+  startDate: Date,
+  endDate: Date,
+  map: Map<string, ContributionDataPoint>
+): Promise<void> {
+  const student = await db.student.findFirst({
+    where: { userId: studentId, schoolId },
+    select: { id: true },
+  })
+
+  if (!student) return
+
+  const [attendance, submissions, results, borrowRecords] = await Promise.all([
+    db.attendance.findMany({
+      where: {
+        schoolId,
+        studentId: student.id,
+        date: { gte: startDate, lte: endDate },
+        status: { in: ["PRESENT", "LATE"] },
+      },
+      select: { date: true },
+    }),
+    db.assignmentSubmission.findMany({
+      where: {
+        schoolId,
+        studentId: student.id,
+        submittedAt: { gte: startDate, lte: endDate },
+        status: { in: ["SUBMITTED", "LATE_SUBMITTED", "GRADED"] },
+      },
+      select: { submittedAt: true },
+    }),
+    db.result.findMany({
+      where: {
+        schoolId,
+        studentId: student.id,
+        gradedAt: { gte: startDate, lte: endDate },
+      },
+      select: { gradedAt: true },
+    }),
+    db.borrowRecord.findMany({
+      where: {
+        schoolId,
+        userId: studentId,
+        borrowDate: { gte: startDate, lte: endDate },
+      },
+      select: { borrowDate: true },
+    }),
+  ])
+
+  attendance.forEach((a) => addActivity(map, a.date, "attendance"))
+  submissions.forEach((s) => {
+    if (s.submittedAt) addActivity(map, s.submittedAt, "assignment_submitted")
+  })
+  results.forEach((r) => addActivity(map, r.gradedAt, "exam_completed"))
+  borrowRecords.forEach((b) => addActivity(map, b.borrowDate, "library_visit"))
+}
+
+async function fetchTeacherActivities(
+  teacherUserId: string,
+  schoolId: string,
+  startDate: Date,
+  endDate: Date,
+  map: Map<string, ContributionDataPoint>
+): Promise<void> {
+  const teacher = await db.teacher.findFirst({
+    where: { userId: teacherUserId, schoolId },
+    select: { id: true },
+  })
+
+  if (!teacher) return
+
+  const [attendanceMarked, gradesPublished] = await Promise.all([
+    db.attendance.findMany({
+      where: {
+        schoolId,
+        markedBy: teacher.id,
+        markedAt: { gte: startDate, lte: endDate },
+      },
+      select: { markedAt: true },
+    }),
+    db.result.findMany({
+      where: {
+        schoolId,
+        gradedBy: teacher.id,
+        gradedAt: { gte: startDate, lte: endDate },
+      },
+      select: { gradedAt: true },
+    }),
+  ])
+
+  attendanceMarked.forEach((a: { markedAt: Date }) =>
+    addActivity(map, a.markedAt, "attendance_taken")
+  )
+  gradesPublished.forEach((g: { gradedAt: Date | null }) => {
+    if (g.gradedAt) addActivity(map, g.gradedAt, "grade_published")
+  })
+}
+
+async function fetchParentActivities(
+  guardianUserId: string,
+  schoolId: string,
+  startDate: Date,
+  endDate: Date,
+  map: Map<string, ContributionDataPoint>
+): Promise<void> {
+  const [payments, messages] = await Promise.all([
+    db.payment
+      .findMany({
+        where: {
+          schoolId,
+          paymentDate: { gte: startDate, lte: endDate },
+        },
+        select: { paymentDate: true },
+        take: 0,
+      })
+      .catch(() => []),
+    db.message
+      .findMany({
+        where: {
+          senderId: guardianUserId,
+          createdAt: { gte: startDate, lte: endDate },
+        },
+        select: { createdAt: true },
+      })
+      .catch(() => []),
+  ])
+
+  payments.forEach((p) => addActivity(map, p.paymentDate, "payment_made"))
+  messages.forEach((m) => addActivity(map, m.createdAt, "message_sent"))
+}
+
+async function fetchStaffActivities(
+  staffUserId: string,
+  schoolId: string,
+  startDate: Date,
+  endDate: Date,
+  map: Map<string, ContributionDataPoint>
+): Promise<void> {
+  const [timesheetEntries, expenses] = await Promise.all([
+    db.timesheetEntry
+      .findMany({
+        where: {
+          schoolId,
+          teacherId: staffUserId,
+          entryDate: { gte: startDate, lte: endDate },
+        },
+        select: { entryDate: true },
+      })
+      .catch(() => []),
+    db.expense
+      .findMany({
+        where: {
+          schoolId,
+          approvedBy: staffUserId,
+          approvedAt: { gte: startDate, lte: endDate },
+        },
+        select: { approvedAt: true },
+      })
+      .catch(() => []),
+  ])
+
+  timesheetEntries.forEach((t) =>
+    addActivity(map, t.entryDate, "task_completed")
+  )
+  expenses.forEach((e) => {
+    if (e.approvedAt) addActivity(map, e.approvedAt, "expense_processed")
+  })
+}
+
+const getCachedContributionData = unstable_cache(
+  async (
+    userId: string,
+    schoolId: string,
+    year: number,
+    role: ProfileRole
+  ): Promise<ContributionGraphData> => {
+    const { startDate, endDate } = getYearDateRange(year)
+    const map = initializeContributionMap(startDate, endDate)
+
+    switch (role) {
+      case "student":
+        await fetchStudentActivities(userId, schoolId, startDate, endDate, map)
+        break
+      case "teacher":
+        await fetchTeacherActivities(userId, schoolId, startDate, endDate, map)
+        break
+      case "parent":
+        await fetchParentActivities(userId, schoolId, startDate, endDate, map)
+        break
+      case "staff":
+        await fetchStaffActivities(userId, schoolId, startDate, endDate, map)
+        break
+    }
+
+    calculateIntensityLevels(map)
+
+    const contributions = Array.from(map.values())
+    const totalActivities = contributions.reduce((sum, c) => sum + c.count, 0)
+    const summary = calculateSummary(contributions)
+
+    return {
+      contributions,
+      totalActivities,
+      year,
+      role,
+      summary,
+    }
+  },
+  ["contribution-data"],
+  {
+    revalidate: 300,
+    tags: ["contribution-data"],
+  }
+)
+
+export async function getContributionData(
+  params: GetContributionDataParams = {}
+): Promise<GetContributionDataResult> {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return { success: false, error: "Not authenticated" }
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return { success: false, error: "School context not found" }
     }
 
-    const targetUserId = userId || session.user.id
-    const targetYear = year || new Date().getFullYear()
+    const userId = params.userId || session.user.id
+    const year = params.year || new Date().getFullYear()
 
-    const startDate = new Date(targetYear, 0, 1)
-    const endDate = new Date(targetYear, 11, 31, 23, 59, 59)
+    if (year < 2020 || year > new Date().getFullYear() + 1) {
+      return { success: false, error: "Invalid year parameter" }
+    }
 
-    // Fetch user activities grouped by date
-    const activities = await db.userActivity.groupBy({
-      by: ["createdAt"],
-      where: {
-        schoolId,
-        userId: targetUserId,
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      _count: {
-        id: true,
-      },
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
     })
 
-    // Also fetch attendance records if user is a student
-    const attendanceRecords = await db.attendance.findMany({
-      where: {
-        schoolId,
-        student: {
-          user: { id: targetUserId },
-        },
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-        status: "PRESENT",
-      },
-      select: { date: true },
-    })
-
-    // Fetch assignment submissions
-    const submissions = await db.assignmentSubmission.findMany({
-      where: {
-        schoolId,
-        student: {
-          user: { id: targetUserId },
-        },
-        submittedAt: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      select: { submittedAt: true },
-    })
-
-    // Build contribution map
-    const contributionMap = new Map<string, ContributionDay>()
-
-    // Initialize all days in the year
-    const current = new Date(startDate)
-    while (current <= endDate) {
-      const dateStr = current.toISOString().split("T")[0]
-      contributionMap.set(dateStr, {
-        date: dateStr,
-        count: 0,
-        level: 0,
-        details: {
-          attendance: 0,
-          assignments: 0,
-          achievements: 0,
-          activities: 0,
-        },
-      })
-      current.setDate(current.getDate() + 1)
+    if (!user) {
+      return { success: false, error: "User not found" }
     }
 
-    // Add activities
-    for (const activity of activities) {
-      const dateStr = activity.createdAt.toISOString().split("T")[0]
-      const day = contributionMap.get(dateStr)
-      if (day) {
-        day.count += activity._count.id
-        day.details.activities =
-          (day.details.activities || 0) + activity._count.id
-      }
+    const role = mapUserRoleToProfileRole(user.role)
+    if (!role) {
+      return { success: false, error: "Unsupported user role" }
     }
 
-    // Add attendance
-    for (const record of attendanceRecords) {
-      const dateStr = record.date.toISOString().split("T")[0]
-      const day = contributionMap.get(dateStr)
-      if (day) {
-        day.count += 1
-        day.details.attendance = (day.details.attendance || 0) + 1
-      }
-    }
+    const data = await getCachedContributionData(userId, schoolId, year, role)
 
-    // Add submissions
-    for (const submission of submissions) {
-      if (submission.submittedAt) {
-        const dateStr = submission.submittedAt.toISOString().split("T")[0]
-        const day = contributionMap.get(dateStr)
-        if (day) {
-          day.count += 1
-          day.details.assignments = (day.details.assignments || 0) + 1
-        }
-      }
-    }
-
-    // Calculate levels based on count
-    for (const day of contributionMap.values()) {
-      if (day.count === 0) day.level = 0
-      else if (day.count <= 2) day.level = 1
-      else if (day.count <= 4) day.level = 2
-      else if (day.count <= 6) day.level = 3
-      else day.level = 4
-    }
-
-    const contributions = Array.from(contributionMap.values())
-    const totalContributions = contributions.reduce(
-      (sum, d) => sum + d.count,
-      0
-    )
-
-    return {
-      success: true as const,
-      data: {
-        contributions,
-        totalContributions,
-        year: targetYear,
-      },
-    }
+    return { success: true, data }
   } catch (error) {
     console.error("Error fetching contribution data:", error)
     return {
-      success: false as const,
-      error: "Failed to fetch contribution data",
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch contribution data",
     }
+  }
+}
+
+/**
+ * Determine profile role for a user
+ */
+export async function getUserProfileRole(
+  userId?: string
+): Promise<ProfileRole | null> {
+  try {
+    const session = await auth()
+    const targetUserId = userId || session?.user?.id
+
+    if (!targetUserId) return null
+
+    const user = await db.user.findUnique({
+      where: { id: targetUserId },
+      select: { role: true },
+    })
+
+    if (!user) return null
+
+    return mapUserRoleToProfileRole(user.role)
+  } catch {
+    return null
   }
 }
 

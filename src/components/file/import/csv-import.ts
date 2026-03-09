@@ -84,6 +84,7 @@ interface ImportResult {
   success: boolean
   imported: number
   failed: number
+  skipped: number
   errors: Array<{
     row: number
     error: string
@@ -106,6 +107,7 @@ class CsvImportService {
         columns: true,
         skip_empty_lines: true,
         trim: true,
+        bom: true,
         cast: (value) => {
           // Convert empty strings to undefined
           return value === "" ? undefined : value
@@ -134,12 +136,31 @@ class CsvImportService {
       success: false,
       imported: 0,
       failed: 0,
+      skipped: 0,
       errors: [],
       warnings: [],
     }
 
     try {
       const rows = this.parseCSV(csvContent)
+
+      // Batch pre-load existing studentIds and emails to avoid N+1 queries
+      const [existingStudents, existingUsers] = await Promise.all([
+        db.student.findMany({
+          where: { schoolId },
+          select: { studentId: true },
+        }),
+        db.user.findMany({
+          where: { schoolId },
+          select: { email: true },
+        }),
+      ])
+      const existingStudentIds = new Set(
+        existingStudents.map((s) => s.studentId).filter(Boolean)
+      )
+      const existingEmails = new Set(
+        existingUsers.map((u) => u.email).filter(Boolean)
+      )
 
       for (let i = 0; i < rows.length; i++) {
         const rowNumber = i + 2 // Account for header row
@@ -194,26 +215,25 @@ class CsvImportService {
             continue
           }
 
-          // Check if student already exists
-          const existingStudent = await db.student.findFirst({
-            where: {
-              schoolId,
-              studentId: validated.studentId,
-            },
-          })
-
-          if (existingStudent) {
-            result.errors.push({
+          // Check if student already exists (using pre-loaded set)
+          if (existingStudentIds.has(validated.studentId)) {
+            result.warnings?.push({
               row: rowNumber,
-              error: formatDuplicateError(
-                "studentId",
-                validated.studentId,
-                "student"
-              ),
-              details: `This student ID is already registered in the system. Please use a unique student ID.`,
-              data: validated,
+              warning: `Student ID "${validated.studentId}" already exists — skipped`,
             })
-            result.failed++
+            result.skipped++
+            continue
+          }
+
+          // Check if email already exists (using pre-loaded set)
+          const studentEmail =
+            validated.email || `${validated.studentId}@school.local`
+          if (existingEmails.has(studentEmail)) {
+            result.warnings?.push({
+              row: rowNumber,
+              warning: `Email "${studentEmail}" already exists — skipped`,
+            })
+            result.skipped++
             continue
           }
 
@@ -368,7 +388,8 @@ class CsvImportService {
         }
       }
 
-      result.success = result.imported > 0
+      result.success =
+        result.imported > 0 || (result.skipped > 0 && result.failed === 0)
       return result
     } catch (error) {
       logger.error(
@@ -394,12 +415,31 @@ class CsvImportService {
       success: false,
       imported: 0,
       failed: 0,
+      skipped: 0,
       errors: [],
       warnings: [],
     }
 
     try {
       const rows = this.parseCSV(csvContent)
+
+      // Batch pre-load existing employeeIds and emails to avoid N+1 queries
+      const [existingTeachers, existingUsers] = await Promise.all([
+        db.teacher.findMany({
+          where: { schoolId },
+          select: { employeeId: true },
+        }),
+        db.user.findMany({
+          where: { schoolId },
+          select: { email: true },
+        }),
+      ])
+      const existingEmployeeIds = new Set(
+        existingTeachers.map((t) => t.employeeId).filter(Boolean)
+      )
+      const existingEmails = new Set(
+        existingUsers.map((u) => u.email).filter(Boolean)
+      )
 
       for (let i = 0; i < rows.length; i++) {
         const rowNumber = i + 2
@@ -433,45 +473,23 @@ class CsvImportService {
             continue
           }
 
-          // Check if teacher already exists
-          const existingTeacher = await db.teacher.findFirst({
-            where: {
-              schoolId,
-              employeeId: validated.employeeId,
-            },
-          })
-
-          if (existingTeacher) {
-            result.errors.push({
+          // Check if teacher already exists (using pre-loaded set)
+          if (existingEmployeeIds.has(validated.employeeId)) {
+            result.warnings?.push({
               row: rowNumber,
-              error: formatDuplicateError(
-                "employeeId",
-                validated.employeeId,
-                "teacher"
-              ),
-              details: `This employee ID is already registered in the system. Please use a unique employee ID.`,
-              data: validated,
+              warning: `Employee ID "${validated.employeeId}" already exists — skipped`,
             })
-            result.failed++
+            result.skipped++
             continue
           }
 
-          // Check if email already exists
-          const existingUser = await db.user.findFirst({
-            where: {
-              email: validated.email,
-              schoolId,
-            },
-          })
-
-          if (existingUser) {
-            result.errors.push({
+          // Check if email already exists (using pre-loaded set)
+          if (existingEmails.has(validated.email)) {
+            result.warnings?.push({
               row: rowNumber,
-              error: formatDuplicateError("email", validated.email, "user"),
-              details: `This email address is already registered in the system. Each teacher must have a unique email address.`,
-              data: validated,
+              warning: `Email "${validated.email}" already exists — skipped`,
             })
-            result.failed++
+            result.skipped++
             continue
           }
 
@@ -570,7 +588,8 @@ class CsvImportService {
         }
       }
 
-      result.success = result.imported > 0
+      result.success =
+        result.imported > 0 || (result.skipped > 0 && result.failed === 0)
       return result
     } catch (error) {
       logger.error(
@@ -637,6 +656,7 @@ class CsvImportService {
       success: false,
       imported: 0,
       failed: 0,
+      skipped: 0,
       errors: [],
       warnings: [],
     }
@@ -677,17 +697,11 @@ class CsvImportService {
             where: { email: validated.emailAddress, schoolId },
           })
           if (existingUser) {
-            result.errors.push({
+            result.warnings?.push({
               row: rowNumber,
-              error: formatDuplicateError(
-                "email",
-                validated.emailAddress,
-                "user"
-              ),
-              details: `This email address is already registered. Each staff member must have a unique email.`,
-              data: validated,
+              warning: `Email "${validated.emailAddress}" already exists — skipped`,
             })
-            result.failed++
+            result.skipped++
             continue
           }
 
@@ -697,17 +711,11 @@ class CsvImportService {
               where: { schoolId, employeeId: validated.employeeId },
             })
             if (existingStaff) {
-              result.errors.push({
+              result.warnings?.push({
                 row: rowNumber,
-                error: formatDuplicateError(
-                  "employeeId",
-                  validated.employeeId,
-                  "staff member"
-                ),
-                details: `This employee ID is already registered. Please use a unique employee ID.`,
-                data: validated,
+                warning: `Employee ID "${validated.employeeId}" already exists — skipped`,
               })
-              result.failed++
+              result.skipped++
               continue
             }
           }
@@ -795,7 +803,8 @@ class CsvImportService {
         }
       }
 
-      result.success = result.imported > 0
+      result.success =
+        result.imported > 0 || (result.skipped > 0 && result.failed === 0)
       return result
     } catch (error) {
       logger.error(
@@ -818,6 +827,7 @@ class CsvImportService {
       success: false,
       imported: 0,
       failed: 0,
+      skipped: 0,
       errors: [],
       warnings: [],
     }
@@ -859,17 +869,11 @@ class CsvImportService {
               where: { schoolId, emailAddress: validated.emailAddress },
             })
             if (existingGuardian) {
-              result.errors.push({
+              result.warnings?.push({
                 row: rowNumber,
-                error: formatDuplicateError(
-                  "email",
-                  validated.emailAddress,
-                  "guardian"
-                ),
-                details: `This email is already registered as a guardian. Each guardian must have a unique email.`,
-                data: validated,
+                warning: `Guardian email "${validated.emailAddress}" already exists — skipped`,
               })
-              result.failed++
+              result.skipped++
               continue
             }
           }
@@ -975,7 +979,8 @@ class CsvImportService {
         }
       }
 
-      result.success = result.imported > 0
+      result.success =
+        result.imported > 0 || (result.skipped > 0 && result.failed === 0)
       return result
     } catch (error) {
       logger.error(

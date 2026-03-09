@@ -89,6 +89,17 @@ interface FileUploadFieldProps {
   showFileList?: boolean
   /** Placeholder text */
   placeholder?: string
+  /** Enable client-side image optimization before upload */
+  optimizeImages?: boolean
+  /** Custom image optimization settings */
+  imageOptimization?: {
+    maxWidth?: number
+    maxHeight?: number
+    quality?: number
+    format?: "webp" | "jpeg" | "png"
+  }
+  /** Files above this size (bytes) use chunked upload with real progress */
+  chunkThreshold?: number
   /** Accept mapping for dropzone */
   accept?: Record<string, string[]>
   /** Dictionary for i18n */
@@ -126,6 +137,9 @@ export function FileUploadField({
   showPreview = true,
   showFileList = true,
   placeholder,
+  optimizeImages,
+  imageOptimization,
+  chunkThreshold,
   accept,
   dictionary,
   onUploadComplete,
@@ -160,6 +174,9 @@ export function FileUploadField({
               showPreview={showPreview}
               showFileList={showFileList}
               placeholder={placeholder}
+              optimizeImages={optimizeImages}
+              imageOptimization={imageOptimization}
+              chunkThreshold={chunkThreshold}
               accept={accept}
               dictionary={dictionary}
               onFilesChange={(files) => {

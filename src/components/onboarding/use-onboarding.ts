@@ -343,7 +343,11 @@ function getCompletedSteps(statusData: SchoolWithStatus): OnboardingStep[] {
   }
 
   // title: School has a real name (not the default)
-  if (statusData.name && statusData.name !== "New School") {
+  if (
+    statusData.name &&
+    statusData.name !== "New School" &&
+    statusData.name !== "Untitled"
+  ) {
     completedSteps.push("title")
   }
 

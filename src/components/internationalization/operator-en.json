@@ -1,7 +1,7 @@
 {
   "operator": {
     "dashboard": {
-      "title": "Operator Dashboard",
+      "title": "Overview",
       "welcome": "Welcome Back",
       "overview": "Platform Overview",
       "monthlyRecurringRevenue": "Monthly Recurring Revenue",

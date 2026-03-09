@@ -25,7 +25,7 @@
 
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import type {
   FileCategory,
@@ -40,11 +40,20 @@ import {
   uploadFile,
   uploadFiles as uploadFilesAction,
 } from "./actions"
+import { useChunkedUpload } from "./use-chunked"
+import { useImageOptimization } from "./use-image-optimization"
 import { validateFile, validateFiles } from "./validation"
 
 // ============================================================================
 // Types
 // ============================================================================
+
+interface ImageOptimizationConfig {
+  maxWidth?: number
+  maxHeight?: number
+  quality?: number
+  format?: "webp" | "jpeg" | "png"
+}
 
 interface UseUploadOptions {
   category: FileCategory
@@ -58,6 +67,12 @@ interface UseUploadOptions {
   maxTotalSize?: number
   allowedTypes?: string[]
   metadata?: Record<string, string>
+  /** Enable client-side image optimization (WebP conversion, resize) before upload */
+  optimizeImages?: boolean
+  /** Custom image optimization settings (defaults: 2048x2048, quality 0.85, webp) */
+  imageOptimization?: ImageOptimizationConfig
+  /** Files above this size (bytes) use chunked upload with real progress. Disabled by default. */
+  chunkThreshold?: number
   onSuccess?: (result: UploadResult) => void
   onError?: (error: string, filename?: string) => void
   onProgress?: (progress: UploadProgress) => void
@@ -79,6 +94,7 @@ interface UploadResult {
 interface UseUploadReturn {
   // State
   isUploading: boolean
+  isOptimizing: boolean
   progress: UploadProgress | null
   error: string | null
   uploadedFiles: UploadResult[]
@@ -112,6 +128,48 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
   const [uploadedFiles, setUploadedFiles] = useState<UploadResult[]>([])
 
   const abortControllerRef = useRef<AbortController | null>(null)
+
+  // Always call hooks unconditionally (React rules of hooks)
+  const { optimizeImage, canOptimize, isOptimizing } = useImageOptimization({
+    maxWidth: options.imageOptimization?.maxWidth ?? 2048,
+    maxHeight: options.imageOptimization?.maxHeight ?? 2048,
+    quality: options.imageOptimization?.quality ?? 0.85,
+    format: options.imageOptimization?.format ?? "webp",
+  })
+
+  const {
+    uploadFile: chunkedUploadFile,
+    progress: chunkedProgress,
+    isUploading: isChunkedUploading,
+  } = useChunkedUpload({
+    category: options.category,
+    folder: options.folder,
+  })
+
+  // Pipe real progress from chunked upload into main progress state
+  useEffect(() => {
+    const filenames = Object.keys(chunkedProgress)
+    if (filenames.length === 0) return
+    const latest = filenames[filenames.length - 1]
+    const cp = chunkedProgress[latest]
+    if (!cp) return
+
+    setProgress((prev) => {
+      if (!prev || prev.status === "success") return prev
+      return {
+        ...prev,
+        progress: cp.progress,
+        percentage: cp.progress,
+        loaded: Math.floor((cp.progress / 100) * (prev.total ?? 0)),
+        status:
+          cp.status === "completed"
+            ? "success"
+            : cp.status === "failed"
+              ? "error"
+              : "uploading",
+      }
+    })
+  }, [chunkedProgress])
 
   // ============================================================================
   // Validation
@@ -166,25 +224,92 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
 
       setIsUploading(true)
       setError(null)
-      setProgress({
-        fileId: `upload-${Date.now()}`,
-        fileName: file.name,
-        filename: file.name,
-        progress: 0,
-        percentage: 0,
-        loaded: 0,
-        total: file.size,
-        status: "uploading",
-      })
 
       try {
-        // Create FormData
-        const formData = new FormData()
-        formData.set("file", file)
+        // Step 1: Optimize image if enabled
+        let processedFile = file
+        if (options.optimizeImages && canOptimize(file)) {
+          setProgress({
+            fileId: `upload-${Date.now()}`,
+            fileName: file.name,
+            filename: file.name,
+            progress: 0,
+            percentage: 0,
+            loaded: 0,
+            total: file.size,
+            status: "uploading",
+          })
+          processedFile = await optimizeImage(file)
+        }
 
-        // Simulate progress by incrementing 10% every 200ms until server responds
-        // Real progress would require XMLHttpRequest upload events (not available with FormData)
-        // Stops at 90% to leave room for server processing
+        // Step 2: Choose upload strategy
+        const useChunked =
+          options.chunkThreshold && processedFile.size > options.chunkThreshold
+
+        setProgress({
+          fileId: `upload-${Date.now()}`,
+          fileName: file.name,
+          filename: file.name,
+          progress: 0,
+          percentage: 0,
+          loaded: 0,
+          total: processedFile.size,
+          status: "uploading",
+        })
+
+        if (useChunked) {
+          // Chunked upload with real progress from useChunkedUpload
+          const chunkedResult = (await chunkedUploadFile(processedFile)) as {
+            success: boolean
+            fileId?: string
+            url?: string
+            error?: string
+          }
+
+          if (!chunkedResult.success) {
+            const errMsg = chunkedResult.error || "Chunked upload failed"
+            setProgress((prev) =>
+              prev ? { ...prev, status: "error", error: errMsg } : null
+            )
+            setError(errMsg)
+            options.onError?.(errMsg, file.name)
+            return null
+          }
+
+          const uploadResult: UploadResult = {
+            id: chunkedResult.fileId || `chunked-${Date.now()}`,
+            url: chunkedResult.url || "",
+            filename: processedFile.name,
+            originalName: file.name,
+            size: processedFile.size,
+            mimeType: processedFile.type,
+            category: options.category,
+            type: options.type,
+            provider: (options.provider || "s3") as StorageProvider,
+            tier: (options.tier || "standard") as StorageTier,
+          }
+
+          setProgress({
+            fileId: `upload-${Date.now()}`,
+            fileName: file.name,
+            filename: file.name,
+            loaded: processedFile.size,
+            total: processedFile.size,
+            progress: 100,
+            percentage: 100,
+            status: "success",
+          })
+
+          setUploadedFiles((prev) => [...prev, uploadResult])
+          options.onSuccess?.(uploadResult)
+          return uploadResult
+        }
+
+        // Standard upload (FormData)
+        const formData = new FormData()
+        formData.set("file", processedFile)
+
+        // Simulate progress (FormData doesn't expose upload events)
         const progressInterval = setInterval(() => {
           setProgress((prev) => {
             if (!prev || (prev.percentage ?? prev.progress) >= 90) return prev
@@ -201,7 +326,6 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
           })
         }, 200)
 
-        // Upload via server action
         const result = await uploadFile(formData, {
           category: options.category,
           type: options.type,
@@ -241,8 +365,8 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
           fileId: `upload-${Date.now()}`,
           fileName: file.name,
           filename: file.name,
-          loaded: file.size,
-          total: file.size,
+          loaded: processedFile.size,
+          total: processedFile.size,
           progress: 100,
           percentage: 100,
           status: "success",
@@ -254,8 +378,8 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
           fileId: `upload-${Date.now()}`,
           fileName: file.name,
           filename: file.name,
-          loaded: file.size,
-          total: file.size,
+          loaded: processedFile.size,
+          total: processedFile.size,
           progress: 100,
           percentage: 100,
           status: "success",
@@ -275,7 +399,7 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
         setIsUploading(false)
       }
     },
-    [options, validate]
+    [options, validate, canOptimize, optimizeImage, chunkedUploadFile]
   )
 
   // ============================================================================
@@ -414,6 +538,7 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
   return {
     // State
     isUploading,
+    isOptimizing,
     progress,
     error,
     uploadedFiles,

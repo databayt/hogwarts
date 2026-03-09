@@ -564,27 +564,51 @@ export async function getEnrollmentStats(
   }
   const where = campaignId ? { ...baseWhere, campaignId } : baseWhere
 
-  const [awaitingEnrollment, enrolled, feesPending, documentsPending] =
-    await Promise.all([
-      db.application.count({ where: { ...where, admissionConfirmed: false } }),
-      db.application.count({ where: { ...where, admissionConfirmed: true } }),
-      db.application.count({ where: { ...where, applicationFeePaid: false } }),
-      db.application.count({
-        where: {
-          ...where,
-          OR: [
-            { documents: { equals: Prisma.AnyNull } },
-            { documents: { equals: [] } },
-          ],
+  const [
+    awaitingEnrollment,
+    enrolled,
+    feesPending,
+    documentsPending,
+    pendingPlacement,
+  ] = await Promise.all([
+    db.application.count({ where: { ...where, admissionConfirmed: false } }),
+    db.application.count({ where: { ...where, admissionConfirmed: true } }),
+    db.application.count({ where: { ...where, applicationFeePaid: false } }),
+    db.application.count({
+      where: {
+        ...where,
+        OR: [
+          { documents: { equals: Prisma.AnyNull } },
+          { documents: { equals: [] } },
+        ],
+      },
+    }),
+    // Count admitted students without section placement
+    // Query students directly: admitted applications whose student has no section
+    db.student.count({
+      where: {
+        schoolId,
+        sectionId: null,
+        user: {
+          applications: {
+            some: {
+              schoolId,
+              admissionConfirmed: true,
+              status: { in: ["SELECTED", "ADMITTED"] },
+              ...(campaignId ? { campaignId } : {}),
+            },
+          },
         },
-      }),
-    ])
+      },
+    }),
+  ])
 
   return {
     awaitingEnrollment,
     enrolled,
     feesPending,
     documentsPending,
+    pendingPlacement,
   }
 }
 

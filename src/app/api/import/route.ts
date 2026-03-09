@@ -55,6 +55,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
+import * as XLSX from "xlsx"
 
 import { logger } from "@/lib/logger"
 import {
@@ -64,6 +65,50 @@ import {
   importTeachers,
 } from "@/components/file"
 
+/**
+ * Convert uploaded file (CSV/Excel/JSON) to CSV string
+ */
+async function fileToCSV(file: File): Promise<string> {
+  const name = file.name.toLowerCase()
+
+  if (name.endsWith(".csv")) {
+    return file.text()
+  }
+
+  if (name.endsWith(".json")) {
+    const text = await file.text()
+    const data = JSON.parse(text)
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error("JSON file must contain a non-empty array of objects")
+    }
+    const headers = Object.keys(data[0])
+    const rows = data.map((row: Record<string, unknown>) =>
+      headers
+        .map((h) => {
+          const val = row[h]
+          const str = val !== null && val !== undefined ? String(val) : ""
+          return str.includes(",") || str.includes('"')
+            ? `"${str.replace(/"/g, '""')}"`
+            : str
+        })
+        .join(",")
+    )
+    return [headers.join(","), ...rows].join("\n")
+  }
+
+  if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+    const buffer = await file.arrayBuffer()
+    const workbook = XLSX.read(buffer, { type: "array" })
+    const sheetName = workbook.SheetNames[0]
+    if (!sheetName || !workbook.Sheets[sheetName]) {
+      throw new Error("Excel file has no sheets")
+    }
+    return XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName])
+  }
+
+  throw new Error(`Unsupported file format. Use .csv, .xlsx, .xls, or .json`)
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
@@ -72,8 +117,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Only allow PRINCIPAL or DEVELOPER to import
+    // Allow ADMIN, PRINCIPAL, or DEVELOPER to import
     if (
+      session.user.role !== "ADMIN" &&
       session.user.role !== "PRINCIPAL" &&
       session.user.role !== "DEVELOPER"
     ) {
@@ -105,8 +151,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Read file content
-    const content = await file.text()
+    // Convert any format to CSV
+    const content = await fileToCSV(file)
 
     let result
     if (type === "students") {

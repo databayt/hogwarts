@@ -381,10 +381,11 @@ All test accounts use password: `1234`
 
 **Platform Accounts** (no schoolId):
 
-| Email               | Role      | Purpose                               |
-| ------------------- | --------- | ------------------------------------- |
-| `dev@databayt.org`  | DEVELOPER | Platform admin, SaaS dashboard access |
-| `user@databayt.org` | USER      | Fresh user, potential SaaS subscriber |
+| Email                    | Role      | Purpose                                  |
+| ------------------------ | --------- | ---------------------------------------- |
+| `dev@databayt.org`       | DEVELOPER | Platform admin, SaaS dashboard access    |
+| `user@databayt.org`      | USER      | Fresh user, potential SaaS subscriber    |
+| `applicant@databayt.org` | USER      | Fresh user, for application flow testing |
 
 **Demo School Accounts** (tied to demo school only, **cannot access other schools**):
 
@@ -408,6 +409,7 @@ All test accounts use password: `1234`
 - **SaaS Dashboard**: Use `dev@databayt.org` (only DEVELOPER role can access)
 - **School Dashboard**: Use `admin@databayt.org` on `demo.localhost:3000`
 - **Onboarding Flow**: Use `user@databayt.org` (no school, for testing "Get Started" → onboarding flow)
+- **Application Flow**: Use `applicant@databayt.org` on `demo.localhost:3000/apply` (apply → admin review → enrollment)
 - **RBAC Testing**: Compare access between roles on same routes
 - **Cross-subdomain SSO**: Login on main domain, access school subdomain
 
@@ -419,6 +421,13 @@ pnpm db:reset-test-user    # Reset user@databayt.org to fresh state
 ```
 
 Or re-run the full seed: `pnpm db:seed`
+
+**Reset Test Applicant** (`applicant@databayt.org`):
+This account should stay fresh (no schoolId, USER role) for application flow tests. If it gets modified during testing, reset with:
+
+```bash
+pnpm db:reset-test-applicant    # Reset applicant@databayt.org to fresh state
+```
 
 ### Prisma Models
 

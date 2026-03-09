@@ -36,6 +36,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -112,6 +113,10 @@ interface Lesson {
   durationMinutes: number | null
   description: string | null
   objectives: string | null
+  thumbnailKey: string | null
+  imageKey: string | null
+  color: string | null
+  concept: string | null
   _count?: { videos: number }
 }
 
@@ -123,6 +128,10 @@ interface Chapter {
   status: string
   totalLessons: number
   description: string | null
+  thumbnailKey: string | null
+  imageKey: string | null
+  color: string | null
+  concept: string | null
   lessons: Lesson[]
 }
 
@@ -139,6 +148,7 @@ interface Subject {
   color: string | null
   imageKey: string | null
   thumbnailKey: string | null
+  concept: string | null
   totalChapters: number
   totalLessons: number
   usageCount: number
@@ -470,6 +480,10 @@ export function CatalogDetail({ subject, lang }: Props) {
               sequenceOrder: Number(chapterSequence) || 0,
               status: chapterStatus,
               totalLessons: 0,
+              thumbnailKey: null,
+              imageKey: null,
+              color: null,
+              concept: null,
               lessons: [],
             },
           ])
@@ -615,6 +629,10 @@ export function CatalogDetail({ subject, lang }: Props) {
                           : null,
                         objectives: lessonObjectives || null,
                         status: lessonStatus,
+                        thumbnailKey: null,
+                        imageKey: null,
+                        color: null,
+                        concept: null,
                       },
                     ],
                   }
@@ -696,6 +714,9 @@ export function CatalogDetail({ subject, lang }: Props) {
 
   const totalLessons = chapters.reduce((s, ch) => s + ch.lessons.length, 0)
 
+  // Resolve banner image: CDN thumbnail or color fallback
+  const cdnBannerUrl = getCatalogImageUrl(subject.thumbnailKey, null, "lg")
+
   return (
     <PageContainer>
       {/* Breadcrumb */}
@@ -709,10 +730,14 @@ export function CatalogDetail({ subject, lang }: Props) {
 
       {/* Hero */}
       <div
-        className="mb-6 rounded-lg p-6"
-        style={{ backgroundColor: heroDisplay.color ?? "#f3f4f6" }}
+        className="relative mb-6 overflow-hidden rounded-lg bg-cover bg-center p-6"
+        style={{
+          backgroundColor: heroDisplay.color ?? "#f3f4f6",
+          ...(cdnBannerUrl ? { backgroundImage: `url(${cdnBannerUrl})` } : {}),
+        }}
       >
-        <div className="flex items-start justify-between">
+        {cdnBannerUrl && <div className="absolute inset-0 bg-black/40" />}
+        <div className="relative flex items-start justify-between">
           <div>
             <h1 className="mb-2 text-2xl font-bold text-white">
               {heroDisplay.name}
@@ -731,7 +756,7 @@ export function CatalogDetail({ subject, lang }: Props) {
             Edit Subject
           </Button>
         </div>
-        <div className="mt-3 flex gap-2">
+        <div className="relative mt-3 flex gap-2">
           {heroDisplay.levels.map((level) => (
             <Badge
               key={level}
@@ -745,6 +770,16 @@ export function CatalogDetail({ subject, lang }: Props) {
             {heroDisplay.department}
           </Badge>
         </div>
+      </div>
+
+      {/* Banner Image Upload */}
+      <div className="mb-6">
+        <CatalogImageUpload
+          entityType="subject"
+          entityId={subject.id}
+          currentThumbnailKey={subject.thumbnailKey}
+          currentImageKey={null}
+        />
       </div>
 
       {/* Stats */}
@@ -792,7 +827,7 @@ export function CatalogDetail({ subject, lang }: Props) {
             entityType="subject"
             entityId={subject.id}
             currentThumbnailKey={subject.thumbnailKey}
-            currentImageKey={subject.imageKey}
+            currentImageKey={null}
           />
         </CardContent>
       </Card>
@@ -934,6 +969,17 @@ export function CatalogDetail({ subject, lang }: Props) {
                 </Select>
               </div>
             </div>
+            {editingChapter && (
+              <div className="space-y-2">
+                <Label>Thumbnail</Label>
+                <CatalogImageUpload
+                  entityType="chapter"
+                  entityId={editingChapter.id}
+                  currentThumbnailKey={editingChapter.thumbnailKey}
+                  currentImageKey={null}
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -1081,6 +1127,17 @@ export function CatalogDetail({ subject, lang }: Props) {
                 </div>
               </div>
             </div>
+            {editingLesson && (
+              <div className="space-y-2">
+                <Label>Thumbnail</Label>
+                <CatalogImageUpload
+                  entityType="lesson"
+                  entityId={editingLesson.id}
+                  currentThumbnailKey={editingLesson.thumbnailKey}
+                  currentImageKey={null}
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -1305,6 +1362,19 @@ function SortableChapterItem({
           >
             <GripVertical className="text-muted-foreground h-4 w-4" />
           </button>
+          {chapter.thumbnailKey && (
+            <img
+              src={
+                getCatalogImageUrl(
+                  chapter.thumbnailKey,
+                  chapter.imageKey,
+                  "sm"
+                ) ?? ""
+              }
+              alt=""
+              className="h-6 w-6 shrink-0 rounded object-cover"
+            />
+          )}
           <CollapsibleTrigger className="flex flex-1 items-center gap-2 text-sm">
             {open ? (
               <ChevronDown className="h-4 w-4 shrink-0" />
@@ -1466,7 +1536,17 @@ function SortableLessonItem({
       >
         <GripVertical className="h-3 w-3" />
       </button>
-      <BookOpen className="h-3.5 w-3.5 shrink-0" />
+      {lesson.thumbnailKey ? (
+        <img
+          src={
+            getCatalogImageUrl(lesson.thumbnailKey, lesson.imageKey, "sm") ?? ""
+          }
+          alt=""
+          className="h-5 w-5 shrink-0 rounded object-cover"
+        />
+      ) : (
+        <BookOpen className="h-3.5 w-3.5 shrink-0" />
+      )}
       <span>{lesson.name}</span>
       {lesson.durationMinutes && (
         <span className="text-xs">{lesson.durationMinutes} min</span>

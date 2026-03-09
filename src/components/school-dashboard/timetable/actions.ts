@@ -2744,7 +2744,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     dayOfWeek: number
     weekOffset: number
     teacherId?: string
-    classId?: string
+    classId?: string | { in: string[] }
   } = {
     schoolId,
     termId: term.id,
@@ -2764,12 +2764,12 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       select: { id: true },
     })
     if (student) {
-      const enrollment = await db.studentClass.findFirst({
+      const enrollments = await db.studentClass.findMany({
         where: { studentId: student.id, schoolId },
-        orderBy: { createdAt: "desc" },
         select: { classId: true },
       })
-      if (enrollment) where.classId = enrollment.classId
+      const classIds = enrollments.map((e) => e.classId)
+      if (classIds.length > 0) where.classId = { in: classIds }
     }
   }
 

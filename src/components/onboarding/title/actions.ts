@@ -45,9 +45,28 @@ export async function updateSchoolTitle(
 
     const validated = titleSchema.parse(data)
 
+    // Check subdomain availability before saving
+    if (validated.subdomain) {
+      const existing = await db.school.findFirst({
+        where: {
+          domain: validated.subdomain,
+          id: { not: schoolId },
+        },
+      })
+      if (existing) {
+        return createActionResponse(undefined, {
+          message: "SUBDOMAIN_TAKEN",
+          name: "ValidationError",
+        })
+      }
+    }
+
     await db.school.update({
       where: { id: schoolId },
-      data: { name: validated.title },
+      data: {
+        name: validated.title,
+        ...(validated.subdomain ? { domain: validated.subdomain } : {}),
+      },
     })
 
     revalidatePath(`/onboarding/${schoolId}/title`)

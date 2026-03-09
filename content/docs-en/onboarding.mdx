@@ -627,6 +627,131 @@ Validates ownership and redirects to the about-school step.
 
 ---
 
+## Auto-Provisioning Chain
+
+When `completeOnboarding()` runs (triggered at the legal step), it marks the school as active and executes a 5-step auto-provisioning chain that creates all academic infrastructure. Each step is wrapped in a try/catch so failures don't block the others.
+
+**Source**: `src/components/onboarding/legal/actions.ts` → `src/lib/catalog-setup.ts`
+
+### Step 1: `setupDefaultsForSchool()`
+
+Creates foundational school resources. Idempotent — skips if records already exist.
+
+| Resource    | Count by School Level                          |
+| ----------- | ---------------------------------------------- |
+| YearLevels  | primary=8, secondary=6, both=14                |
+| Departments | 6 (always)                                     |
+| ScoreRanges | 9 (always: A+ through F with score boundaries) |
+
+### Step 2: `setupCatalogForSchool()`
+
+Resolves curriculum via `inferCurriculum()` and creates the academic structure.
+
+**Curriculum Resolution** uses progressive fallback:
+
+| Priority | Strategy                      | Example                                           |
+| -------- | ----------------------------- | ------------------------------------------------- |
+| 1        | International type → `us-k12` | Any country + `international`                     |
+| 2        | Country map → exact match     | `US` → `us-k12`, `SD` → `national`                |
+| 3        | Unmapped country → `us-k12`   | `GB` + non-intl → `british`, fallback to `us-k12` |
+
+**Country → Curriculum Map**:
+
+```
+US → us-k12    GB → british    SD → national
+SA → national  EG → national   AE → national
+QA → national  JO → national   * → us-k12
+```
+
+**Created Resources** (by school level):
+
+| Resource          | primary | secondary | both |
+| ----------------- | ------- | --------- | ---- |
+| AcademicLevels    | 1       | 2         | 3    |
+| AcademicGrades    | 6       | 6         | 12   |
+| AcademicStreams   | 0       | 6         | 6    |
+| SubjectSelections | ~108    | ~132      | ~240 |
+
+Streams are only created for secondary/both levels (science + arts tracks for grades 10-12). Subject selections link catalog subjects to the school's grades and streams.
+
+### Step 3: `applyTimetableStructureForNewSchool()`
+
+Creates the time-based academic structure. Only runs if `school.curriculum` is set.
+
+| Resource   | Count                         |
+| ---------- | ----------------------------- |
+| SchoolYear | 1                             |
+| Terms      | 2                             |
+| Periods    | Varies by timetable structure |
+
+**Timetable Structure → Periods**:
+
+| Structure Slug   | Periods | Used By                  |
+| ---------------- | ------- | ------------------------ |
+| `us-standard`    | 9       | US schools               |
+| `sd-gov-default` | 10      | Sudan government         |
+| `sd-private`     | 9       | Sudan private            |
+| `sd-british`     | 8       | Sudan international      |
+| `gulf-private`   | 9       | Gulf private             |
+| `mena-standard`  | 9       | MENA public              |
+| `intl-default`   | 8       | International (fallback) |
+
+### Step 4: ClassroomType Upsert
+
+Creates a single `ClassroomType` named "Classroom" so the school dashboard's Configure tab works immediately post-onboarding.
+
+### Step 5: `autoProvisionSections()`
+
+Creates classrooms and sections based on the school's capacity settings (grades × `sectionsPerGrade`). Each grade gets N classrooms with corresponding sections, using the ClassroomType from Step 4.
+
+---
+
+## Test Scenarios
+
+Nine scenarios covering different country/type/level combinations have been verified. All share: Departments=6, ScoreRanges=9, SchoolYear=1, Terms=2, ClassroomType=1.
+
+| #   | Country | Type    | Level     | Curriculum        | Subjects | Levels | Grades | Streams | Timetable      | Periods | Classrooms |
+| --- | ------- | ------- | --------- | ----------------- | -------- | ------ | ------ | ------- | -------------- | ------- | ---------- |
+| 1   | US      | intl    | primary   | us-k12 (direct)   | ~108     | 1      | 6      | 0       | us-standard    | 9       | 12         |
+| 2   | US      | public  | secondary | us-k12 (direct)   | ~132     | 2      | 6      | 6       | us-standard    | 9       | 12         |
+| 3   | US      | private | both      | us-k12 (direct)   | ~240     | 3      | 12     | 6       | us-standard    | 9       | 24         |
+| 4   | SD      | public  | primary   | national→fallback | ~108     | 1      | 6      | 0       | sd-gov-default | 10      | 12         |
+| 5   | SD      | private | secondary | national→fallback | ~132     | 2      | 6      | 6       | sd-private     | 9       | 12         |
+| 6   | SD      | intl    | both      | us-k12 (direct!)  | ~240     | 3      | 12     | 6       | sd-british     | 8       | 24         |
+| 7   | SA      | private | primary   | national→fallback | ~108     | 1      | 6      | 0       | gulf-private   | 9       | 12         |
+| 8   | EG      | public  | both      | national→fallback | ~240     | 3      | 12     | 6       | mena-standard  | 9       | 24         |
+| 9   | GB      | intl    | secondary | us-k12 (direct!)  | ~132     | 2      | 6      | 6       | intl-default   | 8       | 12         |
+
+**Key observations**:
+
+- International schools always resolve to `us-k12` regardless of country (scenarios 6, 9)
+- "national" curriculum falls back to US K-12 subject catalog (no national catalogs seeded yet)
+- Primary schools get 0 streams; secondary/both get 6 (science + arts for grades 10-12)
+- Classrooms = grades × sectionsPerGrade (default 2)
+
+**Verification SQL**:
+
+```sql
+SELECT
+  (SELECT count(*) FROM "YearLevel" WHERE "schoolId" = $1) as year_levels,
+  (SELECT count(*) FROM "Department" WHERE "schoolId" = $1) as departments,
+  (SELECT count(*) FROM "ScoreRange" WHERE "schoolId" = $1) as score_ranges,
+  (SELECT count(*) FROM "AcademicLevel" WHERE "schoolId" = $1) as academic_levels,
+  (SELECT count(*) FROM "AcademicGrade" WHERE "schoolId" = $1) as academic_grades,
+  (SELECT count(*) FROM "AcademicStream" WHERE "schoolId" = $1) as streams,
+  (SELECT count(*) FROM "SchoolSubjectSelection" WHERE "schoolId" = $1) as subjects,
+  (SELECT count(*) FROM "SchoolYear" WHERE "schoolId" = $1) as school_years,
+  (SELECT count(*) FROM "Term" WHERE "schoolId" = $1) as terms,
+  (SELECT count(*) FROM "Period" WHERE "schoolId" = $1) as periods,
+  (SELECT count(*) FROM "ClassroomType" WHERE "schoolId" = $1) as classroom_types,
+  (SELECT count(*) FROM "Classroom" WHERE "schoolId" = $1) as classrooms,
+  (SELECT count(*) FROM "Section" WHERE "schoolId" = $1) as sections;
+```
+
+For the full detailed test matrix with step-by-step workflow, see [`docs/onboarding-test-matrix.md`](/docs/onboarding-test-matrix).
+
+---
+
 ## Production Blockers
 
 ### P0 - Critical

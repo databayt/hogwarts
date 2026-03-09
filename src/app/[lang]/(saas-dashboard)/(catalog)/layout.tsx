@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 interface Props {
   children: React.ReactNode
@@ -28,7 +29,7 @@ export default async function CatalogLayout({ children, params }: Props) {
   const proposalsLabel = n?.proposals || "Proposals"
 
   const catalogPages: PageNavItem[] = [
-    { name: n?.catalog || "Catalog", href: `/${lang}/catalog` },
+    { name: n?.subjects || "Subjects", href: `/${lang}/catalog` },
     { name: n?.questions || "Questions", href: `/${lang}/catalog/questions` },
     { name: n?.materials || "Materials", href: `/${lang}/catalog/materials` },
     {
@@ -54,9 +55,10 @@ export default async function CatalogLayout({ children, params }: Props) {
   ]
 
   return (
-    <>
+    <div className="space-y-6">
+      <PageHeadingSetter title={n?.catalog || "Catalog"} />
       <PageNav pages={catalogPages} />
       {children}
-    </>
+    </div>
   )
 }

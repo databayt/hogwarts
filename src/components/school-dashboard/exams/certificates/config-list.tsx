@@ -98,7 +98,7 @@ export function CertificateConfigList({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <a href={`certificates/configs/${config.id}/edit`}>
+                    <a href={`certificates/cert-wizard/${config.id}`}>
                       <Edit className="me-2 h-4 w-4" />
                       Edit
                     </a>

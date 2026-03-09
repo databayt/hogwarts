@@ -63,7 +63,10 @@ export const NewVerificationForm = (props: Props) => {
     >
       <Card className="bg-background border-none shadow-none">
         <CardHeader className="text-center">
-          <h4>Confirming your verification</h4>
+          <h4>
+            {dictionary?.auth?.confirmingVerification ||
+              "Confirming your verification"}
+          </h4>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
@@ -75,10 +78,10 @@ export const NewVerificationForm = (props: Props) => {
 
             <div className="muted text-center">
               <Link
-                href="/login"
+                href={`/${lang}/login`}
                 className="underline-offset-4 hover:underline"
               >
-                Back to login
+                {dictionary?.auth?.backToLogin || "Back to login"}
               </Link>
             </div>
           </div>

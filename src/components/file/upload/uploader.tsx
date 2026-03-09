@@ -59,6 +59,17 @@ interface UploaderProps {
   variant?: "default" | "compact" | "avatar" | "banner"
   placeholder?: string
   accept?: Record<string, string[]>
+  /** Enable client-side image optimization (WebP conversion, resize) before upload */
+  optimizeImages?: boolean
+  /** Custom image optimization settings */
+  imageOptimization?: {
+    maxWidth?: number
+    maxHeight?: number
+    quality?: number
+    format?: "webp" | "jpeg" | "png"
+  }
+  /** Files above this size (bytes) use chunked upload with real progress */
+  chunkThreshold?: number
   onUploadComplete?: (results: UploadResult[]) => void
   onUploadError?: (error: string) => void
   onFilesChange?: (files: UploadResult[]) => void
@@ -66,6 +77,7 @@ interface UploaderProps {
     dropzone?: string
     browse?: string
     uploading?: string
+    optimizing?: string
     uploadComplete?: string
     uploadFailed?: string
     remove?: string
@@ -115,6 +127,9 @@ export function Uploader({
   variant = "default",
   placeholder,
   accept,
+  optimizeImages,
+  imageOptimization,
+  chunkThreshold,
   onUploadComplete,
   onUploadError,
   onFilesChange,
@@ -124,6 +139,7 @@ export function Uploader({
 
   const {
     isUploading,
+    isOptimizing,
     progress,
     error,
     uploadedFiles,
@@ -141,6 +157,9 @@ export function Uploader({
     maxSize,
     maxFiles,
     allowedTypes,
+    optimizeImages,
+    imageOptimization,
+    chunkThreshold,
     onSuccess: (result) => {
       setPreviews((prev) =>
         prev.map((p) =>
@@ -322,11 +341,13 @@ export function Uploader({
       >
         <input {...getInputProps()} />
 
-        {isUploading ? (
+        {isUploading || isOptimizing ? (
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="text-primary h-10 w-10 animate-spin" />
             <p className="text-muted-foreground text-sm">
-              {dictionary?.uploading || "Uploading..."}
+              {isOptimizing
+                ? dictionary?.optimizing || "Optimizing..."
+                : dictionary?.uploading || "Uploading..."}
             </p>
             {progress && (
               <Progress value={progress.percentage} className="w-48" />

@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useMemo } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { Bookmark, Check, HelpCircle, Loader2 } from "lucide-react"
 
@@ -89,6 +90,8 @@ export interface FormFooterProps {
   savingLabel?: string
   /** Last saved label template with {time} placeholder (default: "Last saved {time}") */
   lastSavedTemplate?: string
+  /** Callback when navigating to a new step (receives the step slug) */
+  onStepChange?: (step: string) => void
 }
 
 // =============================================================================
@@ -122,6 +125,7 @@ export function FormFooter({
   isSaving = false,
   savingLabel,
   lastSavedTemplate,
+  onStepChange,
 }: FormFooterProps) {
   const router = useRouter()
   const params = useParams()
@@ -183,6 +187,7 @@ export function FormFooter({
 
     if (currentStepIndex > 0) {
       const prevStep = config.steps[currentStepIndex - 1]
+      onStepChange?.(prevStep)
       router.push(`${basePath}/${entityId}/${prevStep}`)
     }
   }
@@ -205,6 +210,7 @@ export function FormFooter({
 
     if (currentStepIndex < config.steps.length - 1) {
       const nextStep = config.steps[currentStepIndex + 1]
+      onStepChange?.(nextStep)
       router.push(`${basePath}/${entityId}/${nextStep}`)
     }
   }
@@ -272,7 +278,10 @@ export function FormFooter({
         {/* Left side - Logo, Help, Save */}
         <div className="flex items-center gap-1 rtl:flex-row-reverse">
           {showLogo && (
-            <div className="relative flex h-8 w-8 items-center justify-center">
+            <Link
+              href={`/${locale}`}
+              className="relative flex h-8 w-8 items-center justify-center"
+            >
               <div className="relative h-6 w-6">
                 <Image
                   src={logoSrc}
@@ -282,34 +291,30 @@ export function FormFooter({
                   className="object-contain"
                 />
               </div>
-            </div>
+            </Link>
           )}
           {showHelp && (
-            <Button
-              variant="link"
-              size="icon"
+            <button
               onClick={onHelp}
-              className="hover:bg-muted h-8 w-8 rounded-full p-0"
+              className="flex h-8 w-8 items-center justify-center"
               aria-label={dict.help || "Help"}
             >
-              <HelpCircle className="h-5 w-5" />
-            </Button>
+              <HelpCircle className="h-6 w-6" strokeWidth={1} />
+            </button>
           )}
           {showSave && (
-            <Button
-              variant="link"
-              size="icon"
+            <button
               onClick={onSave}
               disabled={isSaving}
-              className="hover:bg-muted h-8 w-8 rounded-full p-0"
+              className="flex h-8 w-8 items-center justify-center"
               aria-label={dict.save || "Save"}
             >
               {isSaving ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-6 w-6 animate-spin" />
               ) : (
-                <Bookmark className="h-5 w-5" />
+                <Bookmark className="h-6 w-6" strokeWidth={1} />
               )}
-            </Button>
+            </button>
           )}
           {/* Save status indicator */}
           {showSaveStatus && (

@@ -185,6 +185,14 @@ export const HP_CHARACTERS = {
     // Reuse harry image as placeholder (neville image not available)
     sourceImage: "/public/site/harry.jpg",
   },
+  // applicant@databayt.org
+  applicant: {
+    nameAr: "لونا لوفغود",
+    nameEn: "Luna Lovegood",
+    bio: "Ravenclaw student. Sees what others cannot.",
+    gender: "F" as const,
+    sourceImage: "/public/site/harry.jpg",
+  },
 } as const
 
 // ============================================================================
@@ -226,6 +234,13 @@ export const ADMIN_USERS = [
     username: HP_CHARACTERS.user.nameAr,
     bio: HP_CHARACTERS.user.bio,
     image: HP_CHARACTERS.user.sourceImage.replace("/public", ""),
+  },
+  {
+    email: "applicant@databayt.org",
+    role: "USER",
+    username: HP_CHARACTERS.applicant.nameAr,
+    bio: HP_CHARACTERS.applicant.bio,
+    image: HP_CHARACTERS.applicant.sourceImage.replace("/public", ""),
   },
 ]
 

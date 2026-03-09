@@ -5,7 +5,13 @@
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Clock, CreditCard, FileText, UserCheck } from "lucide-react"
+import {
+  AlertTriangle,
+  Clock,
+  CreditCard,
+  FileText,
+  UserCheck,
+} from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -37,6 +43,7 @@ interface EnrollmentTableProps {
     enrolled: number
     feesPending: number
     documentsPending: number
+    pendingPlacement: number
   }
 }
 
@@ -155,6 +162,18 @@ export function EnrollmentTable({
 
   return (
     <>
+      {/* Placement Reminder Banner */}
+      {stats.pendingPlacement > 0 && (
+        <div className="bg-warning/10 border-warning flex items-center gap-3 rounded-lg border p-4">
+          <AlertTriangle className="text-warning h-5 w-5 shrink-0" />
+          <p className="text-sm">
+            <strong>{stats.pendingPlacement}</strong>{" "}
+            {(t?.enrollment as Record<string, string>)?.pendingPlacement ||
+              "admitted student(s) need section placement. Use the placement action on each row to assign them to a section."}
+          </p>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

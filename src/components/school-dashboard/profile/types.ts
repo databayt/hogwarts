@@ -3,6 +3,7 @@
  * Comprehensive type definitions for all user profile types in the school-dashboard
  */
 
+import type React from "react"
 import type {
   Achievement,
   Assignment,
@@ -73,7 +74,7 @@ export interface BaseProfile {
 
   // Activity & Stats
   activityStats: ActivityStats
-  recentActivity: ActivityItem[]
+  recentActivity: SystemActivityItem[]
 
   // Custom Fields
   customFields?: Record<string, any>
@@ -144,9 +145,9 @@ export interface ActivityStats {
 /**
  * Individual activity item
  */
-export interface ActivityItem {
+export interface SystemActivityItem {
   id: string
-  type: ActivityType
+  type: UserActivityType
   title: string
   description?: string
   timestamp: Date
@@ -158,7 +159,7 @@ export interface ActivityItem {
 /**
  * Types of activities
  */
-export enum ActivityType {
+export enum UserActivityType {
   // Academic
   ASSIGNMENT_SUBMITTED = "ASSIGNMENT_SUBMITTED",
   GRADE_RECEIVED = "GRADE_RECEIVED",
@@ -511,7 +512,7 @@ export interface ChildOverview {
   academicPerformance: "excellent" | "good" | "average" | "needs_improvement"
   upcomingEvents: number
   pendingFees?: number | null
-  recentActivity: ActivityItem[]
+  recentActivity: SystemActivityItem[]
 }
 
 // ============================================================================
@@ -603,7 +604,7 @@ export interface MonthlyStats {
 /**
  * Tab configuration for profile views
  */
-export interface ProfileTab {
+export interface ProfileTabConfig {
   id: string
   label: string
   icon?: string
@@ -734,4 +735,188 @@ export interface NotificationPreferences {
   achievements: boolean
   academicUpdates: boolean
   announcements: boolean
+}
+
+// ============================================================================
+// Visual Profile Types (merged from src/components/profile/types.ts)
+// ============================================================================
+
+export type ProfileRole = "student" | "teacher" | "staff" | "parent"
+
+export interface ProfileStat {
+  label: string
+  value: number | string
+  icon?: React.ReactNode
+}
+
+export interface ProfileAchievement {
+  id: string
+  title: string
+  description: string
+  icon: string
+  earnedAt?: Date | string
+  level?: "bronze" | "silver" | "gold" | "platinum"
+  context?: string
+}
+
+export interface PinnedItem {
+  id: string
+  title: string
+  description?: string
+  category: string
+  categoryColor: string
+  stats: { label: string; value: number | string }[]
+  link?: string
+  isPrivate?: boolean
+}
+
+export interface ActivityDataPoint {
+  date: Date
+  level: 0 | 1 | 2 | 3 | 4
+  count: number
+  activities?: string[]
+}
+
+export interface ProfileTab {
+  id: string
+  label: string
+  count?: number
+  icon?: React.ReactNode
+}
+
+export interface Organization {
+  id: string
+  name: string
+  avatarUrl?: string
+  role?: string
+}
+
+export interface RoleInfo {
+  title: string
+  subtitle: string
+  description: string
+  icon: string
+  imageSrc: string
+  tabs: ProfileTab[]
+  stats: ProfileStat[]
+  achievements: ProfileAchievement[]
+  organizations: Organization[]
+}
+
+export interface ActivitySummary {
+  label: string
+  value: number
+  percentage: number
+  color: string
+}
+
+export const CONTRIBUTION_COLORS = {
+  empty: "bg-muted/50",
+  level1: "bg-emerald-900/50",
+  level2: "bg-emerald-700/70",
+  level3: "bg-emerald-500/80",
+  level4: "bg-emerald-400",
+} as const
+
+export const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+]
+
+export const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+// Activity types for different roles
+export type ActivityType =
+  // Student activities
+  | "attendance"
+  | "assignment_submitted"
+  | "exam_completed"
+  | "library_visit"
+  | "club_activity"
+  // Teacher activities
+  | "class_taught"
+  | "grade_published"
+  | "attendance_taken"
+  | "lesson_created"
+  // Parent activities
+  | "portal_login"
+  | "payment_made"
+  | "message_sent"
+  | "event_rsvp"
+  // Staff activities
+  | "task_completed"
+  | "report_generated"
+  | "expense_processed"
+  | "meeting_attended"
+
+export interface ActivityBreakdown {
+  type: ActivityType
+  count: number
+  label: string
+}
+
+export interface ContributionDataPoint {
+  date: string
+  count: number
+  level: 0 | 1 | 2 | 3 | 4
+  activities: ActivityBreakdown[]
+}
+
+export interface ContributionSummary {
+  activeDays: number
+  longestStreak: number
+  currentStreak: number
+  averagePerDay: number
+  peakDay: { date: string; count: number } | null
+}
+
+export interface ContributionGraphData {
+  contributions: ContributionDataPoint[]
+  totalActivities: number
+  year: number
+  role: ProfileRole
+  summary: ContributionSummary
+}
+
+export interface GetContributionDataParams {
+  userId?: string
+  year?: number
+}
+
+export type GetContributionDataResult =
+  | { success: true; data: ContributionGraphData }
+  | { success: false; error: string }
+
+export const ACTIVITY_LABELS: Record<ActivityType, string> = {
+  // Student
+  attendance: "Attended class",
+  assignment_submitted: "Submitted assignment",
+  exam_completed: "Completed exam",
+  library_visit: "Library visit",
+  club_activity: "Club activity",
+  // Teacher
+  class_taught: "Taught class",
+  grade_published: "Published grade",
+  attendance_taken: "Marked attendance",
+  lesson_created: "Created lesson",
+  // Parent
+  portal_login: "Portal login",
+  payment_made: "Made payment",
+  message_sent: "Sent message",
+  event_rsvp: "Event RSVP",
+  // Staff
+  task_completed: "Completed task",
+  report_generated: "Generated report",
+  expense_processed: "Processed expense",
+  meeting_attended: "Attended meeting",
 }

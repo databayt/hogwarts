@@ -40,11 +40,15 @@ export const register = async (
   })
 
   const verificationToken = await generateVerificationToken(email)
-  await sendVerificationEmail(
+  const emailSent = await sendVerificationEmail(
     verificationToken.email,
     verificationToken.token,
     locale
   )
+
+  if (!emailSent) {
+    return { error: "Failed to send verification email. Please try again." }
+  }
 
   return { success: "Confirmation email sent!" }
 }

@@ -46,12 +46,37 @@ async function getSchoolDefaults() {
   }
 }
 
+async function getActiveTerms() {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return []
+
+    const terms = await db.term.findMany({
+      where: { schoolId, isActive: true },
+      select: {
+        id: true,
+        termNumber: true,
+        schoolYear: { select: { yearName: true } },
+      },
+      orderBy: { startDate: "desc" },
+    })
+
+    return terms.map((t) => ({
+      id: t.id,
+      label: `${t.schoolYear.yearName} - Term ${t.termNumber}`,
+    }))
+  } catch {
+    return []
+  }
+}
+
 export async function ConfigureContent({ dictionary, lang }: Props) {
   const d = dictionary?.classrooms?.configure
 
-  const [result, schoolDefaults] = await Promise.all([
+  const [result, schoolDefaults, activeTerms] = await Promise.all([
     getGradeConfiguration(),
     getSchoolDefaults(),
+    getActiveTerms(),
   ])
 
   if (!result.success) {
@@ -94,6 +119,7 @@ export async function ConfigureContent({ dictionary, lang }: Props) {
           grades={grades}
           roomTypes={roomTypes}
           schoolDefaults={schoolDefaults}
+          activeTerms={activeTerms}
         />
       </CardContent>
     </Card>

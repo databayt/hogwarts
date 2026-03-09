@@ -96,12 +96,12 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
               <p className="text-muted-foreground text-xs">
                 Started {startDate}
               </p>
-              {subdomain && (
-                <p className="text-muted-foreground text-xs">
-                  <span className="hidden sm:inline">•</span> {subdomain}
-                  .databayt.org
-                </p>
-              )}
+              <p className="text-muted-foreground text-xs">
+                <span className="hidden sm:inline">•</span>{" "}
+                {subdomain
+                  ? `${subdomain}.databayt.org`
+                  : "subdomain undefined"}
+              </p>
             </div>
           </div>
         </div>

@@ -83,7 +83,6 @@ export class AWSS3Provider extends BaseStorageProvider {
         Key: path,
         Body: buffer,
         ContentType: options?.contentType || "application/octet-stream",
-        ACL: options?.access === "private" ? "private" : "public-read",
         Metadata: options?.metadata,
       })
 

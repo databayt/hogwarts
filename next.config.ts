@@ -111,6 +111,11 @@ const nextConfig: NextConfig = {
         hostname: "hogwarts-databayt.s3.us-east-1.amazonaws.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "d1dlwtcfl0db67.cloudfront.net",
+        pathname: "/**",
+      },
     ],
   },
 

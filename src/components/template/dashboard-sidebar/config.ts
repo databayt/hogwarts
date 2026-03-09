@@ -15,5 +15,4 @@ export const dashboardNav: { title: string; href: string; icon: IconKey }[] = [
     icon: "barChart",
   },
   { title: "Tenants", href: "/saas-dashboard/tenants", icon: "envelope" },
-  { title: "Profile", href: "/saas-dashboard/profile", icon: "cog" },
 ]

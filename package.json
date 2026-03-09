@@ -21,6 +21,7 @@
     "db:seed": "tsx prisma/seeds/index.ts",
     "db:seed:single": "tsx prisma/seeds/single.ts",
     "db:reset-test-user": "tsx prisma/seeds/reset-test-user.ts",
+    "db:reset-test-applicant": "tsx prisma/seeds/reset-test-applicant.ts",
     "seed:videos": "tsx scripts/seed-s3-videos.ts",
     "cleanup:sudanese": "tsx scripts/cleanup-sudanese-catalog.ts",
     "test": "vitest",

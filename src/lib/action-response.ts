@@ -15,6 +15,7 @@ export interface ActionResponse<T = any> {
   success: boolean
   data?: T
   error?: string
+  warning?: string
   code?: string
   errors?: Record<string, string>
 }
@@ -25,7 +26,13 @@ export async function createActionResponse<T>(
 ): Promise<ActionResponse<T>> {
   if (error) {
     const errorMessage =
-      error instanceof Error ? error.message : "An error occurred"
+      error instanceof Error
+        ? error.message
+        : typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message: unknown }).message)
+          : typeof error === "string"
+            ? error
+            : "An error occurred"
     return { success: false, error: errorMessage, code: "ERROR" }
   }
   return { success: true, data }

@@ -36,6 +36,7 @@ export default async function EnrollmentContent({
     enrolled: 0,
     feesPending: 0,
     documentsPending: 0,
+    pendingPlacement: 0,
   }
 
   if (schoolId) {

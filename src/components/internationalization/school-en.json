@@ -2520,7 +2520,7 @@
       "goToDashboard": "Go to Dashboard",
       "whatsYourSchoolName": "What's your school's name?",
       "schoolNameDescription": "This will be your school's official name in the system.",
-      "schoolNamePlaceholder": "e.g., Al-Azhar International School",
+      "schoolNamePlaceholder": "School Name",
       "unexpectedError": "An unexpected error occurred",
       "describeYourSchool": "Describe your school",
       "schoolDescriptionPlaceholder": "Tell us about your school's mission, values, and what makes it special...",
@@ -2543,7 +2543,7 @@
       "primaryColor": "Primary Color",
       "secondaryColor": "Secondary Color",
       "importData": "Import Data",
-      "importDescription": "Upload your student records in Excel or CSV format.",
+      "importDescription": "Upload your student records in any format. You can do it or fine-tune it later.",
       "importExistingData": "Import existing student and teacher data",
       "uploadCSV": "Upload CSV file",
       "downloadTemplate": "Download template",
@@ -2613,7 +2613,7 @@
       "dataProtection": "Data Protection",
       "acceptTerms": "I accept the terms and conditions",
       "schoolAvailableAt": "Your school will be available at:",
-      "subdomainPlaceholder": "your-school",
+      "subdomainPlaceholder": "Subdomain",
       "describeEducationModel": "Describe your school's",
       "educationModel": "education model",
       "selectSchoolTypeDescription": "Select the type that best describes your school's educational approach and governance structure.",
@@ -3295,7 +3295,13 @@
         "noGrades": "No grades configured. Set up academic grades first.",
         "upToDate": "Up to date",
         "noChanges": "All grades already have the configured number of sections",
-        "setupTypes": "Please set up classroom types first (e.g., \"Classroom\", \"Lab\") in the Rooms tab."
+        "setupTypes": "Please set up classroom types first (e.g., \"Classroom\", \"Lab\") in the Rooms tab.",
+        "generateClasses": "Generate Classes from Catalog",
+        "generateClassesDescription": "Create class records for each grade based on catalog subject selections. Requires active subject selections and a term.",
+        "term": "Term",
+        "selectTerm": "Select term",
+        "generatingClasses": "Generating...",
+        "generateClassesBtn": "Generate Classes for All Grades"
       },
       "roomCapacity": {
         "title": "Room Capacity Overview",
@@ -3639,7 +3645,8 @@
         "feesUnpaid": "Fees Unpaid",
         "documentsNeeded": "Documents Needed",
         "paymentRecorded": "Payment recorded",
-        "enrollmentConfirmed": "Enrollment confirmed"
+        "enrollmentConfirmed": "Enrollment confirmed",
+        "pendingPlacement": "admitted student(s) need section placement. Use the placement action on each row to assign them to a section."
       },
       "settings": {
         "title": "Admission Settings",

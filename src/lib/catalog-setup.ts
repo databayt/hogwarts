@@ -1,5 +1,3 @@
-"use server"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
@@ -288,56 +286,59 @@ export async function setupDefaultsForSchool(
     return { yearLevels: 0, departments: 0, scoreRanges: 0 }
   }
 
-  return db.$transaction(async (tx) => {
-    const results = { yearLevels: 0, departments: 0, scoreRanges: 0 }
+  return db.$transaction(
+    async (tx) => {
+      const results = { yearLevels: 0, departments: 0, scoreRanges: 0 }
 
-    // 1. YearLevels (filtered by schoolLevel)
-    if (existingYearLevels === 0) {
-      const applicable = YEAR_LEVEL_DEFAULTS.filter((yl) =>
-        yl.schoolLevels.includes(schoolLevel)
-      )
-      for (const yl of applicable) {
-        await tx.yearLevel.create({
-          data: {
-            schoolId,
-            levelName: yl.name,
-            levelOrder: yl.levelOrder,
-          },
-        })
-        results.yearLevels++
+      // 1. YearLevels (filtered by schoolLevel)
+      if (existingYearLevels === 0) {
+        const applicable = YEAR_LEVEL_DEFAULTS.filter((yl) =>
+          yl.schoolLevels.includes(schoolLevel)
+        )
+        for (const yl of applicable) {
+          await tx.yearLevel.create({
+            data: {
+              schoolId,
+              levelName: yl.name,
+              levelOrder: yl.levelOrder,
+            },
+          })
+          results.yearLevels++
+        }
       }
-    }
 
-    // 2. Departments
-    if (existingDepts === 0) {
-      for (const dept of DEPARTMENT_DEFAULTS) {
-        await tx.department.create({
-          data: {
-            schoolId,
-            departmentName: dept.name,
-          },
-        })
-        results.departments++
+      // 2. Departments
+      if (existingDepts === 0) {
+        for (const dept of DEPARTMENT_DEFAULTS) {
+          await tx.department.create({
+            data: {
+              schoolId,
+              departmentName: dept.name,
+            },
+          })
+          results.departments++
+        }
       }
-    }
 
-    // 3. ScoreRanges
-    if (existingRanges === 0) {
-      for (const range of SCORE_RANGE_DEFAULTS) {
-        await tx.scoreRange.create({
-          data: {
-            schoolId,
-            grade: range.grade,
-            minScore: range.minScore,
-            maxScore: range.maxScore,
-          },
-        })
-        results.scoreRanges++
+      // 3. ScoreRanges
+      if (existingRanges === 0) {
+        for (const range of SCORE_RANGE_DEFAULTS) {
+          await tx.scoreRange.create({
+            data: {
+              schoolId,
+              grade: range.grade,
+              minScore: range.minScore,
+              maxScore: range.maxScore,
+            },
+          })
+          results.scoreRanges++
+        }
       }
-    }
 
-    return results
-  })
+      return results
+    },
+    { timeout: 30000 }
+  )
 }
 
 // ============================================================================
@@ -393,11 +394,10 @@ export async function setupCatalogForSchool(
   // Use school's country (ISO code), then options override, then fallback
   const country = school?.country || options?.country || "US"
   const schoolType = school?.schoolType || options?.schoolType || undefined
-  // Infer curriculum from country+schoolType, allow school/options override
-  const curriculum =
-    school?.curriculum ||
-    options?.curriculum ||
-    inferCurriculum(country, schoolType)
+  // Infer curriculum from country+schoolType for catalog lookup
+  // NOTE: school.curriculum stores the timetable structure slug (e.g. "us-standard"),
+  // NOT the catalog curriculum. Only options override or inferCurriculum() are valid here.
+  const curriculum = options?.curriculum || inferCurriculum(country, schoolType)
   const allowedLevels =
     SCHOOL_LEVEL_TO_CATALOG[school?.schoolLevel ?? "both"] ??
     SCHOOL_LEVEL_TO_CATALOG.both
@@ -444,178 +444,190 @@ export async function setupCatalogForSchool(
     }
   }
 
-  const result = await db.$transaction(async (tx) => {
-    // 1. Create academic levels (filtered by schoolLevel)
-    const levelRecords: Array<{ id: string; level: string }> = []
-    for (const levelConfig of applicableLevelConfig) {
-      const level = await tx.academicLevel.create({
-        data: {
-          schoolId,
-          name: levelConfig.name,
-          slug: levelConfig.slug,
-          level: levelConfig.level,
-          levelOrder: levelConfig.levelOrder,
-          startGrade: levelConfig.startGrade,
-          endGrade: levelConfig.endGrade,
-        },
-      })
-      levelRecords.push({ id: level.id, level: levelConfig.level })
-    }
-
-    // 2. Create academic grades (filtered by schoolLevel)
-    const gradeRecords: Array<{
-      id: string
-      gradeNumber: number
-      levelId: string
-    }> = []
-
-    for (const levelConfig of applicableLevelConfig) {
-      const levelRecord = levelRecords.find(
-        (l) => l.level === levelConfig.level
-      )!
-
-      for (
-        let grade = levelConfig.startGrade;
-        grade <= levelConfig.endGrade;
-        grade++
-      ) {
-        const academicGrade = await tx.academicGrade.create({
+  const result = await db.$transaction(
+    async (tx) => {
+      // 1. Create academic levels (filtered by schoolLevel)
+      const levelRecords: Array<{ id: string; level: string }> = []
+      for (const levelConfig of applicableLevelConfig) {
+        const level = await tx.academicLevel.create({
           data: {
             schoolId,
-            levelId: levelRecord.id,
-            yearLevelId: gradeNumberToYearLevel.get(grade) ?? null,
-            name: GRADE_NAMES[grade] ?? `الصف ${grade}`,
-            slug: `grade-${grade}`,
+            name: levelConfig.name,
+            slug: levelConfig.slug,
+            level: levelConfig.level,
+            levelOrder: levelConfig.levelOrder,
+            startGrade: levelConfig.startGrade,
+            endGrade: levelConfig.endGrade,
+          },
+        })
+        levelRecords.push({ id: level.id, level: levelConfig.level })
+      }
+
+      // 2. Create academic grades (filtered by schoolLevel)
+      const gradeRecords: Array<{
+        id: string
+        gradeNumber: number
+        levelId: string
+      }> = []
+
+      for (const levelConfig of applicableLevelConfig) {
+        const levelRecord = levelRecords.find(
+          (l) => l.level === levelConfig.level
+        )!
+
+        for (
+          let grade = levelConfig.startGrade;
+          grade <= levelConfig.endGrade;
+          grade++
+        ) {
+          const academicGrade = await tx.academicGrade.create({
+            data: {
+              schoolId,
+              levelId: levelRecord.id,
+              yearLevelId: gradeNumberToYearLevel.get(grade) ?? null,
+              name: GRADE_NAMES[grade] ?? `الصف ${grade}`,
+              slug: `grade-${grade}`,
+              gradeNumber: grade,
+            },
+          })
+          gradeRecords.push({
+            id: academicGrade.id,
             gradeNumber: grade,
-          },
-        })
-        gradeRecords.push({
-          id: academicGrade.id,
-          gradeNumber: grade,
-          levelId: levelRecord.id,
-        })
+            levelId: levelRecord.id,
+          })
+        }
       }
-    }
 
-    // 3. Create high school streams (Science + Arts for grades 10-12)
-    const streamRecords: Array<{
-      id: string
-      gradeId: string
-      streamType: string
-    }> = []
-    const highGrades = gradeRecords.filter((g) => g.gradeNumber >= 10)
+      // 3. Create high school streams (Science + Arts for grades 10-12)
+      const streamRecords: Array<{
+        id: string
+        gradeId: string
+        streamType: string
+      }> = []
+      const highGrades = gradeRecords.filter((g) => g.gradeNumber >= 10)
 
-    for (const grade of highGrades) {
-      for (const streamDef of HIGH_SCHOOL_STREAMS) {
-        const stream = await tx.academicStream.create({
-          data: {
-            schoolId,
+      for (const grade of highGrades) {
+        for (const streamDef of HIGH_SCHOOL_STREAMS) {
+          const stream = await tx.academicStream.create({
+            data: {
+              schoolId,
+              gradeId: grade.id,
+              name: streamDef.name,
+              slug: streamDef.slug,
+              streamType: streamDef.streamType,
+            },
+          })
+          streamRecords.push({
+            id: stream.id,
             gradeId: grade.id,
-            name: streamDef.name,
-            slug: streamDef.slug,
             streamType: streamDef.streamType,
-          },
-        })
-        streamRecords.push({
-          id: stream.id,
-          gradeId: grade.id,
-          streamType: streamDef.streamType,
-        })
-      }
-    }
-
-    // 4. Create subject selections (link catalog subjects to grades)
-    let selectionCount = 0
-
-    for (const subject of catalogSubjects) {
-      // Grade-specific subjects have explicit grades (e.g., [3] for "Math Grade 3")
-      // Level-based subjects use levels to derive grade ranges
-      let applicableGrades: number[]
-
-      if (subject.grades.length > 0) {
-        // Grade-specific: use exact grades, filtered by school's allowed levels
-        const allowedGradeNumbers = new Set(
-          gradeRecords.map((g) => g.gradeNumber)
-        )
-        applicableGrades = subject.grades.filter((g) =>
-          allowedGradeNumbers.has(g)
-        )
-      } else {
-        // Level-based fallback: map levels to grade ranges
-        const levelToGrades = (level: string): number[] => {
-          if (!allowedLevels.includes(level)) return []
-          switch (level) {
-            case "ELEMENTARY":
-              return [1, 2, 3, 4, 5, 6]
-            case "MIDDLE":
-              return [7, 8, 9]
-            case "HIGH":
-              return [10, 11, 12]
-            default:
-              return []
-          }
+          })
         }
-        applicableGrades = subject.levels.flatMap(levelToGrades)
       }
 
-      for (const gradeNumber of applicableGrades) {
-        const gradeRecord = gradeRecords.find(
-          (g) => g.gradeNumber === gradeNumber
-        )
-        if (!gradeRecord) continue
+      // 4. Create subject selections (link catalog subjects to grades)
+      // Collect all selection data first, then bulk insert with createMany
+      const selectionData: Array<{
+        schoolId: string
+        catalogSubjectId: string
+        gradeId: string
+        isRequired: boolean
+        isActive: boolean
+        weeklyPeriods: number
+        streamId?: string
+      }> = []
 
-        const baseData = {
-          schoolId,
-          catalogSubjectId: subject.id,
-          gradeId: gradeRecord.id,
-          isRequired: true,
-          isActive: true,
-          weeklyPeriods: getDefaultWeeklyPeriods(subject.name, gradeNumber),
-        }
+      const allowedGradeNumbers = new Set(
+        gradeRecords.map((g) => g.gradeNumber)
+      )
 
-        // For grades 10+ with streams, create stream-scoped selections
-        const subjectStreamType =
-          gradeNumber >= 10 ? getSubjectStreamType(subject.name) : null
-        const gradeStreams = streamRecords.filter(
-          (s) => s.gradeId === gradeRecord.id
-        )
+      for (const subject of catalogSubjects) {
+        let applicableGrades: number[]
 
-        if (subjectStreamType && gradeStreams.length > 0) {
-          // Stream-specific subject: create selection only for matching stream(s)
-          const matchingStreams = gradeStreams.filter(
-            (s) => s.streamType === subjectStreamType
+        if (subject.grades.length > 0) {
+          applicableGrades = subject.grades.filter((g) =>
+            allowedGradeNumbers.has(g)
           )
-          for (const stream of matchingStreams) {
-            await tx.schoolSubjectSelection.create({
-              data: { ...baseData, streamId: stream.id },
-            })
-            selectionCount++
-          }
         } else {
-          // Shared subject or no streams: create without streamId
-          await tx.schoolSubjectSelection.create({ data: baseData })
-          selectionCount++
+          const levelToGrades = (level: string): number[] => {
+            if (!allowedLevels.includes(level)) return []
+            switch (level) {
+              case "ELEMENTARY":
+                return [1, 2, 3, 4, 5, 6]
+              case "MIDDLE":
+                return [7, 8, 9]
+              case "HIGH":
+                return [10, 11, 12]
+              default:
+                return []
+            }
+          }
+          applicableGrades = subject.levels.flatMap(levelToGrades)
+        }
+
+        for (const gradeNumber of applicableGrades) {
+          const gradeRecord = gradeRecords.find(
+            (g) => g.gradeNumber === gradeNumber
+          )
+          if (!gradeRecord) continue
+
+          const baseData = {
+            schoolId,
+            catalogSubjectId: subject.id,
+            gradeId: gradeRecord.id,
+            isRequired: true,
+            isActive: true,
+            weeklyPeriods: getDefaultWeeklyPeriods(subject.name, gradeNumber),
+          }
+
+          const subjectStreamType =
+            gradeNumber >= 10 ? getSubjectStreamType(subject.name) : null
+          const gradeStreams = streamRecords.filter(
+            (s) => s.gradeId === gradeRecord.id
+          )
+
+          if (subjectStreamType && gradeStreams.length > 0) {
+            const matchingStreams = gradeStreams.filter(
+              (s) => s.streamType === subjectStreamType
+            )
+            for (const stream of matchingStreams) {
+              selectionData.push({ ...baseData, streamId: stream.id })
+            }
+          } else {
+            selectionData.push(baseData)
+          }
         }
       }
-    }
 
-    // 5. Update usage counts on catalog subjects
-    for (const subject of catalogSubjects) {
-      await tx.catalogSubject.update({
-        where: { id: subject.id },
-        data: { usageCount: { increment: 1 } },
-      })
-    }
+      // Bulk insert all selections at once
+      if (selectionData.length > 0) {
+        await tx.schoolSubjectSelection.createMany({ data: selectionData })
+      }
+      const selectionCount = selectionData.length
 
-    return {
-      skipped: false,
-      levels: levelRecords.length,
-      grades: gradeRecords.length,
-      streams: streamRecords.length,
-      selections: selectionCount,
-      subjects: catalogSubjects.length,
-    }
-  })
+      return {
+        skipped: false,
+        levels: levelRecords.length,
+        grades: gradeRecords.length,
+        streams: streamRecords.length,
+        selections: selectionCount,
+        subjects: catalogSubjects.length,
+      }
+    },
+    { timeout: 60000 }
+  )
+
+  // Update usage counts outside the main transaction to avoid timeout
+  // This is non-critical metadata so it's OK if it partially fails
+  try {
+    const subjectIds = catalogSubjects.map((s) => s.id)
+    await db.$executeRawUnsafe(
+      `UPDATE catalog_subjects SET "usageCount" = "usageCount" + 1 WHERE id = ANY($1::text[])`,
+      subjectIds
+    )
+  } catch {
+    // Non-critical: usage count is just metadata
+  }
 
   return result
 }
@@ -713,16 +725,19 @@ async function findCatalogSubjects(
  * Cascading deletes handle most cleanup via schema relations.
  */
 export async function teardownCatalogForSchool(schoolId: string) {
-  await db.$transaction(async (tx) => {
-    // Delete bridge tables first
-    await tx.schoolSubjectSelection.deleteMany({ where: { schoolId } })
-    await tx.schoolContentOverride.deleteMany({ where: { schoolId } })
+  await db.$transaction(
+    async (tx) => {
+      // Delete bridge tables first
+      await tx.schoolSubjectSelection.deleteMany({ where: { schoolId } })
+      await tx.schoolContentOverride.deleteMany({ where: { schoolId } })
 
-    // Delete academic structure
-    await tx.academicStream.deleteMany({ where: { schoolId } })
-    await tx.academicGrade.deleteMany({ where: { schoolId } })
-    await tx.academicLevel.deleteMany({ where: { schoolId } })
-  })
+      // Delete academic structure
+      await tx.academicStream.deleteMany({ where: { schoolId } })
+      await tx.academicGrade.deleteMany({ where: { schoolId } })
+      await tx.academicLevel.deleteMany({ where: { schoolId } })
+    },
+    { timeout: 30000 }
+  )
 
   return { success: true }
 }
@@ -774,92 +789,95 @@ export async function applyTimetableStructureForNewSchool(
   // Wrap creation in transaction for atomicity
   const existingTerms = await db.term.count({ where: { schoolId, yearId } })
 
-  return db.$transaction(async (tx) => {
-    // Create periods
-    let createdCount = 0
-    for (const period of structure.periods) {
-      const [startHour, startMin] = period.startTime.split(":").map(Number)
-      const [endHour, endMin] = period.endTime.split(":").map(Number)
+  return db.$transaction(
+    async (tx) => {
+      // Create periods
+      let createdCount = 0
+      for (const period of structure.periods) {
+        const [startHour, startMin] = period.startTime.split(":").map(Number)
+        const [endHour, endMin] = period.endTime.split(":").map(Number)
 
-      await tx.period.create({
-        data: {
-          schoolId,
-          yearId,
-          name: period.name,
-          startTime: new Date(Date.UTC(1970, 0, 1, startHour, startMin)),
-          endTime: new Date(Date.UTC(1970, 0, 1, endHour, endMin)),
-        },
-      })
-      createdCount++
-    }
-
-    // Create 2 default terms within the school year
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const yearStart = now.getMonth() >= 8 ? currentYear : currentYear - 1
-
-    let termId: string | undefined
-
-    if (existingTerms === 0) {
-      // Determine which term should be active based on current date
-      const term1End = new Date(yearStart + 1, 0, 31) // Jan 31
-      const isNowInTerm1 = now <= term1End
-
-      const term1 = await tx.term.create({
-        data: {
-          schoolId,
-          yearId,
-          termNumber: 1,
-          startDate: new Date(yearStart, 8, 1), // Sep 1
-          endDate: term1End,
-          isActive: isNowInTerm1,
-        },
-      })
-      termId = term1.id
-
-      const term2 = await tx.term.create({
-        data: {
-          schoolId,
-          yearId,
-          termNumber: 2,
-          startDate: new Date(yearStart + 1, 1, 1), // Feb 1
-          endDate: new Date(yearStart + 1, 5, 30), // Jun 30
-          isActive: !isNowInTerm1,
-        },
-      })
-
-      // Use Term 2 id if that's the active term
-      if (!isNowInTerm1) termId = term2.id
-    }
-
-    // Resolve termId from existing terms if not freshly created
-    if (!termId) {
-      const activeTerm = await tx.term.findFirst({
-        where: { schoolId, yearId, isActive: true },
-        select: { id: true },
-      })
-      termId = activeTerm?.id
-    }
-
-    // Persist working days from structure definition
-    if (termId) {
-      const existingConfig = await tx.schoolWeekConfig.findFirst({
-        where: { schoolId },
-      })
-      if (!existingConfig) {
-        await tx.schoolWeekConfig.create({
+        await tx.period.create({
           data: {
             schoolId,
-            termId,
-            workingDays: structure.workingDays,
-            defaultLunchAfterPeriod: structure.lunchAfterPeriod,
+            yearId,
+            name: period.name,
+            startTime: new Date(Date.UTC(1970, 0, 1, startHour, startMin)),
+            endTime: new Date(Date.UTC(1970, 0, 1, endHour, endMin)),
           },
         })
+        createdCount++
       }
-    }
 
-    return { skipped: false, periods: createdCount, yearId, termId }
-  })
+      // Create 2 default terms within the school year
+      const now = new Date()
+      const currentYear = now.getFullYear()
+      const yearStart = now.getMonth() >= 8 ? currentYear : currentYear - 1
+
+      let termId: string | undefined
+
+      if (existingTerms === 0) {
+        // Determine which term should be active based on current date
+        const term1End = new Date(yearStart + 1, 0, 31) // Jan 31
+        const isNowInTerm1 = now <= term1End
+
+        const term1 = await tx.term.create({
+          data: {
+            schoolId,
+            yearId,
+            termNumber: 1,
+            startDate: new Date(yearStart, 8, 1), // Sep 1
+            endDate: term1End,
+            isActive: isNowInTerm1,
+          },
+        })
+        termId = term1.id
+
+        const term2 = await tx.term.create({
+          data: {
+            schoolId,
+            yearId,
+            termNumber: 2,
+            startDate: new Date(yearStart + 1, 1, 1), // Feb 1
+            endDate: new Date(yearStart + 1, 5, 30), // Jun 30
+            isActive: !isNowInTerm1,
+          },
+        })
+
+        // Use Term 2 id if that's the active term
+        if (!isNowInTerm1) termId = term2.id
+      }
+
+      // Resolve termId from existing terms if not freshly created
+      if (!termId) {
+        const activeTerm = await tx.term.findFirst({
+          where: { schoolId, yearId, isActive: true },
+          select: { id: true },
+        })
+        termId = activeTerm?.id
+      }
+
+      // Persist working days from structure definition
+      if (termId) {
+        const existingConfig = await tx.schoolWeekConfig.findFirst({
+          where: { schoolId },
+        })
+        if (!existingConfig) {
+          await tx.schoolWeekConfig.create({
+            data: {
+              schoolId,
+              termId,
+              workingDays: structure.workingDays,
+              defaultLunchAfterPeriod: structure.lunchAfterPeriod,
+            },
+          })
+        }
+      }
+
+      return { skipped: false, periods: createdCount, yearId, termId }
+    },
+    { timeout: 30000 }
+  )
 }
 
 /**
@@ -940,6 +958,76 @@ export async function recordVideoView(videoId: string) {
     where: { id: videoId },
     data: { viewCount: { increment: 1 } },
   })
+}
+
+/**
+ * Auto-provision classrooms and sections based on the school's capacity settings
+ * and academic grades. Called after onboarding to create default classroom/section
+ * records for each grade.
+ */
+export async function autoProvisionSections(schoolId: string) {
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { sectionsPerGrade: true, studentsPerSection: true },
+  })
+
+  const sectionsPerGrade = school?.sectionsPerGrade || 2
+  const studentsPerSection = school?.studentsPerSection || 30
+
+  const grades = await db.academicGrade.findMany({
+    where: { schoolId },
+    orderBy: { gradeNumber: "asc" },
+  })
+
+  const classroomType = await db.classroomType.findFirst({
+    where: { schoolId },
+  })
+
+  if (!classroomType || grades.length === 0) {
+    return { classrooms: 0, sections: 0 }
+  }
+
+  const letters = "ABCDEFGHIJ".split("")
+  let classroomCount = 0
+  let sectionCount = 0
+
+  for (const grade of grades) {
+    for (let i = 0; i < sectionsPerGrade; i++) {
+      const letter = letters[i]
+      const roomName = `Grade ${grade.gradeNumber}-${letter}`
+
+      const classroom = await db.classroom.upsert({
+        where: { schoolId_roomName: { schoolId, roomName } },
+        create: {
+          schoolId,
+          roomName,
+          capacity: studentsPerSection,
+          typeId: classroomType.id,
+          gradeId: grade.id,
+        },
+        update: {},
+      })
+      classroomCount++
+
+      await db.section.upsert({
+        where: {
+          schoolId_gradeId_letter: { schoolId, gradeId: grade.id, letter },
+        },
+        create: {
+          schoolId,
+          gradeId: grade.id,
+          name: roomName,
+          letter,
+          classroomId: classroom.id,
+          maxCapacity: studentsPerSection,
+        },
+        update: {},
+      })
+      sectionCount++
+    }
+  }
+
+  return { classrooms: classroomCount, sections: sectionCount }
 }
 
 /** @internal Exported for testing only */

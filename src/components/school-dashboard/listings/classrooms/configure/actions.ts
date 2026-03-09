@@ -12,7 +12,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertClassroomPermission, getAuthContext } from "../authorization"
-import { generateSectionsSchema } from "./validation"
+import { generateClassesSchema, generateSectionsSchema } from "./validation"
 
 export type GradeConfig = {
   gradeId: string
@@ -293,6 +293,245 @@ export async function generateSections(
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to generate sections",
+    }
+  }
+}
+
+/**
+ * Bulk generate Class records for a grade based on SchoolSubjectSelection.
+ * Each selection becomes a Class record (subject x grade x term).
+ */
+export async function generateClassesForGrade(
+  input: z.infer<typeof generateClassesSchema>
+): Promise<ActionResponse<{ created: number; details: string[] }>> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    try {
+      assertClassroomPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to generate classes" }
+    }
+
+    const parsed = generateClassesSchema.parse(input)
+
+    // Validate term exists
+    const term = await db.term.findFirst({
+      where: { id: parsed.termId, schoolId },
+      select: { id: true },
+    })
+    if (!term) {
+      return { success: false, error: "Term not found" }
+    }
+
+    // Find required defaults: a teacher and period range
+    const [defaultTeacher, periods] = await Promise.all([
+      db.teacher.findFirst({
+        where: { schoolId },
+        select: { id: true },
+      }),
+      db.period.findMany({
+        where: { schoolId },
+        orderBy: { startTime: "asc" },
+        select: { id: true },
+        take: 2,
+      }),
+    ])
+
+    if (!defaultTeacher) {
+      return {
+        success: false,
+        error:
+          "No teachers found. Create at least one teacher before generating classes.",
+      }
+    }
+
+    if (periods.length < 2) {
+      return {
+        success: false,
+        error:
+          "No periods found. Configure school periods before generating classes.",
+      }
+    }
+
+    const startPeriodId = periods[0].id
+    const endPeriodId = periods[periods.length - 1].id
+
+    let totalCreated = 0
+    const details: string[] = []
+
+    await db.$transaction(async (tx) => {
+      for (const gradeId of parsed.gradeIds) {
+        const grade = await tx.academicGrade.findFirst({
+          where: { id: gradeId, schoolId },
+          select: { id: true, name: true, gradeNumber: true },
+        })
+        if (!grade) continue
+
+        // Get subject selections for this grade (relation name is 'subject' -> CatalogSubject)
+        const selections = await tx.schoolSubjectSelection.findMany({
+          where: { schoolId, gradeId, isActive: true },
+          include: {
+            subject: {
+              select: { id: true, name: true },
+            },
+          },
+        })
+
+        if (selections.length === 0) {
+          details.push(`${grade.name}: no active subject selections found`)
+          continue
+        }
+
+        // Get or create a default department for auto-generated subjects
+        let defaultDept = await tx.department.findFirst({
+          where: { schoolId },
+          select: { id: true },
+        })
+        if (!defaultDept) {
+          defaultDept = await tx.department.create({
+            data: { schoolId, departmentName: "General" },
+          })
+        }
+
+        // Get classrooms for this grade (round-robin assignment)
+        const classrooms = await tx.classroom.findMany({
+          where: { schoolId, gradeId },
+          select: { id: true },
+          orderBy: { roomName: "asc" },
+        })
+
+        let created = 0
+        for (let i = 0; i < selections.length; i++) {
+          const sel = selections[i]
+          const catalogSubjectName =
+            sel.subject?.name ?? sel.customName ?? "Unknown"
+
+          // Find or create school-scoped Subject
+          let subjectRecord = await tx.subject.findFirst({
+            where: { schoolId, catalogSubjectId: sel.catalogSubjectId },
+            select: { id: true },
+          })
+
+          if (!subjectRecord) {
+            subjectRecord = await tx.subject.create({
+              data: {
+                schoolId,
+                departmentId: defaultDept.id,
+                subjectName: catalogSubjectName,
+                catalogSubjectId: sel.catalogSubjectId,
+              },
+            })
+          }
+
+          const className = `${catalogSubjectName} - ${grade.name}`
+
+          // Upsert to be idempotent
+          const existing = await tx.class.findFirst({
+            where: {
+              schoolId,
+              subjectId: subjectRecord.id,
+              gradeId,
+              termId: term.id,
+            },
+            select: { id: true },
+          })
+
+          if (!existing) {
+            const roomId =
+              classrooms.length > 0
+                ? classrooms[i % classrooms.length].id
+                : classrooms[0]?.id
+
+            // roomId is required — if no classrooms exist, create a default one
+            let assignedRoomId = roomId
+            if (!assignedRoomId) {
+              // Get or create default classroom type
+              let defaultType = await tx.classroomType.findFirst({
+                where: { schoolId },
+                select: { id: true },
+              })
+              if (!defaultType) {
+                defaultType = await tx.classroomType.create({
+                  data: { schoolId, name: "Classroom" },
+                })
+              }
+
+              const defaultRoom = await tx.classroom.upsert({
+                where: {
+                  schoolId_roomName: {
+                    schoolId,
+                    roomName: `${grade.name} - Default`,
+                  },
+                },
+                create: {
+                  schoolId,
+                  roomName: `${grade.name} - Default`,
+                  typeId: defaultType.id,
+                  gradeId,
+                  capacity: 30,
+                },
+                update: {},
+              })
+              assignedRoomId = defaultRoom.id
+            }
+
+            await tx.class.create({
+              data: {
+                schoolId,
+                name: className,
+                subjectId: subjectRecord.id,
+                gradeId,
+                termId: term.id,
+                teacherId: defaultTeacher.id,
+                classroomId: assignedRoomId,
+                startPeriodId,
+                endPeriodId,
+              },
+            })
+            created++
+            totalCreated++
+          }
+        }
+
+        details.push(
+          created > 0
+            ? `${grade.name}: created ${created} class${created !== 1 ? "es" : ""}`
+            : `${grade.name}: all classes already exist`
+        )
+      }
+    })
+
+    revalidatePath("/classrooms")
+    revalidatePath("/classes")
+    return { success: true, data: { created: totalCreated, details } }
+  } catch (error) {
+    console.error("[generateClassesForGrade] Error:", error)
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
+    }
+
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to generate classes",
     }
   }
 }

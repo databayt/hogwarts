@@ -2,13 +2,14 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect } from "react"
+import React, { useCallback, useEffect } from "react"
 import { useParams } from "next/navigation"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { FormFooter, ONBOARDING_CONFIG } from "@/components/form/footer"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
+import { updateOnboardingStep } from "@/components/onboarding/actions"
 import { ErrorBoundary } from "@/components/onboarding/error-boundary"
 import {
   HostValidationProvider,
@@ -34,6 +35,15 @@ function HostLayoutContent({ children }: HostLayoutProps) {
     string | undefined
   >
 
+  const handleStepChange = useCallback(
+    (step: string) => {
+      if (listingId) {
+        updateOnboardingStep(listingId, step)
+      }
+    },
+    [listingId]
+  )
+
   useEffect(() => {
     if (listingId) {
       loadListing(listingId)
@@ -55,6 +65,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
           locale={locale}
           useValidation={useHostValidation}
           finalLabel={dict.createSchool}
+          onStepChange={handleStepChange}
         />
       </div>
     )
@@ -80,6 +91,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
           locale={locale}
           useValidation={useHostValidation}
           finalLabel={dict.createSchool}
+          onStepChange={handleStepChange}
         />
       </div>
     )
@@ -95,6 +107,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
         locale={locale}
         useValidation={useHostValidation}
         finalLabel={dict.createSchool}
+        onStepChange={handleStepChange}
       />
     </div>
   )

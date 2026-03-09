@@ -21,6 +21,7 @@ export interface CatalogSubjectRow {
   slug: string
   department: string
   levels: string[]
+  grades: number[]
   status: string
   totalChapters: number
   totalLessons: number
@@ -38,11 +39,11 @@ export const catalogColumns: ColumnDef<CatalogSubjectRow>[] = [
       return (
         <Link
           href={`catalog/${id}`}
-          className="flex items-center gap-2 font-medium hover:underline"
+          className="flex max-w-[200px] items-center gap-2 truncate font-medium hover:underline"
         >
           {color && (
             <span
-              className="inline-block h-3 w-3 rounded-full"
+              className="inline-block h-3 w-3 shrink-0 rounded-full"
               style={{ backgroundColor: color }}
             />
           )}
@@ -54,19 +55,30 @@ export const catalogColumns: ColumnDef<CatalogSubjectRow>[] = [
   {
     accessorKey: "department",
     header: "Department",
+    cell: ({ row }) => (
+      <span className="block max-w-[140px] truncate">
+        {row.original.department}
+      </span>
+    ),
   },
   {
-    accessorKey: "levels",
-    header: "Levels",
-    cell: ({ row }) => (
-      <div className="flex gap-1">
-        {row.original.levels.map((level) => (
-          <Badge key={level} variant="secondary" className="text-xs">
-            {level}
-          </Badge>
-        ))}
-      </div>
-    ),
+    accessorKey: "grades",
+    header: "Grades",
+    cell: ({ row }) => {
+      const grades = row.original.grades
+      if (!grades.length)
+        return <span className="text-muted-foreground">—</span>
+      const sorted = [...grades].sort((a, b) => a - b)
+      const label =
+        sorted.length === 1
+          ? `Grade ${sorted[0]}`
+          : `Grade ${sorted[0]}–${sorted[sorted.length - 1]}`
+      return (
+        <Badge variant="secondary" className="text-xs">
+          {label}
+        </Badge>
+      )
+    },
   },
   {
     accessorKey: "status",
@@ -85,14 +97,17 @@ export const catalogColumns: ColumnDef<CatalogSubjectRow>[] = [
   {
     accessorKey: "totalChapters",
     header: "Chapters",
+    meta: { align: "center" as const },
   },
   {
     accessorKey: "totalLessons",
     header: "Lessons",
+    meta: { align: "center" as const },
   },
   {
     accessorKey: "usageCount",
     header: "Schools",
+    meta: { align: "center" as const },
   },
   {
     id: "actions",

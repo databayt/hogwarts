@@ -14,7 +14,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { EmptyState } from "@/components/saas-dashboard/common/empty-state"
-import { Shell as PageContainer } from "@/components/table/shell"
 
 import type { InvoiceRow } from "./columns"
 import { ExportButton } from "./export-button"
@@ -148,119 +147,112 @@ export async function BillingContent({
   const t = dictionary.operator
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <div>
-          <h2>{t.billing.title}</h2>
-          <p className="muted">{t.billing.overview}</p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t.billing.totalRevenue}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(stats.totalRevenue, lang)}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {t.billing.fromPaidInvoices.replace(
-                  "{count}",
-                  stats.paidInvoices.toString()
-                )}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t.billing.paymentRate}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.paymentRate}%</div>
-              <p className="text-muted-foreground text-xs">
-                {t.billing.ofInvoices
-                  .replace("{paid}", stats.paidInvoices.toString())
-                  .replace("{total}", stats.totalInvoices.toString())}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t.billing.openInvoices}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.openInvoices}</div>
-              <p className="text-muted-foreground text-xs">
-                {t.billing.awaitingPayment}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t.billing.pendingReceipts}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingReceipts}</div>
-              <p className="text-muted-foreground text-xs">
-                {t.billing.awaitingReview}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tabs for Invoices and Receipts */}
-        <Tabs defaultValue="invoices" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="invoices">{t.billing.title}</TabsTrigger>
-            <TabsTrigger value="receipts">{t.billing.receipts}</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="invoices" className="space-y-4">
-            <div className="flex justify-end">
-              <ExportButton
-                filters={{
-                  status: searchParams?.status,
-                  search: searchParams?.search,
-                }}
-              />
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t.billing.totalRevenue}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(stats.totalRevenue, lang)}
             </div>
-            {invoiceData.rows.length > 0 ? (
-              <InvoicesTable
-                initialData={invoiceData.rows}
-                total={invoiceData.total}
-                perPage={invoiceData.limit}
-                lang={lang}
-              />
-            ) : (
-              <EmptyState
-                title={t.billing.noInvoices}
-                description={t.billing.invoicesWillAppear}
-              />
-            )}
-          </TabsContent>
+            <p className="text-muted-foreground text-xs">
+              {t.billing.fromPaidInvoices.replace(
+                "{count}",
+                stats.paidInvoices.toString()
+              )}
+            </p>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="receipts" className="space-y-4">
-            <ReceiptsContent
-              dictionary={dictionary}
-              lang={lang}
-              searchParams={searchParams}
-            />
-          </TabsContent>
-        </Tabs>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t.billing.paymentRate}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.paymentRate}%</div>
+            <p className="text-muted-foreground text-xs">
+              {t.billing.ofInvoices
+                .replace("{paid}", stats.paidInvoices.toString())
+                .replace("{total}", stats.totalInvoices.toString())}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t.billing.openInvoices}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.openInvoices}</div>
+            <p className="text-muted-foreground text-xs">
+              {t.billing.awaitingPayment}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t.billing.pendingReceipts}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.pendingReceipts}</div>
+            <p className="text-muted-foreground text-xs">
+              {t.billing.awaitingReview}
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    </PageContainer>
+
+      {/* Tabs for Invoices and Receipts */}
+      <Tabs defaultValue="invoices" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="invoices">{t.billing.title}</TabsTrigger>
+          <TabsTrigger value="receipts">{t.billing.receipts}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="invoices" className="space-y-4">
+          <div className="flex justify-end">
+            <ExportButton
+              filters={{
+                status: searchParams?.status,
+                search: searchParams?.search,
+              }}
+            />
+          </div>
+          {invoiceData.rows.length > 0 ? (
+            <InvoicesTable
+              initialData={invoiceData.rows}
+              total={invoiceData.total}
+              perPage={invoiceData.limit}
+              lang={lang}
+            />
+          ) : (
+            <EmptyState
+              title={t.billing.noInvoices}
+              description={t.billing.invoicesWillAppear}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="receipts" className="space-y-4">
+          <ReceiptsContent
+            dictionary={dictionary}
+            lang={lang}
+            searchParams={searchParams}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }

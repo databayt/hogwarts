@@ -25,6 +25,7 @@ import {
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
+  generateClassesForGrade,
   generateSections,
   type GradeConfig,
   type RoomTypeOption,
@@ -35,10 +36,16 @@ interface SchoolDefaults {
   studentsPerSection: number
 }
 
+interface TermOption {
+  id: string
+  label: string
+}
+
 interface ConfigureFormProps {
   grades: GradeConfig[]
   roomTypes: RoomTypeOption[]
   schoolDefaults?: SchoolDefaults
+  activeTerms?: TermOption[]
 }
 
 type GradeRow = {
@@ -55,6 +62,7 @@ export function ConfigureForm({
   grades,
   roomTypes,
   schoolDefaults,
+  activeTerms = [],
 }: ConfigureFormProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
@@ -77,6 +85,9 @@ export function ConfigureForm({
       existingSections: g.existingSections,
     }))
   )
+
+  const [selectedTermId, setSelectedTermId] = useState(activeTerms[0]?.id ?? "")
+  const [isGeneratingClasses, startClassTransition] = useTransition()
 
   const [defaultSections, setDefaultSections] = useState(
     schoolDefaults?.sectionsPerGrade ?? 2
@@ -152,6 +163,29 @@ export function ConfigureForm({
   }
 
   const needsGeneration = (row: GradeRow) => row.sections > row.existingSections
+
+  const handleGenerateClasses = () => {
+    if (!selectedTermId) {
+      toast.error("Select an active term first")
+      return
+    }
+
+    startClassTransition(async () => {
+      const result = await generateClassesForGrade({
+        gradeIds: rows.map((r) => r.gradeId),
+        termId: selectedTermId,
+      })
+
+      if (result.success && result.data) {
+        toast.success(
+          `Created ${result.data.created} class${result.data.created !== 1 ? "es" : ""}`
+        )
+        result.data.details.forEach((detail) => toast.info(detail))
+      } else {
+        toast.error(result.error)
+      }
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -327,6 +361,48 @@ export function ConfigureForm({
           </TableBody>
         </Table>
       </div>
+
+      {/* Generate Classes Section */}
+      {activeTerms.length > 0 && grades.length > 0 && (
+        <div className="border-t pt-6">
+          <h3 className="mb-2 font-medium">
+            {d?.generateClasses || "Generate Classes from Catalog"}
+          </h3>
+          <p className="text-muted-foreground mb-4 text-sm">
+            {d?.generateClassesDescription ||
+              "Create class records for each grade based on catalog subject selections. Requires active subject selections and a term."}
+          </p>
+          <div className="flex items-end gap-4">
+            <div className="space-y-1">
+              <label className="text-muted-foreground text-sm">
+                {d?.term || "Term"}
+              </label>
+              <Select value={selectedTermId} onValueChange={setSelectedTermId}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder={d?.selectTerm || "Select term"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeTerms.map((term) => (
+                    <SelectItem key={term.id} value={term.id}>
+                      {term.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleGenerateClasses}
+              disabled={isGeneratingClasses || !selectedTermId}
+            >
+              {isGeneratingClasses
+                ? d?.generatingClasses || "Generating..."
+                : d?.generateClassesBtn || "Generate Classes for All Grades"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

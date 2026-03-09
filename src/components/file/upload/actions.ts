@@ -75,11 +75,24 @@ export async function uploadFile(
   try {
     // 1. Authenticate and get schoolId
     const session = await auth()
-    const schoolId = session?.user?.schoolId
     const userId = session?.user?.id
 
-    if (!schoolId || !userId) {
-      return { success: false, error: "Unauthorized - no school context" }
+    if (!userId) {
+      return { success: false, error: "Unauthorized - not authenticated" }
+    }
+
+    // Always fetch schoolId from DB (JWT may be stale after school reset/recreation)
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { schoolId: true },
+    })
+    const schoolId = user?.schoolId ?? undefined
+
+    if (!schoolId) {
+      return {
+        success: false,
+        error: "No school context — complete onboarding first",
+      }
     }
 
     // 2. Extract file from FormData
@@ -173,7 +186,6 @@ export async function uploadFile(
       pathname,
     }
   } catch (error) {
-    console.error("[uploadFile] Error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Upload failed",
@@ -252,7 +264,6 @@ export async function deleteFile(
 
     return { success: true }
   } catch (error) {
-    console.error("[deleteFile] Error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Delete failed",

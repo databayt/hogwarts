@@ -777,6 +777,14 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedProfileImages(prisma)
     },
   },
+  "reset-test-applicant": {
+    description: "Reset applicant@databayt.org for application flow testing",
+    global: true,
+    run: async () => {
+      const { resetTestApplicant } = await import("./reset-test-applicant")
+      await resetTestApplicant()
+    },
+  },
 }
 
 // ============================================================================

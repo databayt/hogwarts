@@ -9,7 +9,6 @@ import { useSession } from "next-auth/react"
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Spinner } from "@/components/ui/spinner"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -198,14 +197,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
         <Separator className="mx-auto mb-3 w-full max-w-5xl sm:mb-4" />
         <div className="mx-auto flex w-full max-w-5xl justify-end rtl:justify-start">
           <Button onClick={handleGetStarted} disabled={isCreating}>
-            {isCreating ? (
-              <>
-                <Spinner className="me-2" />
-                {dictionary.creatingSchool}
-              </>
-            ) : (
-              dictionary.getStarted
-            )}
+            {dictionary.getStarted}
           </Button>
         </div>
       </footer>

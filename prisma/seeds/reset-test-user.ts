@@ -26,26 +26,58 @@ async function resetTestUser() {
   const passwordHash = await getPasswordHash()
 
   try {
-    // Find the user
-    const existingUser = await prisma.user.findFirst({
+    // Find ALL users with this email (duplicates possible due to NULL schoolId uniqueness)
+    const allUsers = await prisma.user.findMany({
       where: { email: TEST_USER_EMAIL },
+      orderBy: { createdAt: "asc" },
     })
 
-    if (existingUser) {
-      // Delete any schools created by this user EXCEPT the demo school
-      const deletedSchools = await prisma.school.deleteMany({
+    if (allUsers.length > 0) {
+      // Keep the oldest, delete duplicates
+      const keeper = allUsers[0]
+      const duplicates = allUsers.slice(1)
+
+      if (duplicates.length > 0) {
+        const duplicateIds = duplicates.map((u) => u.id)
+        await prisma.user.deleteMany({ where: { id: { in: duplicateIds } } })
+        console.log(`   Deleted ${duplicates.length} duplicate user(s)`)
+      }
+
+      // Find schools created by this user (except demo)
+      const schoolsToDelete = await prisma.school.findMany({
         where: {
-          createdByUserId: existingUser.id,
+          createdByUserId: keeper.id,
           domain: { not: "demo" },
         },
+        select: { id: true },
       })
-      if (deletedSchools.count > 0) {
-        console.log(`   Deleted ${deletedSchools.count} orphaned school(s)`)
+
+      if (schoolsToDelete.length > 0) {
+        const schoolIds = schoolsToDelete.map((s) => s.id)
+
+        // Unlink users first (FK constraint prevents school deletion otherwise)
+        const unlinkedUsers = await prisma.user.updateMany({
+          where: { schoolId: { in: schoolIds } },
+          data: { schoolId: null, role: "USER" },
+        })
+        if (unlinkedUsers.count > 0) {
+          console.log(
+            `   Unlinked ${unlinkedUsers.count} user(s) from school(s)`
+          )
+        }
+
+        // Now safe to delete
+        const deletedSchools = await prisma.school.deleteMany({
+          where: { id: { in: schoolIds } },
+        })
+        if (deletedSchools.count > 0) {
+          console.log(`   Deleted ${deletedSchools.count} orphaned school(s)`)
+        }
       }
 
       // Reset user to fresh state
       await prisma.user.update({
-        where: { id: existingUser.id },
+        where: { id: keeper.id },
         data: {
           role: "USER",
           schoolId: null,
