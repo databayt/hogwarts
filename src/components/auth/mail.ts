@@ -231,9 +231,12 @@ export const sendPasswordResetEmail = async (
 export const sendVerificationEmail = async (
   email: string,
   token: string,
-  locale = "en"
+  locale = "en",
+  callbackUrl?: string
 ): Promise<boolean> => {
-  const confirmLink = `${domain}/${locale}/new-verification?token=${token}`
+  const confirmLink = callbackUrl
+    ? `${domain}/${locale}/new-verification?token=${token}&callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : `${domain}/${locale}/new-verification?token=${token}`
   const t = getStrings(locale)
 
   if (isDev) console.log("Email confirmation link:", confirmLink)

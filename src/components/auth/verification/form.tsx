@@ -28,6 +28,7 @@ export const NewVerificationForm = (props: Props) => {
 
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
+  const callbackUrl = searchParams.get("callbackUrl")
 
   const onSubmit = useCallback(() => {
     if (success || error) return
@@ -78,7 +79,11 @@ export const NewVerificationForm = (props: Props) => {
 
             <div className="muted text-center">
               <Link
-                href={`/${lang}/login`}
+                href={
+                  callbackUrl
+                    ? `/${lang}/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                    : `/${lang}/login`
+                }
                 className="underline-offset-4 hover:underline"
               >
                 {dictionary?.auth?.backToLogin || "Back to login"}

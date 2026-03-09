@@ -247,6 +247,12 @@ export async function proxy(req: NextRequest) {
 
   // Redirect logged-in users away from auth pages
   if (isAuth && authenticated) {
+    // Honor callbackUrl if present (e.g., login → onboarding flow)
+    const authCallbackUrl = url.searchParams.get("callbackUrl")
+    if (authCallbackUrl && authCallbackUrl.startsWith("/")) {
+      return NextResponse.redirect(new URL(authCallbackUrl, req.url))
+    }
+
     let redirectPath: string
     if (subdomain) {
       // School subdomain: redirect to school dashboard (clean URL, middleware will rewrite)

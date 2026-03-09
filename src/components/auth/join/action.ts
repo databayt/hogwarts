@@ -14,7 +14,8 @@ import { RegisterSchema } from "../validation"
 
 export const register = async (
   values: z.infer<typeof RegisterSchema>,
-  locale = "en"
+  locale = "en",
+  callbackUrl?: string | null
 ) => {
   const validatedFields = RegisterSchema.safeParse(values)
 
@@ -43,7 +44,8 @@ export const register = async (
   const emailSent = await sendVerificationEmail(
     verificationToken.email,
     verificationToken.token,
-    locale
+    locale,
+    callbackUrl ?? undefined
   )
 
   if (!emailSent) {

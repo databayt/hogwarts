@@ -310,7 +310,11 @@ export const LoginForm = ({
 
               <div className="muted text-center">
                 <Link
-                  href="/join"
+                  href={
+                    callbackUrl
+                      ? `/join?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                      : "/join"
+                  }
                   className="underline-offset-4 hover:underline"
                 >
                   {dictionary?.auth?.dontHaveAccount ||

@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Suspense, useMemo, useState, useTransition } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -35,6 +36,8 @@ interface Props extends React.ComponentPropsWithoutRef<"div"> {
 
 export const RegisterForm = (props: Props) => {
   const { dictionary, lang, className, ...rest } = props
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl")
   const [error, setError] = useState<string | undefined>("")
   const [success, setSuccess] = useState<string | undefined>("")
   const [isPending, startTransition] = useTransition()
@@ -59,7 +62,7 @@ export const RegisterForm = (props: Props) => {
     setSuccess("")
 
     startTransition(() => {
-      register(values, lang).then((data) => {
+      register(values, lang, callbackUrl).then((data) => {
         setError(data.error)
         setSuccess(data.success)
       })
@@ -156,7 +159,11 @@ export const RegisterForm = (props: Props) => {
 
               <div className="muted text-center">
                 <Link
-                  href={`/${lang}/login`}
+                  href={
+                    callbackUrl
+                      ? `/${lang}/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                      : `/${lang}/login`
+                  }
                   className="underline-offset-4 hover:underline"
                 >
                   {dictionary?.auth?.alreadyHaveAccount ||
