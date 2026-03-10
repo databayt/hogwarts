@@ -9,6 +9,12 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { sendEmail } from "@/lib/email"
+import {
+  calculateExpiryDate,
+  generateInvitationToken,
+  isInvitationExpired,
+  MAX_RESEND_COUNT,
+} from "@/lib/invitation-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertMembershipPermission, getAuthContext } from "./authorization"
@@ -19,9 +25,11 @@ import {
   bulkActivateSchema,
   bulkSuspendSchema,
   changeRoleSchema,
+  forcePasswordResetSchema,
   inviteMemberSchema,
   rejectMemberRequestSchema,
   removeMemberSchema,
+  resendInvitationSchema,
   suspendMemberSchema,
 } from "./validation"
 
@@ -646,6 +654,8 @@ export async function inviteMember(
           userId: existingUser?.id,
           joinMethod: "INVITATION",
           status: "PENDING",
+          invitationToken: generateInvitationToken(),
+          expiresAt: calculateExpiryDate(),
         },
       }),
       db.school.findUnique({
@@ -679,6 +689,100 @@ export async function inviteMember(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to invite member",
+    }
+  }
+}
+
+// --- Resend Invitation ---
+export async function resendInvitation(
+  input: z.infer<typeof resendInvitationSchema>
+): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    try {
+      assertMembershipPermission(authContext, "invite", schoolId)
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const parsed = resendInvitationSchema.parse(input)
+
+    const request = await db.membershipRequest.findFirst({
+      where: {
+        id: parsed.requestId,
+        schoolId,
+        status: "PENDING",
+        joinMethod: "INVITATION",
+      },
+    })
+    if (!request) return actionError(ACTION_ERRORS.NOT_FOUND)
+
+    // Check if invitation has been resent too many times
+    if (request.resentCount >= MAX_RESEND_COUNT) {
+      return {
+        success: false,
+        error: `Maximum resend limit (${MAX_RESEND_COUNT}) reached`,
+      }
+    }
+
+    // Check if already expired — still allow resend (it resets the expiry)
+    const wasExpired = isInvitationExpired(request.expiresAt)
+
+    // Generate a new token and reset expiry
+    const newToken = generateInvitationToken()
+    const newExpiresAt = calculateExpiryDate()
+
+    await db.membershipRequest.update({
+      where: { id: parsed.requestId },
+      data: {
+        invitationToken: newToken,
+        expiresAt: newExpiresAt,
+        lastResentAt: new Date(),
+        resentCount: { increment: 1 },
+      },
+    })
+
+    // Fetch school info for the email
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { name: true, domain: true },
+    })
+
+    const schoolName = school?.name || "School Portal"
+    const subdomain = school?.domain || ""
+
+    // Re-send invitation email (fire-and-forget)
+    sendEmail({
+      to: request.email,
+      subject: wasExpired
+        ? `Your invitation to ${schoolName} has been renewed`
+        : `Reminder: Invitation to join ${schoolName}`,
+      template: "invitation",
+      data: {
+        schoolName,
+        role: request.requestedRole,
+        portalUrl: subdomain
+          ? `https://${subdomain}.databayt.org`
+          : "https://ed.databayt.org",
+      },
+    }).catch(console.error)
+
+    revalidatePath("/school/membership")
+    return { success: true }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: "Validation failed" }
+    }
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to resend invitation",
     }
   }
 }
@@ -863,6 +967,79 @@ export async function exportMembersCSV(): Promise<ActionResponse<string>> {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to export",
+    }
+  }
+}
+
+// --- Force Password Reset ---
+export async function forcePasswordReset(
+  input: z.infer<typeof forcePasswordResetSchema>
+): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    try {
+      assertMembershipPermission(authContext, "suspend", schoolId)
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const parsed = forcePasswordResetSchema.parse(input)
+
+    // Cannot force-reset own password via admin action
+    if (parsed.userId === authContext.userId) {
+      return { success: false, error: "Cannot force-reset your own password" }
+    }
+
+    const targetUser = await db.user.findFirst({
+      where: { id: parsed.userId, schoolId },
+      select: { id: true, email: true, username: true },
+    })
+    if (!targetUser) return actionError(ACTION_ERRORS.NOT_FOUND)
+
+    await db.user.update({
+      where: { id: parsed.userId },
+      data: { mustChangePassword: true },
+    })
+
+    // Notify user via in-app notification (fire-and-forget)
+    dispatchNotification({
+      schoolId,
+      userId: parsed.userId,
+      type: "system_alert",
+      title: "Password Reset Required",
+      body: "Your administrator has required you to change your password on next login.",
+      priority: "high",
+      actorId: authContext.userId,
+    }).catch(console.error)
+
+    // Send email notification (fire-and-forget)
+    if (targetUser.email) {
+      sendEmail({
+        to: targetUser.email,
+        subject: "Password Reset Required",
+        template: "force-password-reset",
+        data: {
+          message:
+            "Your school administrator has required you to change your password. You will be prompted to set a new password on your next login.",
+        },
+      }).catch(console.error)
+    }
+
+    revalidatePath("/school/membership")
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to force password reset",
     }
   }
 }

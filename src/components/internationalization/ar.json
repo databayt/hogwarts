@@ -154,7 +154,13 @@
     "confirm": "تأكيد",
     "username": "الاسم",
     "confirmingVerification": "جارٍ تأكيد التحقق",
-    "backToLogin": "العودة لتسجيل الدخول"
+    "backToLogin": "العودة لتسجيل الدخول",
+    "google": "جوجل",
+    "facebook": "فيسبوك",
+    "enterNewPassword": "أدخل كلمة مرور جديدة",
+    "newPassword": "كلمة المرور الجديدة",
+    "authenticationError": "خطأ في المصادقة",
+    "or": "أو"
   },
   "marketing": {
     "hero": {

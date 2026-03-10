@@ -48,7 +48,7 @@ export function StructurePreview({
     lang === "ar" ? structure.description : structure.descriptionEn
 
   return (
-    <div className="border-primary bg-primary/5 w-full rounded-lg border-2 p-4">
+    <div className="border-primary bg-primary/5 w-full rounded-lg border p-4">
       <div className="mb-3 flex items-start justify-between">
         <div>
           <h4 className="font-semibold">{name}</h4>

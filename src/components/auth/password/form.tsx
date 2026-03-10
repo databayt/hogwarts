@@ -64,14 +64,16 @@ export const NewPasswordForm = (props: Props) => {
   return (
     <div
       className={cn(
-        "flex min-w-[200px] flex-col gap-6 md:min-w-[350px]",
+        "flex min-w-[280px] flex-col gap-6 md:min-w-[350px]",
         className
       )}
       {...rest}
     >
       <Card className="bg-background border-none shadow-none">
         <CardHeader className="text-center">
-          <h4>Enter a new password</h4>
+          <h4>
+            {dictionary?.auth?.enterNewPassword || "Enter a new password"}
+          </h4>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -86,7 +88,9 @@ export const NewPasswordForm = (props: Props) => {
                         <Input
                           {...field}
                           disabled={isPending}
-                          placeholder="New Password"
+                          placeholder={
+                            dictionary?.auth?.newPassword || "New Password"
+                          }
                           type="password"
                         />
                       </FormControl>
@@ -103,7 +107,7 @@ export const NewPasswordForm = (props: Props) => {
                   type="submit"
                   className="h-11 w-full"
                 >
-                  Reset password
+                  {dictionary?.auth?.resetPassword || "Reset password"}
                 </Button>
               </div>
 
@@ -112,7 +116,7 @@ export const NewPasswordForm = (props: Props) => {
                   href="/login"
                   className="underline-offset-4 hover:underline"
                 >
-                  Back to login
+                  {dictionary?.auth?.backToLogin || "Back to login"}
                 </Link>
               </div>
             </form>

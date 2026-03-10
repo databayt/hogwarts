@@ -22,7 +22,11 @@ const cleanUrlHash = () => {
   }
 }
 
-export const Social = () => {
+interface SocialProps {
+  dictionary?: { auth?: { google?: string; facebook?: string } }
+}
+
+export const Social = ({ dictionary }: SocialProps = {}) => {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl")
   const tenant = searchParams.get("tenant")
@@ -337,7 +341,7 @@ export const Social = () => {
               fill="currentColor"
             />
           </svg>
-          Google
+          {dictionary?.auth?.google || "Google"}
         </Button>
         <Button
           size="lg"
@@ -354,7 +358,7 @@ export const Social = () => {
               fill="currentColor"
             />
           </svg>
-          Facebook
+          {dictionary?.auth?.facebook || "Facebook"}
         </Button>
       </div>
     </div>

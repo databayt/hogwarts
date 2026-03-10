@@ -3,9 +3,9 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getDisplayName } from "@/lib/transliterate-name"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { type ParentRow } from "@/components/school-dashboard/listings/parents/columns"
@@ -60,14 +60,24 @@ export default async function ParentsContent({
       guardianModel.findMany({ where, orderBy, skip, take }),
       guardianModel.count({ where }),
     ])
-    data = rows.map((p: any) => ({
-      id: p.id,
-      userId: p.userId || null,
-      name: getDisplayName(p.givenName, p.surname, lang),
-      emailAddress: p.emailAddress || "-",
-      status: p.userId ? "active" : "inactive",
-      createdAt: (p.createdAt as Date).toISOString(),
-    }))
+    data = await Promise.all(
+      rows.map(async (p: any) => ({
+        id: p.id,
+        userId: p.userId || null,
+        name:
+          p.lang && p.lang !== lang
+            ? await getDisplayText(
+                `${p.givenName} ${p.surname}`.trim(),
+                p.lang || "ar",
+                lang,
+                schoolId!
+              )
+            : `${p.givenName} ${p.surname}`.trim(),
+        emailAddress: p.emailAddress || "-",
+        status: p.userId ? "active" : "inactive",
+        createdAt: (p.createdAt as Date).toISOString(),
+      }))
+    )
     total = count as number
   }
   return (

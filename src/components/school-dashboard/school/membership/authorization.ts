@@ -10,6 +10,7 @@ export type MembershipAction =
   | "approve"
   | "reject"
   | "invite"
+  | "resend_invitation"
   | "export"
   | "bulk_action"
 

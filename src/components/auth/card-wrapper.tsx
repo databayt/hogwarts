@@ -13,6 +13,7 @@ interface CardWrapperProps {
   backButtonLabel: string
   backButtonHref: string
   showSocial?: boolean
+  dictionary?: { auth?: { or?: string; google?: string; facebook?: string } }
 }
 
 export const CardWrapper = ({
@@ -21,6 +22,7 @@ export const CardWrapper = ({
   backButtonLabel,
   backButtonHref,
   showSocial,
+  dictionary,
 }: CardWrapperProps) => {
   return (
     <Card className="bg-background w-[350px] border-none shadow-none">
@@ -29,12 +31,12 @@ export const CardWrapper = ({
       </CardHeader>
       {showSocial && (
         <CardContent>
-          <Social />
+          <Social dictionary={dictionary} />
         </CardContent>
       )}
       <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
         <span className="bg-background text-muted-foreground relative z-10 px-2">
-          Or
+          {dictionary?.auth?.or || "Or"}
         </span>
       </div>
       <CardContent>{children}</CardContent>

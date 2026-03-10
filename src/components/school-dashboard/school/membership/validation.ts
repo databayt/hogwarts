@@ -55,10 +55,18 @@ export const inviteMemberSchema = z.object({
   name: z.string().optional(),
 })
 
+export const resendInvitationSchema = z.object({
+  requestId: z.string().min(1),
+})
+
 export const bulkSuspendSchema = z.object({
   userIds: z.array(z.string().min(1)).min(1),
 })
 
 export const bulkActivateSchema = z.object({
   userIds: z.array(z.string().min(1)).min(1),
+})
+
+export const forcePasswordResetSchema = z.object({
+  userId: z.string().min(1),
 })

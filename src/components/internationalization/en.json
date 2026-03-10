@@ -154,7 +154,13 @@
     "confirm": "Confirm",
     "username": "Name",
     "confirmingVerification": "Confirming your verification",
-    "backToLogin": "Back to login"
+    "backToLogin": "Back to login",
+    "google": "Google",
+    "facebook": "Facebook",
+    "enterNewPassword": "Enter a new password",
+    "newPassword": "New Password",
+    "authenticationError": "Authentication Error",
+    "or": "Or"
   },
   "marketing": {
     "hero": {

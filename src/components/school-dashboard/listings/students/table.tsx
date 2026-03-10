@@ -37,6 +37,7 @@ import { DataTable } from "@/components/table/data-table"
 import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
+import { AccessCodeDialog } from "./access-code-dialog"
 import { deleteStudent, getStudents, getStudentsCSV } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
 
@@ -113,6 +114,22 @@ function StudentsTableInner({
     filters: searchValue ? { name: searchValue } : undefined,
   })
 
+  // Access code dialog state
+  const [accessCodeOpen, setAccessCodeOpen] = useState(false)
+  const [accessCodeStudentIds, setAccessCodeStudentIds] = useState<string[]>([])
+  const [accessCodeStudentNames, setAccessCodeStudentNames] = useState<
+    Record<string, string>
+  >({})
+
+  const handleGenerateAccessCode = useCallback(
+    (studentId: string, studentName: string) => {
+      setAccessCodeStudentIds([studentId])
+      setAccessCodeStudentNames({ [studentId]: studentName })
+      setAccessCodeOpen(true)
+    },
+    []
+  )
+
   // Callback for column delete success - triggers optimistic remove
   const handleColumnDeleteSuccess = useCallback(
     (id: string) => {
@@ -121,15 +138,16 @@ function StudentsTableInner({
     [optimisticRemove]
   )
 
-  // Generate columns on the client side with dictionary, lang, and delete callback
+  // Generate columns on the client side with dictionary, lang, and callbacks
   const columns = useMemo(
     () => [
       getSelectColumn<StudentRow>(),
       ...getStudentColumns(dictionary, lang, {
         onDeleteSuccess: handleColumnDeleteSuccess,
+        onGenerateAccessCode: handleGenerateAccessCode,
       }),
     ],
-    [dictionary, lang, handleColumnDeleteSuccess]
+    [dictionary, lang, handleColumnDeleteSuccess, handleGenerateAccessCode]
   )
 
   // Table instance
@@ -143,8 +161,10 @@ function StudentsTableInner({
         pageSize: data.length || perPage,
       },
       columnVisibility: {
-        // Default visible: name, className, status
         createdAt: false,
+        email: false,
+        dateOfBirth: false,
+        enrollmentDate: false,
       },
     },
   })
@@ -385,6 +405,13 @@ function StudentsTableInner({
         content={
           <StudentCreateForm dictionary={dictionary} onSuccess={refresh} />
         }
+      />
+
+      <AccessCodeDialog
+        open={accessCodeOpen}
+        onOpenChange={setAccessCodeOpen}
+        studentIds={accessCodeStudentIds}
+        studentNames={accessCodeStudentNames}
       />
     </>
   )

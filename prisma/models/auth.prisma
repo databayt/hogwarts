@@ -16,9 +16,11 @@ model User {
   email         String?
   emailVerified DateTime?
   image         String?
-  password      String?
-  role          UserRole  @default(USER)
-  isSuspended   Boolean   @default(false)
+  password          String?
+  role              UserRole  @default(USER)
+  isSuspended       Boolean   @default(false)
+  mustChangePassword Boolean  @default(false)
+  passwordChangedAt  DateTime?
 
   // GitHub-style profile fields
   bio           String? @db.Text // User bio/README

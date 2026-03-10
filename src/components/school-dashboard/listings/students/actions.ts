@@ -553,9 +553,16 @@ export async function getStudents(
       id: string
       userId: string | null
       name: string
+      studentId: string | null
       sectionName: string
+      gradeName: string | null
       status: string
       createdAt: string
+      classCount: number
+      gradeCount: number
+      email: string | null
+      dateOfBirth: string | null
+      enrollmentDate: string | null
     }>
     total: number
   }>
@@ -596,6 +603,7 @@ export async function getStudents(
             OR: [
               { givenName: { contains: sp.name, mode: "insensitive" } },
               { surname: { contains: sp.name, mode: "insensitive" } },
+              { studentId: { contains: sp.name, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -627,6 +635,12 @@ export async function getStudents(
         skip,
         take,
         include: {
+          _count: {
+            select: {
+              studentClasses: true,
+              results: true,
+            },
+          },
           section: {
             select: { name: true },
           },
@@ -643,9 +657,18 @@ export async function getStudents(
       id: s.id as string,
       userId: s.userId as string | null,
       name: [s.givenName, s.surname].filter(Boolean).join(" "),
+      studentId: (s.studentId as string | null) || null,
       sectionName: s.section?.name || s.academicGrade?.name || "-",
-      status: s.userId ? "active" : "inactive",
+      gradeName: (s.academicGrade?.name as string) || null,
+      status: s.status === "ACTIVE" ? "active" : "inactive",
       createdAt: (s.createdAt as Date).toISOString(),
+      classCount: s._count?.studentClasses || 0,
+      gradeCount: s._count?.results || 0,
+      email: (s.email as string | null) || null,
+      dateOfBirth: s.dateOfBirth ? (s.dateOfBirth as Date).toISOString() : null,
+      enrollmentDate: s.enrollmentDate
+        ? (s.enrollmentDate as Date).toISOString()
+        : null,
     }))
 
     return { success: true, data: { rows: mapped, total: count as number } }
@@ -1489,6 +1512,150 @@ export async function bulkDeleteStudents(input: {
         error instanceof Error
           ? error.message
           : "Failed to bulk delete students",
+    }
+  }
+}
+
+// ============================================================================
+// Access Code Management
+// ============================================================================
+
+/**
+ * Generate access codes for one or more students.
+ * Returns generated codes with student IDs and expiry dates.
+ */
+export async function generateStudentAccessCodes(input: {
+  studentIds: string[]
+}): Promise<
+  ActionResponse<Array<{ studentId: string; code: string; expiresAt: string }>>
+> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const parsed = z
+      .object({ studentIds: z.array(z.string().min(1)).min(1).max(100) })
+      .parse(input)
+
+    // Verify all students belong to this school
+    const students = await db.student.findMany({
+      where: { id: { in: parsed.studentIds }, schoolId },
+      select: { id: true },
+    })
+
+    const validIds = new Set(students.map((s) => s.id))
+    const invalidIds = parsed.studentIds.filter((id) => !validIds.has(id))
+
+    if (invalidIds.length > 0) {
+      return {
+        success: false,
+        error: `${invalidIds.length} student(s) not found in this school`,
+      }
+    }
+
+    const { generateAccessCodesForStudents } =
+      await import("@/lib/student-access-code")
+    const codes = await generateAccessCodesForStudents(
+      schoolId,
+      parsed.studentIds
+    )
+
+    return {
+      success: true,
+      data: codes.map((c) => ({
+        studentId: c.studentId,
+        code: c.code,
+        expiresAt: c.expiresAt.toISOString(),
+      })),
+    }
+  } catch (error) {
+    console.error("[generateStudentAccessCodes] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to generate access codes",
+    }
+  }
+}
+
+/**
+ * Get existing access codes for a student.
+ */
+export async function getStudentAccessCodes(input: {
+  studentId: string
+}): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      code: string
+      expiresAt: string | null
+      usedAt: string | null
+      createdAt: string
+    }>
+  >
+> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const { studentId } = z
+      .object({ studentId: z.string().min(1) })
+      .parse(input)
+
+    // Verify student belongs to this school
+    const student = await db.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: { id: true },
+    })
+
+    if (!student) {
+      return actionError(ACTION_ERRORS.NOT_FOUND, "Student not found")
+    }
+
+    const codes = await db.studentAccessCode.findMany({
+      where: { studentId, schoolId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        code: true,
+        expiresAt: true,
+        usedAt: true,
+        createdAt: true,
+      },
+    })
+
+    return {
+      success: true,
+      data: codes.map((c) => ({
+        id: c.id,
+        code: c.code,
+        expiresAt: c.expiresAt?.toISOString() ?? null,
+        usedAt: c.usedAt?.toISOString() ?? null,
+        createdAt: c.createdAt.toISOString(),
+      })),
+    }
+  } catch (error) {
+    console.error("[getStudentAccessCodes] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch access codes",
     }
   }
 }

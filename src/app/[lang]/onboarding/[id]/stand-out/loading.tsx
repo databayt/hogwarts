@@ -1,20 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { Skeleton } from "@/components/ui/skeleton"
+import { StandOutSkeleton } from "@/components/onboarding/loading"
 
 export default function Loading() {
-  return (
-    <div className="mx-auto max-w-2xl space-y-8 p-8">
-      <Skeleton className="h-2 w-full rounded-full" />
-      <Skeleton className="h-10 w-48" />
-      <Skeleton className="h-6 w-96" />
-      <div className="grid gap-4 sm:grid-cols-2">
-        {[...Array(6)].map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-lg" />
-        ))}
-      </div>
-      <Skeleton className="ms-auto h-10 w-24 rounded-md" />
-    </div>
-  )
+  return <StandOutSkeleton />
 }

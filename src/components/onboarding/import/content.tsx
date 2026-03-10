@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
-import { smartImport } from "./actions"
+import { parseAndValidate, smartImport } from "./actions"
 
 interface ImportResult {
   imported: number
@@ -27,12 +27,14 @@ interface SectionState {
   uploading: boolean
   result: ImportResult | null
   error: string | null
+  importing: boolean
 }
 
 const initialState: SectionState = {
   uploading: false,
   result: null,
   error: null,
+  importing: false,
 }
 
 const ACCEPTED_FORMATS = ".csv,.xlsx,.xls,.json"
@@ -55,20 +57,51 @@ export default function ImportContent({ dictionary }: Props) {
 
   const handleUpload = useCallback(async (file: File, type: ImportType) => {
     const setState = type === "students" ? setStudents : setTeachers
-    setState({ uploading: true, result: null, error: null })
+    setState({ uploading: true, result: null, error: null, importing: false })
 
     try {
+      // Phase 1: Fast parse + validate (<500ms)
       const formData = new FormData()
       formData.append("file", file)
       formData.append("type", type)
 
-      const result = await smartImport(formData)
-      setState({ uploading: false, result, error: null })
+      const preview = await parseAndValidate(formData)
+
+      // Show optimistic result immediately
+      setState({
+        uploading: false,
+        result: {
+          imported: preview.validRows,
+          failed: preview.invalidRows.length,
+          skipped: 0,
+          errors: preview.invalidRows,
+        },
+        error: null,
+        importing: true,
+      })
+
+      // Phase 2: Background batch import (non-blocking)
+      const importData = new FormData()
+      importData.append("csvContent", preview.csvContent)
+      importData.append("type", type)
+
+      smartImport(importData)
+        .then((result) => {
+          setState((prev) => ({ ...prev, result, importing: false }))
+        })
+        .catch((err) => {
+          setState((prev) => ({
+            ...prev,
+            error: err instanceof Error ? err.message : "Import failed",
+            importing: false,
+          }))
+        })
     } catch (err) {
       setState({
         uploading: false,
         result: null,
         error: err instanceof Error ? err.message : "Import failed",
+        importing: false,
       })
     }
   }, [])
@@ -167,7 +200,9 @@ function DropZone({
           state.error
             ? "border-red-300"
             : state.result
-              ? "border-green-300"
+              ? state.importing
+                ? "border-blue-300"
+                : "border-muted-foreground/30"
               : "border-muted-foreground/30 hover:border-muted-foreground/50"
         }`}
       >
@@ -182,9 +217,16 @@ function DropZone({
             {state.result && (
               <div className="space-y-2 text-sm">
                 {state.result.imported > 0 && (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    {state.result.imported} imported successfully
+                  <div
+                    className={`flex items-center justify-center gap-2 ${state.importing ? "text-blue-600" : "text-green-700 dark:text-green-400"}`}
+                  >
+                    {state.importing ? (
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    )}
+                    {state.result.imported}{" "}
+                    {state.importing ? "importing..." : "imported successfully"}
                   </div>
                 )}
                 {state.result.skipped > 0 && (
@@ -220,13 +262,17 @@ function DropZone({
             )}
 
             {/* Re-upload link */}
-            <button
-              type="button"
-              onClick={onBrowse}
-              className="text-muted-foreground hover:text-foreground mt-1 text-xs underline underline-offset-2"
-            >
-              Upload another file
-            </button>
+            {!state.importing && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={onBrowse}
+                  className="text-muted-foreground hover:text-foreground mt-1 text-xs underline underline-offset-2"
+                >
+                  Upload another file
+                </button>
+              </div>
+            )}
             <input
               ref={inputRef}
               type="file"

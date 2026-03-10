@@ -2,20 +2,23 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
 
-import { CardWrapper } from "@/components/auth/card-wrapper"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
-interface Props {
+interface Props extends React.ComponentPropsWithoutRef<"div"> {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
 }
 
 export const ErrorCard = (props: Props) => {
-  const { dictionary, lang } = props
+  const { dictionary, lang, className, ...rest } = props
   const searchParams = useSearchParams()
   const error = searchParams.get("error")
 
@@ -41,33 +44,44 @@ export const ErrorCard = (props: Props) => {
     error && errorMessages[error] ? errorMessages[error] : errorMessages.default
 
   return (
-    <CardWrapper
-      headerLabel="Authentication Error"
-      backButtonHref="/login"
-      backButtonLabel="Back to login"
+    <div
+      className={cn(
+        "flex min-w-[280px] flex-col gap-6 md:min-w-[350px]",
+        className
+      )}
+      {...rest}
     >
-      <div className="flex w-full flex-col items-center gap-4">
-        <div className="bg-destructive/15 text-destructive flex items-center gap-x-2 rounded-md p-3 text-sm">
-          <ExclamationTriangleIcon className="h-4 w-4" />
-          <p>{errorMessage}</p>
-        </div>
-        {error && (
-          <div className="text-muted-foreground text-center text-xs">
-            <p>Error code: {error}</p>
-            {/* DEBUG: Show all URL params to capture full error */}
-            <pre className="bg-muted mt-2 max-w-full overflow-auto rounded p-2 text-start text-[10px]">
-              {JSON.stringify(
-                Object.fromEntries(searchParams.entries()),
-                null,
-                2
+      <Card className="bg-background border-none shadow-none">
+        <CardHeader className="text-center">
+          <h4>
+            {dictionary?.auth?.authenticationError || "Authentication Error"}
+          </h4>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6">
+            <div className="flex w-full flex-col items-center gap-4">
+              <div className="bg-destructive/15 text-destructive flex items-center gap-x-2 rounded-md p-3 text-sm">
+                <ExclamationTriangleIcon className="h-4 w-4" />
+                <p>{errorMessage}</p>
+              </div>
+              {error && (
+                <div className="text-muted-foreground text-center text-xs">
+                  <p>Error code: {error}</p>
+                </div>
               )}
-            </pre>
-            <p className="mt-2">
-              If this problem persists, please contact support.
-            </p>
+            </div>
+
+            <div className="muted text-center">
+              <Link
+                href={`/${lang}/login`}
+                className="underline-offset-4 hover:underline"
+              >
+                {dictionary?.auth?.backToLogin || "Back to login"}
+              </Link>
+            </div>
           </div>
-        )}
-      </div>
-    </CardWrapper>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

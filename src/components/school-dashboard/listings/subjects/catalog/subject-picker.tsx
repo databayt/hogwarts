@@ -2,15 +2,22 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
-import { Check, GraduationCap, Layers, Search } from "lucide-react"
+import {
+  Check,
+  GraduationCap,
+  Layers,
+  Loader2,
+  Minus,
+  Plus,
+  Search,
+} from "lucide-react"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -62,6 +69,7 @@ interface Props {
   subjects: CatalogSubject[]
   grades: Grade[]
   selections: Selection[]
+  schoolLevels: string[]
   lang: Locale
 }
 
@@ -71,17 +79,26 @@ const LEVEL_LABELS: Record<string, Record<string, string>> = {
   HIGH: { en: "High", ar: "ثانوي" },
 }
 
-export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
+type StatusFilter = "all" | "included" | "not-included"
+
+export function SubjectPicker({
+  subjects,
+  grades,
+  selections,
+  schoolLevels,
+  lang,
+}: Props) {
   const { dictionary } = useDictionary()
   const cat = dictionary?.school?.subjects?.catalog as
     | Record<string, string>
     | undefined
   const [search, setSearch] = useState("")
-  const [levelFilter, setLevelFilter] = useState<string>("all")
-  const [selectedGradeId, setSelectedGradeId] = useState<string>(
-    grades[0]?.id ?? ""
+  const [levelFilter, setLevelFilter] = useState<string>(
+    schoolLevels.length === 1 ? schoolLevels[0] : "all"
   )
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
   const [isPending, startTransition] = useTransition()
+  const [pendingSubjectId, setPendingSubjectId] = useState<string | null>(null)
   const [optimisticSelections, setOptimisticSelections] = useState<Set<string>>(
     () => {
       const set = new Set<string>()
@@ -91,6 +108,27 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
       return set
     }
   )
+
+  // Grade pills filtered by level
+  const visibleGrades = useMemo(() => {
+    if (levelFilter === "all") return grades
+    return grades.filter((g) => g.level === levelFilter)
+  }, [grades, levelFilter])
+
+  // Auto-select first visible grade
+  const [selectedGradeId, setSelectedGradeId] = useState<string>(
+    grades[0]?.id ?? ""
+  )
+
+  // When level changes and current grade is not in visible list, select first visible
+  useEffect(() => {
+    if (
+      visibleGrades.length > 0 &&
+      !visibleGrades.some((g) => g.id === selectedGradeId)
+    ) {
+      setSelectedGradeId(visibleGrades[0].id)
+    }
+  }, [visibleGrades, selectedGradeId])
 
   const t = {
     search: cat?.searchSubjects || "Search subjects...",
@@ -105,6 +143,17 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
     catalogDescription:
       cat?.catalogDescription ||
       "Select subjects from the global catalog to add to your school",
+    include: cat?.include || "Include",
+    remove: cat?.remove || "Remove",
+    included: cat?.included || "Included",
+    notIncluded: cat?.notIncluded || "Not Included",
+    all: cat?.all || "All",
+    status: cat?.status || "Status",
+  }
+
+  function isSelected(subjectId: string): boolean {
+    if (!selectedGradeId) return false
+    return optimisticSelections.has(`${subjectId}:${selectedGradeId}`)
   }
 
   const filteredSubjects = useMemo(() => {
@@ -115,9 +164,21 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
         s.department.toLowerCase().includes(search.toLowerCase())
       const matchesLevel =
         levelFilter === "all" || s.levels.includes(levelFilter)
-      return matchesSearch && matchesLevel
+      const selected = optimisticSelections.has(`${s.id}:${selectedGradeId}`)
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "included" && selected) ||
+        (statusFilter === "not-included" && !selected)
+      return matchesSearch && matchesLevel && matchesStatus
     })
-  }, [subjects, search, levelFilter])
+  }, [
+    subjects,
+    search,
+    levelFilter,
+    statusFilter,
+    optimisticSelections,
+    selectedGradeId,
+  ])
 
   // Group subjects by department
   const groupedSubjects = useMemo(() => {
@@ -142,15 +203,12 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
       newSet.add(key)
     }
     setOptimisticSelections(newSet)
+    setPendingSubjectId(subjectId)
 
     startTransition(async () => {
       await toggleSubjectSelection(subjectId, selectedGradeId)
+      setPendingSubjectId(null)
     })
-  }
-
-  function isSelected(subjectId: string): boolean {
-    if (!selectedGradeId) return false
-    return optimisticSelections.has(`${subjectId}:${selectedGradeId}`)
   }
 
   return (
@@ -158,8 +216,9 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
       {/* Description */}
       <p className="text-muted-foreground text-sm">{t.catalogDescription}</p>
 
-      {/* Filters */}
+      {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
+        {/* Search */}
         <div className="relative min-w-[200px] flex-1">
           <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
           <Input
@@ -170,34 +229,50 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
           />
         </div>
 
+        {/* Level filter — always visible */}
         <Select value={levelFilter} onValueChange={setLevelFilter}>
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder={t.allLevels} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t.allLevels}</SelectItem>
-            <SelectItem value="ELEMENTARY">
-              {LEVEL_LABELS.ELEMENTARY[lang] ?? "Elementary"}
-            </SelectItem>
-            <SelectItem value="MIDDLE">
-              {LEVEL_LABELS.MIDDLE[lang] ?? "Middle"}
-            </SelectItem>
-            <SelectItem value="HIGH">
-              {LEVEL_LABELS.HIGH[lang] ?? "High"}
-            </SelectItem>
+            {schoolLevels.map((level) => (
+              <SelectItem key={level} value={level}>
+                {LEVEL_LABELS[level]?.[lang] ?? level}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
-        <Select value={selectedGradeId} onValueChange={setSelectedGradeId}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder={t.selectGrade} />
+        {/* Grade pills */}
+        {visibleGrades.length > 0 && (
+          <div className="flex items-center gap-1">
+            {visibleGrades.map((g) => (
+              <Button
+                key={g.id}
+                variant={selectedGradeId === g.id ? "default" : "outline"}
+                size="sm"
+                className="h-8 min-w-8 px-2.5"
+                onClick={() => setSelectedGradeId(g.id)}
+              >
+                {g.gradeNumber}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        {/* Status filter */}
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+        >
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder={t.status} />
           </SelectTrigger>
           <SelectContent>
-            {grades.map((g) => (
-              <SelectItem key={g.id} value={g.id}>
-                {g.name}
-              </SelectItem>
-            ))}
+            <SelectItem value="all">{t.all}</SelectItem>
+            <SelectItem value="included">{t.included}</SelectItem>
+            <SelectItem value="not-included">{t.notIncluded}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -213,58 +288,56 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
             <h3 className="text-muted-foreground mb-3 text-sm font-medium tracking-wide uppercase">
               {department}
             </h3>
-            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {deptSubjects.map((subject) => {
                 const selected = isSelected(subject.id)
+                const isThisPending =
+                  isPending && pendingSubjectId === subject.id
                 const imagePath = getCatalogImageUrl(
                   subject.thumbnailKey,
                   subject.imageKey,
-                  "md"
+                  "sm"
                 )
 
                 return (
-                  <Card
+                  <div
                     key={subject.id}
                     className={cn(
-                      "group relative cursor-pointer overflow-hidden transition-all hover:shadow-md",
+                      "flex items-center gap-3 overflow-hidden rounded-lg border transition-colors",
                       selected && "ring-primary ring-2"
                     )}
-                    onClick={() => handleToggle(subject.id)}
                   >
-                    {/* Color banner */}
-                    <div
-                      className="relative h-24"
-                      style={{
-                        backgroundColor: subject.color ?? "#6b7280",
-                      }}
-                    >
-                      <PickerThumb imageUrl={imagePath} name={subject.name} />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
-                      {/* Selected badge */}
+                    {/* Thumbnail with optional check overlay */}
+                    <div className="relative">
+                      <PickerThumb
+                        imageUrl={imagePath}
+                        name={subject.name}
+                        color={subject.color}
+                      />
                       {selected && (
-                        <div className="bg-primary absolute end-2 top-2 flex h-6 w-6 items-center justify-center rounded-full">
-                          <Check className="h-4 w-4 text-white" />
+                        <div className="bg-primary/80 absolute inset-0 flex items-center justify-center rounded-s-lg">
+                          <Check className="h-5 w-5 text-white" />
                         </div>
                       )}
+                    </div>
 
-                      {/* Level badges */}
-                      <div className="absolute start-2 bottom-2 flex gap-1">
+                    {/* Name + level + stats */}
+                    <div className="min-w-0 flex-1 pe-1">
+                      <p className="line-clamp-2 text-sm leading-snug font-medium">
+                        {subject.name}
+                      </p>
+                      <div className="mt-0.5 flex items-center gap-1.5">
                         {subject.levels.map((level) => (
                           <Badge
                             key={level}
                             variant="secondary"
-                            className="bg-white/20 text-[10px] text-white"
+                            className="px-1.5 py-0 text-[10px]"
                           >
                             {LEVEL_LABELS[level]?.[lang] ?? level}
                           </Badge>
                         ))}
                       </div>
-                    </div>
-
-                    <CardContent className="p-3">
-                      <h4 className="truncate font-medium">{subject.name}</h4>
-                      <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
+                      <div className="text-muted-foreground mt-0.5 flex items-center gap-3 text-xs">
                         <span className="flex items-center gap-1">
                           <Layers className="h-3 w-3" />
                           {subject.totalChapters} {t.chapters}
@@ -274,8 +347,43 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
                           {subject.usageCount} {t.schools}
                         </span>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+
+                    {/* Include/Remove button */}
+                    <div className="shrink-0 pe-3">
+                      {selected ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive/10 h-8 gap-1 px-2"
+                          onClick={() => handleToggle(subject.id)}
+                          disabled={isThisPending}
+                        >
+                          {isThisPending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Minus className="h-3.5 w-3.5" />
+                          )}
+                          <span className="hidden sm:inline">{t.remove}</span>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 gap-1 px-2"
+                          onClick={() => handleToggle(subject.id)}
+                          disabled={isThisPending}
+                        >
+                          {isThisPending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Plus className="h-3.5 w-3.5" />
+                          )}
+                          <span className="hidden sm:inline">{t.include}</span>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 )
               })}
             </div>
@@ -289,24 +397,33 @@ export function SubjectPicker({ subjects, grades, selections, lang }: Props) {
 function PickerThumb({
   imageUrl,
   name,
+  color,
 }: {
   imageUrl: string | null
   name: string
+  color: string | null
 }) {
   const [failed, setFailed] = useState(false)
   const onError = useCallback(() => setFailed(true), [])
   const showImage = imageUrl && !failed
 
-  return showImage ? (
-    <Image
-      src={imageUrl}
-      alt={name}
-      fill
-      className="object-cover opacity-80"
-      quality={100}
-      sizes="(max-width: 640px) 50vw, 25vw"
-      unoptimized={imageUrl.startsWith("https://")}
-      onError={onError}
-    />
-  ) : null
+  return (
+    <div
+      className="relative h-16 w-16 shrink-0 overflow-hidden rounded-s-lg"
+      style={{ backgroundColor: color ?? "#6b7280" }}
+    >
+      {showImage && (
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          className="object-cover"
+          sizes="192px"
+          quality={100}
+          onError={onError}
+          unoptimized={imageUrl.startsWith("https://")}
+        />
+      )}
+    </div>
+  )
 }

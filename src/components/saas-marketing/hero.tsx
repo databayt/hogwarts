@@ -66,7 +66,14 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
 
         {/* Content */}
         <div className="flex flex-col items-start space-y-10 text-start lg:order-1 lg:flex-1">
-          <h1 className="font-heading text-6xl font-black tracking-tight md:text-7xl lg:text-7xl xl:text-8xl">
+          <h1
+            className={cn(
+              "font-heading font-black tracking-tight",
+              isRTL
+                ? "text-5xl md:text-6xl lg:text-6xl xl:text-7xl"
+                : "text-6xl md:text-7xl lg:text-7xl xl:text-8xl"
+            )}
+          >
             {titleLines.map((line, index) => (
               <span key={index} className="block">
                 {line}

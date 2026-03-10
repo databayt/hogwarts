@@ -4,7 +4,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { CalendarCheck, Ellipsis, GraduationCap, School } from "lucide-react"
+import {
+  CalendarCheck,
+  Ellipsis,
+  GraduationCap,
+  KeyRound,
+  School,
+} from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -31,15 +37,21 @@ export type StudentRow = {
   id: string
   userId: string | null
   name: string
+  studentId: string | null
   sectionName: string
+  gradeName: string | null
   status: string
   createdAt: string
   classCount: number
   gradeCount: number
+  email: string | null
+  dateOfBirth: string | null
+  enrollmentDate: string | null
 }
 
 interface ColumnOptions {
   onDeleteSuccess?: (id: string) => void
+  onGenerateAccessCode?: (studentId: string, studentName: string) => void
 }
 
 export const getStudentColumns = (
@@ -49,11 +61,16 @@ export const getStudentColumns = (
 ): ColumnDef<StudentRow>[] => {
   const t = {
     name: dictionary?.fullName || "Name",
+    studentId: (dictionary as any)?.studentId || "Student ID",
     section: dictionary?.section || "Section",
+    grade: (dictionary as any)?.grade || "Grade",
     classes: dictionary?.classes || "Classes",
     grades: dictionary?.grades || "Grades",
     status: dictionary?.status || "Status",
     created: dictionary?.created || "Created",
+    email: (dictionary as any)?.email || "Email",
+    dateOfBirth: (dictionary as any)?.dateOfBirth || "Date of Birth",
+    enrollmentDate: (dictionary as any)?.enrollmentDate || "Enrollment Date",
     actions: dictionary?.actions || "Actions",
     view: dictionary?.view || "View",
     edit: dictionary?.edit || "Edit",
@@ -88,6 +105,22 @@ export const getStudentColumns = (
       },
       meta: { label: t.name, variant: "text" },
       enableColumnFilter: true,
+    },
+    {
+      accessorKey: "studentId",
+      id: "studentId",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.studentId} />
+      ),
+      meta: { label: t.studentId, variant: "text" },
+    },
+    {
+      accessorKey: "gradeName",
+      id: "gradeName",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.grade} />
+      ),
+      meta: { label: t.grade, variant: "text" },
     },
     {
       accessorKey: "sectionName",
@@ -155,6 +188,52 @@ export const getStudentColumns = (
         </span>
       ),
       meta: { label: t.created, variant: "text" },
+    },
+    {
+      accessorKey: "email",
+      id: "email",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.email} />
+      ),
+      meta: { label: t.email, variant: "text" },
+    },
+    {
+      accessorKey: "dateOfBirth",
+      id: "dateOfBirth",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.dateOfBirth} />
+      ),
+      cell: ({ getValue }) => {
+        const val = getValue<string | null>()
+        if (!val) return "-"
+        return (
+          <span className="text-muted-foreground text-xs tabular-nums">
+            {new Date(val).toLocaleDateString(
+              lang === "ar" ? "ar-SA" : "en-US"
+            )}
+          </span>
+        )
+      },
+      meta: { label: t.dateOfBirth, variant: "text" },
+    },
+    {
+      accessorKey: "enrollmentDate",
+      id: "enrollmentDate",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.enrollmentDate} />
+      ),
+      cell: ({ getValue }) => {
+        const val = getValue<string | null>()
+        if (!val) return "-"
+        return (
+          <span className="text-muted-foreground text-xs tabular-nums">
+            {new Date(val).toLocaleDateString(
+              lang === "ar" ? "ar-SA" : "en-US"
+            )}
+          </span>
+        )
+      },
+      meta: { label: t.enrollmentDate, variant: "text" },
     },
     {
       id: "actions",
@@ -227,6 +306,15 @@ export const getStudentColumns = (
                   <School className="me-2 h-4 w-4" />
                   {t.viewClasses}
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() =>
+                  options?.onGenerateAccessCode?.(student.id, student.name)
+                }
+              >
+                <KeyRound className="me-2 h-4 w-4" />
+                Generate Access Code
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>

@@ -86,7 +86,7 @@ const JoinContent = (props: Props) => {
                       </h5>
                     </div>
                     {option.recommended && (
-                      <span className="text-xs text-green-500 sm:text-sm">
+                      <span className="text-xs text-green-700 sm:text-sm dark:text-green-400">
                         {option.subtitle}
                       </span>
                     )}

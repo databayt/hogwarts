@@ -24,42 +24,51 @@ export default async function SubjectsContent({ lang, level }: Props) {
 
   if (schoolId) {
     try {
-      // Get school's active catalog selections (deduplicated)
+      // Get school's active catalog selections with their catalog subjects
       const selections = await db.schoolSubjectSelection.findMany({
         where: { schoolId, isActive: true },
-        select: { catalogSubjectId: true, customName: true },
+        select: {
+          catalogSubjectId: true,
+          customName: true,
+          subject: {
+            select: {
+              id: true,
+              clickviewId: true,
+              name: true,
+              slug: true,
+              department: true,
+              levels: true,
+              grades: true,
+              color: true,
+              imageKey: true,
+              thumbnailKey: true,
+              lang: true,
+              totalChapters: true,
+              totalLessons: true,
+              averageRating: true,
+              usageCount: true,
+              ratingCount: true,
+              status: true,
+            },
+          },
+        },
       })
 
-      const uniqueIds = [...new Set(selections.map((s) => s.catalogSubjectId))]
       const customNames = new Map(
         selections
           .filter((s) => s.customName)
           .map((s) => [s.catalogSubjectId, s.customName!])
       )
 
-      // Fetch ALL published catalog subjects (selections provide custom names only)
-      const catalogRows = await db.catalogSubject.findMany({
-        where: { status: "PUBLISHED", curriculum: "us-k12" },
-        orderBy: { sortOrder: "asc" },
-        select: {
-          id: true,
-          clickviewId: true,
-          name: true,
-          slug: true,
-          department: true,
-          levels: true,
-          grades: true,
-          color: true,
-          imageKey: true,
-          thumbnailKey: true,
-          lang: true,
-          totalChapters: true,
-          totalLessons: true,
-          averageRating: true,
-          usageCount: true,
-          ratingCount: true,
-        },
-      })
+      // Extract published catalog subjects from selections (deduplicated)
+      const seen = new Set<string>()
+      const catalogRows = selections
+        .map((s) => s.subject)
+        .filter((s) => {
+          if (!s || s.status !== "PUBLISHED" || seen.has(s.id)) return false
+          seen.add(s.id)
+          return true
+        })
 
       // Group by clickviewId → ~62 groups (one per original inventory entry)
       const groupMap = new Map<string, typeof catalogRows>()

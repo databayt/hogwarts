@@ -163,6 +163,7 @@ model School {
   disciplinaryRecords DisciplinaryRecord[]
   libraryRecords      LibraryRecord[]
   feeRecords          FeeRecord[]
+  studentAccessCodes  StudentAccessCode[]
 
   // Banking relations
   bankAccounts    BankAccount[]

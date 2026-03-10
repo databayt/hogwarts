@@ -49,7 +49,11 @@ export const newPassword = async (
 
   await db.user.update({
     where: { id: existingUser.id },
-    data: { password: hashedPassword },
+    data: {
+      password: hashedPassword,
+      passwordChangedAt: new Date(),
+      mustChangePassword: false,
+    },
   })
 
   await db.passwordResetToken.delete({

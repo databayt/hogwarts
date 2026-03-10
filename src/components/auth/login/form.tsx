@@ -30,7 +30,6 @@ import { Input } from "@/components/ui/input"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { FormError } from "../error/form-error"
-import { FormSuccess } from "../form-success"
 import { Social } from "../social"
 import { createLoginSchema } from "../validation"
 import { login, type LoginContext, type LoginOptions } from "./action"
@@ -197,7 +196,7 @@ export const LoginForm = ({
   return (
     <div
       className={cn(
-        "flex min-w-[200px] flex-col gap-6 md:min-w-[350px]",
+        "flex min-w-[280px] flex-col gap-6 md:min-w-[350px]",
         className
       )}
       {...props}
@@ -211,7 +210,7 @@ export const LoginForm = ({
         </CardHeader>
         <CardContent>
           <Suspense fallback={<div className="h-10" />}>
-            <Social />
+            <Social dictionary={dictionary} />
           </Suspense>
         </CardContent>
         <CardContent>
@@ -295,7 +294,6 @@ export const LoginForm = ({
                 )}
 
                 <FormError message={error || urlError} />
-                <FormSuccess message={success} />
 
                 <Button
                   disabled={isPending}

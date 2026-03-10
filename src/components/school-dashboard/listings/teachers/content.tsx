@@ -7,7 +7,6 @@ import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getDisplayName } from "@/lib/transliterate-name"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type TeacherRow } from "@/components/school-dashboard/listings/teachers/columns"
@@ -123,7 +122,15 @@ export default async function TeachersContent({
 
         return {
           id: t.id,
-          name: getDisplayName(t.givenName, t.surname, lang),
+          name:
+            t.lang && t.lang !== lang
+              ? await getDisplayText(
+                  `${t.givenName} ${t.surname}`.trim(),
+                  t.lang || "ar",
+                  lang,
+                  schoolId!
+                )
+              : `${t.givenName} ${t.surname}`.trim(),
           givenName: t.givenName || "",
           surname: t.surname || "",
           emailAddress: t.emailAddress || "-",

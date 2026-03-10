@@ -1,19 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { Skeleton } from "@/components/ui/skeleton"
+import { SubdomainSkeleton } from "@/components/onboarding/loading"
 
 export default function Loading() {
-  return (
-    <div className="mx-auto max-w-2xl space-y-8 p-8">
-      <Skeleton className="h-2 w-full rounded-full" />
-      <Skeleton className="h-10 w-56" />
-      <Skeleton className="h-6 w-80" />
-      <div className="flex items-center gap-2">
-        <Skeleton className="h-12 flex-1 rounded-md" />
-        <Skeleton className="h-6 w-32" />
-      </div>
-      <Skeleton className="ms-auto h-10 w-24 rounded-md" />
-    </div>
-  )
+  return <SubdomainSkeleton />
 }

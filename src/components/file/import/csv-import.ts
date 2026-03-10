@@ -24,6 +24,7 @@ import { z, ZodError } from "zod"
 
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import { detectLanguage } from "@/components/translation/util"
 
 import {
   createRowErrorMessage,
@@ -40,6 +41,10 @@ const studentCsvSchema = z.object({
   email: z.string().email("Invalid email").optional(),
   studentId: z.string().min(1, "Student ID is required"),
   yearLevel: z.string().optional(),
+  middleName: z.string().optional(),
+  section: z.string().optional(),
+  enrollmentDate: z.string().optional(),
+  status: z.string().optional(),
   guardianName: z.string().optional(),
   guardianEmail: z.string().email().optional(),
   guardianPhone: z.string().optional(),
@@ -95,6 +100,65 @@ interface ImportResult {
     row: number
     warning: string
   }>
+  accessCodes?: Array<{
+    studentId: string
+    code: string
+    expiresAt: string
+  }>
+}
+
+/**
+ * Map CSV status values to StudentStatus enum
+ */
+function mapStudentStatus(
+  status?: string
+): "ACTIVE" | "INACTIVE" | "SUSPENDED" | "GRADUATED" | "TRANSFERRED" {
+  if (!status) return "ACTIVE"
+  const normalized = status.toLowerCase().trim()
+  const map: Record<
+    string,
+    "ACTIVE" | "INACTIVE" | "SUSPENDED" | "GRADUATED" | "TRANSFERRED"
+  > = {
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+    suspended: "SUSPENDED",
+    graduated: "GRADUATED",
+    transferred: "TRANSFERRED",
+    // Arabic
+    نشط: "ACTIVE",
+    "غير نشط": "INACTIVE",
+    معلق: "SUSPENDED",
+    متخرج: "GRADUATED",
+    منقول: "TRANSFERRED",
+  }
+  return map[normalized] || "ACTIVE"
+}
+
+/**
+ * Parse section string like "Grade 9-C" into grade number and section letter.
+ * Also handles: "9-C", "Grade 9 C", "9C", "الصف التاسع-ج"
+ */
+function parseSectionString(section: string): {
+  gradeNumber: number | null
+  sectionLetter: string | null
+} {
+  // Try "Grade N-X" or "Grade N X"
+  const gradeMatch = section.match(/grade\s*(\d+)\s*[-\s]?\s*([A-Za-z])?/i)
+  if (gradeMatch) {
+    return {
+      gradeNumber: parseInt(gradeMatch[1], 10),
+      sectionLetter: gradeMatch[2]?.toUpperCase() || null,
+    }
+  }
+  // Try "N-X" or "NX"
+  const shortMatch = section.match(/^(\d+)\s*[-]?\s*([A-Za-z])$/)
+  if (shortMatch) {
+    return {
+      gradeNumber: parseInt(shortMatch[1], 10),
+      sectionLetter: shortMatch[2].toUpperCase(),
+    }
+  }
+  return { gradeNumber: null, sectionLetter: null }
 }
 
 class CsvImportService {
@@ -125,8 +189,12 @@ class CsvImportService {
     }
   }
 
+  // Bcrypt rounds: 6 for auto-generated temporary passwords (5-10ms vs 50-100ms at 10 rounds)
+  private readonly BCRYPT_ROUNDS = 6
+  private readonly CHUNK_SIZE = 50
+
   /**
-   * Import students from CSV
+   * Import students from CSV — chunked parallel hashing + batched DB inserts
    */
   async importStudents(
     csvContent: string,
@@ -162,48 +230,47 @@ class CsvImportService {
         existingUsers.map((u) => u.email).filter(Boolean)
       )
 
+      // Phase 1: Validate all rows and collect valid ones
+      interface ValidatedStudent {
+        rowNumber: number
+        validated: z.infer<typeof studentCsvSchema>
+        email: string
+      }
+      const validRows: ValidatedStudent[] = []
+
       for (let i = 0; i < rows.length; i++) {
-        const rowNumber = i + 2 // Account for header row
+        const rowNumber = i + 2
         try {
-          // Validate with Zod schema
           const validated = studentCsvSchema.parse(rows[i])
 
-          // Additional field-level validations
           const validationErrors = []
 
-          // Validate date of birth format
           if (validated.dateOfBirth) {
             const dateValidation = validateDateFormat(
               validated.dateOfBirth,
               "dateOfBirth"
             )
-            if (!dateValidation.isValid) {
+            if (!dateValidation.isValid)
               validationErrors.push(...dateValidation.errors)
-            }
           }
 
-          // Validate guardian phone format
           if (validated.guardianPhone) {
             const phoneValidation = validatePhoneFormat(
               validated.guardianPhone,
               "guardianPhone"
             )
-            if (!phoneValidation.isValid) {
+            if (!phoneValidation.isValid)
               validationErrors.push(...phoneValidation.errors)
-            }
           }
 
-          // Validate guardian information completeness
           const guardianValidation = validateGuardianInfo({
             guardianName: validated.guardianName,
             guardianEmail: validated.guardianEmail,
             guardianPhone: validated.guardianPhone,
           })
-          if (!guardianValidation.isValid) {
+          if (!guardianValidation.isValid)
             validationErrors.push(...guardianValidation.errors)
-          }
 
-          // If there are validation errors, add them to result
           if (validationErrors.length > 0) {
             result.errors.push({
               row: rowNumber,
@@ -215,7 +282,6 @@ class CsvImportService {
             continue
           }
 
-          // Check if student already exists (using pre-loaded set)
           if (existingStudentIds.has(validated.studentId)) {
             result.warnings?.push({
               row: rowNumber,
@@ -225,7 +291,6 @@ class CsvImportService {
             continue
           }
 
-          // Check if email already exists (using pre-loaded set)
           const studentEmail =
             validated.email || `${validated.studentId}@school.local`
           if (existingEmails.has(studentEmail)) {
@@ -237,137 +302,12 @@ class CsvImportService {
             continue
           }
 
-          // Create user account for student
-          const defaultPassword = await hash(
-            `student${validated.studentId}`,
-            10
-          )
-          const user = await db.user.create({
-            data: {
-              username: validated.name,
-              email: validated.email || `${validated.studentId}@school.local`,
-              password: defaultPassword,
-              role: "STUDENT",
-              schoolId,
-            },
-          })
+          // Track in-batch duplicates
+          existingStudentIds.add(validated.studentId)
+          existingEmails.add(studentEmail)
 
-          // Parse name into first and last name
-          const nameParts = validated.name.trim().split(/\s+/)
-          const givenName = nameParts[0] || "Unknown"
-          const surname = nameParts.slice(1).join(" ") || "Unknown"
-
-          // Create student record
-          const student = await db.student.create({
-            data: {
-              userId: user.id,
-              schoolId,
-              studentId: validated.studentId,
-              givenName,
-              surname,
-              dateOfBirth: validated.dateOfBirth
-                ? new Date(validated.dateOfBirth)
-                : new Date("2010-01-01"), // Default date
-              gender: validated.gender || "other",
-            },
-          })
-
-          // Create guardian if provided
-          if (validated.guardianName && validated.guardianEmail) {
-            // Check if guardian already exists
-            let guardian = await db.guardian.findFirst({
-              where: {
-                schoolId,
-                user: {
-                  email: validated.guardianEmail,
-                },
-              },
-            })
-
-            if (!guardian) {
-              // Create guardian user
-              const guardianPassword = await hash("parent123", 10)
-              const guardianUser = await db.user.create({
-                data: {
-                  username: validated.guardianName,
-                  email: validated.guardianEmail,
-                  password: guardianPassword,
-                  role: "GUARDIAN",
-                  schoolId,
-                },
-              })
-
-              // Parse guardian name into first and last name
-              const guardianNameParts = validated.guardianName
-                .trim()
-                .split(/\s+/)
-              const guardianGivenName = guardianNameParts[0] || "Unknown"
-              const guardianSurname =
-                guardianNameParts.slice(1).join(" ") || "Unknown"
-
-              // Create guardian record
-              guardian = await db.guardian.create({
-                data: {
-                  userId: guardianUser.id,
-                  schoolId,
-                  givenName: guardianGivenName,
-                  surname: guardianSurname,
-                  emailAddress: validated.guardianEmail,
-                },
-              })
-
-              // Add phone number if provided
-              if (validated.guardianPhone) {
-                await db.guardianPhoneNumber.create({
-                  data: {
-                    guardianId: guardian.id,
-                    schoolId,
-                    phoneNumber: validated.guardianPhone,
-                    isPrimary: true,
-                  },
-                })
-              }
-            }
-
-            // Get or create a default guardian type
-            let guardianType = await db.guardianType.findFirst({
-              where: {
-                schoolId,
-                name: "guardian",
-              },
-            })
-
-            if (!guardianType) {
-              guardianType = await db.guardianType.create({
-                data: {
-                  schoolId,
-                  name: "guardian",
-                },
-              })
-            }
-
-            // Link guardian to student
-            await db.studentGuardian.create({
-              data: {
-                studentId: student.id,
-                guardianId: guardian.id,
-                schoolId,
-                guardianTypeId: guardianType.id,
-                isPrimary: true,
-              },
-            })
-          }
-
-          result.imported++
-
-          logger.info("Student imported successfully", {
-            action: "student_import",
-            schoolId,
-            studentId: validated.studentId,
-            row: rowNumber,
-          })
+          validRows.push({ rowNumber, validated, email: studentEmail })
         } catch (error) {
-          // Enhanced error handling with Zod errors
           if (error instanceof ZodError) {
             const formattedError = formatZodError(error)
             result.errors.push({
@@ -380,13 +320,212 @@ class CsvImportService {
             result.errors.push({
               row: rowNumber,
               error: error instanceof Error ? error.message : "Unknown error",
-              details: error instanceof Error ? error.stack : undefined,
               data: rows[i],
             })
           }
           result.failed++
         }
       }
+
+      // Detect CSV language from a sample of names
+      const sampleNames = validRows.slice(0, 5).map((r) => r.validated.name)
+      const detectedLang = detectLanguage(sampleNames.join(" "))
+
+      // Pre-load academic grades and sections for section auto-linking
+      const [existingGrades, existingSections] = await Promise.all([
+        db.academicGrade.findMany({
+          where: { schoolId },
+          select: { id: true, name: true, gradeNumber: true },
+        }),
+        db.section.findMany({
+          where: { schoolId },
+          select: { id: true, name: true, gradeId: true },
+        }),
+      ])
+
+      // Build lookup maps: gradeNumber -> gradeId, "gradeId:sectionName" -> sectionId
+      const gradeByNumber = new Map<number, string>()
+      for (const g of existingGrades) {
+        if (g.gradeNumber != null) gradeByNumber.set(g.gradeNumber, g.id)
+        const num = parseInt(g.name, 10)
+        if (!isNaN(num)) gradeByNumber.set(num, g.id)
+      }
+      const sectionByKey = new Map<string, string>()
+      for (const s of existingSections) {
+        sectionByKey.set(`${s.gradeId}:${s.name.toUpperCase()}`, s.id)
+      }
+
+      // Track created student IDs for access code generation
+      const createdStudentUserIds: string[] = []
+
+      // Phase 2: Process valid rows in chunks with parallel bcrypt + batched DB inserts
+      for (let c = 0; c < validRows.length; c += this.CHUNK_SIZE) {
+        const chunk = validRows.slice(c, c + this.CHUNK_SIZE)
+
+        // Parallel bcrypt hashing for the chunk
+        const hashes = await Promise.all(
+          chunk.map((r) =>
+            hash(`student${r.validated.studentId}`, this.BCRYPT_ROUNDS)
+          )
+        )
+
+        // Generate UUIDs client-side for createMany
+        const userIds = chunk.map(() => crypto.randomUUID())
+
+        try {
+          await db.$transaction(async (tx) => {
+            // Batch create users
+            await tx.user.createMany({
+              data: chunk.map((r, idx) => ({
+                id: userIds[idx],
+                username: r.validated.name,
+                email: r.email,
+                password: hashes[idx],
+                role: "STUDENT" as const,
+                schoolId,
+                mustChangePassword: true,
+              })),
+            })
+
+            // Batch create students
+            await tx.student.createMany({
+              data: chunk.map((r, idx) => {
+                const nameParts = r.validated.name.trim().split(/\s+/)
+
+                // Resolve section + grade from CSV
+                let academicGradeId: string | undefined
+                let sectionId: string | undefined
+
+                if (r.validated.section) {
+                  const parsed = parseSectionString(r.validated.section)
+                  if (parsed.gradeNumber != null) {
+                    academicGradeId =
+                      gradeByNumber.get(parsed.gradeNumber) || undefined
+                    if (academicGradeId && parsed.sectionLetter) {
+                      sectionId =
+                        sectionByKey.get(
+                          `${academicGradeId}:${parsed.sectionLetter}`
+                        ) || undefined
+                    }
+                  }
+                }
+
+                // Fallback: use yearLevel for grade if section didn't resolve
+                if (!academicGradeId && r.validated.yearLevel) {
+                  const parsed = parseSectionString(r.validated.yearLevel)
+                  if (parsed.gradeNumber != null) {
+                    academicGradeId =
+                      gradeByNumber.get(parsed.gradeNumber) || undefined
+                  }
+                }
+
+                return {
+                  userId: userIds[idx],
+                  schoolId,
+                  studentId: r.validated.studentId,
+                  givenName: nameParts[0] || "Unknown",
+                  middleName: r.validated.middleName || undefined,
+                  surname: nameParts.slice(1).join(" ") || "Unknown",
+                  dateOfBirth: r.validated.dateOfBirth
+                    ? new Date(r.validated.dateOfBirth)
+                    : new Date("2010-01-01"),
+                  gender: r.validated.gender || "other",
+                  status: mapStudentStatus(r.validated.status),
+                  enrollmentDate: r.validated.enrollmentDate
+                    ? new Date(r.validated.enrollmentDate)
+                    : new Date(),
+                  academicGradeId: academicGradeId || undefined,
+                  sectionId: sectionId || undefined,
+                  lang: detectedLang,
+                }
+              }),
+            })
+          })
+
+          result.imported += chunk.length
+          createdStudentUserIds.push(...userIds)
+
+          // Handle guardians sequentially after the batch (they have complex find-or-create logic)
+          for (let idx = 0; idx < chunk.length; idx++) {
+            const r = chunk[idx]
+            if (r.validated.guardianName && r.validated.guardianEmail) {
+              try {
+                await this.createGuardianLink(
+                  schoolId,
+                  userIds[idx],
+                  r.validated.guardianName,
+                  r.validated.guardianEmail,
+                  r.validated.guardianPhone,
+                  detectedLang
+                )
+              } catch {
+                // Guardian creation failure shouldn't fail the student import
+                result.warnings?.push({
+                  row: r.rowNumber,
+                  warning: `Student imported but guardian creation failed`,
+                })
+              }
+            }
+          }
+        } catch (error) {
+          // If batch fails, mark all rows in chunk as failed
+          for (const r of chunk) {
+            result.errors.push({
+              row: r.rowNumber,
+              error:
+                error instanceof Error ? error.message : "Batch insert failed",
+              data: r.validated,
+            })
+            result.failed++
+          }
+          // Undo the imported count we would have added
+        }
+      }
+
+      // Phase 3: Generate access codes for newly created students
+      if (createdStudentUserIds.length > 0) {
+        try {
+          // Look up student records by userId to get student IDs
+          const createdStudents = await db.student.findMany({
+            where: { schoolId, userId: { in: createdStudentUserIds } },
+            select: { id: true },
+          })
+
+          if (createdStudents.length > 0) {
+            const { generateAccessCodesForStudents } =
+              await import("@/lib/student-access-code")
+            const codes = await generateAccessCodesForStudents(
+              schoolId,
+              createdStudents.map((s) => s.id)
+            )
+            result.accessCodes = codes.map((c) => ({
+              studentId: c.studentId,
+              code: c.code,
+              expiresAt: c.expiresAt.toISOString(),
+            }))
+          }
+        } catch (codeError) {
+          // Access code generation failure shouldn't fail the import
+          logger.error(
+            "Access code generation failed during import",
+            codeError instanceof Error ? codeError : new Error("Unknown error"),
+            { action: "access_code_generation_error", schoolId }
+          )
+          result.warnings?.push({
+            row: 0,
+            warning:
+              "Students imported successfully but access code generation failed. You can generate codes manually from the student list.",
+          })
+        }
+      }
+
+      logger.info("Student batch import completed", {
+        action: "student_import",
+        schoolId,
+        imported: result.imported,
+        failed: result.failed,
+        skipped: result.skipped,
+      })
 
       result.success =
         result.imported > 0 || (result.skipped > 0 && result.failed === 0)
@@ -395,17 +534,94 @@ class CsvImportService {
       logger.error(
         "Student import failed",
         error instanceof Error ? error : new Error("Unknown error"),
-        {
-          action: "student_import_error",
-          schoolId,
-        }
+        { action: "student_import_error", schoolId }
       )
       throw error
     }
   }
 
   /**
-   * Import teachers from CSV
+   * Helper: create guardian and link to student (by userId)
+   */
+  private async createGuardianLink(
+    schoolId: string,
+    studentUserId: string,
+    guardianName: string,
+    guardianEmail: string,
+    guardianPhone?: string,
+    lang: "ar" | "en" = "ar"
+  ) {
+    // Find the student record by userId
+    const student = await db.student.findFirst({
+      where: { userId: studentUserId, schoolId },
+    })
+    if (!student) return
+
+    // Check if guardian already exists
+    let guardian = await db.guardian.findFirst({
+      where: { schoolId, user: { email: guardianEmail } },
+    })
+
+    if (!guardian) {
+      const guardianPassword = await hash("parent123", this.BCRYPT_ROUNDS)
+      const guardianUser = await db.user.create({
+        data: {
+          username: guardianName,
+          email: guardianEmail,
+          password: guardianPassword,
+          role: "GUARDIAN",
+          schoolId,
+          mustChangePassword: true,
+        },
+      })
+
+      const parts = guardianName.trim().split(/\s+/)
+      guardian = await db.guardian.create({
+        data: {
+          userId: guardianUser.id,
+          schoolId,
+          givenName: parts[0] || "Unknown",
+          surname: parts.slice(1).join(" ") || "Unknown",
+          emailAddress: guardianEmail,
+          lang,
+        },
+      })
+
+      if (guardianPhone) {
+        await db.guardianPhoneNumber.create({
+          data: {
+            guardianId: guardian.id,
+            schoolId,
+            phoneNumber: guardianPhone,
+            isPrimary: true,
+          },
+        })
+      }
+    }
+
+    // Get or create guardian type
+    let guardianType = await db.guardianType.findFirst({
+      where: { schoolId, name: "guardian" },
+    })
+    if (!guardianType) {
+      guardianType = await db.guardianType.create({
+        data: { schoolId, name: "guardian" },
+      })
+    }
+
+    await db.studentGuardian.create({
+      data: {
+        studentId: student.id,
+        guardianId: guardian.id,
+        schoolId,
+        guardianTypeId: guardianType.id,
+        isPrimary: true,
+      },
+    })
+  }
+
+  /**
+   * Import teachers from CSV — chunked parallel hashing + batched DB inserts
    */
   async importTeachers(
     csvContent: string,
@@ -423,7 +639,7 @@ class CsvImportService {
     try {
       const rows = this.parseCSV(csvContent)
 
-      // Batch pre-load existing employeeIds and emails to avoid N+1 queries
+      // Batch pre-load existing employeeIds and emails
       const [existingTeachers, existingUsers] = await Promise.all([
         db.teacher.findMany({
           where: { schoolId },
@@ -441,27 +657,28 @@ class CsvImportService {
         existingUsers.map((u) => u.email).filter(Boolean)
       )
 
+      // Phase 1: Validate all rows
+      interface ValidatedTeacher {
+        rowNumber: number
+        validated: z.infer<typeof teacherCsvSchema>
+      }
+      const validRows: ValidatedTeacher[] = []
+
       for (let i = 0; i < rows.length; i++) {
         const rowNumber = i + 2
         try {
-          // Validate with Zod schema
           const validated = teacherCsvSchema.parse(rows[i])
 
-          // Additional field-level validations
           const validationErrors = []
-
-          // Validate phone number format
           if (validated.phoneNumber) {
             const phoneValidation = validatePhoneFormat(
               validated.phoneNumber,
               "phoneNumber"
             )
-            if (!phoneValidation.isValid) {
+            if (!phoneValidation.isValid)
               validationErrors.push(...phoneValidation.errors)
-            }
           }
 
-          // If there are validation errors, add them to result
           if (validationErrors.length > 0) {
             result.errors.push({
               row: rowNumber,
@@ -473,7 +690,6 @@ class CsvImportService {
             continue
           }
 
-          // Check if teacher already exists (using pre-loaded set)
           if (existingEmployeeIds.has(validated.employeeId)) {
             result.warnings?.push({
               row: rowNumber,
@@ -483,7 +699,6 @@ class CsvImportService {
             continue
           }
 
-          // Check if email already exists (using pre-loaded set)
           if (existingEmails.has(validated.email)) {
             result.warnings?.push({
               row: rowNumber,
@@ -493,81 +708,12 @@ class CsvImportService {
             continue
           }
 
-          // Create user account for teacher
-          const defaultPassword = await hash(
-            `teacher${validated.employeeId}`,
-            10
-          )
-          const user = await db.user.create({
-            data: {
-              username: validated.name,
-              email: validated.email,
-              password: defaultPassword,
-              role: "TEACHER",
-              schoolId,
-            },
-          })
+          // Track in-batch duplicates
+          existingEmployeeIds.add(validated.employeeId)
+          existingEmails.add(validated.email)
 
-          // Parse name into first and last name
-          const teacherNameParts = validated.name.trim().split(/\s+/)
-          const teacherGivenName = teacherNameParts[0] || "Unknown"
-          const teacherSurname =
-            teacherNameParts.slice(1).join(" ") || "Unknown"
-
-          // Create teacher record
-          const teacher = await db.teacher.create({
-            data: {
-              userId: user.id,
-              schoolId,
-              employeeId: validated.employeeId,
-              givenName: teacherGivenName,
-              surname: teacherSurname,
-              emailAddress: validated.email,
-            },
-          })
-
-          // Add phone number if provided
-          if (validated.phoneNumber) {
-            await db.teacherPhoneNumber.create({
-              data: {
-                teacherId: teacher.id,
-                schoolId,
-                phoneNumber: validated.phoneNumber,
-                isPrimary: true,
-              },
-            })
-          }
-
-          // Link to department if provided
-          if (validated.department) {
-            const department = await db.department.findFirst({
-              where: {
-                schoolId,
-                departmentName: validated.department,
-              },
-            })
-
-            if (department) {
-              await db.teacherDepartment.create({
-                data: {
-                  teacherId: teacher.id,
-                  departmentId: department.id,
-                  schoolId,
-                },
-              })
-            }
-          }
-
-          result.imported++
-
-          logger.info("Teacher imported successfully", {
-            action: "teacher_import",
-            schoolId,
-            employeeId: validated.employeeId,
-            row: rowNumber,
-          })
+          validRows.push({ rowNumber, validated })
         } catch (error) {
-          // Enhanced error handling with Zod errors
           if (error instanceof ZodError) {
             const formattedError = formatZodError(error)
             result.errors.push({
@@ -580,13 +726,137 @@ class CsvImportService {
             result.errors.push({
               row: rowNumber,
               error: error instanceof Error ? error.message : "Unknown error",
-              details: error instanceof Error ? error.stack : undefined,
               data: rows[i],
             })
           }
           result.failed++
         }
       }
+
+      // Detect CSV language from a sample of names
+      const sampleNames = validRows.slice(0, 5).map((r) => r.validated.name)
+      const detectedLang = detectLanguage(sampleNames.join(" "))
+
+      // Pre-load departments for linking
+      const departments = await db.department.findMany({
+        where: { schoolId },
+        select: { id: true, departmentName: true },
+      })
+      const deptMap = new Map(departments.map((d) => [d.departmentName, d.id]))
+
+      // Phase 2: Process in chunks
+      for (let c = 0; c < validRows.length; c += this.CHUNK_SIZE) {
+        const chunk = validRows.slice(c, c + this.CHUNK_SIZE)
+
+        // Parallel bcrypt hashing
+        const hashes = await Promise.all(
+          chunk.map((r) =>
+            hash(`teacher${r.validated.employeeId}`, this.BCRYPT_ROUNDS)
+          )
+        )
+
+        const userIds = chunk.map(() => crypto.randomUUID())
+        const teacherIds = chunk.map(() => crypto.randomUUID())
+
+        try {
+          await db.$transaction(async (tx) => {
+            // Batch create users
+            await tx.user.createMany({
+              data: chunk.map((r, idx) => ({
+                id: userIds[idx],
+                username: r.validated.name,
+                email: r.validated.email,
+                password: hashes[idx],
+                role: "TEACHER" as const,
+                schoolId,
+                mustChangePassword: true,
+              })),
+            })
+
+            // Batch create teachers
+            await tx.teacher.createMany({
+              data: chunk.map((r, idx) => {
+                const parts = r.validated.name.trim().split(/\s+/)
+                return {
+                  id: teacherIds[idx],
+                  userId: userIds[idx],
+                  schoolId,
+                  employeeId: r.validated.employeeId,
+                  givenName: parts[0] || "Unknown",
+                  surname: parts.slice(1).join(" ") || "Unknown",
+                  emailAddress: r.validated.email,
+                  lang: detectedLang,
+                }
+              }),
+            })
+
+            // Batch create phone numbers (only for those that have them)
+            const phoneData = chunk
+              .map((r, idx) =>
+                r.validated.phoneNumber
+                  ? {
+                      teacherId: teacherIds[idx],
+                      schoolId,
+                      phoneNumber: r.validated.phoneNumber,
+                      isPrimary: true,
+                    }
+                  : null
+              )
+              .filter(Boolean) as Array<{
+              teacherId: string
+              schoolId: string
+              phoneNumber: string
+              isPrimary: boolean
+            }>
+
+            if (phoneData.length > 0) {
+              await tx.teacherPhoneNumber.createMany({ data: phoneData })
+            }
+
+            // Batch create department links
+            const deptData = chunk
+              .map((r, idx) => {
+                if (!r.validated.department) return null
+                const deptId = deptMap.get(r.validated.department)
+                if (!deptId) return null
+                return {
+                  teacherId: teacherIds[idx],
+                  departmentId: deptId,
+                  schoolId,
+                }
+              })
+              .filter(Boolean) as Array<{
+              teacherId: string
+              departmentId: string
+              schoolId: string
+            }>
+
+            if (deptData.length > 0) {
+              await tx.teacherDepartment.createMany({ data: deptData })
+            }
+          })
+
+          result.imported += chunk.length
+        } catch (error) {
+          for (const r of chunk) {
+            result.errors.push({
+              row: r.rowNumber,
+              error:
+                error instanceof Error ? error.message : "Batch insert failed",
+              data: r.validated,
+            })
+            result.failed++
+          }
+        }
+      }
+
+      logger.info("Teacher batch import completed", {
+        action: "teacher_import",
+        schoolId,
+        imported: result.imported,
+        failed: result.failed,
+        skipped: result.skipped,
+      })
 
       result.success =
         result.imported > 0 || (result.skipped > 0 && result.failed === 0)
@@ -595,10 +865,7 @@ class CsvImportService {
       logger.error(
         "Teacher import failed",
         error instanceof Error ? error : new Error("Unknown error"),
-        {
-          action: "teacher_import_error",
-          schoolId,
-        }
+        { action: "teacher_import_error", schoolId }
       )
       throw error
     }
@@ -613,6 +880,10 @@ class CsvImportService {
       "email",
       "studentId",
       "yearLevel",
+      "middleName",
+      "section",
+      "enrollmentDate",
+      "status",
       "guardianName",
       "guardianEmail",
       "guardianPhone",
@@ -621,8 +892,8 @@ class CsvImportService {
     ]
     const sample = [
       headers.join(","),
-      "John Doe,john.doe@example.com,STD001,Grade 10,Jane Doe,jane.doe@example.com,+1234567890,2008-05-15,male",
-      "Sarah Smith,,STD002,Grade 9,Mike Smith,mike.smith@example.com,+0987654321,2009-03-22,female",
+      "John Doe,john.doe@example.com,STD001,Grade 10,Michael,Grade 10-A,2024-09-01,Active,Jane Doe,jane.doe@example.com,+1234567890,2008-05-15,male",
+      "Sarah Smith,,STD002,Grade 9,,Grade 9-C,2024-09-01,Active,Mike Smith,mike.smith@example.com,+0987654321,2009-03-22,female",
     ]
     return sample.join("\n")
   }
@@ -732,6 +1003,7 @@ class CsvImportService {
               password: defaultPassword,
               role: "STAFF",
               schoolId,
+              mustChangePassword: true,
             },
           })
 
@@ -835,6 +1107,15 @@ class CsvImportService {
     try {
       const rows = this.parseCSV(csvContent)
 
+      // Detect CSV language from a sample of names
+      const sampleNames = rows
+        .slice(0, 5)
+        .map((r: any) => `${r.givenName || ""} ${r.surname || ""}`.trim())
+        .filter(Boolean)
+      const detectedLang = sampleNames.length
+        ? detectLanguage(sampleNames.join(" "))
+        : ("ar" as const)
+
       for (let i = 0; i < rows.length; i++) {
         const rowNumber = i + 2
         try {
@@ -889,6 +1170,7 @@ class CsvImportService {
               password: defaultPassword,
               role: "GUARDIAN",
               schoolId,
+              mustChangePassword: true,
             },
           })
 
@@ -900,6 +1182,7 @@ class CsvImportService {
               givenName: validated.givenName,
               surname: validated.surname,
               emailAddress: validated.emailAddress || undefined,
+              lang: detectedLang,
             },
           })
 

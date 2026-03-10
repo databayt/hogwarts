@@ -201,6 +201,9 @@ export async function getPendingRequests(
     status: r.status,
     joinMethod: r.joinMethod,
     createdAt: r.createdAt,
+    expiresAt: r.expiresAt,
+    lastResentAt: r.lastResentAt,
+    resentCount: r.resentCount,
   }))
 }
 

@@ -1,0 +1,195 @@
+---
+title: "Onboarding Videos"
+description: "Adapting Airbnb's onboarding stage videos into school-themed animations for Hogwarts"
+---
+
+# Onboarding Videos
+
+Guide for adapting mkan's 3 Airbnb onboarding stage videos into school-themed animations for the Hogwarts onboarding flow.
+
+## Original Videos (from Airbnb CDN)
+
+The mkan host onboarding has 3 stages, each opening with a ~4-second animated video. All videos are hosted on Airbnb's CDN (`stream.media.muscache.com`), auto-play muted and inline, with transparent/gradient backgrounds. Together they form a progressive narrative: a building starts as a basic structure, gains detail, and completes.
+
+| Stage | Title                    | Video URL                                                                                         | Visual                             |
+| ----- | ------------------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 1     | Tell us about your place | `https://stream.media.muscache.com/zFaydEaihX6LP01x8TSCl76WHblb01Z01RrFELxyCXoNek.mp4?v_q=high`   | Basic house structure appears      |
+| 2     | Make it stand out        | `https://stream.media.muscache.com/H0101WTUG2qWbyFhy02jlOggSkpsM9H02VOWN52g02oxhDVM.mp4?v_q=high` | More details added to the building |
+| 3     | Finish up and publish    | `https://stream.media.muscache.com/KeNKUpa01dRaT5g00SSBV95FqXYkqf01DJdzn01F1aT00vCI.mp4?v_q=high` | Building completes                 |
+
+### Static Overview Images
+
+The overview landing page also uses static illustrations:
+
+- `/airbnb/place.webp` - Stage 1
+- `/airbnb/stand-out.webp` - Stage 2
+- `/airbnb/publish.png` - Stage 3
+
+### Source Code Locations (mkan)
+
+- Stage 1: `src/app/[lang]/host/[id]/about-place/page.tsx`
+- Stage 2: `src/app/[lang]/host/[id]/stand-out/page.tsx`
+- Stage 3: `src/app/[lang]/host/[id]/finish-setup/page.tsx`
+- Step header: `src/components/host/host-step-header.tsx`
+- Config: `src/components/onboarding/configs.tsx`
+
+## Adaptation Goal
+
+Replace the house/home building animation with a school building animation while:
+
+- Keeping the same progressive 3-stage narrative (outline, details, complete)
+- Maintaining the same flat/geometric animation style
+- Keeping videos at ~4 seconds each
+- Preserving transparent or gradient backgrounds
+
+## Free AI Tool Recommendations
+
+### Tier 1: Best Free Option
+
+**Kling AI (free tier)**
+
+- 10 free credits/day, each 4-second clip costs ~1 credit
+- Use Image-to-Video mode
+- High quality for short animations
+- URL: https://klingai.com
+
+### Tier 2: Strong Alternatives
+
+| Tool                | Free Tier                | Best For                      | URL                               |
+| ------------------- | ------------------------ | ----------------------------- | --------------------------------- |
+| Hailuo AI (MiniMax) | Free credits daily       | Consistent style across clips | https://hailuoai.video            |
+| Luma Dream Machine  | Limited free generations | Quick iterations              | https://lumalabs.ai/dream-machine |
+| Pika                | 150 credits on signup    | Style transfer from reference | https://pika.art                  |
+
+### Tier 3: Paid (if budget allows later)
+
+| Tool               | Price                 | Why Better                 | URL                     |
+| ------------------ | --------------------- | -------------------------- | ----------------------- |
+| Runway Gen-3 Alpha | $12/mo                | Best video-to-video mode   | https://runwayml.com    |
+| Sora (OpenAI)      | ChatGPT Plus ($20/mo) | Highest quality generation | https://openai.com/sora |
+
+## Recommended Free Workflow
+
+### Step 1: Extract Keyframes
+
+Use any screenshot tool to capture the peak frame from each original video at the moment showing the most complete structure.
+
+### Step 2: Edit Keyframes
+
+Use **Canva** (free tier) or **Figma** (free tier) to modify each keyframe:
+
+- Swap the house shape for a school building silhouette
+- Add school elements: flag, clock tower, windows in grid pattern
+- Keep the same flat illustration style and color palette
+- Maintain the same composition and framing
+
+Alternative for generating keyframes from scratch: **Microsoft Designer** (Copilot Image Creator) - free, generates school buildings in matching flat style.
+
+### Step 3: Animate
+
+Use **Kling AI** free tier (Image-to-Video):
+
+- Upload modified keyframe
+- Prompt: "smooth building animation, flat illustration style, minimal motion, 4 seconds"
+- Generate each stage separately
+
+### Step 4: Handle Transparent Background
+
+Options ranked by quality:
+
+1. **Skip transparency** (recommended free approach) - Use a matching gradient background and bake it into the video. The mkan container already uses `from-orange-50 to-pink-50` gradient. Match Hogwarts' theme colors instead.
+
+2. **CapCut** (free) - Has built-in background removal. Works for simple, high-contrast animations.
+
+3. **Unscreen.com** - Free for short clips but may add watermark. Use free trial for 3 clips. URL: https://www.unscreen.com
+
+4. **Remove.bg Video** - Limited free tier. URL: https://www.remove.bg
+
+### Step 5: Final Polish
+
+Use **CapCut** (free) to:
+
+- Trim to exact 4-second duration
+- Add loop point (videos should loop seamlessly)
+- Export as MP4 (H.264) for browser compatibility
+- Optionally export as WebM for better compression
+
+## Alternative Approaches
+
+### Approach A: Replace Videos with Lottie Animations
+
+Instead of AI-generated videos, create **Lottie animations** for pixel-perfect results with true transparency.
+
+| Tool                      | Cost                        | Skill Required             |
+| ------------------------- | --------------------------- | -------------------------- |
+| LottieFiles marketplace   | Free (many free animations) | None - browse and download |
+| Rive                      | Free tier available         | Low - visual editor        |
+| After Effects + Bodymovin | Paid                        | High - motion design       |
+| Fiverr commission         | $50-100 for 3 clips         | None - hire someone        |
+
+Search LottieFiles for "school building animation" or "building construction animation": https://lottiefiles.com
+
+### Approach B: Keep Original Videos
+
+The Airbnb videos are abstract enough that most users won't associate them with Airbnb. They show generic building animations, not branded content. Consider:
+
+- Keep the 3 videos as-is
+- Only replace the static overview images with school-themed illustrations
+- Use Canva or Microsoft Designer to create school illustrations for free
+
+This is the **lowest effort, zero risk** approach.
+
+### Approach C: Use Static Illustrations Instead
+
+Replace videos entirely with animated CSS/SVG illustrations:
+
+- No external dependencies
+- Perfect transparency
+- Tiny file size
+- Fully customizable
+- Can be animated with Framer Motion (already in the stack)
+
+## Integration in Hogwarts
+
+The hogwarts onboarding currently has 15 steps. The school-adapted videos would slot into the stage intro pages following the same pattern as mkan:
+
+```tsx
+// Example: school onboarding stage intro
+const illustration = (
+  <div className="mx-auto flex h-[300px] w-full max-w-xl items-center justify-center overflow-hidden rounded-xl sm:aspect-video sm:w-3/4 sm:rounded-2xl">
+    <video
+      ref={videoRef}
+      className="h-full w-full object-cover"
+      autoPlay
+      muted
+      playsInline
+      preload="auto"
+    >
+      <source src="/videos/onboarding-stage-1.mp4" type="video/mp4" />
+    </video>
+  </div>
+)
+```
+
+Store generated videos in `public/videos/`:
+
+- `onboarding-stage-1.mp4` - School outline appears
+- `onboarding-stage-2.mp4` - Details added (windows, flag, playground)
+- `onboarding-stage-3.mp4` - School building completes
+
+## Tool Reference Summary
+
+| Tool               | Purpose                   | Cost                      | URL                               |
+| ------------------ | ------------------------- | ------------------------- | --------------------------------- |
+| Kling AI           | Image-to-video animation  | Free (10 credits/day)     | https://klingai.com               |
+| Hailuo AI          | Video generation          | Free credits daily        | https://hailuoai.video            |
+| Luma Dream Machine | Quick video generation    | Limited free              | https://lumalabs.ai/dream-machine |
+| Pika               | Style transfer video      | 150 free credits          | https://pika.art                  |
+| Runway Gen-3       | Video-to-video (paid)     | $12/mo                    | https://runwayml.com              |
+| Canva              | Keyframe editing          | Free tier                 | https://www.canva.com             |
+| Figma              | Keyframe editing          | Free tier                 | https://www.figma.com             |
+| Microsoft Designer | AI image generation       | Free                      | https://designer.microsoft.com    |
+| CapCut             | Video editing, BG removal | Free                      | https://www.capcut.com            |
+| Unscreen           | Background removal        | Free (watermark)          | https://www.unscreen.com          |
+| LottieFiles        | Animation marketplace     | Free animations available | https://lottiefiles.com           |
+| Rive               | Interactive animations    | Free tier                 | https://rive.app                  |

@@ -39,4 +39,7 @@ export type MembershipRequestRow = {
   status: MembershipRequestStatus
   joinMethod: JoinMethod
   createdAt: Date
+  expiresAt: Date | null
+  lastResentAt: Date | null
+  resentCount: number
 }

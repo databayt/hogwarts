@@ -129,11 +129,21 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
     }))
   )
 
+  // Derive school levels from academic grades
+  const schoolLevels = Array.from(
+    new Set(
+      grades
+        .map((g) => g.level?.level as string | undefined)
+        .filter((l): l is string => Boolean(l))
+    )
+  )
+
   return (
     <SubjectPicker
       subjects={translatedSubjects}
       grades={translatedGrades}
       selections={selections}
+      schoolLevels={schoolLevels}
       lang={lang}
     />
   )

@@ -23,6 +23,12 @@ model MembershipRequest {
   rejectionReason String?                 @db.Text
   joinMethod      JoinMethod              @default(MANUAL)
 
+  // Invitation lifecycle
+  invitationToken String?   @unique
+  expiresAt       DateTime?
+  lastResentAt    DateTime?
+  resentCount     Int       @default(0)
+
   // Review tracking
   reviewedById    String?
   reviewedAt      DateTime?
@@ -37,5 +43,6 @@ model MembershipRequest {
 
   @@unique([schoolId, email])
   @@index([schoolId, status])
+  @@index([expiresAt])
   @@map("membership_requests")
 }

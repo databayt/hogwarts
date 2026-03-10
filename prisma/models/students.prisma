@@ -27,6 +27,7 @@ model Student {
   givenName  String
   middleName String?
   surname    String
+  lang       String  @default("ar") // Language of stored name data
 
   // Extended personal details
   dateOfBirth    DateTime  @db.Date
@@ -94,6 +95,7 @@ model Student {
   studentClasses    StudentClass[]
   studentYearLevels StudentYearLevel[]
   studentGuardians  StudentGuardian[]
+  accessCodes       StudentAccessCode[]
   attendances       Attendance[]
   submissions       AssignmentSubmission[]
   examResults       ExamResult[]
@@ -187,6 +189,7 @@ model Guardian {
   schoolId        String
   givenName       String
   surname         String
+  lang            String  @default("ar") // Language of stored name data
   emailAddress    String?
   teacherId       String? @unique // Link to teacher if guardian is also a teacher
   profilePhotoUrl String?
@@ -498,4 +501,24 @@ model FeeRecord {
   @@index([schoolId, studentId, academicYearId])
   @@index([schoolId, studentId, status])
   @@map("fee_records")
+}
+
+model StudentAccessCode {
+  id        String    @id @default(cuid())
+  schoolId  String
+  studentId String
+  code      String    @unique
+  expiresAt DateTime?
+  usedAt    DateTime?
+  usedById  String?
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([schoolId, code])
+  @@index([studentId])
+  @@index([expiresAt])
+  @@map("student_access_codes")
 }

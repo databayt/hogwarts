@@ -87,15 +87,29 @@ export function MapboxLocationPicker({
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: "mapbox://styles/mapbox/standard",
       center: value ? [value.longitude, value.latitude] : DEFAULT_CENTER,
       zoom: value ? 15 : DEFAULT_ZOOM,
+      attributionControl: false,
+      config: {
+        basemap: {
+          theme: "faded",
+          lightPreset: "day",
+          showPointOfInterestLabels: false,
+          showTransitLabels: false,
+          showPedestrianRoads: false,
+          show3dObjects: false,
+          showPlaceLabels: true,
+          showRoadLabels: true,
+        },
+      },
     })
-
-    map.addControl(new mapboxgl.NavigationControl(), "top-right")
 
     map.on("load", () => {
       setMapReady(true)
+      // Remove Mapbox logo
+      const logo = mapContainerRef.current?.querySelector(".mapboxgl-ctrl-logo")
+      if (logo) logo.remove()
     })
 
     map.on("click", (e) => {

@@ -72,7 +72,7 @@ export const RegisterForm = (props: Props) => {
   return (
     <div
       className={cn(
-        "flex min-w-[200px] flex-col gap-6 md:min-w-[350px]",
+        "flex min-w-[280px] flex-col gap-6 md:min-w-[350px]",
         className
       )}
       {...rest}
@@ -81,7 +81,7 @@ export const RegisterForm = (props: Props) => {
         <CardHeader className="text-center" />
         <CardContent>
           <Suspense fallback={<div className="h-10" />}>
-            <Social />
+            <Social dictionary={dictionary} />
           </Suspense>
         </CardContent>
         <CardContent>

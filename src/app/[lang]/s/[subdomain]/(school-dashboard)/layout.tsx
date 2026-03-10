@@ -4,6 +4,7 @@
 import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 
+import { db } from "@/lib/db"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { ModalProvider } from "@/components/atom/modal/context"
@@ -14,6 +15,7 @@ import {
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
+import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
 import PlatformHeader from "@/components/template/platform-header/content"
 import PlatformSidebar from "@/components/template/platform-sidebar/content"
 
@@ -103,6 +105,13 @@ export default async function PlatformLayout({
   const serverRole = session.user.role
   const isRTL = checkIsRTL(lang as Locale)
 
+  // Check if user must change their password (e.g., admin-forced reset)
+  const currentUser = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { mustChangePassword: true, password: true },
+  })
+  const mustChangePassword = currentUser?.mustChangePassword ?? false
+
   return (
     <SchoolProvider school={school}>
       <SidebarProvider>
@@ -129,6 +138,11 @@ export default async function PlatformLayout({
                   {children}
                 </div>
               </div>
+              {mustChangePassword && (
+                <ForceChangePasswordModal
+                  hasPassword={!!currentUser?.password}
+                />
+              )}
             </div>
           </PageHeadingProvider>
         </ModalProvider>

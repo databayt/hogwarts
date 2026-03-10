@@ -57,7 +57,7 @@ export const NewVerificationForm = (props: Props) => {
   return (
     <div
       className={cn(
-        "flex min-w-[200px] flex-col gap-6 md:min-w-[350px]",
+        "flex min-w-[280px] flex-col gap-6 md:min-w-[350px]",
         className
       )}
       {...rest}

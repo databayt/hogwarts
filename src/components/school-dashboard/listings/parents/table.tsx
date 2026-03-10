@@ -6,11 +6,12 @@ import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { CircleCheck, CircleX, Mail, Users } from "lucide-react"
+import { CircleCheck, CircleX, Link2, Mail, Users } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
 import {
@@ -32,6 +33,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteParent, getParents, getParentsCSV } from "./actions"
 import { getParentColumns, type ParentRow } from "./columns"
+import { LinkChildDialog } from "./link-child-dialog"
 
 interface ParentsTableProps {
   initialData: ParentRow[]
@@ -70,6 +72,9 @@ function ParentsTableInner({
     active: dictionary?.active || "Active",
     inactive: dictionary?.inactive || "Inactive",
   }
+
+  // Link child dialog state
+  const [linkChildOpen, setLinkChildOpen] = useState(false)
 
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
@@ -226,18 +231,30 @@ function ParentsTableInner({
 
   return (
     <>
-      <PlatformToolbar
-        table={view === "table" ? table : undefined}
-        view={view}
-        onToggleView={toggleView}
-        searchValue={searchValue}
-        onSearchChange={handleSearchChange}
-        searchPlaceholder={t.search}
-        onCreate={() => openModal()}
-        getCSV={handleExportCSV}
-        entityName="parents"
-        translations={toolbarTranslations}
-      />
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <PlatformToolbar
+            table={view === "table" ? table : undefined}
+            view={view}
+            onToggleView={toggleView}
+            searchValue={searchValue}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder={t.search}
+            onCreate={() => openModal()}
+            getCSV={handleExportCSV}
+            entityName="parents"
+            translations={toolbarTranslations}
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setLinkChildOpen(true)}
+        >
+          <Link2 className="me-2 h-4 w-4" />
+          Link Child
+        </Button>
+      </div>
 
       {view === "table" ? (
         <DataTable
@@ -305,6 +322,12 @@ function ParentsTableInner({
       )}
 
       <Modal content={<ParentCreateForm onSuccess={refresh} />} />
+
+      <LinkChildDialog
+        open={linkChildOpen}
+        onOpenChange={setLinkChildOpen}
+        onSuccess={refresh}
+      />
     </>
   )
 }
