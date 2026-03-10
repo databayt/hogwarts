@@ -4,17 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
-import {
-  Check,
-  GraduationCap,
-  Layers,
-  Loader2,
-  Minus,
-  Plus,
-  Search,
-} from "lucide-react"
+import { Check, Loader2, Plus, Search, X } from "lucide-react"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -38,11 +29,9 @@ interface CatalogSubject {
   department: string
   levels: string[]
   color: string | null
-  imageKey: string | null
-  thumbnailKey: string | null
-  totalChapters: number
-  totalLessons: number
-  usageCount: number
+  curriculum: string
+  grades: number[]
+  imageUrl: string | null
   isSelected: boolean
 }
 
@@ -70,7 +59,15 @@ interface Props {
   grades: Grade[]
   selections: Selection[]
   schoolLevels: string[]
+  curricula: string[]
   lang: Locale
+}
+
+const CURRICULUM_LABELS: Record<string, string> = {
+  "us-k12": "US K-12",
+  national: "National",
+  british: "British",
+  ib: "IB",
 }
 
 const LEVEL_LABELS: Record<string, Record<string, string>> = {
@@ -86,6 +83,7 @@ export function SubjectPicker({
   grades,
   selections,
   schoolLevels,
+  curricula,
   lang,
 }: Props) {
   const { dictionary } = useDictionary()
@@ -97,6 +95,7 @@ export function SubjectPicker({
     schoolLevels.length === 1 ? schoolLevels[0] : "all"
   )
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
+  const [curriculumFilter, setCurriculumFilter] = useState("all")
   const [isPending, startTransition] = useTransition()
   const [pendingSubjectId, setPendingSubjectId] = useState<string | null>(null)
   const [optimisticSelections, setOptimisticSelections] = useState<Set<string>>(
@@ -157,6 +156,7 @@ export function SubjectPicker({
   }
 
   const filteredSubjects = useMemo(() => {
+    const selectedGrade = grades.find((g) => g.id === selectedGradeId)
     return subjects.filter((s) => {
       const matchesSearch =
         !search ||
@@ -164,20 +164,34 @@ export function SubjectPicker({
         s.department.toLowerCase().includes(search.toLowerCase())
       const matchesLevel =
         levelFilter === "all" || s.levels.includes(levelFilter)
+      const matchesCurriculum =
+        curriculumFilter === "all" || s.curriculum === curriculumFilter
+      const matchesGrade =
+        !selectedGrade ||
+        s.grades.length === 0 ||
+        s.grades.includes(selectedGrade.gradeNumber)
       const selected = optimisticSelections.has(`${s.id}:${selectedGradeId}`)
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "included" && selected) ||
         (statusFilter === "not-included" && !selected)
-      return matchesSearch && matchesLevel && matchesStatus
+      return (
+        matchesSearch &&
+        matchesLevel &&
+        matchesCurriculum &&
+        matchesGrade &&
+        matchesStatus
+      )
     })
   }, [
     subjects,
     search,
     levelFilter,
+    curriculumFilter,
     statusFilter,
     optimisticSelections,
     selectedGradeId,
+    grades,
   ])
 
   // Group subjects by department
@@ -217,21 +231,24 @@ export function SubjectPicker({
       <p className="text-muted-foreground text-sm">{t.catalogDescription}</p>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div
+        role="toolbar"
+        className="flex w-full flex-wrap items-center gap-2 p-1"
+      >
         {/* Search */}
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+        <div className="relative">
+          <Search className="text-muted-foreground absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder={t.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="ps-9"
+            className="h-9 w-40 ps-8 lg:w-56"
           />
         </div>
 
-        {/* Level filter — always visible */}
+        {/* Level filter */}
         <Select value={levelFilter} onValueChange={setLevelFilter}>
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="h-9 w-[140px]">
             <SelectValue placeholder={t.allLevels} />
           </SelectTrigger>
           <SelectContent>
@@ -244,9 +261,41 @@ export function SubjectPicker({
           </SelectContent>
         </Select>
 
-        {/* Grade pills */}
+        {/* Curriculum filter */}
+        {curricula.length > 1 && (
+          <Select value={curriculumFilter} onValueChange={setCurriculumFilter}>
+            <SelectTrigger className="h-9 w-[140px]">
+              <SelectValue placeholder="Curriculum" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Curricula</SelectItem>
+              {curricula.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {CURRICULUM_LABELS[c] ?? c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {/* Status filter */}
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+        >
+          <SelectTrigger className="h-9 w-[140px]">
+            <SelectValue placeholder={t.status} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t.all}</SelectItem>
+            <SelectItem value="included">{t.included}</SelectItem>
+            <SelectItem value="not-included">{t.notIncluded}</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Grade pills — pushed to end */}
         {visibleGrades.length > 0 && (
-          <div className="flex items-center gap-1">
+          <div className="ms-auto flex items-center gap-1">
             {visibleGrades.map((g) => (
               <Button
                 key={g.id}
@@ -260,21 +309,6 @@ export function SubjectPicker({
             ))}
           </div>
         )}
-
-        {/* Status filter */}
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as StatusFilter)}
-        >
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder={t.status} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t.all}</SelectItem>
-            <SelectItem value="included">{t.included}</SelectItem>
-            <SelectItem value="not-included">{t.notIncluded}</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Subject Grid by Department */}
@@ -293,11 +327,6 @@ export function SubjectPicker({
                 const selected = isSelected(subject.id)
                 const isThisPending =
                   isPending && pendingSubjectId === subject.id
-                const imagePath = getCatalogImageUrl(
-                  subject.thumbnailKey,
-                  subject.imageKey,
-                  "sm"
-                )
 
                 return (
                   <div
@@ -310,7 +339,7 @@ export function SubjectPicker({
                     {/* Thumbnail with optional check overlay */}
                     <div className="relative">
                       <PickerThumb
-                        imageUrl={imagePath}
+                        imageUrl={subject.imageUrl}
                         name={subject.name}
                         color={subject.color}
                       />
@@ -321,7 +350,7 @@ export function SubjectPicker({
                       )}
                     </div>
 
-                    {/* Name + level + stats */}
+                    {/* Name + level */}
                     <div className="min-w-0 flex-1 pe-1">
                       <p className="line-clamp-2 text-sm leading-snug font-medium">
                         {subject.name}
@@ -337,51 +366,28 @@ export function SubjectPicker({
                           </Badge>
                         ))}
                       </div>
-                      <div className="text-muted-foreground mt-0.5 flex items-center gap-3 text-xs">
-                        <span className="flex items-center gap-1">
-                          <Layers className="h-3 w-3" />
-                          {subject.totalChapters} {t.chapters}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <GraduationCap className="h-3 w-3" />
-                          {subject.usageCount} {t.schools}
-                        </span>
-                      </div>
                     </div>
 
-                    {/* Include/Remove button */}
+                    {/* Include/Remove icon button */}
                     <div className="shrink-0 pe-3">
-                      {selected ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:bg-destructive/10 h-8 gap-1 px-2"
-                          onClick={() => handleToggle(subject.id)}
-                          disabled={isThisPending}
-                        >
-                          {isThisPending ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Minus className="h-3.5 w-3.5" />
-                          )}
-                          <span className="hidden sm:inline">{t.remove}</span>
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 gap-1 px-2"
-                          onClick={() => handleToggle(subject.id)}
-                          disabled={isThisPending}
-                        >
-                          {isThisPending ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Plus className="h-3.5 w-3.5" />
-                          )}
-                          <span className="hidden sm:inline">{t.include}</span>
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "h-8 w-8",
+                          selected && "text-destructive hover:bg-destructive/10"
+                        )}
+                        onClick={() => handleToggle(subject.id)}
+                        disabled={isThisPending}
+                      >
+                        {isThisPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : selected ? (
+                          <X className="h-4 w-4" />
+                        ) : (
+                          <Plus className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
                   </div>
                 )

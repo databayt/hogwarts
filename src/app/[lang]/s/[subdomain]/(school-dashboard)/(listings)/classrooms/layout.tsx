@@ -22,6 +22,7 @@ export default async function ClassroomsLayout({ children, params }: Props) {
     {
       name: d?.navigation?.rooms || "Rooms",
       href: base,
+      exact: true,
     },
     {
       name: d?.navigation?.configure || "Configure",

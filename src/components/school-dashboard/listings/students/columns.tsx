@@ -76,7 +76,13 @@ export const getStudentColumns = (
     edit: dictionary?.edit || "Edit",
     delete: dictionary?.delete || "Delete",
     active: dictionary?.active || "Active",
+    unassigned: (dictionary as any)?.unassigned || "Unassigned",
+    incomplete: (dictionary as any)?.incomplete || "Incomplete",
     inactive: dictionary?.inactive || "Inactive",
+    suspended: (dictionary as any)?.suspended || "Suspended",
+    graduated: (dictionary as any)?.graduated || "Graduated",
+    transferred: (dictionary as any)?.transferred || "Transferred",
+    droppedOut: (dictionary as any)?.droppedOut || "Dropped Out",
     viewGrades: dictionary?.viewGrades || "View Grades",
     viewAttendance: dictionary?.viewAttendance || "View Attendance",
     viewClasses: dictionary?.viewClasses || "View Classes",
@@ -164,12 +170,57 @@ export const getStudentColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.status} />
       ),
+      cell: ({ getValue }) => {
+        const status = getValue<string>()
+        const config: Record<
+          string,
+          {
+            label: string
+            variant: "default" | "secondary" | "destructive" | "outline"
+            className?: string
+          }
+        > = {
+          active: { label: t.active, variant: "default" },
+          unassigned: {
+            label: t.unassigned,
+            variant: "outline",
+            className:
+              "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+          },
+          incomplete: {
+            label: t.incomplete,
+            variant: "outline",
+            className:
+              "border-orange-500/50 bg-orange-500/10 text-orange-700 dark:text-orange-400",
+          },
+          inactive: { label: t.inactive, variant: "secondary" },
+          suspended: { label: t.suspended, variant: "destructive" },
+          graduated: { label: t.graduated, variant: "outline" },
+          transferred: { label: t.transferred, variant: "outline" },
+          dropped_out: { label: t.droppedOut, variant: "secondary" },
+        }
+        const c = config[status] || {
+          label: status,
+          variant: "outline" as const,
+        }
+        return (
+          <Badge variant={c.variant} className={c.className}>
+            {c.label}
+          </Badge>
+        )
+      },
       meta: {
         label: t.status,
         variant: "select",
         options: [
           { label: t.active, value: "active" },
+          { label: t.unassigned, value: "unassigned" },
+          { label: t.incomplete, value: "incomplete" },
           { label: t.inactive, value: "inactive" },
+          { label: t.suspended, value: "suspended" },
+          { label: t.graduated, value: "graduated" },
+          { label: t.transferred, value: "transferred" },
+          { label: t.droppedOut, value: "dropped_out" },
         ],
       },
       enableColumnFilter: true,

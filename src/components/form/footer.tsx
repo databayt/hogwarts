@@ -381,12 +381,11 @@ export const ONBOARDING_CONFIG: StepConfig = {
     "price",
     "discount",
     "legal",
-    "subdomain",
   ],
   groups: {
     1: ["about-school", "title", "description", "location", "stand-out"],
     2: ["capacity", "schedule", "branding", "import", "finish-setup"],
-    3: ["join", "visibility", "price", "discount", "legal", "subdomain"],
+    3: ["join", "visibility", "price", "discount", "legal"],
   },
   groupLabels: [
     "Tell us about your school",

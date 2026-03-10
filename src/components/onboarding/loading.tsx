@@ -194,12 +194,27 @@ export function StandOutSkeleton() {
 
 export function AboutSchoolSkeleton() {
   return (
-    <OnboardingFormSkeleton>
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full rounded-md" />
-        <Skeleton className="h-24 w-full rounded-md" />
+    <div className="w-full">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-12">
+        {/* Left Side - Content */}
+        <div className="space-y-4 sm:space-y-6">
+          {/* "Step 1" label */}
+          <Skeleton className="h-4 w-16 sm:h-5" />
+          {/* Title */}
+          <Skeleton className="h-10 w-72" />
+          {/* Description - 2 lines */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full sm:h-5" />
+            <Skeleton className="h-4 w-4/5 sm:h-5" />
+          </div>
+        </div>
+
+        {/* Right Side - Illustration */}
+        <div className="order-first block lg:order-last lg:block">
+          <Skeleton className="mx-auto h-[200px] w-full max-w-xl rounded-xl sm:w-3/4 sm:rounded-2xl" />
+        </div>
       </div>
-    </OnboardingFormSkeleton>
+    </div>
   )
 }
 
@@ -222,13 +237,34 @@ export function CongratulationsSkeleton() {
 
 export function OnboardingEntrySkeleton() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-2xl space-y-8 p-8">
-        <Skeleton className="mx-auto h-12 w-48" />
-        <Skeleton className="mx-auto h-6 w-80" />
-        <div className="space-y-4">
-          <Skeleton className="h-12 w-full rounded-md" />
-          <Skeleton className="h-12 w-full rounded-md" />
+    <div className="flex min-h-screen w-full items-center justify-center">
+      <div className="mx-auto w-full max-w-xl space-y-3 px-3 sm:space-y-4 sm:px-4">
+        {/* Welcome Header — always present */}
+        <div>
+          <Skeleton className="mb-3 h-7 w-32 sm:mb-4 sm:h-8" />
+        </div>
+
+        {/* New school options — always present */}
+        <div className="space-y-2 sm:space-y-3">
+          <Skeleton className="h-5 w-40 sm:h-6" />
+          <div className="space-y-2">
+            {/* "Create a new school" row */}
+            <div className="flex min-h-[50px] items-center gap-2 border-b py-2 sm:min-h-[60px] sm:py-3">
+              <Skeleton className="h-8 w-8 flex-shrink-0 rounded-lg sm:h-10 sm:w-10" />
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <Skeleton className="h-4 w-36 sm:h-5" />
+                <Skeleton className="h-3 w-52 sm:h-3.5" />
+              </div>
+            </div>
+            {/* "Create from template" row */}
+            <div className="flex min-h-[50px] items-center gap-2 border-b py-2 sm:min-h-[60px] sm:py-3">
+              <Skeleton className="h-8 w-8 flex-shrink-0 rounded-lg sm:h-10 sm:w-10" />
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <Skeleton className="h-4 w-40 sm:h-5" />
+                <Skeleton className="h-3 w-56 sm:h-3.5" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

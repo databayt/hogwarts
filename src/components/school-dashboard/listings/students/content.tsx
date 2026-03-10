@@ -3,7 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { db } from "@/lib/db"
+import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
@@ -11,7 +11,6 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type StudentRow } from "@/components/school-dashboard/listings/students/columns"
 import { studentsSearchParams } from "@/components/school-dashboard/listings/students/list-params"
 import { StudentsTable } from "@/components/school-dashboard/listings/students/table"
-import { googleTranslateBatch } from "@/components/translation/google"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -21,91 +20,56 @@ interface Props {
 }
 
 /**
- * Batch-translate unique texts with DB cache check first, then Google API for misses.
- * Returns a Map<sourceText, translatedText>.
+ * Derive display status from DB status + data completeness.
+ * Names are proper nouns — never translated.
  */
-async function batchTranslate(
-  texts: string[],
-  sourceLang: string,
-  targetLang: string,
-  schoolId: string
-): Promise<Map<string, string>> {
-  const unique = [...new Set(texts.filter((t) => t.trim() !== ""))]
-  if (unique.length === 0) return new Map()
+function deriveDisplayStatus(s: any): string {
+  // Hard statuses from DB enum (override everything)
+  if (s.status === "SUSPENDED") return "suspended"
+  if (s.status === "GRADUATED") return "graduated"
+  if (s.status === "TRANSFERRED") return "transferred"
+  if (s.status === "DROPPED_OUT") return "dropped_out"
+  if (s.status === "INACTIVE") return "inactive"
 
-  // Check cache for all unique texts
-  const cached = await db.translationCache.findMany({
-    where: {
-      schoolId,
-      sourceLanguage: sourceLang,
-      targetLanguage: targetLang,
-      sourceText: { in: unique },
-    },
-    select: { sourceText: true, translatedText: true, id: true },
-  })
+  // Soft statuses derived from data completeness (ACTIVE students only)
+  if (!s.academicGradeId && !s.sectionId) return "unassigned"
+  if (!s._count?.studentGuardians) return "incomplete"
 
-  const result = new Map<string, string>()
-  const cachedTexts = new Set<string>()
-  for (const c of cached) {
-    result.set(c.sourceText, c.translatedText)
-    cachedTexts.add(c.sourceText)
-  }
+  return "active"
+}
 
-  // Update hit counts (fire-and-forget)
-  if (cached.length > 0) {
-    db.translationCache
-      .updateMany({
-        where: { id: { in: cached.map((c) => c.id) } },
-        data: { hitCount: { increment: 1 }, lastAccessedAt: new Date() },
-      })
-      .catch(() => {})
-  }
-
-  // Translate cache misses via batch API
-  const misses = unique.filter((t) => !cachedTexts.has(t))
-  if (misses.length > 0) {
-    try {
-      // Google Translate batch API: up to 128 texts per call
-      const BATCH_SIZE = 128
-      for (let i = 0; i < misses.length; i += BATCH_SIZE) {
-        const chunk = misses.slice(i, i + BATCH_SIZE)
-        const translated = await googleTranslateBatch(
-          chunk,
-          sourceLang,
-          targetLang
-        )
-        for (let j = 0; j < chunk.length; j++) {
-          result.set(chunk[j], translated[j] || chunk[j])
-        }
-
-        // Cache new translations (fire-and-forget)
-        Promise.allSettled(
-          chunk.map((text, j) =>
-            db.translationCache
-              .create({
-                data: {
-                  schoolId,
-                  sourceText: text,
-                  sourceLanguage: sourceLang,
-                  targetLanguage: targetLang,
-                  translatedText: translated[j] || "",
-                  provider: "google",
-                },
-              })
-              .catch(() => {})
-          )
-        )
+/**
+ * Build status filter for Prisma WHERE clause
+ */
+function buildStatusFilter(status: string): Record<string, any> {
+  switch (status) {
+    case "active":
+      return {
+        status: "ACTIVE",
+        OR: [{ academicGradeId: { not: null } }, { sectionId: { not: null } }],
       }
-    } catch (error) {
-      // On API failure, return originals for misses
-      console.error("[batchTranslate] API error, using originals:", error)
-      for (const text of misses) {
-        if (!result.has(text)) result.set(text, text)
+    case "unassigned":
+      return {
+        status: "ACTIVE",
+        academicGradeId: null,
+        sectionId: null,
       }
-    }
+    case "incomplete":
+      // ACTIVE + has grade/section but no guardians (post-filtered)
+      return { status: "ACTIVE" }
+    case "inactive":
+      return { status: "INACTIVE" }
+    case "suspended":
+      return { status: "SUSPENDED" }
+    case "graduated":
+      return { status: "GRADUATED" }
+    case "transferred":
+      return { status: "TRANSFERRED" }
+    case "dropped_out":
+      return { status: "DROPPED_OUT" }
+    default:
+      return {}
   }
-
-  return result
 }
 
 export default async function StudentsContent({
@@ -134,13 +98,7 @@ export default async function StudentsContent({
             ],
           }
         : {}),
-      ...(sp.status
-        ? sp.status === "active"
-          ? { status: "ACTIVE" }
-          : sp.status === "inactive"
-            ? { status: "INACTIVE" }
-            : {}
-        : {}),
+      ...(sp.status ? buildStatusFilter(sp.status) : {}),
     }
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
@@ -159,6 +117,7 @@ export default async function StudentsContent({
             select: {
               studentClasses: true,
               results: true,
+              studentGuardians: true,
             },
           },
           section: {
@@ -172,48 +131,55 @@ export default async function StudentsContent({
       studentModel.count({ where }),
     ])
 
-    // Collect all texts that need translation
-    const textsToTranslate: string[] = []
-    const needsTranslation = (row: any) => row.lang && row.lang !== lang
+    // Translate section/grade names only (not student names — those are proper nouns)
+    // Max unique section/grade names is small (~18), so individual calls are fine
+    const sectionTranslations = new Map<string, string>()
+    const gradeTranslations = new Map<string, string>()
 
+    const uniqueSections = new Set<string>()
+    const uniqueGrades = new Set<string>()
     for (const s of rows as any[]) {
-      if (needsTranslation(s)) {
-        textsToTranslate.push(`${s.givenName} ${s.surname}`.trim())
-      }
-      if (s.section?.name && s.section.lang && s.section.lang !== lang) {
-        textsToTranslate.push(s.section.name)
-      }
-      if (
-        s.academicGrade?.name &&
-        s.academicGrade.lang &&
-        s.academicGrade.lang !== lang
-      ) {
-        textsToTranslate.push(s.academicGrade.name)
-      }
+      if (s.section?.name && s.section.lang !== lang)
+        uniqueSections.add(s.section.name)
+      if (s.academicGrade?.name && s.academicGrade.lang !== lang)
+        uniqueGrades.add(s.academicGrade.name)
     }
 
-    // Single batch translation for all texts
-    const translationMap =
-      textsToTranslate.length > 0
-        ? await batchTranslate(textsToTranslate, "ar", lang, effectiveSchoolId!)
-        : new Map<string, string>()
+    // Translate unique section/grade names in parallel
+    await Promise.all([
+      ...Array.from(uniqueSections).map(async (name) => {
+        const translated = await getDisplayText(
+          name,
+          "ar",
+          lang,
+          effectiveSchoolId!
+        )
+        sectionTranslations.set(name, translated)
+      }),
+      ...Array.from(uniqueGrades).map(async (name) => {
+        const translated = await getDisplayText(
+          name,
+          "ar",
+          lang,
+          effectiveSchoolId!
+        )
+        gradeTranslations.set(name, translated)
+      }),
+    ])
 
-    // Map rows using the translation lookup
+    // Map rows — names always display as-is (proper nouns)
     data = (rows as any[]).map((s) => {
-      const rawName = `${s.givenName} ${s.surname}`.trim()
-      const name = needsTranslation(s)
-        ? translationMap.get(rawName) || rawName
-        : rawName
+      const name = `${s.givenName} ${s.surname}`.trim()
 
       const sectionName = s.section?.name
-        ? s.section.lang && s.section.lang !== lang
-          ? translationMap.get(s.section.name) || s.section.name
+        ? s.section.lang !== lang
+          ? sectionTranslations.get(s.section.name) || s.section.name
           : s.section.name
         : "-"
 
       const gradeName = s.academicGrade?.name
-        ? s.academicGrade.lang && s.academicGrade.lang !== lang
-          ? translationMap.get(s.academicGrade.name) || s.academicGrade.name
+        ? s.academicGrade.lang !== lang
+          ? gradeTranslations.get(s.academicGrade.name) || s.academicGrade.name
           : s.academicGrade.name
         : null
 
@@ -224,7 +190,7 @@ export default async function StudentsContent({
         studentId: s.studentId || null,
         sectionName: sectionName !== "-" ? sectionName : gradeName || "-",
         gradeName,
-        status: s.status === "ACTIVE" ? "active" : "inactive",
+        status: deriveDisplayStatus(s),
         createdAt: (s.createdAt as Date).toISOString(),
         classCount: s._count?.studentClasses || 0,
         gradeCount: s._count?.results || 0,

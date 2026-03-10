@@ -143,7 +143,7 @@ function parseSectionString(section: string): {
   sectionLetter: string | null
 } {
   // Try "Grade N-X" or "Grade N X"
-  const gradeMatch = section.match(/grade\s*(\d+)\s*[-\s]?\s*([A-Za-z])?/i)
+  const gradeMatch = section.match(/grade\s*(-?\d+)\s*[-\s]?\s*([A-Za-z])?/i)
   if (gradeMatch) {
     return {
       gradeNumber: parseInt(gradeMatch[1], 10),
@@ -151,7 +151,7 @@ function parseSectionString(section: string): {
     }
   }
   // Try "N-X" or "NX"
-  const shortMatch = section.match(/^(\d+)\s*[-]?\s*([A-Za-z])$/)
+  const shortMatch = section.match(/^(-?\d+)\s*[-]?\s*([A-Za-z])$/)
   if (shortMatch) {
     return {
       gradeNumber: parseInt(shortMatch[1], 10),

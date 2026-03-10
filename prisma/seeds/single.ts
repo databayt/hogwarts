@@ -31,6 +31,7 @@ import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { backfillClassGrades } from "./backfill-class-grades"
 import { backfillExamCatalogBridges } from "./backfill-exam-catalog-bridges"
+import { backfillStudentSections } from "./backfill-student-sections"
 import { seedBanking } from "./banking"
 import { seedCatalog } from "./catalog"
 import { seedCatalogBooks } from "./catalog-books"
@@ -59,6 +60,7 @@ import { seedAllPeople, seedStudentDocuments } from "./people"
 import { seedProfileImages } from "./profile-images"
 import { seedQBank } from "./qbank"
 import { seedSchoolWithBranding } from "./school"
+import { seedComboniTeachers } from "./seed-comboni-teachers"
 import { seedStaffMembers } from "./staff-members"
 import { seedStreamCourses, seedStreamEnrollments } from "./stream"
 import { seedSubjects } from "./subjects"
@@ -760,6 +762,23 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async () => {
       await backfillExamCatalogBridges()
+    },
+  },
+  "backfill-student-sections": {
+    description:
+      "Distribute unassigned students across sections (round-robin). Set BACKFILL_SCHOOL_DOMAIN=xxx to target one school.",
+    global: true,
+    run: async () => {
+      const domain = process.env.BACKFILL_SCHOOL_DOMAIN
+      await backfillStudentSections(domain)
+    },
+  },
+  "comboni-teachers": {
+    description:
+      "Seed 30 teachers for Comboni school with department + subject expertise links",
+    global: true,
+    run: async () => {
+      await seedComboniTeachers()
     },
   },
   "catalog-exam-templates": {

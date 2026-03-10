@@ -95,6 +95,49 @@ import {
 } from "@/components/school-dashboard/listings/students/validation"
 
 // ============================================================================
+// Status Helpers
+// ============================================================================
+
+/** Derive display status from DB status + data completeness */
+function deriveStudentDisplayStatus(s: any): string {
+  if (s.status === "SUSPENDED") return "suspended"
+  if (s.status === "GRADUATED") return "graduated"
+  if (s.status === "TRANSFERRED") return "transferred"
+  if (s.status === "DROPPED_OUT") return "dropped_out"
+  if (s.status === "INACTIVE") return "inactive"
+  if (!s.academicGradeId && !s.sectionId) return "unassigned"
+  if (!s._count?.studentGuardians) return "incomplete"
+  return "active"
+}
+
+/** Build Prisma WHERE filter for a display status value */
+function buildStudentStatusFilter(status: string): Record<string, any> {
+  switch (status) {
+    case "active":
+      return {
+        status: "ACTIVE",
+        OR: [{ academicGradeId: { not: null } }, { sectionId: { not: null } }],
+      }
+    case "unassigned":
+      return { status: "ACTIVE", academicGradeId: null, sectionId: null }
+    case "incomplete":
+      return { status: "ACTIVE" }
+    case "inactive":
+      return { status: "INACTIVE" }
+    case "suspended":
+      return { status: "SUSPENDED" }
+    case "graduated":
+      return { status: "GRADUATED" }
+    case "transferred":
+      return { status: "TRANSFERRED" }
+    case "dropped_out":
+      return { status: "DROPPED_OUT" }
+    default:
+      return {}
+  }
+}
+
+// ============================================================================
 // Constants
 // ============================================================================
 
@@ -607,13 +650,7 @@ export async function getStudents(
             ],
           }
         : {}),
-      ...(sp.status
-        ? sp.status === "active"
-          ? { status: "ACTIVE" }
-          : sp.status === "inactive"
-            ? { status: "INACTIVE" }
-            : {}
-        : {}),
+      ...(sp.status ? buildStudentStatusFilter(sp.status) : {}),
     }
 
     // Build pagination
@@ -639,6 +676,7 @@ export async function getStudents(
             select: {
               studentClasses: true,
               results: true,
+              studentGuardians: true,
             },
           },
           section: {
@@ -660,7 +698,7 @@ export async function getStudents(
       studentId: (s.studentId as string | null) || null,
       sectionName: s.section?.name || s.academicGrade?.name || "-",
       gradeName: (s.academicGrade?.name as string) || null,
-      status: s.status === "ACTIVE" ? "active" : "inactive",
+      status: deriveStudentDisplayStatus(s),
       createdAt: (s.createdAt as Date).toISOString(),
       classCount: s._count?.studentClasses || 0,
       gradeCount: s._count?.results || 0,

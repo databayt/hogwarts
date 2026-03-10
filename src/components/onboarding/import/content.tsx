@@ -196,12 +196,12 @@ function DropZone({
   return (
     <div className="w-[400px]">
       <div
-        className={`rounded-lg border-2 border-dashed transition-colors ${
+        className={`min-h-[140px] rounded-lg border-2 border-dashed transition-colors ${
           state.error
             ? "border-red-300"
             : state.result
               ? state.importing
-                ? "border-blue-300"
+                ? "border-orange-300"
                 : "border-muted-foreground/30"
               : "border-muted-foreground/30 hover:border-muted-foreground/50"
         }`}
@@ -218,7 +218,7 @@ function DropZone({
               <div className="space-y-2 text-sm">
                 {state.result.imported > 0 && (
                   <div
-                    className={`flex items-center justify-center gap-2 ${state.importing ? "text-blue-600" : "text-green-700 dark:text-green-400"}`}
+                    className={`flex items-center justify-center gap-2 ${state.importing ? "text-orange-600" : "text-green-700 dark:text-green-400"}`}
                   >
                     {state.importing ? (
                       <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
@@ -329,7 +329,11 @@ function ExpectedFieldsDialog({ dict }: { dict: any }) {
               <FieldRow name="name" required />
               <FieldRow name="studentId" required />
               <FieldRow name="email" />
+              <FieldRow name="middleName" />
+              <FieldRow name="section" />
               <FieldRow name="yearLevel" />
+              <FieldRow name="enrollmentDate" />
+              <FieldRow name="status" />
               <FieldRow name="guardianName" />
               <FieldRow name="guardianEmail" />
               <FieldRow name="guardianPhone" />

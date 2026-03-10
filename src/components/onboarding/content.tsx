@@ -139,34 +139,31 @@ export default function OnboardingContent({ dictionary, locale }: Props) {
         aria-label={t.loading}
       >
         <div className="mx-auto w-full max-w-xl space-y-3 px-3 sm:space-y-4 sm:px-4">
-          {/* Welcome Header skeleton */}
+          {/* Welcome Header — always present */}
           <div>
-            <Skeleton className="mb-3 h-8 w-64 sm:mb-4" />
+            <Skeleton className="mb-3 h-7 w-32 sm:mb-4 sm:h-8" />
           </div>
 
-          {/* Schools skeleton */}
+          {/* New school options — always present */}
           <div className="space-y-2 sm:space-y-3">
-            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-5 w-40 sm:h-6" />
             <div className="space-y-2">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="space-y-2 rounded-lg border p-3">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-24" />
+              {/* "Create a new school" row */}
+              <div className="flex min-h-[50px] items-center gap-2 border-b py-2 sm:min-h-[60px] sm:py-3">
+                <Skeleton className="h-8 w-8 flex-shrink-0 rounded-lg sm:h-10 sm:w-10" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-36 sm:h-5" />
+                  <Skeleton className="h-3 w-52 sm:h-3.5" />
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* New school options skeleton */}
-          <div className="space-y-2 sm:space-y-3">
-            <Skeleton className="h-6 w-32" />
-            <div className="space-y-2">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="space-y-2 rounded-lg border p-3">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-3 w-32" />
+              </div>
+              {/* "Create from template" row */}
+              <div className="flex min-h-[50px] items-center gap-2 border-b py-2 sm:min-h-[60px] sm:py-3">
+                <Skeleton className="h-8 w-8 flex-shrink-0 rounded-lg sm:h-10 sm:w-10" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-40 sm:h-5" />
+                  <Skeleton className="h-3 w-56 sm:h-3.5" />
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>

@@ -1,9 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { PageTitle } from "@/components/atom/page-title"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { SupportedLanguage } from "@/components/translation/types"
@@ -39,9 +41,8 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
       color: true,
       imageKey: true,
       thumbnailKey: true,
-      totalChapters: true,
-      totalLessons: true,
-      usageCount: true,
+      curriculum: true,
+      grades: true,
       lang: true,
     },
   })
@@ -83,16 +84,20 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
   // Build selected subject IDs set (subjects selected for any grade)
   const selectedSubjectIds = new Set(selections.map((s) => s.catalogSubjectId))
 
+  // Derive distinct curricula
+  const curricula = [...new Set(catalogSubjects.map((s) => s.curriculum))]
+
   // Translate catalog subjects
   const translatedSubjects = await Promise.all(
     catalogSubjects.map(async ({ lang: contentLang, ...s }) => ({
-      ...s,
+      id: s.id,
       name: await getDisplayText(
         s.name,
         (contentLang || "ar") as SupportedLanguage,
         lang,
         schoolId
       ),
+      slug: s.slug,
       department: s.department
         ? await getDisplayText(
             s.department,
@@ -102,6 +107,10 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
           )
         : s.department,
       levels: s.levels as string[],
+      color: s.color,
+      curriculum: s.curriculum,
+      grades: s.grades as number[],
+      imageUrl: getCatalogImageUrl(s.thumbnailKey, s.imageKey, "sm"),
       isSelected: selectedSubjectIds.has(s.id),
     }))
   )
@@ -139,12 +148,16 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
   )
 
   return (
-    <SubjectPicker
-      subjects={translatedSubjects}
-      grades={translatedGrades}
-      selections={selections}
-      schoolLevels={schoolLevels}
-      lang={lang}
-    />
+    <>
+      <PageTitle title="Catalog" />
+      <SubjectPicker
+        subjects={translatedSubjects}
+        grades={translatedGrades}
+        selections={selections}
+        schoolLevels={schoolLevels}
+        curricula={curricula}
+        lang={lang}
+      />
+    </>
   )
 }

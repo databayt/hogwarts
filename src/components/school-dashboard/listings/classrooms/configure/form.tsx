@@ -3,10 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
+import { Minus, Plus } from "lucide-react"
 import { toast } from "sonner"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -56,6 +57,55 @@ type GradeRow = {
   capacityPerSection: number
   roomType: string
   existingSections: number
+}
+
+function NumberStepper({
+  value,
+  onChange,
+  min = 1,
+  max = 999,
+  step = 1,
+  wide = false,
+}: {
+  value: number
+  onChange: (v: number) => void
+  min?: number
+  max?: number
+  step?: number
+  wide?: boolean
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-7 w-7 shrink-0 rounded-full"
+        onClick={() => onChange(Math.max(min, value - step))}
+        disabled={value <= min}
+      >
+        <Minus className="h-3 w-3" />
+        <span className="sr-only">Decrease</span>
+      </Button>
+      <span
+        className={cn(
+          "text-center text-sm font-medium tabular-nums",
+          wide ? "w-10" : "w-8"
+        )}
+      >
+        {value}
+      </span>
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-7 w-7 shrink-0 rounded-full"
+        onClick={() => onChange(Math.min(max, value + step))}
+        disabled={value >= max}
+      >
+        <Plus className="h-3 w-3" />
+        <span className="sr-only">Increase</span>
+      </Button>
+    </div>
+  )
 }
 
 export function ConfigureForm({
@@ -189,45 +239,38 @@ export function ConfigureForm({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-muted-foreground text-sm">
+      <div className="flex w-full flex-wrap items-center gap-2 p-1">
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground text-sm">
             {d?.defaultSections || "Default sections"}
-          </label>
-          <Select
-            value={String(defaultSections)}
-            onValueChange={(v) => setDefaultSections(Number(v))}
-          >
-            <SelectTrigger className="w-24">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          </span>
+          <NumberStepper
+            value={defaultSections}
+            onChange={setDefaultSections}
+            min={1}
+            max={10}
+          />
         </div>
 
-        <div className="space-y-1">
-          <label className="text-muted-foreground text-sm">
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground text-sm">
             {d?.defaultCapacity || "Default capacity"}
-          </label>
-          <Input
-            type="number"
+          </span>
+          <NumberStepper
+            value={defaultCapacity}
+            onChange={setDefaultCapacity}
             min={1}
             max={500}
-            value={defaultCapacity}
-            onChange={(e) => setDefaultCapacity(Number(e.target.value) || 30)}
-            className="w-24"
+            step={5}
+            wide
           />
         </div>
 
         <Button variant="outline" size="sm" onClick={applyDefaults}>
           {d?.applyDefaults || "Apply Defaults"}
         </Button>
+
+        <div className="flex-1" />
 
         <Button
           size="sm"
@@ -269,40 +312,23 @@ export function ConfigureForm({
                 <TableRow key={row.gradeId}>
                   <TableCell className="font-medium">{row.gradeName}</TableCell>
                   <TableCell>
-                    <Select
-                      value={String(row.sections)}
-                      onValueChange={(v) =>
-                        updateRow(row.gradeId, "sections", Number(v))
-                      }
-                    >
-                      <SelectTrigger className="w-20">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 10 }, (_, i) => i + 1).map(
-                          (n) => (
-                            <SelectItem key={n} value={String(n)}>
-                              {n}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <NumberStepper
+                      value={row.sections}
+                      onChange={(v) => updateRow(row.gradeId, "sections", v)}
+                      min={Math.max(1, row.existingSections)}
+                      max={10}
+                    />
                   </TableCell>
                   <TableCell>
-                    <Input
-                      type="number"
+                    <NumberStepper
+                      value={row.capacityPerSection}
+                      onChange={(v) =>
+                        updateRow(row.gradeId, "capacityPerSection", v)
+                      }
                       min={1}
                       max={500}
-                      value={row.capacityPerSection}
-                      onChange={(e) =>
-                        updateRow(
-                          row.gradeId,
-                          "capacityPerSection",
-                          Number(e.target.value) || 30
-                        )
-                      }
-                      className="w-20"
+                      step={5}
+                      wide
                     />
                   </TableCell>
                   <TableCell>
