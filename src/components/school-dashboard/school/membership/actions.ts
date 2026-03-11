@@ -512,16 +512,54 @@ export async function approveMemberRequest(
         },
       })
 
-      // If linked to user, set their schoolId and role
+      // If linked to user, assign them to this school
       if (request.userId) {
-        await tx.user.update({
+        const linkedUser = await tx.user.findUnique({
           where: { id: request.userId },
-          data: {
-            schoolId,
-            role: request.requestedRole,
-            updatedAt: new Date(),
+          select: {
+            id: true,
+            schoolId: true,
+            email: true,
+            username: true,
+            image: true,
+            password: true,
           },
         })
+
+        if (
+          linkedUser &&
+          linkedUser.schoolId &&
+          linkedUser.schoolId !== schoolId
+        ) {
+          // User belongs to a DIFFERENT school — create a new User record for this school
+          // instead of overwriting their existing school association
+          const newUser = await tx.user.create({
+            data: {
+              email: linkedUser.email,
+              username: linkedUser.username,
+              image: linkedUser.image,
+              password: linkedUser.password,
+              schoolId,
+              role: request.requestedRole,
+              emailVerified: new Date(),
+            },
+          })
+          // Update membership request to point to new user
+          await tx.membershipRequest.update({
+            where: { id: parsed.requestId },
+            data: { userId: newUser.id },
+          })
+        } else {
+          // User has no school (platform user) or already in this school — safe to update
+          await tx.user.update({
+            where: { id: request.userId },
+            data: {
+              schoolId,
+              role: request.requestedRole,
+              updatedAt: new Date(),
+            },
+          })
+        }
       }
     })
 
@@ -639,10 +677,15 @@ export async function inviteMember(
       }
     }
 
-    // Find user by email if they exist
-    const existingUser = await db.user.findFirst({
-      where: { email: parsed.email },
-    })
+    // Find user by email — prefer platform user (schoolId=null) or same-school user
+    // NEVER link to a user from a different school (tenant isolation)
+    const existingUser =
+      (await db.user.findFirst({
+        where: { email: parsed.email, schoolId },
+      })) ??
+      (await db.user.findFirst({
+        where: { email: parsed.email, schoolId: null },
+      }))
 
     const [request, school] = await Promise.all([
       db.membershipRequest.create({

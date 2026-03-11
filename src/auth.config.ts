@@ -94,9 +94,14 @@ export default {
 
         if (validatedFields.success) {
           const { email, password } = validatedFields.data
-          authLogger.debug("Credentials: Validation passed", { email })
+          // Extract schoolId hint passed from login action for tenant-aware lookup
+          const schoolId = (credentials?.schoolId as string) || undefined
+          authLogger.debug("Credentials: Validation passed", {
+            email,
+            schoolId,
+          })
 
-          const user = await getUserByEmail(email)
+          const user = await getUserByEmail(email, schoolId)
           authLogger.debug("Credentials: User lookup result", {
             found: !!user,
             hasPassword: !!user?.password,

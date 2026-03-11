@@ -95,6 +95,7 @@ async function getTenants(searchParams: Props["searchParams"]) {
     id: tenant.id,
     name: tenant.name,
     subdomain: tenant.domain,
+    domain: tenant.domain,
     isActive: tenant.isActive,
     planType: tenant.planType as "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE",
     studentCount: tenant._count.students,

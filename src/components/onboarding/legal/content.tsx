@@ -38,11 +38,18 @@ const LegalContent = (props: Props) => {
     const handleNext = async () => {
       setIsSubmitting(true)
 
+      // Safety net: never spin forever if the server action hangs
+      const timeout = setTimeout(() => {
+        setIsSubmitting(false)
+      }, 30000)
+
       try {
         const result = await completeOnboarding(schoolId, {
           operationalStatus: hostingType,
           safetyFeatures: safetyFeatures,
         })
+
+        clearTimeout(timeout)
 
         if (result.success && result.data) {
           // Store school data and show success modal instead of navigating
@@ -54,6 +61,7 @@ const LegalContent = (props: Props) => {
           setIsSubmitting(false)
         }
       } catch (error) {
+        clearTimeout(timeout)
         console.error("Error completing onboarding:", error)
         setIsSubmitting(false)
       }

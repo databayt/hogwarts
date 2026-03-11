@@ -69,7 +69,7 @@ export const newVerification = async (token: string) => {
   return { success: "Email verified!" }
 }
 
-const OTP_EXPIRY_MS = 10 * 60 * 1000 // 10 minutes
+const OTP_EXPIRY_MS = 30 * 60 * 1000 // 30 minutes
 const MAX_OTP_ATTEMPTS = 5
 
 export async function verifyOTP(

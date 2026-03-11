@@ -7,18 +7,50 @@ import type { User as PrismaUser } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
-export const getUserByEmail = async (email: string) => {
+/**
+ * Tenant-aware user lookup by email.
+ *
+ * Priority:
+ * 1. If schoolId provided → exact match for that school
+ * 2. Platform user (schoolId = null) with a password
+ * 3. Any platform user (schoolId = null)
+ * 4. Fallback: most recently updated user with that email (backward compat)
+ */
+export const getUserByEmail = async (
+  email: string,
+  schoolId?: string | null
+) => {
   try {
-    // In multi-tenant setup, we need to find users by email
-    // When duplicates exist (NULL schoolId treated as distinct), prefer the one with a password
-    const users = await db.user.findMany({
-      where: { email },
+    // When schoolId is provided, look for user in that specific school
+    if (schoolId) {
+      const schoolUser = await db.user.findFirst({
+        where: { email, schoolId },
+      })
+      if (schoolUser) return schoolUser
+    }
+
+    // Look for platform user (no school association)
+    const platformUsers = await db.user.findMany({
+      where: { email, schoolId: null },
       orderBy: { updatedAt: "desc" },
     })
 
-    // Prefer users that have a password hash (credential login needs it)
-    const withPassword = users.find((u) => u.password)
-    return withPassword || users[0] || null
+    // Prefer platform user with a password (credential login)
+    const withPassword = platformUsers.find((u) => u.password)
+    if (withPassword) return withPassword
+    if (platformUsers[0]) return platformUsers[0]
+
+    // Fallback: any user with this email (backward compat for existing accounts)
+    // Only used when no schoolId hint and no platform user exists
+    if (!schoolId) {
+      const anyUser = await db.user.findFirst({
+        where: { email },
+        orderBy: { updatedAt: "desc" },
+      })
+      return anyUser
+    }
+
+    return null
   } catch (error) {
     console.error("[getUserByEmail] Database lookup failed:", error)
     return null
@@ -41,30 +73,32 @@ export const getUserById = async (id: string): Promise<ExtendedUser | null> => {
   }
 }
 
-// New function to handle OAuth user creation/linking
+/**
+ * OAuth user creation/linking — always uses platform-level users (schoolId = null).
+ */
 export const getOrCreateOAuthUser = async (
   email: string,
   provider: string,
   profile: { name?: string; username?: string; image?: string }
 ) => {
   try {
-    // First, try to find an existing user with this email
-    const users = await db.user.findMany({
-      where: { email },
+    // Look for platform-level user first (schoolId = null)
+    const platformUsers = await db.user.findMany({
+      where: { email, schoolId: null },
       orderBy: { createdAt: "desc" },
     })
 
-    let user = users[0]
+    let user = platformUsers[0]
 
     if (!user) {
-      // Create a new user for OAuth (without schoolId initially)
+      // Create a new platform-level user for OAuth
       user = await db.user.create({
         data: {
           email,
           username: profile.name || profile.username || email.split("@")[0],
           image: profile.image,
           emailVerified: new Date(),
-          role: "USER", // Default role for OAuth users
+          role: "USER",
         },
       })
     }
@@ -78,8 +112,6 @@ export const getOrCreateOAuthUser = async (
 
 /**
  * Delete the currently authenticated user account
- * NOTE: This is a destructive operation. Use with caution.
- * Recommended: Implement soft delete or archive instead of hard delete
  */
 export async function deleteCurrentUser() {
   try {
@@ -90,14 +122,6 @@ export async function deleteCurrentUser() {
     }
 
     const userId = session.user.id
-
-    // CRITICAL: Multi-tenant safety - only delete if user has proper context
-    // For production, consider:
-    // 1. Soft delete (isActive: false) instead of hard delete
-    // 2. Archive user data before deletion
-    // 3. Cancel subscriptions via Stripe API
-    // 4. Remove from external services (Plaid, Dwolla, etc.)
-    // 5. Cascade delete or nullify related records
 
     await db.user.delete({
       where: { id: userId },

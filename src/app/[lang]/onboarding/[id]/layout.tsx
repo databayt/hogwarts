@@ -64,7 +64,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
           dictionary={dictionary?.school?.onboarding}
           locale={locale}
           useValidation={useHostValidation}
-          finalLabel={dict.createSchool}
+          finalLabel={dict.create || "Create"}
           onStepChange={handleStepChange}
         />
       </div>
@@ -90,7 +90,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
           dictionary={dictionary?.school?.onboarding}
           locale={locale}
           useValidation={useHostValidation}
-          finalLabel={dict.createSchool}
+          finalLabel={dict.create || "Create"}
           onStepChange={handleStepChange}
         />
       </div>
@@ -106,7 +106,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
         dictionary={dictionary?.school?.onboarding}
         locale={locale}
         useValidation={useHostValidation}
-        finalLabel={dict.createSchool}
+        finalLabel={dict.create || "Create"}
         onStepChange={handleStepChange}
       />
     </div>

@@ -18,12 +18,14 @@ import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { tenantSetupCatalog } from "./actions"
+import { DeleteSchoolDialog } from "./delete-dialog"
 import { TenantDetail } from "./detail"
 
 export type TenantRow = {
   id: string
   name: string
   subdomain: string
+  domain: string
   isActive: boolean
   planType: "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE"
   studentCount: number
@@ -276,6 +278,25 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
                 />
               </div>
             </DropdownMenuItem>
+            {tenant.domain !== "demo" && (
+              <>
+                <DropdownMenuSeparator />
+                <DeleteSchoolDialog
+                  tenantId={tenant.id}
+                  name={tenant.name}
+                  domain={tenant.domain}
+                  studentCount={tenant.studentCount}
+                  teacherCount={tenant.teacherCount}
+                >
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    Delete School
+                  </DropdownMenuItem>
+                </DeleteSchoolDialog>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )

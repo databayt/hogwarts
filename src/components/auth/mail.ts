@@ -119,23 +119,16 @@ ${emailButton(link, "Reset Password")}
       `Reset your password\n\nUse the link below to set a new password:\n${link}\n\nIf you didn't request this, you can safely ignore this email.\n\n— Hogwarts (ed.databayt.org)`,
 
     verifySubject: "Confirm your email",
-    verifyBody: (code: string, link: string) =>
+    verifyBody: (code: string) =>
       emailLayout(
         `<h1 style="margin:0 0 8px 0;font-size:24px;font-weight:600;color:#18181b;line-height:32px;">Confirm your email</h1>
 <p style="margin:0 0 4px 0;font-size:16px;color:#52525b;line-height:24px;">Enter this code to verify your email address.</p>
 ${emailCode(code)}
-<p style="margin:0 0 24px 0;font-size:14px;color:#a1a1aa;line-height:20px;">This code expires in 10 minutes.</p>
-<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 16px 0;border-top:1px solid #e4e4e7;">
-  <tr><td style="padding-top:16px;text-align:center;">
-    <p style="margin:0 0 8px 0;font-size:13px;color:#a1a1aa;line-height:18px;">Or verify using this link:</p>
-    <a href="${link}" target="_blank" style="font-size:13px;color:#71717a;text-decoration:underline;">${link.length > 60 ? link.substring(0, 60) + "..." : link}</a>
-  </td></tr>
-</table>
-<p style="margin:0;font-size:14px;color:#a1a1aa;line-height:20px;">If you didn&rsquo;t create an account, you can safely ignore this email.</p>`,
+<p style="margin:0;font-size:14px;color:#a1a1aa;line-height:20px;">This code expires in 30 minutes. If you didn&rsquo;t create an account, you can safely ignore this email.</p>`,
         "en"
       ),
-    verifyText: (code: string, link: string) =>
-      `Confirm your email\n\nYour verification code: ${code}\n\nThis code expires in 10 minutes.\n\nOr verify using this link:\n${link}\n\nIf you didn't create an account, you can safely ignore this email.\n\n— Hogwarts (ed.databayt.org)`,
+    verifyText: (code: string) =>
+      `Confirm your email\n\nYour verification code: ${code}\n\nThis code expires in 30 minutes.\n\nIf you didn't create an account, you can safely ignore this email.\n\n— Hogwarts (ed.databayt.org)`,
   },
   ar: {
     twoFactorSubject: "رمز التحقق",
@@ -163,23 +156,16 @@ ${emailButton(link, "إعادة التعيين")}
       `إعادة تعيين كلمة المرور\n\nاستخدم الرابط أدناه لتعيين كلمة مرور جديدة:\n${link}\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— هجورتس (ed.databayt.org)`,
 
     verifySubject: "تأكيد بريدك الإلكتروني",
-    verifyBody: (code: string, link: string) =>
+    verifyBody: (code: string) =>
       emailLayout(
         `<h1 style="margin:0 0 8px 0;font-size:24px;font-weight:600;color:#18181b;line-height:32px;">تأكيد بريدك الإلكتروني</h1>
 <p style="margin:0 0 4px 0;font-size:16px;color:#52525b;line-height:24px;">أدخل هذا الرمز للتحقق من بريدك الإلكتروني.</p>
 ${emailCode(code)}
-<p style="margin:0 0 24px 0;font-size:14px;color:#a1a1aa;line-height:20px;">ينتهي صلاحية هذا الرمز خلال 10 دقائق.</p>
-<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 16px 0;border-top:1px solid #e4e4e7;">
-  <tr><td style="padding-top:16px;text-align:center;">
-    <p style="margin:0 0 8px 0;font-size:13px;color:#a1a1aa;line-height:18px;">أو تحقق من خلال هذا الرابط:</p>
-    <a href="${link}" target="_blank" style="font-size:13px;color:#71717a;text-decoration:underline;">${link.length > 60 ? link.substring(0, 60) + "..." : link}</a>
-  </td></tr>
-</table>
-<p style="margin:0;font-size:14px;color:#a1a1aa;line-height:20px;">إذا لم تنشئ حسابًا، يمكنك تجاهل هذا البريد بأمان.</p>`,
+<p style="margin:0;font-size:14px;color:#a1a1aa;line-height:20px;">ينتهي صلاحية هذا الرمز خلال 30 دقيقة. إذا لم تنشئ حسابًا، يمكنك تجاهل هذا البريد بأمان.</p>`,
         "ar"
       ),
-    verifyText: (code: string, link: string) =>
-      `تأكيد بريدك الإلكتروني\n\nرمز التحقق: ${code}\n\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nأو تحقق من خلال هذا الرابط:\n${link}\n\nإذا لم تنشئ حسابًا، يمكنك تجاهل هذا البريد بأمان.\n\n— هجورتس (ed.databayt.org)`,
+    verifyText: (code: string) =>
+      `تأكيد بريدك الإلكتروني\n\nرمز التحقق: ${code}\n\nينتهي صلاحية هذا الرمز خلال 30 دقيقة.\n\nإذا لم تنشئ حسابًا، يمكنك تجاهل هذا البريد بأمان.\n\n— هجورتس (ed.databayt.org)`,
   },
 } as const
 
@@ -261,12 +247,8 @@ export const sendVerificationEmail = async (
       from: "Hogwarts <noreply@databayt.org>",
       to: email,
       subject: t.verifySubject,
-      html: code
-        ? t.verifyBody(code, confirmLink)
-        : t.verifyBody("----", confirmLink),
-      text: code
-        ? t.verifyText(code, confirmLink)
-        : t.verifyText("----", confirmLink),
+      html: t.verifyBody(code || "----"),
+      text: t.verifyText(code || "----"),
     })
 
     if (isDev)

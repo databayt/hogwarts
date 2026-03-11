@@ -126,7 +126,6 @@ export const RegisterForm = (props: Props) => {
       const { verified } = await checkVerificationStatus(verifyEmail)
       if (verified) {
         if (pollingRef.current) clearInterval(pollingRef.current)
-        setSuccess(dictionary?.auth?.emailVerified || "Email verified!")
         await autoLogin(verifyEmail, password)
       }
     }, 3000)
@@ -156,7 +155,7 @@ export const RegisterForm = (props: Props) => {
           setVerifyEmail(data.email)
           setPassword(values.password)
           setMode("verify")
-          setResendCooldown(60)
+          setResendCooldown(90)
         }
       })
     })
@@ -174,7 +173,6 @@ export const RegisterForm = (props: Props) => {
         setOtpValue("")
       }
       if (result.success) {
-        setSuccess(dictionary?.auth?.emailVerified || "Email verified!")
         await autoLogin(verifyEmail, password)
       }
     })
@@ -194,7 +192,7 @@ export const RegisterForm = (props: Props) => {
       if (result.error) setError(result.error)
       if (result.success) {
         setSuccess(result.success)
-        setResendCooldown(60)
+        setResendCooldown(90)
         setOtpValue("")
       }
     })
@@ -233,16 +231,33 @@ export const RegisterForm = (props: Props) => {
                   disabled={isPending}
                 >
                   <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
+                    <InputOTPSlot
+                      index={0}
+                      className="h-14 w-14 rounded-md border text-2xl"
+                    />
+                  </InputOTPGroup>
+                  <InputOTPGroup>
+                    <InputOTPSlot
+                      index={1}
+                      className="h-14 w-14 rounded-md border text-2xl"
+                    />
+                  </InputOTPGroup>
+                  <InputOTPGroup>
+                    <InputOTPSlot
+                      index={2}
+                      className="h-14 w-14 rounded-md border text-2xl"
+                    />
+                  </InputOTPGroup>
+                  <InputOTPGroup>
+                    <InputOTPSlot
+                      index={3}
+                      className="h-14 w-14 rounded-md border text-2xl"
+                    />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
 
               <FormError message={error} />
-              <FormSuccess message={success} />
 
               <div className="flex flex-col items-center gap-2">
                 <Button

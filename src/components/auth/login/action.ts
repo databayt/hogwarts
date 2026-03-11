@@ -83,7 +83,17 @@ export const login = async (
     }
   }
 
-  const existingUser = await getUserByEmail(email)
+  // Resolve schoolId from subdomain for tenant-aware user lookup
+  let loginSchoolId: string | undefined
+  if (subdomain) {
+    const school = await db.school.findFirst({
+      where: { domain: subdomain },
+      select: { id: true },
+    })
+    loginSchoolId = school?.id
+  }
+
+  const existingUser = await getUserByEmail(email, loginSchoolId)
 
   if (!existingUser || !existingUser.email || !existingUser.password) {
     logLoginAttempt({
@@ -318,6 +328,7 @@ export const login = async (
     await signIn("credentials", {
       email,
       password,
+      schoolId: loginSchoolId || "",
       redirect: false,
     })
 

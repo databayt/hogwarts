@@ -988,46 +988,53 @@ export async function autoProvisionSections(schoolId: string) {
   }
 
   const letters = "ABCDEFGHIJ".split("")
-  let classroomCount = 0
-  let sectionCount = 0
 
-  for (const grade of grades) {
-    for (let i = 0; i < sectionsPerGrade; i++) {
-      const letter = letters[i]
-      const roomName = `Grade ${grade.gradeNumber}-${letter}`
+  // Batch all upserts in a single transaction to reduce connection overhead
+  return db.$transaction(
+    async (tx) => {
+      let classroomCount = 0
+      let sectionCount = 0
 
-      const classroom = await db.classroom.upsert({
-        where: { schoolId_roomName: { schoolId, roomName } },
-        create: {
-          schoolId,
-          roomName,
-          capacity: studentsPerSection,
-          typeId: classroomType.id,
-          gradeId: grade.id,
-        },
-        update: {},
-      })
-      classroomCount++
+      for (const grade of grades) {
+        for (let i = 0; i < sectionsPerGrade; i++) {
+          const letter = letters[i]
+          const roomName = `Grade ${grade.gradeNumber}-${letter}`
 
-      await db.section.upsert({
-        where: {
-          schoolId_gradeId_letter: { schoolId, gradeId: grade.id, letter },
-        },
-        create: {
-          schoolId,
-          gradeId: grade.id,
-          name: roomName,
-          letter,
-          classroomId: classroom.id,
-          maxCapacity: studentsPerSection,
-        },
-        update: {},
-      })
-      sectionCount++
-    }
-  }
+          const classroom = await tx.classroom.upsert({
+            where: { schoolId_roomName: { schoolId, roomName } },
+            create: {
+              schoolId,
+              roomName,
+              capacity: studentsPerSection,
+              typeId: classroomType.id,
+              gradeId: grade.id,
+            },
+            update: {},
+          })
+          classroomCount++
 
-  return { classrooms: classroomCount, sections: sectionCount }
+          await tx.section.upsert({
+            where: {
+              schoolId_gradeId_letter: { schoolId, gradeId: grade.id, letter },
+            },
+            create: {
+              schoolId,
+              gradeId: grade.id,
+              name: roomName,
+              letter,
+              classroomId: classroom.id,
+              maxCapacity: studentsPerSection,
+            },
+            update: {},
+          })
+          sectionCount++
+        }
+      }
+
+      return { classrooms: classroomCount, sections: sectionCount }
+    },
+    { timeout: 30000 }
+  )
 }
 
 /** @internal Exported for testing only */

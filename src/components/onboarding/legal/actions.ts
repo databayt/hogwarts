@@ -62,85 +62,15 @@ export async function completeOnboarding(
       },
     })
 
-    // 1. Auto-provision defaults (YearLevels, Departments, ScoreRanges)
-    try {
-      const defaults = await setupDefaultsForSchool(
-        schoolId,
-        school.schoolLevel || "both"
-      )
-      console.log(
-        `[completeOnboarding] Defaults created for school ${schoolId}:`,
-        defaults
-      )
-    } catch (defaultsError) {
+    // Fire-and-forget: provision defaults in background
+    // Each step has its own try/catch, so failures are non-fatal.
+    // The school dashboard works without them (admin can set up manually).
+    provisionSchoolDefaults(schoolId, school).catch((err) =>
       console.error(
-        `[completeOnboarding] Defaults setup failed for school ${schoolId}:`,
-        defaultsError
+        `[completeOnboarding] Background provisioning failed for ${schoolId}:`,
+        err
       )
-    }
-
-    // 2. Auto-setup academic structure (grades, levels, subject selections)
-    try {
-      const catalog = await setupCatalogForSchool(schoolId, {
-        country: school.country || undefined,
-        schoolType: school.schoolType || undefined,
-      })
-      if (catalog.skipped && "message" in catalog) {
-        console.warn(
-          `[completeOnboarding] Catalog setup skipped for school ${schoolId}: ${catalog.message}`
-        )
-      } else {
-        console.log(
-          `[completeOnboarding] Catalog setup complete for school ${schoolId}:`,
-          catalog
-        )
-      }
-    } catch (catalogError) {
-      console.error(
-        `[completeOnboarding] Catalog setup failed for school ${schoolId}:`,
-        catalogError
-      )
-    }
-
-    // 3. Apply timetable structure if the school selected one during onboarding
-    if (school.curriculum) {
-      try {
-        await applyTimetableStructureForNewSchool(schoolId, school.curriculum)
-      } catch (timetableError) {
-        console.error(
-          `[completeOnboarding] Timetable setup failed for school ${schoolId}:`,
-          timetableError
-        )
-      }
-    }
-
-    // 4. Auto-create default ClassroomType so the Configure tab works post-onboarding
-    try {
-      await db.classroomType.upsert({
-        where: { schoolId_name: { schoolId, name: "Classroom" } },
-        create: { schoolId, name: "Classroom" },
-        update: {},
-      })
-    } catch (classroomTypeError) {
-      console.error(
-        `[completeOnboarding] ClassroomType creation failed for school ${schoolId}:`,
-        classroomTypeError
-      )
-    }
-
-    // 5. Auto-provision classrooms and sections based on capacity settings
-    try {
-      const provisioned = await autoProvisionSections(schoolId)
-      console.log(
-        `[completeOnboarding] Auto-provisioned for school ${schoolId}:`,
-        provisioned
-      )
-    } catch (provisionError) {
-      console.error(
-        `[completeOnboarding] Section provisioning failed:`,
-        provisionError
-      )
-    }
+    )
 
     revalidatePath(`/onboarding/${schoolId}`)
 
@@ -152,6 +82,72 @@ export async function completeOnboarding(
   } catch (error) {
     return createActionResponse(undefined, error)
   }
+}
+
+/**
+ * Background provisioning for a newly onboarded school.
+ * Runs all setup steps (defaults, catalog, timetable, classrooms, sections).
+ * Called fire-and-forget so it doesn't block the onboarding response.
+ */
+async function provisionSchoolDefaults(
+  schoolId: string,
+  school: {
+    country: string | null
+    curriculum: string | null
+    schoolLevel: string | null
+    schoolType: string | null
+  }
+) {
+  // Step 1: Run independent setup steps in parallel
+  const [defaults, catalog] = await Promise.allSettled([
+    setupDefaultsForSchool(schoolId, school.schoolLevel || "both"),
+    setupCatalogForSchool(schoolId, {
+      country: school.country || undefined,
+      schoolType: school.schoolType || undefined,
+    }),
+  ])
+
+  console.log(
+    `[provisionSchoolDefaults] Defaults: ${defaults.status}, Catalog: ${catalog.status} for school ${schoolId}`
+  )
+
+  // Step 2: Timetable depends on catalog (grades must exist)
+  if (school.curriculum) {
+    await applyTimetableStructureForNewSchool(
+      schoolId,
+      school.curriculum
+    ).catch((err) =>
+      console.error(
+        `[provisionSchoolDefaults] Timetable failed for ${schoolId}:`,
+        err
+      )
+    )
+  }
+
+  // Step 3: ClassroomType + sections depend on grades from catalog
+  await db.classroomType
+    .upsert({
+      where: { schoolId_name: { schoolId, name: "Classroom" } },
+      create: { schoolId, name: "Classroom" },
+      update: {},
+    })
+    .catch((err) =>
+      console.error(
+        `[provisionSchoolDefaults] ClassroomType failed for ${schoolId}:`,
+        err
+      )
+    )
+
+  await autoProvisionSections(schoolId).catch((err) =>
+    console.error(
+      `[provisionSchoolDefaults] Sections failed for ${schoolId}:`,
+      err
+    )
+  )
+
+  console.log(
+    `[provisionSchoolDefaults] All provisioning complete for school ${schoolId}`
+  )
 }
 
 export async function getSchoolOnboardingStatus(

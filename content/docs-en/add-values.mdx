@@ -1,0 +1,243 @@
+---
+title: "Add Values"
+description: "Step-by-step value delivery milestones from school signup to full automation"
+---
+
+## Overview
+
+Every step below is a concrete milestone where the platform delivers real, usable value to a school owner. They are ordered from first signup to full operation. Each builds on the previous.
+
+| #   | Add Value          | What It Is                                             | Prerequisites        |
+| --- | ------------------ | ------------------------------------------------------ | -------------------- |
+| 1   | School Online      | Live school URL + join code after onboarding           | Complete 15 steps    |
+| 2   | Share & Invite     | Teachers and parents join via URL or join code         | School Online        |
+| 3   | First Announcement | Post visible to all school members                     | School Online        |
+| 4   | Team Onboard       | Add teachers manually or via CSV import                | School Online        |
+| 5   | Students In        | Add students manually, CSV, or admission flow          | School Online        |
+| 6   | Classes Formed     | Create classes linking teacher + subject + students    | Team + Students      |
+| 7   | Timetable Running  | Generate weekly schedule for all classes               | Classes Formed       |
+| 8   | Attendance Tracked | Mark daily attendance per class                        | Classes + Timetable  |
+| 9   | Grades Recorded    | Create exams, enter marks, generate report cards       | Classes + Students   |
+| 10  | Fees Collected     | Set up fee structure, generate invoices                | Students In          |
+| 11  | Parents Connected  | Parents linked to students, see grades and attendance  | Students + Guardians |
+| 12  | School Automated   | Full cycle: attendance + grades + fees + communication | All above            |
+
+---
+
+## 1. School Online
+
+Complete [onboarding](/docs/onboarding) (15 steps) and the platform provisions:
+
+- **Live URL**: `yourschool.databayt.org` accessible immediately
+- **Join code**: 6-character code for members to join
+- **School dashboard**: Full admin panel at the subdomain
+
+**What you can do right now:**
+
+- Share your school URL with anyone
+- Access the school dashboard as admin
+- Configure school settings (branding, visibility, pricing)
+
+---
+
+## 2. Share & Invite
+
+Once the school is online, members can join through three channels:
+
+- **Direct URL**: Share `yourschool.databayt.org` — visitors see the school page and can request to join
+- **Join code**: Members enter the 6-character code on the platform to join directly
+- **Admin invite**: Add members manually from the dashboard
+
+**What you can do right now:**
+
+- Share the join code via WhatsApp, SMS, or print
+- Review and approve membership requests
+- Assign roles (teacher, student, guardian, staff)
+
+---
+
+## 3. First Announcement
+
+Post an announcement from the school dashboard. It is visible to all members immediately.
+
+**What you can do right now:**
+
+- Create announcements with rich text
+- Target specific roles or broadcast to all
+- Members receive notifications
+
+**What you need first:** At least one member besides the admin.
+
+---
+
+## 4. Team Onboard
+
+Add teachers to the school. Three methods:
+
+| Method        | Best For               |
+| ------------- | ---------------------- |
+| Manual entry  | 1-5 teachers           |
+| CSV import    | 6+ teachers            |
+| Join code/URL | Teachers self-register |
+
+**What you can do right now:**
+
+- Add teachers with name, email, subject assignments
+- Import a CSV file with bulk teacher data
+- Teachers get accounts and can log in immediately
+
+See [authentication](/docs/authentication) for how accounts and roles work.
+
+---
+
+## 5. Students In
+
+Add students to the school. Three methods:
+
+| Method                            | Best For                 |
+| --------------------------------- | ------------------------ |
+| Manual entry                      | Small batches            |
+| CSV import                        | Bulk enrollment          |
+| [Admission flow](/docs/admission) | Applications with review |
+
+**What you can do right now:**
+
+- Add students with profile data
+- Import hundreds of students via CSV
+- Set up an admission form for applicants
+- Review and approve applications
+
+---
+
+## 6. Classes Formed
+
+Create classes that link a **teacher**, **subject**, **grade level**, and **enrolled students**. This is the core academic unit.
+
+```
+Class = Subject + Teacher + Grade + Term + Classroom + Students
+```
+
+**What you can do right now:**
+
+- Create classes for each subject and grade
+- Assign teachers to classes
+- Enroll students in their classes
+- View class rosters
+
+**What you need first:** Teachers (step 4) and students (step 5) in the system.
+
+See [integration flow](/docs/integration-flow) for the full chain from catalog to classes.
+
+---
+
+## 7. Timetable Running
+
+Generate a weekly schedule from your classes. The [timetable system](/docs/timetable) assigns periods, rooms, and handles conflicts.
+
+**What you can do right now:**
+
+- Define period structure (start/end times, breaks)
+- Generate timetables per class, teacher, or room
+- View and adjust the weekly grid
+- Print or export schedules
+
+**What you need first:** Classes formed (step 6) with teachers and rooms assigned.
+
+---
+
+## 8. Attendance Tracked
+
+Mark daily [attendance](/docs/attendance) for each class session. Teachers mark from their dashboard or via QR code.
+
+**What you can do right now:**
+
+- Mark students present, absent, late, or excused per period
+- View attendance reports by student, class, or date range
+- Track attendance percentages
+
+**What you need first:** Classes (step 6) and timetable (step 7) — attendance follows the timetable schedule.
+
+---
+
+## 9. Grades Recorded
+
+Create [exams](/docs/exams), enter marks, and generate report cards using the [exam wizard](/docs/exam-wizard).
+
+**What you can do right now:**
+
+- Create exam definitions (name, max marks, weight)
+- Enter student marks per exam
+- Generate report cards with term averages
+- View grade distributions per class
+
+**What you need first:** Classes with enrolled students (step 6).
+
+---
+
+## 10. Fees Collected
+
+Set up fee structures and generate invoices for students.
+
+**What you can do right now:**
+
+- Define fee categories (tuition, transport, activities)
+- Set amounts per grade or per student
+- Generate invoices
+- Track payment status
+
+**What you need first:** Students enrolled (step 5).
+
+---
+
+## 11. Parents Connected
+
+Link parents/guardians to their children. Parents get their own dashboard showing grades, attendance, and announcements.
+
+**What you can do right now:**
+
+- Link guardian accounts to student records
+- Parents view their child's attendance and grades
+- Parents receive announcements and notifications
+- Multiple guardians per student supported
+
+**What you need first:** Students (step 5) and guardian accounts (via join code or admin invite).
+
+---
+
+## 12. School Automated
+
+All systems running together. The school operates with minimal manual work.
+
+**What the full cycle looks like:**
+
+- Teachers mark attendance daily (auto-tracked)
+- Exams are scheduled, marks entered, report cards generated
+- Fees are invoiced and payment status tracked
+- Parents see everything in real time
+- Announcements reach the right audience
+- Admin has full visibility across all operations
+
+**What you need first:** All previous steps completed.
+
+---
+
+## Value Chain
+
+Each add value builds on the previous. Here is the dependency graph:
+
+```
+School Online (1)
+├── Share & Invite (2)
+├── First Announcement (3)
+├── Team Onboard (4)
+│   └── Classes Formed (6) ← Students In (5)
+│       ├── Timetable Running (7)
+│       │   └── Attendance Tracked (8)
+│       └── Grades Recorded (9)
+├── Students In (5)
+│   ├── Fees Collected (10)
+│   └── Parents Connected (11) ← Guardians joined
+└── School Automated (12) ← All above
+```
+
+The fastest path to a fully operational school: complete onboarding, import teachers and students via CSV, form classes, generate timetable. Four actions to reach step 7.
