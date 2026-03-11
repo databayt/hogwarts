@@ -144,6 +144,137 @@ function buildStudentStatusFilter(status: string): Record<string, any> {
 const STUDENTS_PATH = "/students"
 
 // ============================================================================
+// Grade + Section Queries
+// ============================================================================
+
+/**
+ * Fetch academic grades and sections for the school (used by student form).
+ * Sections include student count for capacity display.
+ */
+export async function getGradesAndSections(): Promise<
+  ActionResponse<{
+    grades: Array<{
+      id: string
+      name: string
+      gradeNumber: number
+      level: { id: string; name: string; level: string } | null
+    }>
+    sections: Array<{
+      id: string
+      name: string
+      gradeId: string
+      maxCapacity: number
+      currentCount: number
+    }>
+  }>
+> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const [grades, sections] = await Promise.all([
+      db.academicGrade.findMany({
+        where: { schoolId },
+        orderBy: { gradeNumber: "asc" },
+        select: {
+          id: true,
+          name: true,
+          gradeNumber: true,
+          level: { select: { id: true, name: true, level: true } },
+        },
+      }),
+      db.section.findMany({
+        where: { schoolId },
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          gradeId: true,
+          maxCapacity: true,
+          _count: { select: { students: true } },
+        },
+      }),
+    ])
+
+    return {
+      success: true,
+      data: {
+        grades,
+        sections: sections.map((s) => ({
+          id: s.id,
+          name: s.name,
+          gradeId: s.gradeId,
+          maxCapacity: s.maxCapacity,
+          currentCount: s._count.students,
+        })),
+      },
+    }
+  } catch (error) {
+    console.error("[getGradesAndSections] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to load grades and sections",
+    }
+  }
+}
+
+// ============================================================================
+// Auto-Enrollment Helper
+// ============================================================================
+
+/**
+ * Auto-enroll a student in all classes for their grade.
+ * Uses upsert so it's safe to call multiple times (idempotent).
+ */
+async function autoEnrollStudentInClasses(
+  studentId: string,
+  gradeId: string,
+  schoolId: string
+): Promise<void> {
+  try {
+    const gradeClasses = await db.class.findMany({
+      where: { schoolId, gradeId },
+      select: { id: true },
+    })
+
+    if (gradeClasses.length === 0) return
+
+    await Promise.all(
+      gradeClasses.map((cls) =>
+        db.studentClass.upsert({
+          where: {
+            schoolId_studentId_classId: {
+              schoolId,
+              studentId,
+              classId: cls.id,
+            },
+          },
+          create: {
+            schoolId,
+            studentId,
+            classId: cls.id,
+          },
+          update: {},
+        })
+      )
+    )
+  } catch (error) {
+    // Non-blocking: log but don't fail the parent operation
+    console.error("[autoEnrollStudentInClasses] Error:", error)
+  }
+}
+
+// ============================================================================
 // Mutations
 // ============================================================================
 
@@ -228,8 +359,14 @@ export async function createStudent(
           : {}),
         userId: normalizedUserId,
         academicGradeId: parsed.academicGradeId || null,
+        sectionId: parsed.sectionId || null,
       },
     })
+
+    // Auto-enroll in classes if grade is set
+    if (parsed.academicGradeId) {
+      await autoEnrollStudentInClasses(row.id, parsed.academicGradeId, schoolId)
+    }
 
     // Revalidate cache
     revalidatePath(STUDENTS_PATH)
@@ -337,10 +474,19 @@ export async function updateStudent(
     if (typeof rest.academicGradeId !== "undefined") {
       data.academicGradeId = rest.academicGradeId || null
     }
+    if (typeof rest.sectionId !== "undefined") {
+      data.sectionId = rest.sectionId || null
+    }
 
     // Update student (using updateMany for tenant safety)
     const studentModel = getModelOrThrow("student")
     await studentModel.updateMany({ where: { id, schoolId }, data })
+
+    // Auto-enroll in classes if grade is set
+    const gradeId = rest.academicGradeId ?? undefined
+    if (gradeId) {
+      await autoEnrollStudentInClasses(id, gradeId, schoolId)
+    }
 
     // Revalidate cache
     revalidatePath(STUDENTS_PATH)
@@ -557,6 +703,8 @@ export async function getStudent(input: {
         gender: true,
         enrollmentDate: true,
         userId: true,
+        academicGradeId: true,
+        sectionId: true,
         createdAt: true,
         updatedAt: true,
       },

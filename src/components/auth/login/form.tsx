@@ -2,23 +2,25 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { Suspense, useEffect, useMemo, useState, useTransition } from "react"
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 import Link from "next/link"
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  // CardDescription,
-  CardHeader,
-  // CardTitle,
-} from "@/components/ui/card"
-// import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -27,15 +29,32 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { FormError } from "../error/form-error"
 import { Social } from "../social"
 import { createLoginSchema } from "../validation"
+import {
+  checkVerificationStatus,
+  resendVerificationCode,
+  verifyOTP,
+} from "../verification/action"
 import { login, type LoginContext, type LoginOptions } from "./action"
 
 interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
   dictionary?: Dictionary
+}
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@")
+  if (!domain) return email
+  const visible = local.slice(0, Math.min(2, local.length))
+  return `${visible}${"*".repeat(Math.max(local.length - 2, 0))}@${domain}`
 }
 
 export const LoginForm = ({
@@ -45,6 +64,7 @@ export const LoginForm = ({
 }: LoginFormProps) => {
   const params = useParams()
   const lang = params.lang as string
+  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl")
   const tenant = searchParams.get("tenant")
@@ -78,17 +98,21 @@ export const LoginForm = ({
     searchParams.get("error") === "OAuthAccountNotLinked" ? oauthError : ""
 
   const [showTwoFactor, setShowTwoFactor] = useState(false)
+  const [mode, setMode] = useState<"login" | "verify">("login")
+  const [verifyEmail, setVerifyEmail] = useState("")
+  const [verifyPassword, setVerifyPassword] = useState("")
   const [error, setError] = useState<string | undefined>("")
   const [success, setSuccess] = useState<string | undefined>("")
   const [isPending, startTransition] = useTransition()
+  const [otpValue, setOtpValue] = useState("")
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Handle tenant redirect after successful login
   useEffect(() => {
     const tenant = searchParams.get("tenant")
 
     if (tenant && success) {
-      // Redirect back to tenant subdomain after successful login
-      // Use HTTPS if current page is HTTPS (for dev mode with self-signed certs)
       const useHttps =
         typeof window !== "undefined" && window.location.protocol === "https:"
       const protocol = useHttps ? "https" : "http"
@@ -97,10 +121,70 @@ export const LoginForm = ({
           ? `https://${tenant}.databayt.org/dashboard`
           : `${protocol}://${tenant}.localhost:3000/dashboard`
 
-      console.log("🔄 Redirecting to tenant after login:", tenantUrl)
       window.location.href = tenantUrl
     }
   }, [success, searchParams])
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [resendCooldown])
+
+  // Auto-login helper
+  const autoLogin = useCallback(
+    async (email: string, pwd: string) => {
+      try {
+        const result = await signIn("credentials", {
+          email,
+          password: pwd,
+          redirect: false,
+        })
+        if (result?.ok) {
+          // Re-run login action to get proper redirect URL
+          const loginOptions: LoginOptions = {
+            callbackUrl,
+            context: effectiveContext,
+            subdomain,
+            locale: lang,
+          }
+          const loginResult = await login(
+            { email, password: pwd },
+            loginOptions
+          )
+          if (loginResult?.redirectUrl && !tenant) {
+            window.location.href = loginResult.redirectUrl
+          } else if (!tenant) {
+            window.location.href = callbackUrl || `/${lang}`
+          }
+        } else {
+          router.push(`/${lang}/login`)
+        }
+      } catch {
+        router.push(`/${lang}/login`)
+      }
+    },
+    [callbackUrl, effectiveContext, subdomain, lang, tenant, router]
+  )
+
+  // Polling for verification status
+  useEffect(() => {
+    if (mode !== "verify" || !verifyEmail) return
+
+    pollingRef.current = setInterval(async () => {
+      const { verified } = await checkVerificationStatus(verifyEmail)
+      if (verified) {
+        if (pollingRef.current) clearInterval(pollingRef.current)
+        setSuccess(dictionary?.auth?.emailVerified || "Email verified!")
+        await autoLogin(verifyEmail, verifyPassword)
+      }
+    }, 3000)
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current)
+    }
+  }, [mode, verifyEmail, verifyPassword, autoLogin, dictionary])
 
   // Create localized schema (memoized to prevent recreation on every render)
   const LoginSchema = useMemo(() => {
@@ -136,6 +220,40 @@ export const LoginForm = ({
     },
   })
 
+  const handleOTPComplete = (code: string) => {
+    if (code.length !== 4) return
+    setError("")
+    setSuccess("")
+
+    startTransition(async () => {
+      const result = await verifyOTP(verifyEmail, code)
+      if (result.error) {
+        setError(result.error)
+        setOtpValue("")
+      }
+      if (result.success) {
+        setSuccess(dictionary?.auth?.emailVerified || "Email verified!")
+        await autoLogin(verifyEmail, verifyPassword)
+      }
+    })
+  }
+
+  const handleResend = () => {
+    if (resendCooldown > 0) return
+    setError("")
+    setSuccess("")
+
+    startTransition(async () => {
+      const result = await resendVerificationCode(verifyEmail, lang)
+      if (result.error) setError(result.error)
+      if (result.success) {
+        setSuccess(result.success)
+        setResendCooldown(60)
+        setOtpValue("")
+      }
+    })
+  }
+
   const onSubmit = (values: z.infer<typeof LoginSchema>) => {
     setError("")
     setSuccess("")
@@ -154,15 +272,6 @@ export const LoginForm = ({
       subdomain,
       locale: lang,
     }
-
-    console.log("📋 LOGIN FORM SUBMIT:", {
-      tenant,
-      callbackUrl,
-      finalCallbackUrl,
-      context,
-      subdomain,
-      hasValues: !!values,
-    })
 
     startTransition(() => {
       login(values, loginOptions)
@@ -183,6 +292,12 @@ export const LoginForm = ({
           if (data?.twoFactor) {
             setShowTwoFactor(true)
           }
+          if (data?.needsVerification && data?.email) {
+            setVerifyEmail(data.email)
+            setVerifyPassword(values.password)
+            setMode("verify")
+            setResendCooldown(60)
+          }
         })
         .catch(() => {
           setError(
@@ -193,6 +308,89 @@ export const LoginForm = ({
     })
   }
 
+  // ── Verify mode ──
+  if (mode === "verify") {
+    return (
+      <div
+        className={cn(
+          "flex min-w-[280px] flex-col gap-6 md:min-w-[350px]",
+          className
+        )}
+        {...props}
+      >
+        <Card className="bg-background border-none shadow-none">
+          <CardHeader className="text-center">
+            <h4 className="mb-2">
+              {dictionary?.auth?.verifyYourEmail || "Verify your email"}
+            </h4>
+            <p className="text-muted-foreground">
+              {dictionary?.auth?.codeSentTo || "We sent a code to"}{" "}
+              <strong>{maskEmail(verifyEmail)}</strong>
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6">
+              <div className="flex justify-center">
+                <InputOTP
+                  maxLength={4}
+                  value={otpValue}
+                  onChange={(val) => {
+                    setOtpValue(val)
+                    if (val.length === 4) handleOTPComplete(val)
+                  }}
+                  disabled={isPending}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+
+              <FormError message={error} />
+              {success && (
+                <p className="text-center text-sm text-emerald-500">
+                  {success}
+                </p>
+              )}
+
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={isPending || resendCooldown > 0}
+                  onClick={handleResend}
+                  type="button"
+                >
+                  {resendCooldown > 0
+                    ? `${dictionary?.auth?.resendIn || "Resend in"} ${resendCooldown}s`
+                    : dictionary?.auth?.resendCode || "Resend code"}
+                </Button>
+
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline"
+                  onClick={() => {
+                    setMode("login")
+                    setError("")
+                    setSuccess("")
+                    setOtpValue("")
+                    if (pollingRef.current) clearInterval(pollingRef.current)
+                  }}
+                >
+                  {dictionary?.auth?.backToLogin || "Back to login"}
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // ── Login mode ──
   return (
     <div
       className={cn(
@@ -202,12 +400,7 @@ export const LoginForm = ({
       {...props}
     >
       <Card className="bg-background border-none shadow-none">
-        <CardHeader className="text-center">
-          {/* <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>
-            Login with your Apple or Google account
-          </CardDescription> */}
-        </CardHeader>
+        <CardHeader className="text-center" />
         <CardContent>
           <Suspense fallback={<div className="h-10" />}>
             <Social dictionary={dictionary} />
@@ -323,10 +516,6 @@ export const LoginForm = ({
           </Form>
         </CardContent>
       </Card>
-      {/* <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
-        By clicking continue, you agree to our <br/> <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </div> */}
     </div>
   )
 }

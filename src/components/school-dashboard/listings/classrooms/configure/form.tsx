@@ -3,10 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
-import { Minus, Plus } from "lucide-react"
 import { toast } from "sonner"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -23,9 +21,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { NumberStepper } from "@/components/atom/number-stepper"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
+  bulkEnrollStudentsInClasses,
   generateClassesForGrade,
   generateSections,
   type GradeConfig,
@@ -59,55 +59,6 @@ type GradeRow = {
   existingSections: number
 }
 
-function NumberStepper({
-  value,
-  onChange,
-  min = 1,
-  max = 999,
-  step = 1,
-  wide = false,
-}: {
-  value: number
-  onChange: (v: number) => void
-  min?: number
-  max?: number
-  step?: number
-  wide?: boolean
-}) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <Button
-        variant="outline"
-        size="icon"
-        className="h-7 w-7 shrink-0 rounded-full"
-        onClick={() => onChange(Math.max(min, value - step))}
-        disabled={value <= min}
-      >
-        <Minus className="h-3 w-3" />
-        <span className="sr-only">Decrease</span>
-      </Button>
-      <span
-        className={cn(
-          "text-center text-sm font-medium tabular-nums",
-          wide ? "w-10" : "w-8"
-        )}
-      >
-        {value}
-      </span>
-      <Button
-        variant="outline"
-        size="icon"
-        className="h-7 w-7 shrink-0 rounded-full"
-        onClick={() => onChange(Math.min(max, value + step))}
-        disabled={value >= max}
-      >
-        <Plus className="h-3 w-3" />
-        <span className="sr-only">Increase</span>
-      </Button>
-    </div>
-  )
-}
-
 export function ConfigureForm({
   grades,
   roomTypes,
@@ -138,6 +89,7 @@ export function ConfigureForm({
 
   const [selectedTermId, setSelectedTermId] = useState(activeTerms[0]?.id ?? "")
   const [isGeneratingClasses, startClassTransition] = useTransition()
+  const [isEnrolling, startEnrollTransition] = useTransition()
 
   const [defaultSections, setDefaultSections] = useState(
     schoolDefaults?.sectionsPerGrade ?? 2
@@ -237,6 +189,23 @@ export function ConfigureForm({
     })
   }
 
+  const handleEnrollStudents = () => {
+    startEnrollTransition(async () => {
+      const result = await bulkEnrollStudentsInClasses({
+        gradeIds: rows.map((r) => r.gradeId),
+      })
+
+      if (result.success && result.data) {
+        toast.success(
+          `Created ${result.data.enrolled} enrollment${result.data.enrolled !== 1 ? "s" : ""}`
+        )
+        result.data.details.forEach((detail) => toast.info(detail))
+      } else {
+        toast.error(result.error)
+      }
+    })
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex w-full flex-wrap items-center gap-2 p-1">
@@ -262,7 +231,6 @@ export function ConfigureForm({
             min={1}
             max={500}
             step={5}
-            wide
           />
         </div>
 
@@ -328,7 +296,6 @@ export function ConfigureForm({
                       min={1}
                       max={500}
                       step={5}
-                      wide
                     />
                   </TableCell>
                   <TableCell>
@@ -427,6 +394,30 @@ export function ConfigureForm({
                 : d?.generateClassesBtn || "Generate Classes for All Grades"}
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Enroll Students Section */}
+      {grades.length > 0 && (
+        <div className="border-t pt-6">
+          <h3 className="mb-2 font-medium">
+            {(d as any)?.enrollStudents || "Enroll Students in Classes"}
+          </h3>
+          <p className="text-muted-foreground mb-4 text-sm">
+            {(d as any)?.enrollStudentsDescription ||
+              "Auto-enroll all students into their grade's classes. Students must be assigned to a grade first. Safe to run multiple times (idempotent)."}
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleEnrollStudents}
+            disabled={isEnrolling}
+          >
+            {isEnrolling
+              ? (d as any)?.enrolling || "Enrolling..."
+              : (d as any)?.enrollStudentsBtn ||
+                "Enroll Students for All Grades"}
+          </Button>
         </div>
       )}
     </div>

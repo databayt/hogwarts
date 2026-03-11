@@ -45,12 +45,13 @@ export const register = async (
     verificationToken.email,
     verificationToken.token,
     locale,
-    callbackUrl ?? undefined
+    callbackUrl ?? undefined,
+    verificationToken.code ?? undefined
   )
 
   if (!emailSent) {
     return { error: "Failed to send verification email. Please try again." }
   }
 
-  return { success: "Confirmation email sent!" }
+  return { success: "Confirmation email sent!", email }
 }

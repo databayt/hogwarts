@@ -160,7 +160,15 @@
     "enterNewPassword": "أدخل كلمة مرور جديدة",
     "newPassword": "كلمة المرور الجديدة",
     "authenticationError": "خطأ في المصادقة",
-    "or": "أو"
+    "or": "أو",
+    "checkYourEmail": "تحقق من بريدك الإلكتروني",
+    "verifyYourEmail": "تحقق من بريدك الإلكتروني",
+    "codeSentTo": "أرسلنا رمزاً إلى",
+    "emailVerified": "تم التحقق من البريد الإلكتروني!",
+    "resendCode": "إعادة إرسال الرمز",
+    "resendIn": "إعادة الإرسال خلال",
+    "wrongEmail": "بريد إلكتروني خاطئ؟",
+    "canReturnToOriginalTab": "يمكنك العودة إلى علامة التبويب الأصلية — ستكتشف التحقق تلقائياً."
   },
   "marketing": {
     "hero": {

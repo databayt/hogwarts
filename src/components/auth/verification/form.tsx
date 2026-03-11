@@ -77,6 +77,13 @@ export const NewVerificationForm = (props: Props) => {
               {!success && <FormError message={error} />}
             </div>
 
+            {success && (
+              <p className="text-muted-foreground text-center text-sm">
+                {dictionary?.auth?.canReturnToOriginalTab ||
+                  "You can return to your original tab — it will detect verification automatically."}
+              </p>
+            )}
+
             <div className="muted text-center">
               <Link
                 href={

@@ -535,3 +535,109 @@ export async function generateClassesForGrade(
     }
   }
 }
+
+/**
+ * Bulk enroll all students in their grade's classes.
+ * For each grade: find students with that academicGradeId, find classes with that gradeId,
+ * upsert StudentClass for each student×class pair.
+ */
+export async function bulkEnrollStudentsInClasses(input: {
+  gradeIds: string[]
+}): Promise<ActionResponse<{ enrolled: number; details: string[] }>> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    try {
+      assertClassroomPermission(authContext, "create", { schoolId })
+    } catch {
+      return { success: false, error: "Unauthorized to enroll students" }
+    }
+
+    let totalEnrolled = 0
+    const details: string[] = []
+
+    for (const gradeId of input.gradeIds) {
+      const grade = await db.academicGrade.findFirst({
+        where: { id: gradeId, schoolId },
+        select: { name: true },
+      })
+      if (!grade) continue
+
+      const [students, classes] = await Promise.all([
+        db.student.findMany({
+          where: { schoolId, academicGradeId: gradeId },
+          select: { id: true },
+        }),
+        db.class.findMany({
+          where: { schoolId, gradeId },
+          select: { id: true },
+        }),
+      ])
+
+      if (students.length === 0) {
+        details.push(`${grade.name}: no students assigned to this grade`)
+        continue
+      }
+      if (classes.length === 0) {
+        details.push(`${grade.name}: no classes found — generate classes first`)
+        continue
+      }
+
+      // Batch upsert all student×class pairs
+      let gradeEnrolled = 0
+      await db.$transaction(async (tx) => {
+        for (const student of students) {
+          for (const cls of classes) {
+            await tx.studentClass.upsert({
+              where: {
+                schoolId_studentId_classId: {
+                  schoolId,
+                  studentId: student.id,
+                  classId: cls.id,
+                },
+              },
+              create: {
+                schoolId,
+                studentId: student.id,
+                classId: cls.id,
+              },
+              update: {},
+            })
+            gradeEnrolled++
+          }
+        }
+      })
+
+      totalEnrolled += gradeEnrolled
+      details.push(
+        `${grade.name}: ${students.length} students × ${classes.length} classes = ${gradeEnrolled} enrollments`
+      )
+    }
+
+    revalidatePath("/classrooms")
+    revalidatePath("/students")
+    return { success: true, data: { enrolled: totalEnrolled, details } }
+  } catch (error) {
+    console.error("[bulkEnrollStudentsInClasses] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to enroll students in classes",
+    }
+  }
+}

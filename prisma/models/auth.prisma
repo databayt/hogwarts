@@ -192,6 +192,7 @@ model VerificationToken {
   id      String   @id @default(cuid())
   email   String
   token   String   @unique
+  code    String?
   expires DateTime
 
   @@unique([email, token])

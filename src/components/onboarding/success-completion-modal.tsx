@@ -136,44 +136,23 @@ export default function SuccessCompletionModal({
 
         <h5 className="text-primary mb-6">{fullDomain}</h5>
 
-        {/* Essential Info Card */}
-        <div className="bg-muted/50 mx-auto mb-6 rounded-lg border p-4 text-start">
-          <div className="mb-3 flex items-center justify-between">
-            <small className="text-muted-foreground font-medium">
-              Save your school details
-            </small>
-            <button
-              onClick={handleCopy}
-              className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-3.5 w-3.5 text-green-500" />
-                  <span className="text-green-500">Copied</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" />
-                  <span>Copy</span>
-                </>
-              )}
-            </button>
-          </div>
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">School</span>
-              <span className="font-medium">{schoolData.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">URL</span>
-              <span className="font-medium">{fullDomain}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Admin</span>
-              <span className="font-medium">Your login email</span>
-            </div>
-          </div>
-        </div>
+        {/* Copy essential info */}
+        <button
+          onClick={handleCopy}
+          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
+        >
+          {copied ? (
+            <>
+              <Check className="h-3.5 w-3.5 text-green-500" />
+              <span className="text-green-500">Copied to clipboard</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-3.5 w-3.5" />
+              <span>Copy school details to clipboard</span>
+            </>
+          )}
+        </button>
 
         {/* Action Link */}
         <button

@@ -160,7 +160,15 @@
     "enterNewPassword": "Enter a new password",
     "newPassword": "New Password",
     "authenticationError": "Authentication Error",
-    "or": "Or"
+    "or": "Or",
+    "checkYourEmail": "Check your email",
+    "verifyYourEmail": "Verify your email",
+    "codeSentTo": "We sent a code to",
+    "emailVerified": "Email verified!",
+    "resendCode": "Resend code",
+    "resendIn": "Resend in",
+    "wrongEmail": "Wrong email?",
+    "canReturnToOriginalTab": "You can return to your original tab — it will detect verification automatically."
   },
   "marketing": {
     "hero": {

@@ -24,6 +24,7 @@ export function createStudentBaseSchema(dictionary: Dictionary) {
     enrollmentDate: z.string().optional(), // ISO date YYYY-MM-DD
     userId: z.string().optional(),
     academicGradeId: z.string().optional(),
+    sectionId: z.string().optional(),
     profilePhotoUrl: z.string().optional(),
   })
 }
@@ -55,6 +56,7 @@ export const studentBaseSchema = z.object({
   enrollmentDate: z.string().optional(), // ISO date YYYY-MM-DD
   userId: z.string().optional(),
   academicGradeId: z.string().optional(),
+  sectionId: z.string().optional(),
   profilePhotoUrl: z.string().optional(),
 })
 

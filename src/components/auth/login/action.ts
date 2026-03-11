@@ -103,10 +103,12 @@ export const login = async (
     await sendVerificationEmail(
       verificationToken.email,
       verificationToken.token,
-      locale
+      locale,
+      undefined,
+      verificationToken.code ?? undefined
     )
 
-    return { success: "Confirmation email sent!" }
+    return { needsVerification: true, email: existingUser.email }
   }
 
   if (existingUser.isTwoFactorEnabled && existingUser.email) {

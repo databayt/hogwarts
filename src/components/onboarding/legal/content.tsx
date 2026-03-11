@@ -25,7 +25,7 @@ const LegalContent = (props: Props) => {
   const router = useRouter()
   const { isRTL } = useLocale()
   const schoolId = id
-  const [hostingType, setHostingType] = useState<string>("private-individual")
+  const [hostingType, setHostingType] = useState<string>("")
   const [safetyFeatures, setSafetyFeatures] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)

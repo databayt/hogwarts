@@ -16,6 +16,7 @@ import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
   createStudent,
+  getGradesAndSections,
   getStudent,
   updateStudent,
 } from "@/components/school-dashboard/listings/students/actions"
@@ -42,6 +43,23 @@ export function StudentCreateForm({
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [academicGrades, setAcademicGrades] = useState<
+    Array<{
+      id: string
+      name: string
+      gradeNumber: number
+      level: { id: string; name: string; level: string } | null
+    }>
+  >([])
+  const [sections, setSections] = useState<
+    Array<{
+      id: string
+      name: string
+      gradeId: string
+      maxCapacity: number
+      currentCount: number
+    }>
+  >([])
 
   // Create localized schema (memoized)
   // Note: dictionary prop is Dictionary["school"]["students"] (subsection),
@@ -61,6 +79,8 @@ export function StudentCreateForm({
       gender: undefined as unknown as "male" | "female" | undefined,
       enrollmentDate: "",
       userId: "",
+      academicGradeId: "",
+      sectionId: "",
     },
   })
 
@@ -70,6 +90,18 @@ export function StudentCreateForm({
       ? modal.id.split(":")[1]
       : modal.id
     : undefined
+
+  // Load grades and sections on mount
+  useEffect(() => {
+    const loadGradesAndSections = async () => {
+      const res = await getGradesAndSections()
+      if (res.success && res.data) {
+        setAcademicGrades(res.data.grades)
+        setSections(res.data.sections)
+      }
+    }
+    void loadGradesAndSections()
+  }, [])
 
   useEffect(() => {
     const load = async () => {
@@ -92,6 +124,8 @@ export function StudentCreateForm({
           ? new Date(s.enrollmentDate).toISOString().slice(0, 10)
           : "",
         userId: s.userId ?? "",
+        academicGradeId: s.academicGradeId ?? "",
+        sectionId: s.sectionId ?? "",
       })
     }
     void load()
@@ -172,7 +206,12 @@ export function StudentCreateForm({
               "dateOfBirth",
               "gender",
             ] as const)
-          : (["enrollmentDate", "userId"] as const)
+          : ([
+              "enrollmentDate",
+              "userId",
+              "academicGradeId",
+              "sectionId",
+            ] as const)
 
       const stepValid = await form.trigger(currentStepFields)
       if (stepValid) {
@@ -197,7 +236,14 @@ export function StudentCreateForm({
       case 1:
         return <InformationStep form={form} isView={isView} />
       case 2:
-        return <EnrollmentStep form={form} isView={isView} />
+        return (
+          <EnrollmentStep
+            form={form}
+            isView={isView}
+            academicGrades={academicGrades}
+            sections={sections}
+          />
+        )
       default:
         return null
     }

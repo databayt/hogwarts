@@ -63,7 +63,7 @@ export function DescriptionForm({
   const form = useForm<DescriptionFormData>({
     resolver: zodResolver(descriptionSchema),
     defaultValues: {
-      schoolType: initialData?.schoolType || "private",
+      schoolType: initialData?.schoolType || undefined,
       schoolLevel: initialData?.schoolLevel || undefined,
     },
   })

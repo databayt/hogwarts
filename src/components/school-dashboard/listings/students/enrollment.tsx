@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useMemo } from "react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 
@@ -39,11 +39,30 @@ type AcademicGradeOption = {
   level: { id: string; name: string; level: string } | null
 }
 
+type SectionOption = {
+  id: string
+  name: string
+  gradeId: string
+  maxCapacity: number
+  currentCount: number
+}
+
 export function EnrollmentStep({
   form,
   isView,
   academicGrades,
-}: StudentFormStepProps & { academicGrades?: AcademicGradeOption[] }) {
+  sections,
+}: StudentFormStepProps & {
+  academicGrades?: AcademicGradeOption[]
+  sections?: SectionOption[]
+}) {
+  const selectedGradeId = form.watch("academicGradeId")
+
+  const filteredSections = useMemo(
+    () => sections?.filter((s) => s.gradeId === selectedGradeId) ?? [],
+    [sections, selectedGradeId]
+  )
+
   return (
     <div className="mx-auto max-w-md space-y-4">
       <FormField
@@ -96,7 +115,11 @@ export function EnrollmentStep({
             <FormItem>
               <FormLabel>Academic Grade</FormLabel>
               <Select
-                onValueChange={field.onChange}
+                onValueChange={(value) => {
+                  field.onChange(value)
+                  // Clear section when grade changes
+                  form.setValue("sectionId", "")
+                }}
                 value={field.value || ""}
                 disabled={isView}
               >
@@ -112,6 +135,45 @@ export function EnrollmentStep({
                       {grade.level ? ` (${grade.level.name})` : ""}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      {selectedGradeId && filteredSections.length > 0 && (
+        <FormField
+          control={form.control}
+          name="sectionId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Section</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value || ""}
+                disabled={isView}
+              >
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select section" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {filteredSections.map((section) => {
+                    const isFull = section.currentCount >= section.maxCapacity
+                    return (
+                      <SelectItem
+                        key={section.id}
+                        value={section.id}
+                        disabled={isFull}
+                      >
+                        {section.name} ({section.currentCount}/
+                        {section.maxCapacity}){isFull ? " — Full" : ""}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
               <FormMessage />
