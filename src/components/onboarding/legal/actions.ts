@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 
 import {
   createActionResponse,
@@ -62,15 +63,19 @@ export async function completeOnboarding(
       },
     })
 
-    // Fire-and-forget: provision defaults in background
-    // Each step has its own try/catch, so failures are non-fatal.
-    // The school dashboard works without them (admin can set up manually).
-    provisionSchoolDefaults(schoolId, school).catch((err) =>
-      console.error(
-        `[completeOnboarding] Background provisioning failed for ${schoolId}:`,
-        err
-      )
-    )
+    // Provision defaults after response is sent.
+    // Uses next/server after() so Vercel keeps the function alive until completion
+    // (unlike fire-and-forget promises which get terminated on serverless).
+    after(async () => {
+      try {
+        await provisionSchoolDefaults(schoolId, school)
+      } catch (err) {
+        console.error(
+          `[completeOnboarding] Provisioning failed for ${schoolId}:`,
+          err
+        )
+      }
+    })
 
     revalidatePath(`/onboarding/${schoolId}`)
 
