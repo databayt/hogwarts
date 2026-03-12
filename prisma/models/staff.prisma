@@ -18,6 +18,7 @@ model Teacher {
   contractStartDate DateTime?
   contractEndDate   DateTime?
   profilePhotoUrl   String?
+  wizardStep        String? // null = complete, non-null = current wizard step slug
 
   school             School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classes            Class[]

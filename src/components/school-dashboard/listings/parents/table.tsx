@@ -12,8 +12,6 @@ import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -21,7 +19,6 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { ParentCreateForm } from "@/components/school-dashboard/listings/parents/form"
 import {
   GridCard,
   GridContainer,
@@ -34,6 +31,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 import { deleteParent, getParents, getParentsCSV } from "./actions"
 import { getParentColumns, type ParentRow } from "./columns"
 import { LinkChildDialog } from "./link-child-dialog"
+import { createDraftParent } from "./wizard/actions"
 
 interface ParentsTableProps {
   initialData: ParentRow[]
@@ -51,7 +49,6 @@ function ParentsTableInner({
   perPage = 20,
 }: ParentsTableProps) {
   const router = useRouter()
-  const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
 
   // Translations with fallbacks
@@ -175,12 +172,22 @@ function ParentsTableInner({
     },
   })
 
+  // Handle create via wizard
+  const handleCreate = useCallback(async () => {
+    const result = await createDraftParent()
+    if (result.success && result.data) {
+      router.push(`/${lang}/parents/add/${result.data.id}/information`)
+    } else {
+      ErrorToast(result.error || "Failed to create")
+    }
+  }, [router, lang])
+
   // Handle edit
   const handleEdit = useCallback(
     (id: string) => {
-      openModal(id)
+      router.push(`/${lang}/parents/add/${id}/information`)
     },
-    [openModal]
+    [router, lang]
   )
 
   // Handle view
@@ -240,7 +247,7 @@ function ParentsTableInner({
             searchValue={searchValue}
             onSearchChange={handleSearchChange}
             searchPlaceholder={t.search}
-            onCreate={() => openModal()}
+            onCreate={handleCreate}
             getCSV={handleExportCSV}
             entityName="parents"
             translations={toolbarTranslations}
@@ -320,8 +327,6 @@ function ParentsTableInner({
           )}
         </>
       )}
-
-      <Modal content={<ParentCreateForm onSuccess={refresh} />} />
 
       <LinkChildDialog
         open={linkChildOpen}

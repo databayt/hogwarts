@@ -486,13 +486,13 @@ export async function getInvoices(page: number = 1, limit: number = 5) {
     const skip = (page - 1) * limit
     const [invoices, total] = await Promise.all([
       db.userInvoice.findMany({
-        where: { userId, schoolId },
+        where: { userId, schoolId, wizardStep: null },
         include: { items: true, from: true, to: true },
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
       }),
-      db.userInvoice.count({ where: { userId, schoolId } }),
+      db.userInvoice.count({ where: { userId, schoolId, wizardStep: null } }),
     ])
 
     return {
@@ -525,6 +525,7 @@ export async function getInvoicesWithFilters(searchParams: any) {
     const where: any = {
       userId,
       schoolId,
+      wizardStep: null,
       ...(invoice_no
         ? { invoice_no: { contains: invoice_no, mode: "insensitive" } }
         : {}),

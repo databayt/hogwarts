@@ -382,6 +382,7 @@ export const saasDashboardRoutes = [
   "/observability",
   "/product",
   "/catalog",
+  "/users",
 ]
 
 /**

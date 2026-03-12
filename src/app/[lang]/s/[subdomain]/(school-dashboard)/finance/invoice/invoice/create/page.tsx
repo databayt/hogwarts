@@ -1,39 +1,32 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { auth } from "@/auth"
+"use client"
 
-import RouteModal from "@/components/atom/modal/route-modal"
-import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import CreateEditInvoiceModalContent from "@/components/school-dashboard/finance/invoice/invoice/create-edit-content"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
-interface Props {
-  params: Promise<{ lang: Locale; subdomain: string }>
-}
+import { createDraftInvoice } from "@/components/school-dashboard/finance/invoice/wizard/actions"
 
-export default async function InvoiceCreate({ params }: Props) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-  const session = await auth()
-  const fullName = session?.user.name ?? ""
-  const [derivedFirstName, derivedLastName] = fullName.split(" ", 2)
+export default function InvoiceCreate() {
+  const router = useRouter()
+
+  useEffect(() => {
+    async function create() {
+      const result = await createDraftInvoice()
+      if (result.success && result.data) {
+        router.replace(`/finance/invoice/add/${result.data.id}/details`)
+      } else {
+        router.back()
+      }
+    }
+    create()
+  }, [router])
 
   return (
-    <RouteModal
-      returnTo="/invoice"
-      content={
-        <CreateEditInvoiceModalContent
-          defaults={{
-            firstName: derivedFirstName || null,
-            lastName: derivedLastName || null,
-            email: session?.user.email ?? null,
-            currency: null,
-          }}
-          dictionary={dictionary}
-          lang={lang}
-        />
-      }
-    />
+    <div className="flex items-center justify-center p-8">
+      <Loader2 className="h-6 w-6 animate-spin" />
+    </div>
   )
 }

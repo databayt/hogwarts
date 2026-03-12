@@ -1,223 +1,512 @@
 ---
 title: "Add Values"
-description: "Step-by-step value delivery milestones from school signup to full automation"
+description: "Step-by-step value delivery milestones from school signup to full automation — with real implementation status"
 ---
 
 ## Overview
 
 Every step below is a concrete milestone where the platform delivers real, usable value to a school owner. They are ordered from first signup to full operation. Each builds on the previous.
 
-| #   | Add Value          | What It Is                                             | Prerequisites        |
-| --- | ------------------ | ------------------------------------------------------ | -------------------- |
-| 1   | School Online      | Live school URL + join code after onboarding           | Complete 15 steps    |
-| 2   | Share & Invite     | Teachers and parents join via URL or join code         | School Online        |
-| 3   | First Announcement | Post visible to all school members                     | School Online        |
-| 4   | Team Onboard       | Add teachers manually or via CSV import                | School Online        |
-| 5   | Students In        | Add students manually, CSV, or admission flow          | School Online        |
-| 6   | Classes Formed     | Create classes linking teacher + subject + students    | Team + Students      |
-| 7   | Timetable Running  | Generate weekly schedule for all classes               | Classes Formed       |
-| 8   | Attendance Tracked | Mark daily attendance per class                        | Classes + Timetable  |
-| 9   | Grades Recorded    | Create exams, enter marks, generate report cards       | Classes + Students   |
-| 10  | Fees Collected     | Set up fee structure, generate invoices                | Students In          |
-| 11  | Parents Connected  | Parents linked to students, see grades and attendance  | Students + Guardians |
-| 12  | School Automated   | Full cycle: attendance + grades + fees + communication | All above            |
+| #   | Add Value          | Status | What It Is                                             | Prerequisites        |
+| --- | ------------------ | ------ | ------------------------------------------------------ | -------------------- |
+| 1   | School Online      | ~85%   | Live school URL + join code after onboarding           | Complete 15 steps    |
+| 2   | Share & Invite     | ~50%   | Teachers and parents join via URL or join code         | School Online        |
+| 3   | First Announcement | ~95%   | Post visible to all school members                     | School Online        |
+| 4   | Team Onboard       | ~80%   | Add teachers manually or via CSV import                | School Online        |
+| 5   | Students In        | ~85%   | Add students manually, CSV, or admission flow          | School Online        |
+| 6   | Classes Formed     | ~85%   | Create classes linking teacher + subject + students    | Team + Students      |
+| 7   | Timetable Running  | ~90%   | Generate weekly schedule for all classes               | Classes Formed       |
+| 8   | Attendance Tracked | ~98%   | Mark daily attendance per class                        | Classes + Timetable  |
+| 9   | Grades Recorded    | ~80%   | Create exams, enter marks, generate report cards       | Classes + Students   |
+| 10  | Fees Collected     | ~75%   | Set up fee structure, record payments                  | Students In          |
+| 11  | Parents Connected  | ~70%   | Parents linked to students, see grades and attendance  | Students + Guardians |
+| 12  | School Automated   | ~50%   | Full cycle: attendance + grades + fees + communication | All above            |
 
 ---
 
-## 1. School Online
+## 1. School Online — ~85%
 
-Complete [onboarding](/docs/onboarding) (15 steps) and the platform provisions:
+Complete [onboarding](/docs/onboarding) (15 steps) and the platform provisions a live subdomain.
 
-- **Live URL**: `yourschool.databayt.org` accessible immediately
-- **Join code**: 6-character code for members to join
-- **School dashboard**: Full admin panel at the subdomain
+### Progress
 
-**What you can do right now:**
+- All 15 onboarding steps with routes, forms, validation, and server actions
+- School creation is atomic (`$transaction`)
+- Subdomain provisioning works via middleware rewrite (`school.databayt.org`)
+- `completeOnboarding()` marks school active and fires `provisionSchoolDefaults()`
+- Full school dashboard available immediately at the subdomain
 
-- Share your school URL with anyone
-- Access the school dashboard as admin
-- Configure school settings (branding, visibility, pricing)
+### Gaps
 
----
+- Join code never auto-generated during onboarding — schools finish with `joinCode: null`
+- No DNS provisioning (relies on wildcard DNS — works but no custom domain support)
+- Maps API not integrated (location step collects data but no interactive map)
+- Stripe not integrated (price/discount steps collect data only, no payment processing)
+- Duplicate subdomain action files (`action.ts` + `actions.ts`) need cleanup
 
-## 2. Share & Invite
+### Blockers
 
-Once the school is online, members can join through three channels:
+None critical for MVP — subdomain works via middleware rewrite.
 
-- **Direct URL**: Share `yourschool.databayt.org` — visitors see the school page and can request to join
-- **Join code**: Members enter the 6-character code on the platform to join directly
-- **Admin invite**: Add members manually from the dashboard
+### How to Test
 
-**What you can do right now:**
+1. Login with `user@databayt.org` / `1234`
+2. Walk through all 15 onboarding steps
+3. Verify congratulations page shows the school URL
+4. Navigate to `yourschool.localhost:3000` and confirm the dashboard loads
+5. After testing, reset: `pnpm db:reset-test-user`
 
-- Share the join code via WhatsApp, SMS, or print
-- Review and approve membership requests
-- Assign roles (teacher, student, guardian, staff)
+### Dependencies
 
----
-
-## 3. First Announcement
-
-Post an announcement from the school dashboard. It is visible to all members immediately.
-
-**What you can do right now:**
-
-- Create announcements with rich text
-- Target specific roles or broadcast to all
-- Members receive notifications
-
-**What you need first:** At least one member besides the admin.
+None — this is the entry point.
 
 ---
 
-## 4. Team Onboard
+## 2. Share & Invite — ~50%
 
-Add teachers to the school. Three methods:
+Once the school is online, members can join. Backend is solid but key UI pieces are missing.
 
-| Method        | Best For               |
-| ------------- | ---------------------- |
-| Manual entry  | 1-5 teachers           |
-| CSV import    | 6+ teachers            |
-| Join code/URL | Teachers self-register |
+### Progress
 
-**What you can do right now:**
+- Full membership management (~1089 lines in `actions.ts`): invite, approve, reject, suspend, role change, bulk ops, CSV export
+- `InviteDialog` with role selection
+- `MembershipRequest` model with status tracking
+- `joinSchoolByCode()` backend logic exists
+- Newcomers multi-step modal
 
-- Add teachers with name, email, subject assignments
-- Import a CSV file with bulk teacher data
-- Teachers get accounts and can log in immediately
+### Gaps
 
-See [authentication](/docs/authentication) for how accounts and roles work.
+- No join code entry UI for users (backend exists, no frontend)
+- No join code display/copy UI for admins
+- No invitation token acceptance route (`/accept-invite?token=...`)
+- No shareable public school page
+- No bulk invite UI (paste multiple emails)
+
+### Blockers
+
+- Join codes never generated during onboarding (from #1) — `joinCode` is `null`
+- No UI to enter or view join codes
+
+### How to Test
+
+1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
+2. Navigate to Membership
+3. Click "Invite Member" — dialog opens with role selection
+4. Join code flow is not testable until code generation is implemented
+
+### Dependencies
+
+- **School Online (#1)** — school must exist with a subdomain
 
 ---
 
-## 5. Students In
+## 3. First Announcement — ~95%
 
-Add students to the school. Three methods:
+Fully functional announcement system with rich features.
 
-| Method                            | Best For                 |
-| --------------------------------- | ------------------------ |
-| Manual entry                      | Small batches            |
-| CSV import                        | Bulk enrollment          |
-| [Admission flow](/docs/admission) | Applications with review |
+### Progress
 
-**What you can do right now:**
+- Full CRUD (~1251 lines in `actions.ts`)
+- Rich model: audience scoping, priority levels, scheduling, pinning, featuring
+- Auto-translation via Google Translate API
+- Read tracking with unread badges
+- Notification dispatch (in-app)
+- Config page with templates
+- Export functionality
+- Parent portal view
+- Routes: list, detail, config, archived
 
-- Add students with profile data
-- Import hundreds of students via CSV
-- Set up an admission form for applicants
-- Review and approve applications
+### Gaps
+
+- Scheduled publishing needs external cron (no background job runner)
+- Email notifications not wired (`emailOnPublish` config exists but only dispatches in-app)
+- No file attachments
+
+### Blockers
+
+None critical.
+
+### How to Test
+
+1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
+2. Navigate to Announcements
+3. Create a new announcement, set audience, publish
+4. Login with `teacher@databayt.org` and verify it appears
+5. Check unread badge clears after viewing
+
+### Dependencies
+
+- **School Online (#1)** — at least one member besides admin
 
 ---
 
-## 6. Classes Formed
+## 4. Team Onboard — ~80%
 
-Create classes that link a **teacher**, **subject**, **grade level**, and **enrolled students**. This is the core academic unit.
+Add teachers to the school via multiple channels.
+
+### Progress
+
+- `inviteMember()` with email + role
+- CSV/XLSX/JSON import for teachers via `bulkImportTeachers()`
+- Downloadable import templates
+- `InviteDialog` UI with role selection
+- Role-specific profile creation on approval
+- CSV export of member list
+
+### Gaps
+
+- No bulk invite (paste multiple emails at once)
+- No post-import teacher onboarding flow (teacher gets account but no guided setup)
+- Invitation acceptance page missing (`/accept-invite?token=...` route)
+- Dashboard route for bulk import may be unclear to admins
+
+### Blockers
+
+- No invitation token acceptance route — invited teachers cannot click a link to join
+
+### How to Test
+
+1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
+2. Navigate to Membership > click "Invite Member"
+3. For bulk import: School Settings > Bulk > Teachers tab
+4. Download template, fill in, upload
+
+### Dependencies
+
+- **School Online (#1)**
+
+---
+
+## 5. Students In — ~85%
+
+Full student management with admission pipeline.
+
+### Progress
+
+- Full CRUD with multi-step registration form (7 steps)
+- CSV/XLSX/JSON bulk import with downloadable templates
+- Admission pipeline: campaigns, applications, merit list, enrollment confirmation, section placement with capacity checks
+- Student access codes
+- Enrollment with grade/class/batch assignment
+
+### Gaps
+
+- Guardian linking actions missing — `linkGuardian()`, `unlinkGuardian()`, `getStudentGuardians()` not implemented
+- UI for guardian linking exists but is non-functional
+
+### Blockers
+
+- **Guardian linking is a critical blocker** for parent connectivity (affects #11 Parents Connected)
+
+### Issues
+
+- Guardian tab in student profile shows UI but actions fail silently
+
+### How to Test
+
+1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
+2. Navigate to Students listing > create new student
+3. Test CSV import via School Settings > Bulk > Students tab
+4. Test admission: create campaign at `/admission`, submit application, review, admit, place in section
+
+### Dependencies
+
+- **School Online (#1)**
+
+---
+
+## 6. Classes Formed — ~85%
+
+Create classes that link teacher, subject, grade, and enrolled students.
 
 ```
 Class = Subject + Teacher + Grade + Term + Classroom + Students
 ```
 
-**What you can do right now:**
+### Progress
 
-- Create classes for each subject and grade
-- Assign teachers to classes
-- Enroll students in their classes
-- View class rosters
+- Full CRUD (~65KB actions file)
+- Student enrollment via `StudentClass` bridge table with capacity checks
+- Subject linking from catalog
+- Term and classroom assignment
+- Capacity management
+- CSV export
+- Integration chain: catalog → school subjects → classes
 
-**What you need first:** Teachers (step 4) and students (step 5) in the system.
+### Gaps
 
-See [integration flow](/docs/integration-flow) for the full chain from catalog to classes.
+- Subject-teacher assignment incomplete (homeroom teacher works, but per-subject teacher assignment not fully functional)
+- `gradeId` was null for all classes (fixed by `pnpm db:seed:single backfill-class-grades` but could recur for newly created classes)
 
----
+### Blockers
 
-## 7. Timetable Running
+- Subject-teacher assignment blocks multi-teacher scheduling
 
-Generate a weekly schedule from your classes. The [timetable system](/docs/timetable) assigns periods, rooms, and handles conflicts.
+### How to Test
 
-**What you can do right now:**
+1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
+2. Navigate to Classes listing > create new class
+3. Assign teacher, subject, grade, term
+4. Enroll students from the class detail page
+5. Run `pnpm db:seed:single classes` to verify enrollment seeding works
 
-- Define period structure (start/end times, breaks)
-- Generate timetables per class, teacher, or room
-- View and adjust the weekly grid
-- Print or export schedules
+### Dependencies
 
-**What you need first:** Classes formed (step 6) with teachers and rooms assigned.
-
----
-
-## 8. Attendance Tracked
-
-Mark daily [attendance](/docs/attendance) for each class session. Teachers mark from their dashboard or via QR code.
-
-**What you can do right now:**
-
-- Mark students present, absent, late, or excused per period
-- View attendance reports by student, class, or date range
-- Track attendance percentages
-
-**What you need first:** Classes (step 6) and timetable (step 7) — attendance follows the timetable schedule.
+- **Team Onboard (#4)** — teachers must exist
+- **Students In (#5)** — students must exist
+- **Catalog** — subjects must be set up (auto-provisioned during onboarding)
 
 ---
 
-## 9. Grades Recorded
+## 7. Timetable Running — ~90%
 
-Create [exams](/docs/exams), enter marks, and generate report cards using the [exam wizard](/docs/exam-wizard).
+Generate weekly schedules with AI-powered conflict resolution.
 
-**What you can do right now:**
+### Progress
 
-- Create exam definitions (name, max marks, weight)
-- Enter student marks per exam
-- Generate report cards with term averages
-- View grade distributions per class
+- Full 3-phase AI generation algorithm (974 lines)
+- Visual grid with click-to-assign editing
+- Role-based views (admin, teacher, student, guardian)
+- Conflict detection (teacher, room, student overlaps)
+- Slot editor for manual adjustments
+- Substitution management
+- Template system for recurring structures
+- PDF/CSV export
+- Term-based schedules
 
-**What you need first:** Classes with enrolled students (step 6).
+### Gaps
 
----
+- Performance optimizations needed (React.memo, virtual scrolling for large schools)
+- Accessibility gaps (ARIA labels, keyboard navigation)
+- Preview table shows truncated IDs instead of readable names
+- Role checks on mutations not enforced (any authenticated user can edit)
 
-## 10. Fees Collected
+### Blockers
 
-Set up fee structures and generate invoices for students.
+None critical — MVP-ready.
 
-**What you can do right now:**
+### How to Test
 
-- Define fee categories (tuition, transport, activities)
-- Set amounts per grade or per student
-- Generate invoices
-- Track payment status
+1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
+2. Navigate to Timetable page
+3. Click cells to edit individual slots
+4. Go to Generate tab to run AI generation
+5. Login with `teacher@databayt.org` to see teacher-specific view
+6. Login with `student@databayt.org` to see student-specific view
 
-**What you need first:** Students enrolled (step 5).
+### Dependencies
 
----
-
-## 11. Parents Connected
-
-Link parents/guardians to their children. Parents get their own dashboard showing grades, attendance, and announcements.
-
-**What you can do right now:**
-
-- Link guardian accounts to student records
-- Parents view their child's attendance and grades
-- Parents receive announcements and notifications
-- Multiple guardians per student supported
-
-**What you need first:** Students (step 5) and guardian accounts (via join code or admin invite).
+- **Classes Formed (#6)** — classes with teachers and rooms assigned
 
 ---
 
-## 12. School Automated
+## 8. Attendance Tracked — ~98%
 
-All systems running together. The school operates with minimal manual work.
+The most complete subsystem. Full daily attendance with multiple input methods.
 
-**What the full cycle looks like:**
+### Progress
 
-- Teachers mark attendance daily (auto-tracked)
-- Exams are scheduled, marks entered, report cards generated
-- Fees are invoiced and payment status tracked
-- Parents see everything in real time
-- Announcements reach the right audience
-- Admin has full visibility across all operations
+- Daily marking with 6 statuses (present, absent, late, excused, early leave, sick)
+- Smart class auto-selection from current timetable period
+- Bulk marking with keyboard shortcuts (P/A/L, Ctrl+S to save)
+- QR code session generation
+- Barcode/RFID reader support
+- Geofence verification with Haversine distance calculation
+- Excuse system (7 categories)
+- Intervention tracking (14 types)
+- Analytics dashboard with charts
+- Absence notifications (in-app + SMS)
+- CSV export
+- Policy engine for attendance rules
+- Compliance reporting
+- Kiosk mode for self-check-in
+- Hall pass system
 
-**What you need first:** All previous steps completed.
+### Gaps
+
+- Staff read-only access incomplete
+- Some `.tsx.bak` backup files suggest in-progress rewrites
+
+### Blockers
+
+- **Upstream:** Classes must have enrolled students (`student_classes` table). Run `pnpm db:seed:single classes` if empty.
+- **Upstream:** Timetable must have slots for smart period detection to work.
+
+### How to Test
+
+1. Login with `admin@databayt.org` or `teacher@databayt.org` on `demo.localhost:3000`
+2. Navigate to Attendance page
+3. Select a class and date
+4. Mark students using buttons or keyboard shortcuts (P/A/L)
+5. Press Ctrl+S to save
+6. Ensure classes have enrollments first: `pnpm db:seed:single classes`
+
+### Dependencies
+
+- **Classes Formed (#6)** — classes with enrolled students
+- **Timetable Running (#7)** — for smart period auto-detection
+
+---
+
+## 9. Grades Recorded — ~80%
+
+Extensive exam system with a critical report card bug.
+
+### Progress
+
+- 40+ exam route pages
+- Full CRUD for exams and marks
+- Mark entry: manual, auto-calculate, AI-assisted, bulk, OCR scan
+- Question bank with AI generation
+- Grading config: GPA 4.0/5.0, letter grades, CGPA
+- Report card model and certificate system
+- Progress reports
+- Quick/mock/quiz exam modes
+- Exam creation wizard
+
+### Gaps
+
+- Academic metrics in dashboard return null placeholders
+- No CSV import for question banks
+- No real-time collaboration during grading sessions
+
+### Blockers
+
+- **CRITICAL BUG:** `generateReportCards()` queries `db.exam.findMany({ where: { termId } })` but the `Exam` model has **no `termId` field**. Report card generation is completely non-functional.
+
+### Issues
+
+- `src/components/school-dashboard/reports/actions.ts:74` — `termId` query on Exam model will throw a Prisma error
+
+### How to Test
+
+1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
+2. Navigate to `/exams`
+3. Create an exam, enter marks — this works
+4. Navigate to `/exams/report-cards/` — **this will fail** due to the `termId` bug
+
+### Dependencies
+
+- **Classes Formed (#6)** — classes with enrolled students
+
+---
+
+## 10. Fees Collected — ~75%
+
+Fee management with manual payment tracking. No online payments yet.
+
+### Progress
+
+- Full models: FeeStructure, FeeAssignment, Payment, Refund, Scholarship, Fine
+- Tabbed UI (5 tabs: structures, assignments, payments, scholarships, fines)
+- CRUD actions with schoolId scoping
+- Dashboard stats
+- Validation and tests
+
+### Gaps
+
+- Reports tab shows "coming soon" placeholder
+- No parent-facing payment portal (manual payments only — cash, cheque, bank transfer)
+- No auto-invoice generation
+- No receipt PDF generator
+- No late fee auto-calculation
+- Payment number uses random numbers (collision risk at scale)
+
+### Blockers
+
+- No online payment gateway for school-level fees (Stripe integration is SaaS-level only, not per-school)
+
+### How to Test
+
+1. Login with `admin@databayt.org` or `accountant@databayt.org` on `demo.localhost:3000`
+2. Navigate to `/finance/fees`
+3. Create a fee structure (e.g., "Tuition Q1", amount, category)
+4. Assign the fee to students
+5. Record a payment against an assignment
+
+### Dependencies
+
+- **Students In (#5)** — students must be enrolled
+
+---
+
+## 11. Parents Connected — ~70%
+
+Parent portal exists but partially wired with mock data.
+
+### Progress
+
+- Guardian and StudentGuardian models in schema
+- Parent portal routes: attendance, announcements, events
+- Server actions: `getMyChildren()`, `getChildGrades()`, `getChildTimetable()`, `getChildOverview()` — all verify guardian-student relationship
+- Rich dashboard component with charts
+- Excuse submission form
+- Admin-side parent listing
+
+### Gaps
+
+- Parent dashboard uses **mock data** for grade trends (hardcoded in `dashboard.tsx` line ~199)
+- No server component wires real aggregated data to the parent dashboard
+- No fee information visible to parents
+- No event-driven notifications (grade posted, attendance marked)
+- No parent-teacher messaging
+
+### Blockers
+
+- **Guardian linking actions missing** (from #5) — `linkGuardian()`, `unlinkGuardian()` not implemented
+- Parent dashboard partially shows mock data instead of real student data
+
+### How to Test
+
+1. Login with `parent@databayt.org` / `1234` on `demo.localhost:3000`
+2. Navigate to `/parent/attendance` — shows child's attendance
+3. Navigate to `/parent/announcements` — shows school announcements
+4. Grade trends chart will show mock data, not real grades
+
+### Dependencies
+
+- **Students In (#5)** — students must exist
+- **Guardian linking** — `linkGuardian()` must be implemented for new parent-student connections
+
+---
+
+## 12. School Automated — ~50%
+
+Individual subsystems work but are not connected into an automated workflow.
+
+### Progress
+
+- Dashboard with `getDashboardSummary()` (parallel metric fetching)
+- Notification system: 6 models, 20 files, in-app + email channels
+- Each subsystem (attendance, exams, fees, announcements) works independently
+- Progress report scheduling exists in schema
+
+### Gaps
+
+- No automated triggers between subsystems (e.g., "attendance marked → notify parent")
+- No event bus or pub-sub architecture
+- Academic performance metrics (GPA, pass rate) return null on dashboard
+- No daily digest for parents
+- No cron jobs for scheduled tasks (overdue fee reminders, report generation, attendance alerts)
+- No cross-system analytics or unified reporting
+
+### Blockers
+
+- Report card generation broken (from #9 — `termId` bug)
+- Subsystems disconnected — no orchestration layer to chain workflows
+
+### How to Test
+
+1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
+2. School dashboard homepage shows enrollment/attendance/staff metrics
+3. Each subsystem is testable individually
+4. **End-to-end flow** (exam → marks → report card → notify parent) **fails** at the report card step
+
+### Dependencies
+
+- **All previous add values** must be functional
+- Report card bug (#9) must be fixed for full automation
+- Guardian linking (#5) must be implemented for parent notifications
 
 ---
 
@@ -226,18 +515,29 @@ All systems running together. The school operates with minimal manual work.
 Each add value builds on the previous. Here is the dependency graph:
 
 ```
-School Online (1)
-├── Share & Invite (2)
-├── First Announcement (3)
-├── Team Onboard (4)
-│   └── Classes Formed (6) ← Students In (5)
-│       ├── Timetable Running (7)
-│       │   └── Attendance Tracked (8)
-│       └── Grades Recorded (9)
-├── Students In (5)
-│   ├── Fees Collected (10)
-│   └── Parents Connected (11) ← Guardians joined
-└── School Automated (12) ← All above
+School Online (1) .............. ~85%
+├── Share & Invite (2) ......... ~50%  ⚠ missing join code UI
+├── First Announcement (3) ..... ~95%  ✓ near-complete
+├── Team Onboard (4) ........... ~80%  ⚠ no invite acceptance route
+│   └── Classes Formed (6) ..... ~85%  ← Students In (5) ~85%
+│       ├── Timetable Running (7) ~90%  ✓ MVP-ready
+│       │   └── Attendance Tracked (8) ~98%  ✓ most complete
+│       └── Grades Recorded (9) ~80%  ✗ report card bug
+├── Students In (5) ............ ~85%  ⚠ guardian linking missing
+│   ├── Fees Collected (10) .... ~75%  ⚠ no online payments
+│   └── Parents Connected (11) . ~70%  ⚠ mock data + missing linking
+└── School Automated (12) ...... ~50%  ✗ subsystems disconnected
 ```
 
-The fastest path to a fully operational school: complete onboarding, import teachers and students via CSV, form classes, generate timetable. Four actions to reach step 7.
+## Critical Path to Fix
+
+To reach full automation, these must be resolved in order:
+
+1. **Auto-generate join codes** during onboarding (unblocks #2)
+2. **Implement guardian linking** actions (unblocks #5, #11)
+3. **Fix `termId` bug** in report card generation (unblocks #9, #12)
+4. **Add invitation acceptance route** (`/accept-invite?token=...`) (unblocks #2, #4)
+5. **Wire real data** to parent dashboard, replacing mock data (unblocks #11)
+6. **Add event triggers** between subsystems (unblocks #12)
+
+The fastest path to a fully operational school today: complete onboarding, import teachers and students via CSV, form classes, generate timetable. Four actions to reach step 7 — attendance and exams (minus report cards) work from there.

@@ -53,10 +53,21 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-5xl pb-20">
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-full max-w-md" />
-          <Skeleton className="h-10 w-full" />
+        <div className="flex w-full flex-col gap-6 lg:flex-row lg:justify-between lg:gap-10">
+          {/* Left - heading area */}
+          <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
+            <div className="space-y-3 text-start sm:space-y-4">
+              <Skeleton className="h-9 w-48" />
+              <Skeleton className="h-4 w-72" />
+            </div>
+          </div>
+          {/* Right - form area */}
+          <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full rounded-md" />
+              <Skeleton className="h-12 w-full rounded-md" />
+            </div>
+          </div>
         </div>
         <FormFooter
           config={ONBOARDING_CONFIG}

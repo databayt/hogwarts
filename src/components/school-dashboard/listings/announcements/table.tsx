@@ -17,8 +17,6 @@ import { Megaphone, Pin, Star } from "lucide-react"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -26,7 +24,6 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { AnnouncementCreateForm } from "@/components/school-dashboard/listings/announcements/form"
 import {
   GridCard,
   GridContainer,
@@ -43,6 +40,7 @@ import {
 } from "./actions"
 import type { AnnouncementRow } from "./columns"
 import { getAnnouncementColumns } from "./columns"
+import { createDraftAnnouncement } from "./wizard/actions"
 
 interface AnnouncementsTableProps {
   initialData: AnnouncementRow[]
@@ -107,7 +105,6 @@ function AnnouncementsTableInner({
 }: AnnouncementsTableProps) {
   const t = dictionary
   const router = useRouter()
-  const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
 
   // View mode (table/grid)
@@ -247,12 +244,22 @@ function AnnouncementsTableInner({
     setSearchInput(value)
   }, [])
 
+  // Handle create via wizard
+  const handleCreate = useCallback(async () => {
+    const result = await createDraftAnnouncement()
+    if (result.success && result.data) {
+      router.push(`/${lang}/announcements/add/${result.data.id}/content`)
+    } else {
+      ErrorToast(result.error || "Failed to create")
+    }
+  }, [router, lang])
+
   // Handle edit
   const handleEdit = useCallback(
     (id: string) => {
-      openModal(id)
+      router.push(`/${lang}/announcements/add/${id}/content`)
     },
-    [openModal]
+    [router, lang]
   )
 
   // Handle view
@@ -308,7 +315,7 @@ function AnnouncementsTableInner({
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.announcementTitle}
-        onCreate={() => openModal()}
+        onCreate={handleCreate}
         getCSV={getAnnouncementsCSV}
         entityName="announcements"
         translations={toolbarTranslations}
@@ -372,16 +379,6 @@ function AnnouncementsTableInner({
           )}
         </>
       )}
-
-      <Modal
-        content={
-          <AnnouncementCreateForm
-            dictionary={t}
-            lang={lang}
-            onSuccess={refresh}
-          />
-        }
-      />
     </>
   )
 }

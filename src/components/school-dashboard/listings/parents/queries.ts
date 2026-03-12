@@ -122,7 +122,7 @@ export function buildParentWhere(
   schoolId: string,
   filters: ParentListFilters = {}
 ): Prisma.GuardianWhereInput {
-  const where: Prisma.GuardianWhereInput = { schoolId }
+  const where: Prisma.GuardianWhereInput = { schoolId, wizardStep: null }
 
   // Search by name or email
   if (filters.search) {

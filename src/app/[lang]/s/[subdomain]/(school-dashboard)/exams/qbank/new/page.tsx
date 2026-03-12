@@ -1,37 +1,32 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { redirect } from "next/navigation"
-import { auth } from "@/auth"
+"use client"
 
-import type { Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
-import { QuestionBankForm } from "@/components/school-dashboard/exams/qbank/form"
-import { Shell as PageContainer } from "@/components/table/shell"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
-export const metadata = { title: "Add Question" }
+import { createDraftQuestion } from "@/components/school-dashboard/exams/qbank/wizard/actions"
 
-interface Props {
-  params: Promise<{ lang: Locale; subdomain: string }>
-}
+export default function NewQuestionPage() {
+  const router = useRouter()
 
-export default async function NewQuestionPage({ params }: Props) {
-  const { lang } = await params
-
-  const session = await auth()
-  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
-    redirect(`/${lang}/exams/qbank`)
-  }
-
-  const dictionary = await getDictionary(lang)
+  useEffect(() => {
+    async function create() {
+      const result = await createDraftQuestion()
+      if (result.success && result.data) {
+        router.replace(`/exams/qbank/add/${result.data.id}/question`)
+      } else {
+        router.back()
+      }
+    }
+    create()
+  }, [router])
 
   return (
-    <PageContainer>
-      <div className="flex flex-col gap-4">
-        <PageHeadingSetter title="New Question" />
-        <QuestionBankForm />
-      </div>
-    </PageContainer>
+    <div className="flex items-center justify-center p-8">
+      <Loader2 className="h-6 w-6 animate-spin" />
+    </div>
   )
 }

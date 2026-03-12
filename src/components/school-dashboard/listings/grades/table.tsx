@@ -10,8 +10,6 @@ import { ClipboardCheck, TrendingUp } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -19,7 +17,6 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { ResultCreateForm } from "@/components/school-dashboard/listings/grades/form"
 import {
   GridCard,
   GridContainer,
@@ -31,6 +28,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteResult, getResults, getResultsCSV } from "./actions"
 import { resultColumns, type ResultRow } from "./columns"
+import { createDraftResult } from "./wizard/actions"
 
 interface ResultsTableProps {
   initialData: ResultRow[]
@@ -48,7 +46,6 @@ function ResultsTableInner({
   perPage = 20,
 }: ResultsTableProps) {
   const router = useRouter()
-  const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
   const t = dictionary
 
@@ -151,12 +148,22 @@ function ResultsTableInner({
     },
   })
 
+  // Handle create via wizard
+  const handleCreate = useCallback(async () => {
+    const result = await createDraftResult()
+    if (result.success && result.data) {
+      router.push(`/${lang}/grades/add/${result.data.id}/selection`)
+    } else {
+      ErrorToast(result.error || "Failed to create")
+    }
+  }, [router, lang])
+
   // Handle edit
   const handleEdit = useCallback(
     (id: string) => {
-      openModal(id)
+      router.push(`/${lang}/grades/add/${id}/selection`)
     },
-    [openModal]
+    [router, lang]
   )
 
   // Handle view
@@ -220,7 +227,7 @@ function ResultsTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search results..."
-        onCreate={() => openModal()}
+        onCreate={handleCreate}
         getCSV={handleExportCSV}
         entityName="grades"
         translations={toolbarTranslations}
@@ -278,10 +285,6 @@ function ResultsTableInner({
           )}
         </>
       )}
-
-      <Modal
-        content={<ResultCreateForm dictionary={t} onSuccess={refresh} />}
-      />
     </>
   )
 }

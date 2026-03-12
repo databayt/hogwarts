@@ -182,7 +182,7 @@ export function buildClassWhere(
   schoolId: string,
   filters: ClassListFilters = {}
 ): Prisma.ClassWhereInput {
-  const where: Prisma.ClassWhereInput = { schoolId }
+  const where: Prisma.ClassWhereInput = { schoolId, wizardStep: null }
 
   // Search by name or course code
   if (filters.search) {

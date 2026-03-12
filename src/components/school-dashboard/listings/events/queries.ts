@@ -108,7 +108,7 @@ export function buildEventWhere(
   schoolId: string,
   filters: EventListFilters = {}
 ): Prisma.EventWhereInput {
-  const where: Prisma.EventWhereInput = { schoolId }
+  const where: Prisma.EventWhereInput = { schoolId, wizardStep: null }
 
   // Search by title or organizer
   if (filters.search) {

@@ -153,6 +153,9 @@ model QuestionBank {
   // Curriculum standards
   standards QuestionStandard[]
 
+  // Wizard support
+  wizardStep String? // null = complete, non-null = current wizard step slug
+
   createdBy String // Teacher/System ID
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

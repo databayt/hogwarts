@@ -74,6 +74,7 @@ export async function getExams(
     // Build where clause
     const where: Record<string, unknown> = {
       schoolId,
+      wizardStep: null,
       ...(searchParams.title
         ? { title: { contains: searchParams.title, mode: "insensitive" } }
         : {}),

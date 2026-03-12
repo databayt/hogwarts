@@ -169,7 +169,7 @@ export function buildAssignmentWhere(
   schoolId: string,
   filters: AssignmentListFilters = {}
 ): Prisma.AssignmentWhereInput {
-  const where: Prisma.AssignmentWhereInput = { schoolId }
+  const where: Prisma.AssignmentWhereInput = { schoolId, wizardStep: null }
 
   // Search by title, description, or class name
   if (filters.search) {

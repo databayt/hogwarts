@@ -136,6 +136,19 @@ export {
 } from "./template/wizard-validation-context"
 
 // =============================================================================
+// WIZARD (URL-routed multi-step wizards)
+// =============================================================================
+
+export {
+  type WizardConfig,
+  type WizardStepMeta,
+  type WizardFormRef,
+  createWizardProvider,
+  WizardLayout,
+  WizardStep,
+} from "./wizard"
+
+// =============================================================================
 // BRIDGES (Context Integration)
 // =============================================================================
 

@@ -1,43 +1,32 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { redirect } from "next/navigation"
-import { auth } from "@/auth"
+"use client"
 
-import type { Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
-import { ExamCreateForm } from "@/components/school-dashboard/exams/manage/form"
-import { Shell as PageContainer } from "@/components/table/shell"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
-export const metadata = { title: "Create Exam" }
+import { createDraftExam } from "@/components/school-dashboard/exams/manage/wizard/actions"
 
-interface Props {
-  params: Promise<{ lang: Locale; subdomain: string }>
-}
+export default function NewExamPage() {
+  const router = useRouter()
 
-export default async function Page({ params }: Props) {
-  const { lang } = await params
-
-  const session = await auth()
-  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
-    redirect(`/${lang}/exams`)
-  }
-
-  const dictionary = await getDictionary(lang)
+  useEffect(() => {
+    async function create() {
+      const result = await createDraftExam()
+      if (result.success && result.data) {
+        router.replace(`/exams/manage/add/${result.data.id}/information`)
+      } else {
+        router.back()
+      }
+    }
+    create()
+  }, [router])
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeadingSetter
-          title={dictionary?.school?.exams?.createExam || "Create New Exam"}
-          description={
-            dictionary?.school?.exams?.createDescription ||
-            "Schedule a new examination"
-          }
-        />
-        <ExamCreateForm />
-      </div>
-    </PageContainer>
+    <div className="flex items-center justify-center p-8">
+      <Loader2 className="h-6 w-6 animate-spin" />
+    </div>
   )
 }

@@ -47,8 +47,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -57,7 +55,6 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { deleteResult } from "@/components/school-dashboard/listings/grades/actions"
-import { ResultCreateForm } from "@/components/school-dashboard/listings/grades/form"
 
 import { generateGradeCertificate } from "./certificate/actions"
 import type {
@@ -125,7 +122,6 @@ export function GradeDetailContent({
   lang,
 }: GradeDetailContentProps) {
   const router = useRouter()
-  const { openModal } = useModal()
   const t = dictionary.school.grades
   const [isDownloading, setIsDownloading] = useState<
     "certificate" | "print" | null
@@ -306,7 +302,7 @@ export function GradeDetailContent({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => openModal(grade.id)}
+              onClick={() => router.push(`/grades/add/${grade.id}/selection`)}
             >
               <Pencil className="me-2 h-4 w-4" />
               {t.editGrade}
@@ -660,13 +656,6 @@ export function GradeDetailContent({
           </Card>
         </div>
       </div>
-
-      {/* Edit Modal */}
-      <Modal
-        content={
-          <ResultCreateForm dictionary={t} onSuccess={() => router.refresh()} />
-        }
-      />
     </>
   )
 }

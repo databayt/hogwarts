@@ -4,12 +4,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { useCallback, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { Button } from "@/components/ui/button"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -17,7 +16,6 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { AssignmentCreateForm } from "@/components/school-dashboard/listings/assignments/form"
 import { DataTable } from "@/components/table/data-table"
 import { DataTableToolbar } from "@/components/table/data-table-toolbar"
 import { useDataTable } from "@/components/table/use-data-table"
@@ -25,6 +23,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 import { deleteAssignment, getAssignments } from "./actions"
 import { getAssignmentColumns, type AssignmentRow } from "./columns"
 import { ExportButton } from "./export-button"
+import { createDraftAssignment } from "./wizard/actions"
 
 interface AssignmentsTableProps {
   initialData: AssignmentRow[]
@@ -43,6 +42,8 @@ function AssignmentsTableInner({
   lang,
   perPage = 20,
 }: AssignmentsTableProps) {
+  const router = useRouter()
+
   // Translations with fallbacks
   const t = {
     create: dictionary?.create || "Create",
@@ -134,7 +135,15 @@ function AssignmentsTableInner({
     },
   })
 
-  const { openModal } = useModal()
+  // Handle create via wizard
+  const handleCreate = useCallback(async () => {
+    const result = await createDraftAssignment()
+    if (result.success && result.data) {
+      router.push(`/${lang}/assignments/add/${result.data.id}/information`)
+    } else {
+      ErrorToast(result.error || "Failed to create")
+    }
+  }, [router, lang])
 
   return (
     <DataTable
@@ -151,7 +160,7 @@ function AssignmentsTableInner({
             variant="outline"
             size="sm"
             className="h-8 w-8 rounded-full p-0"
-            onClick={() => openModal()}
+            onClick={handleCreate}
             aria-label={t.create}
             title={t.create}
           >
@@ -160,7 +169,6 @@ function AssignmentsTableInner({
           <ExportButton />
         </div>
       </DataTableToolbar>
-      <Modal content={<AssignmentCreateForm onSuccess={refresh} />} />
     </DataTable>
   )
 }

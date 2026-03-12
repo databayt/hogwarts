@@ -82,7 +82,9 @@ export default function SuccessCompletionModal({
     }
   }, [showModal])
 
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "databayt.org"
+  // Strip common prefixes (ed., www.) so school URL is school.databayt.org
+  const rawRoot = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "databayt.org"
+  const rootDomain = rawRoot.replace(/^(ed\.|www\.)/, "") || rawRoot
   const fullDomain = `${schoolData.domain}.${rootDomain}`
 
   const handleCopy = useCallback(() => {
@@ -128,38 +130,36 @@ export default function SuccessCompletionModal({
         </div>
 
         {/* Success Message */}
-        <h2 className="mb-4">Congratulations!</h2>
-
         <p className="text-muted-foreground mb-2">
           Your school has been successfully created at
         </p>
 
         <h5 className="text-primary mb-6">{fullDomain}</h5>
 
-        {/* Copy essential info */}
-        <button
-          onClick={handleCopy}
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
-          {copied ? (
-            <>
-              <Check className="h-3.5 w-3.5 text-green-500" />
-              <span className="text-green-500">Copied to clipboard</span>
-            </>
-          ) : (
-            <>
-              <Copy className="h-3.5 w-3.5" />
-              <span>Copy school details to clipboard</span>
-            </>
-          )}
-        </button>
-
         {/* Action Link */}
         <button
           onClick={onGoToDashboard}
-          className="text-primary underline transition-all hover:no-underline"
+          className="text-primary mb-6 underline transition-all hover:no-underline"
         >
           Go to Dashboard
+        </button>
+
+        {/* Copy essential info */}
+        <button
+          onClick={handleCopy}
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
+        >
+          {copied ? (
+            <>
+              <span className="text-green-500">Copied to clipboard</span>
+              <Check className="h-3.5 w-3.5 text-green-500" />
+            </>
+          ) : (
+            <>
+              <span>Copy school details to clipboard</span>
+              <Copy className="h-3.5 w-3.5" />
+            </>
+          )}
         </button>
       </div>
     </Modal>

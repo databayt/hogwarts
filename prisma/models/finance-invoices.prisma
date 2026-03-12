@@ -35,6 +35,9 @@ model UserInvoice {
   journalEntryId String?
   journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
 
+  // Wizard support
+  wizardStep String? // null = complete, non-null = current wizard step slug
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

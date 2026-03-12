@@ -168,6 +168,9 @@ model Student {
   promotionCandidates PromotionCandidate[]
   transcripts         Transcript[]
 
+  // Wizard support
+  wizardStep String? // null = complete, non-null = current wizard step slug
+
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   StudentAnswer StudentAnswer[]
@@ -202,6 +205,9 @@ model Guardian {
   // Auth relationship
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
+
+  // Wizard support
+  wizardStep String? // null = complete, non-null = current wizard step slug
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

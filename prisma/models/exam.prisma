@@ -124,6 +124,9 @@ model Exam {
   allowLateSubmit   Boolean     @default(false)
   lateSubmitMinutes Int         @default(0) // Extra minutes allowed after deadline
 
+  // Wizard support
+  wizardStep String? // null = complete, non-null = current wizard step slug
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -752,6 +755,9 @@ model Result {
   assignment Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   exam       Exam?       @relation(fields: [examId], references: [id], onDelete: Cascade)
   subject    Subject?    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  // Wizard support
+  wizardStep String? // null = complete, non-null = current wizard step slug
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

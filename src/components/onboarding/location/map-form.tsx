@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
 
 import { type LocationResult } from "@/lib/mapbox"
+import { Skeleton } from "@/components/ui/skeleton"
 
 import { type LocationFormData } from "./validation"
 
@@ -19,8 +20,8 @@ const MapboxLocationPicker = dynamic(
     ssr: false,
     loading: () => (
       <div className="space-y-3">
-        <div className="bg-muted/50 h-10 w-full animate-pulse rounded-md" />
-        <div className="bg-muted/50 h-[320px] w-full animate-pulse rounded-xl" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-[320px] w-full rounded-xl" />
       </div>
     ),
   }

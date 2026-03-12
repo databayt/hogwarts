@@ -11,8 +11,6 @@ import { BookOpen, UserCheck, Users, UserX } from "lucide-react"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -21,7 +19,6 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { TeacherCreateForm } from "@/components/school-dashboard/listings/teachers/form"
 import {
   GridCard,
   GridContainer,
@@ -38,6 +35,7 @@ import {
   updateTeacher,
 } from "./actions"
 import { getTeacherColumns, type TeacherRow } from "./columns"
+import { createDraftTeacher } from "./wizard/actions"
 
 interface TeachersTableProps {
   initialData: TeacherRow[]
@@ -55,7 +53,6 @@ function TeachersTableInner({
   perPage = 20,
 }: TeachersTableProps) {
   const router = useRouter()
-  const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
   // Translations with fallbacks
   const t = {
@@ -184,12 +181,22 @@ function TeachersTableInner({
     [optimisticRemove, refresh, t.failedToDeleteTeacher]
   )
 
+  // Handle create via wizard
+  const handleCreate = useCallback(async () => {
+    const result = await createDraftTeacher()
+    if (result.success && result.data) {
+      router.push(`/${lang}/teachers/add/${result.data.id}/information`)
+    } else {
+      ErrorToast(result.error || "Failed to create")
+    }
+  }, [router, lang])
+
   // Handle edit
   const handleEdit = useCallback(
     (teacher: TeacherRow) => {
-      openModal(teacher.id)
+      router.push(`/${lang}/teachers/add/${teacher.id}/information`)
     },
-    [openModal]
+    [router, lang]
   )
 
   // Handle toggle status
@@ -324,7 +331,7 @@ function TeachersTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.search}
-        onCreate={() => openModal()}
+        onCreate={handleCreate}
         getCSV={handleExportCSV}
         entityName="teachers"
         translations={toolbarTranslations}
@@ -397,8 +404,6 @@ function TeachersTableInner({
           )}
         </>
       )}
-
-      <Modal content={<TeacherCreateForm onSuccess={refresh} />} />
     </>
   )
 }

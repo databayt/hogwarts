@@ -45,11 +45,7 @@ export default function LocationContent({ dictionary }: Props) {
         </div>
         <div className="space-y-3">
           <Skeleton className="h-10 w-full rounded-md" />
-          <Skeleton className="h-10 w-full rounded-md" />
-          <div className="grid grid-cols-2 gap-3">
-            <Skeleton className="h-10 w-full rounded-md" />
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
+          <Skeleton className="h-[320px] w-full rounded-xl" />
         </div>
       </FormLayout>
     )

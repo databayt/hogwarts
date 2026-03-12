@@ -10,8 +10,6 @@ import { useRouter } from "next/navigation"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import { SeeMore } from "@/components/atom/see-more"
 import {
   confirmDeleteDialog,
@@ -20,7 +18,6 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { StudentCreateForm } from "@/components/school-dashboard/listings/students/form"
 import {
   GridCard,
   GridContainer,
@@ -40,6 +37,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 import { AccessCodeDialog } from "./access-code-dialog"
 import { deleteStudent, getStudents, getStudentsCSV } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
+import { createDraftStudent } from "./wizard/actions"
 
 interface StudentsTableProps {
   initialData: StudentRow[]
@@ -57,7 +55,6 @@ function StudentsTableInner({
   perPage = 20,
 }: StudentsTableProps) {
   const router = useRouter()
-  const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
 
   // Translations with fallbacks
@@ -213,12 +210,22 @@ function StudentsTableInner({
     [optimisticRemove, refresh, lang]
   )
 
+  // Handle create via wizard
+  const handleCreate = useCallback(async () => {
+    const result = await createDraftStudent()
+    if (result.success && result.data) {
+      router.push(`/${lang}/students/add/${result.data.id}/personal`)
+    } else {
+      ErrorToast(result.error || "Failed to create")
+    }
+  }, [router, lang])
+
   // Handle edit
   const handleEdit = useCallback(
     (id: string) => {
-      openModal(id)
+      router.push(`/${lang}/students/add/${id}/personal`)
     },
-    [openModal]
+    [router, lang]
   )
 
   // Handle view
@@ -329,7 +336,7 @@ function StudentsTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.search}
-        onCreate={() => openModal()}
+        onCreate={handleCreate}
         getCSV={handleExportCSV}
         entityName="students"
         translations={toolbarTranslations}
@@ -400,12 +407,6 @@ function StudentsTableInner({
           />
         </>
       )}
-
-      <Modal
-        content={
-          <StudentCreateForm dictionary={dictionary} onSuccess={refresh} />
-        }
-      />
 
       <AccessCodeDialog
         open={accessCodeOpen}

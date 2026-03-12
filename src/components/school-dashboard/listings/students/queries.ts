@@ -168,7 +168,7 @@ export function buildStudentWhere(
   schoolId: string,
   filters: StudentListFilters = {}
 ): Prisma.StudentWhereInput {
-  const where: Prisma.StudentWhereInput = { schoolId }
+  const where: Prisma.StudentWhereInput = { schoolId, wizardStep: null }
 
   // Search by name, email, studentId, or grNumber
   if (filters.search) {

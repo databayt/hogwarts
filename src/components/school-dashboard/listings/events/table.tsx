@@ -11,8 +11,6 @@ import { Calendar, MapPin, Users } from "lucide-react"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -20,7 +18,6 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { EventCreateForm } from "@/components/school-dashboard/listings/events/form"
 import {
   GridCard,
   GridContainer,
@@ -32,6 +29,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteEvent, getEvents, getEventsCSV } from "./actions"
 import { getEventColumns, type EventRow } from "./columns"
+import { createDraftEvent } from "./wizard/actions"
 
 interface EventsTableProps {
   initialData: EventRow[]
@@ -49,7 +47,6 @@ function EventsTableInner({
   perPage = 20,
 }: EventsTableProps) {
   const router = useRouter()
-  const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
 
   // Translations with fallbacks
@@ -176,12 +173,22 @@ function EventsTableInner({
     },
   })
 
+  // Handle create via wizard
+  const handleCreate = useCallback(async () => {
+    const result = await createDraftEvent()
+    if (result.success && result.data) {
+      router.push(`/${lang}/events/add/${result.data.id}/information`)
+    } else {
+      ErrorToast(result.error || "Failed to create")
+    }
+  }, [router, lang])
+
   // Handle edit
   const handleEdit = useCallback(
     (id: string) => {
-      openModal(id)
+      router.push(`/${lang}/events/add/${id}/information`)
     },
-    [openModal]
+    [router, lang]
   )
 
   // Handle view
@@ -240,7 +247,7 @@ function EventsTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.search}
-        onCreate={() => openModal()}
+        onCreate={handleCreate}
         getCSV={handleExportCSV}
         entityName="events"
         translations={toolbarTranslations}
@@ -300,16 +307,6 @@ function EventsTableInner({
           )}
         </>
       )}
-
-      <Modal
-        content={
-          <EventCreateForm
-            onSuccess={refresh}
-            lang={lang}
-            dictionary={dictionary}
-          />
-        }
-      />
     </>
   )
 }

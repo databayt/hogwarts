@@ -329,6 +329,20 @@ body {
   container-type: inline-size;
 }
 
+/* Smooth shimmer animation for skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@utility animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
 /* Float animation for featured book */
 @keyframes float {
   0%,
@@ -338,6 +352,11 @@ body {
   50% {
     transform: translateY(-10px);
   }
+}
+
+/* Hide Mapbox logo to prevent flash */
+.mapboxgl-ctrl-logo {
+  display: none !important;
 }
 
 /* Mapbox Geocoder Styles */

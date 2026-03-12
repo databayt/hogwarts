@@ -114,6 +114,7 @@ export function buildAnnouncementWhere(
 ): Prisma.AnnouncementWhereInput {
   const where: Prisma.AnnouncementWhereInput = {
     schoolId,
+    wizardStep: null,
   }
 
   // Text search - search in title field

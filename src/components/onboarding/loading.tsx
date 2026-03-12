@@ -46,10 +46,9 @@ export function DescriptionSkeleton() {
 export function LocationSkeleton() {
   return (
     <OnboardingFormSkeleton>
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full rounded-md" />
-        <Skeleton className="h-12 w-full rounded-md" />
-        <Skeleton className="h-48 w-full rounded-lg" />
+      <div className="space-y-3">
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-[320px] w-full rounded-xl" />
       </div>
     </OnboardingFormSkeleton>
   )

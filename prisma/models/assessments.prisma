@@ -43,6 +43,9 @@ model Assignment {
   submissions    AssignmentSubmission[]
   results        Result[]
 
+  // Wizard support
+  wizardStep String? // null = complete, non-null = current wizard step slug
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

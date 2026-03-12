@@ -177,6 +177,7 @@ export function buildResultWhere(
 ): Prisma.ResultWhereInput {
   const where: Prisma.ResultWhereInput = {
     schoolId,
+    wizardStep: null,
   }
 
   // ID filters

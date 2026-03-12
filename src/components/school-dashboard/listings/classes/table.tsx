@@ -10,8 +10,6 @@ import { BookOpen, Users } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -19,7 +17,6 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { ClassCreateForm } from "@/components/school-dashboard/listings/classes/form"
 import {
   GridCard,
   GridContainer,
@@ -36,6 +33,7 @@ import {
   getLocalizedSubjectName,
   type ClassRow,
 } from "./columns"
+import { createDraftClass } from "./wizard/actions"
 
 interface ClassesTableProps {
   initialData: ClassRow[]
@@ -53,7 +51,6 @@ function ClassesTableInner({
   perPage = 20,
 }: ClassesTableProps) {
   const router = useRouter()
-  const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
 
   // Translations with fallbacks
@@ -175,12 +172,22 @@ function ClassesTableInner({
     [router]
   )
 
+  // Handle create via wizard
+  const handleCreate = useCallback(async () => {
+    const result = await createDraftClass()
+    if (result.success && result.data) {
+      router.push(`/${lang}/classes/add/${result.data.id}/information`)
+    } else {
+      ErrorToast(result.error || "Failed to create")
+    }
+  }, [router, lang])
+
   // Handle edit
   const handleEdit = useCallback(
     (id: string) => {
-      openModal(id)
+      router.push(`/${lang}/classes/add/${id}/information`)
     },
-    [openModal]
+    [router, lang]
   )
 
   // Handle view
@@ -222,7 +229,7 @@ function ClassesTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.search}
-        onCreate={() => openModal()}
+        onCreate={handleCreate}
         getCSV={handleExportCSV}
         entityName="classes"
         translations={toolbarTranslations}
@@ -287,8 +294,6 @@ function ClassesTableInner({
           )}
         </>
       )}
-
-      <Modal content={<ClassCreateForm onSuccess={refresh} />} />
     </>
   )
 }

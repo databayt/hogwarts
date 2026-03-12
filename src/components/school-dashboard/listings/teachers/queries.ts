@@ -119,7 +119,7 @@ export function buildTeacherWhere(
   schoolId: string,
   filters: TeacherListFilters = {}
 ): Prisma.TeacherWhereInput {
-  const where: Prisma.TeacherWhereInput = { schoolId }
+  const where: Prisma.TeacherWhereInput = { schoolId, wizardStep: null }
 
   // Search by name or email
   if (filters.search) {

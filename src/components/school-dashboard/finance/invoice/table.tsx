@@ -8,8 +8,6 @@ import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -17,7 +15,7 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { InvoiceCreateForm } from "@/components/school-dashboard/finance/invoice/form"
+import { createDraftInvoice } from "@/components/school-dashboard/finance/invoice/wizard/actions"
 import { DataTable } from "@/components/table/data-table"
 import { DataTableToolbar } from "@/components/table/data-table-toolbar"
 import { useDataTable } from "@/components/table/use-data-table"
@@ -136,7 +134,12 @@ function InvoiceTableInner({
     },
   })
 
-  const { openModal } = useModal()
+  const handleCreate = useCallback(async () => {
+    const result = await createDraftInvoice()
+    if (result.success && result.data) {
+      router.push(`/finance/invoice/add/${result.data.id}/details`)
+    }
+  }, [router])
 
   return (
     <DataTable
@@ -152,14 +155,13 @@ function InvoiceTableInner({
           variant="outline"
           size="sm"
           className="h-8 w-8 rounded-full p-0"
-          onClick={() => openModal()}
+          onClick={handleCreate}
           aria-label={il?.createInvoice || "Create Invoice"}
           title={il?.createInvoice || "Create Invoice"}
         >
           <Plus className="h-4 w-4" />
         </Button>
       </DataTableToolbar>
-      <Modal content={<InvoiceCreateForm onSuccess={refresh} />} />
     </DataTable>
   )
 }

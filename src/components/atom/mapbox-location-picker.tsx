@@ -16,6 +16,7 @@ import { useMapboxSearch } from "@/hooks/use-mapbox-search"
 import { useReverseGeocode } from "@/hooks/use-reverse-geocode"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 
 import "mapbox-gl/dist/mapbox-gl.css"
 
@@ -23,7 +24,7 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
 
 // Default center (world view)
 const DEFAULT_CENTER: [number, number] = [0, 20]
-const DEFAULT_ZOOM = 2
+const DEFAULT_ZOOM = 1.2
 
 interface MapboxLocationPickerProps {
   value?: LocationResult | null
@@ -90,6 +91,7 @@ export function MapboxLocationPicker({
       style: "mapbox://styles/mapbox/standard",
       center: value ? [value.longitude, value.latitude] : DEFAULT_CENTER,
       zoom: value ? 15 : DEFAULT_ZOOM,
+      projection: "globe",
       attributionControl: false,
       config: {
         basemap: {
@@ -107,9 +109,6 @@ export function MapboxLocationPicker({
 
     map.on("load", () => {
       setMapReady(true)
-      // Remove Mapbox logo
-      const logo = mapContainerRef.current?.querySelector(".mapboxgl-ctrl-logo")
-      if (logo) logo.remove()
     })
 
     map.on("click", (e) => {
@@ -291,6 +290,9 @@ export function MapboxLocationPicker({
         style={{ height: mapHeight }}
       >
         <div ref={mapContainerRef} className="h-full w-full" />
+
+        {/* Skeleton overlay until map loads */}
+        {!mapReady && <Skeleton className="absolute inset-0 rounded-xl" />}
 
         {/* Tap hint when no pin */}
         {!value?.latitude && !value?.longitude && mapReady && (

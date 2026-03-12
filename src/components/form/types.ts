@@ -234,7 +234,7 @@ export interface BaseFieldProps {
 
 /** Text field props */
 export interface TextFieldProps extends BaseFieldProps {
-  type?: "text" | "email" | "password" | "tel" | "url"
+  type?: "text" | "email" | "password" | "tel" | "url" | "number" | "time"
   maxLength?: number
   minLength?: number
 }

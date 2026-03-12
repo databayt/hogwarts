@@ -1,0 +1,8 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+import ScheduleContent from "@/components/school-dashboard/listings/classes/wizard/schedule/content"
+
+export default function SchedulePage() {
+  return <ScheduleContent />
+}

@@ -22,4 +22,5 @@ export const platformNav: PlatformNavItem[] = [
   { title: "Observability", href: "/observability", icon: "barChart" },
   { title: "Catalog", href: "/catalog", icon: "bookOpen" },
   { title: "Tenants", href: "/tenants", icon: "envelope" },
+  { title: "Users", href: "/users", icon: "users" },
 ]

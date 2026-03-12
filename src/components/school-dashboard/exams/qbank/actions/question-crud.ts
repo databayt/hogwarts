@@ -437,6 +437,7 @@ export async function getQuestions(
     const questions = await db.questionBank.findMany({
       where: {
         schoolId, // CRITICAL: Multi-tenant scope
+        wizardStep: null,
         ...(filters?.subjectId && { subjectId: filters.subjectId }),
         ...(filters?.questionType && {
           questionType: filters.questionType as QuestionType,
