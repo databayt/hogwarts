@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/process-email-notifications",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/cleanup-notifications",
@@ -34,11 +34,11 @@
     },
     {
       "path": "/api/cron/teacher-reminders",
-      "schedule": "0 8-16 * * 1-5"
+      "schedule": "0 8 * * 1-5"
     },
     {
       "path": "/api/cron/scheduled-reports",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
