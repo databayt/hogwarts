@@ -10,25 +10,10 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateStudentEnrollment } from "./actions"
 import { enrollmentSchema, type EnrollmentFormData } from "./validation"
-
-const STATUS_OPTIONS = [
-  { label: "Active", value: "ACTIVE" },
-  { label: "Inactive", value: "INACTIVE" },
-  { label: "Suspended", value: "SUSPENDED" },
-  { label: "Graduated", value: "GRADUATED" },
-  { label: "Transferred", value: "TRANSFERRED" },
-  { label: "Dropped Out", value: "DROPPED_OUT" },
-] as const
-
-const STUDENT_TYPE_OPTIONS = [
-  { label: "Regular", value: "REGULAR" },
-  { label: "Transfer", value: "TRANSFER" },
-  { label: "International", value: "INTERNATIONAL" },
-  { label: "Exchange", value: "EXCHANGE" },
-] as const
 
 interface EnrollmentFormProps {
   studentId: string
@@ -39,6 +24,35 @@ interface EnrollmentFormProps {
 export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
   ({ studentId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const students = (dictionary?.school as any)?.students
+    const t = students?.enrollment as Record<string, any> | undefined
+    const tRoot = students as Record<string, string> | undefined
+
+    const statusOptions = [
+      { label: t?.statusOptions?.active || "Active", value: "ACTIVE" },
+      { label: t?.statusOptions?.inactive || "Inactive", value: "INACTIVE" },
+      { label: t?.statusOptions?.suspended || "Suspended", value: "SUSPENDED" },
+      { label: t?.statusOptions?.graduated || "Graduated", value: "GRADUATED" },
+      {
+        label: t?.statusOptions?.transferred || "Transferred",
+        value: "TRANSFERRED",
+      },
+      {
+        label: t?.statusOptions?.droppedOut || "Dropped Out",
+        value: "DROPPED_OUT",
+      },
+    ]
+
+    const studentTypeOptions = [
+      { label: t?.typeOptions?.regular || "Regular", value: "REGULAR" },
+      { label: t?.typeOptions?.transfer || "Transfer", value: "TRANSFER" },
+      {
+        label: t?.typeOptions?.international || "International",
+        value: "INTERNATIONAL",
+      },
+      { label: t?.typeOptions?.exchange || "Exchange", value: "EXCHANGE" },
+    ]
 
     const form = useForm<EnrollmentFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,19 +80,26 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
             try {
               const valid = await form.trigger()
               if (!valid) {
-                reject(new Error("Validation failed"))
+                reject(
+                  new Error(tRoot?.validationFailed || "Validation failed")
+                )
                 return
               }
               const data = form.getValues()
               const result = await updateStudentEnrollment(studentId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tRoot?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tRoot?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -91,43 +112,47 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
         <form className="space-y-6">
           <DateField
             name="enrollmentDate"
-            label="Enrollment Date"
+            label={t?.enrollmentDate || "Enrollment Date"}
             disabled={isPending}
           />
           <InputField
             name="admissionNumber"
-            label="Admission Number"
-            placeholder="Enter admission number"
+            label={t?.admissionNumber || "Admission Number"}
+            placeholder={
+              t?.admissionNumberPlaceholder || "Enter admission number"
+            }
             disabled={isPending}
           />
           <SelectField
             name="status"
-            label="Status"
-            options={[...STATUS_OPTIONS]}
+            label={t?.status || "Status"}
+            options={statusOptions}
             disabled={isPending}
           />
           <SelectField
             name="studentType"
-            label="Student Type"
-            options={[...STUDENT_TYPE_OPTIONS]}
+            label={t?.studentType || "Student Type"}
+            options={studentTypeOptions}
             disabled={isPending}
           />
           <InputField
             name="category"
-            label="Category"
-            placeholder="Enter category"
+            label={t?.category || "Category"}
+            placeholder={t?.categoryPlaceholder || "Enter category"}
             disabled={isPending}
           />
           <InputField
             name="academicGradeId"
-            label="Academic Grade ID"
-            placeholder="Enter academic grade ID"
+            label={t?.academicGradeId || "Academic Grade ID"}
+            placeholder={
+              t?.academicGradeIdPlaceholder || "Enter academic grade ID"
+            }
             disabled={isPending}
           />
           <InputField
             name="sectionId"
-            label="Section ID"
-            placeholder="Enter section ID"
+            label={t?.sectionId || "Section ID"}
+            placeholder={t?.sectionIdPlaceholder || "Enter section ID"}
             disabled={isPending}
           />
         </form>

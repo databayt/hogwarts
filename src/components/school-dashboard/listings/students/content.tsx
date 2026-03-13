@@ -85,6 +85,7 @@ export default async function StudentsContent({
 
   let data: StudentRow[] = []
   let total = 0
+  let gradeOptions: Array<{ label: string; value: string }> = []
   const studentModel = getModel("student")
   if (effectiveSchoolId && studentModel) {
     const where: any = {
@@ -168,6 +169,20 @@ export default async function StudentsContent({
     ])
 
     // Map rows — names always display as-is (proper nouns)
+    // Collect unique grade options for faceted filter
+    const gradeSet = new Set<string>()
+    for (const s of rows as any[]) {
+      if (s.academicGrade?.name) {
+        const translated =
+          s.academicGrade.lang !== lang
+            ? gradeTranslations.get(s.academicGrade.name) ||
+              s.academicGrade.name
+            : s.academicGrade.name
+        gradeSet.add(translated)
+      }
+    }
+    gradeOptions = Array.from(gradeSet).map((g) => ({ label: g, value: g }))
+
     data = (rows as any[]).map((s) => {
       const name = `${s.givenName} ${s.surname}`.trim()
 
@@ -201,6 +216,7 @@ export default async function StudentsContent({
         enrollmentDate: s.enrollmentDate
           ? (s.enrollmentDate as Date).toISOString()
           : null,
+        wizardStep: s.wizardStep || null,
       }
     })
     total = count as number
@@ -212,6 +228,7 @@ export default async function StudentsContent({
       dictionary={dictionary?.students}
       lang={lang}
       perPage={sp.perPage}
+      gradeOptions={gradeOptions}
     />
   )
 }

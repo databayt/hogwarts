@@ -26,8 +26,11 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { useSidebar } from "@/components/ui/sidebar"
 
+import { ProfileEditSection } from "./edit-role-data"
+
 interface TeacherDashboardProps {
   data: Record<string, unknown>
+  isOwner?: boolean
 }
 
 // Classes being taught
@@ -90,12 +93,33 @@ const TOP_STUDENTS = [
   { name: "Omar Khalid", class: "Grade 11", grade: "A-", improvement: "+7%" },
 ]
 
-export default function TeacherDashboard({ data }: TeacherDashboardProps) {
+export default function TeacherDashboard({
+  data,
+  isOwner,
+}: TeacherDashboardProps) {
   const { open, isMobile } = useSidebar()
   const useMobileLayout = isMobile || open
 
   return (
     <div className="space-y-6">
+      {/* Self-Edit Section */}
+      {isOwner && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Edit Your Information</CardTitle>
+            <CardDescription>
+              Update your contact details, qualifications, and experience
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProfileEditSection
+              entityType="teacher"
+              steps={["contact", "qualifications", "experience"]}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats Overview */}
       <div
         className={cn(

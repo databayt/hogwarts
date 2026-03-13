@@ -14,8 +14,10 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { getFeeAssignmentList, getFineList, getPaymentList } from "./queries"
 import {
   bulkFeeAssignmentSchema,
   feeAssignmentSchema,
@@ -184,6 +186,59 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
       },
     })
 
+    // Notify student about new fee due (non-blocking)
+    const student = await db.student.findFirst({
+      where: { id: formData.studentId as string, schoolId },
+      select: { userId: true, givenName: true, surname: true },
+    })
+    if (student?.userId) {
+      dispatchNotification({
+        schoolId,
+        userId: student.userId,
+        type: "fee_due",
+        title: "رسوم دراسية جديدة",
+        body: `تم تعيين رسوم بقيمة ${parseFloat(formData.finalAmount as string).toLocaleString()} لحسابك`,
+        priority: "high",
+        channels: ["in_app", "email"],
+        metadata: {
+          feeAssignmentId: feeAssignment.id,
+          amount: parseFloat(formData.finalAmount as string),
+          url: "/finance/fees",
+        },
+        actorId: session.user.id,
+      }).catch((err) => console.error("[assignFee] Notification error:", err))
+    }
+
+    // Notify guardians about new fee (non-blocking)
+    if (student) {
+      const guardianLinks = await db.studentGuardian.findMany({
+        where: { studentId: formData.studentId as string, schoolId },
+        select: { guardian: { select: { userId: true } } },
+      })
+      for (const link of guardianLinks) {
+        if (link.guardian?.userId) {
+          dispatchNotification({
+            schoolId,
+            userId: link.guardian.userId,
+            type: "fee_due",
+            title: "رسوم دراسية جديدة",
+            body: `تم تعيين رسوم بقيمة ${parseFloat(formData.finalAmount as string).toLocaleString()} لحساب ${student.givenName} ${student.surname}`,
+            priority: "high",
+            channels: ["in_app", "email"],
+            metadata: {
+              feeAssignmentId: feeAssignment.id,
+              amount: parseFloat(formData.finalAmount as string),
+              studentName: `${student.givenName} ${student.surname}`,
+              url: "/finance/fees",
+            },
+            actorId: session.user.id,
+          }).catch((err) =>
+            console.error("[assignFee] Guardian notification error:", err)
+          )
+        }
+      }
+    }
+
     revalidatePath("/finance/fees")
     return { success: true, data: feeAssignment.id }
   } catch (error) {
@@ -348,6 +403,62 @@ export async function recordPayment(
       data: { status: newStatus },
     })
 
+    // Notify student about payment received (non-blocking)
+    const student = await db.student.findFirst({
+      where: { id: feeAssignment.studentId, schoolId },
+      select: { userId: true },
+    })
+    if (student?.userId) {
+      dispatchNotification({
+        schoolId,
+        userId: student.userId,
+        type: "fee_paid",
+        title: "تم استلام الدفعة",
+        body: `تم تسجيل دفعة بقيمة ${amount.toLocaleString()}. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${(finalAmount - newTotalPaid).toLocaleString()}`}`,
+        priority: "normal",
+        channels: ["in_app"],
+        metadata: {
+          paymentId: payment.id,
+          feeAssignmentId,
+          amount,
+          status: newStatus,
+          url: "/finance/fees",
+        },
+        actorId: session.user.id,
+      }).catch((err) =>
+        console.error("[recordPayment] Notification error:", err)
+      )
+    }
+
+    // Notify guardians about payment (non-blocking)
+    const guardianLinks = await db.studentGuardian.findMany({
+      where: { studentId: feeAssignment.studentId, schoolId },
+      select: { guardian: { select: { userId: true } } },
+    })
+    for (const link of guardianLinks) {
+      if (link.guardian?.userId) {
+        dispatchNotification({
+          schoolId,
+          userId: link.guardian.userId,
+          type: "fee_paid",
+          title: "تم استلام الدفعة",
+          body: `تم تسجيل دفعة بقيمة ${amount.toLocaleString()} لحساب الطالب. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${(finalAmount - newTotalPaid).toLocaleString()}`}`,
+          priority: "normal",
+          channels: ["in_app", "email"],
+          metadata: {
+            paymentId: payment.id,
+            feeAssignmentId,
+            amount,
+            status: newStatus,
+            url: "/finance/fees",
+          },
+          actorId: session.user.id,
+        }).catch((err) =>
+          console.error("[recordPayment] Guardian notification error:", err)
+        )
+      }
+    }
+
     revalidatePath("/finance/fees")
     return { success: true, data: payment.id }
   } catch (error) {
@@ -473,6 +584,122 @@ export async function waiveFine(
   } catch (error) {
     console.error("Error waiving fine:", error)
     return { success: false, error: "Failed to waive fine" }
+  }
+}
+
+// ============================================
+// REPORTING ACTIONS
+// ============================================
+
+// ============================================
+// TABLE FETCHER ACTIONS
+// ============================================
+
+/** Fetch fee assignment rows for table pagination */
+export async function fetchAssignmentRows(
+  params: Record<string, unknown> & { page: number; perPage: number }
+): Promise<{ rows: any[]; total: number }> {
+  const { page, perPage } = params
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return { rows: [], total: 0 }
+
+    const result = await getFeeAssignmentList(schoolId, { page, perPage })
+    const rows = result.rows.map((fa: any) => ({
+      id: fa.id,
+      studentName: [fa.student?.givenName, fa.student?.surname]
+        .filter(Boolean)
+        .join(" "),
+      studentId: fa.student?.id,
+      feeStructureName: fa.feeStructure?.name || "-",
+      academicYear: fa.academicYear,
+      finalAmount: Number(fa.finalAmount),
+      totalDiscount: Number(fa.totalDiscount),
+      paidAmount: (fa.payments ?? [])
+        .filter((p: any) => p.status === "SUCCESS")
+        .reduce((sum: number, p: any) => sum + Number(p.amount), 0),
+      status: fa.status,
+      createdAt:
+        fa.createdAt instanceof Date
+          ? fa.createdAt.toISOString()
+          : String(fa.createdAt),
+    }))
+    return { rows, total: result.count }
+  } catch {
+    return { rows: [], total: 0 }
+  }
+}
+
+/** Fetch payment rows for table pagination */
+export async function fetchPaymentRows(
+  params: Record<string, unknown> & { page: number; perPage: number }
+): Promise<{ rows: any[]; total: number }> {
+  const { page, perPage } = params
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return { rows: [], total: 0 }
+
+    const result = await getPaymentList(schoolId, { page, perPage })
+    const rows = result.rows.map((p: any) => ({
+      id: p.id,
+      paymentNumber: p.paymentNumber,
+      studentName: [p.student?.givenName, p.student?.surname]
+        .filter(Boolean)
+        .join(" "),
+      studentId: p.student?.id,
+      feeStructureName: p.feeAssignment?.feeStructure?.name || "-",
+      amount: Number(p.amount),
+      paymentDate:
+        p.paymentDate instanceof Date
+          ? p.paymentDate.toISOString()
+          : String(p.paymentDate),
+      paymentMethod: p.paymentMethod,
+      receiptNumber: p.receiptNumber,
+      status: p.status,
+      createdAt:
+        p.createdAt instanceof Date
+          ? p.createdAt.toISOString()
+          : String(p.createdAt),
+    }))
+    return { rows, total: result.count }
+  } catch {
+    return { rows: [], total: 0 }
+  }
+}
+
+/** Fetch fine rows for table pagination */
+export async function fetchFineRows(
+  params: Record<string, unknown> & { page: number; perPage: number }
+): Promise<{ rows: any[]; total: number }> {
+  const { page, perPage } = params
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return { rows: [], total: 0 }
+
+    const result = await getFineList(schoolId, { page, perPage })
+    const rows = result.rows.map((f: any) => ({
+      id: f.id,
+      studentName: [f.student?.givenName, f.student?.surname]
+        .filter(Boolean)
+        .join(" "),
+      studentId: f.student?.id,
+      fineType: f.fineType,
+      amount: Number(f.amount),
+      reason: f.reason,
+      dueDate:
+        f.dueDate instanceof Date ? f.dueDate.toISOString() : String(f.dueDate),
+      isPaid: f.isPaid,
+      paidAmount: f.paidAmount ? Number(f.paidAmount) : 0,
+      isWaived: f.isWaived,
+      waiverReason: f.waiverReason,
+      createdAt:
+        f.createdAt instanceof Date
+          ? f.createdAt.toISOString()
+          : String(f.createdAt),
+    }))
+    return { rows, total: result.count }
+  } catch {
+    return { rows: [], total: 0 }
   }
 }
 

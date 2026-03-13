@@ -6,20 +6,21 @@ import type { WizardConfig } from "@/components/form/wizard"
 export const STUDENT_WIZARD_CONFIG: WizardConfig = {
   id: "student",
   steps: [
+    "photo",
     "personal",
-    "contact",
-    "emergency",
     "enrollment",
+    "contact",
+    "location",
     "health",
     "previous-education",
-    "review",
   ],
   groups: {
-    1: ["personal", "contact"],
-    2: ["emergency", "enrollment"],
-    3: ["health", "previous-education", "review"],
+    1: ["photo", "personal", "enrollment"],
+    2: ["contact", "location"],
+    3: ["health", "previous-education"],
   },
-  groupLabels: ["Personal Details", "Enrollment", "Health & History"],
+  groupLabels: ["Essentials", "Contact Details", "Health & History"],
   requiredSteps: ["personal"],
+  skipToComplete: true,
   finalLabel: "Complete",
 }

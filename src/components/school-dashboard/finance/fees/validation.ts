@@ -27,36 +27,39 @@ export type FeeStructureInput = z.infer<typeof feeStructureSchema>
 export const feeAssignmentSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
   feeStructureId: z.string().min(1, "Fee structure is required"),
-  assignedDate: z.date(),
-  dueDate: z.date(),
-  amount: z.number().min(0, "Amount must be positive"),
+  academicYear: z.string().min(1, "Academic year is required"),
+  finalAmount: z.number().min(0, "Amount must be positive"),
+  customAmount: z.number().min(0).optional(),
+  totalDiscount: z.number().min(0).optional(),
+  scholarshipId: z.string().optional(),
   status: z
-    .enum(["PENDING", "PAID", "PARTIALLY_PAID", "OVERDUE", "WAIVED"])
+    .enum(["PENDING", "PARTIAL", "PAID", "OVERDUE", "CANCELLED"])
     .default("PENDING"),
-  notes: z.string().optional(),
 })
 
 export type FeeAssignmentInput = z.infer<typeof feeAssignmentSchema>
 
 // Payment Schema
 export const paymentSchema = z.object({
-  studentId: z.string().min(1, "Student is required"),
-  feeAssignmentId: z.string().optional(),
+  feeAssignmentId: z.string().min(1, "Fee assignment is required"),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
   paymentMethod: z.enum([
     "CASH",
-    "CARD",
+    "CHEQUE",
     "BANK_TRANSFER",
-    "MOBILE_MONEY",
-    "CHECK",
+    "CREDIT_CARD",
+    "DEBIT_CARD",
+    "UPI",
+    "NET_BANKING",
+    "WALLET",
     "OTHER",
   ]),
-  transactionReference: z.string().optional(),
+  transactionId: z.string().optional(),
   paymentDate: z.date(),
   status: z
-    .enum(["PENDING", "PROCESSING", "COMPLETED", "FAILED", "REFUNDED"])
-    .default("COMPLETED"),
-  notes: z.string().optional(),
+    .enum(["PENDING", "SUCCESS", "FAILED", "CANCELLED", "REFUNDED"])
+    .default("SUCCESS"),
+  remarks: z.string().optional(),
 })
 
 export type PaymentInput = z.infer<typeof paymentSchema>
@@ -127,14 +130,16 @@ export type ScholarshipApplicationInput = z.infer<
 // Fine Schema
 export const fineSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
+  fineType: z.enum([
+    "LATE_FEE",
+    "LIBRARY_FINE",
+    "DISCIPLINE_FINE",
+    "DAMAGE_FINE",
+    "OTHER",
+  ]),
   reason: z.string().min(1, "Fine reason is required"),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
-  fineDate: z.date(),
   dueDate: z.date(),
-  status: z.enum(["PENDING", "PAID", "WAIVED", "OVERDUE"]).default("PENDING"),
-  isPaid: z.boolean().default(false),
-  paidAt: z.date().optional(),
-  notes: z.string().optional(),
 })
 
 export type FineInput = z.infer<typeof fineSchema>
@@ -143,8 +148,8 @@ export type FineInput = z.infer<typeof fineSchema>
 export const bulkFeeAssignmentSchema = z.object({
   feeStructureId: z.string().min(1, "Fee structure is required"),
   studentIds: z.array(z.string()).min(1, "At least one student is required"),
-  dueDate: z.date(),
-  notes: z.string().optional(),
+  academicYear: z.string().min(1, "Academic year is required"),
+  finalAmount: z.number().min(0, "Amount must be positive"),
 })
 
 export type BulkFeeAssignmentInput = z.infer<typeof bulkFeeAssignmentSchema>

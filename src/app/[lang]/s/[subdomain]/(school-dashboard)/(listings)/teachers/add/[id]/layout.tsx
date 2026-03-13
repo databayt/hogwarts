@@ -5,7 +5,10 @@
 import React from "react"
 
 import { WizardLayout } from "@/components/form/wizard"
-import { updateTeacherWizardStep } from "@/components/school-dashboard/listings/teachers/wizard/actions"
+import {
+  completeTeacherWizard,
+  updateTeacherWizardStep,
+} from "@/components/school-dashboard/listings/teachers/wizard/actions"
 import { TEACHER_WIZARD_CONFIG } from "@/components/school-dashboard/listings/teachers/wizard/config"
 import {
   TeacherWizardProvider,
@@ -26,7 +29,11 @@ export default function TeacherWizardLayout({
       onStepChange={(entityId, step) => {
         updateTeacherWizardStep(entityId, step)
       }}
+      onComplete={async (entityId) => {
+        await completeTeacherWizard(entityId)
+      }}
       finalLabel="Complete"
+      finalDestination="/teachers"
     >
       {children}
     </WizardLayout>

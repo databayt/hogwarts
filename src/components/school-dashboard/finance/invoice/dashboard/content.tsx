@@ -79,7 +79,7 @@ export function DashboardContent({ dictionary, lang }: Props) {
         const totalAmountInCurrencyFormat = new Intl.NumberFormat(lang, {
           style: "currency",
           currency: row.original.currency,
-        }).format(row.original.total)
+        }).format(Number(row.original.total))
 
         return totalAmountInCurrencyFormat
       },

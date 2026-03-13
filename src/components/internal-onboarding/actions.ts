@@ -194,6 +194,7 @@ export async function submitInternalOnboarding(
                 : undefined,
               employmentType: details.employmentType || "FULL_TIME",
               profilePhotoUrl: data.personal.profilePhotoUrl,
+              wizardStep: "employment",
               schoolId,
             },
           })
@@ -224,6 +225,18 @@ export async function submitInternalOnboarding(
                   : new Date(),
                 schoolId,
               },
+            })
+          }
+
+          // Subject expertise
+          if (details.subjects?.length) {
+            await tx.teacherSubjectExpertise.createMany({
+              data: details.subjects.map((subjectId: string) => ({
+                schoolId,
+                teacherId: teacher.id,
+                subjectId,
+                expertiseLevel: "PRIMARY",
+              })),
             })
           }
           break
@@ -334,6 +347,7 @@ export async function submitInternalOnboarding(
                   | "REGULAR"
                   | "TRANSFER"
                   | "INTERNATIONAL") || "REGULAR",
+              wizardStep: "location",
               schoolId,
             },
           })

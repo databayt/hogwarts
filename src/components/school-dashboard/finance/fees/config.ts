@@ -15,26 +15,29 @@ export const FEE_STATUS = {
 
 export const FEE_ASSIGNMENT_STATUS = {
   PENDING: "PENDING",
+  PARTIAL: "PARTIAL",
   PAID: "PAID",
-  PARTIALLY_PAID: "PARTIALLY_PAID",
   OVERDUE: "OVERDUE",
-  WAIVED: "WAIVED",
+  CANCELLED: "CANCELLED",
 } as const
 
 export const PAYMENT_METHOD = {
   CASH: "CASH",
-  CARD: "CARD",
+  CHEQUE: "CHEQUE",
   BANK_TRANSFER: "BANK_TRANSFER",
-  MOBILE_MONEY: "MOBILE_MONEY",
-  CHECK: "CHECK",
+  CREDIT_CARD: "CREDIT_CARD",
+  DEBIT_CARD: "DEBIT_CARD",
+  UPI: "UPI",
+  NET_BANKING: "NET_BANKING",
+  WALLET: "WALLET",
   OTHER: "OTHER",
 } as const
 
 export const PAYMENT_STATUS = {
   PENDING: "PENDING",
-  PROCESSING: "PROCESSING",
-  COMPLETED: "COMPLETED",
+  SUCCESS: "SUCCESS",
   FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
   REFUNDED: "REFUNDED",
 } as const
 
@@ -82,11 +85,10 @@ export const STATUS_COLORS = {
   ARCHIVED: "bg-gray-500/10 text-gray-500",
   PENDING: "bg-yellow-500/10 text-yellow-500",
   PAID: "bg-green-500/10 text-green-500",
-  PARTIALLY_PAID: "bg-blue-500/10 text-blue-500",
+  PARTIAL: "bg-blue-500/10 text-blue-500",
   OVERDUE: "bg-red-500/10 text-red-500",
-  WAIVED: "bg-purple-500/10 text-purple-500",
-  PROCESSING: "bg-blue-500/10 text-blue-500",
-  COMPLETED: "bg-green-500/10 text-green-500",
+  CANCELLED: "bg-gray-500/10 text-gray-500",
+  SUCCESS: "bg-green-500/10 text-green-500",
   FAILED: "bg-red-500/10 text-red-500",
   REFUNDED: "bg-orange-500/10 text-orange-500",
   UNDER_REVIEW: "bg-blue-500/10 text-blue-500",

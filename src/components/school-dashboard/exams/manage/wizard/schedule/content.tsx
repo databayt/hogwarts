@@ -12,12 +12,28 @@ import { WizardStep } from "@/components/form/wizard"
 import { useExamWizard } from "../use-exam-wizard"
 import { ScheduleForm } from "./form"
 
+const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
+  schedule: {
+    title: "Schedule",
+    description: "Set the exam date, time, and duration.",
+  },
+  marks: {
+    title: "Marks & Instructions",
+    description: "Set the marks and exam instructions.",
+  },
+}
+
 export default function ScheduleContent() {
   const params = useParams()
   const examId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useExamWizard()
   const [isValid, setIsValid] = useState(false)
+  const [heading, setHeading] = useState(TAB_HEADINGS.schedule)
+
+  const handleTabChange = (tabId: string) => {
+    setHeading(TAB_HEADINGS[tabId] || TAB_HEADINGS.schedule)
+  }
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -42,10 +58,7 @@ export default function ScheduleContent() {
       isLoading={isLoading}
     >
       <FormLayout>
-        <FormHeading
-          title="Schedule & Marks"
-          description="Set the exam date, time, duration, and marks."
-        />
+        <FormHeading title={heading.title} description={heading.description} />
         <ScheduleForm
           ref={formRef}
           examId={examId}
@@ -63,6 +76,7 @@ export default function ScheduleContent() {
               : undefined
           }
           onValidChange={setIsValid}
+          onTabChange={handleTabChange}
         />
       </FormLayout>
     </WizardStep>

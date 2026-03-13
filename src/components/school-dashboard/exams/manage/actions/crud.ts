@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { examCreateSchema, examUpdateSchema } from "../validation"
@@ -122,6 +123,23 @@ export async function createExam(
         catalogSubjectId: subjectExists.catalogSubjectId || undefined,
       },
     })
+
+    // Notify students in the class about new exam (non-blocking)
+    dispatchNotificationsToAudience({
+      schoolId,
+      type: "system_alert",
+      title: "امتحان جديد",
+      body: `تم جدولة امتحان "${parsed.title}" في ${new Date(parsed.examDate).toLocaleDateString("ar")}`,
+      priority: "high",
+      channels: ["in_app"],
+      metadata: {
+        examId: exam.id,
+        examDate: parsed.examDate.toISOString(),
+        url: "/exams",
+      },
+      targetScope: "class",
+      targetClassId: parsed.classId,
+    }).catch((err) => console.error("[createExam] Notification error:", err))
 
     revalidatePath("/exams")
     return {
@@ -349,6 +367,22 @@ export async function deleteExam(input: {
     await db.exam.deleteMany({
       where: { id, schoolId },
     })
+
+    // Notify students about exam cancellation (non-blocking)
+    dispatchNotificationsToAudience({
+      schoolId,
+      type: "system_alert",
+      title: "إلغاء امتحان",
+      body: `تم إلغاء امتحان "${examExists.title}"`,
+      priority: "high",
+      channels: ["in_app"],
+      metadata: {
+        examId: id,
+        url: "/exams",
+      },
+      targetScope: "class",
+      targetClassId: examExists.classId,
+    }).catch((err) => console.error("[deleteExam] Notification error:", err))
 
     revalidatePath("/exams")
     return {

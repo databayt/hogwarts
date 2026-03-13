@@ -204,6 +204,7 @@ model School {
   usageMetrics          UsageMetrics[]
 
   // Receipt tracking relations
+  billingReceipts    Receipt[]
   expenseReceipts    ExpenseReceipt[]
   creditNotes        CreditNote[]
   billingPreferences BillingPreferences?

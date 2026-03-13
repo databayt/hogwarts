@@ -54,6 +54,7 @@ export const studentListSelect = {
   surname: true,
   gender: true,
   userId: true,
+  wizardStep: true,
   enrollmentDate: true,
   academicGradeId: true,
   createdAt: true,
@@ -166,9 +167,12 @@ export const studentDetailSelect = {
  */
 export function buildStudentWhere(
   schoolId: string,
-  filters: StudentListFilters = {}
+  filters: StudentListFilters & { includeDrafts?: boolean } = {}
 ): Prisma.StudentWhereInput {
-  const where: Prisma.StudentWhereInput = { schoolId, wizardStep: null }
+  const where: Prisma.StudentWhereInput = {
+    schoolId,
+    ...(filters.includeDrafts ? {} : { wizardStep: null }),
+  }
 
   // Search by name, email, studentId, or grNumber
   if (filters.search) {

@@ -1,9 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import crypto from "crypto"
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import AddTeacherContent from "@/components/school-dashboard/listings/teachers/add/content"
 
 export const metadata = { title: "Dashboard: Add Teacher" }
 
@@ -13,7 +17,24 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
 
-  return <AddTeacherContent dictionary={dictionary.school} lang={lang} />
+  const session = await auth()
+  if (!session?.user) redirect(`/${lang}/teachers`)
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) redirect(`/${lang}/teachers`)
+
+  const draftEmail = `draft-${crypto.randomUUID().slice(0, 8)}@draft.internal`
+
+  const teacher = await db.teacher.create({
+    data: {
+      schoolId,
+      givenName: "",
+      surname: "",
+      emailAddress: draftEmail,
+      wizardStep: "information",
+    },
+  })
+
+  redirect(`/${lang}/teachers/add/${teacher.id}/information`)
 }

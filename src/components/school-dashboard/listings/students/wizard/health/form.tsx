@@ -10,30 +10,32 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { WizardTabs, type WizardTab } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateStudentHealth } from "./actions"
 import { healthSchema, type HealthFormData } from "./validation"
-
-const BLOOD_GROUP_OPTIONS = [
-  { label: "A+", value: "A+" },
-  { label: "A-", value: "A-" },
-  { label: "B+", value: "B+" },
-  { label: "B-", value: "B-" },
-  { label: "AB+", value: "AB+" },
-  { label: "AB-", value: "AB-" },
-  { label: "O+", value: "O+" },
-  { label: "O-", value: "O-" },
-] as const
 
 interface HealthFormProps {
   studentId: string
   initialData?: Partial<HealthFormData>
   onValidChange?: (isValid: boolean) => void
+  onTabChange?: (tabId: string) => void
 }
 
 export const HealthForm = forwardRef<WizardFormRef, HealthFormProps>(
-  ({ studentId, initialData, onValidChange }, ref) => {
+  ({ studentId, initialData, onValidChange, onTabChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+
+    const { dictionary } = useDictionary()
+    const students = (dictionary?.school as any)?.students
+    const t = students?.health as Record<string, string> | undefined
+    const tRoot = students as Record<string, string> | undefined
+
+    const TABS: WizardTab[] = [
+      { id: "medical", label: t?.medicalTab || "Medical" },
+      { id: "insurance", label: t?.doctorInsuranceTab || "Doctor & Insurance" },
+    ]
 
     const form = useForm<HealthFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,11 +44,11 @@ export const HealthForm = forwardRef<WizardFormRef, HealthFormProps>(
         medicalConditions: initialData?.medicalConditions || "",
         allergies: initialData?.allergies || "",
         medicationRequired: initialData?.medicationRequired || "",
+        bloodGroup: initialData?.bloodGroup || "",
         doctorName: initialData?.doctorName || "",
         doctorContact: initialData?.doctorContact || "",
         insuranceProvider: initialData?.insuranceProvider || "",
         insuranceNumber: initialData?.insuranceNumber || "",
-        bloodGroup: initialData?.bloodGroup || "",
       },
     })
 
@@ -62,19 +64,26 @@ export const HealthForm = forwardRef<WizardFormRef, HealthFormProps>(
             try {
               const valid = await form.trigger()
               if (!valid) {
-                reject(new Error("Validation failed"))
+                reject(
+                  new Error(tRoot?.validationFailed || "Validation failed")
+                )
                 return
               }
               const data = form.getValues()
               const result = await updateStudentHealth(studentId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tRoot?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tRoot?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -85,54 +94,83 @@ export const HealthForm = forwardRef<WizardFormRef, HealthFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <TextareaField
-            name="medicalConditions"
-            label="Medical Conditions"
-            placeholder="Enter any medical conditions"
-            disabled={isPending}
-          />
-          <TextareaField
-            name="allergies"
-            label="Allergies"
-            placeholder="Enter any allergies"
-            disabled={isPending}
-          />
-          <TextareaField
-            name="medicationRequired"
-            label="Medication Required"
-            placeholder="Enter any required medication"
-            disabled={isPending}
-          />
-          <InputField
-            name="doctorName"
-            label="Doctor Name"
-            placeholder="Enter doctor's name"
-            disabled={isPending}
-          />
-          <InputField
-            name="doctorContact"
-            label="Doctor Contact"
-            placeholder="Enter doctor's contact number"
-            disabled={isPending}
-          />
-          <InputField
-            name="insuranceProvider"
-            label="Insurance Provider"
-            placeholder="Enter insurance provider"
-            disabled={isPending}
-          />
-          <InputField
-            name="insuranceNumber"
-            label="Insurance Number"
-            placeholder="Enter insurance number"
-            disabled={isPending}
-          />
-          <InputField
-            name="bloodGroup"
-            label="Blood Group"
-            placeholder="e.g. A+, B-, O+"
-            disabled={isPending}
-          />
+          <WizardTabs tabs={TABS} onTabChange={onTabChange}>
+            {(activeTab) =>
+              activeTab === "medical" ? (
+                <div className="space-y-6">
+                  <TextareaField
+                    name="medicalConditions"
+                    label={t?.medicalConditions || "Medical Conditions"}
+                    placeholder={
+                      t?.medicalConditionsPlaceholder ||
+                      "Enter any medical conditions"
+                    }
+                    disabled={isPending}
+                  />
+                  <TextareaField
+                    name="allergies"
+                    label={t?.allergies || "Allergies"}
+                    placeholder={
+                      t?.allergiesPlaceholder || "Enter any allergies"
+                    }
+                    disabled={isPending}
+                  />
+                  <TextareaField
+                    name="medicationRequired"
+                    label={t?.medicationRequired || "Medication Required"}
+                    placeholder={
+                      t?.medicationRequiredPlaceholder ||
+                      "Enter any required medication"
+                    }
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="bloodGroup"
+                    label={t?.bloodGroup || "Blood Group"}
+                    placeholder={t?.bloodGroupPlaceholder || "e.g. A+, B-, O+"}
+                    disabled={isPending}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <InputField
+                    name="doctorName"
+                    label={t?.doctorName || "Doctor Name"}
+                    placeholder={
+                      t?.doctorNamePlaceholder || "Enter doctor's name"
+                    }
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="doctorContact"
+                    label={t?.doctorContact || "Doctor Contact"}
+                    placeholder={
+                      t?.doctorContactPlaceholder ||
+                      "Enter doctor's contact number"
+                    }
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="insuranceProvider"
+                    label={t?.insuranceProvider || "Insurance Provider"}
+                    placeholder={
+                      t?.insuranceProviderPlaceholder ||
+                      "Enter insurance provider"
+                    }
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="insuranceNumber"
+                    label={t?.insuranceNumber || "Insurance Number"}
+                    placeholder={
+                      t?.insuranceNumberPlaceholder || "Enter insurance number"
+                    }
+                    disabled={isPending}
+                  />
+                </div>
+              )
+            }
+          </WizardTabs>
         </form>
       </Form>
     )

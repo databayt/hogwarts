@@ -592,7 +592,25 @@ export async function getInvoiceById(id: string) {
       include: { items: true, from: true, to: true },
     })
     if (!invoice) return { success: false, error: "Invoice not found" }
-    return { success: true, data: invoice }
+    // Convert Decimal to number for client consumption
+    return {
+      success: true,
+      data: {
+        ...invoice,
+        sub_total: Number(invoice.sub_total),
+        discount: invoice.discount != null ? Number(invoice.discount) : null,
+        tax_percentage:
+          invoice.tax_percentage != null
+            ? Number(invoice.tax_percentage)
+            : null,
+        total: Number(invoice.total),
+        items: invoice.items.map((item) => ({
+          ...item,
+          price: Number(item.price),
+          total: Number(item.total),
+        })),
+      },
+    }
   } catch (error) {
     console.error(error)
     return { success: false, error: "Failed to fetch invoice" }
@@ -622,7 +640,7 @@ export async function sendInvoiceEmail(invoiceId: string, subject: string) {
     const totalFormatted = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: invoice.currency || "USD",
-    }).format(invoice.total)
+    }).format(Number(invoice.total))
     const emailContent = SendInvoiceEmail({
       firstName: invoice.to.name,
       invoiceNo: invoice.invoice_no,
@@ -816,20 +834,15 @@ export async function getDashboardStats() {
     ])
 
     const totalRevenue = invoices.reduce(
-      (prev: number, curr: { total: number }) => prev + curr.total,
+      (prev: number, curr) => prev + Number(curr.total),
       0
     )
-    const chartData = invoices.map(
-      (invoice: {
-        invoice_date: Date
-        total: number
-        status: InvoiceStatus
-      }) => ({
-        date: invoice.invoice_date.toISOString().split("T")[0],
-        totalRevenue: invoice.total,
-        paidRevenue: invoice.status === InvoiceStatus.PAID ? invoice.total : 0,
-      })
-    )
+    const chartData = invoices.map((invoice) => ({
+      date: invoice.invoice_date.toISOString().split("T")[0],
+      totalRevenue: Number(invoice.total),
+      paidRevenue:
+        invoice.status === InvoiceStatus.PAID ? Number(invoice.total) : 0,
+    }))
 
     return {
       success: true,

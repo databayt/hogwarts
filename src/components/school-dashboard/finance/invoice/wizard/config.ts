@@ -5,13 +5,12 @@ import type { WizardConfig } from "@/components/form/wizard"
 
 export const INVOICE_WIZARD_CONFIG: WizardConfig = {
   id: "invoice",
-  steps: ["details", "items", "review"],
+  steps: ["details", "items"],
   groups: {
     1: ["details"],
     2: ["items"],
-    3: ["review"],
   },
-  groupLabels: ["Invoice Details", "Line Items", "Review"],
+  groupLabels: ["Invoice Details", "Line Items"],
   requiredSteps: ["details", "items"],
   finalLabel: "Create Invoice",
 }

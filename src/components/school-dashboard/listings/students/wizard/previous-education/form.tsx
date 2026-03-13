@@ -10,6 +10,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateStudentPreviousEducation } from "./actions"
 import {
@@ -28,6 +29,11 @@ export const PreviousEducationForm = forwardRef<
   PreviousEducationFormProps
 >(({ studentId, initialData, onValidChange }, ref) => {
   const [isPending, startTransition] = useTransition()
+
+  const { dictionary } = useDictionary()
+  const students = (dictionary?.school as any)?.students
+  const t = students?.previousEducation as Record<string, string> | undefined
+  const tRoot = students as Record<string, string> | undefined
 
   const form = useForm<PreviousEducationFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,19 +60,24 @@ export const PreviousEducationForm = forwardRef<
           try {
             const valid = await form.trigger()
             if (!valid) {
-              reject(new Error("Validation failed"))
+              reject(new Error(tRoot?.validationFailed || "Validation failed"))
               return
             }
             const data = form.getValues()
             const result = await updateStudentPreviousEducation(studentId, data)
             if (!result.success) {
-              ErrorToast(result.error || "Failed to save")
+              ErrorToast(
+                result.error || tRoot?.failedToSave || "Failed to save"
+              )
               reject(new Error(result.error))
               return
             }
             resolve()
           } catch (err) {
-            const msg = err instanceof Error ? err.message : "Failed to save"
+            const msg =
+              err instanceof Error
+                ? err.message
+                : tRoot?.failedToSave || "Failed to save"
             ErrorToast(msg)
             reject(err)
           }
@@ -79,37 +90,47 @@ export const PreviousEducationForm = forwardRef<
       <form className="space-y-6">
         <InputField
           name="previousSchoolName"
-          label="Previous School Name"
-          placeholder="Enter previous school name"
+          label={t?.schoolName || "Previous School Name"}
+          placeholder={t?.schoolNamePlaceholder || "Enter previous school name"}
           disabled={isPending}
         />
         <TextareaField
           name="previousSchoolAddress"
-          label="Previous School Address"
-          placeholder="Enter previous school address"
+          label={t?.schoolAddress || "Previous School Address"}
+          placeholder={
+            t?.schoolAddressPlaceholder || "Enter previous school address"
+          }
           disabled={isPending}
         />
         <InputField
           name="previousGrade"
-          label="Previous Grade"
-          placeholder="Enter previous grade level"
+          label={t?.previousGrade || "Previous Grade"}
+          placeholder={
+            t?.previousGradePlaceholder || "Enter previous grade level"
+          }
           disabled={isPending}
         />
         <InputField
           name="transferCertificateNo"
-          label="Transfer Certificate No."
-          placeholder="Enter transfer certificate number"
+          label={t?.transferCertificate || "Transfer Certificate No."}
+          placeholder={
+            t?.transferCertificatePlaceholder ||
+            "Enter transfer certificate number"
+          }
           disabled={isPending}
         />
         <DateField
           name="transferDate"
-          label="Transfer Date"
+          label={t?.transferDate || "Transfer Date"}
           disabled={isPending}
         />
         <TextareaField
           name="previousAcademicRecord"
-          label="Previous Academic Record"
-          placeholder="Enter previous academic record details"
+          label={t?.academicRecord || "Previous Academic Record"}
+          placeholder={
+            t?.academicRecordPlaceholder ||
+            "Enter previous academic record details"
+          }
           disabled={isPending}
         />
       </form>

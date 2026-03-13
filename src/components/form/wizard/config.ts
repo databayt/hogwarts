@@ -20,6 +20,10 @@ export interface WizardConfig {
   groupLabels?: string[]
   /** Steps that must be completed before finishing */
   requiredSteps?: string[]
+  /** Allow skipping ahead after all required steps are done */
+  skipToComplete?: boolean
+  /** Step slug to jump to when skip is clicked (default: jumps past next group) */
+  skipToStep?: string
   /** Button label for the final step (default: "Finish") */
   finalLabel?: string
   /** Redirect URL after completing the final step */

@@ -14,6 +14,7 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -324,6 +325,33 @@ export async function generateSalarySlips(
       },
     })
 
+    // Notify admins that payroll is ready for approval (non-blocking)
+    const admins = await db.user.findMany({
+      where: { schoolId, role: "ADMIN" },
+      select: { id: true },
+    })
+    for (const admin of admins) {
+      dispatchNotification({
+        schoolId,
+        userId: admin.id,
+        type: "system_alert",
+        title: "كشف رواتب جاهز للموافقة",
+        body: `كشف الرواتب ${payrollRun.runNumber} جاهز للمراجعة. ${slipsGenerated} قسيمة راتب بإجمالي ${totalNet.toLocaleString()}`,
+        priority: "high",
+        channels: ["in_app"],
+        metadata: {
+          payrollRunId,
+          runNumber: payrollRun.runNumber,
+          slipsGenerated,
+          totalNet,
+          url: "/finance/payroll",
+        },
+        actorId: session.user.id,
+      }).catch((err) =>
+        console.error("[generateSalarySlips] Notification error:", err)
+      )
+    }
+
     revalidatePath("/finance/payroll")
     return { success: true, data: slipsGenerated }
   } catch (error) {
@@ -386,6 +414,27 @@ export async function approvePayroll(
       },
     })
 
+    // Notify payroll creator about approval (non-blocking)
+    if (payrollRun.processedBy) {
+      dispatchNotification({
+        schoolId,
+        userId: payrollRun.processedBy,
+        type: "system_alert",
+        title: "تمت الموافقة على كشف الرواتب",
+        body: `تمت الموافقة على كشف الرواتب ${payrollRun.runNumber}. يمكنك الآن صرف المدفوعات.`,
+        priority: "normal",
+        channels: ["in_app"],
+        metadata: {
+          payrollRunId,
+          runNumber: payrollRun.runNumber,
+          url: "/finance/payroll",
+        },
+        actorId: session.user.id,
+      }).catch((err) =>
+        console.error("[approvePayroll] Notification error:", err)
+      )
+    }
+
     revalidatePath("/finance/payroll")
     return { success: true }
   } catch (error) {
@@ -429,6 +478,28 @@ export async function rejectPayroll(
         notes: `REJECTED: ${reason}\n\n${payrollRun.notes || ""}`,
       },
     })
+
+    // Notify payroll creator about rejection (non-blocking)
+    if (payrollRun.processedBy) {
+      dispatchNotification({
+        schoolId,
+        userId: payrollRun.processedBy,
+        type: "system_alert",
+        title: "تم رفض كشف الرواتب",
+        body: `تم رفض كشف الرواتب ${payrollRun.runNumber}: ${reason}`,
+        priority: "high",
+        channels: ["in_app"],
+        metadata: {
+          payrollRunId,
+          runNumber: payrollRun.runNumber,
+          reason,
+          url: "/finance/payroll",
+        },
+        actorId: session.user.id,
+      }).catch((err) =>
+        console.error("[rejectPayroll] Notification error:", err)
+      )
+    }
 
     revalidatePath("/finance/payroll")
     return { success: true }
@@ -494,6 +565,36 @@ export async function processPayments(
       where: { id: payrollRunId },
       data: { status: "PAID" },
     })
+
+    // Notify teachers about salary payment (non-blocking)
+    const paidSlips = await db.salarySlip.findMany({
+      where: { payrollRunId, status: "PAID" },
+      select: {
+        teacherId: true,
+        netSalary: true,
+        teacher: { select: { userId: true, givenName: true, surname: true } },
+      },
+    })
+    for (const slip of paidSlips) {
+      if (slip.teacher?.userId) {
+        dispatchNotification({
+          schoolId,
+          userId: slip.teacher.userId,
+          type: "system_alert",
+          title: "تم صرف الراتب",
+          body: `تم صرف راتبك بقيمة ${Number(slip.netSalary).toLocaleString()}`,
+          priority: "high",
+          channels: ["in_app", "email"],
+          metadata: {
+            payrollRunId,
+            netSalary: Number(slip.netSalary),
+            url: "/finance/payroll",
+          },
+        }).catch((err) =>
+          console.error("[processPayments] Notification error:", err)
+        )
+      }
+    }
 
     revalidatePath("/finance/payroll")
     return { success: true, data: updateResult.count }

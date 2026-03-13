@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useStudentWizard } from "../use-student-wizard"
 import { PersonalForm } from "./form"
@@ -17,6 +18,10 @@ export default function PersonalContent() {
   const studentId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useStudentWizard()
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school as any)?.students?.personal as
+    | Record<string, string>
+    | undefined
   const [isValid, setIsValid] = useState(false)
 
   // Set initial validity from loaded data
@@ -38,8 +43,10 @@ export default function PersonalContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Personal Information"
-          description="Enter the student's personal details."
+          title={t?.title || "Personal Information"}
+          description={
+            t?.description || "Enter the student's personal details."
+          }
         />
         <PersonalForm
           ref={formRef}

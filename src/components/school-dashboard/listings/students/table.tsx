@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { Badge } from "@/components/ui/badge"
 import { SeeMore } from "@/components/atom/see-more"
 import {
   confirmDeleteDialog,
@@ -45,6 +44,7 @@ interface StudentsTableProps {
   dictionary?: Dictionary["school"]["students"]
   lang: Locale
   perPage?: number
+  gradeOptions?: Array<{ label: string; value: string }>
 }
 
 function StudentsTableInner({
@@ -53,6 +53,7 @@ function StudentsTableInner({
   dictionary,
   lang,
   perPage = 20,
+  gradeOptions = [],
 }: StudentsTableProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -142,9 +143,16 @@ function StudentsTableInner({
       ...getStudentColumns(dictionary, lang, {
         onDeleteSuccess: handleColumnDeleteSuccess,
         onGenerateAccessCode: handleGenerateAccessCode,
+        gradeOptions,
       }),
     ],
-    [dictionary, lang, handleColumnDeleteSuccess, handleGenerateAccessCode]
+    [
+      dictionary,
+      lang,
+      handleColumnDeleteSuccess,
+      handleGenerateAccessCode,
+      gradeOptions,
+    ]
   )
 
   // Table instance
@@ -216,7 +224,11 @@ function StudentsTableInner({
     if (result.success && result.data) {
       router.push(`/${lang}/students/add/${result.data.id}/personal`)
     } else {
-      ErrorToast(result.error || "Failed to create")
+      ErrorToast(
+        result.error ||
+          (dictionary as Record<string, string> | undefined)?.failedToCreate ||
+          "Failed to create"
+      )
     }
   }, [router, lang])
 

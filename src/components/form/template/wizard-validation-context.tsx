@@ -34,6 +34,10 @@ export interface WizardValidationContextType {
   customNavigation?: CustomNavigation
   setCustomNavigation: (navigation?: CustomNavigation) => void
 
+  // Save handler (save current form without advancing)
+  onSave?: () => Promise<void>
+  setOnSave: (fn?: () => Promise<void>) => void
+
   // Flow type (for consumer information)
   flowType: WizardFlowType
 
@@ -102,6 +106,9 @@ export function WizardValidationProvider({
   const [customNavigation, setCustomNavigation] = useState<
     CustomNavigation | undefined
   >(undefined)
+  const [onSave, setOnSave] = useState<(() => Promise<void>) | undefined>(
+    undefined
+  )
 
   // Dependency flow state
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(
@@ -153,6 +160,12 @@ export function WizardValidationProvider({
   )
 
   // Context value
+  // Stable setter that unwraps function values from React's setState convention
+  const setOnSaveStable = useCallback(
+    (fn?: () => Promise<void>) => setOnSave(() => fn),
+    []
+  )
+
   const value: WizardValidationContextType = useMemo(
     () => ({
       isNextDisabled,
@@ -161,6 +174,8 @@ export function WizardValidationProvider({
       disableNext,
       customNavigation,
       setCustomNavigation,
+      onSave,
+      setOnSave: setOnSaveStable,
       flowType,
       dependencies,
       completedSteps,
@@ -173,6 +188,8 @@ export function WizardValidationProvider({
       enableNext,
       disableNext,
       customNavigation,
+      onSave,
+      setOnSaveStable,
       flowType,
       dependencies,
       completedSteps,

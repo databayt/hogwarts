@@ -74,21 +74,16 @@ export async function getDashboardStats() {
     ])
 
     const totalRevenue = invoices.reduce(
-      (prev: number, curr: { total: number }) => prev + curr.total,
+      (prev: number, curr) => prev + Number(curr.total),
       0
     )
 
-    const chartData = invoices.map(
-      (invoice: {
-        invoice_date: Date
-        total: number
-        status: InvoiceStatus
-      }) => ({
-        date: invoice.invoice_date.toISOString().split("T")[0],
-        totalRevenue: invoice.total,
-        paidRevenue: invoice.status === InvoiceStatus.PAID ? invoice.total : 0,
-      })
-    )
+    const chartData = invoices.map((invoice) => ({
+      date: invoice.invoice_date.toISOString().split("T")[0],
+      totalRevenue: Number(invoice.total),
+      paidRevenue:
+        invoice.status === InvoiceStatus.PAID ? Number(invoice.total) : 0,
+    }))
 
     return {
       success: true,

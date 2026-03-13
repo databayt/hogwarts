@@ -52,6 +52,7 @@ export const teacherListSelect = {
   emailAddress: true,
   gender: true,
   userId: true,
+  wizardStep: true,
   createdAt: true,
 } as const
 
@@ -117,9 +118,12 @@ export const teacherDetailSelect = {
  */
 export function buildTeacherWhere(
   schoolId: string,
-  filters: TeacherListFilters = {}
+  filters: TeacherListFilters & { includeDrafts?: boolean } = {}
 ): Prisma.TeacherWhereInput {
-  const where: Prisma.TeacherWhereInput = { schoolId, wizardStep: null }
+  const where: Prisma.TeacherWhereInput = {
+    schoolId,
+    ...(filters.includeDrafts ? {} : { wizardStep: null }),
+  }
 
   // Search by name or email
   if (filters.search) {

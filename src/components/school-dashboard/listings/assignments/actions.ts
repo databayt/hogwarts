@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
@@ -80,6 +81,26 @@ export async function createAssignment(
         status: "DRAFT",
       },
     })
+
+    // Notify students in the class about the new assignment (non-blocking)
+    dispatchNotificationsToAudience({
+      schoolId,
+      type: "assignment_created",
+      title: `واجب جديد: ${parsed.title}`,
+      body: `تم إضافة واجب جديد "${parsed.title}" مع موعد تسليم ${new Date(parsed.dueDate).toLocaleDateString("ar-SA")}`,
+      priority: "normal",
+      channels: ["in_app", "email"],
+      metadata: {
+        assignmentId: row.id,
+        classId: parsed.classId,
+        dueDate: parsed.dueDate.toISOString(),
+        url: `/assignments/${row.id}`,
+      },
+      targetScope: "class",
+      targetClassId: parsed.classId,
+    }).catch((err) =>
+      console.error("[createAssignment] Notification error:", err)
+    )
 
     revalidatePath(ASSIGNMENTS_PATH)
     return { success: true, data: { id: row.id as string } }

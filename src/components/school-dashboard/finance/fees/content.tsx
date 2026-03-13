@@ -1,10 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import Link from "next/link"
 import {
   Award,
   CircleAlert,
-  CircleCheck,
   CreditCard,
   DollarSign,
   TrendingUp,
@@ -14,7 +14,7 @@ import {
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -155,7 +155,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(totalFeesCollected / 100).toLocaleString()}
+              ${totalFeesCollected.toLocaleString()}
             </div>
             <p className="text-muted-foreground text-xs">
               {fp?.completedPayments || "Completed payments"}
@@ -172,7 +172,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(pendingPayments / 100).toLocaleString()}
+              ${pendingPayments.toLocaleString()}
             </div>
             <p className="text-muted-foreground text-xs">
               {activeAssignmentsCount} {fp?.assignments || "assignments"}
@@ -189,7 +189,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(overduePayments / 100).toLocaleString()}
+              ${overduePayments.toLocaleString()}
             </div>
             <p className="text-muted-foreground text-xs">
               {c?.requiresAction || "Requires action"}
@@ -229,17 +229,24 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" disabled>
+              <Link
+                href={`/${lang}/finance/fees/structures`}
+                className={buttonVariants({ className: "w-full" })}
+              >
                 {`${fp?.viewStructures || "View Structures"} (${feeStructuresCount})`}
-              </Button>
+              </Link>
               {canCreate && (
-                <Button variant="outline" className="w-full" size="sm" disabled>
+                <Link
+                  href={`/${lang}/finance/fees/structures/new`}
+                  className={buttonVariants({
+                    variant: "outline",
+                    size: "sm",
+                    className: "w-full",
+                  })}
+                >
                   {fp?.createNewStructure || "Create New Structure"}
-                </Button>
+                </Link>
               )}
-              <p className="text-muted-foreground text-center text-xs">
-                Coming soon
-              </p>
             </CardContent>
           </Card>
         )}
@@ -257,17 +264,24 @@ export default async function FeesContent({ dictionary, lang }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Button className="w-full" disabled>
+            <Link
+              href={`/${lang}/finance/fees/payments`}
+              className={buttonVariants({ className: "w-full" })}
+            >
               {fp?.viewPayments || "View Payments"}
-            </Button>
+            </Link>
             {canCreate && (
-              <Button variant="outline" className="w-full" size="sm" disabled>
+              <Link
+                href={`/${lang}/finance/fees/payments/new`}
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "sm",
+                  className: "w-full",
+                })}
+              >
                 {fp?.recordPayment || "Record Payment"}
-              </Button>
+              </Link>
             )}
-            <p className="text-muted-foreground text-center text-xs">
-              Coming soon
-            </p>
           </CardContent>
         </Card>
 
@@ -285,17 +299,24 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" disabled>
+              <Link
+                href={`/${lang}/finance/fees/assignments`}
+                className={buttonVariants({ className: "w-full" })}
+              >
                 {fp?.viewAssignments || "View Assignments"}
-              </Button>
+              </Link>
               {canCreate && (
-                <Button variant="outline" className="w-full" size="sm" disabled>
+                <Link
+                  href={`/${lang}/finance/fees/assignments/new`}
+                  className={buttonVariants({
+                    variant: "outline",
+                    size: "sm",
+                    className: "w-full",
+                  })}
+                >
                   {fp?.bulkAssignFees || "Bulk Assign Fees"}
-                </Button>
+                </Link>
               )}
-              <p className="text-muted-foreground text-center text-xs">
-                Coming soon
-              </p>
             </CardContent>
           </Card>
         )}
@@ -314,15 +335,12 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" disabled>
+              <Link
+                href={`/${lang}/finance/fees/scholarships`}
+                className={buttonVariants({ className: "w-full" })}
+              >
                 {`${fp?.viewScholarships || "View Scholarships"} (${scholarshipsCount})`}
-              </Button>
-              <Button variant="outline" className="w-full" size="sm" disabled>
-                {fp?.reviewApplications || "Review Applications"}
-              </Button>
-              <p className="text-muted-foreground text-center text-xs">
-                Coming soon
-              </p>
+              </Link>
             </CardContent>
           </Card>
         )}
@@ -341,15 +359,12 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" disabled>
+              <Link
+                href={`/${lang}/finance/fees/fines`}
+                className={buttonVariants({ className: "w-full" })}
+              >
                 {`${fp?.viewFines || "View Fines"} (${finesCount})`}
-              </Button>
-              <Button variant="outline" className="w-full" size="sm" disabled>
-                {fp?.issueFine || "Issue Fine"}
-              </Button>
-              <p className="text-muted-foreground text-center text-xs">
-                Coming soon
-              </p>
+              </Link>
             </CardContent>
           </Card>
         )}
@@ -368,15 +383,12 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" disabled>
+              <Link
+                href={`/${lang}/finance/reports`}
+                className={buttonVariants({ className: "w-full" })}
+              >
                 {c?.viewReports || "View Reports"}
-              </Button>
-              <Button variant="outline" className="w-full" size="sm" disabled>
-                {fp?.collectionReport || "Collection Report"}
-              </Button>
-              <p className="text-muted-foreground text-center text-xs">
-                Coming soon
-              </p>
+              </Link>
             </CardContent>
           </Card>
         )}

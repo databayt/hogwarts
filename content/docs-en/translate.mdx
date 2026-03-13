@@ -1,351 +1,531 @@
 ---
-title: "Translation"
-description: "On-demand translation system with single-language storage and Google Translate caching"
+title: "Translation Progress"
+description: "Comprehensive translation coverage tracker - scenarios, gaps, per-URL status, and best practices"
 ---
 
-## Overview
+## Architecture Overview
 
-All user-generated content is stored in **one language** with a `lang` field. Translation happens **on-demand** when the viewer's locale differs from the stored language. This eliminates dual-field schemas (`titleEn`/`titleAr`) and keeps the database simple.
-
-### Core Principles
-
-| Principle               | Description                                                               |
-| ----------------------- | ------------------------------------------------------------------------- |
-| Single-language storage | Each record stores content in one language, indicated by `lang`           |
-| Generic field names     | `title`, `body`, `name` - never `titleEn` or `titleAr`                    |
-| On-demand translation   | Content is translated at display time via `getDisplayText()`              |
-| Database caching        | Translations are cached in `TranslationCache` to avoid repeated API calls |
-| Graceful fallback       | If translation fails, the original text is returned                       |
-
----
-
-## How It Works
+Translation operates on two tiers:
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    Translation Flow                           │
-├──────────────────────────────────────────────────────────────┤
-│                                                               │
-│  Stored Content (lang: "ar")                                  │
-│       │                                                       │
-│       ▼                                                       │
-│  getDisplayText(text, contentLang, displayLang, schoolId)     │
-│       │                                                       │
-│       ├── Same language? ──► Return text directly (zero cost) │
-│       │                                                       │
-│       └── Different language?                                 │
-│               │                                               │
-│               ▼                                               │
-│       Check TranslationCache                                  │
-│               │                                               │
-│               ├── Cache hit ──► Return cached translation     │
-│               │                  (increment hitCount)         │
-│               │                                               │
-│               └── Cache miss                                  │
-│                       │                                       │
-│                       ▼                                       │
-│               Google Translate API                            │
-│                       │                                       │
-│                       ▼                                       │
-│               Store in TranslationCache                       │
-│                       │                                       │
-│                       ▼                                       │
-│               Return translated text                          │
-│                                                               │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     Tier 1: Static UI                        │
+│  Dictionary JSON files → getDictionary() → {dictionary.key} │
+│  5,600+ keys synced across ar.json / en.json pairs          │
+│  Covers: sidebar, table headers, status badges, labels      │
+├─────────────────────────────────────────────────────────────┤
+│                  Tier 2: Dynamic Content                     │
+│  Single-language DB storage → getDisplayText() → translate   │
+│  Google Translate API + TranslationCache (DB caching)        │
+│  Covers: announcements, subjects, departments, events        │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+### Infrastructure Files
+
+| File                                                                | Purpose                                          |
+| ------------------------------------------------------------------- | ------------------------------------------------ |
+| `src/lib/content-display.ts`                                        | `getDisplayText()`, `getDisplayFields()`         |
+| `src/lib/translate.ts`                                              | `translateWithCache()`, server actions           |
+| `src/lib/google-translate.ts`                                       | Google Translate API client                      |
+| `src/lib/auto-translate.ts`                                         | Auto-translation utilities                       |
+| `src/components/internationalization/helpers/index.ts`              | `ValidationHelper`, `ToastHelper`, `ErrorHelper` |
+| `src/components/internationalization/dictionaries.ts`               | Route-specific dictionary loaders                |
+| `src/components/internationalization/dictionaries/en/messages.json` | Validation, toast, error message keys            |
 
 ---
 
-## Core Utilities
+## Translation Scenarios
 
-### `getDisplayText()`
+| #   | Scenario                                  | How It Works                                                           | Status                   |
+| --- | ----------------------------------------- | ---------------------------------------------------------------------- | ------------------------ |
+| 1   | **Viewing content in same language**      | `getDisplayText()` returns text directly (zero cost)                   | Working                  |
+| 2   | **Viewing content in different language** | `getDisplayText()` → TranslationCache → Google API                     | Working (~15 surfaces)   |
+| 3   | **Table column headers**                  | Dictionary keys via `dictionary.school.students.columns.*`             | Working (with fallbacks) |
+| 4   | **Table cell values (status badges)**     | Dictionary mapping via `dictionary.school.status.*`                    | Working                  |
+| 5   | **Navigation / sidebar**                  | Dictionary keys via `dictionary.platform.sidebar.*`                    | Working (2 missing keys) |
+| 6   | **Form input in user's language**         | `lang` field should match locale. Most forms don't set it              | Partial                  |
+| 7   | **Select options / dropdowns**            | Static options like "Male/Female", "Full-Time/Part-Time"               | NOT translated           |
+| 8   | **Validation messages**                   | i18n helpers exist (`ValidationHelper`) but unused in school-dashboard | NOT translated           |
+| 9   | **Toast / notification messages**         | i18n helpers exist (`ToastHelper`) but unused in school-dashboard      | NOT translated           |
+| 10  | **Server action errors**                  | `"Not authenticated"`, `"Failed to create..."` hardcoded               | NOT translated           |
+| 11  | **Button text**                           | "Save", "Cancel", "Delete", "Submit" hardcoded                         | NOT translated           |
+| 12  | **Wizard tab / group labels**             | `groupLabels: ["Essentials", "Contact Details"]` hardcoded             | NOT translated           |
+| 13  | **Confirmation dialogs**                  | "Are you sure?" hardcoded                                              | NOT translated           |
+| 14  | **Empty states**                          | "No data found", "No results" hardcoded                                | NOT translated           |
 
-The primary function for translating a single field. Returns the text directly if languages match, otherwise translates with caching.
+### The Infrastructure-Coverage Gap
 
-**File:** `src/lib/content-display.ts`
+The infrastructure is solid - dictionary files have 5,600+ keys, `ValidationHelper` / `ToastHelper` / `ErrorHelper` classes exist in `src/components/internationalization/helpers/index.ts`, and `getDisplayText()` works well. The gap is **adoption**: ~2,985 hardcoded English strings across 500+ files in the school-dashboard layer haven't been wired to use these helpers.
+
+---
+
+## Coverage Progress Matrix
+
+### Dictionary & getDisplayText Coverage (112 content.tsx files total)
+
+| Area              | Dictionary Used | getDisplayText Used | Forms Translated | Selects Translated | Validation Translated | Toasts Translated | Overall |
+| ----------------- | :-------------: | :-----------------: | :--------------: | :----------------: | :-------------------: | :---------------: | ------- |
+| **Dashboard**     |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **Students**      |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Teachers**      |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Classes**       |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Subjects**      |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Announcements** |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Events**        |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **Assignments**   |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **Parents**       |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Grades**        |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **Classrooms**    |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Exams**         |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Finance**       |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **Attendance**    |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Timetable**     |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **Profile**       |       Yes       |         Yes         |        No        |         No         |          No           |        No         | Partial |
+| **Settings**      |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **Notifications** |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **Admission**     |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **School Config** |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+| **Reports**       |       Yes       |         No          |        No        |         No         |          No           |        No         | Partial |
+
+**Legend**: Yes = implemented, No = hardcoded English, Partial = some layers done
+
+---
+
+## Gaps & Blockers
+
+### Gap 1: Forms Layer (~40 form files, ~327 strings)
+
+All labels, placeholders, and helper text are hardcoded English. ~15 form files (~19%) use `useDictionary()`.
+
+**Scope**: `src/components/school-dashboard/**/form.tsx` (~40 files with hardcoded labels)
+
+**Example** (student contact form):
 
 ```typescript
-import { getDisplayText } from "@/lib/content-display"
+// Current - hardcoded
+<FormLabel>Phone Number</FormLabel>
+<Input placeholder="Enter phone number" />
 
-// Content stored in Arabic, user viewing in English -> translates
-const title = await getDisplayText("مرحبا", "ar", "en", schoolId)
-// Returns "Hello" (translated and cached)
-
-// Content stored in Arabic, user viewing in Arabic -> returns directly
-const title = await getDisplayText("مرحبا", "ar", "ar", schoolId)
-// Returns "مرحبا" (no translation needed)
+// Target - dictionary-driven
+<FormLabel>{dictionary.school.students.form.phoneNumber}</FormLabel>
+<Input placeholder={dictionary.school.students.form.phoneNumberPlaceholder} />
 ```
 
-**Signature:**
+### Gap 2: Config / Select Options (24 config files, ~415 strings)
+
+Static option arrays use hardcoded English labels.
+
+**Scope**: `src/components/school-dashboard/**/config.ts` (24 files with hardcoded labels)
+
+**Example** (student config):
 
 ```typescript
-async function getDisplayText(
-  text: string | null | undefined,
-  contentLang: "en" | "ar",
-  displayLang: "en" | "ar",
-  schoolId: string
-): Promise<string>
+// Current - hardcoded
+const GENDER_OPTIONS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+]
+
+// Target - dictionary-driven
+const getGenderOptions = (d: Dictionary) => [
+  { value: "male", label: d.school.students.gender.male },
+  { value: "female", label: d.school.students.gender.female },
+]
 ```
 
-### `getDisplayFields()`
+### Gap 3: Validation Messages (90 validation files, ~660 strings)
 
-Batch translate multiple fields of an entity in parallel. More efficient than calling `getDisplayText()` for each field.
+Zod schemas use hardcoded English error messages. `ValidationHelper` exists but is only used in onboarding + auth (not school-dashboard).
 
-**File:** `src/lib/content-display.ts`
+**Scope**: `src/components/school-dashboard/**/validation.ts` (90 files)
 
-```typescript
-import { getDisplayFields } from "@/lib/content-display"
-
-const translated = await getDisplayFields(
-  announcement,
-  ["title", "body"],
-  announcement.lang,
-  "en",
-  schoolId
-)
-// { title: "Hello", body: "Welcome to school" }
-```
-
-### `translateWithCache()`
-
-Low-level function that handles the cache lookup and Google Translate API call. Used internally by `getDisplayText()`.
-
-**File:** `src/lib/translate.ts`
+**Example**:
 
 ```typescript
-import { translateWithCache } from "@/lib/translate"
-
-const translated = await translateWithCache(text, "ar", "en", schoolId)
-```
-
-### `translateText()` and `translateFields()`
-
-Server actions for explicit translation requests. These authenticate the user and resolve `schoolId` from tenant context automatically.
-
-**File:** `src/lib/translate.ts`
-
-```typescript
-import { translateFields, translateText } from "@/lib/translate"
-
-// Single text
-const result = await translateText({ text: "Hello", sourceLanguage: "en" })
-
-// Multiple fields in a single batch API call
-const result = await translateFields({
-  fields: { title: "Hello", body: "World" },
-  sourceLanguage: "en",
+// Current - hardcoded
+export const studentSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email"),
 })
+
+// Target - using ValidationHelper
+export const createStudentSchema = (v: ValidationHelper) =>
+  z.object({
+    name: z.string().min(1, v.required()),
+    email: z.string().email(v.email()),
+  })
 ```
+
+**Blocker**: Zod schemas are currently defined at module level (static). To use `ValidationHelper`, they need to become factory functions that accept the helper as a parameter. This is a significant refactor across 90 files. The pattern already works in onboarding (`createOnboardingSchema(v)`) and auth (`createLoginSchema(v)`).
+
+### Gap 4: Toast Messages (~79 hardcoded calls across 27 files)
+
+Success/error toasts use hardcoded English strings. `ToastHelper` exists but is unused.
+
+**Scope**: 79 hardcoded toast calls across 27 files in school-dashboard
+
+**Example**:
+
+```typescript
+// Current - hardcoded
+toast.success("Student created successfully")
+toast.error("Failed to create student")
+
+// Target - using ToastHelper
+toast.success(t.success.student.created())
+toast.error(t.error.student.createFailed())
+```
+
+**Blocker**: Toast calls happen in client components, but `ToastHelper` needs dictionary context. Requires either a `useToastHelper()` hook or passing dictionary through props.
+
+### Gap 5: Server Action Errors (66 action files, ~302 strings)
+
+Error messages returned from server actions are hardcoded English. `ErrorHelper` exists but is unused.
+
+**Scope**: `src/components/school-dashboard/**/actions.ts` (66 files with hardcoded errors)
+
+**Example**:
+
+```typescript
+// Current - hardcoded
+return { success: false, error: "Not authenticated" }
+return { success: false, error: "Missing school context" }
+return { success: false, error: "Failed to create student" }
+
+// Option A - error codes (recommended)
+return { success: false, errorCode: "NOT_AUTHENTICATED" }
+// Client translates: dictionary.messages.errors.auth.notAuthenticated
+
+// Option B - translate in action
+const d = await getDictionary(locale)
+return { success: false, error: d.messages.errors.auth.notAuthenticated }
+```
+
+**Blocker**: Server actions don't have access to the user's locale. Two approaches: (A) return error codes and translate on the client, or (B) accept `locale` as a parameter.
+
+### Gap 6: Button Text (across all forms)
+
+Common button labels are hardcoded.
+
+**Common patterns**:
+
+- `>Save<` / `>Cancel<` / `>Delete<` / `>Submit<`
+- `>Create<` / `>Update<` / `>Edit<`
+- `>Back<` / `>Next<` / `>Confirm<`
+
+**Fix**: Use `dictionary.common.save`, `dictionary.common.cancel`, etc. These keys already exist in the dictionary system.
+
+### Gap 7: Wizard Tab / Group Labels (11 wizard configs, ~92 strings)
+
+Step names, group labels, and select options are hardcoded in wizard config objects.
+
+**Scope**: 11 wizard config files + 4 FormFooter preset configs
+
+**Example** (student wizard):
+
+```typescript
+// Current - hardcoded
+groupLabels: ["Essentials", "Contact Details", "Health & History"],
+finalLabel: "Complete",
+
+// Target - dictionary-driven (at render time)
+// Config stays static with keys, wizard-layout resolves labels from dictionary
+groupLabels: ["essentials", "contactDetails", "healthHistory"],
+// wizard-layout.tsx maps: dictionary.school.students.wizard[key]
+```
+
+### Gap 8: Sidebar Missing Keys
+
+Two navigation items lack dictionary entries:
+
+- `"Cards"` - not in `platform.sidebar`
+- `"Lab"` - not in `platform.sidebar`
+
+**Fix**: Add keys to `school-en.json` and `school-ar.json`.
 
 ---
 
-## Integration Patterns
+## Best Practices
 
-### Pattern 1: Server Components (translate in `rows.map()`)
+### Form Pattern
 
-Used when displaying database rows in tables. Translate each row's fields inside `Promise.all()`.
+Pass dictionary to forms and use translated labels:
 
 ```typescript
 // content.tsx (server component)
-import { getDisplayText } from "@/lib/content-display"
+const dictionary = await getDictionary(lang)
+return <StudentForm dictionary={dictionary.school.students} />
 
-const data = await Promise.all(
-  rows.map(async (row) => ({
-    id: row.id,
-    title: await getDisplayText(
-      row.title,
-      (row.lang as "ar" | "en") || "ar",
-      lang, // viewer's locale
-      schoolId!
-    ),
-    // ... other fields
-  }))
-)
+// form.tsx (client component)
+interface Props {
+  dictionary: Dictionary["school"]["students"]
+}
+
+export function StudentForm({ dictionary }: Props) {
+  return (
+    <FormField
+      name="name"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{dictionary.form.name}</FormLabel>
+          <Input
+            placeholder={dictionary.form.namePlaceholder}
+            {...field}
+          />
+        </FormItem>
+      )}
+    />
+  )
+}
 ```
 
-### Pattern 2: Server Actions (add `displayLang` parameter)
+### Select Pattern
 
-Used when actions return data that needs translation. Accept `displayLang` and translate before returning.
+Translate static options via dictionary:
 
 ```typescript
-// actions.ts
-export async function getDepartments(
-  displayLang?: "ar" | "en"
-): Promise<ActionResult> {
-  const { schoolId } = await getTenantContext()
-  const lang = displayLang || "ar"
+// config.ts - export a factory function
+export const getGenderOptions = (dictionary: Dictionary["school"]) => [
+  { value: "male", label: dictionary.students.gender.male },
+  { value: "female", label: dictionary.students.gender.female },
+]
 
-  const departments = await db.department.findMany({
-    where: { schoolId },
+// form.tsx - call with dictionary
+const options = getGenderOptions(dictionary)
+```
+
+### Validation Pattern
+
+Use `ValidationHelper` from i18n helpers:
+
+```typescript
+import { getValidationMessages } from "@/components/internationalization/helpers"
+
+// Create schema factory
+export const createStudentSchema = (
+  v: ReturnType<typeof getValidationMessages>
+) =>
+  z.object({
+    name: z.string().min(1, v.required()),
+    email: z.string().email(v.email()),
+    phone: z.string().min(10, v.minLength(10)),
   })
 
-  const translated = await Promise.all(
-    departments.map(async (dept) => ({
-      ...dept,
-      departmentName: await getDisplayText(
-        dept.departmentName,
-        (dept.lang as "ar" | "en") || "ar",
-        lang,
-        schoolId!
-      ),
-    }))
-  )
-
-  return { success: true, data: translated }
-}
+// In form component
+const dictionary = await getDictionary(lang)
+const v = getValidationMessages(dictionary)
+const schema = createStudentSchema(v)
 ```
 
----
+### Toast Pattern
 
-## Integrated Surfaces
-
-Translation is currently integrated in these components:
-
-| Surface                  | File                                     | Fields Translated                  |
-| ------------------------ | ---------------------------------------- | ---------------------------------- |
-| Announcements list       | `listings/announcements/content.tsx`     | `title`                            |
-| Subjects table           | `listings/subjects/content.tsx`          | `subjectName`, `departmentName`    |
-| Departments              | `teachers/departments/actions.ts`        | `departmentName`, `subjectName`    |
-| Announcement detail      | `announcements/actions.ts`               | `title`, `body`                    |
-| Parent announcements     | `parent-portal/announcements/actions.ts` | `title`, `body`                    |
-| Year levels (academic)   | `school/academic/level/actions.ts`       | `levelName`                        |
-| Year levels (students)   | `students/year-levels/actions.ts`        | `levelName`                        |
-| Gamification leaderboard | `gamification/actions.ts`                | badge `name`                       |
-| Competitions             | `gamification/actions.ts`                | `name`, `description`, `className` |
-
-All paths are relative to `src/components/school-dashboard/`.
-
----
-
-## Schema Rules
-
-### Generic Field Names
-
-```prisma
-// CORRECT - generic field + lang
-model Announcement {
-  title String?
-  body  String? @db.Text
-  lang  String  @default("ar")
-}
-
-// WRONG - bilingual columns
-model Announcement {
-  titleEn String?
-  titleAr String?
-}
-```
-
-### TranslationCache Model
-
-**File:** `prisma/models/translation-cache.prisma`
-
-```prisma
-model TranslationCache {
-  id             String   @id @default(cuid())
-  schoolId       String
-  sourceText     String   @db.Text
-  sourceLanguage String   // "ar" or "en"
-  targetLanguage String   // "ar" or "en"
-  translatedText String   @db.Text
-  provider       String   @default("google")
-  hitCount       Int      @default(0)
-  lastAccessedAt DateTime @default(now())
-
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([schoolId, sourceText, sourceLanguage, targetLanguage])
-  @@index([schoolId, sourceLanguage, targetLanguage])
-  @@index([lastAccessedAt])
-  @@map("translation_cache")
-}
-```
-
-The composite unique constraint on `(schoolId, sourceText, sourceLanguage, targetLanguage)` ensures each translation is cached once per school.
-
----
-
-## Performance
-
-| Scenario                                    | Cost                                          |
-| ------------------------------------------- | --------------------------------------------- |
-| Same language (contentLang === displayLang) | Zero - returns text directly                  |
-| Cache hit                                   | Single DB lookup (~1ms)                       |
-| Cache miss                                  | Google Translate API call + DB write          |
-| Multiple fields                             | `Promise.all()` parallelizes all translations |
-
-### Optimization Tips
-
-- **Parallel translation** - Always use `Promise.all(rows.map(...))` instead of sequential `for` loops
-- **Cache warming** - First request for a text is the slowest; subsequent requests hit the DB cache
-- **Hit tracking** - `hitCount` and `lastAccessedAt` enable future cache eviction strategies
-- **Batch API** - `translateFields()` uses `googleTranslateBatch()` for a single API call with multiple texts
-
----
-
-## Infrastructure
-
-| File                                     | Purpose                                                                        |
-| ---------------------------------------- | ------------------------------------------------------------------------------ |
-| `src/lib/content-display.ts`             | `getDisplayText()`, `getDisplayFields()` - primary display utilities           |
-| `src/lib/translate.ts`                   | `translateWithCache()`, `translateText()`, `translateFields()` - caching layer |
-| `src/lib/google-translate.ts`            | `googleTranslate()`, `googleTranslateBatch()` - Google Translate API client    |
-| `src/lib/auto-translate.ts`              | `prepareContentData()`, `withAutoTranslation()` - auto-translation utilities   |
-| `prisma/models/translation-cache.prisma` | `TranslationCache` model definition                                            |
-
-### Environment Variable
-
-```
-GOOGLE_TRANSLATE_API_KEY=your-api-key
-```
-
-Google Cloud Translation API v2. Free tier: 500K characters/month.
-
----
-
-## Adding Translation to New Features
-
-Follow this checklist when adding translation support to a new model or surface:
-
-### 1. Schema
-
-- [ ] Use generic field names (`title`, not `titleEn`)
-- [ ] Add `lang String @default("ar")` to the model
-- [ ] Run `pnpm prisma generate` after schema changes
-
-### 2. Server Component (content.tsx)
-
-- [ ] Import `getDisplayText` from `@/lib/content-display`
-- [ ] Get `lang` from the page props (viewer's locale)
-- [ ] Get `schoolId` from `getTenantContext()`
-- [ ] Wrap `rows.map()` in `Promise.all()` for parallel translation
-- [ ] Call `getDisplayText(field, row.lang, lang, schoolId)` for each translatable field
-
-### 3. Server Action (actions.ts)
-
-- [ ] Add `displayLang?: "ar" | "en"` parameter
-- [ ] Translate fields before returning with `getDisplayText()`
-- [ ] Use `Promise.all()` for multiple rows
-
-### Example
+Use `ToastHelper` with dictionary context:
 
 ```typescript
-// content.tsx
-import { getDisplayText } from "@/lib/content-display"
+import { getToastMessages } from "@/components/internationalization/helpers"
 
-const data = await Promise.all(
-  rows.map(async (item) => ({
-    id: item.id,
-    name: await getDisplayText(
-      item.name,
-      (item.lang as "ar" | "en") || "ar",
-      lang,
-      schoolId!
-    ),
-  }))
-)
+// In client component
+function StudentForm({ dictionary }: Props) {
+  const t = useMemo(() => getToastMessages(dictionary), [dictionary])
+
+  const onSubmit = async (data: FormData) => {
+    const result = await createStudent(data)
+    if (result.success) {
+      toast.success(t.success.student.created())
+    } else {
+      toast.error(t.error.student.createFailed())
+    }
+  }
+}
 ```
+
+### Server Action Error Pattern
+
+Return error codes instead of hardcoded strings:
+
+```typescript
+// actions.ts - return codes
+export async function createStudent(
+  input: StudentInput
+): Promise<ActionResponse> {
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, errorCode: "NOT_AUTHENTICATED" }
+  }
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { success: false, errorCode: "MISSING_SCHOOL_CONTEXT" }
+  }
+
+  // ...
+}
+
+// form.tsx - translate on client
+const ERROR_MAP: Record<string, string> = {
+  NOT_AUTHENTICATED: dictionary.messages.errors.auth.notAuthenticated,
+  MISSING_SCHOOL_CONTEXT:
+    dictionary.messages.errors.tenant.missingSchoolContext,
+}
+
+if (!result.success) {
+  toast.error(
+    ERROR_MAP[result.errorCode] ??
+      dictionary.messages.errors.server.internalError
+  )
+}
+```
+
+---
+
+## Full Issue List (Per Route)
+
+### Students
+
+| Route / Component         | Dictionary | getDisplayText |   Forms   |  Selects  | Validation |  Toasts   |  Actions  |
+| ------------------------- | :--------: | :------------: | :-------: | :-------: | :--------: | :-------: | :-------: |
+| `/students` (list)        |    Yes     |      Yes       |     -     |     -     |     -      |     -     |     -     |
+| `/students/add` (wizard)  |     No     |       No       | Hardcoded | Hardcoded | Hardcoded  | Hardcoded | Hardcoded |
+| `/students/[id]` (detail) |    Yes     |       No       |     -     |     -     |     -      |     -     |     -     |
+| `/students/year-levels`   |    Yes     |      Yes       |    No     |    No     |     No     |    Yes    | Hardcoded |
+| `/students/enroll`        |    Yes     |       No       |    No     |    No     |     No     |    Yes    | Hardcoded |
+| `/students/guardians`     |    Yes     |       No       |    No     |    No     |     No     |    No     | Hardcoded |
+| `/students/settings`      |    Yes     |       No       |    No     |    No     |     No     |    No     | Hardcoded |
+| `/students/reports`       |    Yes     |       No       |    No     |    No     |     No     |    No     | Hardcoded |
+| `/students/performance`   |    Yes     |       No       |    No     |    No     |     No     |    No     | Hardcoded |
+
+### Teachers
+
+| Route / Component         | Dictionary | getDisplayText |   Forms   |  Selects  | Validation |  Toasts   |  Actions  |
+| ------------------------- | :--------: | :------------: | :-------: | :-------: | :--------: | :-------: | :-------: |
+| `/teachers` (list)        |    Yes     |      Yes       |     -     |     -     |     -      |     -     |     -     |
+| `/teachers/add` (wizard)  |     No     |       No       | Hardcoded | Hardcoded | Hardcoded  | Hardcoded | Hardcoded |
+| `/teachers/[id]` (detail) |    Yes     |       No       |     -     |     -     |     -      |     -     |     -     |
+| `/teachers/departments`   |    Yes     |      Yes       |    No     |    No     |     No     |    Yes    | Hardcoded |
+| `/teachers/schedule`      |    Yes     |       No       |    No     |    No     |     No     |    No     | Hardcoded |
+| `/teachers/settings`      |    Yes     |       No       |    No     |    No     |     No     |    No     | Hardcoded |
+| `/teachers/performance`   |    Yes     |       No       |    No     |    No     |     No     |    No     | Hardcoded |
+
+### Classes & Subjects
+
+| Route / Component   | Dictionary | getDisplayText |   Forms   |  Selects  | Validation | Toasts |  Actions  |
+| ------------------- | :--------: | :------------: | :-------: | :-------: | :--------: | :----: | :-------: |
+| `/classes` (list)   |    Yes     |      Yes       |     -     |     -     |     -      |   -    |     -     |
+| `/classes/create`   |    Yes     |       No       | Hardcoded | Hardcoded | Hardcoded  |  Yes   | Hardcoded |
+| `/subjects` (list)  |    Yes     |      Yes       |     -     |     -     |     -      |   -    |     -     |
+| `/subjects/catalog` |    Yes     |      Yes       |    No     |    No     |     No     |  Yes   | Hardcoded |
+
+### Exams
+
+| Route / Component        | Dictionary | getDisplayText |   Forms   |  Selects  | Validation | Toasts |  Actions  |
+| ------------------------ | :--------: | :------------: | :-------: | :-------: | :--------: | :----: | :-------: |
+| `/exams` (list)          |    Yes     |      Yes       |     -     |     -     |     -      |   -    |     -     |
+| `/exams/manage` (wizard) |    Yes     |      Yes       | Hardcoded | Hardcoded | Hardcoded  |  Yes   | Hardcoded |
+| `/exams/qbank` (wizard)  |    Yes     |      Yes       | Hardcoded | Hardcoded | Hardcoded  |   No   | Hardcoded |
+| `/exams/generate`        |    Yes     |      Yes       | Hardcoded | Hardcoded |     No     |   No   | Hardcoded |
+| `/exams/results`         |    Yes     |      Yes       |     -     |     -     |     -      |   -    |     -     |
+| `/exams/mark`            |    Yes     |       No       | Hardcoded |    No     |     No     |  Yes   | Hardcoded |
+| `/exams/paper`           |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/exams/take`            |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+
+### Finance
+
+| Route / Component           | Dictionary | getDisplayText |   Forms   |  Selects  | Validation | Toasts |  Actions  |
+| --------------------------- | :--------: | :------------: | :-------: | :-------: | :--------: | :----: | :-------: |
+| `/finance` (dashboard)      |    Yes     |       No       |     -     |     -     |     -      |   -    |     -     |
+| `/finance/fees`             |    Yes     |       No       | Hardcoded | Hardcoded | Hardcoded  |  Yes   | Hardcoded |
+| `/finance/invoice` (wizard) |    Yes     |       No       | Hardcoded | Hardcoded | Hardcoded  |  Yes   | Hardcoded |
+| `/finance/payroll`          |    Yes     |       No       | Hardcoded | Hardcoded | Hardcoded  |   No   | Hardcoded |
+| `/finance/salary`           |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/finance/expenses`         |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/finance/budget`           |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/finance/wallet`           |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/finance/banking`          |    Yes     |       No       | Hardcoded |    No     |     No     |  Yes   | Hardcoded |
+| `/finance/receipt`          |    Yes     |       No       |    No     |    No     |     No     |  Yes   | Hardcoded |
+| `/finance/reports`          |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/finance/accounts`         |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/finance/timesheet`        |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/finance/permissions`      |    Yes     |       No       |    No     |    No     |     No     |  Yes   | Hardcoded |
+
+### Attendance
+
+| Route / Component          | Dictionary | getDisplayText |   Forms   | Selects | Validation | Toasts |  Actions  |
+| -------------------------- | :--------: | :------------: | :-------: | :-----: | :--------: | :----: | :-------: |
+| `/attendance` (main)       |    Yes     |      Yes       |     -     |    -    |     -      |   -    |     -     |
+| `/attendance/records`      |    Yes     |       No       |    No     |   No    |     No     |   No   | Hardcoded |
+| `/attendance/overview`     |    Yes     |       No       |    No     |   No    |     No     |   No   | Hardcoded |
+| `/attendance/excuses`      |    Yes     |       No       |    No     |   No    |     No     |   No   | Hardcoded |
+| `/attendance/analytics`    |    Yes     |       No       |    No     |   No    |     No     |   No   | Hardcoded |
+| `/attendance/reports`      |    Yes     |       No       |    No     |   No    |     No     |   No   | Hardcoded |
+| `/attendance/qr-code`      |    Yes     |       No       |    No     |   No    |     No     |   No   | Hardcoded |
+| `/attendance/bulk-upload`  |    Yes     |       No       | Hardcoded |   No    |     No     |  Yes   | Hardcoded |
+| `/attendance/geofence`     |    Yes     |       No       | Hardcoded |   No    |     No     |  Yes   | Hardcoded |
+| `/attendance/gamification` |    Yes     |      Yes       |    No     |   No    |     No     |   No   | Hardcoded |
+| `/attendance/hall-pass`    |    Yes     |       No       |    No     |   No    |     No     |   No   | Hardcoded |
+| `/attendance/kiosk`        |    Yes     |       No       |    No     |   No    |     No     |   No   | Hardcoded |
+
+### Timetable
+
+| Route / Component          | Dictionary | getDisplayText | Forms | Selects | Validation | Toasts |  Actions  |
+| -------------------------- | :--------: | :------------: | :---: | :-----: | :--------: | :----: | :-------: |
+| `/timetable` (main)        |    Yes     |       No       |   -   |    -    |     -      |   -    |     -     |
+| `/timetable/by-class`      |    Yes     |       No       |  No   |   No    |     No     |   No   | Hardcoded |
+| `/timetable/by-teacher`    |    Yes     |       No       |  No   |   No    |     No     |   No   | Hardcoded |
+| `/timetable/by-room`       |    Yes     |       No       |  No   |   No    |     No     |   No   | Hardcoded |
+| `/timetable/generate`      |    Yes     |       No       |  No   |   No    |     No     |   No   | Hardcoded |
+| `/timetable/settings`      |    Yes     |       No       |  No   |   No    |     No     |   No   | Hardcoded |
+| `/timetable/conflicts`     |    Yes     |       No       |  No   |   No    |     No     |   No   | Hardcoded |
+| `/timetable/substitutions` |    Yes     |       No       |  No   |   No    |     No     |   No   | Hardcoded |
+
+### Other Areas
+
+| Route / Component     | Dictionary | getDisplayText |   Forms   |  Selects  | Validation | Toasts |  Actions  |
+| --------------------- | :--------: | :------------: | :-------: | :-------: | :--------: | :----: | :-------: |
+| `/announcements`      |    Yes     |      Yes       | Hardcoded | Hardcoded | Hardcoded  |  Yes   | Hardcoded |
+| `/assignments`        |    Yes     |       No       | Hardcoded | Hardcoded | Hardcoded  |  Yes   | Hardcoded |
+| `/events`             |    Yes     |       No       | Hardcoded |    No     |     No     |  Yes   | Hardcoded |
+| `/grades`             |    Yes     |       No       | Hardcoded |    No     | Hardcoded  |  Yes   | Hardcoded |
+| `/classrooms`         |    Yes     |      Yes       | Hardcoded | Hardcoded | Hardcoded  |  Yes   | Hardcoded |
+| `/parents`            |    Yes     |      Yes       | Hardcoded |    No     | Hardcoded  |  Yes   | Hardcoded |
+| `/notifications`      |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/profile`            |    Yes     |      Yes       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/settings`           |    Yes     |       No       | Hardcoded |    No     | Hardcoded  |  Yes   | Hardcoded |
+| `/settings/academic`  |    Yes     |       No       | Hardcoded |    No     | Hardcoded  |  Yes   | Hardcoded |
+| `/admission`          |    Yes     |       No       | Hardcoded |    No     | Hardcoded  |  Yes   | Hardcoded |
+| `/school/membership`  |    Yes     |      Yes       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/school/config`      |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/dashboard/settings` |    Yes     |       No       | Hardcoded |    No     |     No     |  Yes   | Hardcoded |
+| `/billing`            |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/reports`            |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+| `/facility`           |    Yes     |       No       |    No     |    No     |     No     |   No   | Hardcoded |
+
+---
+
+## Summary Statistics
+
+| Layer                                   | Hardcoded Strings |              Files Affected | Status              |
+| --------------------------------------- | ----------------: | --------------------------: | ------------------- |
+| **Dictionary (table headers, sidebar)** |                 - | 112 / 196 content.tsx (57%) | Working             |
+| **getDisplayText (dynamic content)**    |                 - |             34 files (~17%) | Partial             |
+| **Button / action text**                |            ~1,023 |              332 .tsx files | 0% translated       |
+| **Validation (Zod messages)**           |              ~660 |            90 validation.ts | 0% translated       |
+| **Config (select options)**             |              ~415 |                24 config.ts | 0% translated       |
+| **Forms (labels, placeholders)**        |              ~327 |                ~40 form.tsx | ~19% use dictionary |
+| **Server action errors**                |              ~302 |               66 actions.ts | 0% translated       |
+| **Wizard configs**                      |               ~92 |         11 wizard config.ts | 0% translated       |
+| **Empty states**                        |               ~87 |               81 .tsx files | 0% translated       |
+| **Toasts**                              |               ~79 |                    27 files | 0% translated       |
+| **TOTAL**                               |        **~2,985** |             **~500+ files** |                     |
+
+### Priority Order
+
+1. **Button text** (quick win - `dictionary.common.*` keys already exist, ~1,023 strings)
+2. **Wizard group labels** (11 files, high visibility, ~92 strings)
+3. **Form labels** (~40 files, ~327 strings, largest UX impact)
+4. **Select options** (24 config files, ~415 strings)
+5. **Validation messages** (90 files, ~660 strings, needs schema factory refactor)
+6. **Server action errors** (66 files, ~302 strings, needs error code pattern)
+7. **Empty states** (81 files, ~87 strings)
+8. **Toast messages** (27 files, ~79 strings, needs dictionary plumbing)
+9. **getDisplayText expansion** (162 remaining content.tsx without dictionary)

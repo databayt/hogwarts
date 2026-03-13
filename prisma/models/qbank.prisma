@@ -296,6 +296,12 @@ model ExamTemplate {
   // Print settings (pageSize, orientation, answerSheetType, layout)
   printConfig Json?
 
+  // Wizard support
+  wizardStep    String?    // null = complete, non-null = current step slug (draft)
+  gradeIds      String[]   // AcademicGrade IDs for targeting
+  sectionIds    String[]   // Section IDs (optional targeting)
+  classroomIds  String[]   // Classroom IDs (optional targeting)
+
   // Catalog bridge FK (adopted from catalog)
   catalogExamTemplateId String?
 
@@ -335,6 +341,9 @@ model GeneratedExam {
 
   // Metadata
   generationNotes String? @db.Text
+
+  // Wizard support
+  wizardStep String? // null = complete, non-null = current step slug (draft)
 
   // Relations
   school    School                  @relation(fields: [schoolId], references: [id], onDelete: Cascade)

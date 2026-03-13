@@ -1,39 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-export const STEPS = {
-  1: "Basic Information",
-  2: "Contact Details",
-  3: "Employment Details",
-  4: "Qualifications",
-  5: "Experience",
-  6: "Subject Expertise",
-  7: "Review & Submit",
-} as const
-
-export const STEP_FIELDS = {
-  1: ["givenName", "surname", "gender", "birthDate"] as const,
-  2: ["emailAddress"] as const,
-  3: [
-    "employeeId",
-    "joiningDate",
-    "employmentStatus",
-    "employmentType",
-    "contractStartDate",
-    "contractEndDate",
-  ] as const,
-  4: ["qualifications"] as const,
-  5: ["experiences"] as const,
-  6: ["subjectExpertise"] as const,
-  7: [] as const, // Review step has no fields
-} as const
-
-export const TOTAL_FIELDS = [
-  ...STEP_FIELDS[1],
-  ...STEP_FIELDS[2],
-  ...STEP_FIELDS[3],
-].length
-
 export const GENDER_OPTIONS = [
   { label: "Male", value: "male" },
   { label: "Female", value: "female" },

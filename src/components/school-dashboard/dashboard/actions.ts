@@ -3564,8 +3564,8 @@ async function getAccountantResourceUsage(schoolId: string) {
       }),
     ])
 
-  const revenue = monthlyRevenue._sum.total || 0
-  const overdue = overdueAmount._sum.total || 0
+  const revenue = Number(monthlyRevenue._sum.total) || 0
+  const overdue = Number(overdueAmount._sum.total) || 0
 
   return [
     {
@@ -3904,10 +3904,10 @@ async function getStudentFinancialOverview(
     select: { total: true, status: true, due_date: true },
   })
 
-  const total = invoices.reduce((sum, inv) => sum + inv.total, 0)
+  const total = invoices.reduce((sum, inv) => sum + Number(inv.total), 0)
   const paid = invoices
     .filter((inv) => inv.status === "PAID")
-    .reduce((sum, inv) => sum + inv.total, 0)
+    .reduce((sum, inv) => sum + Number(inv.total), 0)
   const pending = total - paid
 
   const nextDue = invoices
@@ -3959,10 +3959,10 @@ async function getParentFinancialOverview(
         select: { total: true, status: true },
       })
 
-      const total = invoices.reduce((sum, inv) => sum + inv.total, 0)
+      const total = invoices.reduce((sum, inv) => sum + Number(inv.total), 0)
       const paid = invoices
         .filter((inv) => inv.status === "PAID")
-        .reduce((sum, inv) => sum + inv.total, 0)
+        .reduce((sum, inv) => sum + Number(inv.total), 0)
 
       return {
         childName: `${c.student.givenName} ${c.student.surname}`,
@@ -4982,7 +4982,7 @@ async function getAccountantChartData(
   invoices.forEach((inv) => {
     const monthsAgo = (now.getMonth() - inv.createdAt.getMonth() + 12) % 12
     if (monthsAgo < 6) {
-      monthlyRevenue[5 - monthsAgo] += inv.total
+      monthlyRevenue[5 - monthsAgo] += Number(inv.total)
     }
   })
 
@@ -4994,10 +4994,13 @@ async function getAccountantChartData(
   })
 
   // Collection rate
-  const totalInvoiced = invoices.reduce((sum, inv) => sum + inv.total, 0)
+  const totalInvoiced = invoices.reduce(
+    (sum, inv) => sum + Number(inv.total),
+    0
+  )
   const totalCollected = invoices
     .filter((inv) => inv.status === "PAID")
-    .reduce((sum, inv) => sum + inv.total, 0)
+    .reduce((sum, inv) => sum + Number(inv.total), 0)
   const collectionRate =
     totalInvoiced > 0 ? Math.round((totalCollected / totalInvoiced) * 100) : 100
 

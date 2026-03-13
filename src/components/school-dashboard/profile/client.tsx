@@ -190,9 +190,9 @@ export default function ProfileContent({
   const getRoleDashboard = () => {
     switch (role) {
       case "student":
-        return <StudentDashboard data={data} />
+        return <StudentDashboard data={data} isOwner={isOwner} />
       case "teacher":
-        return <TeacherDashboard data={data} />
+        return <TeacherDashboard data={data} isOwner={isOwner} />
       case "staff":
         return <StaffDashboard data={data} />
       case "parent":

@@ -1,0 +1,286 @@
+---
+title: "Students"
+description: "Complete guide to student data entry, wizard flow, validation, import, and profile self-edit across all entry points"
+---
+
+## Overview
+
+Students enter the system through **six entry points**, each unified under a single validation schema and wizard infrastructure. Whether an admin creates a student via the wizard, imports from CSV, enrolls from an application, or a student joins through internal onboarding — the data flows through the same pipeline and incomplete records are clearly marked for completion.
+
+```
+                        STUDENT ENTRY POINTS
+  ┌──────────────────────────────────────────────────────────────┐
+  │                                                              │
+  │  1. Admin Wizard         → 7 steps, 35+ fields, draft flow  │
+  │  2. CSV Bulk Import      → ~12 fields, marked incomplete    │
+  │  3. Internal Onboarding  → ~21 fields, marked incomplete    │
+  │  4. Application Enroll   → ~15 fields from Application      │
+  │  5. Profile Self-Edit    → Contact, emergency contacts      │
+  │  6. Admin Detail Edit    → Link to wizard at any step       │
+  │                                                              │
+  └──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Wizard Flow
+
+The primary creation path is a **7-step wizard** that creates a draft record on entry and progressively fills it in. Each step saves independently, so the student can be resumed at any point.
+
+A **"Skip & Create"** button appears as soon as the admin fills the critical fields (givenName + surname on the personal step). Clicking it saves the current step, marks the wizard complete, and redirects to the students list immediately. The student can fill in remaining details later via their profile page.
+
+### Steps
+
+| Step                  | Route Segment         | Fields                                                                                                                      | Required?          |
+| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| 1. Photo              | `/photo`              | profilePhotoUrl                                                                                                             | None               |
+| 2. Personal           | `/personal`           | givenName, middleName, surname, dateOfBirth, gender, nationality                                                            | givenName, surname |
+| 3. Enrollment         | `/enrollment`         | enrollmentDate, admissionNumber, status, studentType, academicGradeId, sectionId                                            | None (defaults)    |
+| 4. Contact            | `/contact`            | email, mobileNumber, alternatePhone, emergencyContactName, emergencyContactPhone, emergencyContactRelation                  | None               |
+| 5. Location           | `/location`           | currentAddress, city, state, postalCode, country                                                                            | None               |
+| 6. Health             | `/health`             | medicalConditions, allergies, medicationRequired, bloodGroup, doctorName, doctorContact, insuranceProvider, insuranceNumber | None               |
+| 7. Previous Education | `/previous-education` | previousSchoolName, previousSchoolAddress, previousGrade, transferCertificateNo, transferDate, previousAcademicRecord       | None               |
+
+### Step Groups
+
+| Group | Label            | Steps                       |
+| ----- | ---------------- | --------------------------- |
+| 1     | Essentials       | photo, personal, enrollment |
+| 2     | Contact Details  | contact, location           |
+| 3     | Health & History | health, previous-education  |
+
+### Route Structure
+
+```
+src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/
+  students/
+    add/
+      [id]/
+        layout.tsx                # Wizard layout with step navigation
+        photo/page.tsx
+        personal/page.tsx
+        enrollment/page.tsx
+        contact/page.tsx
+        location/page.tsx
+        health/page.tsx
+        previous-education/page.tsx
+```
+
+### Draft Lifecycle
+
+```
+1. Admin clicks "Add Student"
+2. Draft created: { givenName: "", dateOfBirth: new Date(), wizardStep: "photo" }
+3. Each step saves fields + advances wizardStep
+4. Two completion paths:
+   a. FAST: Fill givenName + surname → click "Skip & Create" → wizardStep: null (complete)
+   b. FULL: Progress through all 7 steps → last step sets wizardStep: null (complete)
+5. Complete students appear in the main list (wizardStep: null filter)
+6. Abandoned drafts can be deleted via deleteDraftStudent()
+```
+
+---
+
+## Component Structure
+
+```
+src/components/school-dashboard/listings/students/
+├── content.tsx           # Server component — list page
+├── table.tsx             # Client — DataTable with search, pagination
+├── columns.tsx           # Client — column definitions with incomplete badge
+├── actions.ts            # Server actions — createStudent, updateStudent, deleteStudent
+├── queries.ts            # Query builders — buildStudentWhere (supports includeDrafts)
+├── validation.ts         # Single source of truth — composed from wizard step schemas
+├── config.ts             # Enum constants (GENDER_OPTIONS)
+├── authorization.ts      # RBAC permission checks
+├── types.ts              # StudentDTO, StudentRow, form step types
+├── detail/
+│   └── content.tsx       # Student profile view with edit link to wizard
+└── wizard/
+    ├── actions.ts        # createDraftStudent, completeStudentWizard, updateStudentWizardStep
+    ├── config.ts         # Wizard step config (order, labels, routes, groups)
+    ├── use-student-wizard.ts  # Client hook for wizard state
+    ├── photo/            # Step 1: form.tsx, validation.ts, actions.ts
+    ├── personal/         # Step 2: form.tsx, validation.ts, actions.ts (required: givenName, surname)
+    ├── enrollment/       # Step 3: form.tsx, validation.ts, actions.ts
+    ├── contact/          # Step 4: form.tsx, validation.ts, actions.ts (includes emergency tab)
+    ├── location/         # Step 5: form.tsx, validation.ts, actions.ts (Mapbox or manual)
+    ├── health/           # Step 6: form.tsx, validation.ts, actions.ts (includes doctor/insurance tab)
+    └── previous-education/ # Step 7: form.tsx, validation.ts, actions.ts (final step, triggers complete)
+```
+
+---
+
+## Validation (Single Source of Truth)
+
+The root `validation.ts` composes from wizard step schemas. This ensures the wizard forms, server actions, CSV import, and onboarding all validate against the same rules.
+
+```typescript
+// students/validation.ts — composed from wizard step schemas
+import { contactSchema } from "./wizard/contact/validation"
+import { emergencySchema } from "./wizard/emergency/validation"
+import { enrollmentSchema } from "./wizard/enrollment/validation"
+import { healthSchema } from "./wizard/health/validation"
+import { personalSchema } from "./wizard/personal/validation"
+import { previousEducationSchema } from "./wizard/previous-education/validation"
+
+export const studentCreateSchema = personalSchema
+  .merge(contactSchema)
+  .merge(emergencySchema)
+  .merge(enrollmentSchema)
+  .merge(healthSchema)
+  .merge(previousEducationSchema)
+  .extend({
+    // System fields (not in wizard UI, set programmatically)
+    userId: z.string().optional(),
+  })
+```
+
+### Skip & Create
+
+Only the **personal** step is required (`requiredSteps: ["personal"]`). Once `givenName` and `surname` are filled, a "Skip & Create" button appears. Clicking it saves the form, calls `completeStudentWizard()`, and redirects to `/students`. All other steps are optional and can be filled later.
+
+---
+
+## Entry Point Details
+
+### 1. Admin Wizard (Primary)
+
+The full 7-step wizard. Creates a draft record, fills fields progressively, and marks complete on review.
+
+**wizardStep lifecycle**: `"personal"` -> `"contact"` -> ... -> `null` (complete)
+
+### 2. CSV Bulk Import
+
+```typescript
+// csv-import.ts — importStudents()
+await tx.student.createMany({
+  data: chunk.map((r) => ({
+    schoolId,
+    givenName: parts[0],
+    surname: parts.slice(1).join(" "),
+    email: r.validated.email,
+    wizardStep: "emergency", // Marked incomplete — CSV covers personal + contact only
+  })),
+})
+```
+
+CSV-imported students appear in the "Incomplete" tab. Admins click to open the wizard at the `emergency` step to fill in remaining details.
+
+### 3. Internal Onboarding
+
+When a student joins through the school's join page, the onboarding flow creates:
+
+- Student record with personal + contact + enrollment fields + `wizardStep: "health"`
+- Guardian records (if guardian info provided)
+- Section assignment (if section selected)
+
+### 4. Application Enrollment
+
+When an admin approves an application via `confirmEnrollment()`:
+
+```typescript
+// admission/actions.ts — confirmEnrollment()
+const student = await tx.student.create({
+  data: {
+    schoolId,
+    givenName: application.firstName,
+    surname: application.lastName,
+    dateOfBirth: application.dateOfBirth,
+    gender: application.gender,
+    email: application.email,
+    emergencyContactName: application.guardianName || application.fatherName,
+    emergencyContactPhone: application.guardianPhone || application.fatherPhone,
+    emergencyContactRelation: application.guardianRelation || "Parent",
+    wizardStep: "health", // Application doesn't collect health data
+  },
+})
+```
+
+Enrolled students appear in the "Incomplete" tab. Admins can finish health and previous education via the wizard.
+
+### 5. Profile Self-Edit
+
+Students can edit their own:
+
+- **Contact** information (email, phone, address)
+- **Emergency** contacts (name, phone, relation)
+
+They **cannot** edit:
+
+- Personal information (name, gender, birth date) — admin only
+- Enrollment details (grade, section, status) — admin only
+- Health information — admin only
+- Previous education — admin only
+
+Self-edit uses the same wizard step forms rendered in a dialog on the profile page.
+
+### 6. Admin Detail Edit
+
+The student detail view has an "Edit" button that links to `/{lang}/students/add/{studentId}/personal` — opening the wizard pre-populated with existing data.
+
+---
+
+## Incomplete Records
+
+### Skip & Create (Fast Path)
+
+When an admin only needs to register a student quickly, the **"Skip & Create"** button appears on the personal step as soon as `givenName` and `surname` are filled. Clicking it:
+
+1. Saves the current step data
+2. Calls `completeStudentWizard()` → sets `wizardStep: null`
+3. Redirects to `/students`
+
+The student appears immediately in the main list as a complete record. Optional fields (contact, health, etc.) can be filled later by the student via their profile self-edit, or by an admin reopening the wizard.
+
+### How Records Become Incomplete
+
+| Source               | wizardStep Set To | Fields Covered                                    |
+| -------------------- | ----------------- | ------------------------------------------------- |
+| Wizard (in progress) | Current step name | All steps up to current                           |
+| CSV Import           | `"emergency"`     | Name, email, phone, grade                         |
+| Internal Onboarding  | `"health"`        | Name, email, phone, enrollment, emergency         |
+| Application Enroll   | `"health"`        | Name, DOB, gender, email, emergency from guardian |
+
+### How Admins Find Them
+
+- Incomplete records show an **amber "Incomplete" badge** on the name column
+- The status faceted filter includes an "Incomplete" option
+- The action dropdown shows **"Edit (Incomplete)"**, linking directly to the wizard at the incomplete step
+
+### Query Parameter
+
+```typescript
+// To include incomplete records in queries:
+buildStudentWhere(schoolId, { includeDrafts: true })
+```
+
+---
+
+## Config Constants
+
+`config.ts` exports enum options used by wizard step forms:
+
+| Constant         | Values       |
+| ---------------- | ------------ |
+| `GENDER_OPTIONS` | Male, Female |
+
+Additional enum values are defined in the wizard step validation schemas (blood groups, enrollment statuses, etc.).
+
+---
+
+## Key Files
+
+| File                             | Purpose                                                       |
+| -------------------------------- | ------------------------------------------------------------- |
+| `students/add/[id]/layout.tsx`   | Wizard layout with step navigation                            |
+| `students/wizard/actions.ts`     | createDraftStudent, completeStudentWizard, deleteDraftStudent |
+| `students/wizard/config.ts`      | Wizard step config (order, labels, groups)                    |
+| `students/validation.ts`         | Composed schema (single source of truth)                      |
+| `students/queries.ts`            | buildStudentWhere with includeDrafts support                  |
+| `students/columns.tsx`           | Incomplete badge + "Complete Profile" action                  |
+| `internal-onboarding/actions.ts` | Onboarding student creation with wizardStep                   |
+| `admission/actions.ts`           | confirmEnrollment with emergency + wizardStep                 |
+| `file/import/csv-import.ts`      | Bulk import with wizardStep marker                            |
+| `profile/edit-role-data.tsx`     | Self-edit dialog using wizard step forms                      |
+| `profile/edit-role-actions.ts`   | Permission-checked self-edit server actions                   |

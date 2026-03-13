@@ -71,13 +71,14 @@ export function createWizardProvider<T>(
     const [error, setError] = useState<string | null>(null)
     const [lastId, setLastId] = useState<string | null>(null)
     const mountedRef = useRef(true)
+    const loadFnRef = useRef(loadFn)
 
-    useEffect(
-      () => () => {
+    useEffect(() => {
+      mountedRef.current = true
+      return () => {
         mountedRef.current = false
-      },
-      []
-    )
+      }
+    }, [])
 
     const clearError = useCallback(() => setError(null), [])
 
@@ -91,7 +92,7 @@ export function createWizardProvider<T>(
         setLastId(id)
 
         try {
-          const result = await loadFn(id)
+          const result = await loadFnRef.current(id)
 
           if (result.success && result.data) {
             if (!mountedRef.current) return
@@ -138,7 +139,7 @@ export function createWizardProvider<T>(
           setIsLoading(false)
         }
       },
-      [loadFn, maxRetries]
+      [maxRetries]
     )
 
     const reload = useCallback(async () => {

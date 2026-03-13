@@ -12,12 +12,32 @@ import { WizardStep } from "@/components/form/wizard"
 import { useInvoiceWizard } from "../use-invoice-wizard"
 import { DetailsForm } from "./form"
 
+const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
+  invoice: {
+    title: "Invoice Details",
+    description: "Enter the invoice number, dates, and currency.",
+  },
+  from: {
+    title: "From Address",
+    description: "Enter the sender's name and address.",
+  },
+  to: {
+    title: "To Address",
+    description: "Enter the recipient's name and address.",
+  },
+}
+
 export default function DetailsContent() {
   const params = useParams()
   const invoiceId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useInvoiceWizard()
   const [isValid, setIsValid] = useState(false)
+  const [heading, setHeading] = useState(TAB_HEADINGS.invoice)
+
+  const handleTabChange = (tabId: string) => {
+    setHeading(TAB_HEADINGS[tabId] || TAB_HEADINGS.invoice)
+  }
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -41,10 +61,7 @@ export default function DetailsContent() {
       isLoading={isLoading}
     >
       <FormLayout>
-        <FormHeading
-          title="Invoice Details"
-          description="Enter the invoice information and addresses."
-        />
+        <FormHeading title={heading.title} description={heading.description} />
         <DetailsForm
           ref={formRef}
           invoiceId={invoiceId}
@@ -79,6 +96,7 @@ export default function DetailsContent() {
               : undefined
           }
           onValidChange={setIsValid}
+          onTabChange={handleTabChange}
         />
       </FormLayout>
     </WizardStep>

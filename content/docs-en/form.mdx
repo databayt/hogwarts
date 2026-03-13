@@ -29,9 +29,15 @@ Create/edit/view entity via modal dialog. Uses `useModal()` context for mode det
 
 Reference: `listings/subjects/form.tsx` (165 lines), `listings/grades/form.tsx` (194 lines)
 
-### Category 2: Wizard Step Forms (~6 files)
+### Category 2: URL-Routed Wizard Step Forms (~14 files)
 
-One step in a multi-step wizard. Uses `forwardRef` + `useImperativeHandle` to expose `saveAndNext()` to parent orchestrator. Typically 200-400 lines.
+Full-screen overlay wizard with URL-based routing. Each step is a separate Next.js page rendered inside `WizardLayout`. Uses `WizardStep` wrapper for save-before-navigate and `createWizardProvider` for data loading with retry. Typically 100-250 lines per step.
+
+Reference: `listings/teachers/wizard/information/form.tsx`, `listings/students/wizard/personal/form.tsx`
+
+### Category 2b: Application Wizard Step Forms (~6 files)
+
+One step in the application multi-step wizard. Uses `forwardRef` + `useImperativeHandle` to expose `saveAndNext()` to parent orchestrator. Typically 200-400 lines.
 
 Reference: `apply/personal/form.tsx` (330 lines), `apply/contact/form.tsx`
 
@@ -534,6 +540,257 @@ Key points:
 - Final step calls `form.handleSubmit(onSubmit)()`
 - Dictionary-based i18n for toast messages
 
+### Template D: URL-Routed Wizard Form
+
+Full-screen overlay wizard with URL-based step routing. Each step is a Next.js page inside a shared layout. Uses the generic `WizardLayout` + `WizardStep` + `createWizardProvider` stack. Reference: `listings/teachers/wizard/` (7 steps), `listings/students/wizard/` (7 steps).
+
+#### Infrastructure (shared across all wizards)
+
+```
+src/components/form/wizard/
+  config.ts            # WizardConfig, WizardStepMeta, WizardFormRef types
+  wizard-provider.tsx  # createWizardProvider() factory (data loading + retry)
+  wizard-layout.tsx    # WizardLayout (full-screen overlay + footer)
+  wizard-step.tsx      # WizardStep wrapper (enableNext + save-before-navigate)
+  index.ts             # Re-exports
+```
+
+#### Per-entity wizard structure
+
+```
+src/components/school-dashboard/listings/teachers/wizard/
+  config.ts                  # TEACHER_WIZARD_CONFIG (steps, groups, labels)
+  use-teacher-wizard.ts      # createWizardProvider<TeacherDTO>("Teacher", { loadFn })
+  actions.ts                 # createDraftTeacher, getTeacherForWizard
+  information/
+    validation.ts            # Zod schema
+    actions.ts               # saveTeacherInformation server action
+    form.tsx                 # Client form (useForm + useImperativeHandle)
+    content.tsx              # WizardStep wrapper (loads data, renders form)
+  contact/
+    ...                      # Same pattern for each step
+  review/
+    content.tsx              # Review step (isReviewStep=true, no form)
+```
+
+#### Step 1: Define wizard config
+
+```typescript
+// wizard/config.ts
+import type { WizardConfig } from "@/components/form/wizard"
+
+export const TEACHER_WIZARD_CONFIG: WizardConfig = {
+  id: "teacher",
+  steps: [
+    "information",
+    "contact",
+    "employment",
+    "qualifications",
+    "experience",
+    "expertise",
+    "review",
+  ],
+  groups: {
+    1: ["information", "contact"],
+    2: ["employment", "qualifications", "experience"],
+    3: ["expertise", "review"],
+  },
+  groupLabels: [
+    "Personal Details",
+    "Professional Background",
+    "Expertise & Review",
+  ],
+  requiredSteps: ["information", "contact"],
+  finalLabel: "Complete",
+}
+```
+
+#### Step 2: Create data provider
+
+```typescript
+// wizard/use-teacher-wizard.ts
+import { createWizardProvider } from "@/components/form/wizard"
+
+import { getTeacherForWizard } from "./actions"
+
+const { Provider: TeacherWizardProvider, useWizardData: useTeacherWizard } =
+  createWizardProvider<TeacherDTO>("Teacher", {
+    loadFn: getTeacherForWizard,
+  })
+
+export { TeacherWizardProvider, useTeacherWizard }
+```
+
+`createWizardProvider` handles:
+
+- Loading state with `isLoading` / `error`
+- Retry with exponential backoff for access-denied errors
+- Optimistic local updates via `updateData(partial)`
+- `mountedRef` guard for StrictMode safety
+
+#### Step 3: Wire layout.tsx (Next.js route)
+
+```typescript
+// app/[lang]/s/[subdomain]/(school-dashboard)/teachers/add/[id]/layout.tsx
+import { WizardLayout } from "@/components/form/wizard"
+import { TeacherWizardProvider, useTeacherWizard } from "@/components/school-dashboard/listings/teachers/wizard/use-teacher-wizard"
+import { TEACHER_WIZARD_CONFIG } from "@/components/school-dashboard/listings/teachers/wizard/config"
+
+export default function TeacherAddLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <WizardLayout
+      config={TEACHER_WIZARD_CONFIG}
+      dataProvider={TeacherWizardProvider}
+      loadHook={useTeacherWizard}
+      basePath="/teachers/add"
+    >
+      {children}
+    </WizardLayout>
+  )
+}
+```
+
+`WizardLayout` provides:
+
+- Full-screen overlay (`fixed inset-0 z-50 overflow-y-auto`)
+- Vertical centering (`flex min-h-full items-center justify-center pb-24`)
+- Loading skeleton, error state with retry, and `FormFooter` with progress dots
+- Provider stack: `ErrorBoundary → DataProvider → WizardValidationProvider`
+
+#### Step 4: Write step content.tsx
+
+```typescript
+// wizard/information/content.tsx
+"use client"
+
+import { useParams } from "next/navigation"
+import { useRef, useState } from "react"
+import type { WizardFormRef } from "@/components/form/wizard"
+import { WizardStep } from "@/components/form/wizard/wizard-step"
+import { FormHeading } from "@/components/form/template/heading"
+import { useTeacherWizard } from "../use-teacher-wizard"
+import { InformationForm } from "./form"
+
+export default function InformationContent() {
+  const params = useParams()
+  const teacherId = params.id as string
+  const formRef = useRef<WizardFormRef>(null)
+  const { data, isLoading } = useTeacherWizard()
+  const [isValid, setIsValid] = useState(false)
+
+  return (
+    <WizardStep
+      entityId={teacherId}
+      nextStep={`/teachers/add/${teacherId}/contact`}
+      isValid={isValid}
+      formRef={formRef}
+      isLoading={isLoading}
+    >
+      <FormHeading title="Basic Information" description="Enter the teacher's personal details" />
+      <InformationForm
+        ref={formRef}
+        teacherId={teacherId}
+        initialData={data}
+        onValidChange={setIsValid}
+      />
+    </WizardStep>
+  )
+}
+```
+
+`WizardStep` handles:
+
+- `enableNext()` / `disableNext()` based on `isValid`
+- Custom navigation: calls `formRef.current.saveAndNext()` before URL change
+- Loading skeleton via `FormLayout` when `isLoading=true`
+
+#### Step 5: Write step form.tsx
+
+```typescript
+// wizard/information/form.tsx
+"use client"
+
+import { useEffect, useImperativeHandle, useRef } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { FormLayout } from "@/components/form/template/layout"
+import type { WizardFormRef } from "@/components/form/wizard"
+import { saveTeacherInformation } from "./actions"
+import { informationSchema, type InformationInput } from "./validation"
+
+interface InformationFormProps {
+  ref: React.Ref<WizardFormRef>
+  teacherId: string
+  initialData: TeacherDTO | null
+  onValidChange: (valid: boolean) => void
+}
+
+export function InformationForm({ ref, teacherId, initialData, onValidChange }: InformationFormProps) {
+  const form = useForm<InformationInput>({
+    resolver: zodResolver(informationSchema),
+    defaultValues: { firstName: "", lastName: "" },
+  })
+
+  // Populate from wizard data provider
+  useEffect(() => {
+    if (initialData) {
+      form.reset({ firstName: initialData.firstName ?? "", lastName: initialData.lastName ?? "" })
+    }
+  }, [initialData])
+
+  // Report validity changes
+  useEffect(() => {
+    const sub = form.watch(() => {
+      const { firstName, lastName } = form.getValues()
+      onValidChange(!!firstName && !!lastName)
+    })
+    return () => sub.unsubscribe()
+  }, [form, onValidChange])
+
+  // Expose saveAndNext to WizardStep via ref
+  useImperativeHandle(ref, () => ({
+    saveAndNext: async () => {
+      const valid = await form.trigger()
+      if (!valid) throw new Error("Validation failed")
+      const values = form.getValues()
+      const result = await saveTeacherInformation({ id: teacherId, ...values })
+      if (!result.success) throw new Error(result.error || "Save failed")
+    },
+  }))
+
+  return (
+    <FormLayout>
+      <div className="space-y-3">
+        <h2>Basic Information</h2>
+        <p className="text-muted-foreground">Enter personal details</p>
+      </div>
+      <Form {...form}>
+        <form className="space-y-4">
+          <FormField control={form.control} name="firstName" render={({ field }) => (
+            <FormItem>
+              <FormLabel>First Name</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          {/* ... additional fields */}
+        </form>
+      </Form>
+    </FormLayout>
+  )
+}
+```
+
+Key points:
+
+- `ref` as regular prop (React 19 — no `forwardRef` needed)
+- `useImperativeHandle` exposes `saveAndNext()` to `WizardStep`
+- `form.watch()` reports validity changes via `onValidChange` callback
+- `FormLayout` provides the two-column responsive split
+- Data populated from `createWizardProvider` via `initialData` prop
+
 ## Anti-Patterns
 
 ### 1. `zodResolver(schema) as any` (10+ files)
@@ -699,7 +956,8 @@ This works without react-hook-form or zodResolver -- the server action validates
 | ------------------------------------ | ---------------------------------- |
 | Simple create form (1-5 fields)      | `useActionState` + native `<form>` |
 | Complex CRUD form with edit mode     | react-hook-form + zodResolver      |
-| Multi-step wizard                    | react-hook-form + forwardRef       |
+| URL-routed multi-step wizard         | WizardLayout + WizardStep          |
+| Application wizard step              | react-hook-form + forwardRef       |
 | Form with real-time field validation | react-hook-form + zodResolver      |
 | Form with file uploads               | react-hook-form + custom handlers  |
 
@@ -747,6 +1005,20 @@ src/components/<feature>/
   form.tsx          # Client component (this file)
   information.tsx   # Step sub-component (extracted from form)
   content.tsx       # Server component (renders form)
+```
+
+For URL-routed wizards, steps are nested in a `wizard/` subdirectory:
+
+```
+src/components/<feature>/wizard/
+  config.ts                  # WizardConfig (steps, groups, labels)
+  use-<entity>-wizard.ts     # createWizardProvider instance
+  actions.ts                 # createDraft, getForWizard
+  <step-name>/
+    validation.ts            # Step-specific Zod schema
+    actions.ts               # save<Step> server action
+    form.tsx                 # Client form with useImperativeHandle
+    content.tsx              # WizardStep wrapper
 ```
 
 ### What Belongs Where

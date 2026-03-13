@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { generateStudentAccessCodes } from "./actions"
 
@@ -41,6 +42,10 @@ export function AccessCodeDialog({
   const [isPending, startTransition] = useTransition()
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const printRef = useRef<HTMLDivElement>(null)
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school as any)?.students?.accessCode as
+    | Record<string, string>
+    | undefined
 
   const handleGenerate = useCallback(() => {
     setError(null)
@@ -59,8 +64,9 @@ export function AccessCodeDialog({
       } else {
         setError(
           "error" in result
-            ? (result.error ?? "Failed to generate codes")
-            : "Failed to generate codes"
+            ? (result.error ??
+                (t?.failedToGenerate || "Failed to generate codes"))
+            : t?.failedToGenerate || "Failed to generate codes"
         )
       }
     })
@@ -87,7 +93,7 @@ export function AccessCodeDialog({
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Student Access Codes</title>
+        <title>${t?.title || "Student Access Codes"}</title>
         <style>
           body { font-family: system-ui, sans-serif; padding: 2rem; }
           .code-card {
@@ -117,11 +123,9 @@ export function AccessCodeDialog({
         </style>
       </head>
       <body>
-        <h2>Student Access Codes</h2>
+        <h2>${t?.title || "Student Access Codes"}</h2>
         <div class="instructions">
-          Share this code with the student's parent or guardian.
-          They can use it to link their account to the student's profile.
-          Each code can only be used once.
+          ${t?.printInstructions || "Share this code with the student's parent or guardian. They can use it to link their account to the student's profile. Each code can only be used once."}
         </div>
         ${codes
           .map(
@@ -129,7 +133,7 @@ export function AccessCodeDialog({
           <div class="code-card">
             <div class="student-name">${c.studentName}</div>
             <div class="access-code">${c.code}</div>
-            <div class="expiry">Expires: ${new Date(c.expiresAt).toLocaleDateString()}</div>
+            <div class="expiry">${t?.expires || "Expires"}: ${new Date(c.expiresAt).toLocaleDateString()}</div>
           </div>
         `
           )
@@ -162,12 +166,12 @@ export function AccessCodeDialog({
         <DialogHeader>
           <DialogTitle>
             {studentIds.length === 1
-              ? "Generate Access Code"
-              : `Generate Access Codes (${studentIds.length} students)`}
+              ? t?.generateOne || "Generate Access Code"
+              : `${t?.generateMultiple || "Generate Access Codes"} (${studentIds.length})`}
           </DialogTitle>
           <DialogDescription>
-            Share these codes with parents to let them link their accounts to
-            students. Each code can only be used once and expires after 90 days.
+            {t?.description ||
+              "Share these codes with parents to let them link their accounts to students. Each code can only be used once and expires after 90 days."}
           </DialogDescription>
         </DialogHeader>
 
@@ -176,7 +180,7 @@ export function AccessCodeDialog({
             <div className="flex items-center justify-center py-8">
               <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
               <span className="text-muted-foreground ms-2 text-sm">
-                Generating codes...
+                {t?.generating || "Generating codes..."}
               </span>
             </div>
           )}
@@ -201,7 +205,8 @@ export function AccessCodeDialog({
                         {item.code}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Expires: {new Date(item.expiresAt).toLocaleDateString()}
+                        {t?.expires || "Expires"}:{" "}
+                        {new Date(item.expiresAt).toLocaleDateString()}
                       </p>
                     </div>
                     <Button
@@ -222,7 +227,7 @@ export function AccessCodeDialog({
               <div className="flex justify-end gap-2">
                 <Button variant="outline" size="sm" onClick={handlePrint}>
                   <Printer className="me-2 h-4 w-4" />
-                  Print
+                  {t?.print || "Print"}
                 </Button>
                 <Button
                   variant="outline"
@@ -230,7 +235,7 @@ export function AccessCodeDialog({
                   onClick={handleGenerate}
                   disabled={isPending}
                 >
-                  Regenerate
+                  {t?.regenerate || "Regenerate"}
                 </Button>
               </div>
             </>

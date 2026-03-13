@@ -16,6 +16,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { WizardTabs, type WizardTab } from "@/components/form/wizard"
 
 import {
   BLOOM_LEVEL_OPTIONS,
@@ -28,14 +29,20 @@ import {
   type QuestionDetailsFormData,
 } from "./validation"
 
+const TABS: WizardTab[] = [
+  { id: "question", label: "Question" },
+  { id: "details", label: "Details" },
+]
+
 interface QuestionFormProps {
   questionId: string
   initialData?: Partial<QuestionDetailsFormData>
   onValidChange?: (isValid: boolean) => void
+  onTabChange?: (tabId: string) => void
 }
 
 export const QuestionForm = forwardRef<WizardFormRef, QuestionFormProps>(
-  ({ questionId, initialData, onValidChange }, ref) => {
+  ({ questionId, initialData, onValidChange, onTabChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const [subjectOptions, setSubjectOptions] = useState<
       { label: string; value: string }[]
@@ -108,78 +115,89 @@ export const QuestionForm = forwardRef<WizardFormRef, QuestionFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <SelectField
-            name="subjectId"
-            label="Subject"
-            options={subjectOptions}
-            required
-            disabled={isPending}
-          />
-          <TextareaField
-            name="questionText"
-            label="Question Text"
-            placeholder="Enter the question (minimum 10 characters)"
-            required
-            disabled={isPending}
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField
-              name="questionType"
-              label="Question Type"
-              options={[...QUESTION_TYPE_OPTIONS]}
-              required
-              disabled={isPending}
-            />
-            <SelectField
-              name="difficulty"
-              label="Difficulty"
-              options={[...DIFFICULTY_OPTIONS]}
-              required
-              disabled={isPending}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField
-              name="bloomLevel"
-              label="Bloom's Level"
-              options={[...BLOOM_LEVEL_OPTIONS]}
-              required
-              disabled={isPending}
-            />
-            <InputField
-              name="points"
-              label="Points"
-              type="number"
-              placeholder="1"
-              required
-              disabled={isPending}
-            />
-          </div>
-          <InputField
-            name="timeEstimate"
-            label="Time Estimate (minutes)"
-            type="number"
-            placeholder="Optional"
-            disabled={isPending}
-          />
-          <InputField
-            name="tags"
-            label="Tags"
-            placeholder="Enter comma-separated tags"
-            disabled={isPending}
-          />
-          <TextareaField
-            name="explanation"
-            label="Explanation"
-            placeholder="Explain the correct answer (optional)"
-            disabled={isPending}
-          />
-          <InputField
-            name="imageUrl"
-            label="Image URL"
-            placeholder="Optional image URL"
-            disabled={isPending}
-          />
+          <WizardTabs tabs={TABS} onTabChange={onTabChange}>
+            {(activeTab) =>
+              activeTab === "question" ? (
+                <div className="space-y-6">
+                  <SelectField
+                    name="subjectId"
+                    label="Subject"
+                    options={subjectOptions}
+                    required
+                    disabled={isPending}
+                  />
+                  <TextareaField
+                    name="questionText"
+                    label="Question Text"
+                    placeholder="Enter the question (minimum 10 characters)"
+                    required
+                    disabled={isPending}
+                  />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <SelectField
+                      name="questionType"
+                      label="Question Type"
+                      options={[...QUESTION_TYPE_OPTIONS]}
+                      required
+                      disabled={isPending}
+                    />
+                    <SelectField
+                      name="difficulty"
+                      label="Difficulty"
+                      options={[...DIFFICULTY_OPTIONS]}
+                      required
+                      disabled={isPending}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <SelectField
+                      name="bloomLevel"
+                      label="Bloom's Level"
+                      options={[...BLOOM_LEVEL_OPTIONS]}
+                      required
+                      disabled={isPending}
+                    />
+                    <InputField
+                      name="points"
+                      label="Points"
+                      type="number"
+                      placeholder="1"
+                      required
+                      disabled={isPending}
+                    />
+                  </div>
+                  <InputField
+                    name="timeEstimate"
+                    label="Time Estimate (minutes)"
+                    type="number"
+                    placeholder="Optional"
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="tags"
+                    label="Tags"
+                    placeholder="Enter comma-separated tags"
+                    disabled={isPending}
+                  />
+                  <TextareaField
+                    name="explanation"
+                    label="Explanation"
+                    placeholder="Explain the correct answer (optional)"
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="imageUrl"
+                    label="Image URL"
+                    placeholder="Optional image URL"
+                    disabled={isPending}
+                  />
+                </div>
+              )
+            }
+          </WizardTabs>
         </form>
       </Form>
     )

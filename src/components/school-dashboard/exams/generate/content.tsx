@@ -219,7 +219,6 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
                         size="sm"
                         className="h-7 text-xs"
                         asChild
-                        onClick={(e) => e.stopPropagation()}
                       >
                         <Link
                           href={`/${lang}/exams/generate/template-wizard?configId=${t.id}`}

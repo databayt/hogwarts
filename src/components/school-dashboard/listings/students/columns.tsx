@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import {
   CalendarCheck,
+  CheckCircle,
   Ellipsis,
   GraduationCap,
   KeyRound,
@@ -47,11 +48,13 @@ export type StudentRow = {
   email: string | null
   dateOfBirth: string | null
   enrollmentDate: string | null
+  wizardStep: string | null
 }
 
 interface ColumnOptions {
   onDeleteSuccess?: (id: string) => void
   onGenerateAccessCode?: (studentId: string, studentName: string) => void
+  gradeOptions?: Array<{ label: string; value: string }>
 }
 
 export const getStudentColumns = (
@@ -59,33 +62,38 @@ export const getStudentColumns = (
   lang?: Locale,
   options?: ColumnOptions
 ): ColumnDef<StudentRow>[] => {
+  // Helper to safely access dictionary keys (JSON may have keys not in TS type)
+  const d = dictionary as Record<string, string> | undefined
   const t = {
-    name: dictionary?.fullName || "Name",
-    studentId: (dictionary as any)?.studentId || "Student ID",
-    section: dictionary?.section || "Section",
-    grade: (dictionary as any)?.grade || "Grade",
-    classes: dictionary?.classes || "Classes",
-    grades: dictionary?.grades || "Grades",
-    status: dictionary?.status || "Status",
-    created: dictionary?.created || "Created",
-    email: (dictionary as any)?.email || "Email",
-    dateOfBirth: (dictionary as any)?.dateOfBirth || "Date of Birth",
-    enrollmentDate: (dictionary as any)?.enrollmentDate || "Enrollment Date",
-    actions: dictionary?.actions || "Actions",
-    view: dictionary?.view || "View",
-    edit: dictionary?.edit || "Edit",
-    delete: dictionary?.delete || "Delete",
-    active: dictionary?.active || "Active",
-    unassigned: (dictionary as any)?.unassigned || "Unassigned",
-    incomplete: (dictionary as any)?.incomplete || "Incomplete",
-    inactive: dictionary?.inactive || "Inactive",
-    suspended: (dictionary as any)?.suspended || "Suspended",
-    graduated: (dictionary as any)?.graduated || "Graduated",
-    transferred: (dictionary as any)?.transferred || "Transferred",
-    droppedOut: (dictionary as any)?.droppedOut || "Dropped Out",
-    viewGrades: dictionary?.viewGrades || "View Grades",
-    viewAttendance: dictionary?.viewAttendance || "View Attendance",
-    viewClasses: dictionary?.viewClasses || "View Classes",
+    name: d?.fullName || "Name",
+    studentId: d?.studentId || "Student ID",
+    section: d?.section || "Section",
+    grade: d?.grade || "Grade",
+    classes: d?.classes || "Classes",
+    grades: d?.grades || "Grades",
+    status: d?.status || "Status",
+    created: d?.created || "Created",
+    email: d?.email || "Email",
+    dateOfBirth: d?.dateOfBirth || "Date of Birth",
+    enrollmentDate: d?.enrollmentDate || "Enrollment Date",
+    actions: d?.actions || "Actions",
+    view: d?.view || "View",
+    edit: d?.edit || "Edit",
+    delete: d?.delete || "Delete",
+    active: d?.active || "Active",
+    unassigned: d?.unassigned || "Unassigned",
+    incomplete: d?.incomplete || "Incomplete",
+    inactive: d?.inactive || "Inactive",
+    suspended: d?.suspended || "Suspended",
+    graduated: d?.graduated || "Graduated",
+    transferred: d?.transferred || "Transferred",
+    droppedOut: d?.droppedOut || "Dropped Out",
+    completion: d?.completion || "Completion",
+    complete: d?.complete || "Complete",
+    generateAccessCode: d?.generateAccessCode || "Generate Access Code",
+    viewGrades: d?.viewGrades || "View Grades",
+    viewAttendance: d?.viewAttendance || "View Attendance",
+    viewClasses: d?.viewClasses || "View Classes",
   }
 
   return [
@@ -97,17 +105,28 @@ export const getStudentColumns = (
       ),
       cell: ({ row }) => {
         const student = row.original
-        if (student.userId) {
-          return (
-            <Link
-              href={`/${lang}/profile/${student.userId}`}
-              className="font-medium hover:underline"
-            >
-              {student.name}
-            </Link>
-          )
-        }
-        return <span className="font-medium">{student.name}</span>
+        return (
+          <div className="flex items-center gap-2">
+            {student.userId ? (
+              <Link
+                href={`/${lang}/profile/${student.userId}`}
+                className="font-medium hover:underline"
+              >
+                {student.name}
+              </Link>
+            ) : (
+              <span className="font-medium">{student.name}</span>
+            )}
+            {student.wizardStep && (
+              <Badge
+                variant="outline"
+                className="border-amber-300 px-1.5 py-0 text-[10px] text-amber-700"
+              >
+                {t.incomplete}
+              </Badge>
+            )}
+          </div>
+        )
       },
       meta: { label: t.name, variant: "text" },
       enableColumnFilter: true,
@@ -126,7 +145,12 @@ export const getStudentColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.grade} />
       ),
-      meta: { label: t.grade, variant: "text" },
+      meta: {
+        label: t.grade,
+        variant: "select",
+        options: options?.gradeOptions || [],
+      },
+      enableColumnFilter: true,
     },
     {
       accessorKey: "sectionName",
@@ -286,6 +310,35 @@ export const getStudentColumns = (
       },
       meta: { label: t.enrollmentDate, variant: "text" },
     },
+    // Completion status (visible when viewing incomplete records)
+    {
+      id: "completion",
+      header: () => <span>{t.completion}</span>,
+      cell: ({ row }) => {
+        const student = row.original
+        if (!student.wizardStep) {
+          return (
+            <Badge variant="outline" className="gap-1">
+              <CheckCircle className="h-3 w-3" />
+              {t.complete}
+            </Badge>
+          )
+        }
+        return (
+          <Link
+            href={`/${lang}/students/add/${student.id}/${student.wizardStep}`}
+          >
+            <Badge variant="secondary" className="gap-1">
+              {student.wizardStep}
+            </Badge>
+          </Link>
+        )
+      },
+      meta: {
+        label: t.completion,
+        variant: "text",
+      },
+    },
     {
       id: "actions",
       header: () => <span className="sr-only">{t.actions}</span>,
@@ -338,7 +391,17 @@ export const getStudentColumns = (
                   {t.view}
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
+              {student.wizardStep ? (
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={`/${lang}/students/add/${student.id}/${student.wizardStep}`}
+                  >
+                    {t.edit} ({t.incomplete})
+                  </Link>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/grades?studentId=${student.id}`}>
@@ -365,7 +428,7 @@ export const getStudentColumns = (
                 }
               >
                 <KeyRound className="me-2 h-4 w-4" />
-                Generate Access Code
+                {t.generateAccessCode}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>

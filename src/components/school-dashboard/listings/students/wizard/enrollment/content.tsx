@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useStudentWizard } from "../use-student-wizard"
 import { EnrollmentForm } from "./form"
@@ -18,6 +19,9 @@ export default function EnrollmentContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useStudentWizard()
   const [isValid, setIsValid] = useState(true)
+  const { dictionary } = useDictionary()
+  const students = (dictionary?.school as any)?.students
+  const t = students?.enrollment as Record<string, any> | undefined
 
   return (
     <WizardStep
@@ -29,8 +33,10 @@ export default function EnrollmentContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Enrollment Details"
-          description="Enter the student's enrollment information."
+          title={t?.title || "Enrollment Details"}
+          description={
+            t?.description || "Enter the student's enrollment information."
+          }
         />
         <EnrollmentForm
           ref={formRef}

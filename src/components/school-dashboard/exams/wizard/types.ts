@@ -1,11 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-export interface StepDefinition {
-  id: string
-  label: { en: string; ar: string }
-  isComplete: (state: TemplateWizardState) => boolean
-}
+// Domain types shared across exam wizards (template, generate, cert)
 
 export interface GradeBoundary {
   label: string
@@ -20,46 +16,6 @@ export interface DecorationConfig {
   }
   watermark: { enabled: boolean; text?: string; opacity?: number }
   frame: { enabled: boolean }
-}
-
-export interface TemplateWizardState {
-  // Step 1: Gallery
-  selectedPresetId: string | null
-
-  // Step 2: Info
-  name: string
-  description: string
-  subjectIds: string[]
-  gradeIds: string[]
-  duration: number
-  totalMarks: number
-  examType: ExamType
-  questionTypes: QuestionTypeConfig[]
-
-  // Step 3: Paper Layout (section variant selections)
-  headerVariant: string
-  footerVariant: string
-  studentInfoVariant: string
-  instructionsVariant: string
-  answerSheetVariant: string
-  coverVariant: string
-
-  // Step N-2: Scoring & Grades
-  passingScore: number
-  gradeBoundaries: GradeBoundary[]
-
-  // Step N-1: Footer & Print
-  decorations: DecorationConfig
-  pageSize: "A4" | "LETTER"
-  orientation: "portrait" | "landscape"
-  answerSheetType: "NONE" | "SEPARATE" | "BUBBLE"
-  layout: "SINGLE_COLUMN" | "TWO_COLUMN" | "BOOKLET"
-
-  // Navigation
-  currentStep: number
-
-  // Edit mode
-  existingTemplateId: string | null
 }
 
 export type ExamType =
@@ -91,44 +47,6 @@ export interface DifficultyDistribution {
   HARD: number
 }
 
-export type WizardAction =
-  | { type: "SET_INFO"; payload: Partial<TemplateWizardState> }
-  | { type: "SET_HEADER_VARIANT"; payload: string }
-  | { type: "SET_FOOTER_VARIANT"; payload: string }
-  | { type: "SET_STUDENT_INFO_VARIANT"; payload: string }
-  | { type: "SET_INSTRUCTIONS_VARIANT"; payload: string }
-  | { type: "SET_ANSWER_SHEET_VARIANT"; payload: string }
-  | { type: "SET_COVER_VARIANT"; payload: string }
-  | { type: "SET_QUESTION_TYPES"; payload: QuestionTypeConfig[] }
-  | { type: "SET_PRESET"; payload: string | null }
-  | {
-      type: "APPLY_PRESET"
-      payload: {
-        slots: Record<string, string>
-        decorations: DecorationConfig
-      }
-    }
-  | { type: "SET_DECORATIONS"; payload: DecorationConfig }
-  | {
-      type: "SET_PRINT_CONFIG"
-      payload: Partial<
-        Pick<
-          TemplateWizardState,
-          "pageSize" | "orientation" | "answerSheetType" | "layout"
-        >
-      >
-    }
-  | {
-      type: "SET_SCORING"
-      payload: Partial<
-        Pick<TemplateWizardState, "passingScore" | "gradeBoundaries">
-      >
-    }
-  | { type: "SET_STEP"; payload: number }
-  | { type: "NEXT_STEP" }
-  | { type: "PREV_STEP" }
-  | { type: "LOAD_STATE"; payload: TemplateWizardState }
-
 export const DEFAULT_GRADE_BOUNDARIES: GradeBoundary[] = [
   { label: "A+", minPercent: 95 },
   { label: "A", minPercent: 90 },
@@ -146,16 +64,16 @@ export const DEFAULT_DECORATIONS: DecorationConfig = {
   frame: { enabled: false },
 }
 
-export const INITIAL_STATE: TemplateWizardState = {
+export const INITIAL_STATE = {
   selectedPresetId: null,
   name: "",
   description: "",
-  subjectIds: [],
-  gradeIds: [],
+  subjectIds: [] as string[],
+  gradeIds: [] as string[],
   duration: 60,
   totalMarks: 100,
-  examType: "MIDTERM",
-  questionTypes: [],
+  examType: "MIDTERM" as ExamType,
+  questionTypes: [] as QuestionTypeConfig[],
   headerVariant: "standard",
   footerVariant: "standard",
   studentInfoVariant: "standard",
@@ -165,10 +83,8 @@ export const INITIAL_STATE: TemplateWizardState = {
   passingScore: 50,
   gradeBoundaries: DEFAULT_GRADE_BOUNDARIES,
   decorations: DEFAULT_DECORATIONS,
-  pageSize: "A4",
-  orientation: "portrait",
-  answerSheetType: "SEPARATE",
-  layout: "SINGLE_COLUMN",
-  currentStep: 0,
-  existingTemplateId: null,
+  pageSize: "A4" as const,
+  orientation: "portrait" as const,
+  answerSheetType: "SEPARATE" as const,
+  layout: "SINGLE_COLUMN" as const,
 }

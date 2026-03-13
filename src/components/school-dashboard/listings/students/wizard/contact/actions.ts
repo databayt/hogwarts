@@ -21,11 +21,9 @@ export async function getStudentContact(
         email: true,
         mobileNumber: true,
         alternatePhone: true,
-        currentAddress: true,
-        city: true,
-        state: true,
-        postalCode: true,
-        country: true,
+        emergencyContactName: true,
+        emergencyContactPhone: true,
+        emergencyContactRelation: true,
       },
     })
 
@@ -37,11 +35,9 @@ export async function getStudentContact(
         email: student.email ?? undefined,
         mobileNumber: student.mobileNumber ?? undefined,
         alternatePhone: student.alternatePhone ?? undefined,
-        currentAddress: student.currentAddress ?? undefined,
-        city: student.city ?? undefined,
-        state: student.state ?? undefined,
-        postalCode: student.postalCode ?? undefined,
-        country: student.country ?? undefined,
+        emergencyContactName: student.emergencyContactName ?? undefined,
+        emergencyContactPhone: student.emergencyContactPhone ?? undefined,
+        emergencyContactRelation: student.emergencyContactRelation ?? undefined,
       },
     }
   } catch (error) {
@@ -68,11 +64,9 @@ export async function updateStudentContact(
         email: parsed.email || null,
         mobileNumber: parsed.mobileNumber || null,
         alternatePhone: parsed.alternatePhone || null,
-        currentAddress: parsed.currentAddress || null,
-        city: parsed.city || null,
-        state: parsed.state || null,
-        postalCode: parsed.postalCode || null,
-        country: parsed.country || null,
+        emergencyContactName: parsed.emergencyContactName || null,
+        emergencyContactPhone: parsed.emergencyContactPhone || null,
+        emergencyContactRelation: parsed.emergencyContactRelation || null,
       },
     })
 

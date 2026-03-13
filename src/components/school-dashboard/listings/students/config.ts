@@ -1,19 +1,21 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-export const STEPS = {
-  1: "Basic Information",
-  2: "Enrollment Details",
-} as const
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-export const STEP_FIELDS = {
-  1: ["givenName", "middleName", "surname", "dateOfBirth", "gender"] as const,
-  2: ["enrollmentDate", "userId", "academicGradeId", "sectionId"] as const,
-} as const
-
-export const TOTAL_FIELDS = [...STEP_FIELDS[1], ...STEP_FIELDS[2]].length
-
+/** Default gender options (English fallback) */
 export const GENDER_OPTIONS = [
   { label: "Male", value: "male" },
   { label: "Female", value: "female" },
 ] as const
+
+/** Dictionary-driven gender options */
+export function getGenderOptions(
+  dictionary?: Dictionary["school"]["students"]
+) {
+  const info = dictionary?.information as Record<string, string> | undefined
+  return [
+    { label: info?.male || "Male", value: "male" },
+    { label: info?.female || "Female", value: "female" },
+  ]
+}

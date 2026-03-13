@@ -10,18 +10,25 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { WizardTabs, type WizardTab } from "@/components/form/wizard"
 
 import { updateExamSchedule } from "./actions"
 import { scheduleSchema, type ScheduleFormData } from "./validation"
+
+const TABS: WizardTab[] = [
+  { id: "schedule", label: "Schedule" },
+  { id: "marks", label: "Marks" },
+]
 
 interface ScheduleFormProps {
   examId: string
   initialData?: Partial<ScheduleFormData>
   onValidChange?: (isValid: boolean) => void
+  onTabChange?: (tabId: string) => void
 }
 
 export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
-  ({ examId, initialData, onValidChange }, ref) => {
+  ({ examId, initialData, onValidChange, onTabChange }, ref) => {
     const [isPending, startTransition] = useTransition()
 
     const form = useForm<ScheduleFormData>({
@@ -94,56 +101,67 @@ export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <DateField
-            name="examDate"
-            label="Exam Date"
-            required
-            disabled={isPending}
-          />
-          <InputField
-            name="startTime"
-            label="Start Time"
-            type="time"
-            required
-            disabled={isPending}
-          />
-          <InputField
-            name="endTime"
-            label="End Time"
-            type="time"
-            required
-            disabled={isPending}
-          />
-          <InputField
-            name="duration"
-            label="Duration (minutes)"
-            type="number"
-            placeholder="60"
-            required
-            disabled={isPending}
-          />
-          <InputField
-            name="totalMarks"
-            label="Total Marks"
-            type="number"
-            placeholder="100"
-            required
-            disabled={isPending}
-          />
-          <InputField
-            name="passingMarks"
-            label="Passing Marks"
-            type="number"
-            placeholder="40"
-            required
-            disabled={isPending}
-          />
-          <TextareaField
-            name="instructions"
-            label="Instructions"
-            placeholder="Enter exam instructions (optional)"
-            disabled={isPending}
-          />
+          <WizardTabs tabs={TABS} onTabChange={onTabChange}>
+            {(activeTab) =>
+              activeTab === "schedule" ? (
+                <div className="space-y-6">
+                  <DateField
+                    name="examDate"
+                    label="Exam Date"
+                    required
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="startTime"
+                    label="Start Time"
+                    type="time"
+                    required
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="endTime"
+                    label="End Time"
+                    type="time"
+                    required
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="duration"
+                    label="Duration (minutes)"
+                    type="number"
+                    placeholder="60"
+                    required
+                    disabled={isPending}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <InputField
+                    name="totalMarks"
+                    label="Total Marks"
+                    type="number"
+                    placeholder="100"
+                    required
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="passingMarks"
+                    label="Passing Marks"
+                    type="number"
+                    placeholder="40"
+                    required
+                    disabled={isPending}
+                  />
+                  <TextareaField
+                    name="instructions"
+                    label="Instructions"
+                    placeholder="Enter exam instructions (optional)"
+                    disabled={isPending}
+                  />
+                </div>
+              )
+            }
+          </WizardTabs>
         </form>
       </Form>
     )

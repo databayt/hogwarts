@@ -17,6 +17,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { CheckboxField, DateField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { WizardTabs, type WizardTab } from "@/components/form/wizard"
 
 import { completeAnnouncementWizard } from "../actions"
 import {
@@ -40,14 +41,20 @@ const ROLE_OPTIONS = [
   { label: "Accountant", value: "ACCOUNTANT" },
 ]
 
+const TABS: WizardTab[] = [
+  { id: "audience", label: "Audience" },
+  { id: "publishing", label: "Publishing" },
+]
+
 interface TargetingFormProps {
   announcementId: string
   initialData?: Partial<TargetingFormData>
   onValidChange?: (isValid: boolean) => void
+  onTabChange?: (tabId: string) => void
 }
 
 export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
-  ({ announcementId, initialData, onValidChange }, ref) => {
+  ({ announcementId, initialData, onValidChange, onTabChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
     const [classOptions, setClassOptions] = useState<
@@ -131,48 +138,67 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <SelectField
-            name="scope"
-            label="Scope"
-            options={[...SCOPE_OPTIONS]}
-            required
-            disabled={isPending}
-          />
-          {scope === "class" && (
-            <SelectField
-              name="classId"
-              label="Class"
-              options={[...classOptions]}
-              required
-              disabled={isPending}
-            />
-          )}
-          {scope === "role" && (
-            <SelectField
-              name="role"
-              label="Role"
-              options={[...ROLE_OPTIONS]}
-              required
-              disabled={isPending}
-            />
-          )}
-          <CheckboxField
-            name="published"
-            label="Published"
-            disabled={isPending}
-          />
-          <DateField
-            name="scheduledFor"
-            label="Scheduled For"
-            disabled={isPending}
-          />
-          <DateField name="expiresAt" label="Expires At" disabled={isPending} />
-          <CheckboxField name="pinned" label="Pinned" disabled={isPending} />
-          <CheckboxField
-            name="featured"
-            label="Featured"
-            disabled={isPending}
-          />
+          <WizardTabs tabs={TABS} onTabChange={onTabChange}>
+            {(activeTab) =>
+              activeTab === "audience" ? (
+                <div className="space-y-6">
+                  <SelectField
+                    name="scope"
+                    label="Scope"
+                    options={[...SCOPE_OPTIONS]}
+                    required
+                    disabled={isPending}
+                  />
+                  {scope === "class" && (
+                    <SelectField
+                      name="classId"
+                      label="Class"
+                      options={[...classOptions]}
+                      required
+                      disabled={isPending}
+                    />
+                  )}
+                  {scope === "role" && (
+                    <SelectField
+                      name="role"
+                      label="Role"
+                      options={[...ROLE_OPTIONS]}
+                      required
+                      disabled={isPending}
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <CheckboxField
+                    name="published"
+                    label="Published"
+                    disabled={isPending}
+                  />
+                  <DateField
+                    name="scheduledFor"
+                    label="Scheduled For"
+                    disabled={isPending}
+                  />
+                  <DateField
+                    name="expiresAt"
+                    label="Expires At"
+                    disabled={isPending}
+                  />
+                  <CheckboxField
+                    name="pinned"
+                    label="Pinned"
+                    disabled={isPending}
+                  />
+                  <CheckboxField
+                    name="featured"
+                    label="Featured"
+                    disabled={isPending}
+                  />
+                </div>
+              )
+            }
+          </WizardTabs>
         </form>
       </Form>
     )

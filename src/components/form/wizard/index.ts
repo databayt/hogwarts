@@ -35,3 +35,6 @@ export { WizardLayout } from "./wizard-layout"
 
 // Step wrapper
 export { WizardStep } from "./wizard-step"
+
+// Tabs
+export { WizardTabs, type WizardTab } from "./wizard-tabs"

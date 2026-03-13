@@ -8,6 +8,7 @@ import type { ExamStatus } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResponse } from "./types"
@@ -263,6 +264,22 @@ export async function cancelExam(
           : exam.description,
       },
     })
+
+    // Notify students about exam cancellation (non-blocking)
+    dispatchNotificationsToAudience({
+      schoolId,
+      type: "system_alert",
+      title: "إلغاء امتحان",
+      body: `تم إلغاء امتحان "${exam.title}"${reason ? `: ${reason}` : ""}`,
+      priority: "high",
+      channels: ["in_app"],
+      metadata: {
+        examId,
+        url: "/exams",
+      },
+      targetScope: "class",
+      targetClassId: exam.classId,
+    }).catch((err) => console.error("[cancelExam] Notification error:", err))
 
     revalidatePath("/exams")
     revalidatePath(`/exams/${examId}`)

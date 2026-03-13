@@ -9,6 +9,7 @@ import type { AdmissionApplicationStatus } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
 
@@ -346,6 +347,39 @@ export async function updateApplicationStatus(params: {
       data,
     })
 
+    // Notify applicant about status change (non-blocking)
+    const application = await db.application.findFirst({
+      where: { id: params.id, schoolId },
+      select: { userId: true, firstName: true, lastName: true },
+    })
+    if (application?.userId) {
+      const statusMessages: Record<string, string> = {
+        SHORTLISTED: "تم إدراجك في القائمة المختصرة",
+        SELECTED: "تهانينا! تم قبولك",
+        REJECTED: "نأسف، لم يتم قبول طلبك",
+        WAITLISTED: "تم وضعك في قائمة الانتظار",
+      }
+      const statusMessage =
+        statusMessages[params.status] || `حالة الطلب: ${params.status}`
+      dispatchNotification({
+        schoolId,
+        userId: application.userId,
+        type: "system_alert",
+        title: "تحديث حالة الطلب",
+        body: statusMessage,
+        priority: params.status === "SELECTED" ? "high" : "normal",
+        channels: ["in_app", "email"],
+        metadata: {
+          applicationId: params.id,
+          status: params.status,
+          url: "/admission",
+        },
+        actorId: session.user?.id,
+      }).catch((err) =>
+        console.error("[updateApplicationStatus] Notification error:", err)
+      )
+    }
+
     revalidatePath("/admission")
     return { success: true, data: null }
   } catch (error) {
@@ -599,6 +633,19 @@ export async function confirmEnrollment(params: {
                 category: application.category ?? undefined,
                 previousSchoolName: application.previousSchool ?? undefined,
                 previousGrade: application.previousClass ?? undefined,
+                // Map guardian/parent info to emergency contact
+                emergencyContactName:
+                  application.guardianName ||
+                  application.fatherName ||
+                  undefined,
+                emergencyContactPhone:
+                  application.guardianPhone ||
+                  application.fatherPhone ||
+                  undefined,
+                emergencyContactRelation:
+                  application.guardianRelation || "Parent",
+                // Mark incomplete — contact/location not collected by application
+                wizardStep: "contact",
               },
             })
 
@@ -793,6 +840,26 @@ export async function confirmEnrollment(params: {
       }
     } catch {
       // Non-critical: suggestion is best-effort
+    }
+
+    // Notify student about enrollment confirmation (non-blocking)
+    if (application.userId) {
+      dispatchNotification({
+        schoolId,
+        userId: application.userId,
+        type: "account_created",
+        title: "تم تأكيد القبول",
+        body: `تهانينا! تم تأكيد تسجيلك بالمدرسة. رقم التسجيل: ${enrollmentNumber}`,
+        priority: "high",
+        channels: ["in_app", "email"],
+        metadata: {
+          applicationId: params.id,
+          enrollmentNumber,
+          url: "/",
+        },
+      }).catch((err) =>
+        console.error("[confirmEnrollment] Notification error:", err)
+      )
     }
 
     revalidatePath("/admission/enrollment")
@@ -1041,6 +1108,27 @@ export async function placeStudentInSection(params: {
           // Non-blocking: logged inside syncStudentClassToEnrollment
         }
       }
+    }
+
+    // Notify student about section placement (non-blocking)
+    if (application.userId) {
+      dispatchNotification({
+        schoolId,
+        userId: application.userId,
+        type: "system_alert",
+        title: "تعيين القسم",
+        body: `تم تعيينك في قسم "${sectionData.name}"`,
+        priority: "normal",
+        channels: ["in_app"],
+        metadata: {
+          applicationId: params.applicationId,
+          sectionId: params.sectionId,
+          sectionName: sectionData.name,
+          url: "/",
+        },
+      }).catch((err) =>
+        console.error("[placeStudentInSection] Notification error:", err)
+      )
     }
 
     revalidatePath("/admission/enrollment")

@@ -10,19 +10,26 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { CheckboxField, InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { WizardTabs, type WizardTab } from "@/components/form/wizard"
 import { PROCTOR_MODE_OPTIONS } from "@/components/school-dashboard/exams/manage/wizard/config"
 
 import { updateExamSettings } from "./actions"
 import { settingsSchema, type SettingsFormData } from "./validation"
 
+const TABS: WizardTab[] = [
+  { id: "proctoring", label: "Proctoring" },
+  { id: "attempts", label: "Attempts" },
+]
+
 interface SettingsFormProps {
   examId: string
   initialData?: Partial<SettingsFormData>
   onValidChange?: (isValid: boolean) => void
+  onTabChange?: (tabId: string) => void
 }
 
 export const SettingsForm = forwardRef<WizardFormRef, SettingsFormProps>(
-  ({ examId, initialData, onValidChange }, ref) => {
+  ({ examId, initialData, onValidChange, onTabChange }, ref) => {
     const [isPending, startTransition] = useTransition()
 
     const form = useForm<SettingsFormData>({
@@ -74,51 +81,62 @@ export const SettingsForm = forwardRef<WizardFormRef, SettingsFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <SelectField
-            name="proctorMode"
-            label="Proctor Mode"
-            options={[...PROCTOR_MODE_OPTIONS]}
-            disabled={isPending}
-          />
-          <CheckboxField
-            name="shuffleQuestions"
-            label="Shuffle Questions"
-            description="Randomize question order for each student"
-            disabled={isPending}
-          />
-          <CheckboxField
-            name="shuffleOptions"
-            label="Shuffle Options"
-            description="Randomize answer options for each student"
-            disabled={isPending}
-          />
-          <InputField
-            name="maxAttempts"
-            label="Max Attempts"
-            type="number"
-            placeholder="1"
-            disabled={isPending}
-          />
-          <InputField
-            name="retakePenalty"
-            label="Retake Penalty (%)"
-            type="number"
-            placeholder="0"
-            disabled={isPending}
-          />
-          <CheckboxField
-            name="allowLateSubmit"
-            label="Allow Late Submission"
-            description="Allow students to submit after the deadline"
-            disabled={isPending}
-          />
-          <InputField
-            name="lateSubmitMinutes"
-            label="Late Submit Grace Period (minutes)"
-            type="number"
-            placeholder="0"
-            disabled={isPending}
-          />
+          <WizardTabs tabs={TABS} onTabChange={onTabChange}>
+            {(activeTab) =>
+              activeTab === "proctoring" ? (
+                <div className="space-y-6">
+                  <SelectField
+                    name="proctorMode"
+                    label="Proctor Mode"
+                    options={[...PROCTOR_MODE_OPTIONS]}
+                    disabled={isPending}
+                  />
+                  <CheckboxField
+                    name="shuffleQuestions"
+                    label="Shuffle Questions"
+                    description="Randomize question order for each student"
+                    disabled={isPending}
+                  />
+                  <CheckboxField
+                    name="shuffleOptions"
+                    label="Shuffle Options"
+                    description="Randomize answer options for each student"
+                    disabled={isPending}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <InputField
+                    name="maxAttempts"
+                    label="Max Attempts"
+                    type="number"
+                    placeholder="1"
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="retakePenalty"
+                    label="Retake Penalty (%)"
+                    type="number"
+                    placeholder="0"
+                    disabled={isPending}
+                  />
+                  <CheckboxField
+                    name="allowLateSubmit"
+                    label="Allow Late Submission"
+                    description="Allow students to submit after the deadline"
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="lateSubmitMinutes"
+                    label="Late Submit Grace Period (minutes)"
+                    type="number"
+                    placeholder="0"
+                    disabled={isPending}
+                  />
+                </div>
+              )
+            }
+          </WizardTabs>
         </form>
       </Form>
     )

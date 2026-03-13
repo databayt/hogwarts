@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import { Form } from "@/components/ui/form"
-import { Separator } from "@/components/ui/separator"
 import { ErrorToast } from "@/components/atom/toast"
 import {
   DateField,
@@ -16,6 +15,7 @@ import {
   TextareaField,
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { WizardTabs, type WizardTab } from "@/components/form/wizard"
 import {
   CURRENCY_OPTIONS,
   INVOICE_STATUS_OPTIONS,
@@ -24,14 +24,21 @@ import {
 import { updateInvoiceDetails } from "./actions"
 import { detailsSchema, type DetailsFormData } from "./validation"
 
+const TABS: WizardTab[] = [
+  { id: "invoice", label: "Invoice" },
+  { id: "from", label: "From" },
+  { id: "to", label: "To" },
+]
+
 interface DetailsFormProps {
   invoiceId: string
   initialData?: Partial<DetailsFormData>
   onValidChange?: (isValid: boolean) => void
+  onTabChange?: (tabId: string) => void
 }
 
 export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
-  ({ invoiceId, initialData, onValidChange }, ref) => {
+  ({ invoiceId, initialData, onValidChange, onTabChange }, ref) => {
     const [isPending, startTransition] = useTransition()
 
     const form = useForm<DetailsFormData>({
@@ -107,137 +114,139 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          {/* Invoice Details */}
-          <div className="grid grid-cols-2 gap-4">
-            <InputField
-              name="invoice_no"
-              label="Invoice Number"
-              placeholder="INV-001"
-              required
-              disabled={isPending}
-            />
-            <SelectField
-              name="currency"
-              label="Currency"
-              options={[...CURRENCY_OPTIONS]}
-              required
-              disabled={isPending}
-            />
-          </div>
+          <WizardTabs tabs={TABS} onTabChange={onTabChange}>
+            {(activeTab) => {
+              if (activeTab === "invoice") {
+                return (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <InputField
+                        name="invoice_no"
+                        label="Invoice Number"
+                        placeholder="INV-001"
+                        required
+                        disabled={isPending}
+                      />
+                      <SelectField
+                        name="currency"
+                        label="Currency"
+                        options={[...CURRENCY_OPTIONS]}
+                        required
+                        disabled={isPending}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <DateField
+                        name="invoice_date"
+                        label="Invoice Date"
+                        required
+                        disabled={isPending}
+                      />
+                      <DateField
+                        name="due_date"
+                        label="Due Date"
+                        required
+                        disabled={isPending}
+                      />
+                    </div>
+                    <SelectField
+                      name="status"
+                      label="Status"
+                      options={[...INVOICE_STATUS_OPTIONS]}
+                      disabled={isPending}
+                    />
+                    <TextareaField
+                      name="notes"
+                      label="Notes"
+                      placeholder="Additional notes or terms..."
+                      disabled={isPending}
+                    />
+                  </div>
+                )
+              }
 
-          <div className="grid grid-cols-2 gap-4">
-            <DateField
-              name="invoice_date"
-              label="Invoice Date"
-              required
-              disabled={isPending}
-            />
-            <DateField
-              name="due_date"
-              label="Due Date"
-              required
-              disabled={isPending}
-            />
-          </div>
+              if (activeTab === "from") {
+                return (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <InputField
+                        name="from.name"
+                        label="Name"
+                        placeholder="Your company name"
+                        required
+                        disabled={isPending}
+                      />
+                      <InputField
+                        name="from.email"
+                        label="Email"
+                        placeholder="billing@company.com"
+                        disabled={isPending}
+                      />
+                    </div>
+                    <InputField
+                      name="from.address1"
+                      label="Address Line 1"
+                      placeholder="Street address"
+                      required
+                      disabled={isPending}
+                    />
+                    <InputField
+                      name="from.address2"
+                      label="Address Line 2"
+                      placeholder="Suite, unit, etc."
+                      disabled={isPending}
+                    />
+                    <InputField
+                      name="from.address3"
+                      label="Address Line 3"
+                      placeholder="City, state, zip"
+                      disabled={isPending}
+                    />
+                  </div>
+                )
+              }
 
-          <SelectField
-            name="status"
-            label="Status"
-            options={[...INVOICE_STATUS_OPTIONS]}
-            disabled={isPending}
-          />
-
-          <Separator />
-
-          {/* From Address */}
-          <fieldset className="space-y-4">
-            <legend className="text-sm font-medium">From</legend>
-            <div className="grid grid-cols-2 gap-4">
-              <InputField
-                name="from.name"
-                label="Name"
-                placeholder="Your company name"
-                required
-                disabled={isPending}
-              />
-              <InputField
-                name="from.email"
-                label="Email"
-                placeholder="billing@company.com"
-                disabled={isPending}
-              />
-            </div>
-            <InputField
-              name="from.address1"
-              label="Address Line 1"
-              placeholder="Street address"
-              required
-              disabled={isPending}
-            />
-            <InputField
-              name="from.address2"
-              label="Address Line 2"
-              placeholder="Suite, unit, etc."
-              disabled={isPending}
-            />
-            <InputField
-              name="from.address3"
-              label="Address Line 3"
-              placeholder="City, state, zip"
-              disabled={isPending}
-            />
-          </fieldset>
-
-          <Separator />
-
-          {/* To Address */}
-          <fieldset className="space-y-4">
-            <legend className="text-sm font-medium">To</legend>
-            <div className="grid grid-cols-2 gap-4">
-              <InputField
-                name="to.name"
-                label="Name"
-                placeholder="Client name"
-                required
-                disabled={isPending}
-              />
-              <InputField
-                name="to.email"
-                label="Email"
-                placeholder="client@email.com"
-                disabled={isPending}
-              />
-            </div>
-            <InputField
-              name="to.address1"
-              label="Address Line 1"
-              placeholder="Street address"
-              required
-              disabled={isPending}
-            />
-            <InputField
-              name="to.address2"
-              label="Address Line 2"
-              placeholder="Suite, unit, etc."
-              disabled={isPending}
-            />
-            <InputField
-              name="to.address3"
-              label="Address Line 3"
-              placeholder="City, state, zip"
-              disabled={isPending}
-            />
-          </fieldset>
-
-          <Separator />
-
-          {/* Notes */}
-          <TextareaField
-            name="notes"
-            label="Notes"
-            placeholder="Additional notes or terms..."
-            disabled={isPending}
-          />
+              // "to" tab
+              return (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <InputField
+                      name="to.name"
+                      label="Name"
+                      placeholder="Client name"
+                      required
+                      disabled={isPending}
+                    />
+                    <InputField
+                      name="to.email"
+                      label="Email"
+                      placeholder="client@email.com"
+                      disabled={isPending}
+                    />
+                  </div>
+                  <InputField
+                    name="to.address1"
+                    label="Address Line 1"
+                    placeholder="Street address"
+                    required
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="to.address2"
+                    label="Address Line 2"
+                    placeholder="Suite, unit, etc."
+                    disabled={isPending}
+                  />
+                  <InputField
+                    name="to.address3"
+                    label="Address Line 3"
+                    placeholder="City, state, zip"
+                    disabled={isPending}
+                  />
+                </div>
+              )
+            }}
+          </WizardTabs>
         </form>
       </Form>
     )

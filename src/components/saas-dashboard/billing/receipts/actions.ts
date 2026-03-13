@@ -103,6 +103,7 @@ export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
 
     const receipt = await db.receipt.create({
       data: {
+        schoolId: invoice.schoolId,
         invoiceId: validated.invoiceId,
         amount: validated.amount,
         fileName: validated.fileName,

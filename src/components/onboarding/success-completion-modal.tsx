@@ -9,7 +9,7 @@ import React, {
   useEffect,
   useState,
 } from "react"
-import confetti from "canvas-confetti"
+import Lottie from "lottie-react"
 import { Check, Copy } from "lucide-react"
 
 import { Modal } from "@/components/atom/modal"
@@ -32,55 +32,14 @@ export default function SuccessCompletionModal({
   onGoToDashboard,
 }: SuccessCompletionModalProps) {
   const [copied, setCopied] = useState(false)
+  const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
-    if (showModal) {
-      // Trigger confetti animation
-      const count = 200
-      const defaults = {
-        origin: { y: 0.7 },
-        zIndex: 100000,
-      }
-
-      function fire(particleRatio: number, opts: any) {
-        confetti({
-          ...defaults,
-          ...opts,
-          particleCount: Math.floor(count * particleRatio),
-          spread: 90,
-          scalar: 1.2,
-          colors: ["#10B981", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444"],
-        })
-      }
-
-      fire(0.25, {
-        spread: 26,
-        startVelocity: 55,
-      })
-
-      fire(0.2, {
-        spread: 60,
-      })
-
-      fire(0.35, {
-        spread: 100,
-        decay: 0.91,
-        scalar: 0.8,
-      })
-
-      fire(0.1, {
-        spread: 120,
-        startVelocity: 25,
-        decay: 0.92,
-        scalar: 1.2,
-      })
-
-      fire(0.1, {
-        spread: 120,
-        startVelocity: 45,
-      })
-    }
-  }, [showModal])
+    fetch("/animations/confetti.json")
+      .then((res) => res.json())
+      .then((data) => setAnimationData(data))
+      .catch(console.error)
+  }, [])
 
   // Strip common prefixes (ed., www.) so school URL is school.databayt.org
   const rawRoot = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "databayt.org"
@@ -105,62 +64,55 @@ export default function SuccessCompletionModal({
     <Modal
       showModal={showModal}
       setShowModal={setShowModal}
-      className="md:max-w-lg"
+      className="md:max-w-sm"
       preventDefaultClose={false}
     >
-      <div className="p-8 text-center">
-        {/* Success Icon */}
-        <div className="mb-6 flex justify-center">
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-green-500">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="white"
-              strokeWidth={3}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+      <div className="px-8 py-12 text-center">
+        {/* Celebration Animation */}
+        {animationData && (
+          <div className="mx-auto mb-4 h-32 w-32">
+            <Lottie animationData={animationData} loop autoplay />
           </div>
-        </div>
+        )}
 
         {/* Success Message */}
-        <p className="text-muted-foreground mb-2">
-          Your school has been successfully created at
-        </p>
+        <p className="text-muted-foreground mb-2">Your school lives at</p>
 
-        <h5 className="text-primary mb-6">{fullDomain}</h5>
+        <h5 className="mb-6">
+          <a
+            href={`http://${fullDomain}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline transition-colors hover:opacity-80"
+          >
+            {fullDomain}
+          </a>
+        </h5>
 
-        {/* Action Link */}
-        <button
-          onClick={onGoToDashboard}
-          className="text-primary mb-6 underline transition-all hover:no-underline"
-        >
-          Go to Dashboard
-        </button>
-
-        {/* Copy essential info */}
-        <button
-          onClick={handleCopy}
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
+        {/* Copy school details - only icon is clickable */}
+        <div className="flex items-center justify-center gap-1.5">
           {copied ? (
             <>
-              <span className="text-green-500">Copied to clipboard</span>
+              <span className="text-sm text-green-500">
+                Copied to clipboard
+              </span>
               <Check className="h-3.5 w-3.5 text-green-500" />
             </>
           ) : (
             <>
-              <span>Copy school details to clipboard</span>
-              <Copy className="h-3.5 w-3.5" />
+              <span className="text-muted-foreground text-xs">
+                Copy details to clipboard
+              </span>
+              <button
+                onClick={handleCopy}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Copy school details"
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </button>
             </>
           )}
-        </button>
+        </div>
       </div>
     </Modal>
   )

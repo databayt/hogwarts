@@ -67,6 +67,7 @@ import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
@@ -1130,6 +1131,32 @@ export async function moveTimetableSlot(input: {
       classroomId: targetClassroomId,
     },
   })
+
+  // Notify affected teacher about schedule change (non-blocking)
+  if (existingSlot.teacher) {
+    const teacherUser = await db.teacher.findFirst({
+      where: { id: existingSlot.teacher.id, schoolId },
+      select: { userId: true },
+    })
+    if (teacherUser?.userId) {
+      dispatchNotification({
+        schoolId,
+        userId: teacherUser.userId,
+        type: "class_rescheduled",
+        title: "تغيير في الجدول",
+        body: `تم نقل حصة ${existingSlot.class?.name || "الحصة"} إلى يوم ووقت جديد`,
+        priority: "high",
+        channels: ["in_app"],
+        metadata: {
+          slotId: input.slotId,
+          className: existingSlot.class?.name,
+          url: "/timetable",
+        },
+      }).catch((err) =>
+        console.error("[moveTimetableSlot] Notification error:", err)
+      )
+    }
+  }
 
   // Log action for audit trail
   await logTimetableAction("edit", {
@@ -2266,6 +2293,22 @@ export async function deleteTimetableSlot(input: {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
+  // Fetch slot info before deletion for notification
+  const slotToDelete = await db.timetable.findFirst({
+    where: {
+      schoolId,
+      termId: input.termId,
+      dayOfWeek: input.dayOfWeek,
+      periodId: input.periodId,
+      classId: input.classId,
+      weekOffset: input.weekOffset,
+    },
+    include: {
+      teacher: { select: { userId: true, givenName: true, surname: true } },
+      class: { select: { name: true } },
+    },
+  })
+
   await db.timetable.delete({
     where: {
       schoolId_termId_dayOfWeek_periodId_classId_weekOffset: {
@@ -2283,6 +2326,26 @@ export async function deleteTimetableSlot(input: {
     entityType: "slot",
     metadata: input,
   })
+
+  // Notify teacher about removed slot (non-blocking)
+  if (slotToDelete?.teacher?.userId) {
+    dispatchNotification({
+      schoolId,
+      userId: slotToDelete.teacher.userId,
+      type: "class_cancelled",
+      title: "إلغاء حصة",
+      body: `تم إلغاء حصة ${slotToDelete.class?.name || "الحصة"} من الجدول`,
+      priority: "normal",
+      channels: ["in_app"],
+      metadata: {
+        dayOfWeek: input.dayOfWeek,
+        className: slotToDelete.class?.name,
+        url: "/timetable",
+      },
+    }).catch((err) =>
+      console.error("[deleteTimetableSlot] Notification error:", err)
+    )
+  }
 
   return { success: true }
 }
@@ -5365,6 +5428,31 @@ export async function assignSubstitute(input: {
     },
   })
 
+  // Notify substitute teacher about assignment (non-blocking)
+  const subTeacherUser = await db.teacher.findFirst({
+    where: { id: input.substituteTeacherId, schoolId },
+    select: { userId: true },
+  })
+  if (subTeacherUser?.userId) {
+    dispatchNotification({
+      schoolId,
+      userId: subTeacherUser.userId,
+      type: "system_alert",
+      title: "تعيين بديل",
+      body: `تم تعيينك كبديل لـ ${originalSlot.teacher?.givenName} ${originalSlot.teacher?.surname} في ${originalSlot.class?.name} (${originalSlot.period?.name})`,
+      priority: "high",
+      channels: ["in_app", "email"],
+      metadata: {
+        substitutionId: substitution.id,
+        originalSlotId: input.originalSlotId,
+        slotDate: input.slotDate.toISOString(),
+        url: "/timetable",
+      },
+    }).catch((err) =>
+      console.error("[assignSubstitute] Notification error:", err)
+    )
+  }
+
   return { success: true, substitution }
 }
 
@@ -5414,6 +5502,31 @@ export async function respondToSubstitution(input: {
       declineReason: input.declineReason,
     },
   })
+
+  // If declined, notify admins so they can find another substitute (non-blocking)
+  if (input.response === "DECLINED") {
+    const admins = await db.user.findMany({
+      where: { schoolId, role: "ADMIN" },
+      select: { id: true },
+    })
+    for (const admin of admins) {
+      dispatchNotification({
+        schoolId,
+        userId: admin.id,
+        type: "system_alert",
+        title: "رفض البدالة",
+        body: `رفض المعلم البديل التعيين${input.declineReason ? `: ${input.declineReason}` : ""}`,
+        priority: "high",
+        channels: ["in_app"],
+        metadata: {
+          substitutionId: input.id,
+          url: "/timetable/substitutions",
+        },
+      }).catch((err) =>
+        console.error("[respondToSubstitution] Notification error:", err)
+      )
+    }
+  }
 
   return { success: true }
 }
@@ -5559,6 +5672,29 @@ export async function cancelSubstitution(input: {
     entityId: input.id,
     metadata: { reason: input.reason },
   })
+
+  // Notify substitute teacher about cancellation (non-blocking)
+  const subTeacher = await db.teacher.findFirst({
+    where: { id: record.substituteTeacherId, schoolId },
+    select: { userId: true },
+  })
+  if (subTeacher?.userId) {
+    dispatchNotification({
+      schoolId,
+      userId: subTeacher.userId,
+      type: "system_alert",
+      title: "إلغاء البدالة",
+      body: `تم إلغاء تعيينك كبديل${input.reason ? `: ${input.reason}` : ""}`,
+      priority: "normal",
+      channels: ["in_app"],
+      metadata: {
+        substitutionId: input.id,
+        url: "/timetable",
+      },
+    }).catch((err) =>
+      console.error("[cancelSubstitution] Notification error:", err)
+    )
+  }
 
   return { success: true }
 }

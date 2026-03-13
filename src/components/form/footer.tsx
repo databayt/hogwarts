@@ -6,7 +6,7 @@ import React, { useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useParams, usePathname, useRouter } from "next/navigation"
-import { Bookmark, Check, HelpCircle, Loader2 } from "lucide-react"
+import { Bookmark, Check, HelpCircle, Loader2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -35,6 +35,7 @@ export interface CustomNavigation {
 export interface ValidationContext {
   isNextDisabled: boolean
   customNavigation?: CustomNavigation
+  onSave?: () => Promise<void>
 }
 
 export interface FormFooterProps {
@@ -70,6 +71,10 @@ export interface FormFooterProps {
   dictionary?: Record<string, unknown>
   /** Locale override */
   locale?: string
+  /** Show close button (X icon) */
+  showClose?: boolean
+  /** Callback for close button */
+  onClose?: () => void
   /** Show logo */
   showLogo?: boolean
   /** Logo src */
@@ -92,6 +97,12 @@ export interface FormFooterProps {
   lastSavedTemplate?: string
   /** Callback when navigating to a new step (receives the step slug) */
   onStepChange?: (step: string) => void
+  /** Required step slugs (for skip-to-complete logic) */
+  requiredSteps?: string[]
+  /** Callback when user clicks "Skip & Complete" */
+  onSkipToComplete?: () => void
+  /** Label for the skip button (default: "Skip & Create") */
+  skipLabel?: string
 }
 
 // =============================================================================
@@ -115,6 +126,8 @@ export function FormFooter({
   nextDisabled = false,
   dictionary,
   locale: propLocale,
+  showClose = false,
+  onClose,
   showLogo = true,
   logoSrc = "/logo.png",
   showHelp = true,
@@ -126,6 +139,9 @@ export function FormFooter({
   savingLabel,
   lastSavedTemplate,
   onStepChange,
+  requiredSteps,
+  onSkipToComplete,
+  skipLabel,
 }: FormFooterProps) {
   const router = useRouter()
   const params = useParams()
@@ -139,12 +155,14 @@ export function FormFooter({
   // Use validation context if provided
   let contextNextDisabled = false
   let customNavigation: CustomNavigation | undefined
+  let contextOnSave: (() => Promise<void>) | undefined
 
   if (useValidation) {
     try {
       const validationContext = useValidation()
       contextNextDisabled = validationContext.isNextDisabled
       customNavigation = validationContext.customNavigation
+      contextOnSave = validationContext.onSave
     } catch {
       // Context not available
     }
@@ -172,6 +190,26 @@ export function FormFooter({
   }, [currentStepSlug, config.groups])
 
   const isLastStep = currentStepIndex === config.steps.length - 1
+
+  // Skip-to-complete: available on or after the last required step, when form is valid
+  const canSkipToComplete = useMemo(() => {
+    if (!requiredSteps?.length || !onSkipToComplete) return false
+    const lastRequiredIndex = Math.max(
+      ...requiredSteps.map((s) => config.steps.indexOf(s))
+    )
+    return (
+      currentStepIndex >= lastRequiredIndex &&
+      !isLastStep &&
+      !contextNextDisabled
+    )
+  }, [
+    requiredSteps,
+    onSkipToComplete,
+    config.steps,
+    currentStepIndex,
+    isLastStep,
+    contextNextDisabled,
+  ])
 
   // Navigation handlers
   const handleBack = () => {
@@ -277,6 +315,15 @@ export function FormFooter({
       <div className="mx-auto flex max-w-5xl items-center justify-between py-3 sm:py-4 rtl:flex-row-reverse">
         {/* Left side - Logo, Help, Save */}
         <div className="flex items-center gap-1 rtl:flex-row-reverse">
+          {showClose && onClose && (
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center"
+              aria-label={dict.close || "Close"}
+            >
+              <X className="h-6 w-6" strokeWidth={1} />
+            </button>
+          )}
           {showLogo && (
             <Link
               href={`/${locale}`}
@@ -349,6 +396,24 @@ export function FormFooter({
           >
             {actualBackLabel}
           </Button>
+
+          {canSkipToComplete && (
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                try {
+                  await contextOnSave?.()
+                } catch {
+                  return // Save failed, don't complete
+                }
+                onSkipToComplete?.()
+              }}
+              size="sm"
+              className="animate-in fade-in duration-300"
+            >
+              {skipLabel || "Skip & Create"}
+            </Button>
+          )}
 
           <Button onClick={handleNext} disabled={!canGoNextActual} size="sm">
             {actualNextLabel}

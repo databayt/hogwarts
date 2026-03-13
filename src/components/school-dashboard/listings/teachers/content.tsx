@@ -46,13 +46,14 @@ export default async function TeachersContent({
       ...(sp.emailAddress
         ? { emailAddress: { contains: sp.emailAddress, mode: "insensitive" } }
         : {}),
-      ...(sp.status
-        ? sp.status === "active"
-          ? { employmentStatus: "ACTIVE" }
-          : sp.status === "inactive"
-            ? { NOT: { employmentStatus: "ACTIVE" } }
-            : {}
-        : {}),
+      ...(sp.status === "incomplete"
+        ? { wizardStep: { not: null } }
+        : sp.status === "ACTIVE" ||
+            sp.status === "ON_LEAVE" ||
+            sp.status === "TERMINATED" ||
+            sp.status === "RETIRED"
+          ? { wizardStep: null, employmentStatus: sp.status }
+          : {}),
     }
 
     const skip = (sp.page - 1) * sp.perPage
@@ -147,6 +148,7 @@ export default async function TeachersContent({
           joiningDate: t.joiningDate
             ? (t.joiningDate as Date).toISOString()
             : null,
+          wizardStep: t.wizardStep || null,
           createdAt: (t.createdAt as Date).toISOString(),
         }
       })

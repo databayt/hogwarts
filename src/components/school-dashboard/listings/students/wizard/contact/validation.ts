@@ -4,14 +4,14 @@
 import { z } from "zod"
 
 export const contactSchema = z.object({
+  // Contact tab
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   mobileNumber: z.string().optional(),
   alternatePhone: z.string().optional(),
-  currentAddress: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  postalCode: z.string().optional(),
-  country: z.string().optional(),
+  // Emergency tab
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+  emergencyContactRelation: z.string().optional(),
 })
 
 export type ContactFormData = z.infer<typeof contactSchema>

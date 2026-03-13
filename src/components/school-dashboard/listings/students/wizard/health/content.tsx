@@ -2,12 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useRef, useState } from "react"
+import React, { useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useStudentWizard } from "../use-student-wizard"
 import { HealthForm } from "./form"
@@ -19,6 +20,40 @@ export default function HealthContent() {
   const { data, isLoading } = useStudentWizard()
   const [isValid, setIsValid] = useState(true)
 
+  const { dictionary } = useDictionary()
+  const students = (dictionary?.school as any)?.students
+  const t = students?.health as Record<string, string> | undefined
+
+  const TAB_HEADINGS: Record<string, { title: string; description: string }> =
+    useMemo(
+      () => ({
+        medical: {
+          title: t?.title || "Medical Information",
+          description:
+            t?.description ||
+            "Add the student's medical conditions and allergies.",
+        },
+        insurance: {
+          title: t?.doctorInsuranceTitle || "Doctor & Insurance",
+          description:
+            t?.doctorInsuranceDescription ||
+            "Add the student's doctor and insurance details.",
+        },
+      }),
+      [t]
+    )
+
+  const [heading, setHeading] = useState(TAB_HEADINGS.medical)
+
+  // Sync heading when dictionary loads or tab changes
+  React.useEffect(() => {
+    setHeading(TAB_HEADINGS.medical)
+  }, [TAB_HEADINGS])
+
+  const handleTabChange = (tabId: string) => {
+    setHeading(TAB_HEADINGS[tabId] || TAB_HEADINGS.medical)
+  }
+
   return (
     <WizardStep
       entityId={studentId}
@@ -28,10 +63,7 @@ export default function HealthContent() {
       isLoading={isLoading}
     >
       <FormLayout>
-        <FormHeading
-          title="Health Information"
-          description="Add the student's medical and health details."
-        />
+        <FormHeading title={heading.title} description={heading.description} />
         <HealthForm
           ref={formRef}
           studentId={studentId}
@@ -50,6 +82,7 @@ export default function HealthContent() {
               : undefined
           }
           onValidChange={setIsValid}
+          onTabChange={handleTabChange}
         />
       </FormLayout>
     </WizardStep>

@@ -6,11 +6,9 @@ import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { BookOpen, UserCheck, Users, UserX } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { Badge } from "@/components/ui/badge"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -133,6 +131,7 @@ function TeachersTableInner({
         userId: r.userId || null,
         profilePhotoUrl: r.profilePhotoUrl || null,
         joiningDate: r.joiningDate || null,
+        wizardStep: r.wizardStep || null,
       })) as TeacherRow[]
       return { rows, total: result.data.total }
     },
@@ -272,6 +271,7 @@ function TeachersTableInner({
         status: true,
         account: false, // Hidden by default
         joiningDate: false, // Hidden by default
+        completion: false, // Hidden by default, visible via column toggle
       },
     },
   })

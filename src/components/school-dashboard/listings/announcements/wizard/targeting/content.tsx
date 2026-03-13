@@ -12,12 +12,28 @@ import { WizardStep } from "@/components/form/wizard"
 import { useAnnouncementWizard } from "../use-announcement-wizard"
 import { TargetingForm } from "./form"
 
+const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
+  audience: {
+    title: "Audience",
+    description: "Choose who sees this announcement.",
+  },
+  publishing: {
+    title: "Publishing",
+    description: "Configure when and how the announcement is published.",
+  },
+}
+
 export default function TargetingContent() {
   const params = useParams()
   const announcementId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useAnnouncementWizard()
   const [isValid, setIsValid] = useState(true)
+  const [heading, setHeading] = useState(TAB_HEADINGS.audience)
+
+  const handleTabChange = (tabId: string) => {
+    setHeading(TAB_HEADINGS[tabId] || TAB_HEADINGS.audience)
+  }
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -38,10 +54,7 @@ export default function TargetingContent() {
       isLoading={isLoading}
     >
       <FormLayout>
-        <FormHeading
-          title="Targeting & Publishing"
-          description="Choose who sees this announcement and when it gets published."
-        />
+        <FormHeading title={heading.title} description={heading.description} />
         <TargetingForm
           ref={formRef}
           announcementId={announcementId}
@@ -60,6 +73,7 @@ export default function TargetingContent() {
               : undefined
           }
           onValidChange={setIsValid}
+          onTabChange={handleTabChange}
         />
       </FormLayout>
     </WizardStep>

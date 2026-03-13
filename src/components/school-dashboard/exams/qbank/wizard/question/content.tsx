@@ -12,12 +12,28 @@ import { WizardStep } from "@/components/form/wizard"
 import { useQuestionWizard } from "../use-question-wizard"
 import { QuestionForm } from "./form"
 
+const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
+  question: {
+    title: "Question",
+    description: "Enter the question text, subject, and type.",
+  },
+  details: {
+    title: "Question Details",
+    description: "Set difficulty, points, tags, and explanation.",
+  },
+}
+
 export default function QuestionContent() {
   const params = useParams()
   const questionId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useQuestionWizard()
   const [isValid, setIsValid] = useState(false)
+  const [heading, setHeading] = useState(TAB_HEADINGS.question)
+
+  const handleTabChange = (tabId: string) => {
+    setHeading(TAB_HEADINGS[tabId] || TAB_HEADINGS.question)
+  }
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -38,10 +54,7 @@ export default function QuestionContent() {
       isLoading={isLoading}
     >
       <FormLayout>
-        <FormHeading
-          title="Question Details"
-          description="Enter the question text, type, and metadata."
-        />
+        <FormHeading title={heading.title} description={heading.description} />
         <QuestionForm
           ref={formRef}
           questionId={questionId}
@@ -76,6 +89,7 @@ export default function QuestionContent() {
               : undefined
           }
           onValidChange={setIsValid}
+          onTabChange={handleTabChange}
         />
       </FormLayout>
     </WizardStep>

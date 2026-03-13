@@ -1,21 +1,32 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+//
+// Single source of truth: composed from wizard step schemas.
+// Individual step schemas live in ./wizard/*/validation.ts
 
 import { z } from "zod"
 
-// Base teacher information schema
-export const teacherBaseSchema = z.object({
-  givenName: z.string().min(1, "Given name is required"),
-  surname: z.string().min(1, "Surname is required"),
-  gender: z.enum(["male", "female"]).optional(),
-  emailAddress: z.string().email("Valid email is required"),
-  birthDate: z.coerce.date().optional(),
-  profilePhotoUrl: z.string().optional(),
-})
+import { contactSchema, phoneNumberSchema } from "./wizard/contact/validation"
+import { experienceItemSchema } from "./wizard/experience/validation"
+import { expertiseItemSchema } from "./wizard/expertise/validation"
+import { informationSchema } from "./wizard/information/validation"
+import { photoSchema } from "./wizard/photo/validation"
+import { qualificationSchema } from "./wizard/qualifications/validation"
 
-// Employment details schema
-export const employmentDetailsSchema = z
-  .object({
+// Re-export individual schemas for consumers (CSV import, onboarding, etc.)
+export { phoneNumberSchema } from "./wizard/contact/validation"
+export { qualificationSchema } from "./wizard/qualifications/validation"
+export { experienceItemSchema as experienceSchema } from "./wizard/experience/validation"
+export { expertiseItemSchema as subjectExpertiseSchema } from "./wizard/expertise/validation"
+
+// Composed full schema — merges flat fields from wizard steps.
+// Wizard step schemas with .refine() (employment) can't be merged,
+// so we inline the employment fields and add cross-field refinements here.
+export const teacherCreateSchema = photoSchema
+  .merge(informationSchema)
+  .merge(contactSchema)
+  .extend({
+    // Employment fields (from wizard/employment/validation.ts)
     employeeId: z.string().optional(),
     joiningDate: z.coerce.date().optional(),
     employmentStatus: z
@@ -26,10 +37,13 @@ export const employmentDetailsSchema = z
       .default("FULL_TIME"),
     contractStartDate: z.coerce.date().optional(),
     contractEndDate: z.coerce.date().optional(),
+    // Nested arrays
+    qualifications: z.array(qualificationSchema).optional().default([]),
+    experiences: z.array(experienceItemSchema).optional().default([]),
+    subjectExpertise: z.array(expertiseItemSchema).optional().default([]),
   })
   .refine(
     (data) => {
-      // If contract dates are provided, start must be before end
       if (data.contractStartDate && data.contractEndDate) {
         return data.contractStartDate < data.contractEndDate
       }
@@ -40,82 +54,8 @@ export const employmentDetailsSchema = z
       path: ["contractEndDate"],
     }
   )
-
-// Qualification schema
-export const qualificationSchema = z
-  .object({
-    qualificationType: z.enum(["DEGREE", "CERTIFICATION", "LICENSE"]),
-    name: z.string().min(1, "Qualification name is required"),
-    institution: z.string().optional(),
-    major: z.string().optional(),
-    dateObtained: z.coerce.date(),
-    expiryDate: z.coerce.date().optional(),
-    licenseNumber: z.string().optional(),
-    documentUrl: z.string().optional(),
-  })
   .refine(
     (data) => {
-      // If expiry date is provided, it must be after obtained date
-      if (data.expiryDate && data.dateObtained) {
-        return data.dateObtained < data.expiryDate
-      }
-      return true
-    },
-    {
-      message: "Expiry date must be after date obtained",
-      path: ["expiryDate"],
-    }
-  )
-
-// Experience schema
-export const experienceSchema = z
-  .object({
-    institution: z.string().min(1, "Institution name is required"),
-    position: z.string().min(1, "Position is required"),
-    startDate: z.coerce.date(),
-    endDate: z.coerce.date().optional(),
-    isCurrent: z.boolean().default(false),
-    description: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      // If not current and end date is provided, start must be before end
-      if (!data.isCurrent && data.endDate) {
-        return data.startDate < data.endDate
-      }
-      return true
-    },
-    {
-      message: "Start date must be before end date",
-      path: ["endDate"],
-    }
-  )
-
-// Phone number schema
-export const phoneNumberSchema = z.object({
-  phoneType: z.enum(["mobile", "home", "work", "emergency"]),
-  phoneNumber: z.string().min(1, "Phone number is required"),
-  isPrimary: z.boolean().default(false),
-})
-
-// Subject expertise schema
-export const subjectExpertiseSchema = z.object({
-  subjectId: z.string().min(1, "Subject is required"),
-  expertiseLevel: z.enum(["PRIMARY", "SECONDARY", "CERTIFIED"]),
-})
-
-// Complete teacher creation schema with all nested data
-export const teacherCreateSchema = teacherBaseSchema
-  .merge(employmentDetailsSchema)
-  .extend({
-    phoneNumbers: z.array(phoneNumberSchema).optional().default([]),
-    qualifications: z.array(qualificationSchema).optional().default([]),
-    experiences: z.array(experienceSchema).optional().default([]),
-    subjectExpertise: z.array(subjectExpertiseSchema).optional().default([]),
-  })
-  .refine(
-    (data) => {
-      // Birth date must be before joining date
       if (data.birthDate && data.joiningDate) {
         return data.birthDate < data.joiningDate
       }
@@ -127,14 +67,26 @@ export const teacherCreateSchema = teacherBaseSchema
     }
   )
 
-export const teacherUpdateSchema = teacherBaseSchema
-  .merge(employmentDetailsSchema)
+export const teacherUpdateSchema = informationSchema
+  .merge(contactSchema)
+  .extend({
+    employeeId: z.string().optional(),
+    joiningDate: z.coerce.date().optional(),
+    employmentStatus: z
+      .enum(["ACTIVE", "ON_LEAVE", "TERMINATED", "RETIRED"])
+      .optional(),
+    employmentType: z
+      .enum(["FULL_TIME", "PART_TIME", "CONTRACT", "SUBSTITUTE"])
+      .optional(),
+    contractStartDate: z.coerce.date().optional(),
+    contractEndDate: z.coerce.date().optional(),
+    qualifications: z.array(qualificationSchema).optional(),
+    experiences: z.array(experienceItemSchema).optional(),
+    subjectExpertise: z.array(expertiseItemSchema).optional(),
+  })
   .partial()
   .extend({
     id: z.string().min(1, "Required"),
-    qualifications: z.array(qualificationSchema).optional(),
-    experiences: z.array(experienceSchema).optional(),
-    subjectExpertise: z.array(subjectExpertiseSchema).optional(),
   })
 
 // Class teacher assignment schema (for co-teaching)
@@ -163,7 +115,7 @@ export const workloadConfigSchema = z
     },
     {
       message:
-        "Thresholds must be in ascending order: min ≤ normal ≤ max ≤ overload",
+        "Thresholds must be in ascending order: min <= normal <= max <= overload",
       path: ["overloadThreshold"],
     }
   )
@@ -179,10 +131,10 @@ export const getTeachersSchema = z.object({
   name: z.string().optional().default(""),
   emailAddress: z.string().optional().default(""),
   status: z.string().optional().default(""),
-  employmentStatus: z.string().optional().default(""), // TODO: not applied as filter in getTeachers()
-  employmentType: z.string().optional().default(""), // TODO: not applied as filter in getTeachers()
-  departmentId: z.string().optional().default(""), // TODO: not applied as filter in getTeachers()
-  subjectId: z.string().optional().default(""), // TODO: not applied as filter in getTeachers()
-  workloadStatus: z.enum(["UNDERUTILIZED", "NORMAL", "OVERLOAD"]).optional(), // TODO: not applied as filter in getTeachers()
+  employmentStatus: z.string().optional().default(""),
+  employmentType: z.string().optional().default(""),
+  departmentId: z.string().optional().default(""),
+  subjectId: z.string().optional().default(""),
+  workloadStatus: z.enum(["UNDERUTILIZED", "NORMAL", "OVERLOAD"]).optional(),
   sort: z.array(sortItemSchema).optional().default([]),
 })

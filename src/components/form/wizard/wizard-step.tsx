@@ -70,7 +70,8 @@ export function WizardStep({
   children,
 }: WizardStepProps) {
   const router = useRouter()
-  const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
+  const { enableNext, disableNext, setCustomNavigation, setOnSave } =
+    useWizardValidation()
   const isSavingRef = useRef(false)
 
   // Control next button state based on form validity
@@ -105,8 +106,34 @@ export function WizardStep({
     }
 
     setCustomNavigation({ onNext: handleNext })
-    return () => setCustomNavigation(undefined)
-  }, [entityId, nextStep, router, setCustomNavigation, formRef, isReviewStep])
+
+    // Register save-only handler (saves without navigating)
+    const handleSave = async () => {
+      if (isSavingRef.current) return
+      isSavingRef.current = true
+      try {
+        await formRef.current?.saveAndNext()
+      } catch {
+        // Error handled in form
+      } finally {
+        isSavingRef.current = false
+      }
+    }
+    setOnSave(handleSave)
+
+    return () => {
+      setCustomNavigation(undefined)
+      setOnSave(undefined)
+    }
+  }, [
+    entityId,
+    nextStep,
+    router,
+    setCustomNavigation,
+    setOnSave,
+    formRef,
+    isReviewStep,
+  ])
 
   if (isLoading) {
     return (

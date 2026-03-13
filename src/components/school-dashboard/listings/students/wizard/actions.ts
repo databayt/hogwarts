@@ -58,7 +58,7 @@ export async function createDraftStudent(): Promise<
         surname: "",
         dateOfBirth: new Date(),
         gender: "male",
-        wizardStep: "personal",
+        wizardStep: "photo",
       },
     })
 

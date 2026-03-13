@@ -41,7 +41,7 @@ export async function getInvoiceForWizard(
 
     if (!invoice) return { success: false, error: "Invoice not found" }
 
-    return { success: true, data: invoice as InvoiceWizardData }
+    return { success: true, data: invoice as unknown as InvoiceWizardData }
   } catch (error) {
     return {
       success: false,

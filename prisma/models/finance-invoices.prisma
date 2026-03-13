@@ -20,10 +20,10 @@ model UserInvoice {
   to             UserInvoiceAddress @relation("ToAddress", fields: [toAddressId], references: [id])
   toAddressId    String             @unique
   items          UserInvoiceItem[]
-  sub_total      Float
-  discount       Float?
-  tax_percentage Float?
-  total          Float
+  sub_total      Decimal  @db.Decimal(10, 2)
+  discount       Decimal? @db.Decimal(10, 2)
+  tax_percentage Decimal? @db.Decimal(5, 2)
+  total          Decimal  @db.Decimal(10, 2)
   notes          String?            @db.Text
   status         InvoiceStatus      @default(UNPAID)
   userId         String
@@ -51,8 +51,8 @@ model UserInvoiceItem {
   id        String      @id @default(cuid())
   item_name String
   quantity  Int
-  price     Float
-  total     Float
+  price     Decimal @db.Decimal(10, 2)
+  total     Decimal @db.Decimal(10, 2)
   invoiceId String
   invoice   UserInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   schoolId  String
@@ -111,6 +111,7 @@ model UserInvoiceSignature {
 // This is separate from ExpenseReceipt which tracks expense receipts with OCR
 model Receipt {
   id         String    @id @default(cuid())
+  schoolId   String
   invoiceId  String
   fileName   String
   fileUrl    String
@@ -119,11 +120,13 @@ model Receipt {
   notes      String?   @db.Text
   reviewedAt DateTime?
 
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([schoolId])
   @@index([invoiceId])
   @@index([status])
 }

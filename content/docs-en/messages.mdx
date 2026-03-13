@@ -1,0 +1,809 @@
+---
+title: "Messages"
+description: "Complete guide to the messaging system - direct and group conversations, real-time chat, file attachments, reactions, typing indicators, read receipts, and role-based access control"
+---
+
+## Overview
+
+The Messages module provides a comprehensive in-platform messaging system for school communication. It supports 5 conversation types (direct, group, class, department, announcement), real-time chat via Socket.IO, file attachments with drag-and-drop upload, emoji reactions, typing indicators, read receipts, message threading, and full RBAC enforcement across all 8 user roles.
+
+### Module Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         ENTRY POINT                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│  All Roles:  /messages              → Messaging Interface               │
+│              /messages?conversation=<id>  → Deep link to conversation   │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    MESSAGING CLIENT (messaging-client.tsx)               │
+├────────────────────────────┬────────────────────────────────────────────┤
+│       SIDEBAR              │              CHAT INTERFACE                │
+│  ┌──────────────────┐      │  ┌──────────────────────────────────────┐  │
+│  │ Conversation List │      │  │  Chat Header (title, participants)  │  │
+│  │ • Search          │      │  ├──────────────────────────────────────┤  │
+│  │ • Filter by type  │      │  │  Message List (cursor pagination)   │  │
+│  │ • Unread counts   │      │  │  • Message bubbles                  │  │
+│  │ • Pinned convos   │      │  │  • Message groups (same sender)     │  │
+│  │ • Last message    │      │  │  • Reactions                        │  │
+│  └──────────────────┘      │  │  • Thread replies (replyToId)       │  │
+│                            │  ├──────────────────────────────────────┤  │
+│  ┌──────────────────┐      │  │  Typing Indicators                  │  │
+│  │ New Conversation  │      │  ├──────────────────────────────────────┤  │
+│  │ • User search     │      │  │  Message Input (useActionState)     │  │
+│  │ • Direct or group │      │  │  • Text input with send             │  │
+│  │ • Type selection   │      │  │  • File attachment button           │  │
+│  └──────────────────┘      │  │  • Draft auto-save                  │  │
+│                            │  └──────────────────────────────────────┘  │
+└────────────────────────────┴────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    ▼                               ▼
+┌──────────────────────────────┐  ┌──────────────────────────────────────┐
+│   REAL-TIME LAYER            │  │       SERVER ACTIONS                  │
+│  Socket.IO WebSocket         │  │  actions.ts (20+ actions, 1200+ LOC) │
+│  ┌────────────────────────┐  │  │  ┌──────────────────────────────────┐│
+│  │ useRealtimeMessages()  │  │  │  │ Conversations: create, archive, ││
+│  │ • message:new          │  │  │  │   leave, pin, mute, unmute      ││
+│  │ • message:updated      │  │  │  ├──────────────────────────────────┤│
+│  │ • message:deleted      │  │  │  │ Messages: send, sendFromForm,   ││
+│  │ • message:read         │  │  │  │   edit, delete (soft)           ││
+│  │ • message:reaction     │  │  │  ├──────────────────────────────────┤│
+│  │ • typing:start/stop    │  │  │  │ Participants: add, remove       ││
+│  └────────────────────────┘  │  │  ├──────────────────────────────────┤│
+│  ┌────────────────────────┐  │  │  │ Reactions: add, remove          ││
+│  │ useConversationList()  │  │  │  ├──────────────────────────────────┤│
+│  │ • conversation:new     │  │  │  │ Read: markMessage, markConvo    ││
+│  │ • conversation:updated │  │  │  ├──────────────────────────────────┤│
+│  │ • conversation:archived│  │  │  │ Drafts: save, delete            ││
+│  │ • participant events   │  │  │  ├──────────────────────────────────┤│
+│  └────────────────────────┘  │  │  │ Invites: create, respond        ││
+│                              │  │  ├──────────────────────────────────┤│
+│  Rooms:                      │  │  │ Pins: pin, unpin message        ││
+│  • conversation:{id}         │  │  └──────────────────────────────────┘│
+│  • user_conversations:{uid}  │  └──────────────────────────────────────┘
+└──────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      QUERIES (queries.ts, 1300+ LOC)                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Conversations:                                                         │
+│  • getConversationsList()        → Paginated with unread counts         │
+│  • getConversation()             → Single with participants             │
+│  • getOrCreateDirectConversation() → Dedup direct conversations         │
+│                                                                         │
+│  Messages:                                                              │
+│  • getMessagesList()             → Standard pagination                  │
+│  • getMessagesWithCursor()       → Cursor-based (infinite scroll)       │
+│                                                                         │
+│  Counts:                                                                │
+│  • getUnreadMessageCount()       → Raw SQL optimized                    │
+│  • getUnreadCountsPerConversation() → Per-conversation counts           │
+│                                                                         │
+│  Search:                                                                │
+│  • fullTextSearchMessages()      → PostgreSQL tsvector/tsquery + rank   │
+│  • globalSearch()                → Cross-conversation search            │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      SUPPORTING SYSTEMS                                 │
+├──────────────────┬──────────────────┬───────────────────────────────────┤
+│   ATTACHMENTS    │   NOTIFICATIONS  │          AUDIT LOG                │
+│  ┌────────────┐  │  ┌────────────┐  │  ┌─────────────────────────────┐ │
+│  │ S3 / Vercel│  │  │ New message│  │  │ All operations logged via   │ │
+│  │ Blob upload│  │  │ → in-app   │  │  │ AuditLog model              │ │
+│  │ Drag+drop  │  │  │ Mention    │  │  │ • conversation CRUD         │ │
+│  │ Previews   │  │  │ → targeted │  │  │ • message send/edit/delete  │ │
+│  │ Progress   │  │  │ Announce   │  │  │ • participant changes       │ │
+│  └────────────┘  │  │ → priority │  │  │ • permission changes        │ │
+│                  │  └────────────┘  │  └─────────────────────────────┘ │
+└──────────────────┴──────────────────┴───────────────────────────────────┘
+```
+
+### Key Features
+
+| Feature                    | Status         | Description                                                     |
+| -------------------------- | -------------- | --------------------------------------------------------------- |
+| Direct Conversations       | **Production** | 1-to-1 messaging with dedup via directParticipant lookup        |
+| Group Conversations        | **Production** | Multi-user groups with owner/admin/member roles                 |
+| Class Conversations        | **Production** | Linked to Class model, teacher-scoped                           |
+| Department Conversations   | **Production** | Linked to Department model                                      |
+| Announcement Conversations | **Production** | Admin/Developer broadcast channel                               |
+| Message Threading          | **Production** | Reply-to with `replyToId` linking                               |
+| Emoji Reactions            | **Production** | Per-message reactions, unique per user+emoji                    |
+| Read Receipts              | **Production** | Per-message per-user read timestamps                            |
+| Typing Indicators          | **Production** | 5-second expiry, unique per conversation+user                   |
+| Message Drafts             | **Production** | Auto-save drafts per conversation per user                      |
+| Pinned Messages            | **Production** | Pin/unpin with attribution                                      |
+| Conversation Invites       | **Production** | Invite system with pending/accepted/declined/expired            |
+| File Attachments           | **Production** | Drag-and-drop, previews, progress bars, S3/Vercel Blob          |
+| Full-Text Search           | **Production** | PostgreSQL tsvector/tsquery with ranking                        |
+| Cursor Pagination          | **Production** | Efficient infinite scroll for message lists                     |
+| Soft Delete                | **Production** | Messages soft-deleted with `isDeleted`/`deletedAt`              |
+| Message Editing            | **Production** | Edit own messages with `isEdited`/`editedAt` tracking           |
+| System Messages            | **Production** | Auto-generated for joins, leaves, renames, pins                 |
+| Conversation Mute/Pin      | **Production** | Per-user mute and pin preferences                               |
+| Archive                    | **Production** | Archive conversations (admin/owner only)                        |
+| Audit Logging              | **Production** | All operations logged via AuditLog model                        |
+| Notification Integration   | **Production** | In-app notifications for new messages, mentions, announcements  |
+| Socket.IO Client Hooks     | **Wired**      | `useRealtimeMessages`, `useConversationListUpdates` hooks ready |
+| Socket.IO Server Events    | **Not Done**   | Server-side messaging events not implemented                    |
+| Auto-Read Marking          | **Not Done**   | IntersectionObserver-based read marking not wired               |
+| Voice/Video Calls          | **Not Done**   | Buttons present but disabled, no implementation                 |
+
+### Routes
+
+All routes under `src/app/[lang]/s/[subdomain]/(school-dashboard)/messages/`:
+
+| Route                      | Roles | Description                               |
+| -------------------------- | ----- | ----------------------------------------- |
+| `/messages`                | All   | Main messaging interface (sidebar + chat) |
+| `/messages?conversation=X` | All   | Deep link to specific conversation        |
+
+### File Structure
+
+```
+src/app/[lang]/s/[subdomain]/(school-dashboard)/messages/
+├── page.tsx                    # Server entry point
+├── loading.tsx                 # Suspense skeleton
+├── error.tsx                   # Error boundary
+
+src/components/school-dashboard/messaging/
+├── content.tsx                 # Server component: fetches data, renders client
+├── messaging-client.tsx        # Client orchestrator: sidebar + chat + Socket.IO
+├── chat-interface.tsx          # Chat view: header, messages, input, typing
+├── conversation-list.tsx       # Sidebar conversation list
+├── conversation-card.tsx       # Individual conversation card
+├── new-conversation-dialog.tsx # Create direct/group with user search
+├── message-list.tsx            # Scrollable messages with load-more
+├── message-bubble.tsx          # Individual message rendering
+├── message-group.tsx           # Groups consecutive messages from same sender
+├── message-input.tsx           # Text input (React 19 useActionState)
+├── message-search.tsx          # In-conversation search
+├── attachment-upload.tsx       # Drag-and-drop (react-dropzone), previews
+├── auto-scroller.tsx           # Auto-scroll to bottom
+├── empty-state.tsx             # "No active conversation" placeholder
+├── serialization.tsx           # Date serialization for SSR
+│
+├── config.ts                   # Types, roles, limits, emoji, system templates
+├── types.ts                    # DTOs, filter types, Socket.IO event types
+├── validation.ts               # 25+ Zod schemas
+├── authorization.ts            # RBAC + participant access control
+├── audit.ts                    # Audit logging for all operations
+├── notification-helpers.ts     # Integration with notification system
+├── upload-actions.ts           # File upload/delete/validate server actions
+├── actions.ts                  # 20+ server actions (1200+ LOC)
+├── queries.ts                  # Cursor pagination, full-text search (1300+ LOC)
+│
+└── hooks/
+    └── use-realtime-messages.ts  # WebSocket hook for real-time
+```
+
+## Conversation Types
+
+### Five Conversation Types
+
+| Type           | Purpose                   | Auto-Participants           | Key Fields                        |
+| -------------- | ------------------------- | --------------------------- | --------------------------------- |
+| `direct`       | 1-to-1 private messaging  | Both users                  | `directParticipant1Id`, `2Id`     |
+| `group`        | Multi-user group chat     | Creator as owner            | `title`, `description`, `avatar`  |
+| `class`        | Class-bound communication | Teacher + enrolled students | `classId`                         |
+| `department`   | Department-wide channel   | Department members          | `departmentId`                    |
+| `announcement` | Admin/Developer broadcast | All school members          | `title`, read-only for non-admins |
+
+### Direct Conversation Dedup
+
+Direct conversations use `directParticipant1Id` and `directParticipant2Id` fields for quick lookup. The `getOrCreateDirectConversation()` query checks both orderings before creating a new conversation, preventing duplicates.
+
+### System Message Templates
+
+Automatic system messages are generated for lifecycle events:
+
+| Template                | Trigger                     |
+| ----------------------- | --------------------------- |
+| `participant_joined`    | User joins conversation     |
+| `participant_left`      | User leaves conversation    |
+| `participant_added`     | User added by admin/owner   |
+| `participant_removed`   | User removed by admin/owner |
+| `conversation_created`  | New conversation created    |
+| `conversation_renamed`  | Conversation title changed  |
+| `conversation_archived` | Conversation archived       |
+| `message_pinned`        | Message pinned              |
+| `message_unpinned`      | Message unpinned            |
+
+## Role-Based Access Control
+
+All messaging server actions enforce RBAC via `authorization.ts`. Access is controlled at two levels: **platform role** (what conversation types a user can access) and **participant role** (what actions a user can take within a conversation).
+
+### Platform Role Permissions
+
+| Role       | Direct |   Group    |  Class  | Department | Announcement |
+| ---------- | :----: | :--------: | :-----: | :--------: | :----------: |
+| DEVELOPER  |   Y    |     Y      |    Y    |     Y      |      Y       |
+| ADMIN      |   Y    |     Y      |    Y    |     Y      |      Y       |
+| TEACHER    |   Y    |     Y      | Y (own) |     Y      |      -       |
+| ACCOUNTANT |   Y    |     Y      |    -    |     -      |      -       |
+| STAFF      |   Y    |     Y      |    -    |     -      |      -       |
+| STUDENT    |   Y    | Y (create) |    -    |     -      |      -       |
+| GUARDIAN   |   Y    |     -      |    -    |     -      |      -       |
+
+### Participant Role Permissions
+
+| Participant Role | Send | Edit Own | Delete Own | Add Members | Remove Members | Pin | Manage |
+| ---------------- | :--: | :------: | :--------: | :---------: | :------------: | :-: | :----: |
+| owner            |  Y   |    Y     |     Y      |      Y      |       Y        |  Y  |   Y    |
+| admin            |  Y   |    Y     |     Y      |      Y      |       Y        |  Y  |   Y    |
+| member           |  Y   |    Y     |     Y      | Groups only |       -        |  Y  |   -    |
+| read_only        |  -   |    -     |     -      |      -      |       -        |  -  |   -    |
+| guest            |  -   |    -     |     -      |      -      |       -        |  -  |   -    |
+
+### Teacher Scoping
+
+Teachers can only access `class` conversations for classes they teach (via `Class.teacherId` + `ClassTeacher` bridge table). They cannot create or view class conversations for other teachers' classes.
+
+## Message Lifecycle
+
+### Message Status Flow
+
+```
+SENDING
+   │
+   ▼
+  SENT ──────────────────► FAILED
+   │                     (network/validation error)
+   ▼
+DELIVERED
+   │
+   ▼
+  READ
+```
+
+### Statuses
+
+| Status      | Description                                    |
+| ----------- | ---------------------------------------------- |
+| `sending`   | Client-side optimistic state                   |
+| `sent`      | Server received and persisted                  |
+| `delivered` | Delivered to recipient's client                |
+| `read`      | Recipient has viewed the message               |
+| `failed`    | Send failed (validation, network, permissions) |
+
+### Content Types
+
+| Content Type | Description                   | Rendering                    |
+| ------------ | ----------------------------- | ---------------------------- |
+| `text`       | Plain text message            | Text with link detection     |
+| `image`      | Image attachment              | Inline preview with lightbox |
+| `file`       | File attachment               | File card with download link |
+| `system`     | Auto-generated system message | Centered, muted styling      |
+
+### Soft Delete
+
+Messages are soft-deleted via `isDeleted: true` and `deletedAt` timestamp. Deleted messages show a "This message was deleted" placeholder in the UI. Only the message sender (or conversation owner/admin) can delete messages.
+
+### Message Editing
+
+Users can edit their own messages. Edited messages display an "edited" indicator with the `editedAt` timestamp. The `isEdited` flag is set to `true` on update.
+
+## File Attachments
+
+### Upload Flow
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      FILE UPLOAD FLOW                                │
+└──────────────────────────────────────────────────────────────────────┘
+
+  [1] USER ACTION              [2] VALIDATION             [3] UPLOAD
+  ┌──────────────┐             ┌──────────────┐           ┌──────────────┐
+  │ Drag-and-drop│             │ File size    │           │ S3 or Vercel │
+  │ or file pick │─────────────│ MIME type    │───────────│ Blob storage │
+  │ (dropzone)   │             │ Dimensions   │           │ Progress bar │
+  └──────────────┘             └──────────────┘           └──────────────┘
+                                                                 │
+                                                                 ▼
+                               [4] ATTACHMENT RECORD      [5] SEND MESSAGE
+                               ┌──────────────┐           ┌──────────────┐
+                               │ fileName     │           │ Message with │
+                               │ fileUrl      │───────────│ contentType  │
+                               │ fileSize     │           │ = image/file │
+                               │ fileType     │           └──────────────┘
+                               │ thumbnail    │
+                               └──────────────┘
+```
+
+### Storage Path
+
+```
+messaging/{schoolId}/{conversationId}/{filename}
+```
+
+### File Size Limits
+
+| Category  | Max Size | Supported Types              |
+| --------- | -------- | ---------------------------- |
+| Images    | 10 MB    | JPEG, PNG, GIF, WebP         |
+| Videos    | 100 MB   | MP4, WebM, QuickTime         |
+| Audio     | 25 MB    | MP3, WAV, OGG                |
+| Documents | 50 MB    | PDF, DOC/DOCX, XLS/XLSX, TXT |
+
+### Upload Features
+
+- **Drag-and-drop** via `react-dropzone`
+- **Image previews** before send
+- **Progress bars** during upload
+- **MIME type validation** on client and server
+- **Dimension tracking** for images (width/height)
+- **Thumbnail generation** (not yet implemented)
+
+## Real-Time Architecture
+
+### Socket.IO Events
+
+| Event                              | Direction       | Description                   |
+| ---------------------------------- | --------------- | ----------------------------- |
+| `message:new`                      | Server → Client | New message in conversation   |
+| `message:updated`                  | Server → Client | Message edited                |
+| `message:deleted`                  | Server → Client | Message deleted               |
+| `message:read`                     | Server → Client | Message read receipt          |
+| `message:reaction`                 | Server → Client | Reaction added/removed        |
+| `conversation:new`                 | Server → Client | New conversation created      |
+| `conversation:updated`             | Server → Client | Conversation metadata changed |
+| `conversation:archived`            | Server → Client | Conversation archived         |
+| `conversation:participant_added`   | Server → Client | Participant added             |
+| `conversation:participant_removed` | Server → Client | Participant removed           |
+| `typing:start`                     | Bidirectional   | User started typing           |
+| `typing:stop`                      | Bidirectional   | User stopped typing           |
+| `conversation:invite`              | Server → Client | Conversation invite received  |
+
+### Room Structure
+
+| Room Pattern                    | Purpose                            |
+| ------------------------------- | ---------------------------------- |
+| `conversation:{conversationId}` | All participants of a conversation |
+| `user_conversations:{userId}`   | User's conversation list updates   |
+
+### Client Hooks
+
+```typescript
+// Real-time messages within a conversation
+useRealtimeMessages(conversationId: string)
+// Returns: messages, typing users, connection status
+
+// Sidebar conversation list updates
+useConversationListUpdates(userId: string)
+// Returns: updated conversation list with unread counts
+```
+
+> **Gap:** The Socket.IO server currently only has attendance events implemented. Messaging events are defined in client hooks but the server-side event emission is not wired. Chat currently relies on optimistic updates and page refreshes.
+
+## Notification Integration
+
+### Notification Triggers
+
+| Trigger              | Recipients                  | Priority |
+| -------------------- | --------------------------- | -------- |
+| New message          | All participants (- sender) | Normal   |
+| @mention in message  | Mentioned user(s)           | High     |
+| Announcement message | All school members          | High     |
+| Conversation invite  | Invitee                     | Normal   |
+
+Notifications are dispatched via the platform's notification system (`notification-helpers.ts`), which supports in-app, email, and SMS channels.
+
+## Search
+
+### Full-Text Search
+
+The `fullTextSearchMessages()` query uses PostgreSQL's `tsvector` and `tsquery` for ranked full-text search within a conversation:
+
+```typescript
+fullTextSearchMessages(input: {
+  conversationId: string
+  query: string
+  limit?: number
+  offset?: number
+})
+// Returns: messages ranked by relevance (ts_rank)
+```
+
+### Global Search
+
+The `globalSearch()` query searches across all conversations the user has access to:
+
+```typescript
+globalSearch(input: {
+  query: string
+  conversationTypes?: ConversationType[]
+  limit?: number
+})
+// Returns: messages with conversation metadata
+```
+
+## API Reference
+
+### Server Actions (`actions.ts`)
+
+**20+ server actions across 8 categories:**
+
+#### Conversations -- 6 actions
+
+| Action                  | Roles        | Purpose                             |
+| ----------------------- | ------------ | ----------------------------------- |
+| `createConversation()`  | All (RBAC)   | Create conversation of any type     |
+| `archiveConversation()` | Owner, Admin | Archive a conversation              |
+| `leaveConversation()`   | All members  | Leave a conversation                |
+| `pinConversation()`     | All members  | Pin conversation in sidebar         |
+| `muteConversation()`    | All members  | Mute notifications for conversation |
+| `unmuteConversation()`  | All members  | Unmute notifications                |
+
+#### Messages -- 4 actions
+
+| Action                  | Roles                   | Purpose                               |
+| ----------------------- | ----------------------- | ------------------------------------- |
+| `sendMessage()`         | Members (not read_only) | Send a message to a conversation      |
+| `sendMessageFromForm()` | Members (not read_only) | React 19 form action for message send |
+| `editMessage()`         | Message sender only     | Edit own message content              |
+| `deleteMessage()`       | Sender, Owner, Admin    | Soft delete a message                 |
+
+#### Participants -- 2 actions
+
+| Action                | Roles        | Purpose                       |
+| --------------------- | ------------ | ----------------------------- |
+| `addParticipant()`    | Owner, Admin | Add user to conversation      |
+| `removeParticipant()` | Owner, Admin | Remove user from conversation |
+
+#### Reactions -- 2 actions
+
+| Action             | Roles          | Purpose                       |
+| ------------------ | -------------- | ----------------------------- |
+| `addReaction()`    | All members    | Add emoji reaction to message |
+| `removeReaction()` | Reaction owner | Remove own reaction           |
+
+#### Pins -- 2 actions
+
+| Action           | Roles                | Purpose                       |
+| ---------------- | -------------------- | ----------------------------- |
+| `pinMessage()`   | Owner, Admin, Member | Pin a message in conversation |
+| `unpinMessage()` | Owner, Admin, Pinner | Unpin a pinned message        |
+
+#### Read Receipts -- 2 actions
+
+| Action                     | Roles       | Purpose                           |
+| -------------------------- | ----------- | --------------------------------- |
+| `markMessageAsRead()`      | All members | Mark single message as read       |
+| `markConversationAsRead()` | All members | Mark all messages in conversation |
+
+#### Drafts -- 2 actions
+
+| Action          | Roles       | Purpose                 |
+| --------------- | ----------- | ----------------------- |
+| `saveDraft()`   | All members | Auto-save message draft |
+| `deleteDraft()` | Draft owner | Delete saved draft      |
+
+#### Invites -- 2 actions
+
+| Action                       | Roles        | Purpose                      |
+| ---------------------------- | ------------ | ---------------------------- |
+| `createConversationInvite()` | Owner, Admin | Invite user to conversation  |
+| `respondToInvite()`          | Invitee      | Accept or decline invitation |
+
+### Key Action Signatures
+
+```typescript
+// Create a conversation (any type)
+createConversation(input: {
+  type: 'direct' | 'group' | 'class' | 'department' | 'announcement'
+  title?: string
+  description?: string
+  participantIds?: string[]
+  classId?: string
+  departmentId?: string
+})
+
+// Send a message
+sendMessage(input: {
+  conversationId: string
+  content: string
+  contentType?: 'text' | 'image' | 'file'
+  replyToId?: string
+  metadata?: Record<string, unknown>  // mentions, links
+})
+
+// React 19 form action for message send
+sendMessageFromForm(
+  prevState: FormState,
+  formData: FormData
+)
+
+// Edit own message
+editMessage(input: {
+  messageId: string
+  content: string
+})
+
+// Soft delete message
+deleteMessage(messageId: string)
+
+// Add emoji reaction
+addReaction(input: {
+  messageId: string
+  emoji: string
+})
+
+// Mark conversation as read
+markConversationAsRead(conversationId: string)
+
+// Save draft
+saveDraft(input: {
+  conversationId: string
+  content: string
+  replyToId?: string
+})
+```
+
+### Queries (`queries.ts`)
+
+| Query                              | Purpose                                   |
+| ---------------------------------- | ----------------------------------------- |
+| `getConversationsList()`           | Paginated list with unread counts         |
+| `getConversation()`                | Single conversation with participants     |
+| `getOrCreateDirectConversation()`  | Dedup direct conversations                |
+| `getMessagesList()`                | Standard paginated message list           |
+| `getMessagesWithCursor()`          | Cursor-based pagination (infinite scroll) |
+| `getUnreadMessageCount()`          | Total unread count (raw SQL optimized)    |
+| `getUnreadCountsPerConversation()` | Per-conversation unread counts            |
+| `fullTextSearchMessages()`         | PostgreSQL tsvector/tsquery with ranking  |
+| `globalSearch()`                   | Cross-conversation search                 |
+
+## Database Schema
+
+### Core Models (10 models)
+
+```prisma
+model Conversation {
+  id                   String             @id @default(cuid())
+  schoolId             String
+  type                 ConversationType
+  title                String?
+  description          String?
+  avatar               String?
+  createdById          String
+  directParticipant1Id String?            // Quick direct lookup
+  directParticipant2Id String?            // Quick direct lookup
+  classId              String?            // For class conversations
+  departmentId         String?            // For department conversations
+  isLocked             Boolean            @default(false)
+  isArchived           Boolean            @default(false)
+  lastMessageAt        DateTime?
+
+  @@index([schoolId, type, lastMessageAt(sort: Desc)])
+  @@index([classId])
+  @@index([departmentId])
+  @@index([directParticipant1Id, directParticipant2Id])
+}
+
+model ConversationParticipant {
+  id             String          @id @default(cuid())
+  conversationId String
+  userId         String
+  role           ParticipantRole @default(member)
+  nickname       String?
+  lastReadAt     DateTime?
+  unreadCount    Int             @default(0)
+  isMuted        Boolean         @default(false)
+  isPinned       Boolean         @default(false)
+  isActive       Boolean         @default(true)
+  leftAt         DateTime?
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id          String      @id @default(cuid())
+  conversationId String
+  senderId    String
+  content     String?     @db.Text
+  contentType String      @default("text")  // text, image, file, system
+  status      MessageStatus @default(sent)
+  replyToId   String?     // Threading
+  isEdited    Boolean     @default(false)
+  editedAt    DateTime?
+  isDeleted   Boolean     @default(false)
+  deletedAt   DateTime?   // Soft delete
+  isSystem    Boolean     @default(false)
+  metadata    Json?       // mentions, links
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@index([replyToId])
+  @@index([conversationId, isSystem])
+}
+
+model MessageAttachment {
+  id        String  @id @default(cuid())
+  messageId String
+  fileName  String
+  fileUrl   String
+  fileSize  Int
+  fileType  String  // MIME type
+  width     Int?    // For images
+  height    Int?    // For images
+  thumbnail String?
+  uploaded  Boolean @default(false)
+}
+
+model MessageReaction {
+  id        String @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+
+  @@unique([messageId, userId, emoji])
+}
+
+model MessageReadReceipt {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  @@unique([messageId, userId])
+}
+
+model TypingIndicator {
+  id             String   @id @default(cuid())
+  schoolId       String
+  conversationId String
+  userId         String
+  isTyping       Boolean  @default(true)
+  startedAt      DateTime @default(now())
+  expiresAt      DateTime // 5 seconds from start
+
+  @@unique([conversationId, userId])
+}
+
+model MessageDraft {
+  id             String  @id @default(cuid())
+  conversationId String
+  userId         String
+  content        String  @db.Text
+  replyToId      String?
+
+  @@unique([conversationId, userId])
+}
+
+model PinnedMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  messageId      String
+  pinnedById     String
+  pinnedAt       DateTime @default(now())
+}
+
+model ConversationInvite {
+  id         String   @id @default(cuid())
+  conversationId String
+  inviterId  String
+  inviteeId  String
+  status     String   @default("pending")  // pending, accepted, declined, expired
+  expiresAt  DateTime?
+}
+```
+
+### Enums
+
+```prisma
+enum ConversationType {
+  direct
+  group
+  class
+  department
+  announcement
+}
+
+enum MessageStatus {
+  sending
+  sent
+  delivered
+  read
+  failed
+}
+
+enum ParticipantRole {
+  owner
+  admin
+  member
+  read_only
+  guest
+}
+```
+
+## Seed Data
+
+```bash
+pnpm db:seed:single messages
+```
+
+Creates realistic test data:
+
+- 50 conversations across all 5 types
+- 300+ messages with varied content types
+- Reactions, read receipts, and threading
+- File attachment records
+- System messages for lifecycle events
+
+## Known Issues
+
+### Critical
+
+1. **Socket.IO server not implemented** -- The Socket.IO server only has attendance events. Messaging events (`message:new`, `typing:start`, etc.) are defined in client hooks but not emitted server-side. Chat relies on optimistic updates and page refreshes.
+2. **No polling fallback** -- When WebSocket is unavailable, there is no fallback polling mechanism for message delivery.
+
+### High
+
+3. **Auto-read marking not wired** -- IntersectionObserver-based read marking is not connected. Messages are only marked as read via explicit `markMessageAsRead()` calls.
+4. **Message edit UI incomplete** -- Edit message action exists but the UI has `// TODO` markers for the inline edit interface.
+5. **Class/department auto-population** -- Class and department conversations do not auto-populate participants from the class roster or department membership.
+
+### Medium
+
+6. **Voice/video call buttons disabled** -- UI buttons are present but disabled with no underlying implementation.
+7. **No message forwarding** -- Cannot forward messages to other conversations.
+8. **No scheduled messages** -- Cannot schedule messages for future delivery.
+9. **No voice messages** -- Audio recording and playback not implemented.
+10. **Attachment thumbnail generation skipped** -- `MessageAttachment.thumbnail` field exists but thumbnails are not generated during upload.
+11. **No canned response templates** -- No pre-built response templates for common messages.
+
+## Production Readiness
+
+| Area                     | Status   | Notes                                                 |
+| ------------------------ | -------- | ----------------------------------------------------- |
+| RBAC on all actions      | Done     | `authorization.ts` with role + participant matrix     |
+| Multi-tenant isolation   | Done     | `schoolId` on all queries and mutations               |
+| Conversation dedup       | Done     | `getOrCreateDirectConversation()` prevents dupes      |
+| Soft delete              | Done     | `isDeleted`/`deletedAt` on messages                   |
+| Cursor pagination        | Done     | Efficient infinite scroll via `getMessagesWithCursor` |
+| Full-text search         | Done     | PostgreSQL tsvector/tsquery with ranking              |
+| File upload validation   | Done     | MIME type + size limits on client and server          |
+| Audit logging            | Done     | All operations logged via AuditLog model              |
+| Notification integration | Done     | New message, mention, announcement notifications      |
+| Zod validation           | Done     | 25+ schemas in `validation.ts`                        |
+| Real-time (Socket.IO)    | Not done | Client hooks ready, server events not implemented     |
+| Auto-read (Intersection) | Not done | Manual read marking only                              |
+| Voice/video calls        | Not done | Buttons disabled, no implementation                   |
+
+## Best Practices
+
+### For Administrators
+
+1. Use **announcement** conversations for school-wide broadcasts
+2. Create **department** conversations for staff coordination
+3. Monitor audit logs for messaging policy compliance
+4. Archive inactive conversations to keep the sidebar clean
+5. Assign appropriate participant roles (owner/admin/member/read_only)
+
+### For Teachers
+
+1. Use **class** conversations for class-specific communication
+2. Pin important messages for student reference
+3. Use **group** conversations for project-based collaboration
+4. Respond to parent direct messages promptly
+5. Use mentions to notify specific participants
+
+### For Students
+
+1. Use **direct** messages for private teacher communication
+2. Create **group** conversations for study groups
+3. Check pinned messages for important class updates
+4. Mute conversations during study time using the mute toggle
+
+### For Parents/Guardians
+
+1. Use **direct** messages to communicate with teachers
+2. Enable notifications to stay informed of school updates
+3. Check announcement conversations for school-wide information

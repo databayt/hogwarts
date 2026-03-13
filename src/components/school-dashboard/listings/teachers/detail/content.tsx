@@ -30,6 +30,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import {
   Award,
   BookOpen,
@@ -40,7 +41,6 @@ import {
   Edit,
   GraduationCap,
   Mail,
-  MoreHorizontal,
   Phone,
   Star,
   User,
@@ -59,12 +59,8 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-
-import { TeacherCreateForm } from "../form"
 
 // ============================================================================
 // Types
@@ -244,7 +240,6 @@ export function TeacherDetailContent({
   isOwner = false,
 }: Props) {
   const [activeTab, setActiveTab] = useState("overview")
-  const { openModal } = useModal()
 
   const d = dictionary?.teachers?.detail
   const t = {
@@ -309,13 +304,13 @@ export function TeacherDetailContent({
                   </div>
                   {isOwner && (
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openModal(teacher.id)}
-                      >
-                        <Edit className="me-2 h-4 w-4" />
-                        {t.edit}
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/${lang}/teachers/add/${teacher.id}/information`}
+                        >
+                          <Edit className="me-2 h-4 w-4" />
+                          {t.edit}
+                        </Link>
                       </Button>
                     </div>
                   )}
@@ -753,9 +748,6 @@ export function TeacherDetailContent({
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Edit Modal */}
-      <Modal content={<TeacherCreateForm />} />
     </>
   )
 }

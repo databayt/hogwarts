@@ -437,6 +437,7 @@ class CsvImportService {
                   academicGradeId: academicGradeId || undefined,
                   sectionId: sectionId || undefined,
                   lang: detectedLang,
+                  wizardStep: "emergency",
                 }
               }),
             })
@@ -786,6 +787,7 @@ class CsvImportService {
                   surname: parts.slice(1).join(" ") || "Unknown",
                   emailAddress: r.validated.email,
                   lang: detectedLang,
+                  wizardStep: "employment",
                 }
               }),
             })

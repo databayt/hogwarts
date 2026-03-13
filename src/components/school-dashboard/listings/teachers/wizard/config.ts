@@ -6,24 +6,21 @@ import type { WizardConfig } from "@/components/form/wizard"
 export const TEACHER_WIZARD_CONFIG: WizardConfig = {
   id: "teacher",
   steps: [
+    "photo",
     "information",
     "contact",
     "employment",
     "qualifications",
     "experience",
     "expertise",
-    "review",
   ],
   groups: {
-    1: ["information", "contact"],
+    1: ["photo", "information", "contact"],
     2: ["employment", "qualifications", "experience"],
-    3: ["expertise", "review"],
+    3: ["expertise"],
   },
-  groupLabels: [
-    "Personal Details",
-    "Professional Background",
-    "Expertise & Review",
-  ],
+  groupLabels: ["Personal Details", "Professional Background", "Expertise"],
   requiredSteps: ["information", "contact"],
+  skipToComplete: true,
   finalLabel: "Complete",
 }

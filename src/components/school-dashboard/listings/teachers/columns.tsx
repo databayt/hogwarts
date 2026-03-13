@@ -58,6 +58,7 @@ export type TeacherRow = {
   userId: string | null
   profilePhotoUrl: string | null
   joiningDate: string | null
+  wizardStep: string | null
   createdAt: string
 }
 
@@ -100,6 +101,8 @@ export const getTeacherColumns = (
     hasAccount: dictionary?.hasAccount || "Has Account",
     noAccount: dictionary?.noAccount || "No Account",
     noDepartment: dictionary?.noDepartment || "Unassigned",
+    incomplete: (dictionary as any)?.incomplete || "Incomplete",
+    completeProfile: (dictionary as any)?.completeProfile || "Complete Profile",
   }
 
   const getInitials = (name: string) => {
@@ -111,15 +114,45 @@ export const getTeacherColumns = (
       .toUpperCase()
   }
 
-  const getStatusBadge = (status: string) => {
-    const isActive = status === "ACTIVE"
-    return {
-      label: isActive ? t.active : t.inactive,
-      variant: isActive ? "default" : "secondary",
-      className: isActive
-        ? "bg-green-100 text-green-800"
-        : "bg-gray-100 text-gray-600",
-      icon: isActive ? CheckCircle : XCircle,
+  const getStatusBadge = (status: string, hasWizardStep: boolean) => {
+    if (hasWizardStep) {
+      return {
+        label: t.incomplete,
+        className: "border-amber-300 bg-amber-50 text-amber-700",
+        icon: XCircle,
+      }
+    }
+    switch (status) {
+      case "ACTIVE":
+        return {
+          label: t.active,
+          className: "bg-green-100 text-green-800",
+          icon: CheckCircle,
+        }
+      case "ON_LEAVE":
+        return {
+          label: (dictionary as any)?.onLeave || "On Leave",
+          className: "bg-yellow-100 text-yellow-800",
+          icon: XCircle,
+        }
+      case "TERMINATED":
+        return {
+          label: (dictionary as any)?.terminated || "Terminated",
+          className: "bg-red-100 text-red-800",
+          icon: XCircle,
+        }
+      case "RETIRED":
+        return {
+          label: (dictionary as any)?.retired || "Retired",
+          className: "bg-gray-100 text-gray-600",
+          icon: XCircle,
+        }
+      default:
+        return {
+          label: status,
+          className: "bg-gray-100 text-gray-600",
+          icon: XCircle,
+        }
     }
   }
 
@@ -158,16 +191,18 @@ export const getTeacherColumns = (
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <Link
-                href={
-                  teacher.userId
-                    ? `/${lang}/profile/${teacher.userId}`
-                    : `/${lang}/teachers/${teacher.id}`
-                }
-                className="font-medium hover:underline"
-              >
-                {teacher.name}
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={
+                    teacher.userId
+                      ? `/${lang}/profile/${teacher.userId}`
+                      : `/${lang}/teachers/${teacher.id}`
+                  }
+                  className="font-medium hover:underline"
+                >
+                  {teacher.name}
+                </Link>
+              </div>
               <span className="text-muted-foreground text-xs">
                 {teacher.emailAddress !== "-" ? teacher.emailAddress : ""}
               </span>
@@ -287,8 +322,11 @@ export const getTeacherColumns = (
         <DataTableColumnHeader column={column} title={t.status} />
       ),
       cell: ({ row }) => {
-        const status = row.original.employmentStatus
-        const badge = getStatusBadge(status)
+        const teacher = row.original
+        const badge = getStatusBadge(
+          teacher.employmentStatus,
+          !!teacher.wizardStep
+        )
         const Icon = badge.icon
         return (
           <Badge variant="secondary" className={`gap-1 ${badge.className}`}>
@@ -301,8 +339,20 @@ export const getTeacherColumns = (
         label: t.status,
         variant: "select",
         options: [
-          { label: t.active, value: "active" },
-          { label: t.inactive, value: "inactive" },
+          { label: t.active, value: "ACTIVE" },
+          {
+            label: (dictionary as any)?.onLeave || "On Leave",
+            value: "ON_LEAVE",
+          },
+          {
+            label: (dictionary as any)?.terminated || "Terminated",
+            value: "TERMINATED",
+          },
+          {
+            label: (dictionary as any)?.retired || "Retired",
+            value: "RETIRED",
+          },
+          { label: t.incomplete, value: "incomplete" },
         ],
       },
       enableColumnFilter: true,
@@ -365,6 +415,33 @@ export const getTeacherColumns = (
       meta: { label: t.joined, variant: "text" },
     },
 
+    // Completion status (visible when viewing incomplete records)
+    {
+      id: "completion",
+      header: () => <span>{"Completion"}</span>,
+      cell: ({ row }) => {
+        const teacher = row.original
+        if (!teacher.wizardStep) {
+          return (
+            <Badge variant="outline" className="gap-1">
+              <CheckCircle className="h-3 w-3" />
+              {"Complete"}
+            </Badge>
+          )
+        }
+        return (
+          <Link
+            href={`/${lang}/teachers/add/${teacher.id}/${teacher.wizardStep}`}
+          >
+            <Badge variant="secondary" className="gap-1">
+              {teacher.wizardStep}
+            </Badge>
+          </Link>
+        )
+      },
+      meta: { label: "Completion", variant: "text" },
+    },
+
     // Actions
     {
       id: "actions",
@@ -399,14 +476,26 @@ export const getTeacherColumns = (
                 </Link>
               </DropdownMenuItem>
 
-              {/* Edit */}
-              <DropdownMenuItem
-                onClick={() => callbacks?.onEdit?.(teacher)}
-                className="flex items-center gap-2"
-              >
-                <Pencil className="h-4 w-4" />
-                {t.edit}
-              </DropdownMenuItem>
+              {/* Edit / Complete Profile */}
+              {teacher.wizardStep ? (
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={`/${lang}/teachers/add/${teacher.id}/${teacher.wizardStep}`}
+                    className="flex items-center gap-2"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    {t.completeProfile || "Complete Profile"}
+                  </Link>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() => callbacks?.onEdit?.(teacher)}
+                  className="flex items-center gap-2"
+                >
+                  <Pencil className="h-4 w-4" />
+                  {t.edit}
+                </DropdownMenuItem>
+              )}
 
               <DropdownMenuSeparator />
 

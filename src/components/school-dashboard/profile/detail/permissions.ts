@@ -316,3 +316,56 @@ export function canViewField(
 
   return publicFields.includes(fieldName) // PUBLIC
 }
+
+// ============================================================================
+// Self-Edit Permissions
+// ============================================================================
+
+const SELF_EDITABLE_STEPS = {
+  teacher: ["contact", "qualifications", "experience"],
+  student: ["contact"],
+} as const
+
+const ADMIN_EDITABLE_STEPS = {
+  teacher: [
+    "information",
+    "contact",
+    "employment",
+    "qualifications",
+    "experience",
+    "expertise",
+  ],
+  student: [
+    "personal",
+    "enrollment",
+    "contact",
+    "location",
+    "health",
+    "previous-education",
+  ],
+} as const
+
+type EditableRole = keyof typeof SELF_EDITABLE_STEPS
+
+/**
+ * Check if a viewer can edit a specific section of a profile
+ */
+export function canEditSection(
+  isOwner: boolean,
+  isAdmin: boolean,
+  role: string,
+  section: string
+): boolean {
+  const entityRole = role as EditableRole
+  if (isOwner && entityRole in SELF_EDITABLE_STEPS) {
+    return (SELF_EDITABLE_STEPS[entityRole] as readonly string[]).includes(
+      section
+    )
+  }
+  if (isAdmin && entityRole in ADMIN_EDITABLE_STEPS) {
+    return (ADMIN_EDITABLE_STEPS[entityRole] as readonly string[]).includes(
+      section
+    )
+  }
+  return false
+}

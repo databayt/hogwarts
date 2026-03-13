@@ -143,7 +143,7 @@ export async function getDashboardStats(
   } = await getCachedDashboardData(schoolId, startDate, endDate)
 
   // Calculate Revenue Metrics
-  const totalRevenue = invoices.reduce((sum, inv) => sum + inv.total, 0)
+  const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.total), 0)
   const collectedRevenue = payments.reduce(
     (sum, pay) => sum + decimalToNumber(pay.amount),
     0
@@ -211,7 +211,7 @@ export async function getDashboardStats(
         inv.status === "OVERDUE" ||
         (inv.status === "UNPAID" && inv.due_date < now)
     )
-    .reduce((sum, inv) => sum + inv.total, 0)
+    .reduce((sum, inv) => sum + Number(inv.total), 0)
 
   // Calculate Payroll Metrics
   const totalPayroll = payrollRuns.reduce(

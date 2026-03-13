@@ -11,12 +11,17 @@ import { toast } from "@/components/ui/use-toast"
 
 import { markAllNotificationsAsRead, markNotificationAsRead } from "./actions"
 import { NOTIFICATION_TYPE_CONFIG } from "./config"
+import {
+  fetchNotificationBellData,
+  type NotificationBellData,
+} from "./poll-actions"
 import type { NotificationDTO } from "./types"
 
 interface UseNotificationsOptions {
   autoConnect?: boolean
   autoSubscribe?: boolean
   showToast?: boolean
+  pollInterval?: number // Polling interval in ms (default: 30000)
   onNewNotification?: (notification: NotificationDTO) => void
   onNotificationRead?: (notificationId: string) => void
   onNotificationDeleted?: (notificationId: string) => void
@@ -173,6 +178,55 @@ export function useNotifications(
       }
     }
   }, [options.autoConnect, session, connect, disconnect])
+
+  // Polling fallback when Socket.IO is unavailable
+  useEffect(() => {
+    if (isConnected || !session?.user?.id || !session?.user?.schoolId) return
+
+    const interval = options.pollInterval ?? 30000
+
+    let active = true
+    const poll = async () => {
+      if (!active) return
+      try {
+        const data = await fetchNotificationBellData()
+        if (!active || !data) return
+        setUnreadCount(data.unreadCount)
+        if (data.recent.length > 0) {
+          setRecentNotifications((prev) => {
+            const prevIds = new Set(prev.map((n) => n.id))
+            const newItems = data.recent.filter((n) => !prevIds.has(n.id))
+            if (newItems.length === 0) return prev
+            // Show toast for genuinely new notifications
+            if (options.showToast !== false) {
+              for (const n of newItems) {
+                if (!n.read) {
+                  toast({
+                    title: n.title,
+                    description: n.body,
+                    variant:
+                      n.priority === "urgent" ? "destructive" : "default",
+                  })
+                }
+              }
+            }
+            return [...newItems, ...prev].slice(0, 10)
+          })
+        }
+      } catch {
+        // Silently fail — next poll will retry
+      }
+    }
+
+    // Initial fetch
+    poll()
+    const timer = setInterval(poll, interval)
+
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [isConnected, session, options.pollInterval, options.showToast])
 
   // Set up notification event listeners
   useEffect(() => {

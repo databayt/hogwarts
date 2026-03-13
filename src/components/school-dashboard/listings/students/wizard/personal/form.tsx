@@ -10,7 +10,8 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
-import { GENDER_OPTIONS } from "@/components/school-dashboard/listings/students/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { getGenderOptions } from "@/components/school-dashboard/listings/students/config"
 
 import { updateStudentPersonal } from "./actions"
 import { personalSchema, type PersonalFormData } from "./validation"
@@ -24,6 +25,10 @@ interface PersonalFormProps {
 export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
   ({ studentId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const students = (dictionary?.school as any)?.students
+    const t = students?.personal as Record<string, string> | undefined
+    const tRoot = students as Record<string, string> | undefined
 
     const form = useForm<PersonalFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,19 +59,26 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
             try {
               const valid = await form.trigger()
               if (!valid) {
-                reject(new Error("Validation failed"))
+                reject(
+                  new Error(tRoot?.validationFailed || "Validation failed")
+                )
                 return
               }
               const data = form.getValues()
               const result = await updateStudentPersonal(studentId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tRoot?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tRoot?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -79,41 +91,45 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
         <form className="space-y-6">
           <InputField
             name="givenName"
-            label="Given Name"
-            placeholder="Enter given name"
+            label={t?.givenName || "Given Name"}
+            placeholder={t?.givenNamePlaceholder || "Enter given name"}
             required
             disabled={isPending}
           />
           <InputField
             name="middleName"
-            label="Middle Name"
-            placeholder="Enter middle name"
+            label={t?.middleName || "Middle Name"}
+            placeholder={t?.middleNamePlaceholder || "Enter middle name"}
             disabled={isPending}
           />
           <InputField
             name="surname"
-            label="Surname"
-            placeholder="Enter surname"
+            label={t?.surname || "Surname"}
+            placeholder={t?.surnamePlaceholder || "Enter surname"}
             required
             disabled={isPending}
           />
-          <DateField
-            name="dateOfBirth"
-            label="Date of Birth"
-            disabled={isPending}
-          />
-          <SelectField
-            name="gender"
-            label="Gender"
-            options={[...GENDER_OPTIONS]}
-            disabled={isPending}
-          />
-          <InputField
-            name="nationality"
-            label="Nationality"
-            placeholder="Enter nationality"
-            disabled={isPending}
-          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
+            <div className="sm:col-span-2">
+              <DateField
+                name="dateOfBirth"
+                label={t?.dateOfBirth || "Date of Birth"}
+                disabled={isPending}
+              />
+            </div>
+            <SelectField
+              name="gender"
+              label={t?.gender || "Gender"}
+              options={getGenderOptions(students)}
+              disabled={isPending}
+            />
+            <InputField
+              name="nationality"
+              label={t?.nationality || "Nationality"}
+              placeholder={t?.nationalityPlaceholder || "Enter nationality"}
+              disabled={isPending}
+            />
+          </div>
         </form>
       </Form>
     )

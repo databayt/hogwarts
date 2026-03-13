@@ -41,13 +41,17 @@ export async function getInvoiceItems(
         items: invoice.items.map((item) => ({
           item_name: item.item_name,
           quantity: item.quantity,
-          price: item.price,
-          total: item.total,
+          price: Number(item.price),
+          total: Number(item.total),
         })),
-        sub_total: invoice.sub_total,
-        discount: invoice.discount ?? undefined,
-        tax_percentage: invoice.tax_percentage ?? undefined,
-        total: invoice.total,
+        sub_total: Number(invoice.sub_total),
+        discount:
+          invoice.discount != null ? Number(invoice.discount) : undefined,
+        tax_percentage:
+          invoice.tax_percentage != null
+            ? Number(invoice.tax_percentage)
+            : undefined,
+        total: Number(invoice.total),
       },
     }
   } catch (error) {
