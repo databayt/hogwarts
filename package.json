@@ -10,7 +10,7 @@
     "dev:ws": "node server.js",
     "dev:full": "node server.js",
     "prebuild": "prisma generate && tsx prisma/seeds/ensure-demo.ts",
-    "build": "NODE_OPTIONS='--max-old-space-size=6144' next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=6144' next build --bundler webpack",
     "start": "NODE_ENV=production node server.js",
     "start:next": "next start",
     "lint": "next lint",
