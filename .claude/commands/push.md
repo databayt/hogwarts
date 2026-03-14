@@ -71,35 +71,54 @@ Use conventional commit type based on changes:
 git push origin $(git branch --show-current)
 ```
 
-### Step 7: Monitor Vercel
+### Step 7: Monitor Vercel Deployment
 
-After push, show:
+After push, actively monitor the Vercel deployment until it reaches a terminal state (READY or ERROR).
+
+**Vercel Project Info:**
+
+- Project ID: `prj_jI7ezom5AbJfMbeB8F9lquA94OMP`
+- Team ID: `team_byS1aI4jmz4mSh0RNx8dR12J`
+
+**Monitoring loop:**
+
+1. Use `list_deployments` to find the latest deployment for the commit
+2. Poll `get_deployment` every 60 seconds until state is `READY` or `ERROR`
+3. If `ERROR`: fetch build logs with `get_deployment_build_logs` (limit: 1000), extract last 40 lines to show the error
+4. If `READY`: show success summary
+
+**On READY:**
 
 ```
 ═══════════════════════════════════════
-✅ PUSH COMPLETE
+✅ DEPLOYMENT SUCCESSFUL
 ═══════════════════════════════════════
 Branch: <branch>
 Commit: <hash>
-Preview: https://<branch>---hogwarts.vercel.app
+URL: <deployment url>
 Vercel Dashboard: https://vercel.com/databayt/hogwarts
 ═══════════════════════════════════════
 ```
 
+**On ERROR:**
+
+- Show the build error from logs
+- Suggest fix and ask user whether to fix and redeploy
+
 ## Summary Table
 
-| Step | Check      | Action on Fail    |
-| ---- | ---------- | ----------------- |
-| 1    | TypeScript | STOP - fix errors |
-| 2    | Lint       | Auto-fix, retry   |
-| 3    | Build      | STOP - fix errors |
-| 4    | Status     | Show changes      |
-| 5    | Commit     | Create commit     |
-| 6    | Push       | Push to remote    |
-| 7    | Monitor    | Show Vercel URL   |
+| Step | Check      | Action on Fail            |
+| ---- | ---------- | ------------------------- |
+| 1    | TypeScript | STOP - fix errors         |
+| 2    | Lint       | Auto-fix, retry           |
+| 3    | Build      | STOP - fix errors         |
+| 4    | Status     | Show changes              |
+| 5    | Commit     | Create commit             |
+| 6    | Push       | Push to remote            |
+| 7    | Monitor    | Poll until READY or ERROR |
 
 ## Quick Reference
 
 - **One push only**: All changes in single commit
 - **Full validation**: TypeScript + Lint + Build before push
-- **Monitoring**: Vercel preview URL provided
+- **Full cycle**: Push AND monitor deployment until terminal state
