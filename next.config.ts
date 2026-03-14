@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
 
   // Optimize package imports for tree-shaking
   experimental: {
+    webpackMemoryOptimizations: true,
     optimizePackageImports: [
       "@assistant-ui/react",
       "@radix-ui/react-icons",
