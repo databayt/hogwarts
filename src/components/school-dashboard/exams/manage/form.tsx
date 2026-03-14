@@ -13,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { createExam, getExam, updateExam } from "./actions"
 import { BasicInformationStep } from "./basic-information"
@@ -27,6 +28,7 @@ interface ExamCreateFormProps {
 }
 
 export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
+  const { locale } = useLocale()
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
@@ -196,9 +198,9 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
   }
 
   const stepLabels: Record<number, string> = {
-    1: "Basic Information",
-    2: "Schedule & Marks",
-    3: "Instructions & Details",
+    1: locale === "ar" ? "المعلومات الأساسية" : "Basic Information",
+    2: locale === "ar" ? "الجدول والدرجات" : "Schedule & Marks",
+    3: locale === "ar" ? "التعليمات والتفاصيل" : "Instructions & Details",
   }
 
   return (

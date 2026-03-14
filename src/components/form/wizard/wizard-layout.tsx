@@ -23,6 +23,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 import { ErrorBoundary } from "@/components/onboarding/error-boundary"
 
 import type { WizardConfig } from "./config"
+import { resolveFinalLabel, resolveGroupLabels } from "./config"
 
 /**
  * Generic Wizard Layout
@@ -91,12 +92,14 @@ interface WizardLayoutProps {
   children: ReactNode
 }
 
-// Convert WizardConfig to StepConfig for FormFooter
-function toStepConfig(config: WizardConfig): StepConfig {
+// Convert WizardConfig to StepConfig for FormFooter (locale-aware)
+function toStepConfig(config: WizardConfig, locale?: string): StepConfig {
   return {
     steps: config.steps,
     groups: config.groups,
-    groupLabels: config.groupLabels,
+    groupLabels: locale
+      ? resolveGroupLabels(config, locale)
+      : config.groupLabels,
   }
 }
 
@@ -164,7 +167,7 @@ function WizardLayoutContent({
     }
   }, [entityId, loadData])
 
-  const stepConfig = toStepConfig(config)
+  const stepConfig = toStepConfig(config, locale)
 
   const handleSkipToComplete = useCallback(async () => {
     if (!entityId) return
@@ -194,7 +197,7 @@ function WizardLayoutContent({
       dictionary={dictionary?.school?.onboarding}
       locale={locale}
       useValidation={useWizardValidation}
-      finalLabel={finalLabel || config.finalLabel || "Finish"}
+      finalLabel={finalLabel || resolveFinalLabel(config, locale) || "Finish"}
       finalDestination={finalDestination || config.finalDestination}
       onStepChange={handleStepChange}
       showClose={showClose}

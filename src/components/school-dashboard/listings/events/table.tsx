@@ -8,6 +8,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Calendar, MapPin, Users } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
@@ -283,7 +284,7 @@ function EventsTableInner({
                   key={event.id}
                   icon="/anthropic/category-01.svg"
                   title={event.title}
-                  description={new Date(event.eventDate).toLocaleDateString()}
+                  description={formatDate(event.eventDate, lang)}
                   subtitle={event.eventType?.replace("_", " ")}
                   onClick={() => handleView(event.id)}
                 />

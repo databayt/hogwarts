@@ -7,6 +7,7 @@ import { useParams } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export interface CourseRow {
@@ -163,7 +165,7 @@ export const getCourseColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<Date>()).toLocaleDateString()}
+          {formatDate(getValue<Date>(), (lang as Locale) || "ar")}
         </span>
       ),
     },

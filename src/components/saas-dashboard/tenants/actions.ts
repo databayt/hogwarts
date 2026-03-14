@@ -91,8 +91,7 @@ export async function tenantToggleActive(input: {
       reason: validated.reason,
     })
 
-    revalidatePath("/saas-dashboard/tenants")
-    revalidatePath(`/operator/tenants/${validated.tenantId}`)
+    revalidatePath("/tenants")
 
     return { success: true, data: updatedSchool }
   } catch (error) {
@@ -137,8 +136,7 @@ export async function tenantChangePlan(input: {
       reason: validated.reason,
     })
 
-    revalidatePath("/saas-dashboard/tenants")
-    revalidatePath(`/operator/tenants/${validated.tenantId}`)
+    revalidatePath("/tenants")
 
     return { success: true, data: school }
   } catch (error) {
@@ -181,8 +179,7 @@ export async function tenantEndTrial(input: {
       reason: validated.reason,
     })
 
-    revalidatePath("/saas-dashboard/tenants")
-    revalidatePath(`/operator/tenants/${validated.tenantId}`)
+    revalidatePath("/tenants")
 
     return { success: true, data: school }
   } catch (error) {
@@ -346,7 +343,7 @@ export async function tenantSetupCatalog(input: { tenantId: string }): Promise<
       }
     }
 
-    revalidatePath("/saas-dashboard/tenants")
+    revalidatePath("/tenants")
     // After the skipped guard, result has levels/grades/streams/selections
     const { levels, grades, streams, selections } = result as {
       skipped: false
@@ -585,7 +582,7 @@ export async function tenantDelete(input: {
       reason: `Deleted "${school.name}" (${school.domain}). Reason: ${validated.reason}. Affected: ${stats.users} users, ${stats.students} students, ${stats.teachers} teachers, ${stats.classes} classes.`,
     })
 
-    revalidatePath("/saas-dashboard/tenants")
+    revalidatePath("/tenants")
 
     return {
       success: true,

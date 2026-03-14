@@ -245,6 +245,7 @@ export function useNotifications(
           priority: data.priority as NotificationPriority,
           title: data.title,
           body: data.body,
+          lang: (data as any).lang ?? "ar",
           metadata: null,
           actorId: data.actorId || null,
           actor: null,

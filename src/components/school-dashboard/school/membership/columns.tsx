@@ -137,19 +137,56 @@ export const getMemberColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.role || "Role"} />
       ),
-      cell: ({ getValue }) => (
-        <Badge variant="secondary">{getValue<string>()}</Badge>
-      ),
+      cell: ({ getValue }) => {
+        const role = getValue<string>()
+        const roleLabels: Record<string, string> =
+          options?.lang === "ar"
+            ? {
+                ADMIN: "مدير",
+                TEACHER: "معلم",
+                STUDENT: "طالب",
+                GUARDIAN: "ولي أمر",
+                STAFF: "موظف",
+                ACCOUNTANT: "محاسب",
+              }
+            : {
+                ADMIN: "Admin",
+                TEACHER: "Teacher",
+                STUDENT: "Student",
+                GUARDIAN: "Guardian",
+                STAFF: "Staff",
+                ACCOUNTANT: "Accountant",
+              }
+        return <Badge variant="secondary">{roleLabels[role] || role}</Badge>
+      },
       meta: {
         label: t.role || "Role",
         variant: "select",
         options: [
-          { label: "Admin", value: "ADMIN" },
-          { label: "Teacher", value: "TEACHER" },
-          { label: "Student", value: "STUDENT" },
-          { label: "Guardian", value: "GUARDIAN" },
-          { label: "Staff", value: "STAFF" },
-          { label: "Accountant", value: "ACCOUNTANT" },
+          {
+            label: options?.lang === "ar" ? "مدير" : "Admin",
+            value: "ADMIN",
+          },
+          {
+            label: options?.lang === "ar" ? "معلم" : "Teacher",
+            value: "TEACHER",
+          },
+          {
+            label: options?.lang === "ar" ? "طالب" : "Student",
+            value: "STUDENT",
+          },
+          {
+            label: options?.lang === "ar" ? "ولي أمر" : "Guardian",
+            value: "GUARDIAN",
+          },
+          {
+            label: options?.lang === "ar" ? "موظف" : "Staff",
+            value: "STAFF",
+          },
+          {
+            label: options?.lang === "ar" ? "محاسب" : "Accountant",
+            value: "ACCOUNTANT",
+          },
         ],
       },
       enableColumnFilter: true,

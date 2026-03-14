@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertLibraryPermission, getAuthContext } from "./authorization"
@@ -237,7 +238,7 @@ export async function borrowBook(
 
     return {
       success: true,
-      message: `Book borrowed successfully. Due date: ${dueDate.toLocaleDateString()}`,
+      message: `Book borrowed successfully. Due date: ${formatDate(dueDate, "ar")}`,
     }
   } catch (error) {
     console.error("Borrow book error:", error)

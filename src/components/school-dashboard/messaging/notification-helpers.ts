@@ -118,12 +118,21 @@ export async function notifyMentions(
 
     if (validParticipants.length === 0) return
 
+    // Look up school's preferred language for notification text
+    const conversation = await db.conversation.findFirst({
+      where: { id: conversationId },
+      select: { school: { select: { preferredLanguage: true } } },
+    })
+    const lang = conversation?.school?.preferredLanguage ?? "ar"
+    const mentionTitle =
+      lang === "ar" ? `${senderName} أشار إليك` : `${senderName} mentioned you`
+
     // Create mention notifications
     const notificationPromises = validParticipants.map((participant) =>
       createNotification({
         userId: participant.userId,
         type: "message_mention" as NotificationType,
-        title: `${senderName} mentioned you`,
+        title: mentionTitle,
         body: truncateContent(messageContent),
         priority: "high", // Mentions are higher priority
         actorId: senderId,
@@ -156,14 +165,28 @@ export async function notifyParticipantAdded(
   conversationTitle?: string
 ): Promise<void> {
   try {
+    // Look up school's preferred language
+    const school = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const lang = school?.preferredLanguage ?? "ar"
+    const title =
+      lang === "ar" ? "تمت إضافتك إلى محادثة" : "Added to conversation"
+    const body = conversationTitle
+      ? lang === "ar"
+        ? `${addedByName} أضافك إلى "${conversationTitle}"`
+        : `${addedByName} added you to "${conversationTitle}"`
+      : lang === "ar"
+        ? `${addedByName} أضافك إلى محادثة`
+        : `${addedByName} added you to a conversation`
+
     await createNotification({
       userId: addedUserId,
       type: "message" as NotificationType,
       priority: "normal",
-      title: "Added to conversation",
-      body: conversationTitle
-        ? `${addedByName} added you to "${conversationTitle}"`
-        : `${addedByName} added you to a conversation`,
+      title,
+      body,
       actorId: addedByUserId,
       channels: ["in_app"] as NotificationChannel[],
       metadata: {

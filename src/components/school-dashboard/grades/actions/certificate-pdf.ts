@@ -9,6 +9,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { getProvider } from "@/components/file/providers/factory"
 import type { Locale } from "@/components/internationalization/config"
 
@@ -45,7 +46,8 @@ function buildCertificateData(
     name: string
     logoUrl?: string | null
   },
-  totalStudents?: number
+  totalStudents?: number,
+  locale: Locale = "ar"
 ): CertificateForPaper {
   // Resolve body template placeholders
   const resolveTemplate = (template: string) =>
@@ -56,7 +58,7 @@ function buildCertificateData(
       .replace(/\{\{grade\}\}/g, cert.grade || "")
       .replace(/\{\{rank\}\}/g, cert.rank ? String(cert.rank) : "")
       .replace(/\{\{schoolName\}\}/g, school.name)
-      .replace(/\{\{date\}\}/g, cert.examDate.toLocaleDateString())
+      .replace(/\{\{date\}\}/g, formatDate(cert.examDate, locale))
 
   const signatures = Array.isArray(config.signatures)
     ? (config.signatures as Array<{
@@ -80,7 +82,7 @@ function buildCertificateData(
       : undefined,
 
     examTitle: cert.examTitle,
-    examDate: cert.examDate.toLocaleDateString(),
+    examDate: formatDate(cert.examDate, locale),
     score: cert.score,
     maxScore: 100,
     percentage: cert.score,
@@ -94,7 +96,7 @@ function buildCertificateData(
     certificateNumber: cert.certificateNumber,
     verificationCode: cert.verificationCode,
     verificationUrl: cert.verificationUrl || undefined,
-    issuedDate: cert.examDate.toLocaleDateString(),
+    issuedDate: formatDate(cert.examDate, locale),
 
     signatures,
   }
@@ -181,7 +183,8 @@ export async function generateCertificatePDF(
         name: cert.school.name,
         logoUrl: cert.school.logoUrl,
       },
-      undefined
+      undefined,
+      locale
     )
 
     const pdfUrl = await renderAndUploadCertPdf(
@@ -282,7 +285,8 @@ export async function batchGenerateCertificatePDFs(
             name: cert.school.name,
             logoUrl: cert.school.logoUrl,
           },
-          certs.length
+          certs.length,
+          locale
         )
 
         const pdfUrl = await renderAndUploadCertPdf(
@@ -364,7 +368,7 @@ export async function previewCertificate(
       subject: "Mathematics",
       subjectAr: "الرياضيات",
       examTitle: "Final Exam 2025",
-      examDate: new Date().toLocaleDateString(),
+      examDate: formatDate(new Date(), locale),
       score: 92,
       maxScore: 100,
       percentage: 92,
@@ -375,7 +379,7 @@ export async function previewCertificate(
       schoolLogo: config.school.logoUrl || undefined,
       certificateNumber: "CERT-PREVIEW",
       verificationCode: "PREVIEW123",
-      issuedDate: new Date().toLocaleDateString(),
+      issuedDate: formatDate(new Date(), locale),
       signatures: Array.isArray(config.signatures)
         ? (config.signatures as CertificateForPaper["signatures"])
         : [],

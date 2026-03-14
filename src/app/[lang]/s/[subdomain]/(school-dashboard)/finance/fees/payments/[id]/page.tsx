@@ -5,6 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -100,14 +101,14 @@ export default async function PaymentDetailPage({ params }: Props) {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Amount</span>
               <span className="text-xl font-bold">
-                {Number(payment.amount).toLocaleString()}
+                {formatCurrency(Number(payment.amount), lang)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Date</span>
               <span className="font-medium">
                 {payment.paymentDate
-                  ? new Date(payment.paymentDate).toLocaleDateString()
+                  ? formatDate(payment.paymentDate, lang)
                   : "-"}
               </span>
             </div>
@@ -182,7 +183,10 @@ export default async function PaymentDetailPage({ params }: Props) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total Fee</span>
                   <span className="font-medium">
-                    {Number(payment.feeAssignment.finalAmount).toLocaleString()}
+                    {formatCurrency(
+                      Number(payment.feeAssignment.finalAmount),
+                      lang
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between">

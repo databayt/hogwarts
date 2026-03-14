@@ -216,9 +216,9 @@ export function EventCreateForm({
   }
 
   const stepLabels: Record<number, string> = {
-    1: "Basic Information",
-    2: "Schedule & Location",
-    3: "Details & Attendees",
+    1: lang === "ar" ? "المعلومات الأساسية" : "Basic Information",
+    2: lang === "ar" ? "الجدول والموقع" : "Schedule & Location",
+    3: lang === "ar" ? "التفاصيل والحضور" : "Details & Attendees",
   }
 
   return (

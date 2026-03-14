@@ -86,6 +86,13 @@ function TeachersTableInner({
       dictionary?.failedToDeleteTeacher || "Failed to delete teacher",
     failedToUpdateStatus:
       dictionary?.failedToUpdateStatus || "Failed to update status",
+    cancel: (dictionary as any)?.cancel || "Cancel",
+    deleteItem: (dictionary as any)?.deleteItem || "Delete item",
+    cannotBeUndone:
+      (dictionary as any)?.cannotBeUndone || "This action cannot be undone.",
+    loadMore: dictionary?.loadMore || "Load More",
+    loading: dictionary?.loading || "Loading...",
+    noResults: (dictionary as any)?.noResults || "No results.",
   }
 
   // View mode (table/grid)
@@ -153,8 +160,12 @@ function TeachersTableInner({
   const handleDelete = useCallback(
     async (teacher: TeacherRow) => {
       try {
-        const deleteMsg = `${t.delete} ${teacher.name}?`
-        const ok = await confirmDeleteDialog(deleteMsg)
+        const ok = await confirmDeleteDialog(undefined, {
+          title: `${t.delete} ${teacher.name}?`,
+          description: t.cannotBeUndone,
+          confirmText: t.delete,
+          cancelText: t.cancel,
+        })
         if (!ok) return
 
         // Optimistic remove
@@ -344,6 +355,11 @@ function TeachersTableInner({
           hasMore={hasMore}
           isLoading={isLoading || isPending}
           onLoadMore={loadMore}
+          translations={{
+            loadMore: t.loadMore,
+            loading: t.loading,
+            noResults: t.noResults,
+          }}
         />
       ) : (
         <>
@@ -380,7 +396,9 @@ function TeachersTableInner({
                     description={teacher.department || t.noDepartment}
                     subtitle={`${teacher.subjectCount} ${t.subjects} • ${teacher.classCount} ${t.classes}`}
                     onClick={() =>
-                      router.push(`/${lang}/teachers/${teacher.id}`)
+                      router.push(
+                        `/${lang}/profile/${teacher.userId || teacher.id}`
+                      )
                     }
                   />
                 )
@@ -396,9 +414,7 @@ function TeachersTableInner({
                 disabled={isLoading}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {isLoading
-                  ? dictionary?.loading || "Loading..."
-                  : dictionary?.loadMore || "Load More"}
+                {isLoading ? t.loading : t.loadMore}
               </button>
             </div>
           )}

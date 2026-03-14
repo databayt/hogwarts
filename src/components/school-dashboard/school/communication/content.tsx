@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Bell, Mail, Megaphone, Send } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import {

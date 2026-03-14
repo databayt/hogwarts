@@ -266,11 +266,16 @@ export async function cancelExam(
     })
 
     // Notify students about exam cancellation (non-blocking)
+    const schoolPref = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
       title: "إلغاء امتحان",
       body: `تم إلغاء امتحان "${exam.title}"${reason ? `: ${reason}` : ""}`,
+      lang: schoolPref?.preferredLanguage ?? "ar",
       priority: "high",
       channels: ["in_app"],
       metadata: {

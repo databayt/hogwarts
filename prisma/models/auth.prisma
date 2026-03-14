@@ -111,6 +111,7 @@ model User {
   notificationSummaries     NotificationSummary[]      @relation("UserNotificationSummaries")
 
   // Messaging relations
+  conversationsCreated        Conversation[]            @relation("ConversationCreator")
   conversationParticipants    ConversationParticipant[] @relation("ConversationParticipants")
   messagesSent                Message[]                 @relation("MessagesSent")
   messageReactions            MessageReaction[]         @relation("MessageReactions")

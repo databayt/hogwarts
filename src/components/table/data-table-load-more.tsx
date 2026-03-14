@@ -12,6 +12,11 @@ interface DataTableLoadMoreProps<TData> extends React.ComponentProps<"div"> {
   hasMore?: boolean
   isLoading?: boolean
   onLoadMore?: () => void
+  translations?: {
+    loadMore?: string
+    loading?: string
+    rowsSelected?: string
+  }
 }
 
 function DataTableLoadMoreInner<TData>({
@@ -19,6 +24,7 @@ function DataTableLoadMoreInner<TData>({
   hasMore = false,
   isLoading = false,
   onLoadMore,
+  translations,
   className,
   ...props
 }: DataTableLoadMoreProps<TData>) {
@@ -35,7 +41,8 @@ function DataTableLoadMoreInner<TData>({
     >
       {selectedRows > 0 && (
         <div className="text-muted-foreground muted whitespace-nowrap">
-          {selectedRows} of {totalRows} row(s) selected.
+          {selectedRows} / {totalRows}{" "}
+          {translations?.rowsSelected || "row(s) selected."}
         </div>
       )}
 
@@ -49,10 +56,10 @@ function DataTableLoadMoreInner<TData>({
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Loading...
+              {translations?.loading || "Loading..."}
             </>
           ) : (
-            "Load More"
+            translations?.loadMore || "Load More"
           )}
         </button>
       )}

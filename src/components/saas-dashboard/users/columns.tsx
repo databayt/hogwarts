@@ -5,6 +5,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -130,7 +131,7 @@ export const userColumns: ColumnDef<UserRow>[] = [
     ),
     cell: ({ getValue }) => (
       <span className="text-muted-foreground text-xs tabular-nums">
-        {new Date(getValue<string>()).toLocaleDateString()}
+        {formatDate(getValue<string>(), "en")}
       </span>
     ),
     meta: { label: "Created", variant: "text" },

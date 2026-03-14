@@ -14,10 +14,17 @@ export const metadata = {
 
 interface Props {
   params: Promise<{ lang: Locale }>
+  searchParams: Promise<{
+    page?: string
+    limit?: string
+    status?: string
+    search?: string
+  }>
 }
 
-export default async function Billing({ params }: Props) {
+export default async function Billing({ params, searchParams }: Props) {
   const { lang } = await params
+  const resolvedSearchParams = await searchParams
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
@@ -31,7 +38,11 @@ export default async function Billing({ params }: Props) {
     <div className="space-y-6">
       <PageHeadingSetter title={d?.billing?.title || "Billing"} />
       <PageNav pages={billingPages} />
-      <BillingContent dictionary={dictionary} lang={lang} />
+      <BillingContent
+        dictionary={dictionary}
+        lang={lang}
+        searchParams={resolvedSearchParams}
+      />
     </div>
   )
 }

@@ -23,14 +23,7 @@ import {
   GridEmptyState,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
-import {
-  BulkActionsToolbar,
-  createDeleteAction,
-  createExportAction,
-  createMessageAction,
-} from "@/components/table/bulk-actions-toolbar"
 import { DataTable } from "@/components/table/data-table"
-import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { AccessCodeDialog } from "./access-code-dialog"
@@ -78,6 +71,13 @@ function StudentsTableInner({
     export: dictionary?.export || "Export",
     reset: dictionary?.reset || "Reset",
     noAccount: dictionary?.noAccount || "No Account",
+    cancel: (dictionary as any)?.cancel || "Cancel",
+    deleteItem: (dictionary as any)?.deleteItem || "Delete item",
+    cannotBeUndone:
+      (dictionary as any)?.cannotBeUndone || "This action cannot be undone.",
+    loadMore: dictionary?.loadMore || "Load More",
+    loading: dictionary?.loading || "Loading...",
+    noResults: (dictionary as any)?.noResults || "No results.",
   }
 
   // View mode (table/grid)
@@ -138,14 +138,12 @@ function StudentsTableInner({
 
   // Generate columns on the client side with dictionary, lang, and callbacks
   const columns = useMemo(
-    () => [
-      getSelectColumn<StudentRow>(),
-      ...getStudentColumns(dictionary, lang, {
+    () =>
+      getStudentColumns(dictionary, lang, {
         onDeleteSuccess: handleColumnDeleteSuccess,
         onGenerateAccessCode: handleGenerateAccessCode,
         gradeOptions,
       }),
-    ],
     [
       dictionary,
       lang,
@@ -166,6 +164,7 @@ function StudentsTableInner({
         pageSize: data.length || perPage,
       },
       columnVisibility: {
+        studentId: false,
         createdAt: false,
         email: false,
         dateOfBirth: false,
@@ -189,8 +188,12 @@ function StudentsTableInner({
   const handleDelete = useCallback(
     async (student: StudentRow) => {
       try {
-        const deleteMsg = `${t.delete} ${student.name}?`
-        const ok = await confirmDeleteDialog(deleteMsg)
+        const ok = await confirmDeleteDialog(undefined, {
+          title: `${t.delete} ${student.name}?`,
+          description: t.cannotBeUndone,
+          confirmText: t.delete,
+          cancelText: t.cancel,
+        })
         if (!ok) return
 
         // Optimistic remove
@@ -243,71 +246,9 @@ function StudentsTableInner({
   // Handle view
   const handleView = useCallback(
     (student: StudentRow) => {
-      const target = student.userId
-        ? `/${lang}/profile/${student.userId}`
-        : `/${lang}/students/${student.id}`
-      router.push(target)
+      router.push(`/${lang}/profile/${student.userId || student.id}`)
     },
     [router, lang]
-  )
-
-  // Bulk delete handler
-  const handleBulkDelete = useCallback(
-    async (rows: StudentRow[]) => {
-      const deleteMsg = `${t.delete} ${rows.length} ${dictionary?.title || "students"}?`
-      const ok = await confirmDeleteDialog(deleteMsg)
-      if (!ok) return
-
-      // Optimistically remove all selected rows
-      rows.forEach((row) => optimisticRemove(row.id))
-
-      // Delete each student
-      const results = await Promise.all(
-        rows.map((row) => deleteStudent({ id: row.id }))
-      )
-
-      const failures = results.filter((r) => !r.success)
-      if (failures.length === 0) {
-        DeleteToast()
-        table.toggleAllPageRowsSelected(false)
-      } else {
-        refresh()
-        ErrorToast(
-          `${dictionary?.failedToDeleteStudent || "Failed to delete"} (${failures.length})`
-        )
-      }
-    },
-    [lang, optimisticRemove, refresh, table]
-  )
-
-  // Bulk export handler
-  const handleBulkExport = useCallback(
-    async (rows: StudentRow[]) => {
-      // Export selected rows as CSV
-      const csv = rows
-        .map((r) => `${r.name},${r.sectionName},${r.status},${r.createdAt}`)
-        .join("\n")
-      const header = `${t.fullName},${t.section},${t.status},${t.created}`
-      const csvContent = `${header}\n${csv}`
-
-      // Download
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const link = document.createElement("a")
-      link.href = URL.createObjectURL(blob)
-      link.download = "selected-students.csv"
-      link.click()
-      table.toggleAllPageRowsSelected(false)
-    },
-    [lang, table]
-  )
-
-  // Bulk actions
-  const bulkActions = useMemo(
-    () => [
-      createDeleteAction<StudentRow>(handleBulkDelete, lang),
-      createExportAction<StudentRow>(handleBulkExport, lang),
-    ],
-    [handleBulkDelete, handleBulkExport, lang]
   )
 
   // Get status badge
@@ -337,6 +278,7 @@ function StudentsTableInner({
     export: t.export,
     exportCSV: dictionary?.exportCSV || "Export CSV",
     exporting: dictionary?.exporting || "Exporting...",
+    view: t.view,
   }
 
   return (
@@ -355,16 +297,18 @@ function StudentsTableInner({
       />
 
       {view === "table" ? (
-        <>
-          <DataTable
-            table={table}
-            paginationMode="load-more"
-            hasMore={hasMore}
-            isLoading={isLoading || isPending}
-            onLoadMore={loadMore}
-          />
-          <BulkActionsToolbar table={table} actions={bulkActions} lang={lang} />
-        </>
+        <DataTable
+          table={table}
+          paginationMode="load-more"
+          hasMore={hasMore}
+          isLoading={isLoading || isPending}
+          onLoadMore={loadMore}
+          translations={{
+            loadMore: t.loadMore,
+            loading: t.loading,
+            noResults: t.noResults,
+          }}
+        />
       ) : (
         <>
           {data.length === 0 ? (
@@ -394,11 +338,7 @@ function StudentsTableInner({
                     key={student.id}
                     avatar={{ fallback: initials }}
                     title={student.name}
-                    description={
-                      student.sectionName !== "-"
-                        ? student.sectionName
-                        : undefined
-                    }
+                    description={student.classroom || undefined}
                     subtitle={
                       student.status === "active" ? t.active : t.inactive
                     }

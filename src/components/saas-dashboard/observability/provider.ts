@@ -122,35 +122,41 @@ export async function fetchLogs(
         }),
         db.auditLog.count({ where }),
       ])
-      const rows: UnifiedLog[] = await Promise.all(
-        logs.map(async (l) => {
-          const [user, school] = await Promise.all([
-            db.user.findUnique({
-              where: { id: l.userId },
-              select: { email: true },
-            }),
-            l.schoolId
-              ? db.school.findUnique({
-                  where: { id: l.schoolId },
-                  select: { name: true },
-                })
-              : Promise.resolve(null),
-          ])
-          return {
-            id: l.id,
-            createdAt: l.createdAt,
-            userId: l.userId,
-            schoolId: l.schoolId ?? null,
-            action: l.action,
-            reason: l.reason ?? null,
-            ip: l.ip ?? null,
-            userEmail: user?.email ?? null,
-            schoolName: school?.name ?? null,
-            level: null, // not available from DB provider
-            requestId: null, // not available from DB provider
-          } satisfies UnifiedLog
-        })
-      )
+      // Batch-fetch users and schools to avoid N+1
+      const userIds = [...new Set(logs.map((l) => l.userId))]
+      const schoolIds = [
+        ...new Set(logs.map((l) => l.schoolId).filter(Boolean) as string[]),
+      ]
+
+      const [users, schools] = await Promise.all([
+        db.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, email: true },
+        }),
+        schoolIds.length > 0
+          ? db.school.findMany({
+              where: { id: { in: schoolIds } },
+              select: { id: true, name: true },
+            })
+          : Promise.resolve([]),
+      ])
+
+      const userMap = new Map(users.map((u) => [u.id, u.email]))
+      const schoolMap = new Map(schools.map((s) => [s.id, s.name]))
+
+      const rows: UnifiedLog[] = logs.map((l) => ({
+        id: l.id,
+        createdAt: l.createdAt,
+        userId: l.userId,
+        schoolId: l.schoolId ?? null,
+        action: l.action,
+        reason: l.reason ?? null,
+        ip: l.ip ?? null,
+        userEmail: userMap.get(l.userId) ?? null,
+        schoolName: l.schoolId ? (schoolMap.get(l.schoolId) ?? null) : null,
+        level: null,
+        requestId: null,
+      }))
       return { rows, total }
     }
   }

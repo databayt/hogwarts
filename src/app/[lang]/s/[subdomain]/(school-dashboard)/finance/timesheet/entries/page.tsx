@@ -4,6 +4,7 @@
 import Link from "next/link"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -63,7 +64,7 @@ export default async function TimesheetEntriesPage({ params }: Props) {
                   </p>
                   <p className="text-muted-foreground text-sm">
                     {entry.period.name} &mdash;{" "}
-                    {new Date(entry.entryDate).toLocaleDateString()}
+                    {formatDate(entry.entryDate, lang)}
                   </p>
                 </div>
                 <div className="flex items-center gap-4 text-sm">

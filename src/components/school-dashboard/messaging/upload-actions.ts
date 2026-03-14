@@ -63,7 +63,7 @@ export interface AttachmentUploadResult {
   fileName: string
   fileSize: number
   fileType: string
-  thumbnailUrl?: string
+  thumbnail?: string
 }
 
 type ActionResponse<T> =
@@ -111,6 +111,7 @@ export async function uploadMessageAttachment(
 
     // 3. Check user is participant in conversation
     const isParticipant = await isConversationParticipant(
+      schoolId,
       conversationId,
       session.user.id
     )
@@ -181,7 +182,7 @@ export async function uploadMessageAttachment(
     })
 
     // 9. Generate thumbnail for images (optional)
-    let thumbnailUrl: string | undefined
+    let thumbnail: string | undefined
     if (category === "image") {
       // For now, we'll skip thumbnail generation
       // Could be added later with Sharp processing
@@ -194,7 +195,7 @@ export async function uploadMessageAttachment(
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
-      thumbnailUrl,
+      thumbnail,
     }
 
     // 11. Audit log (non-blocking)
@@ -251,6 +252,7 @@ export async function deleteMessageAttachment(
 
     // 3. Check user is participant in conversation
     const isParticipant = await isConversationParticipant(
+      schoolId,
       conversationId,
       session.user.id
     )

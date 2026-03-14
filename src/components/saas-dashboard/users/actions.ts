@@ -127,7 +127,7 @@ export async function userDelete(input: {
       reason: `Deleted user "${userEmail}". Reason: ${validated.reason}`,
     })
 
-    revalidatePath("/saas-dashboard/users")
+    revalidatePath("/users")
 
     return {
       success: true,
@@ -194,7 +194,7 @@ export async function userToggleSuspend(input: {
         `${updated.isSuspended ? "Suspended" : "Unsuspended"} user "${user.email}". ${validated.reason || ""}`.trim(),
     })
 
-    revalidatePath("/saas-dashboard/users")
+    revalidatePath("/users")
 
     return {
       success: true,
@@ -254,7 +254,7 @@ export async function userResetSchool(input: {
         `Detached user "${user.email}" from school. ${validated.reason || ""}`.trim(),
     })
 
-    revalidatePath("/saas-dashboard/users")
+    revalidatePath("/users")
 
     return {
       success: true,

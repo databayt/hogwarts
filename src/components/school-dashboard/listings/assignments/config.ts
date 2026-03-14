@@ -32,3 +32,28 @@ export const ASSIGNMENT_STATUSES = [
   { label: "Completed", value: "COMPLETED" },
   { label: "Graded", value: "GRADED" },
 ] as const
+
+// --- Bilingual factory functions ---
+
+export const getAssignmentTypes = (lang?: string) => [
+  { value: "HOMEWORK", label: lang === "ar" ? "واجب منزلي" : "Homework" },
+  { value: "QUIZ", label: lang === "ar" ? "اختبار قصير" : "Quiz" },
+  { value: "TEST", label: lang === "ar" ? "اختبار" : "Test" },
+  { value: "MIDTERM", label: lang === "ar" ? "منتصف الفصل" : "Midterm" },
+  { value: "FINAL_EXAM", label: lang === "ar" ? "اختبار نهائي" : "Final Exam" },
+  { value: "PROJECT", label: lang === "ar" ? "مشروع" : "Project" },
+  { value: "LAB_REPORT", label: lang === "ar" ? "تقرير مختبر" : "Lab Report" },
+  { value: "ESSAY", label: lang === "ar" ? "مقال" : "Essay" },
+  {
+    value: "PRESENTATION",
+    label: lang === "ar" ? "عرض تقديمي" : "Presentation",
+  },
+]
+
+export const getAssignmentStatuses = (lang?: string) => [
+  { value: "DRAFT", label: lang === "ar" ? "مسودة" : "Draft" },
+  { value: "PUBLISHED", label: lang === "ar" ? "منشور" : "Published" },
+  { value: "IN_PROGRESS", label: lang === "ar" ? "جاري" : "In Progress" },
+  { value: "COMPLETED", label: lang === "ar" ? "مكتمل" : "Completed" },
+  { value: "GRADED", label: lang === "ar" ? "تم التقييم" : "Graded" },
+]

@@ -736,6 +736,28 @@ export async function getStudent(input: {
  * @param input - Query parameters
  * @returns Action response with students and total count
  */
+/**
+ * Format grade for display:
+ * - Arabic name: strip "الصف " prefix → "الثالث"
+ * - English: "Grade 3", "KG", "Pre-K" from gradeNumber
+ */
+function formatGradeLabel(
+  grade: { name?: string | null; gradeNumber?: number | null } | null
+): string | null {
+  if (!grade) return null
+  if (grade.name) {
+    return grade.name
+      .replace(/^الروضة الأولى$/, "أولى روضة")
+      .replace(/^الروضة الثانية$/, "ثانية روضة")
+      .replace(/^الصف /, "")
+  }
+  if (grade.gradeNumber == null) return null
+  const n = grade.gradeNumber
+  if (n < 0) return "Pre-K"
+  if (n === 0) return "KG"
+  return `Grade ${n}`
+}
+
 export async function getStudents(
   input: Partial<z.infer<typeof getStudentsSchema>>
 ): Promise<
@@ -745,15 +767,15 @@ export async function getStudents(
       userId: string | null
       name: string
       studentId: string | null
-      sectionName: string
+      classroom: string | null
       gradeName: string | null
       status: string
       createdAt: string
-      classCount: number
-      gradeCount: number
       email: string | null
       dateOfBirth: string | null
       enrollmentDate: string | null
+      wizardStep: string | null
+      profilePhotoUrl: string | null
     }>
     total: number
   }>
@@ -828,10 +850,15 @@ export async function getStudents(
             },
           },
           section: {
-            select: { name: true },
+            select: {
+              name: true,
+              classroom: {
+                select: { roomName: true },
+              },
+            },
           },
           academicGrade: {
-            select: { name: true },
+            select: { name: true, lang: true, gradeNumber: true },
           },
         },
       }),
@@ -844,17 +871,17 @@ export async function getStudents(
       userId: s.userId as string | null,
       name: [s.givenName, s.surname].filter(Boolean).join(" "),
       studentId: (s.studentId as string | null) || null,
-      sectionName: s.section?.name || s.academicGrade?.name || "-",
-      gradeName: (s.academicGrade?.name as string) || null,
+      classroom: (s.section?.classroom?.roomName as string) || null,
+      gradeName: formatGradeLabel(s.academicGrade),
       status: deriveStudentDisplayStatus(s),
       createdAt: (s.createdAt as Date).toISOString(),
-      classCount: s._count?.studentClasses || 0,
-      gradeCount: s._count?.results || 0,
       email: (s.email as string | null) || null,
       dateOfBirth: s.dateOfBirth ? (s.dateOfBirth as Date).toISOString() : null,
       enrollmentDate: s.enrollmentDate
         ? (s.enrollmentDate as Date).toISOString()
         : null,
+      wizardStep: (s.wizardStep as string | null) || null,
+      profilePhotoUrl: (s.profilePhotoUrl as string | null) || null,
     }))
 
     return { success: true, data: { rows: mapped, total: count as number } }

@@ -10,7 +10,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
-import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
+import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
 
 import { assertAdmissionPermission } from "./authorization"
@@ -361,12 +361,17 @@ export async function updateApplicationStatus(params: {
       }
       const statusMessage =
         statusMessages[params.status] || `حالة الطلب: ${params.status}`
+      const school = await db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
       dispatchNotification({
         schoolId,
         userId: application.userId,
         type: "system_alert",
         title: "تحديث حالة الطلب",
         body: statusMessage,
+        lang: school?.preferredLanguage ?? "ar",
         priority: params.status === "SELECTED" ? "high" : "normal",
         channels: ["in_app", "email"],
         metadata: {
@@ -844,12 +849,17 @@ export async function confirmEnrollment(params: {
 
     // Notify student about enrollment confirmation (non-blocking)
     if (application.userId) {
+      const schoolLang = await db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
       dispatchNotification({
         schoolId,
         userId: application.userId,
         type: "account_created",
         title: "تم تأكيد القبول",
         body: `تهانينا! تم تأكيد تسجيلك بالمدرسة. رقم التسجيل: ${enrollmentNumber}`,
+        lang: schoolLang?.preferredLanguage ?? "ar",
         priority: "high",
         channels: ["in_app", "email"],
         metadata: {
@@ -1057,67 +1067,34 @@ export async function placeStudentInSection(params: {
 
     // Assign student to section and create StudentClass entries
     let noClassesForGrade = false
-    const createdClassIds: string[] = []
 
-    await db.$transaction(async (tx) => {
-      await tx.student.update({
-        where: { id: student.id },
-        data: { sectionId: params.sectionId },
-      })
-
-      // Find all classes for this section's grade and enroll the student
-      if (sectionData.gradeId) {
-        const gradeClasses = await tx.class.findMany({
-          where: { schoolId, gradeId: sectionData.gradeId },
-          select: { id: true },
-        })
-
-        if (gradeClasses.length > 0) {
-          await Promise.all(
-            gradeClasses.map((cls) =>
-              tx.studentClass.upsert({
-                where: {
-                  schoolId_studentId_classId: {
-                    schoolId,
-                    studentId: student.id,
-                    classId: cls.id,
-                  },
-                },
-                create: {
-                  schoolId,
-                  studentId: student.id,
-                  classId: cls.id,
-                },
-                update: {},
-              })
-            )
-          )
-          createdClassIds.push(...gradeClasses.map((cls) => cls.id))
-        } else {
-          noClassesForGrade = true
-        }
-      }
+    await db.student.update({
+      where: { id: student.id },
+      data: { sectionId: params.sectionId },
     })
 
-    // Sync LMS enrollments (non-blocking, outside transaction)
-    if (createdClassIds.length > 0) {
-      for (const classId of createdClassIds) {
-        try {
-          await syncStudentClassToEnrollment(schoolId, student.id, classId)
-        } catch {
-          // Non-blocking: logged inside syncStudentClassToEnrollment
-        }
-      }
+    if (sectionData.gradeId) {
+      const result = await enrollStudentInGradeClasses(
+        schoolId,
+        student.id,
+        sectionData.gradeId
+      )
+      noClassesForGrade = result.classIds.length === 0
     }
 
     // Notify student about section placement (non-blocking)
     if (application.userId) {
+      const schoolLang2 = await db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
       dispatchNotification({
         schoolId,
         userId: application.userId,
         type: "system_alert",
         title: "تعيين القسم",
         body: `تم تعيينك في قسم "${sectionData.name}"`,
+        lang: schoolLang2?.preferredLanguage ?? "ar",
         priority: "normal",
         channels: ["in_app"],
         metadata: {

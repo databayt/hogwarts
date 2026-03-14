@@ -4,6 +4,7 @@
 import Link from "next/link"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -81,8 +82,7 @@ export default async function BalanceSheetPage({ params }: Props) {
         <div>
           <h3 className="text-lg font-medium">Balance Sheet</h3>
           <p className="text-muted-foreground text-sm">
-            {fiscalYear.name} &mdash; As of{" "}
-            {new Date(data.asOfDate).toLocaleDateString()}
+            {fiscalYear.name} &mdash; As of {formatDate(data.asOfDate, lang)}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -109,10 +109,10 @@ export default async function BalanceSheetPage({ params }: Props) {
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-muted-foreground border-b text-left">
+                <tr className="text-muted-foreground border-b text-start">
                   <th className="pb-2">Code</th>
                   <th className="pb-2">Account</th>
-                  <th className="pb-2 text-right">Balance</th>
+                  <th className="pb-2 text-end">Balance</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,11 +120,8 @@ export default async function BalanceSheetPage({ params }: Props) {
                   <tr key={a.accountCode} className="border-b last:border-0">
                     <td className="py-2 font-mono">{a.accountCode}</td>
                     <td className="py-2">{a.accountName}</td>
-                    <td className="py-2 text-right">
-                      $
-                      {a.balance.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                    <td className="py-2 text-end">
+                      {formatCurrency(a.balance, lang)}
                     </td>
                   </tr>
                 ))}
@@ -132,11 +129,8 @@ export default async function BalanceSheetPage({ params }: Props) {
                   <td className="pt-2" colSpan={2}>
                     Total Assets
                   </td>
-                  <td className="pt-2 text-right">
-                    $
-                    {data.totalAssets.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
+                  <td className="pt-2 text-end">
+                    {formatCurrency(data.totalAssets, lang)}
                   </td>
                 </tr>
               </tbody>
@@ -158,10 +152,10 @@ export default async function BalanceSheetPage({ params }: Props) {
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-muted-foreground border-b text-left">
+                <tr className="text-muted-foreground border-b text-start">
                   <th className="pb-2">Code</th>
                   <th className="pb-2">Account</th>
-                  <th className="pb-2 text-right">Balance</th>
+                  <th className="pb-2 text-end">Balance</th>
                 </tr>
               </thead>
               <tbody>
@@ -169,11 +163,8 @@ export default async function BalanceSheetPage({ params }: Props) {
                   <tr key={l.accountCode} className="border-b last:border-0">
                     <td className="py-2 font-mono">{l.accountCode}</td>
                     <td className="py-2">{l.accountName}</td>
-                    <td className="py-2 text-right">
-                      $
-                      {l.balance.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                    <td className="py-2 text-end">
+                      {formatCurrency(l.balance, lang)}
                     </td>
                   </tr>
                 ))}
@@ -181,11 +172,8 @@ export default async function BalanceSheetPage({ params }: Props) {
                   <td className="pt-2" colSpan={2}>
                     Total Liabilities
                   </td>
-                  <td className="pt-2 text-right">
-                    $
-                    {data.totalLiabilities.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
+                  <td className="pt-2 text-end">
+                    {formatCurrency(data.totalLiabilities, lang)}
                   </td>
                 </tr>
               </tbody>
@@ -205,10 +193,10 @@ export default async function BalanceSheetPage({ params }: Props) {
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-muted-foreground border-b text-left">
+                <tr className="text-muted-foreground border-b text-start">
                   <th className="pb-2">Code</th>
                   <th className="pb-2">Account</th>
-                  <th className="pb-2 text-right">Balance</th>
+                  <th className="pb-2 text-end">Balance</th>
                 </tr>
               </thead>
               <tbody>
@@ -216,11 +204,8 @@ export default async function BalanceSheetPage({ params }: Props) {
                   <tr key={e.accountCode} className="border-b last:border-0">
                     <td className="py-2 font-mono">{e.accountCode}</td>
                     <td className="py-2">{e.accountName}</td>
-                    <td className="py-2 text-right">
-                      $
-                      {e.balance.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                    <td className="py-2 text-end">
+                      {formatCurrency(e.balance, lang)}
                     </td>
                   </tr>
                 ))}
@@ -228,11 +213,8 @@ export default async function BalanceSheetPage({ params }: Props) {
                   <td className="pt-2" colSpan={2}>
                     Total Equity
                   </td>
-                  <td className="pt-2 text-right">
-                    $
-                    {data.totalEquity.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
+                  <td className="pt-2 text-end">
+                    {formatCurrency(data.totalEquity, lang)}
                   </td>
                 </tr>
               </tbody>
@@ -249,10 +231,7 @@ export default async function BalanceSheetPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {data.totalAssets.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(data.totalAssets, lang)}
             </p>
           </CardContent>
         </Card>
@@ -264,10 +243,7 @@ export default async function BalanceSheetPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {data.totalLiabilities.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(data.totalLiabilities, lang)}
             </p>
           </CardContent>
         </Card>
@@ -277,10 +253,7 @@ export default async function BalanceSheetPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {data.totalEquity.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(data.totalEquity, lang)}
             </p>
           </CardContent>
         </Card>

@@ -65,3 +65,20 @@ export const TIME_SLOTS = [
   "18:00",
   "18:30",
 ] as const
+
+// --- Bilingual factory functions ---
+
+export const getExamStatuses = (lang?: string) => [
+  { value: "PLANNED", label: lang === "ar" ? "مخطط" : "Planned" },
+  { value: "IN_PROGRESS", label: lang === "ar" ? "جاري" : "In Progress" },
+  { value: "COMPLETED", label: lang === "ar" ? "مكتمل" : "Completed" },
+  { value: "CANCELLED", label: lang === "ar" ? "ملغي" : "Cancelled" },
+]
+
+export const getExamTypes = (lang?: string) => [
+  { value: "MIDTERM", label: lang === "ar" ? "منتصف الفصل" : "Midterm" },
+  { value: "FINAL", label: lang === "ar" ? "نهائي" : "Final" },
+  { value: "QUIZ", label: lang === "ar" ? "اختبار قصير" : "Quiz" },
+  { value: "ASSIGNMENT", label: lang === "ar" ? "واجب" : "Assignment" },
+  { value: "PROJECT", label: lang === "ar" ? "مشروع" : "Project" },
+]

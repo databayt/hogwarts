@@ -115,6 +115,12 @@ export async function GET(request: NextRequest) {
 
       if (!student) continue
 
+      // Look up school's preferred language
+      const school = await db.school.findFirst({
+        where: { id: assignment.schoolId },
+        select: { preferredLanguage: true },
+      })
+
       const amount = assignment.finalAmount.toString()
       const feeName = assignment.feeStructure.name
 
@@ -139,6 +145,7 @@ export async function GET(request: NextRequest) {
           body: `Fee payment of ${amount} for "${feeName}" is overdue. Please make payment immediately.`,
           priority: "urgent",
           channels: ["in_app", "email"],
+          lang: school?.preferredLanguage ?? "ar",
           metadata: {
             feeAssignmentId: assignment.id,
             url: "/finance/fees",

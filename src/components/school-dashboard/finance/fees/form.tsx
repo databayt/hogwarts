@@ -5,6 +5,7 @@
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
+import { formatCurrency } from "@/lib/i18n-format"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -194,10 +195,7 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
           <div>
             <p className="text-muted-foreground text-sm">Total Amount</p>
             <p className="text-2xl font-bold">
-              $
-              {totalAmount.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(totalAmount, lang)}
             </p>
           </div>
           <div className="flex gap-2">

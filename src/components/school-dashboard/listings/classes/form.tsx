@@ -14,6 +14,7 @@ import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 import {
   createClass,
   getClass,
@@ -31,6 +32,7 @@ interface ClassCreateFormProps {
 }
 
 export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
+  const { locale } = useLocale()
   const { dictionary: fullDict } = useDictionary()
   const t = fullDict?.messages?.toast
   const { modal, closeModal } = useModal()
@@ -183,9 +185,9 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
   }
 
   const stepLabels: Record<number, string> = {
-    1: "Basic Information",
-    2: "Schedule Details",
-    3: "Capacity & Course",
+    1: locale === "ar" ? "المعلومات الأساسية" : "Basic Information",
+    2: locale === "ar" ? "تفاصيل الجدول" : "Schedule Details",
+    3: locale === "ar" ? "السعة والمقرر" : "Capacity & Course",
   }
 
   return (

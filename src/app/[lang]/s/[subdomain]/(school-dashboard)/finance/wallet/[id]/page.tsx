@@ -5,6 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -68,10 +69,7 @@ export default async function WalletDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {wallet.currency}{" "}
-              {Number(wallet.balance).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {wallet.currency} {formatCurrency(Number(wallet.balance), lang)}
             </p>
           </CardContent>
         </Card>
@@ -122,22 +120,16 @@ export default async function WalletDetailPage({ params }: Props) {
                       {tx.description || tx.reference || "Transaction"}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      {tx.createdAt.toLocaleDateString()}
-                      {tx.sourceModule && ` — ${tx.sourceModule}`}
+                      {formatDate(tx.createdAt, lang)}
+                      {tx.sourceModule && ` \u2014 ${tx.sourceModule}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
                     <span>
-                      Amount:{" "}
-                      {Number(tx.amount).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                      Amount: {formatCurrency(Number(tx.amount), lang)}
                     </span>
                     <span>
-                      Balance:{" "}
-                      {Number(tx.balanceAfter).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                      Balance: {formatCurrency(Number(tx.balanceAfter), lang)}
                     </span>
                     <Badge
                       variant={tx.type === "CREDIT" ? "default" : "destructive"}

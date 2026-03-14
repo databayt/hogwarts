@@ -109,8 +109,7 @@ export type MessageAttachmentDTO = {
   size: number
   fileSize: number
   fileType: string
-  thumbnailUrl: string | null
-  metadata: Record<string, unknown> | null
+  thumbnail: string | null
   uploadedAt: Date
 }
 
@@ -325,7 +324,7 @@ export type CreateMessagePayload = {
     fileName: string
     fileSize: number
     fileType: string
-    thumbnailUrl?: string
+    thumbnail?: string
   }>
   metadata?: Record<string, unknown>
 }

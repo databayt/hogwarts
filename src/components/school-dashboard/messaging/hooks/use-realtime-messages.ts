@@ -312,7 +312,6 @@ export function useRealtimeMessages(
 
           if (showNotifications && data.senderId !== session?.user?.id) {
             toast({
-              title: "New message",
               description:
                 data.content.slice(0, 50) +
                 (data.content.length > 50 ? "..." : ""),

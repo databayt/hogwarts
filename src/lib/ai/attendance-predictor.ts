@@ -26,6 +26,8 @@
 
 import OpenAI from "openai"
 
+import { formatDate } from "@/lib/i18n-format"
+
 import { AIErrorType, AIServiceError, DEFAULT_AI_CONFIG } from "./config"
 import { aiRateLimiter } from "./rate-limiter"
 
@@ -286,7 +288,7 @@ export async function predictStudentRisk(
 
 **Context:**
 - Previous interventions: ${data.previousInterventions}
-- Last intervention: ${data.lastInterventionDate?.toLocaleDateString() || "None"}
+- Last intervention: ${data.lastInterventionDate ? formatDate(data.lastInterventionDate, "en") : "None"}
 - Active intervention: ${data.hasActiveIntervention ? "Yes" : "No"}
 - Guardian contact available: ${data.hasGuardianContact ? "Yes" : "No"}
 - Known health condition: ${data.hasHealthCondition ? "Yes" : "No"}

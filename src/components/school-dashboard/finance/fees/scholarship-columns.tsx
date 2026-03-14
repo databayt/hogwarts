@@ -6,6 +6,8 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis, Users } from "lucide-react"
 
+import { formatCurrency } from "@/lib/i18n-format"
+import type { Locale } from "@/components/internationalization/config"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -105,10 +107,7 @@ export const getScholarshipColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
-          $
-          {getValue<number>().toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-          })}
+          {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
         </span>
       ),
       meta: { label: "Coverage Amount", variant: "text" },

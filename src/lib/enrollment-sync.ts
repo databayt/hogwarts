@@ -1,4 +1,62 @@
+import type { PrismaClient } from "@prisma/client"
+
 import { db } from "@/lib/db"
+
+/**
+ * Enroll a student in all classes for a given grade.
+ * Creates StudentClass records (idempotent via unique constraint)
+ * and syncs LMS enrollments.
+ *
+ * Used by: student wizard enrollment, admission placement, CSV import.
+ */
+export async function enrollStudentInGradeClasses(
+  schoolId: string,
+  studentId: string,
+  gradeId: string,
+  tx?: Pick<PrismaClient, "class" | "studentClass">
+): Promise<{ classIds: string[]; warning?: string }> {
+  const client = tx ?? db
+
+  const gradeClasses = await client.class.findMany({
+    where: { schoolId, gradeId },
+    select: { id: true },
+  })
+
+  if (gradeClasses.length === 0) {
+    return {
+      classIds: [],
+      warning:
+        "No classes found for this grade. Generate classes first via Classrooms > Configure.",
+    }
+  }
+
+  await Promise.all(
+    gradeClasses.map((cls) =>
+      client.studentClass.upsert({
+        where: {
+          schoolId_studentId_classId: {
+            schoolId,
+            studentId,
+            classId: cls.id,
+          },
+        },
+        create: { schoolId, studentId, classId: cls.id },
+        update: {},
+      })
+    )
+  )
+
+  const classIds = gradeClasses.map((cls) => cls.id)
+
+  // Sync LMS enrollments (non-blocking, outside any transaction)
+  if (!tx) {
+    for (const classId of classIds) {
+      syncStudentClassToEnrollment(schoolId, studentId, classId).catch(() => {})
+    }
+  }
+
+  return { classIds }
+}
 
 /**
  * Sync a StudentClass enrollment to the LMS Enrollment system.

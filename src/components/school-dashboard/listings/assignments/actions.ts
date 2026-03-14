@@ -83,11 +83,16 @@ export async function createAssignment(
     })
 
     // Notify students in the class about the new assignment (non-blocking)
+    const schoolPref = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
     dispatchNotificationsToAudience({
       schoolId,
       type: "assignment_created",
       title: `واجب جديد: ${parsed.title}`,
       body: `تم إضافة واجب جديد "${parsed.title}" مع موعد تسليم ${new Date(parsed.dueDate).toLocaleDateString("ar-SA")}`,
+      lang: schoolPref?.preferredLanguage ?? "ar",
       priority: "normal",
       channels: ["in_app", "email"],
       metadata: {

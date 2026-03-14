@@ -16,8 +16,10 @@ export interface WizardConfig {
   steps: string[]
   /** Group steps into phases for the progress bar */
   groups: Record<number, string[]>
-  /** Labels for each progress group */
+  /** Labels for each progress group (default/fallback language) */
   groupLabels?: string[]
+  /** Localized group labels keyed by language code (e.g., { ar: [...], en: [...] }) */
+  i18nGroupLabels?: Record<string, string[]>
   /** Steps that must be completed before finishing */
   requiredSteps?: string[]
   /** Allow skipping ahead after all required steps are done */
@@ -26,8 +28,32 @@ export interface WizardConfig {
   skipToStep?: string
   /** Button label for the final step (default: "Finish") */
   finalLabel?: string
+  /** Localized final button label keyed by language code (e.g., { ar: "...", en: "..." }) */
+  i18nFinalLabel?: Record<string, string>
   /** Redirect URL after completing the final step */
   finalDestination?: string
+}
+
+/**
+ * Resolve localized group labels from a WizardConfig.
+ * Falls back to groupLabels if i18nGroupLabels doesn't have the requested locale.
+ */
+export function resolveGroupLabels(
+  config: WizardConfig,
+  locale: string
+): string[] | undefined {
+  return config.i18nGroupLabels?.[locale] ?? config.groupLabels
+}
+
+/**
+ * Resolve localized final label from a WizardConfig.
+ * Falls back to finalLabel if i18nFinalLabel doesn't have the requested locale.
+ */
+export function resolveFinalLabel(
+  config: WizardConfig,
+  locale: string
+): string | undefined {
+  return config.i18nFinalLabel?.[locale] ?? config.finalLabel
 }
 
 /** Metadata for a single wizard step */

@@ -150,6 +150,24 @@ export async function seedSections(
 
   if (grades.length === 0) return
 
+  // Only use regular classrooms for homeroom sections (not labs, sports, admin)
+  const regularClassrooms = await prisma.classroom.findMany({
+    where: {
+      schoolId,
+      classroomType: { name: "classroom" },
+    },
+    select: { id: true, roomName: true, capacity: true },
+    orderBy: { roomName: "asc" },
+  })
+  const homeroomRooms =
+    regularClassrooms.length > 0
+      ? regularClassrooms.map((c) => ({
+          id: c.id,
+          name: c.roomName,
+          capacity: c.capacity,
+        }))
+      : classrooms // fallback to all if no type filter matches
+
   let teacherIdx = 0
   let classroomIdx = 0
   let created = 0
@@ -160,14 +178,17 @@ export async function seedSections(
       const letter = String.fromCharCode(65 + i) // A, B, C
       const name = `Grade ${grade.gradeNumber}-${letter}`
       const teacher = teachers[teacherIdx % teachers.length]
-      const classroom = classrooms[classroomIdx % classrooms.length]
+      const classroom = homeroomRooms[classroomIdx % homeroomRooms.length]
       teacherIdx++
       classroomIdx++
 
       try {
         await prisma.section.upsert({
           where: { schoolId_name: { schoolId, name } },
-          update: {},
+          update: {
+            classroomId: classroom.id,
+            homeroomTeacherId: teacher.id,
+          },
           create: {
             schoolId,
             gradeId: grade.id,
@@ -279,7 +300,7 @@ export async function seedStudentEnrollments(
       try {
         await prisma.student.update({
           where: { id: levelStudents[i].id },
-          data: { sectionId: section.id },
+          data: { sectionId: section.id, academicGradeId: gradeId },
         })
         sectionAssignments++
       } catch {

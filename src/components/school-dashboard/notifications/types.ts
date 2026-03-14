@@ -20,6 +20,7 @@ export type NotificationDTO = {
   priority: NotificationPriority
   title: string
   body: string
+  lang: string
   metadata: Record<string, unknown> | null
   actorId: string | null
   actor: {

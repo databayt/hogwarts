@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis, Users } from "lucide-react"
 
+import { formatCurrency } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { STATUS_COLORS } from "./config"
@@ -35,12 +37,31 @@ export type FeeStructureRow = {
 export const getFeeStructureColumns = (
   lang?: string
 ): ColumnDef<FeeStructureRow>[] => {
+  const isAr = lang === "ar"
+
+  const t = {
+    name: isAr ? "الاسم" : "Name",
+    academicYear: isAr ? "العام الدراسي" : "Academic Year",
+    class: isAr ? "الفصل" : "Class",
+    allClasses: isAr ? "جميع الفصول" : "All Classes",
+    totalAmount: isAr ? "المبلغ الإجمالي" : "Total Amount",
+    installments: isAr ? "الأقساط" : "Installments",
+    assignments: isAr ? "التعيينات" : "Assignments",
+    status: isAr ? "الحالة" : "Status",
+    active: isAr ? "نشط" : "Active",
+    inactive: isAr ? "غير نشط" : "Inactive",
+    created: isAr ? "تاريخ الإنشاء" : "Created",
+    actions: isAr ? "إجراءات" : "Actions",
+    view: isAr ? "عرض" : "View",
+    edit: isAr ? "تعديل" : "Edit",
+  }
+
   return [
     {
       accessorKey: "name",
       id: "name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Name" />
+        <DataTableColumnHeader column={column} title={t.name} />
       ),
       cell: ({ row }) => {
         const fee = row.original
@@ -53,65 +74,62 @@ export const getFeeStructureColumns = (
           </Link>
         )
       },
-      meta: { label: "Name", variant: "text" },
+      meta: { label: t.name, variant: "text" },
       enableColumnFilter: true,
     },
     {
       accessorKey: "academicYear",
       id: "academicYear",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Academic Year" />
+        <DataTableColumnHeader column={column} title={t.academicYear} />
       ),
-      meta: { label: "Academic Year", variant: "text" },
+      meta: { label: t.academicYear, variant: "text" },
     },
     {
       accessorKey: "className",
       id: "className",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Class" />
+        <DataTableColumnHeader column={column} title={t.class} />
       ),
       cell: ({ getValue }) => {
         const val = getValue<string | null>()
         return val ? (
           <span>{val}</span>
         ) : (
-          <Badge variant="outline">All Classes</Badge>
+          <Badge variant="outline">{t.allClasses}</Badge>
         )
       },
-      meta: { label: "Class", variant: "text" },
+      meta: { label: t.class, variant: "text" },
     },
     {
       accessorKey: "totalAmount",
       id: "totalAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total Amount" />
+        <DataTableColumnHeader column={column} title={t.totalAmount} />
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
-          $
-          {getValue<number>().toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-          })}
+          {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
         </span>
       ),
-      meta: { label: "Total Amount", variant: "text" },
+      meta: { label: t.totalAmount, variant: "text" },
     },
     {
       accessorKey: "installments",
       id: "installments",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Installments" />
+        <DataTableColumnHeader column={column} title={t.installments} />
       ),
       cell: ({ getValue }) => (
         <span className="tabular-nums">{getValue<number>()}</span>
       ),
-      meta: { label: "Installments", variant: "text" },
+      meta: { label: t.installments, variant: "text" },
     },
     {
       accessorKey: "assignmentCount",
       id: "assignmentCount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Assignments" />
+        <DataTableColumnHeader column={column} title={t.assignments} />
       ),
       cell: ({ getValue }) => (
         <Badge variant="secondary" className="tabular-nums">
@@ -119,29 +137,29 @@ export const getFeeStructureColumns = (
           {getValue<number>()}
         </Badge>
       ),
-      meta: { label: "Assignments", variant: "text" },
+      meta: { label: t.assignments, variant: "text" },
     },
     {
       accessorKey: "isActive",
       id: "isActive",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader column={column} title={t.status} />
       ),
       cell: ({ getValue }) => {
         const active = getValue<boolean>()
         const color = active ? STATUS_COLORS.ACTIVE : STATUS_COLORS.INACTIVE
         return (
           <Badge variant="outline" className={color}>
-            {active ? "Active" : "Inactive"}
+            {active ? t.active : t.inactive}
           </Badge>
         )
       },
       meta: {
-        label: "Status",
+        label: t.status,
         variant: "select",
         options: [
-          { label: "Active", value: "true" },
-          { label: "Inactive", value: "false" },
+          { label: t.active, value: "true" },
+          { label: t.inactive, value: "false" },
         ],
       },
       enableColumnFilter: true,
@@ -150,20 +168,20 @@ export const getFeeStructureColumns = (
       accessorKey: "createdAt",
       id: "createdAt",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created" />
+        <DataTableColumnHeader column={column} title={t.created} />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
           {new Date(getValue<string>()).toLocaleDateString(
-            lang === "ar" ? "ar-SA" : "en-US"
+            isAr ? "ar-SA" : "en-US"
           )}
         </span>
       ),
-      meta: { label: "Created", variant: "text" },
+      meta: { label: t.created, variant: "text" },
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => <span className="sr-only">{t.actions}</span>,
       cell: ({ row }) => {
         const fee = row.original
         return (
@@ -171,20 +189,20 @@ export const getFeeStructureColumns = (
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{t.actions}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuContent align={isAr ? "start" : "end"}>
+              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/finance/fees/structures/${fee.id}`}>
-                  View
+                  {t.view}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/finance/fees/structures/${fee.id}/edit`}>
-                  Edit
+                  {t.edit}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

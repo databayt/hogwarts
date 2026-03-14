@@ -16,6 +16,7 @@ import {
   Zap,
 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

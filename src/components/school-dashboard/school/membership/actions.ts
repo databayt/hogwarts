@@ -720,6 +720,7 @@ export async function inviteMember(
         portalUrl: subdomain
           ? `https://${subdomain}.databayt.org`
           : "https://ed.databayt.org",
+        acceptUrl: `https://ed.databayt.org/accept-invite?token=${request.invitationToken}`,
       },
     }).catch(console.error)
 
@@ -813,6 +814,7 @@ export async function resendInvitation(
         portalUrl: subdomain
           ? `https://${subdomain}.databayt.org`
           : "https://ed.databayt.org",
+        acceptUrl: `https://ed.databayt.org/accept-invite?token=${newToken}`,
       },
     }).catch(console.error)
 
@@ -826,6 +828,135 @@ export async function resendInvitation(
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to resend invitation",
+    }
+  }
+}
+
+// --- Accept Invitation (by token) ---
+export async function acceptInvitation(
+  token: string
+): Promise<ActionResponse<{ domain: string }>> {
+  try {
+    const session = await auth()
+    if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const request = await db.membershipRequest.findUnique({
+      where: { invitationToken: token },
+      include: {
+        school: { select: { id: true, name: true, domain: true } },
+      },
+    })
+
+    if (!request || request.status !== "PENDING") {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    if (isInvitationExpired(request.expiresAt)) {
+      return { success: false, error: "This invitation has expired" }
+    }
+
+    const schoolId = request.schoolId
+
+    await db.$transaction(async (tx) => {
+      // Update request status
+      await tx.membershipRequest.update({
+        where: { id: request.id },
+        data: {
+          status: "APPROVED",
+          userId: session.user!.id,
+          reviewedAt: new Date(),
+        },
+      })
+
+      // Link user to school — same logic as approveMemberRequest
+      const linkedUser = await tx.user.findUnique({
+        where: { id: session.user!.id },
+        select: {
+          id: true,
+          schoolId: true,
+          email: true,
+          username: true,
+          image: true,
+          password: true,
+        },
+      })
+
+      if (
+        linkedUser &&
+        linkedUser.schoolId &&
+        linkedUser.schoolId !== schoolId
+      ) {
+        // User belongs to a DIFFERENT school — create a new User record
+        const newUser = await tx.user.create({
+          data: {
+            email: linkedUser.email,
+            username: linkedUser.username,
+            image: linkedUser.image,
+            password: linkedUser.password,
+            schoolId,
+            role: request.requestedRole,
+            emailVerified: new Date(),
+          },
+        })
+        // Update membership request to point to new user
+        await tx.membershipRequest.update({
+          where: { id: request.id },
+          data: { userId: newUser.id },
+        })
+      } else {
+        // User has no school or already in this school — safe to update
+        await tx.user.update({
+          where: { id: session.user!.id },
+          data: {
+            schoolId,
+            role: request.requestedRole,
+            updatedAt: new Date(),
+          },
+        })
+      }
+    })
+
+    revalidatePath("/school/membership")
+    return { success: true, data: { domain: request.school.domain || "" } }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to accept invitation",
+    }
+  }
+}
+
+// --- Decline Invitation (by token) ---
+export async function declineInvitation(
+  token: string
+): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const request = await db.membershipRequest.findUnique({
+      where: { invitationToken: token },
+    })
+
+    if (!request || request.status !== "PENDING") {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    await db.membershipRequest.update({
+      where: { id: request.id },
+      data: {
+        status: "REJECTED",
+        reviewedAt: new Date(),
+      },
+    })
+
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to decline invitation",
     }
   }
 }

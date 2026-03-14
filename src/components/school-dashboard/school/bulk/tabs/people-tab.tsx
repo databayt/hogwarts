@@ -156,7 +156,7 @@ function ImportCard({
             <Input
               ref={fileInputRef}
               type="file"
-              accept=".csv,.xlsx,.xls,.json"
+              accept=".csv,.xlsx,.xls,.json,.docx"
               onChange={(e) => {
                 setFile(e.target.files?.[0] || null)
                 setResult(null)
@@ -290,8 +290,8 @@ export function PeopleTab({ dictionary, lang }: Props) {
         title={isArabic ? "استيراد الطلاب" : "Import Students"}
         description={
           isArabic
-            ? "استيراد بيانات الطلاب من ملف CSV أو Excel أو JSON"
-            : "Bulk import student data from CSV, Excel, or JSON file"
+            ? "استيراد بيانات الطلاب من ملف CSV أو Excel أو JSON أو Word"
+            : "Bulk import student data from CSV, Excel, JSON, or Word file"
         }
         templateContent={STUDENT_TEMPLATE}
         templateFilename="students-template.csv"
@@ -304,8 +304,8 @@ export function PeopleTab({ dictionary, lang }: Props) {
         title={isArabic ? "استيراد المعلمين" : "Import Teachers"}
         description={
           isArabic
-            ? "استيراد بيانات المعلمين من ملف CSV أو Excel أو JSON"
-            : "Bulk import teacher data from CSV, Excel, or JSON file"
+            ? "استيراد بيانات المعلمين من ملف CSV أو Excel أو JSON أو Word"
+            : "Bulk import teacher data from CSV, Excel, JSON, or Word file"
         }
         templateContent={TEACHER_TEMPLATE}
         templateFilename="teachers-template.csv"
@@ -318,8 +318,8 @@ export function PeopleTab({ dictionary, lang }: Props) {
         title={isArabic ? "استيراد الموظفين" : "Import Staff"}
         description={
           isArabic
-            ? "استيراد بيانات الموظفين من ملف CSV أو Excel أو JSON"
-            : "Bulk import staff data from CSV, Excel, or JSON file"
+            ? "استيراد بيانات الموظفين من ملف CSV أو Excel أو JSON أو Word"
+            : "Bulk import staff data from CSV, Excel, JSON, or Word file"
         }
         templateContent={STAFF_TEMPLATE}
         templateFilename="staff-template.csv"
@@ -332,8 +332,8 @@ export function PeopleTab({ dictionary, lang }: Props) {
         title={isArabic ? "استيراد أولياء الأمور" : "Import Guardians"}
         description={
           isArabic
-            ? "استيراد بيانات أولياء الأمور من ملف CSV أو Excel أو JSON"
-            : "Bulk import guardian data from CSV, Excel, or JSON file"
+            ? "استيراد بيانات أولياء الأمور من ملف CSV أو Excel أو JSON أو Word"
+            : "Bulk import guardian data from CSV, Excel, JSON, or Word file"
         }
         templateContent={GUARDIAN_TEMPLATE}
         templateFilename="guardians-template.csv"

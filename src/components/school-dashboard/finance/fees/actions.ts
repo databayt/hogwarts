@@ -186,6 +186,13 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
       },
     })
 
+    // Look up school's preferred language for notifications
+    const schoolPref = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const schoolLang = schoolPref?.preferredLanguage ?? "ar"
+
     // Notify student about new fee due (non-blocking)
     const student = await db.student.findFirst({
       where: { id: formData.studentId as string, schoolId },
@@ -198,6 +205,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
         type: "fee_due",
         title: "رسوم دراسية جديدة",
         body: `تم تعيين رسوم بقيمة ${parseFloat(formData.finalAmount as string).toLocaleString()} لحسابك`,
+        lang: schoolLang,
         priority: "high",
         channels: ["in_app", "email"],
         metadata: {
@@ -223,6 +231,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
             type: "fee_due",
             title: "رسوم دراسية جديدة",
             body: `تم تعيين رسوم بقيمة ${parseFloat(formData.finalAmount as string).toLocaleString()} لحساب ${student.givenName} ${student.surname}`,
+            lang: schoolLang,
             priority: "high",
             channels: ["in_app", "email"],
             metadata: {
@@ -403,6 +412,13 @@ export async function recordPayment(
       data: { status: newStatus },
     })
 
+    // Look up school's preferred language for notifications
+    const schoolPref2 = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const schoolLang2 = schoolPref2?.preferredLanguage ?? "ar"
+
     // Notify student about payment received (non-blocking)
     const student = await db.student.findFirst({
       where: { id: feeAssignment.studentId, schoolId },
@@ -415,6 +431,7 @@ export async function recordPayment(
         type: "fee_paid",
         title: "تم استلام الدفعة",
         body: `تم تسجيل دفعة بقيمة ${amount.toLocaleString()}. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${(finalAmount - newTotalPaid).toLocaleString()}`}`,
+        lang: schoolLang2,
         priority: "normal",
         channels: ["in_app"],
         metadata: {
@@ -443,6 +460,7 @@ export async function recordPayment(
           type: "fee_paid",
           title: "تم استلام الدفعة",
           body: `تم تسجيل دفعة بقيمة ${amount.toLocaleString()} لحساب الطالب. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${(finalAmount - newTotalPaid).toLocaleString()}`}`,
+          lang: schoolLang2,
           priority: "normal",
           channels: ["in_app", "email"],
           metadata: {

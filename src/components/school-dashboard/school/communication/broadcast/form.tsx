@@ -6,6 +6,7 @@ import { useState, useTransition } from "react"
 import type { NotificationBatch } from "@prisma/client"
 import { CheckCircle, Clock, Send, XCircle } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {

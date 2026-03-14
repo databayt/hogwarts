@@ -38,6 +38,7 @@ model Conversation {
   description String?          @db.Text // Optional description for group conversations
   avatar      String? // Group avatar URL (optional)
   createdById String? // Creator of the conversation
+  createdBy   User?   @relation("ConversationCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   // Direct conversation participants (for type=direct only)
   // For quick lookup without joining participants table

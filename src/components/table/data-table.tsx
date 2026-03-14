@@ -26,6 +26,12 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   hasMore?: boolean
   isLoading?: boolean
   onLoadMore?: () => void
+  translations?: {
+    loadMore?: string
+    loading?: string
+    noResults?: string
+    rowsSelected?: string
+  }
 }
 
 function DataTableInner<TData>({
@@ -37,6 +43,7 @@ function DataTableInner<TData>({
   hasMore = false,
   isLoading = false,
   onLoadMore,
+  translations,
   ...props
 }: DataTableProps<TData>) {
   return (
@@ -118,7 +125,7 @@ function DataTableInner<TData>({
                   colSpan={table.getAllColumns().length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  {translations?.noResults || "No results."}
                 </TableCell>
               </TableRow>
             )}
@@ -134,6 +141,7 @@ function DataTableInner<TData>({
             hasMore={hasMore}
             isLoading={isLoading}
             onLoadMore={onLoadMore}
+            translations={translations}
           />
         )}
         {actionBar &&

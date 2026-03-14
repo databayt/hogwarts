@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export default async function WalletTransactionsPage({ params }: Props) {
-  await params
+  const { lang } = await params
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -51,21 +52,16 @@ export default async function WalletTransactionsPage({ params }: Props) {
                     {tx.sourceModule && ` &mdash; ${tx.sourceModule}`}
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    {tx.createdAt.toLocaleDateString()}
+                    {formatDate(tx.createdAt, lang)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-end">
                     <p className="font-medium">
-                      {Number(tx.amount).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                      {formatCurrency(Number(tx.amount), lang)}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      Balance:{" "}
-                      {Number(tx.balanceAfter).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                      Balance: {formatCurrency(Number(tx.balanceAfter), lang)}
                     </p>
                   </div>
                   <Badge

@@ -72,7 +72,7 @@ describe("domains/actions.ts", () => {
           status: "pending",
         }),
       })
-      expect(revalidatePath).toHaveBeenCalledWith("/saas-dashboard/domains")
+      expect(revalidatePath).toHaveBeenCalledWith("/domains")
     })
 
     it("rejects duplicate domain", async () => {

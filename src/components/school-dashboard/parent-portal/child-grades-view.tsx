@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -18,14 +19,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Locale } from "@/components/internationalization/config"
 
 import { getChildGrades } from "./actions"
 
 interface Props {
   studentId: string
+  lang?: Locale
 }
 
-export async function ChildGradesView({ studentId }: Props) {
+export async function ChildGradesView({ studentId, lang = "ar" }: Props) {
   const { grades } = await getChildGrades({ studentId })
 
   const { examResults, classScores } = grades

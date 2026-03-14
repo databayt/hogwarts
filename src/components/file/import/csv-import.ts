@@ -39,7 +39,7 @@ import {
 const studentCsvSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email").optional(),
-  studentId: z.string().min(1, "Student ID is required"),
+  studentId: z.string().optional(), // Auto-generated if missing
   yearLevel: z.string().optional(),
   middleName: z.string().optional(),
   section: z.string().optional(),
@@ -54,8 +54,8 @@ const studentCsvSchema = z.object({
 
 const teacherCsvSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email"),
-  employeeId: z.string().min(1, "Employee ID is required"),
+  email: z.string().email("Invalid email").optional(), // Auto-generated if missing
+  employeeId: z.string().optional(), // Auto-generated if missing
   department: z.string().optional(),
   phoneNumber: z.string().optional(),
   subjects: z.string().optional(), // Comma-separated list
@@ -282,6 +282,11 @@ class CsvImportService {
             continue
           }
 
+          // Auto-generate studentId if missing
+          if (!validated.studentId) {
+            validated.studentId = `STD-${Date.now()}-${i}`
+          }
+
           if (existingStudentIds.has(validated.studentId)) {
             result.warnings?.push({
               row: rowNumber,
@@ -419,10 +424,28 @@ class CsvImportService {
                   }
                 }
 
+                // Calculate wizardStep based on missing fields
+                // Wizard steps: personal -> enrollment -> contact -> location -> health -> previous-education
+                const hasPersonal =
+                  nameParts[0] &&
+                  nameParts[0] !== "Unknown" &&
+                  r.validated.dateOfBirth &&
+                  r.validated.gender
+                const hasEnrollment = !!academicGradeId
+                const hasContact =
+                  r.validated.email || r.validated.guardianPhone
+                const wizardStep = !hasPersonal
+                  ? "personal"
+                  : !hasEnrollment
+                    ? "enrollment"
+                    : !hasContact
+                      ? "contact"
+                      : null
+
                 return {
                   userId: userIds[idx],
                   schoolId,
-                  studentId: r.validated.studentId,
+                  studentId: r.validated.studentId!,
                   givenName: nameParts[0] || "Unknown",
                   middleName: r.validated.middleName || undefined,
                   surname: nameParts.slice(1).join(" ") || "Unknown",
@@ -437,7 +460,7 @@ class CsvImportService {
                   academicGradeId: academicGradeId || undefined,
                   sectionId: sectionId || undefined,
                   lang: detectedLang,
-                  wizardStep: "emergency",
+                  wizardStep,
                 }
               }),
             })
@@ -691,6 +714,20 @@ class CsvImportService {
             continue
           }
 
+          // Auto-generate employeeId if missing
+          if (!validated.employeeId) {
+            validated.employeeId = `TCH-${Date.now()}-${i}`
+          }
+
+          // Auto-generate email if missing
+          if (!validated.email) {
+            const slug = validated.name
+              .trim()
+              .toLowerCase()
+              .replace(/\s+/g, ".")
+            validated.email = `${slug}.${validated.employeeId}@school.local`
+          }
+
           if (existingEmployeeIds.has(validated.employeeId)) {
             result.warnings?.push({
               row: rowNumber,
@@ -778,16 +815,32 @@ class CsvImportService {
             await tx.teacher.createMany({
               data: chunk.map((r, idx) => {
                 const parts = r.validated.name.trim().split(/\s+/)
+
+                // Calculate wizardStep based on missing fields
+                // Wizard steps: information -> contact -> employment -> qualifications -> experience -> expertise
+                const hasContact =
+                  r.validated.email &&
+                  !r.validated.email.endsWith("@school.local")
+                const hasEmployment = !!r.validated.employeeId
+                const hasQualification = !!r.validated.qualification
+                const wizardStep = !hasContact
+                  ? "contact"
+                  : !hasEmployment
+                    ? "employment"
+                    : !hasQualification
+                      ? "qualifications"
+                      : null
+
                 return {
                   id: teacherIds[idx],
                   userId: userIds[idx],
                   schoolId,
-                  employeeId: r.validated.employeeId,
+                  employeeId: r.validated.employeeId!,
                   givenName: parts[0] || "Unknown",
                   surname: parts.slice(1).join(" ") || "Unknown",
-                  emailAddress: r.validated.email,
+                  emailAddress: r.validated.email!,
                   lang: detectedLang,
-                  wizardStep: "employment",
+                  wizardStep,
                 }
               }),
             })

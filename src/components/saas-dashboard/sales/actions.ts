@@ -3,11 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 import { LeadPriority, LeadSource, LeadStatus, LeadType } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
 import {
   createLeadSchema,
   leadFilterSchema,
@@ -28,28 +28,9 @@ export type ActionResponse<T = void> =
 
 const SALES_PATH = "/sales"
 
-// Platform schoolId for saas-dashboard-level leads (no tenant scoping)
+// Platform-level leads stored under a sentinel schoolId
+// TODO: Consider creating a real "platform" School record or making Lead.schoolId optional
 const PLATFORM_SCHOOL_ID = "platform"
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-async function getOperatorContext() {
-  const session = await auth()
-
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized")
-  }
-
-  // Check if user is a school-dashboard admin (DEVELOPER role)
-  const isPlatformAdmin = session.user.role === "DEVELOPER"
-  if (!isPlatformAdmin) {
-    throw new Error("Unauthorized: Platform admin access required")
-  }
-
-  return { userId: session.user.id }
-}
 
 // ============================================================================
 // CRUD Operations
@@ -62,7 +43,7 @@ export async function createOperatorLead(
   input: z.infer<typeof createLeadSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { userId } = await getOperatorContext()
+    const { userId } = await requireOperator()
 
     // Validate input
     const validated = createLeadSchema.parse(input)
@@ -138,7 +119,7 @@ export async function updateOperatorLead(
   input: z.infer<typeof updateLeadSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    await getOperatorContext()
+    await requireOperator()
 
     // Validate input
     const validated = updateLeadSchema.parse(input)
@@ -226,7 +207,7 @@ export async function deleteOperatorLead(
   id: string
 ): Promise<ActionResponse<void>> {
   try {
-    await getOperatorContext()
+    await requireOperator()
 
     // Find the lead
     const existing = await db.lead.findFirst({
@@ -285,7 +266,7 @@ export async function getOperatorLeads(
   }>
 > {
   try {
-    await getOperatorContext()
+    await requireOperator()
 
     // Build where clause
     const where: Record<string, unknown> = {
@@ -379,7 +360,7 @@ export async function getOperatorLeadById(id: string): Promise<
   } | null>
 > {
   try {
-    await getOperatorContext()
+    await requireOperator()
 
     const lead = await db.lead.findFirst({
       where: { id, schoolId: PLATFORM_SCHOOL_ID },

@@ -4,6 +4,7 @@
 import Link from "next/link"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -60,7 +61,7 @@ export default async function TrialBalancePage({ params }: Props) {
           <h3 className="text-lg font-medium">Trial Balance</h3>
           <p className="text-muted-foreground text-sm">
             {fiscalYear?.name ?? "All periods"} &mdash; As of{" "}
-            {new Date(data.asOfDate).toLocaleDateString()}
+            {formatDate(data.asOfDate, lang)}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -90,12 +91,12 @@ export default async function TrialBalancePage({ params }: Props) {
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-muted-foreground border-b text-left">
+                <tr className="text-muted-foreground border-b text-start">
                   <th className="pb-2">Code</th>
                   <th className="pb-2">Account</th>
                   <th className="pb-2">Type</th>
-                  <th className="pb-2 text-right">Debit</th>
-                  <th className="pb-2 text-right">Credit</th>
+                  <th className="pb-2 text-end">Debit</th>
+                  <th className="pb-2 text-end">Credit</th>
                 </tr>
               </thead>
               <tbody>
@@ -108,19 +109,15 @@ export default async function TrialBalancePage({ params }: Props) {
                         {a.accountType}
                       </Badge>
                     </td>
-                    <td className="py-2 text-right">
+                    <td className="py-2 text-end">
                       {a.debitBalance > 0
-                        ? `$${a.debitBalance.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                          })}`
-                        : "—"}
+                        ? formatCurrency(a.debitBalance, lang)
+                        : "\u2014"}
                     </td>
-                    <td className="py-2 text-right">
+                    <td className="py-2 text-end">
                       {a.creditBalance > 0
-                        ? `$${a.creditBalance.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                          })}`
-                        : "—"}
+                        ? formatCurrency(a.creditBalance, lang)
+                        : "\u2014"}
                     </td>
                   </tr>
                 ))}
@@ -128,17 +125,11 @@ export default async function TrialBalancePage({ params }: Props) {
                   <td className="pt-2" colSpan={3}>
                     Totals
                   </td>
-                  <td className="pt-2 text-right">
-                    $
-                    {data.totalDebits.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
+                  <td className="pt-2 text-end">
+                    {formatCurrency(data.totalDebits, lang)}
                   </td>
-                  <td className="pt-2 text-right">
-                    $
-                    {data.totalCredits.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
+                  <td className="pt-2 text-end">
+                    {formatCurrency(data.totalCredits, lang)}
                   </td>
                 </tr>
               </tbody>
@@ -155,10 +146,7 @@ export default async function TrialBalancePage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {data.totalDebits.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(data.totalDebits, lang)}
             </p>
           </CardContent>
         </Card>
@@ -168,10 +156,7 @@ export default async function TrialBalancePage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {data.totalCredits.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(data.totalCredits, lang)}
             </p>
           </CardContent>
         </Card>
@@ -181,10 +166,9 @@ export default async function TrialBalancePage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {Math.abs(data.totalDebits - data.totalCredits).toLocaleString(
-                undefined,
-                { minimumFractionDigits: 2 }
+              {formatCurrency(
+                Math.abs(data.totalDebits - data.totalCredits),
+                lang
               )}
             </p>
           </CardContent>

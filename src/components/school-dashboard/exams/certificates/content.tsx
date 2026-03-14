@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -122,7 +123,7 @@ export async function CertificateContent() {
                   </div>
                   <p className="text-muted-foreground text-xs">
                     #{cert.certificateNumber} &middot; Issued{" "}
-                    {new Date(cert.issuedAt).toLocaleDateString()}
+                    {formatDate(cert.issuedAt, "en")}
                   </p>
                   <div className="flex gap-2">
                     {cert.pdfUrl && (

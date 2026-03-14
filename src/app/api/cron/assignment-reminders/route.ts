@@ -55,6 +55,9 @@ export async function GET(request: NextRequest) {
         classId: true,
         title: true,
         dueDate: true,
+        school: {
+          select: { preferredLanguage: true },
+        },
       },
     })
 
@@ -81,6 +84,7 @@ export async function GET(request: NextRequest) {
           assignmentId: assignment.id,
           url: `/assignments/${assignment.id}`,
         },
+        lang: assignment.school?.preferredLanguage ?? "ar",
         targetScope: "class",
         targetClassId: assignment.classId,
       })

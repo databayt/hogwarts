@@ -248,7 +248,7 @@ export function DescriptionForm({
                 onClick={handleBack}
                 className="text-muted-foreground hover:text-foreground mb-4 flex items-center gap-2 text-sm transition-colors"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={16} className="rtl:rotate-180" />
                 <span>{selectedTypeName}</span>
               </button>
 

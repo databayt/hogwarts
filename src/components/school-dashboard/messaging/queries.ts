@@ -116,8 +116,7 @@ export const messageListSelect = {
       fileName: true,
       fileSize: true,
       fileType: true,
-      thumbnailUrl: true,
-      metadata: true,
+      thumbnail: true,
       uploadedAt: true,
     },
   },
@@ -404,6 +403,7 @@ export async function getMessagesList(
  * @returns Messages and metadata for pagination
  */
 export async function getMessagesWithCursor(
+  schoolId: string,
   conversationId: string,
   options: {
     cursor?: string // Message ID to start from
@@ -417,6 +417,7 @@ export async function getMessagesWithCursor(
   const query: any = {
     where: {
       conversationId,
+      conversation: { schoolId },
       isDeleted: false, // Don't include deleted messages
     },
     orderBy: {
@@ -666,30 +667,40 @@ export async function getUnreadCountsPerConversation(
   userId: string,
   conversationIds?: string[]
 ): Promise<Map<string, number>> {
-  // Build WHERE clause for optional conversation filtering
-  const conversationFilter = conversationIds?.length
-    ? `AND cp."conversationId" = ANY(${conversationIds})`
-    : ""
-
-  // Single query to get all unread counts grouped by conversation
-  const results = await db.$queryRaw<
-    { conversationId: string; count: bigint }[]
-  >`
-    SELECT
-      cp."conversationId",
-      COUNT(m.id) as count
-    FROM "ConversationParticipant" cp
-    INNER JOIN "Conversation" c ON c.id = cp."conversationId"
-    LEFT JOIN "Message" m ON
-      m."conversationId" = cp."conversationId"
-      AND m."senderId" != ${userId}
-      AND m."createdAt" > COALESCE(cp."lastReadAt", '1970-01-01'::timestamp)
-      AND m."isDeleted" = false
-    WHERE cp."userId" = ${userId}
-      AND c."schoolId" = ${schoolId}
-      ${conversationFilter}
-    GROUP BY cp."conversationId"
-  `
+  // Use separate branches to avoid SQL injection via Prisma.raw()
+  const results =
+    conversationIds && conversationIds.length > 0
+      ? await db.$queryRaw<{ conversationId: string; count: bigint }[]>`
+          SELECT
+            cp."conversationId",
+            COUNT(m.id) as count
+          FROM "ConversationParticipant" cp
+          INNER JOIN "Conversation" c ON c.id = cp."conversationId"
+          LEFT JOIN "Message" m ON
+            m."conversationId" = cp."conversationId"
+            AND m."senderId" != ${userId}
+            AND m."createdAt" > COALESCE(cp."lastReadAt", '1970-01-01'::timestamp)
+            AND m."isDeleted" = false
+          WHERE cp."userId" = ${userId}
+            AND c."schoolId" = ${schoolId}
+            AND cp."conversationId" = ANY(${conversationIds}::text[])
+          GROUP BY cp."conversationId"
+        `
+      : await db.$queryRaw<{ conversationId: string; count: bigint }[]>`
+          SELECT
+            cp."conversationId",
+            COUNT(m.id) as count
+          FROM "ConversationParticipant" cp
+          INNER JOIN "Conversation" c ON c.id = cp."conversationId"
+          LEFT JOIN "Message" m ON
+            m."conversationId" = cp."conversationId"
+            AND m."senderId" != ${userId}
+            AND m."createdAt" > COALESCE(cp."lastReadAt", '1970-01-01'::timestamp)
+            AND m."isDeleted" = false
+          WHERE cp."userId" = ${userId}
+            AND c."schoolId" = ${schoolId}
+          GROUP BY cp."conversationId"
+        `
 
   // Convert to Map for O(1) lookups
   const countsMap = new Map<string, number>()
@@ -704,6 +715,7 @@ export async function getUnreadCountsPerConversation(
  * Get user's conversation participant record
  */
 export async function getConversationParticipant(
+  schoolId: string,
   conversationId: string,
   userId: string
 ) {
@@ -711,6 +723,7 @@ export async function getConversationParticipant(
     where: {
       conversationId,
       userId,
+      conversation: { schoolId },
     },
   })
 }
@@ -719,6 +732,7 @@ export async function getConversationParticipant(
  * Check if user is participant in conversation
  */
 export async function isConversationParticipant(
+  schoolId: string,
   conversationId: string,
   userId: string
 ): Promise<boolean> {
@@ -726,6 +740,7 @@ export async function isConversationParticipant(
     where: {
       conversationId,
       userId,
+      conversation: { schoolId },
     },
   })
   return count > 0
@@ -734,10 +749,14 @@ export async function isConversationParticipant(
 /**
  * Get conversation participants
  */
-export async function getConversationParticipants(conversationId: string) {
+export async function getConversationParticipants(
+  schoolId: string,
+  conversationId: string
+) {
   return db.conversationParticipant.findMany({
     where: {
       conversationId,
+      conversation: { schoolId },
     },
     select: {
       id: true,
@@ -764,10 +783,14 @@ export async function getConversationParticipants(conversationId: string) {
 /**
  * Get pinned messages for a conversation
  */
-export async function getPinnedMessages(conversationId: string) {
+export async function getPinnedMessages(
+  schoolId: string,
+  conversationId: string
+) {
   return db.pinnedMessage.findMany({
     where: {
       conversationId,
+      message: { conversation: { schoolId } },
     },
     orderBy: {
       pinnedAt: "desc",
@@ -794,10 +817,14 @@ export async function getPinnedMessages(conversationId: string) {
 /**
  * Get message attachments
  */
-export async function getMessageAttachments(messageId: string) {
+export async function getMessageAttachments(
+  schoolId: string,
+  messageId: string
+) {
   return db.messageAttachment.findMany({
     where: {
       messageId,
+      message: { conversation: { schoolId } },
     },
     orderBy: {
       uploadedAt: "asc",
@@ -808,10 +835,11 @@ export async function getMessageAttachments(messageId: string) {
 /**
  * Get message reactions
  */
-export async function getMessageReactions(messageId: string) {
+export async function getMessageReactions(schoolId: string, messageId: string) {
   return db.messageReaction.findMany({
     where: {
       messageId,
+      message: { conversation: { schoolId } },
     },
     orderBy: {
       createdAt: "asc",
@@ -835,10 +863,14 @@ export async function getMessageReactions(messageId: string) {
 /**
  * Get message read receipts
  */
-export async function getMessageReadReceipts(messageId: string) {
+export async function getMessageReadReceipts(
+  schoolId: string,
+  messageId: string
+) {
   return db.messageReadReceipt.findMany({
     where: {
       messageId,
+      message: { conversation: { schoolId } },
     },
     orderBy: {
       readAt: "desc",
@@ -861,10 +893,19 @@ export async function getMessageReadReceipts(messageId: string) {
 /**
  * Get message drafts for a user
  */
-export async function getMessageDrafts(userId: string) {
+export async function getMessageDrafts(schoolId: string, userId: string) {
+  // MessageDraft has no direct conversation relation in schema,
+  // so we first get the user's conversation IDs scoped to this school
+  const schoolConversationIds = await db.conversation.findMany({
+    where: { schoolId },
+    select: { id: true },
+  })
+  const conversationIds = schoolConversationIds.map((c) => c.id)
+
   return db.messageDraft.findMany({
     where: {
       userId,
+      conversationId: { in: conversationIds },
     },
     orderBy: {
       updatedAt: "desc",
@@ -875,7 +916,18 @@ export async function getMessageDrafts(userId: string) {
 /**
  * Get message draft for a conversation
  */
-export async function getMessageDraft(conversationId: string, userId: string) {
+export async function getMessageDraft(
+  schoolId: string,
+  conversationId: string,
+  userId: string
+) {
+  // Verify conversation belongs to this school before returning draft
+  const conversation = await db.conversation.findFirst({
+    where: { id: conversationId, schoolId },
+    select: { id: true },
+  })
+  if (!conversation) return null
+
   return db.messageDraft.findFirst({
     where: {
       conversationId,
@@ -887,11 +939,12 @@ export async function getMessageDraft(conversationId: string, userId: string) {
 /**
  * Get conversation invites for a user
  */
-export async function getConversationInvites(userId: string) {
+export async function getConversationInvites(schoolId: string, userId: string) {
   return db.conversationInvite.findMany({
     where: {
       inviteeId: userId,
       status: "pending",
+      conversation: { schoolId },
       OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     },
     orderBy: {
@@ -926,11 +979,15 @@ export async function getConversationInvites(userId: string) {
 /**
  * Get typing indicators for a conversation
  */
-export async function getTypingIndicators(conversationId: string) {
+export async function getTypingIndicators(
+  schoolId: string,
+  conversationId: string
+) {
   const fiveSecondsAgo = new Date(Date.now() - 5000)
 
   return db.typingIndicator.findMany({
     where: {
+      schoolId,
       conversationId,
       startedAt: {
         gte: fiveSecondsAgo,
@@ -1106,54 +1163,90 @@ export async function fullTextSearchMessages(
     return { results: [], total: 0 }
   }
 
-  // Build conversation filter
-  const conversationFilter = conversationId
-    ? `AND m."conversationId" = '${conversationId}'`
-    : ""
-
   // Execute full-text search with ranking
-  const results = await db.$queryRaw<SearchResult[]>`
-    SELECT
-      m.id,
-      m."conversationId",
-      m.content,
-      m."contentType",
-      m."senderId",
-      u.username as "senderUsername",
-      u.image as "senderImage",
-      c.title as "conversationTitle",
-      c.type as "conversationType",
-      m."createdAt",
-      ts_rank(
-        to_tsvector('english', COALESCE(m.content, '')),
-        to_tsquery('english', ${sanitizedQuery})
-      ) as rank
-    FROM "Message" m
-    INNER JOIN "Conversation" c ON c.id = m."conversationId"
-    INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
-    LEFT JOIN "User" u ON u.id = m."senderId"
-    WHERE c."schoolId" = ${schoolId}
-      AND cp."userId" = ${userId}
-      AND m."isDeleted" = false
-      AND to_tsvector('english', COALESCE(m.content, '')) @@ to_tsquery('english', ${sanitizedQuery})
-      ${Prisma.raw(conversationFilter)}
-    ORDER BY rank DESC, m."createdAt" DESC
-    LIMIT ${limit}
-    OFFSET ${offset}
-  `
+  // Use separate branches to avoid SQL injection via Prisma.raw()
+  const results = conversationId
+    ? await db.$queryRaw<SearchResult[]>`
+        SELECT
+          m.id,
+          m."conversationId",
+          m.content,
+          m."contentType",
+          m."senderId",
+          u.username as "senderUsername",
+          u.image as "senderImage",
+          c.title as "conversationTitle",
+          c.type as "conversationType",
+          m."createdAt",
+          ts_rank(
+            to_tsvector('simple', COALESCE(m.content, '')),
+            to_tsquery('simple', ${sanitizedQuery})
+          ) as rank
+        FROM "Message" m
+        INNER JOIN "Conversation" c ON c.id = m."conversationId"
+        INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+        LEFT JOIN "User" u ON u.id = m."senderId"
+        WHERE c."schoolId" = ${schoolId}
+          AND cp."userId" = ${userId}
+          AND m."isDeleted" = false
+          AND m."conversationId" = ${conversationId}
+          AND to_tsvector('simple', COALESCE(m.content, '')) @@ to_tsquery('simple', ${sanitizedQuery})
+        ORDER BY rank DESC, m."createdAt" DESC
+        LIMIT ${limit}
+        OFFSET ${offset}
+      `
+    : await db.$queryRaw<SearchResult[]>`
+        SELECT
+          m.id,
+          m."conversationId",
+          m.content,
+          m."contentType",
+          m."senderId",
+          u.username as "senderUsername",
+          u.image as "senderImage",
+          c.title as "conversationTitle",
+          c.type as "conversationType",
+          m."createdAt",
+          ts_rank(
+            to_tsvector('simple', COALESCE(m.content, '')),
+            to_tsquery('simple', ${sanitizedQuery})
+          ) as rank
+        FROM "Message" m
+        INNER JOIN "Conversation" c ON c.id = m."conversationId"
+        INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+        LEFT JOIN "User" u ON u.id = m."senderId"
+        WHERE c."schoolId" = ${schoolId}
+          AND cp."userId" = ${userId}
+          AND m."isDeleted" = false
+          AND to_tsvector('simple', COALESCE(m.content, '')) @@ to_tsquery('simple', ${sanitizedQuery})
+        ORDER BY rank DESC, m."createdAt" DESC
+        LIMIT ${limit}
+        OFFSET ${offset}
+      `
 
   // Get total count for pagination
-  const countResult = await db.$queryRaw<{ count: bigint }[]>`
-    SELECT COUNT(DISTINCT m.id) as count
-    FROM "Message" m
-    INNER JOIN "Conversation" c ON c.id = m."conversationId"
-    INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
-    WHERE c."schoolId" = ${schoolId}
-      AND cp."userId" = ${userId}
-      AND m."isDeleted" = false
-      AND to_tsvector('english', COALESCE(m.content, '')) @@ to_tsquery('english', ${sanitizedQuery})
-      ${Prisma.raw(conversationFilter)}
-  `
+  const countResult = conversationId
+    ? await db.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(DISTINCT m.id) as count
+        FROM "Message" m
+        INNER JOIN "Conversation" c ON c.id = m."conversationId"
+        INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+        WHERE c."schoolId" = ${schoolId}
+          AND cp."userId" = ${userId}
+          AND m."isDeleted" = false
+          AND m."conversationId" = ${conversationId}
+          AND to_tsvector('simple', COALESCE(m.content, '')) @@ to_tsquery('simple', ${sanitizedQuery})
+      `
+    : await db.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(DISTINCT m.id) as count
+        FROM "Message" m
+        INNER JOIN "Conversation" c ON c.id = m."conversationId"
+        INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+        WHERE c."schoolId" = ${schoolId}
+          AND cp."userId" = ${userId}
+          AND m."isDeleted" = false
+          AND to_tsvector('simple', COALESCE(m.content, '')) @@ to_tsquery('simple', ${sanitizedQuery})
+      `
 
   const total = Number(countResult[0]?.count || 0)
 

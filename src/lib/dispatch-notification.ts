@@ -23,6 +23,7 @@ export async function dispatchNotification(params: {
   type: NotificationType
   title: string
   body: string
+  lang?: string
   priority?: NotificationPriority
   actorId?: string
   channels?: NotificationChannel[]
@@ -47,6 +48,7 @@ export async function dispatchNotification(params: {
         type: params.type,
         title: params.title,
         body: params.body,
+        lang: params.lang ?? "ar",
         priority: params.priority ?? "normal",
         actorId: params.actorId ?? null,
         channels: params.channels ?? ["in_app"],
@@ -72,6 +74,7 @@ export async function dispatchNotificationsToAudience(params: {
   type: NotificationType
   title: string
   body: string
+  lang?: string
   priority?: NotificationPriority
   actorId?: string
   channels?: NotificationChannel[]
@@ -115,6 +118,7 @@ export async function dispatchNotificationsToAudience(params: {
         type: params.type,
         title: params.title,
         body: params.body,
+        lang: params.lang ?? "ar",
         priority: params.priority ?? "normal",
         actorId: params.actorId ?? null,
         channels: params.channels ?? ["in_app"],

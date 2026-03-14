@@ -5,6 +5,7 @@
 import React from "react"
 import { Copy, Edit, Eye, MoreHorizontal, Trash2 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,6 +16,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { Locale } from "@/components/internationalization/config"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { OnboardingSchoolData } from "./types"
 import { formatCurrency } from "./util"

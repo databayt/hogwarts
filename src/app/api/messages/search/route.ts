@@ -86,6 +86,7 @@ export async function GET(request: NextRequest) {
 
     // Check if user is participant in this conversation
     const isParticipant = await isConversationParticipant(
+      schoolId,
       conversationId,
       session.user.id
     )

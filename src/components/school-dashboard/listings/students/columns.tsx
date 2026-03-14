@@ -4,15 +4,9 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import {
-  CalendarCheck,
-  CheckCircle,
-  Ellipsis,
-  GraduationCap,
-  KeyRound,
-  School,
-} from "lucide-react"
+import { Ellipsis } from "lucide-react"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -39,16 +33,15 @@ export type StudentRow = {
   userId: string | null
   name: string
   studentId: string | null
-  sectionName: string
+  classroom: string | null
   gradeName: string | null
   status: string
   createdAt: string
-  classCount: number
-  gradeCount: number
   email: string | null
   dateOfBirth: string | null
   enrollmentDate: string | null
   wizardStep: string | null
+  profilePhotoUrl: string | null
 }
 
 interface ColumnOptions {
@@ -67,10 +60,8 @@ export const getStudentColumns = (
   const t = {
     name: d?.fullName || "Name",
     studentId: d?.studentId || "Student ID",
-    section: d?.section || "Section",
+    classroom: d?.classroom || "Classroom",
     grade: d?.grade || "Grade",
-    classes: d?.classes || "Classes",
-    grades: d?.grades || "Grades",
     status: d?.status || "Status",
     created: d?.created || "Created",
     email: d?.email || "Email",
@@ -88,12 +79,21 @@ export const getStudentColumns = (
     graduated: d?.graduated || "Graduated",
     transferred: d?.transferred || "Transferred",
     droppedOut: d?.droppedOut || "Dropped Out",
-    completion: d?.completion || "Completion",
-    complete: d?.complete || "Complete",
+    draft: d?.draft || "Draft",
     generateAccessCode: d?.generateAccessCode || "Generate Access Code",
     viewGrades: d?.viewGrades || "View Grades",
     viewAttendance: d?.viewAttendance || "View Attendance",
     viewClasses: d?.viewClasses || "View Classes",
+    noEmail: d?.noEmail || "No email",
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase()
   }
 
   return [
@@ -106,30 +106,35 @@ export const getStudentColumns = (
       cell: ({ row }) => {
         const student = row.original
         return (
-          <div className="flex items-center gap-2">
-            {student.userId ? (
-              <Link
-                href={`/${lang}/profile/${student.userId}`}
-                className="font-medium hover:underline"
-              >
-                {student.name}
-              </Link>
-            ) : (
-              <span className="font-medium">{student.name}</span>
-            )}
-            {student.wizardStep && (
-              <Badge
-                variant="outline"
-                className="border-amber-300 px-1.5 py-0 text-[10px] text-amber-700"
-              >
-                {t.incomplete}
-              </Badge>
-            )}
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9">
+              <AvatarImage
+                src={student.profilePhotoUrl || ""}
+                alt={student.name}
+              />
+              <AvatarFallback className="bg-primary/10 text-xs">
+                {getInitials(student.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/${lang}/profile/${student.userId || student.id}`}
+                  className="font-medium hover:underline"
+                >
+                  {student.name}
+                </Link>
+              </div>
+              <span className="text-muted-foreground text-xs">
+                {student.email || t.noEmail}
+              </span>
+            </div>
           </div>
         )
       },
       meta: { label: t.name, variant: "text" },
       enableColumnFilter: true,
+      size: 250,
     },
     {
       accessorKey: "studentId",
@@ -153,40 +158,17 @@ export const getStudentColumns = (
       enableColumnFilter: true,
     },
     {
-      accessorKey: "sectionName",
-      id: "sectionName",
+      accessorKey: "classroom",
+      id: "classroom",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.section} />
+        <DataTableColumnHeader column={column} title={t.classroom} />
       ),
-      meta: { label: t.section, variant: "text" },
-    },
-    {
-      accessorKey: "classCount",
-      id: "classCount",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.classes} />
-      ),
-      cell: ({ getValue }) => (
-        <Badge variant="secondary" className="tabular-nums">
-          <School className="me-1 h-3 w-3" />
-          {getValue<number>()}
-        </Badge>
-      ),
-      meta: { label: t.classes, variant: "text" },
-    },
-    {
-      accessorKey: "gradeCount",
-      id: "gradeCount",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.grades} />
-      ),
-      cell: ({ getValue }) => (
-        <Badge variant="outline" className="tabular-nums">
-          <GraduationCap className="me-1 h-3 w-3" />
-          {getValue<number>()}
-        </Badge>
-      ),
-      meta: { label: t.grades, variant: "text" },
+      cell: ({ getValue }) => {
+        const val = getValue<string | null>()
+        if (!val) return <span className="text-muted-foreground">-</span>
+        return <span className="text-sm">{val}</span>
+      },
+      meta: { label: t.classroom, variant: "text" },
     },
     {
       accessorKey: "status",
@@ -194,44 +176,48 @@ export const getStudentColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.status} />
       ),
-      cell: ({ getValue }) => {
-        const status = getValue<string>()
-        const config: Record<
+      cell: ({ row }) => {
+        const student = row.original
+        const status = student.status
+
+        // Wizard draft overrides display status
+        if (student.wizardStep) {
+          return (
+            <Link
+              href={`/${lang}/students/add/${student.id}/${student.wizardStep}`}
+            >
+              <Badge variant="outline">{t.draft}</Badge>
+            </Link>
+          )
+        }
+
+        const variants: Record<
           string,
-          {
-            label: string
-            variant: "default" | "secondary" | "destructive" | "outline"
-            className?: string
-          }
+          "default" | "secondary" | "destructive" | "outline"
         > = {
-          active: { label: t.active, variant: "default" },
-          unassigned: {
-            label: t.unassigned,
-            variant: "outline",
-            className:
-              "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400",
-          },
-          incomplete: {
-            label: t.incomplete,
-            variant: "outline",
-            className:
-              "border-orange-500/50 bg-orange-500/10 text-orange-700 dark:text-orange-400",
-          },
-          inactive: { label: t.inactive, variant: "secondary" },
-          suspended: { label: t.suspended, variant: "destructive" },
-          graduated: { label: t.graduated, variant: "outline" },
-          transferred: { label: t.transferred, variant: "outline" },
-          dropped_out: { label: t.droppedOut, variant: "secondary" },
+          active: "default",
+          unassigned: "outline",
+          incomplete: "secondary",
+          inactive: "secondary",
+          suspended: "destructive",
+          graduated: "outline",
+          transferred: "outline",
+          dropped_out: "secondary",
         }
-        const c = config[status] || {
-          label: status,
-          variant: "outline" as const,
+
+        const labels: Record<string, string> = {
+          active: t.active,
+          unassigned: t.unassigned,
+          incomplete: t.incomplete,
+          inactive: t.inactive,
+          suspended: t.suspended,
+          graduated: t.graduated,
+          transferred: t.transferred,
+          dropped_out: t.droppedOut,
         }
-        return (
-          <Badge variant={c.variant} className={c.className}>
-            {c.label}
-          </Badge>
-        )
+
+        const label = labels[status] || status.replace("_", " ")
+        return <Badge variant={variants[status] || "default"}>{label}</Badge>
       },
       meta: {
         label: t.status,
@@ -240,6 +226,7 @@ export const getStudentColumns = (
           { label: t.active, value: "active" },
           { label: t.unassigned, value: "unassigned" },
           { label: t.incomplete, value: "incomplete" },
+          { label: t.draft, value: "draft" },
           { label: t.inactive, value: "inactive" },
           { label: t.suspended, value: "suspended" },
           { label: t.graduated, value: "graduated" },
@@ -310,35 +297,6 @@ export const getStudentColumns = (
       },
       meta: { label: t.enrollmentDate, variant: "text" },
     },
-    // Completion status (visible when viewing incomplete records)
-    {
-      id: "completion",
-      header: () => <span>{t.completion}</span>,
-      cell: ({ row }) => {
-        const student = row.original
-        if (!student.wizardStep) {
-          return (
-            <Badge variant="outline" className="gap-1">
-              <CheckCircle className="h-3 w-3" />
-              {t.complete}
-            </Badge>
-          )
-        }
-        return (
-          <Link
-            href={`/${lang}/students/add/${student.id}/${student.wizardStep}`}
-          >
-            <Badge variant="secondary" className="gap-1">
-              {student.wizardStep}
-            </Badge>
-          </Link>
-        )
-      },
-      meta: {
-        label: t.completion,
-        variant: "text",
-      },
-    },
     {
       id: "actions",
       header: () => <span className="sr-only">{t.actions}</span>,
@@ -348,8 +306,13 @@ export const getStudentColumns = (
         const onEdit = () => openModal(student.id)
         const onDelete = async () => {
           try {
-            const deleteMsg = `${t.delete} ${student.name}?`
-            const ok = await confirmDeleteDialog(deleteMsg)
+            const ok = await confirmDeleteDialog(undefined, {
+              title: `${t.delete} ${student.name}?`,
+              description:
+                (d as any)?.cannotBeUndone || "This action cannot be undone.",
+              confirmText: t.delete,
+              cancelText: (d as any)?.cancel || "Cancel",
+            })
             if (!ok) return
             const result = await deleteStudent({ id: student.id })
             if (result.success) {
@@ -381,13 +344,7 @@ export const getStudentColumns = (
               <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link
-                  href={
-                    student.userId
-                      ? `/${lang}/profile/${student.userId}`
-                      : `/${lang}/students/${student.id}`
-                  }
-                >
+                <Link href={`/${lang}/profile/${student.userId || student.id}`}>
                   {t.view}
                 </Link>
               </DropdownMenuItem>
@@ -405,19 +362,16 @@ export const getStudentColumns = (
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/grades?studentId=${student.id}`}>
-                  <GraduationCap className="me-2 h-4 w-4" />
                   {t.viewGrades}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/attendance?studentId=${student.id}`}>
-                  <CalendarCheck className="me-2 h-4 w-4" />
                   {t.viewAttendance}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/classrooms?studentId=${student.id}`}>
-                  <School className="me-2 h-4 w-4" />
                   {t.viewClasses}
                 </Link>
               </DropdownMenuItem>
@@ -427,7 +381,6 @@ export const getStudentColumns = (
                   options?.onGenerateAccessCode?.(student.id, student.name)
                 }
               >
-                <KeyRound className="me-2 h-4 w-4" />
                 {t.generateAccessCode}
               </DropdownMenuItem>
               <DropdownMenuSeparator />

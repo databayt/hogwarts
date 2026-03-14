@@ -64,6 +64,7 @@ import {
 
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { SupportedLanguage } from "@/components/translation/types"
 
@@ -928,6 +929,8 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
       upcomingAssignments: [],
       attendanceSummary: { totalDays: 0, presentDays: 0, percentage: 0 },
       announcements: [],
+      gradeTrend: [],
+      termProgress: { current: 0, total: 0 },
     }
   }
 
@@ -960,6 +963,8 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
       upcomingAssignments: [],
       attendanceSummary: { totalDays: 0, presentDays: 0, percentage: 0 },
       announcements: [],
+      gradeTrend: [],
+      termProgress: { current: 0, total: 0 },
     }
   }
 
@@ -1029,6 +1034,57 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
     take: 5,
   })
 
+  // Grade trend: exam results grouped by month (last 6 months)
+  const gradeTrendResults = await db.examResult.findMany({
+    where: {
+      studentId: firstChild.id,
+      schoolId,
+      createdAt: { gte: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000) },
+    },
+    select: {
+      marksObtained: true,
+      totalMarks: true,
+      percentage: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "asc" },
+  })
+
+  const gradeTrendMap = new Map<string, { total: number; count: number }>()
+  for (const r of gradeTrendResults) {
+    const month = r.createdAt.toLocaleString("en-US", { month: "short" })
+    const existing = gradeTrendMap.get(month) || { total: 0, count: 0 }
+    existing.total += r.percentage
+    existing.count += 1
+    gradeTrendMap.set(month, existing)
+  }
+  const gradeTrend = Array.from(gradeTrendMap.entries()).map(
+    ([period, { total, count }]) => ({
+      period,
+      current: Math.round(total / count),
+    })
+  )
+
+  // Term progress: weeks elapsed vs total weeks
+  const activeTerm = await db.term.findFirst({
+    where: { schoolId, isActive: true },
+    select: { startDate: true, endDate: true },
+  })
+
+  let termProgress = { current: 0, total: 0 }
+  if (activeTerm?.startDate && activeTerm?.endDate) {
+    const start = activeTerm.startDate.getTime()
+    const end = activeTerm.endDate.getTime()
+    const now = Date.now()
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000
+    const totalWeeks = Math.max(1, Math.ceil((end - start) / msPerWeek))
+    const elapsedWeeks = Math.max(
+      0,
+      Math.min(totalWeeks, Math.floor((now - start) / msPerWeek))
+    )
+    termProgress = { current: elapsedWeeks, total: totalWeeks }
+  }
+
   return {
     children,
     recentGrades: recentGrades.map((result) => ({
@@ -1062,6 +1118,8 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
       body: announcement.body || "",
       createdAt: announcement.createdAt.toISOString(),
     })),
+    gradeTrend,
+    termProgress,
   }
 }
 
@@ -2876,7 +2934,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
       id: a.id,
       title: a.title,
       subject: a.class?.subject?.subjectName || "Unknown",
-      dueDate: a.dueDate < today ? "Overdue" : a.dueDate.toLocaleDateString(),
+      dueDate: a.dueDate < today ? "Overdue" : formatDate(a.dueDate, "ar"),
       isOverdue: a.dueDate < today,
       status: (a.submissions[0]?.status?.toLowerCase() || "not_submitted") as
         | "not_submitted"
@@ -3067,7 +3125,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
     children,
     upcomingEvents: upcomingEvents.map((e) => ({
       title: e.title || "Event",
-      date: e.createdAt.toLocaleDateString(),
+      date: formatDate(e.createdAt, "ar"),
     })),
   }
 }
@@ -3729,7 +3787,7 @@ async function getStudentInvoices(
 
   return invoices.map((inv) => ({
     id: inv.id,
-    date: inv.invoice_date.toLocaleDateString(),
+    date: formatDate(inv.invoice_date, "ar"),
     amount: `$${inv.total.toFixed(2)}`,
     status: inv.status.toLowerCase() as "paid" | "open" | "void",
     description: `Invoice #${inv.invoice_no}`,
@@ -3759,7 +3817,7 @@ async function getTeacherInvoices(
 
   return expenses.map((exp) => ({
     id: exp.id,
-    date: exp.expenseDate.toLocaleDateString(),
+    date: formatDate(exp.expenseDate, "ar"),
     amount: `$${Number(exp.amount).toFixed(2)}`,
     status:
       exp.status === "PAID"
@@ -3801,7 +3859,7 @@ async function getParentInvoices(userId: string | undefined, schoolId: string) {
 
   return invoices.map((inv) => ({
     id: inv.id,
-    date: inv.invoice_date.toLocaleDateString(),
+    date: formatDate(inv.invoice_date, "ar"),
     amount: `$${inv.total.toFixed(2)}`,
     status: inv.status.toLowerCase() as "paid" | "open" | "void",
     description: `Invoice #${inv.invoice_no}`,
@@ -3828,7 +3886,7 @@ async function getStaffInvoices(userId: string | undefined, schoolId: string) {
 
   return expenses.map((exp) => ({
     id: exp.id,
-    date: exp.expenseDate.toLocaleDateString(),
+    date: formatDate(exp.expenseDate, "ar"),
     amount: `$${Number(exp.amount).toFixed(2)}`,
     status:
       exp.status === "PAID"
@@ -3856,7 +3914,7 @@ async function getAllSchoolInvoices(schoolId: string) {
 
   return invoices.map((inv) => ({
     id: inv.id,
-    date: inv.invoice_date.toLocaleDateString(),
+    date: formatDate(inv.invoice_date, "ar"),
     amount: `$${inv.total.toFixed(2)}`,
     status: inv.status.toLowerCase() as "paid" | "open" | "void",
     description: `Invoice #${inv.invoice_no}`,
@@ -4591,7 +4649,7 @@ async function getStudentChartData(
   // Group results by month for trend (using marksObtained and totalMarks)
   const monthlyGrades = results.reduce(
     (acc, r) => {
-      const month = r.createdAt.toLocaleDateString("en-US", { month: "short" })
+      const month = formatDate(r.createdAt, "en", { month: "short" })
       if (!acc[month]) acc[month] = []
       const score = r.marksObtained || 0
       const maxScore = r.totalMarks || 100

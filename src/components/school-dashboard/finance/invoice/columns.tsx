@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis, Eye, Pencil, Trash2 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -133,7 +134,7 @@ export const getInvoiceColumns = (
     ),
     cell: ({ getValue }) => (
       <span className="text-muted-foreground text-xs tabular-nums">
-        {new Date(getValue<string>()).toLocaleDateString()}
+        {formatDate(getValue<string>(), lang || "ar")}
       </span>
     ),
     meta: { label: ic?.dueDate || "Due Date", variant: "text" },
@@ -146,7 +147,7 @@ export const getInvoiceColumns = (
     ),
     cell: ({ getValue }) => (
       <span className="text-muted-foreground text-xs tabular-nums">
-        {new Date(getValue<string>()).toLocaleDateString()}
+        {formatDate(getValue<string>(), lang || "ar")}
       </span>
     ),
     meta: { label: ic?.created || "Created", variant: "text" },

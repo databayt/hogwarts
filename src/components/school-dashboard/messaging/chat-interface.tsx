@@ -27,6 +27,7 @@ import { toast } from "@/components/ui/use-toast"
 import type { UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { markConversationAsRead } from "./actions"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
@@ -143,6 +144,11 @@ export function ChatInterface({
 
   const avatarFallback = displayName?.[0]?.toUpperCase() || "C"
 
+  // Mark conversation as read when opened
+  useEffect(() => {
+    markConversationAsRead({ conversationId: conversation.id }).catch(() => {})
+  }, [conversation.id])
+
   // Real-time updates via Socket.IO
   useEffect(() => {
     if (!socketService.isConnected()) return
@@ -200,7 +206,9 @@ export function ChatInterface({
 
         // Mark as read if from another user
         if (data.senderId !== currentUserId) {
-          // Call mark as read action
+          markConversationAsRead({ conversationId: conversation.id }).catch(
+            () => {}
+          )
         }
       }
     })

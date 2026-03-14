@@ -1139,12 +1139,17 @@ export async function moveTimetableSlot(input: {
       select: { userId: true },
     })
     if (teacherUser?.userId) {
+      const schoolPref = await db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
       dispatchNotification({
         schoolId,
         userId: teacherUser.userId,
         type: "class_rescheduled",
         title: "تغيير في الجدول",
         body: `تم نقل حصة ${existingSlot.class?.name || "الحصة"} إلى يوم ووقت جديد`,
+        lang: schoolPref?.preferredLanguage ?? "ar",
         priority: "high",
         channels: ["in_app"],
         metadata: {
@@ -2329,12 +2334,17 @@ export async function deleteTimetableSlot(input: {
 
   // Notify teacher about removed slot (non-blocking)
   if (slotToDelete?.teacher?.userId) {
+    const schoolPref2 = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
     dispatchNotification({
       schoolId,
       userId: slotToDelete.teacher.userId,
       type: "class_cancelled",
       title: "إلغاء حصة",
       body: `تم إلغاء حصة ${slotToDelete.class?.name || "الحصة"} من الجدول`,
+      lang: schoolPref2?.preferredLanguage ?? "ar",
       priority: "normal",
       channels: ["in_app"],
       metadata: {
@@ -5434,12 +5444,17 @@ export async function assignSubstitute(input: {
     select: { userId: true },
   })
   if (subTeacherUser?.userId) {
+    const schoolPref3 = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
     dispatchNotification({
       schoolId,
       userId: subTeacherUser.userId,
       type: "system_alert",
       title: "تعيين بديل",
       body: `تم تعيينك كبديل لـ ${originalSlot.teacher?.givenName} ${originalSlot.teacher?.surname} في ${originalSlot.class?.name} (${originalSlot.period?.name})`,
+      lang: schoolPref3?.preferredLanguage ?? "ar",
       priority: "high",
       channels: ["in_app", "email"],
       metadata: {
@@ -5505,6 +5520,10 @@ export async function respondToSubstitution(input: {
 
   // If declined, notify admins so they can find another substitute (non-blocking)
   if (input.response === "DECLINED") {
+    const schoolPref4 = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
     const admins = await db.user.findMany({
       where: { schoolId, role: "ADMIN" },
       select: { id: true },
@@ -5516,6 +5535,7 @@ export async function respondToSubstitution(input: {
         type: "system_alert",
         title: "رفض البدالة",
         body: `رفض المعلم البديل التعيين${input.declineReason ? `: ${input.declineReason}` : ""}`,
+        lang: schoolPref4?.preferredLanguage ?? "ar",
         priority: "high",
         channels: ["in_app"],
         metadata: {
@@ -5679,12 +5699,17 @@ export async function cancelSubstitution(input: {
     select: { userId: true },
   })
   if (subTeacher?.userId) {
+    const schoolPref5 = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
     dispatchNotification({
       schoolId,
       userId: subTeacher.userId,
       type: "system_alert",
       title: "إلغاء البدالة",
       body: `تم إلغاء تعيينك كبديل${input.reason ? `: ${input.reason}` : ""}`,
+      lang: schoolPref5?.preferredLanguage ?? "ar",
       priority: "normal",
       channels: ["in_app"],
       metadata: {

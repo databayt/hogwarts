@@ -32,13 +32,23 @@ export const getAttendanceColumns = (
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Student" />
+        <DataTableColumnHeader
+          column={column}
+          title={
+            dict.title === "حضور" || dict.title === "الحضور"
+              ? "الطالب"
+              : "Student"
+          }
+        />
       ),
     },
     {
       accessorKey: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader
+          column={column}
+          title={(dict as any).status || "Status"}
+        />
       ),
       cell: ({ getValue, row, column, table }) => {
         const v = getValue<"present" | "absent" | "late">()

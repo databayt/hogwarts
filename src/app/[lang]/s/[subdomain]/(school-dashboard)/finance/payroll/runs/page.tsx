@@ -4,6 +4,7 @@
 import Link from "next/link"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -69,17 +70,14 @@ export default async function PayrollRunsPage({ params }: Props) {
                   <div>
                     <p className="font-medium">{run.runNumber}</p>
                     <p className="text-muted-foreground text-sm">
-                      {new Date(run.payPeriodStart).toLocaleDateString()} —{" "}
-                      {new Date(run.payPeriodEnd).toLocaleDateString()}
+                      {formatDate(run.payPeriodStart, lang)} —{" "}
+                      {formatDate(run.payPeriodEnd, lang)}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-end">
                       <p className="font-medium">
-                        $
-                        {Number(run.totalNet).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
+                        {formatCurrency(Number(run.totalNet), lang)}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {run._count.salarySlips} slips

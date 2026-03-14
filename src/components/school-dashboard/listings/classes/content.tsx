@@ -104,8 +104,12 @@ export default async function ClassesContent({
               lang,
               schoolId!
             )
-          : "Unknown",
-        termName: c.term?.termNumber ? `Term ${c.term.termNumber}` : "Unknown",
+          : "-",
+        termName: c.term?.termNumber
+          ? lang === "ar"
+            ? `الفصل ${c.term.termNumber}`
+            : `Term ${c.term.termNumber}`
+          : "-",
         gradeName: await getDisplayText(
           c.grade?.name || "",
           (c.grade?.lang as "ar" | "en") || "ar",

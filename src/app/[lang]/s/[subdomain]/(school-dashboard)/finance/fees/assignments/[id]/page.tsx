@@ -5,6 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -141,10 +142,12 @@ export default async function AssignmentDetailPage({ params }: Props) {
             <CardDescription>Final Amount</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{finalAmount.toLocaleString()}</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(finalAmount, lang)}
+            </p>
             {totalDiscount > 0 && (
               <p className="text-muted-foreground text-sm">
-                Discount: {totalDiscount.toLocaleString()}
+                Discount: {formatCurrency(totalDiscount, lang)}
               </p>
             )}
             {assignment.scholarship && (
@@ -159,7 +162,9 @@ export default async function AssignmentDetailPage({ params }: Props) {
             <CardDescription>Paid</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{totalPaid.toLocaleString()}</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(totalPaid, lang)}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -167,7 +172,9 @@ export default async function AssignmentDetailPage({ params }: Props) {
             <CardDescription>Remaining</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{remaining.toLocaleString()}</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(remaining, lang)}
+            </p>
             <Badge variant={statusVariant(assignment.status)} className="mt-1">
               {assignment.status}
             </Badge>
@@ -213,11 +220,11 @@ export default async function AssignmentDetailPage({ params }: Props) {
                     </TableCell>
                     <TableCell>
                       {payment.paymentDate
-                        ? new Date(payment.paymentDate).toLocaleDateString()
+                        ? formatDate(payment.paymentDate, lang)
                         : "-"}
                     </TableCell>
                     <TableCell>
-                      {Number(payment.amount).toLocaleString()}
+                      {formatCurrency(Number(payment.amount), lang)}
                     </TableCell>
                     <TableCell>{payment.paymentMethod}</TableCell>
                     <TableCell>{payment.receiptNumber || "-"}</TableCell>

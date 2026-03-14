@@ -252,13 +252,14 @@ export async function ParentDashboard({
       },
     ]
 
-    // TODO: Replace with real grade trend data from children's exam/assessment queries
-    const gradeTrendData = [
-      { period: "Sep", current: 75, previous: 70 },
-      { period: "Oct", current: 78, previous: 72 },
-      { period: "Nov", current: 82, previous: 75 },
-      { period: "Dec", current: averageGrade || 85, previous: 78 },
-    ]
+    const gradeTrendData =
+      data.gradeTrend.length > 0
+        ? data.gradeTrend.map((g) => ({
+            period: g.period,
+            current: g.current,
+            previous: 0,
+          }))
+        : [{ period: "—", current: averageGrade || 0, previous: 0 }]
 
     // Count pending assignments
     const pendingAssignments = data.upcomingAssignments.filter(
@@ -710,8 +711,8 @@ export async function ParentDashboard({
           />
           <ProgressCard
             title={dashDict.progressCards?.termProgress || "Term Progress"}
-            current={12}
-            total={16}
+            current={data.termProgress.current}
+            total={data.termProgress.total || 1}
             unit={dashDict.labels?.weeks || "weeks"}
             iconName="Clock"
             showPercentage

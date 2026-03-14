@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export default async function GeneralLedgerPage({ params }: Props) {
-  await params
+  const { lang } = await params
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -72,9 +73,7 @@ export default async function GeneralLedgerPage({ params }: Props) {
                         #{entry.journalEntry.entryNumber}
                       </td>
                       <td className="text-muted-foreground py-2 pe-4">
-                        {new Date(
-                          entry.journalEntry.entryDate
-                        ).toLocaleDateString()}
+                        {formatDate(entry.journalEntry.entryDate, lang)}
                       </td>
                       <td className="py-2 pe-4">
                         <span className="font-medium">
@@ -87,17 +86,13 @@ export default async function GeneralLedgerPage({ params }: Props) {
                       </td>
                       <td className="py-2 pe-4 text-end">
                         {Number(entry.debit) > 0
-                          ? `$${Number(entry.debit).toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                            })}`
-                          : "—"}
+                          ? formatCurrency(Number(entry.debit), lang)
+                          : "\u2014"}
                       </td>
                       <td className="py-2 pe-4 text-end">
                         {Number(entry.credit) > 0
-                          ? `$${Number(entry.credit).toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                            })}`
-                          : "—"}
+                          ? formatCurrency(Number(entry.credit), lang)
+                          : "\u2014"}
                       </td>
                       <td className="py-2">
                         <Badge

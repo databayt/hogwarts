@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 
 const buttonGroupVariants = cva(
-  "inline-flex items-center justify-center rounded-md [&>button:not(:first-child)]:rounded-l-none [&>button:not(:last-child)]:rounded-r-none [&>button:not(:first-child)]:-ml-px [&>input:not(:first-child)]:rounded-l-none [&>input:not(:last-child)]:rounded-r-none [&>input:not(:first-child)]:-ml-px",
+  "inline-flex items-center justify-center rounded-md [&>button:not(:first-child)]:rounded-s-none [&>button:not(:last-child)]:rounded-e-none [&>button:not(:first-child)]:-ms-px [&>input:not(:first-child)]:rounded-s-none [&>input:not(:last-child)]:rounded-e-none [&>input:not(:first-child)]:-ms-px",
   {
     variants: {
       orientation: {

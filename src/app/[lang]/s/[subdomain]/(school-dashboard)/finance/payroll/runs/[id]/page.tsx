@@ -5,6 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -46,8 +47,8 @@ export default async function PayrollRunDetailPage({ params }: Props) {
         <div>
           <h3 className="text-lg font-medium">{run.runNumber}</h3>
           <p className="text-muted-foreground text-sm">
-            {new Date(run.payPeriodStart).toLocaleDateString()} —{" "}
-            {new Date(run.payPeriodEnd).toLocaleDateString()}
+            {formatDate(run.payPeriodStart, lang)} —{" "}
+            {formatDate(run.payPeriodEnd, lang)}
           </p>
         </div>
         <Badge>{run.status}</Badge>
@@ -60,10 +61,7 @@ export default async function PayrollRunDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {Number(run.totalGross).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(Number(run.totalGross), lang)}
             </p>
           </CardContent>
         </Card>
@@ -73,10 +71,7 @@ export default async function PayrollRunDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {Number(run.totalDeductions).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(Number(run.totalDeductions), lang)}
             </p>
           </CardContent>
         </Card>
@@ -86,10 +81,7 @@ export default async function PayrollRunDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {Number(run.totalNet).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(Number(run.totalNet), lang)}
             </p>
           </CardContent>
         </Card>
@@ -120,16 +112,10 @@ export default async function PayrollRunDetailPage({ params }: Props) {
                   <div className="flex items-center gap-3">
                     <div className="text-end">
                       <p className="font-medium">
-                        $
-                        {Number(slip.netSalary).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
+                        {formatCurrency(Number(slip.netSalary), lang)}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Gross: $
-                        {Number(slip.grossSalary).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
+                        Gross: {formatCurrency(Number(slip.grossSalary), lang)}
                       </p>
                     </div>
                     <Badge

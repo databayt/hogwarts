@@ -4,6 +4,7 @@
 import Link from "next/link"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -77,19 +78,16 @@ export default async function ExpensesListPage({ params }: Props) {
                   <div>
                     <p className="font-medium">
                       {expense.expenseNumber}
-                      {expense.vendor && ` — ${expense.vendor}`}
+                      {expense.vendor && ` \u2014 ${expense.vendor}`}
                     </p>
                     <p className="text-muted-foreground text-sm">
                       {expense.category.name} &mdash;{" "}
-                      {expense.expenseDate.toLocaleDateString()}
+                      {formatDate(expense.expenseDate, lang)}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <p className="font-medium">
-                      $
-                      {Number(expense.amount).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                      {formatCurrency(Number(expense.amount), lang)}
                     </p>
                     <Badge variant={statusVariant(expense.status)}>
                       {expense.status}

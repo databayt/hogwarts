@@ -62,3 +62,31 @@ export function getEmploymentTypeColor(type: string): string {
       return "gray"
   }
 }
+
+// --- Bilingual factory functions ---
+
+export const getEmploymentStatusOptions = (lang?: string) => [
+  { value: "ACTIVE", label: lang === "ar" ? "نشط" : "Active" },
+  { value: "ON_LEAVE", label: lang === "ar" ? "في إجازة" : "On Leave" },
+  { value: "TERMINATED", label: lang === "ar" ? "منتهي" : "Terminated" },
+  { value: "RETIRED", label: lang === "ar" ? "متقاعد" : "Retired" },
+]
+
+export const getEmploymentTypeOptions = (lang?: string) => [
+  { value: "FULL_TIME", label: lang === "ar" ? "دوام كامل" : "Full Time" },
+  { value: "PART_TIME", label: lang === "ar" ? "دوام جزئي" : "Part Time" },
+  { value: "CONTRACT", label: lang === "ar" ? "عقد" : "Contract" },
+  { value: "TEMPORARY", label: lang === "ar" ? "مؤقت" : "Temporary" },
+]
+
+export const getGenderOptions = (lang?: string) => [
+  { value: "male", label: lang === "ar" ? "ذكر" : "Male" },
+  { value: "female", label: lang === "ar" ? "أنثى" : "Female" },
+]
+
+export const getStaffSortOptions = (lang?: string) => [
+  { value: "createdAt", label: lang === "ar" ? "تاريخ الإضافة" : "Date Added" },
+  { value: "givenName", label: lang === "ar" ? "الاسم الأول" : "First Name" },
+  { value: "surname", label: lang === "ar" ? "اسم العائلة" : "Last Name" },
+  { value: "position", label: lang === "ar" ? "المنصب" : "Position" },
+]

@@ -36,6 +36,7 @@ export async function fetchNotificationBellData(): Promise<NotificationBellData 
         priority: n.priority,
         title: n.title,
         body: n.body,
+        lang: n.lang ?? "ar",
         metadata: n.metadata as Record<string, unknown> | null,
         actorId: n.actorId,
         actor: n.actor

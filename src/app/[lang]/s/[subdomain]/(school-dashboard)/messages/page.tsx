@@ -9,12 +9,6 @@ import {
   MessagingContentSkeleton,
 } from "@/components/school-dashboard/messaging/content"
 
-export const metadata: Metadata = {
-  title: `Messages | Hogwarts`,
-  description:
-    "Send and receive messages, communicate with your school community",
-}
-
 interface MessagesPageProps {
   params: Promise<{
     lang: string
@@ -23,6 +17,19 @@ interface MessagesPageProps {
   searchParams: Promise<{
     conversation?: string
   }>
+}
+
+export async function generateMetadata({
+  params,
+}: MessagesPageProps): Promise<Metadata> {
+  const { lang } = await params
+  return {
+    title: lang === "ar" ? "الرسائل | هوغوارتس" : "Messages | Hogwarts",
+    description:
+      lang === "ar"
+        ? "إرسال واستقبال الرسائل، التواصل مع مجتمع المدرسة"
+        : "Send and receive messages, communicate with your school community",
+  }
 }
 
 export default async function MessagesPage({

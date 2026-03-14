@@ -378,6 +378,8 @@ export interface ParentDashboardData {
     body: string
     createdAt: string
   }[]
+  gradeTrend: { period: string; current: number }[]
+  termProgress: { current: number; total: number }
 }
 
 // ============================================================================

@@ -46,7 +46,13 @@ export async function MessagingContent({
 
   const tenantContext = await getTenantContext()
   if (!tenantContext.schoolId) {
-    return <div>No school context found</div>
+    return (
+      <div className="flex h-full items-center justify-center">
+        <p className="text-muted-foreground">
+          {m?.errors?.no_school_context || "No school context found"}
+        </p>
+      </div>
+    )
   }
   const schoolId = tenantContext.schoolId
   const userId = session.user.id

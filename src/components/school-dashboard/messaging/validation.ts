@@ -179,7 +179,7 @@ export const createAttachmentSchema = z
       .max(255, "File name is too long"),
     fileSize: z.number().int().positive("File size must be positive"),
     fileType: z.string().min(1, "File type is required"),
-    thumbnailUrl: z.string().url().optional().or(z.literal("")),
+    thumbnail: z.string().url().optional().or(z.literal("")),
     metadata: z.record(z.string(), z.unknown()).optional(),
   })
   .superRefine((val, ctx) => {

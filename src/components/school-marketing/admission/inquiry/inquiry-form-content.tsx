@@ -164,7 +164,7 @@ export default function InquiryFormContent({
           <Link href={`/${lang}/apply`}>
             <Button className="group">
               {dict.applyNow || "Apply Now"}
-              <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+              <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
             </Button>
           </Link>
         </div>

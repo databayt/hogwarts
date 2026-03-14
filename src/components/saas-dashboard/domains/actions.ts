@@ -82,7 +82,7 @@ export async function domainApprove(input: {
       reason: validated.notes,
     })
 
-    revalidatePath("/saas-dashboard/domains")
+    revalidatePath("/domains")
 
     return { success: true, data: domainRequest }
   } catch (error) {
@@ -123,7 +123,7 @@ export async function domainReject(input: {
       reason: validated.notes,
     })
 
-    revalidatePath("/saas-dashboard/domains")
+    revalidatePath("/domains")
 
     return { success: true, data: domainRequest }
   } catch (error) {
@@ -179,7 +179,7 @@ export async function domainVerify(input: {
         action: "DOMAIN_VERIFIED",
       })
 
-      revalidatePath("/saas-dashboard/domains")
+      revalidatePath("/domains")
 
       return {
         success: true,
@@ -242,7 +242,7 @@ export async function domainCreate(input: {
       action: "DOMAIN_REQUEST_CREATED",
     })
 
-    revalidatePath("/saas-dashboard/domains")
+    revalidatePath("/domains")
 
     return { success: true, data: domainRequest }
   } catch (error) {

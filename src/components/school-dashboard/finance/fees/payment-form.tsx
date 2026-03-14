@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { formatCurrency } from "@/lib/i18n-format"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import type { Locale } from "@/components/internationalization/config"
 
 import { recordPayment } from "./actions"
 
@@ -77,7 +79,7 @@ export default function PaymentForm({ lang, assignments }: Props) {
       }
       if (selected && num > selected.remaining) {
         setAmountError(
-          `Amount cannot exceed remaining balance (${selected.remaining.toLocaleString(undefined, { minimumFractionDigits: 2 })})`
+          `Amount cannot exceed remaining balance (${formatCurrency(selected.remaining, lang as Locale)})`
         )
         return false
       }
@@ -143,10 +145,7 @@ export default function PaymentForm({ lang, assignments }: Props) {
                 {assignments.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.studentName} — {a.feeStructureName} —{" "}
-                    {a.remaining.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}{" "}
-                    remaining
+                    {formatCurrency(a.remaining, lang as Locale)} remaining
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -158,25 +157,19 @@ export default function PaymentForm({ lang, assignments }: Props) {
               <div>
                 <p className="text-muted-foreground text-sm">Total Amount</p>
                 <p className="font-medium">
-                  {selected.finalAmount.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}
+                  {formatCurrency(selected.finalAmount, lang as Locale)}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">Total Paid</p>
                 <p className="font-medium">
-                  {selected.totalPaid.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}
+                  {formatCurrency(selected.totalPaid, lang as Locale)}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">Remaining</p>
                 <p className="font-medium">
-                  {selected.remaining.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}
+                  {formatCurrency(selected.remaining, lang as Locale)}
                 </p>
               </div>
             </div>

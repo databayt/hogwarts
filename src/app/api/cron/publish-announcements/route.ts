@@ -85,6 +85,9 @@ export async function GET(request: NextRequest) {
         title: true,
         lang: true,
         scheduledFor: true,
+        school: {
+          select: { preferredLanguage: true },
+        },
       },
     })
 
@@ -140,6 +143,7 @@ export async function GET(request: NextRequest) {
         title: a.title || "New Announcement",
         body: (a.title || "New announcement published").slice(0, 200),
         priority: "normal",
+        lang: a.school?.preferredLanguage ?? a.lang ?? "ar",
         channels: ["in_app"],
         metadata: {
           announcementId: a.id,

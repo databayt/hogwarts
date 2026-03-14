@@ -13,16 +13,28 @@ export const metadata = {
 
 interface Props {
   params: Promise<{ lang: Locale }>
+  searchParams: Promise<{
+    page?: string
+    limit?: string
+    role?: string
+    school?: string
+    search?: string
+  }>
 }
 
-export default async function Users({ params }: Props) {
+export default async function Users({ params, searchParams }: Props) {
   const { lang } = await params
+  const resolvedSearchParams = await searchParams
   const dictionary = await getDictionary(lang)
 
   return (
     <div className="space-y-6">
       <PageHeadingSetter title="Users" />
-      <UsersContent dictionary={dictionary} lang={lang} />
+      <UsersContent
+        dictionary={dictionary}
+        lang={lang}
+        searchParams={resolvedSearchParams}
+      />
     </div>
   )
 }

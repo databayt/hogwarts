@@ -2,45 +2,17 @@
 
 Track production readiness and enhancements for the Students feature.
 
-**Status:** 🔴 BLOCKED - Guardian Linking Not Functional
-**Completion:** 75%
-**Last Updated:** 2025-12-14
+**Status:** 🟡 IN PROGRESS
+**Completion:** 85%
+**Last Updated:** 2026-03-13
 
 ---
 
-## Critical Blocker
+## Resolved: Guardian Linking
 
-### Guardian Linking (NOT FUNCTIONAL)
+Guardian linking was previously the critical blocker. The `StudentGuardian` model and relationships are now functional — guardians are linked to students during the admission/enrollment flow and via the student wizard. The `linkGuardian()`, `unlinkGuardian()`, and `getStudentGuardians()` actions are implemented in the student wizard enrollment step.
 
-| Property          | Value                                                  |
-| ----------------- | ------------------------------------------------------ |
-| **URLs Affected** | `/students/guardians`, `/students/[id]` (Guardian tab) |
-| **Current State** | UI exists, no server actions implemented               |
-| **Impact**        | Schools cannot link parents to students                |
-
-**Missing Implementation:**
-
-- `linkGuardian(studentId, guardianId)` server action
-- `unlinkGuardian(studentId, guardianId)` server action
-- `getStudentGuardians(studentId)` query
-- Guardian tab UI wiring to actions
-
-**Files to Create/Modify:**
-
-- `src/components/platform/students/actions.ts` - Add guardian actions
-- `src/components/platform/students/guardian-tab/` - Wire UI to actions
-
-**Prisma Models (Exist ✅):**
-
-```prisma
-model StudentGuardian {
-  studentId   String
-  guardianId  String
-  relation    GuardianRelation
-  isPrimary   Boolean @default(false)
-  // ... relations exist
-}
-```
+**Resolved:** 2026-03-13
 
 ---
 
@@ -51,7 +23,7 @@ model StudentGuardian {
 - [x] CRUD operations with Zod validation
 - [x] CSV bulk import with error reporting
 - [x] Class enrollment management (many-to-many via StudentClass)
-- [ ] **Guardian relationships (StudentGuardian linking)** ← BLOCKED
+- [x] Guardian relationships (StudentGuardian linking)
 - [x] Search and filtering (name, status, class)
 - [x] Export student data to CSV
 - [x] Multi-tenant isolation (schoolId scoping)
@@ -73,7 +45,7 @@ model StudentGuardian {
 - [x] Filter by status (active/inactive)
 - [x] Filter by class assignment
 - [x] Update student information
-- [ ] **Link students to guardian accounts** ← BLOCKED (no server actions)
+- [x] Link students to guardian accounts
 - [x] Track enrollment status changes
 - [x] Export student data to CSV
 - [x] Delete student records with confirmation
@@ -93,7 +65,7 @@ model StudentGuardian {
 - [x] Validation on all inputs (client + server)
 - [x] Referential integrity (foreign keys)
 - [x] Class enrollment many-to-many relationship
-- [ ] **Guardian relationships properly linked** ← BLOCKED (model exists, actions missing)
+- [x] Guardian relationships properly linked
 
 ---
 
@@ -480,6 +452,6 @@ For detailed version requirements and architecture patterns, see [Platform Techn
 - ⏸️ Planned but not started
 - 🔴 BLOCKED - Critical blocker preventing MVP completion
 
-**Last Review:** 2025-12-14
-**Current Blocker:** Guardian Linking (no server actions)
-**Next Review:** After resolving guardian linking blocker
+**Last Review:** 2026-03-13
+**Current Blocker:** None critical
+**Next Review:** Next sprint

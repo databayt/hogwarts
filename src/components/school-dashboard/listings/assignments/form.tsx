@@ -14,6 +14,7 @@ import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 import {
   createAssignment,
   getAssignment,
@@ -30,6 +31,7 @@ interface AssignmentCreateFormProps {
 }
 
 export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
+  const { locale } = useLocale()
   const { dictionary: fullDict } = useDictionary()
   const t = fullDict?.messages?.toast
   const { modal, closeModal } = useModal()
@@ -169,8 +171,8 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
   }
 
   const stepLabels: Record<number, string> = {
-    1: "Basic Information",
-    2: "Assignment Details",
+    1: locale === "ar" ? "المعلومات الأساسية" : "Basic Information",
+    2: locale === "ar" ? "تفاصيل الواجب" : "Assignment Details",
   }
 
   return (

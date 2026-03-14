@@ -5,6 +5,7 @@
 import { useCallback, useRef, useState, useTransition } from "react"
 import { Check, Copy, Loader2, Printer } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,7 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { generateStudentAccessCodes } from "./actions"
 
@@ -42,6 +45,7 @@ export function AccessCodeDialog({
   const [isPending, startTransition] = useTransition()
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const printRef = useRef<HTMLDivElement>(null)
+  const { locale } = useLocale()
   const { dictionary } = useDictionary()
   const t = (dictionary?.school as any)?.students?.accessCode as
     | Record<string, string>
@@ -133,7 +137,7 @@ export function AccessCodeDialog({
           <div class="code-card">
             <div class="student-name">${c.studentName}</div>
             <div class="access-code">${c.code}</div>
-            <div class="expiry">${t?.expires || "Expires"}: ${new Date(c.expiresAt).toLocaleDateString()}</div>
+            <div class="expiry">${t?.expires || "Expires"}: ${formatDate(c.expiresAt, locale as Locale)}</div>
           </div>
         `
           )
@@ -206,7 +210,7 @@ export function AccessCodeDialog({
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {t?.expires || "Expires"}:{" "}
-                        {new Date(item.expiresAt).toLocaleDateString()}
+                        {formatDate(item.expiresAt, locale as Locale)}
                       </p>
                     </div>
                     <Button

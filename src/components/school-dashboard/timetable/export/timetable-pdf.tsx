@@ -385,7 +385,11 @@ export function TimetablePDF({
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             {isRTL ? "تم الإنشاء:" : "Generated:"}{" "}
-            {generatedAt.toLocaleDateString()}
+            {new Intl.DateTimeFormat(isRTL ? "ar" : "en", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            }).format(generatedAt)}
           </Text>
           <Text style={styles.footerText}>Powered by Hogwarts</Text>
         </View>

@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   isAdminRole,
@@ -986,7 +987,7 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
         className: excuse.attendance.class.name,
         issue: "unexcused_pending",
         severity: "info",
-        details: `Excuse pending review since ${excuse.attendance.date.toLocaleDateString()}`,
+        details: `Excuse pending review since ${formatDate(excuse.attendance.date, "ar")}`,
         actionUrl: `/attendance/excuses/${excuse.id}`,
       })
     }

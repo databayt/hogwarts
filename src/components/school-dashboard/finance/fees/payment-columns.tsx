@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
 
+import { formatCurrency } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { STATUS_COLORS } from "./config"
@@ -86,10 +88,7 @@ export const getPaymentColumns = (lang?: string): ColumnDef<PaymentRow>[] => {
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
-          $
-          {getValue<number>().toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-          })}
+          {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
         </span>
       ),
       meta: { label: "Amount", variant: "text" },

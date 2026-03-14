@@ -57,6 +57,7 @@ model Notification {
   priority NotificationPriority @default(normal)
   title    String               @db.VarChar(255)
   body     String               @db.Text
+  lang     String               @default("ar")
 
   // Metadata for deep linking and context
   metadata Json? // { entityType: "assignment", entityId: "123", url: "/assignments/123" }

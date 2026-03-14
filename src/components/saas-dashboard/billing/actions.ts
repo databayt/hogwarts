@@ -7,6 +7,7 @@ import type { Invoice } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import {
   logOperatorAudit,
   requireNotImpersonating,
@@ -54,7 +55,7 @@ export async function invoiceUpdateStatus(input: {
       action: `BILLING_INVOICE_${validated.status.toUpperCase()}`,
     })
 
-    revalidatePath("/saas-dashboard/billing")
+    revalidatePath("/billing")
 
     return { success: true, data: invoice }
   } catch (error) {
@@ -228,10 +229,10 @@ export async function getInvoicesCSV(filters?: {
     (invoice.amountDue / 100).toFixed(2),
     (invoice.amountPaid / 100).toFixed(2),
     invoice.status,
-    invoice.periodStart?.toLocaleDateString() || "",
-    invoice.periodEnd?.toLocaleDateString() || "",
-    invoice.createdAt.toLocaleDateString(),
-    invoice.updatedAt.toLocaleDateString(),
+    formatDate(invoice.periodStart, "ar") || "",
+    formatDate(invoice.periodEnd, "ar") || "",
+    formatDate(invoice.createdAt, "ar"),
+    formatDate(invoice.updatedAt, "ar"),
   ])
 
   // Combine into CSV

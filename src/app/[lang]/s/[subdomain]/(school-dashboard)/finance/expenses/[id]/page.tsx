@@ -5,6 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -60,7 +61,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
           <h3 className="text-lg font-medium">{expense.expenseNumber}</h3>
           <p className="text-muted-foreground text-sm">
             {expense.category.name} &mdash;{" "}
-            {expense.expenseDate.toLocaleDateString()}
+            {formatDate(expense.expenseDate, lang)}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -83,10 +84,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {Number(expense.amount).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(Number(expense.amount), lang)}
             </p>
           </CardContent>
         </Card>
@@ -116,7 +114,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {expense.submittedAt.toLocaleDateString()}
+              {formatDate(expense.submittedAt, lang)}
             </p>
           </CardContent>
         </Card>
@@ -142,11 +140,11 @@ export default async function ExpenseDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
             {expense.approvedAt && (
-              <p>Approved on {expense.approvedAt.toLocaleDateString()}</p>
+              <p>Approved on {formatDate(expense.approvedAt, lang)}</p>
             )}
             {expense.rejectedAt && (
               <>
-                <p>Rejected on {expense.rejectedAt.toLocaleDateString()}</p>
+                <p>Rejected on {formatDate(expense.rejectedAt, lang)}</p>
                 {expense.rejectionReason && (
                   <p className="text-muted-foreground">
                     Reason: {expense.rejectionReason}
@@ -155,7 +153,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
               </>
             )}
             {expense.paidAt && (
-              <p>Paid on {expense.paidAt.toLocaleDateString()}</p>
+              <p>Paid on {formatDate(expense.paidAt, lang)}</p>
             )}
           </CardContent>
         </Card>

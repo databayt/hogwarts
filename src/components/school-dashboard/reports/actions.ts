@@ -68,10 +68,10 @@ export async function generateReportCards(input: {
       return { success: false, error: "Term not found" }
     }
 
-    // Get exams for this term
+    // Get exams for this term (Exam has no termId — filter through Class.termId)
     const examWhere = {
       schoolId,
-      termId: input.termId,
+      class: { termId: input.termId },
       ...(input.classId ? { classId: input.classId } : {}),
     }
 

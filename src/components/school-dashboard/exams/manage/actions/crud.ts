@@ -125,11 +125,16 @@ export async function createExam(
     })
 
     // Notify students in the class about new exam (non-blocking)
+    const schoolPref = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
       title: "امتحان جديد",
       body: `تم جدولة امتحان "${parsed.title}" في ${new Date(parsed.examDate).toLocaleDateString("ar")}`,
+      lang: schoolPref?.preferredLanguage ?? "ar",
       priority: "high",
       channels: ["in_app"],
       metadata: {
@@ -369,11 +374,16 @@ export async function deleteExam(input: {
     })
 
     // Notify students about exam cancellation (non-blocking)
+    const schoolPref2 = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
       title: "إلغاء امتحان",
       body: `تم إلغاء امتحان "${examExists.title}"`,
+      lang: schoolPref2?.preferredLanguage ?? "ar",
       priority: "high",
       channels: ["in_app"],
       metadata: {

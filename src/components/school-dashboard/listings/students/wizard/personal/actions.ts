@@ -2,6 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { cookies } from "next/headers"
+
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -60,6 +62,10 @@ export async function updateStudentPersonal(
 
     const parsed = personalSchema.parse(input)
 
+    // Detect the language the name was entered in (from current locale)
+    const cookieStore = await cookies()
+    const lang = cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar"
+
     await db.student.updateMany({
       where: { id: studentId, schoolId },
       data: {
@@ -70,6 +76,7 @@ export async function updateStudentPersonal(
         gender: parsed.gender,
         nationality: parsed.nationality ?? null,
         profilePhotoUrl: parsed.profilePhotoUrl ?? null,
+        lang,
       },
     })
 

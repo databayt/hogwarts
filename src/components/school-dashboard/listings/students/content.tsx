@@ -21,7 +21,6 @@ interface Props {
 
 /**
  * Derive display status from DB status + data completeness.
- * Names are proper nouns — never translated.
  */
 function deriveDisplayStatus(s: any): string {
   // Hard statuses from DB enum (override everything)
@@ -70,6 +69,36 @@ function buildStatusFilter(status: string): Record<string, any> {
     default:
       return {}
   }
+}
+
+/**
+ * Format grade for display:
+ * - Arabic: strip "الصف " prefix → "الثالث" (KG keeps full name "الروضة الأولى")
+ * - English: "Grade 3", "KG", "Pre-K"
+ */
+function formatGradeLabel(
+  grade: { name?: string; lang?: string; gradeNumber?: number | null } | null,
+  targetLang?: string,
+  translations?: Map<string, string>
+): string | null {
+  if (!grade) return null
+  if (grade.name) {
+    if (targetLang && translations && grade.lang !== targetLang) {
+      return translations.get(grade.name) || grade.name
+    }
+    if (targetLang === "ar") {
+      return grade.name
+        .replace(/^الروضة الأولى$/, "أولى روضة")
+        .replace(/^الروضة الثانية$/, "ثانية روضة")
+        .replace(/^الصف /, "")
+    }
+    return grade.name
+  }
+  if (grade.gradeNumber == null) return null
+  const n = grade.gradeNumber
+  if (n < 0) return "Pre-K"
+  if (n === 0) return "KG"
+  return `Grade ${n}`
 }
 
 export default async function StudentsContent({
@@ -122,40 +151,50 @@ export default async function StudentsContent({
             },
           },
           section: {
-            select: { name: true, lang: true },
+            select: {
+              name: true,
+              lang: true,
+              classroom: {
+                select: { roomName: true, lang: true },
+              },
+            },
           },
           academicGrade: {
-            select: { name: true, lang: true },
+            select: { name: true, lang: true, gradeNumber: true },
           },
         },
       }),
       studentModel.count({ where }),
     ])
 
-    // Translate section/grade names only (not student names — those are proper nouns)
-    // Max unique section/grade names is small (~18), so individual calls are fine
-    const sectionTranslations = new Map<string, string>()
+    const classroomTranslations = new Map<string, string>()
     const gradeTranslations = new Map<string, string>()
+    const nameTranslations = new Map<string, string>()
 
-    const uniqueSections = new Set<string>()
+    const uniqueClassrooms = new Set<string>()
     const uniqueGrades = new Set<string>()
+    const uniqueNames = new Map<string, string>()
     for (const s of rows as any[]) {
-      if (s.section?.name && s.section.lang !== lang)
-        uniqueSections.add(s.section.name)
+      if (s.section?.classroom?.roomName && s.section.classroom.lang !== lang)
+        uniqueClassrooms.add(s.section.classroom.roomName)
       if (s.academicGrade?.name && s.academicGrade.lang !== lang)
         uniqueGrades.add(s.academicGrade.name)
+      if (s.lang && s.lang !== lang) {
+        const rawName = `${s.givenName} ${s.surname}`.trim()
+        uniqueNames.set(rawName, s.lang)
+      }
     }
 
-    // Translate unique section/grade names in parallel
+    // Translate unique classroom/grade/name values in parallel
     await Promise.all([
-      ...Array.from(uniqueSections).map(async (name) => {
+      ...Array.from(uniqueClassrooms).map(async (name) => {
         const translated = await getDisplayText(
           name,
           "ar",
           lang,
           effectiveSchoolId!
         )
-        sectionTranslations.set(name, translated)
+        classroomTranslations.set(name, translated)
       }),
       ...Array.from(uniqueGrades).map(async (name) => {
         const translated = await getDisplayText(
@@ -166,49 +205,54 @@ export default async function StudentsContent({
         )
         gradeTranslations.set(name, translated)
       }),
+      ...Array.from(uniqueNames.entries()).map(async ([name, contentLang]) => {
+        const translated = await getDisplayText(
+          name,
+          contentLang as "ar" | "en",
+          lang,
+          effectiveSchoolId!
+        )
+        nameTranslations.set(name, translated)
+      }),
     ])
 
-    // Map rows — names always display as-is (proper nouns)
     // Collect unique grade options for faceted filter
     const gradeSet = new Set<string>()
     for (const s of rows as any[]) {
-      if (s.academicGrade?.name) {
-        const translated =
-          s.academicGrade.lang !== lang
-            ? gradeTranslations.get(s.academicGrade.name) ||
-              s.academicGrade.name
-            : s.academicGrade.name
-        gradeSet.add(translated)
-      }
+      const label = formatGradeLabel(s.academicGrade, lang, gradeTranslations)
+      if (label) gradeSet.add(label)
     }
     gradeOptions = Array.from(gradeSet).map((g) => ({ label: g, value: g }))
 
     data = (rows as any[]).map((s) => {
-      const name = `${s.givenName} ${s.surname}`.trim()
+      const rawName = `${s.givenName} ${s.surname}`.trim()
+      const name =
+        s.lang && s.lang !== lang
+          ? nameTranslations.get(rawName) || rawName
+          : rawName
 
-      const sectionName = s.section?.name
-        ? s.section.lang !== lang
-          ? sectionTranslations.get(s.section.name) || s.section.name
-          : s.section.name
-        : "-"
-
-      const gradeName = s.academicGrade?.name
-        ? s.academicGrade.lang !== lang
-          ? gradeTranslations.get(s.academicGrade.name) || s.academicGrade.name
-          : s.academicGrade.name
+      const classroom = s.section?.classroom?.roomName
+        ? s.section.classroom.lang !== lang
+          ? classroomTranslations.get(s.section.classroom.roomName) ||
+            s.section.classroom.roomName
+          : s.section.classroom.roomName
         : null
+
+      const gradeName = formatGradeLabel(
+        s.academicGrade,
+        lang,
+        gradeTranslations
+      )
 
       return {
         id: s.id,
         userId: s.userId,
         name,
         studentId: s.studentId || null,
-        sectionName: sectionName !== "-" ? sectionName : gradeName || "-",
+        classroom,
         gradeName,
         status: deriveDisplayStatus(s),
         createdAt: (s.createdAt as Date).toISOString(),
-        classCount: s._count?.studentClasses || 0,
-        gradeCount: s._count?.results || 0,
         email: s.email || null,
         dateOfBirth: s.dateOfBirth
           ? (s.dateOfBirth as Date).toISOString()
@@ -217,18 +261,21 @@ export default async function StudentsContent({
           ? (s.enrollmentDate as Date).toISOString()
           : null,
         wizardStep: s.wizardStep || null,
+        profilePhotoUrl: s.profilePhotoUrl || null,
       }
     })
     total = count as number
   }
   return (
-    <StudentsTable
-      initialData={data}
-      total={total}
-      dictionary={dictionary?.students}
-      lang={lang}
-      perPage={sp.perPage}
-      gradeOptions={gradeOptions}
-    />
+    <div className="space-y-6">
+      <StudentsTable
+        initialData={data}
+        total={total}
+        dictionary={dictionary?.students}
+        lang={lang}
+        perPage={sp.perPage}
+        gradeOptions={gradeOptions}
+      />
+    </div>
   )
 }

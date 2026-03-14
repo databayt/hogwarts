@@ -85,3 +85,55 @@ export const TARGET_AUDIENCES = [
   "Specific Class",
   "Other",
 ] as const
+
+// --- Bilingual factory functions ---
+
+export const getEventStatuses = (lang?: string) => [
+  { value: "PLANNED", label: lang === "ar" ? "مخطط" : "Planned" },
+  { value: "IN_PROGRESS", label: lang === "ar" ? "جاري" : "In Progress" },
+  { value: "COMPLETED", label: lang === "ar" ? "مكتمل" : "Completed" },
+  { value: "CANCELLED", label: lang === "ar" ? "ملغي" : "Cancelled" },
+]
+
+export const getEventTypes = (lang?: string) => [
+  { value: "ACADEMIC", label: lang === "ar" ? "أكاديمي" : "Academic" },
+  { value: "SPORTS", label: lang === "ar" ? "رياضي" : "Sports" },
+  { value: "CULTURAL", label: lang === "ar" ? "ثقافي" : "Cultural" },
+  {
+    value: "PARENT_MEETING",
+    label: lang === "ar" ? "اجتماع أولياء" : "Parent Meeting",
+  },
+  { value: "CELEBRATION", label: lang === "ar" ? "احتفال" : "Celebration" },
+  { value: "WORKSHOP", label: lang === "ar" ? "ورشة عمل" : "Workshop" },
+  { value: "OTHER", label: lang === "ar" ? "أخرى" : "Other" },
+]
+
+export const getTargetAudiences = (lang?: string) => [
+  {
+    value: "All Students",
+    label: lang === "ar" ? "جميع الطلاب" : "All Students",
+  },
+  {
+    value: "Primary Students",
+    label: lang === "ar" ? "طلاب المرحلة الابتدائية" : "Primary Students",
+  },
+  {
+    value: "Secondary Students",
+    label: lang === "ar" ? "طلاب المرحلة الثانوية" : "Secondary Students",
+  },
+  {
+    value: "Teachers Only",
+    label: lang === "ar" ? "المعلمون فقط" : "Teachers Only",
+  },
+  {
+    value: "Parents Only",
+    label: lang === "ar" ? "أولياء الأمور فقط" : "Parents Only",
+  },
+  { value: "Staff Only", label: lang === "ar" ? "الموظفون فقط" : "Staff Only" },
+  { value: "Public", label: lang === "ar" ? "عام" : "Public" },
+  {
+    value: "Specific Class",
+    label: lang === "ar" ? "فصل محدد" : "Specific Class",
+  },
+  { value: "Other", label: lang === "ar" ? "أخرى" : "Other" },
+]

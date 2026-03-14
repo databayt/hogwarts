@@ -106,7 +106,12 @@ export default async function ExamsContent({
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
-        <ExamsTable initialData={data} total={total} perPage={sp.perPage} />
+        <ExamsTable
+          initialData={data}
+          total={total}
+          perPage={sp.perPage}
+          lang={lang}
+        />
       </div>
     </PageContainer>
   )

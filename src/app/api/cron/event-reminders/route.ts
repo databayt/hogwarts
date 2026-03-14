@@ -59,6 +59,9 @@ export async function GET(request: NextRequest) {
         location: true,
         isPublic: true,
         targetAudience: true,
+        school: {
+          select: { preferredLanguage: true },
+        },
       },
     })
 
@@ -76,6 +79,7 @@ export async function GET(request: NextRequest) {
           eventId: event.id,
           url: `/events/${event.id}`,
         },
+        lang: event.school?.preferredLanguage ?? "ar",
         targetScope: event.isPublic ? "school" : "role",
         targetRole: event.targetAudience || undefined,
       })

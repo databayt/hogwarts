@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -17,14 +18,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { Locale } from "@/components/internationalization/config"
 
 import { getChildAssignments } from "./actions"
 
 interface Props {
   studentId: string
+  lang?: Locale
 }
 
-export async function ChildAssignmentsView({ studentId }: Props) {
+export async function ChildAssignmentsView({ studentId, lang = "ar" }: Props) {
   const { assignments } = await getChildAssignments({ studentId })
 
   const getStatusBadge = (assignment: (typeof assignments)[0]) => {
@@ -112,7 +115,7 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                         <TableCell>{assignment.subjectName}</TableCell>
                         <TableCell>{assignment.className}</TableCell>
                         <TableCell>
-                          {publishDate?.toLocaleDateString() || "-"}
+                          {publishDate ? formatDate(publishDate, lang) : "-"}
                         </TableCell>
                         <TableCell>
                           <span
@@ -120,7 +123,7 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                               isOverdue ? "text-destructive font-medium" : ""
                             }
                           >
-                            {dueDate.toLocaleDateString()}
+                            {formatDate(dueDate, lang)}
                           </span>
                         </TableCell>
                         <TableCell>

@@ -6,6 +6,7 @@ import {
   Bell,
   BookOpen,
   Box,
+  Building2,
   Calendar,
   ChartBar,
   ChartPie,
@@ -75,4 +76,5 @@ export const Icons = {
   userPlus: UserPlus,
   sales: Target,
   doorOpen: DoorOpen,
+  building: Building2,
 }

@@ -16,6 +16,7 @@
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { formatDate, formatDateTime } from "@/lib/i18n-format"
 
 import type {
   ExamNotificationData,
@@ -429,7 +430,7 @@ function formatNotification(
     case "EXAM_SCHEDULED":
       return {
         title: `New Exam: ${data.examTitle}`,
-        body: `${data.subjectName} exam scheduled for ${data.examDate.toLocaleDateString()}. Duration: ${data.duration} minutes.`,
+        body: `${data.subjectName} exam scheduled for ${formatDate(data.examDate, "ar")}. Duration: ${data.duration} minutes.`,
       }
     case "EXAM_REMINDER":
       return {
@@ -439,7 +440,7 @@ function formatNotification(
     case "EXAM_STARTED":
       return {
         title: `Exam Started: ${data.examTitle}`,
-        body: `The ${data.subjectName} exam has started and will end at ${data.endTime.toLocaleTimeString()}.`,
+        body: `The ${data.subjectName} exam has started and will end at ${formatDateTime(data.endTime, "ar", { hour: "2-digit", minute: "2-digit" })}.`,
       }
     case "EXAM_COMPLETED":
       return {

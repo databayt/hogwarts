@@ -16,6 +16,7 @@ import {
   setupDefaultsForSchool,
 } from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
+import { generateUniqueJoinCode } from "@/lib/join-code"
 
 import { requireSchoolOwnership } from "../auth-helpers"
 
@@ -103,17 +104,33 @@ async function provisionSchoolDefaults(
     schoolType: string | null
   }
 ) {
-  // Step 1: Run independent setup steps in parallel
-  const [defaults, catalog] = await Promise.allSettled([
-    setupDefaultsForSchool(schoolId, school.schoolLevel || "both"),
-    setupCatalogForSchool(schoolId, {
-      country: school.country || undefined,
-      schoolType: school.schoolType || undefined,
-    }),
-  ])
+  // Step 1: Defaults MUST run first (creates YearLevels)
+  // Step 2: Catalog reads YearLevels to set AcademicGrade.yearLevelId
+  // Running in parallel caused a race condition where catalog finished first → null yearLevelId
+  const defaultsResult = await setupDefaultsForSchool(
+    schoolId,
+    school.schoolLevel || "both"
+  ).catch((err) => {
+    console.error(
+      `[provisionSchoolDefaults] Defaults failed for ${schoolId}:`,
+      err
+    )
+    return null
+  })
+
+  const catalogResult = await setupCatalogForSchool(schoolId, {
+    country: school.country || undefined,
+    schoolType: school.schoolType || undefined,
+  }).catch((err) => {
+    console.error(
+      `[provisionSchoolDefaults] Catalog failed for ${schoolId}:`,
+      err
+    )
+    return null
+  })
 
   console.log(
-    `[provisionSchoolDefaults] Defaults: ${defaults.status}, Catalog: ${catalog.status} for school ${schoolId}`
+    `[provisionSchoolDefaults] Defaults: ${defaultsResult ? "ok" : "failed"}, Catalog: ${catalogResult ? "ok" : "failed"} for school ${schoolId}`
   )
 
   // Step 2: Timetable depends on catalog (grades must exist)
@@ -149,6 +166,21 @@ async function provisionSchoolDefaults(
       err
     )
   )
+
+  // Step 4: Generate join code for sharing
+  const joinCode = await generateUniqueJoinCode().catch((err) => {
+    console.error(
+      `[provisionSchoolDefaults] Join code failed for ${schoolId}:`,
+      err
+    )
+    return null
+  })
+  if (joinCode) {
+    await db.school.update({
+      where: { id: schoolId },
+      data: { joinCode },
+    })
+  }
 
   console.log(
     `[provisionSchoolDefaults] All provisioning complete for school ${schoolId}`

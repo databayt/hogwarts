@@ -66,7 +66,7 @@ describe("billing/actions.ts", () => {
         where: { id: "i1" },
         data: expect.objectContaining({ status: "paid" }),
       })
-      expect(revalidatePath).toHaveBeenCalledWith("/saas-dashboard/billing")
+      expect(revalidatePath).toHaveBeenCalledWith("/billing")
     })
 
     it("updates invoice status to void", async () => {

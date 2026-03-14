@@ -3,9 +3,12 @@
 import { useMemo, useState } from "react"
 import { ChevronDown, ChevronUp, Trophy } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { OcticonExpand, OcticonRepo } from "@/components/atom/icons"
+import type { Locale } from "@/components/internationalization/config"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { ProfileRole } from "./types"
 
@@ -43,7 +46,8 @@ interface ActivityItem {
 // Generate activity items based on role
 function generateActivityForRole(
   role: ProfileRole,
-  year: number
+  year: number,
+  locale: Locale
 ): Map<string, ActivityItem[]> {
   const activities = new Map<string, ActivityItem[]>()
   const currentDate = new Date()
@@ -89,12 +93,12 @@ function generateActivityForRole(
             {
               name: "Advanced Mathematics",
               status: "Active",
-              date: date.toLocaleDateString(),
+              date: formatDate(date, locale),
             },
             {
               name: "Physics Lab",
               status: "Active",
-              date: date.toLocaleDateString(),
+              date: formatDate(date, locale),
             },
           ],
           date,
@@ -165,7 +169,7 @@ function generateActivityForRole(
           type: "created",
           title: "Created new learning materials",
           items: [
-            { name: "Calculus Study Guide", date: date.toLocaleDateString() },
+            { name: "Calculus Study Guide", date: formatDate(date, locale) },
           ],
           date,
           icon: <OcticonRepo className="size-3.5" />,
@@ -198,7 +202,7 @@ function generateActivityForRole(
           items: [
             {
               name: "Parent-Teacher Conference",
-              date: date.toLocaleDateString(),
+              date: formatDate(date, locale),
             },
           ],
           date,
@@ -232,9 +236,9 @@ function generateActivityForRole(
           items: [
             {
               name: "Monthly Attendance Report",
-              date: date.toLocaleDateString(),
+              date: formatDate(date, locale),
             },
-            { name: "Fee Collection Summary", date: date.toLocaleDateString() },
+            { name: "Fee Collection Summary", date: formatDate(date, locale) },
           ],
           date,
           icon: <OcticonRepo className="size-3.5" />,
@@ -256,6 +260,7 @@ export default function ContributionActivity({
   selectedYear: selectedYearProp,
   onYearChange,
 }: ContributionActivityProps) {
+  const { locale } = useLocale()
   const currentYear = new Date().getFullYear()
   const [internalYear, setInternalYear] = useState(currentYear)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
@@ -264,8 +269,8 @@ export default function ContributionActivity({
   const setSelectedYear = onYearChange ?? setInternalYear
 
   const activities = useMemo(() => {
-    return generateActivityForRole(role, selectedYear)
-  }, [role, selectedYear])
+    return generateActivityForRole(role, selectedYear, locale)
+  }, [role, selectedYear, locale])
 
   const toggleExpand = (id: string) => {
     setExpandedItems((prev) => {

@@ -4,7 +4,9 @@
 import Link from "next/link"
 import { Plus } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Button } from "@/components/ui/button"
+import type { Locale } from "@/components/internationalization/config"
 import { BankCard } from "@/components/school-dashboard/finance/banking/shared/bank-card"
 
 interface DashboardSidebarProps {
@@ -27,6 +29,7 @@ interface UserProfileSectionProps {
 
 interface RecentActivityItemProps {
   transaction: any
+  lang: string
 }
 
 /**

@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { enrollmentSchema, type EnrollmentFormData } from "./validation"
@@ -72,6 +73,27 @@ export async function updateStudentEnrollment(
         sectionId: parsed.sectionId || null,
       },
     })
+
+    // Create StudentClass records when section is assigned
+    // Without this, students have empty timetables and don't appear in attendance
+    if (parsed.sectionId) {
+      const section = await db.section.findFirst({
+        where: { id: parsed.sectionId, schoolId },
+        select: { gradeId: true },
+      })
+
+      const gradeId = section?.gradeId || parsed.academicGradeId
+      if (gradeId) {
+        const result = await enrollStudentInGradeClasses(
+          schoolId,
+          studentId,
+          gradeId
+        )
+        if (result.warning) {
+          return { success: true, warning: result.warning } as ActionResponse
+        }
+      }
+    }
 
     return { success: true }
   } catch (error) {

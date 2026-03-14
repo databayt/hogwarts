@@ -19,3 +19,9 @@ export function getGenderOptions(
     { label: info?.female || "Female", value: "female" },
   ]
 }
+
+/** Simple lang-based gender options */
+export const getGenderOptionsByLang = (lang?: string) => [
+  { value: "male", label: lang === "ar" ? "ذكر" : "Male" },
+  { value: "female", label: lang === "ar" ? "أنثى" : "Female" },
+]

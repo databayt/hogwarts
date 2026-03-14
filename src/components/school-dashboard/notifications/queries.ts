@@ -54,6 +54,7 @@ export const notificationListSelect = {
   priority: true,
   title: true,
   body: true,
+  lang: true,
   read: true,
   readAt: true,
   actorId: true,

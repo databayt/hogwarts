@@ -4,6 +4,7 @@
 import Link from "next/link"
 
 import { db } from "@/lib/db"
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -69,16 +70,13 @@ export default async function JournalEntriesPage({ params }: Props) {
                       {entry.description || "No description"}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      {new Date(entry.entryDate).toLocaleDateString()} &middot;{" "}
+                      {formatDate(entry.entryDate, lang)} &middot;{" "}
                       {entry.fiscalYear.name}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <p className="font-medium">
-                      $
-                      {totalDebits.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                      {formatCurrency(totalDebits, lang)}
                     </p>
                     <Badge variant={entry.isPosted ? "default" : "secondary"}>
                       {entry.isPosted ? "Posted" : "Draft"}

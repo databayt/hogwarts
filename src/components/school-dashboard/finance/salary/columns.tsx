@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
 
+import { formatCurrency } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type SalaryStructureRow = {
@@ -33,11 +35,19 @@ export type SalaryStructureRow = {
   createdAt: string
 }
 
-const PAY_FREQUENCY_LABELS: Record<string, string> = {
-  MONTHLY: "Monthly",
-  BI_WEEKLY: "Bi-Weekly",
-  WEEKLY: "Weekly",
-  DAILY: "Daily",
+const PAY_FREQUENCY_LABELS: Record<string, Record<string, string>> = {
+  ar: {
+    MONTHLY: "شهري",
+    BI_WEEKLY: "نصف شهري",
+    WEEKLY: "أسبوعي",
+    DAILY: "يومي",
+  },
+  en: {
+    MONTHLY: "Monthly",
+    BI_WEEKLY: "Bi-Weekly",
+    WEEKLY: "Weekly",
+    DAILY: "Daily",
+  },
 }
 
 const PAY_FREQUENCY_COLORS: Record<string, string> = {
@@ -50,12 +60,32 @@ const PAY_FREQUENCY_COLORS: Record<string, string> = {
 export const getSalaryStructureColumns = (
   lang?: string
 ): ColumnDef<SalaryStructureRow>[] => {
+  const isAr = lang === "ar"
+  const freqLabels =
+    PAY_FREQUENCY_LABELS[lang || "en"] || PAY_FREQUENCY_LABELS.en
+
+  const t = {
+    teacher: isAr ? "المعلم" : "Teacher",
+    employeeId: isAr ? "رقم الموظف" : "Employee ID",
+    baseSalary: isAr ? "الراتب الأساسي" : "Base Salary",
+    payFrequency: isAr ? "دورة الدفع" : "Pay Frequency",
+    allowances: isAr ? "البدلات" : "Allowances",
+    deductions: isAr ? "الخصومات" : "Deductions",
+    status: isAr ? "الحالة" : "Status",
+    active: isAr ? "نشط" : "Active",
+    inactive: isAr ? "غير نشط" : "Inactive",
+    effectiveFrom: isAr ? "تاريخ السريان" : "Effective From",
+    actions: isAr ? "إجراءات" : "Actions",
+    view: isAr ? "عرض" : "View",
+    edit: isAr ? "تعديل" : "Edit",
+  }
+
   return [
     {
       accessorKey: "teacherName",
       id: "teacherName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Teacher" />
+        <DataTableColumnHeader column={column} title={t.teacher} />
       ),
       cell: ({ row }) => {
         const salary = row.original
@@ -68,14 +98,14 @@ export const getSalaryStructureColumns = (
           </Link>
         )
       },
-      meta: { label: "Teacher", variant: "text" },
+      meta: { label: t.teacher, variant: "text" },
       enableColumnFilter: true,
     },
     {
       accessorKey: "employeeId",
       id: "employeeId",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Employee ID" />
+        <DataTableColumnHeader column={column} title={t.employeeId} />
       ),
       cell: ({ getValue }) => {
         const val = getValue<string | null>()
@@ -85,38 +115,35 @@ export const getSalaryStructureColumns = (
           <span className="text-muted-foreground">-</span>
         )
       },
-      meta: { label: "Employee ID", variant: "text" },
+      meta: { label: t.employeeId, variant: "text" },
     },
     {
       accessorKey: "baseSalary",
       id: "baseSalary",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Base Salary" />
+        <DataTableColumnHeader column={column} title={t.baseSalary} />
       ),
       cell: ({ row }) => {
         const salary = row.original
         return (
           <span className="text-end font-medium tabular-nums">
-            {salary.currency === "USD" ? "$" : salary.currency}{" "}
-            {salary.baseSalary.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-            })}
+            {formatCurrency(salary.baseSalary, (lang || "en") as Locale)}
           </span>
         )
       },
-      meta: { label: "Base Salary", variant: "text" },
+      meta: { label: t.baseSalary, variant: "text" },
     },
     {
       accessorKey: "payFrequency",
       id: "payFrequency",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Pay Frequency" />
+        <DataTableColumnHeader column={column} title={t.payFrequency} />
       ),
       cell: ({ getValue }) => {
         const freq = getValue<string>()
         const color =
           PAY_FREQUENCY_COLORS[freq] ?? "bg-gray-500/10 text-gray-500"
-        const label = PAY_FREQUENCY_LABELS[freq] ?? freq
+        const label = freqLabels[freq] ?? freq
         return (
           <Badge variant="outline" className={color}>
             {label}
@@ -124,13 +151,13 @@ export const getSalaryStructureColumns = (
         )
       },
       meta: {
-        label: "Pay Frequency",
+        label: t.payFrequency,
         variant: "select",
         options: [
-          { label: "Monthly", value: "MONTHLY" },
-          { label: "Bi-Weekly", value: "BI_WEEKLY" },
-          { label: "Weekly", value: "WEEKLY" },
-          { label: "Daily", value: "DAILY" },
+          { label: freqLabels.MONTHLY, value: "MONTHLY" },
+          { label: freqLabels.BI_WEEKLY, value: "BI_WEEKLY" },
+          { label: freqLabels.WEEKLY, value: "WEEKLY" },
+          { label: freqLabels.DAILY, value: "DAILY" },
         ],
       },
       enableColumnFilter: true,
@@ -139,29 +166,29 @@ export const getSalaryStructureColumns = (
       accessorKey: "allowanceCount",
       id: "allowanceCount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Allowances" />
+        <DataTableColumnHeader column={column} title={t.allowances} />
       ),
       cell: ({ getValue }) => (
         <span className="tabular-nums">{getValue<number>()}</span>
       ),
-      meta: { label: "Allowances", variant: "text" },
+      meta: { label: t.allowances, variant: "text" },
     },
     {
       accessorKey: "deductionCount",
       id: "deductionCount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Deductions" />
+        <DataTableColumnHeader column={column} title={t.deductions} />
       ),
       cell: ({ getValue }) => (
         <span className="tabular-nums">{getValue<number>()}</span>
       ),
-      meta: { label: "Deductions", variant: "text" },
+      meta: { label: t.deductions, variant: "text" },
     },
     {
       accessorKey: "isActive",
       id: "isActive",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader column={column} title={t.status} />
       ),
       cell: ({ getValue }) => {
         const active = getValue<boolean>()
@@ -174,16 +201,16 @@ export const getSalaryStructureColumns = (
                 : "bg-gray-500/10 text-gray-500"
             }
           >
-            {active ? "Active" : "Inactive"}
+            {active ? t.active : t.inactive}
           </Badge>
         )
       },
       meta: {
-        label: "Status",
+        label: t.status,
         variant: "select",
         options: [
-          { label: "Active", value: "true" },
-          { label: "Inactive", value: "false" },
+          { label: t.active, value: "true" },
+          { label: t.inactive, value: "false" },
         ],
       },
       enableColumnFilter: true,
@@ -192,20 +219,20 @@ export const getSalaryStructureColumns = (
       accessorKey: "effectiveFrom",
       id: "effectiveFrom",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Effective From" />
+        <DataTableColumnHeader column={column} title={t.effectiveFrom} />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
           {new Date(getValue<string>()).toLocaleDateString(
-            lang === "ar" ? "ar-SA" : "en-US"
+            isAr ? "ar-SA" : "en-US"
           )}
         </span>
       ),
-      meta: { label: "Effective From", variant: "text" },
+      meta: { label: t.effectiveFrom, variant: "text" },
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => <span className="sr-only">{t.actions}</span>,
       cell: ({ row }) => {
         const salary = row.original
         return (
@@ -213,22 +240,22 @@ export const getSalaryStructureColumns = (
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{t.actions}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuContent align={isAr ? "start" : "end"}>
+              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/finance/salary/structures/${salary.id}`}>
-                  View
+                  {t.view}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href={`/${lang}/finance/salary/structures/${salary.id}/edit`}
                 >
-                  Edit
+                  {t.edit}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

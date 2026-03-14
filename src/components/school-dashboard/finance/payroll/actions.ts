@@ -326,6 +326,11 @@ export async function generateSalarySlips(
     })
 
     // Notify admins that payroll is ready for approval (non-blocking)
+    const schoolPref = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const schoolLang = schoolPref?.preferredLanguage ?? "ar"
     const admins = await db.user.findMany({
       where: { schoolId, role: "ADMIN" },
       select: { id: true },
@@ -337,6 +342,7 @@ export async function generateSalarySlips(
         type: "system_alert",
         title: "كشف رواتب جاهز للموافقة",
         body: `كشف الرواتب ${payrollRun.runNumber} جاهز للمراجعة. ${slipsGenerated} قسيمة راتب بإجمالي ${totalNet.toLocaleString()}`,
+        lang: schoolLang,
         priority: "high",
         channels: ["in_app"],
         metadata: {
@@ -416,12 +422,17 @@ export async function approvePayroll(
 
     // Notify payroll creator about approval (non-blocking)
     if (payrollRun.processedBy) {
+      const schoolPref2 = await db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
       dispatchNotification({
         schoolId,
         userId: payrollRun.processedBy,
         type: "system_alert",
         title: "تمت الموافقة على كشف الرواتب",
         body: `تمت الموافقة على كشف الرواتب ${payrollRun.runNumber}. يمكنك الآن صرف المدفوعات.`,
+        lang: schoolPref2?.preferredLanguage ?? "ar",
         priority: "normal",
         channels: ["in_app"],
         metadata: {
@@ -481,12 +492,17 @@ export async function rejectPayroll(
 
     // Notify payroll creator about rejection (non-blocking)
     if (payrollRun.processedBy) {
+      const schoolPref3 = await db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
       dispatchNotification({
         schoolId,
         userId: payrollRun.processedBy,
         type: "system_alert",
         title: "تم رفض كشف الرواتب",
         body: `تم رفض كشف الرواتب ${payrollRun.runNumber}: ${reason}`,
+        lang: schoolPref3?.preferredLanguage ?? "ar",
         priority: "high",
         channels: ["in_app"],
         metadata: {
@@ -567,6 +583,11 @@ export async function processPayments(
     })
 
     // Notify teachers about salary payment (non-blocking)
+    const schoolPref4 = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const schoolLang4 = schoolPref4?.preferredLanguage ?? "ar"
     const paidSlips = await db.salarySlip.findMany({
       where: { payrollRunId, status: "PAID" },
       select: {
@@ -583,6 +604,7 @@ export async function processPayments(
           type: "system_alert",
           title: "تم صرف الراتب",
           body: `تم صرف راتبك بقيمة ${Number(slip.netSalary).toLocaleString()}`,
+          lang: schoolLang4,
           priority: "high",
           channels: ["in_app", "email"],
           metadata: {

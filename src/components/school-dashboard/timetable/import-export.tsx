@@ -222,7 +222,7 @@ export function ImportExportDialog({
 
     // Add metadata sheet
     const metadataSheet = XLSX.utils.aoa_to_sheet([
-      ["Export Date", new Date().toLocaleDateString()],
+      ["Export Date", new Date().toISOString().split("T")[0]],
       ["Total Slots", slots.length],
       ["Working Days", workingDays.join(", ")],
       ["Periods", periods.length],

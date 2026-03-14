@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -234,7 +235,7 @@ export default function TenantWelcome({
           <p className="muted mt-1">
             Created on{" "}
             {school.createdAt
-              ? new Date(school.createdAt).toLocaleDateString()
+              ? formatDate(school.createdAt, locale)
               : "Recently"}
           </p>
         </div>

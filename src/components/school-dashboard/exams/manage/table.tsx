@@ -28,12 +28,14 @@ interface ExamsTableProps {
   initialData: ExamRow[]
   total: number
   perPage?: number
+  lang?: string
 }
 
 function ExamsTableInner({
   initialData,
   total,
   perPage = 20,
+  lang,
 }: ExamsTableProps) {
   const router = useRouter()
 
@@ -102,8 +104,9 @@ function ExamsTableInner({
     () =>
       getExamColumns({
         onDelete: handleDelete,
+        lang: lang as any,
       }),
-    [handleDelete]
+    [handleDelete, lang]
   )
 
   // Use pageCount of 1 since we're handling all data client-side

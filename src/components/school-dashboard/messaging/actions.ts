@@ -288,6 +288,7 @@ export async function updateConversation(
 
     // Get user's participant role
     const participant = await getConversationParticipant(
+      schoolId,
       parsed.conversationId,
       authContext.userId
     )
@@ -368,6 +369,7 @@ export async function archiveConversation(
 
     // Verify user is participant
     const isParticipant = await isConversationParticipant(
+      schoolId,
       parsed.conversationId,
       authContext.userId
     )
@@ -464,6 +466,7 @@ export async function sendMessage(
 
     // Get user's participant role
     const participant = await getConversationParticipant(
+      schoolId,
       parsed.conversationId,
       authContext.userId
     )
@@ -752,6 +755,7 @@ export async function deleteMessage(
 
     // Get user's participant role
     const participant = await getConversationParticipant(
+      schoolId,
       message.conversationId,
       authContext.userId
     )
@@ -932,6 +936,7 @@ export async function addParticipant(
 
     // Get user's participant role
     const participant = await getConversationParticipant(
+      schoolId,
       parsed.conversationId,
       authContext.userId
     )
@@ -1006,8 +1011,14 @@ export async function removeParticipant(
 
     const parsed = removeParticipantSchema.parse(input)
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
     // Get user's participant role
     const participant = await getConversationParticipant(
+      schoolId,
       parsed.conversationId,
       authContext.userId
     )
@@ -1020,9 +1031,6 @@ export async function removeParticipant(
     if (!canRemove) {
       return { success: false, error: "Permission denied" }
     }
-
-    // Get schoolId for audit
-    const { schoolId } = await getTenantContext()
 
     // Remove participant
     await db.conversationParticipant.deleteMany({
@@ -1087,6 +1095,7 @@ export async function addReaction(
 
     // Verify user is participant
     const isParticipant = await isConversationParticipant(
+      schoolId,
       message.conversationId,
       authContext.userId
     )
@@ -1190,8 +1199,14 @@ export async function loadMoreMessages(input: {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
     // Check if user is participant in this conversation
     const isParticipant = await isConversationParticipant(
+      schoolId,
       input.conversationId,
       authContext.userId
     )
@@ -1205,7 +1220,7 @@ export async function loadMoreMessages(input: {
     const { serializeMessagesPaginated } = await import("./serialization")
 
     // Fetch messages with cursor
-    const result = await getMessagesWithCursor(input.conversationId, {
+    const result = await getMessagesWithCursor(schoolId, input.conversationId, {
       cursor: input.cursor,
       take: input.take ?? 50,
       direction: input.direction ?? "before",
@@ -1544,6 +1559,7 @@ export async function searchConversationMessages(input: {
 
     // Verify user is participant
     const isParticipant = await isConversationParticipant(
+      schoolId,
       input.conversationId,
       authContext.userId
     )

@@ -400,7 +400,7 @@ export async function processPendingEmailNotifications(
     const result = await sendNotificationEmail({
       notificationId: notification.id,
       to: notification.user.email,
-      locale: "ar", // Platform default language (Arabic)
+      locale: (notification.lang ?? "ar") as "ar" | "en",
       type: notification.type,
       priority: notification.priority,
       title: notification.title,

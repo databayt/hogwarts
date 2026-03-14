@@ -4,20 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import {
-  BookOpen,
-  Building2,
-  CheckCircle,
-  Ellipsis,
-  Eye,
-  Pencil,
-  Phone,
-  Trash2,
-  UserCheck,
-  Users,
-  UserX,
-  XCircle,
-} from "lucide-react"
+import { CheckCircle, Ellipsis, XCircle } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -30,12 +17,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -193,11 +174,7 @@ export const getTeacherColumns = (
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <Link
-                  href={
-                    teacher.userId
-                      ? `/${lang}/profile/${teacher.userId}`
-                      : `/${lang}/teachers/${teacher.id}`
-                  }
+                  href={`/${lang}/profile/${teacher.userId || teacher.id}`}
                   className="font-medium hover:underline"
                 >
                   {teacher.name}
@@ -231,12 +208,7 @@ export const getTeacherColumns = (
             </span>
           )
         }
-        return (
-          <div className="flex items-center gap-2">
-            <Building2 className="text-muted-foreground h-4 w-4" />
-            <span className="text-sm">{dept}</span>
-          </div>
-        )
+        return <span className="text-sm">{dept}</span>
       },
       meta: { label: t.department, variant: "text" },
       enableColumnFilter: true,
@@ -255,12 +227,9 @@ export const getTeacherColumns = (
           return <span className="text-muted-foreground">-</span>
         }
         return (
-          <div className="flex items-center gap-2">
-            <Phone className="text-muted-foreground h-3.5 w-3.5" />
-            <span className="font-mono text-sm" dir="ltr">
-              {phone}
-            </span>
-          </div>
+          <span className="font-mono text-sm" dir="ltr">
+            {phone}
+          </span>
         )
       },
       meta: { label: t.phone, variant: "text" },
@@ -269,45 +238,15 @@ export const getTeacherColumns = (
     // Subjects & Classes Count
     {
       id: "workload",
-      header: () => (
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4" />
-          <span>{t.subjects}</span>
-        </div>
-      ),
+      header: () => <span>{t.subjects}</span>,
       cell: ({ row }) => {
         const { subjectCount, classCount } = row.original
         return (
-          <TooltipProvider>
-            <div className="flex items-center gap-3">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1">
-                    <BookOpen className="h-3.5 w-3.5 text-blue-500" />
-                    <span className="text-sm font-medium">{subjectCount}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {subjectCount} {t.subjects}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5 text-green-500" />
-                    <span className="text-sm font-medium">{classCount}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {classCount} {t.classes}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </TooltipProvider>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium">{subjectCount}</span>
+            <span className="text-muted-foreground text-xs">/</span>
+            <span className="text-sm font-medium">{classCount}</span>
+          </div>
         )
       },
       enableSorting: false,
@@ -376,17 +315,7 @@ export const getTeacherColumns = (
                 : "border-gray-300 text-gray-500"
             }
           >
-            {hasAccount ? (
-              <>
-                <UserCheck className="me-1 h-3 w-3" />
-                {t.hasAccount}
-              </>
-            ) : (
-              <>
-                <UserX className="me-1 h-3 w-3" />
-                {t.noAccount}
-              </>
-            )}
+            {hasAccount ? t.hasAccount : t.noAccount}
           </Badge>
         )
       },
@@ -418,14 +347,16 @@ export const getTeacherColumns = (
     // Completion status (visible when viewing incomplete records)
     {
       id: "completion",
-      header: () => <span>{"Completion"}</span>,
+      header: () => (
+        <span>{(dictionary as any)?.completion || "Completion"}</span>
+      ),
       cell: ({ row }) => {
         const teacher = row.original
         if (!teacher.wizardStep) {
           return (
             <Badge variant="outline" className="gap-1">
               <CheckCircle className="h-3 w-3" />
-              {"Complete"}
+              {(dictionary as any)?.complete || "Complete"}
             </Badge>
           )
         }
@@ -439,7 +370,10 @@ export const getTeacherColumns = (
           </Link>
         )
       },
-      meta: { label: "Completion", variant: "text" },
+      meta: {
+        label: (dictionary as any)?.completion || "Completion",
+        variant: "text",
+      },
     },
 
     // Actions
@@ -461,70 +395,39 @@ export const getTeacherColumns = (
               <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
 
-              {/* View Profile */}
               <DropdownMenuItem asChild>
-                <Link
-                  href={
-                    teacher.userId
-                      ? `/${lang}/profile/${teacher.userId}`
-                      : `/${lang}/teachers/${teacher.id}`
-                  }
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
+                <Link href={`/${lang}/profile/${teacher.userId || teacher.id}`}>
                   {t.view}
                 </Link>
               </DropdownMenuItem>
 
-              {/* Edit / Complete Profile */}
               {teacher.wizardStep ? (
                 <DropdownMenuItem asChild>
                   <Link
                     href={`/${lang}/teachers/add/${teacher.id}/${teacher.wizardStep}`}
-                    className="flex items-center gap-2"
                   >
-                    <Pencil className="h-4 w-4" />
                     {t.completeProfile || "Complete Profile"}
                   </Link>
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem
-                  onClick={() => callbacks?.onEdit?.(teacher)}
-                  className="flex items-center gap-2"
-                >
-                  <Pencil className="h-4 w-4" />
+                <DropdownMenuItem onClick={() => callbacks?.onEdit?.(teacher)}>
                   {t.edit}
                 </DropdownMenuItem>
               )}
 
               <DropdownMenuSeparator />
 
-              {/* Toggle Status */}
               <DropdownMenuItem
                 onClick={() => callbacks?.onToggleStatus?.(teacher)}
-                className="flex items-center gap-2"
               >
-                {teacher.employmentStatus === "ACTIVE" ? (
-                  <>
-                    <XCircle className="h-4 w-4" />
-                    {t.deactivate}
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    {t.activate}
-                  </>
-                )}
+                {teacher.employmentStatus === "ACTIVE"
+                  ? t.deactivate
+                  : t.activate}
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
-              {/* Delete */}
-              <DropdownMenuItem
-                onClick={() => callbacks?.onDelete?.(teacher)}
-                className="text-destructive focus:text-destructive flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
+              <DropdownMenuItem onClick={() => callbacks?.onDelete?.(teacher)}>
                 {t.delete}
               </DropdownMenuItem>
             </DropdownMenuContent>
