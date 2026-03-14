@@ -4,6 +4,7 @@
 import Link from "next/link"
 import { ArrowLeft, Download, FileText } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -67,7 +68,7 @@ export default async function ResultDetailContent({
       <div className="flex flex-1 flex-col gap-6">
         <PageHeadingSetter
           title={summary?.examTitle || r?.labels?.examResults || "Exam Results"}
-          description={`${summary?.className || ""} • ${summary?.subjectName || ""} • ${summary?.examDate ? new Date(summary.examDate).toLocaleDateString() : ""}`}
+          description={`${summary?.className || ""} • ${summary?.subjectName || ""} • ${summary?.examDate ? formatDate(summary.examDate, lang) : ""}`}
         />
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" asChild>

@@ -5,8 +5,10 @@
 import * as React from "react"
 import type { Column } from "@tanstack/react-table"
 
+import { formatNumber } from "@/lib/i18n-format"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
+import { useLocale } from "@/components/internationalization/use-locale"
 import type { ExtendedColumnFilter } from "@/components/table/types"
 
 interface DataTableRangeFilterProps<TData> extends React.ComponentProps<"div"> {
@@ -39,17 +41,19 @@ function DataTableRangeFilterInner<TData>({
     return [values[0], values[1]]
   }, [column])
 
+  const { locale } = useLocale()
+
   const formatValue = React.useCallback(
     (value: string | number | undefined) => {
       if (value === undefined || value === "") return ""
       const numValue = Number(value)
       return Number.isNaN(numValue)
         ? ""
-        : numValue.toLocaleString(undefined, {
+        : formatNumber(numValue, locale as "en" | "ar", {
             maximumFractionDigits: 0,
           })
     },
-    []
+    [locale]
   )
 
   const value = React.useMemo(() => {

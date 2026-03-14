@@ -9,6 +9,7 @@ import { auth } from "@/auth"
 import { Clock, Copy, Pencil, Trash, TrendingUp, Users } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -135,9 +136,9 @@ export async function QuestionDetail({
         <div className="space-y-1">
           <h2 className="text-2xl font-bold">{dict.questionBank.title}</h2>
           <p className="text-muted-foreground text-sm">
-            Created {question.createdAt.toLocaleDateString()}
+            Created {formatDate(question.createdAt, locale)}
             {question.updatedAt > question.createdAt &&
-              ` • Updated ${question.updatedAt.toLocaleDateString()}`}
+              ` • Updated ${formatDate(question.updatedAt, locale)}`}
           </p>
         </div>
 

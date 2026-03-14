@@ -11,6 +11,7 @@ import {
   XCircle,
 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -154,9 +155,7 @@ export function CertificateList({
                 {cert.status}
               </Badge>
             </TableCell>
-            <TableCell>
-              {new Date(cert.issuedAt).toLocaleDateString()}
-            </TableCell>
+            <TableCell>{formatDate(cert.issuedAt, "ar")}</TableCell>
             {canManage && (
               <TableCell>
                 <DropdownMenu>

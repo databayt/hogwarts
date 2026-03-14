@@ -17,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { Locale } from "@/components/internationalization/config"
-import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { OnboardingSchoolData } from "./types"
 import { formatCurrency } from "./util"
@@ -31,101 +30,101 @@ export interface SchoolColumn {
   render?: (value: any, row: OnboardingSchoolData) => React.ReactNode
 }
 
-export const schoolColumns: SchoolColumn[] = [
-  {
-    key: "name",
-    title: "School Name",
-    sortable: true,
-    filterable: true,
-    render: (value, row) => (
-      <div className="flex flex-col">
-        <span className="font-medium">{value || "Unnamed School"}</span>
-        {row.domain && (
-          <span className="text-muted-foreground text-xs">{row.domain}</span>
-        )}
-      </div>
-    ),
-  },
-  {
-    key: "schoolType",
-    title: "Type",
-    sortable: true,
-    filterable: true,
-    render: (value, row) => {
-      if (!value) return "-"
-      return (
-        <Badge variant="outline" className="text-xs">
-          {value}
-        </Badge>
-      )
-    },
-  },
-  {
-    key: "maxStudents",
-    title: "Capacity",
-    sortable: true,
-    render: (value, row) => {
-      if (!value && !row.maxTeachers) return "-"
-      return (
-        <div className="text-sm">
-          <div>{value || 0} students</div>
-          <div className="text-muted-foreground">
-            {row.maxTeachers || 0} teachers
-          </div>
+export function getSchoolColumns(locale: Locale): SchoolColumn[] {
+  return [
+    {
+      key: "name",
+      title: "School Name",
+      sortable: true,
+      filterable: true,
+      render: (value, row) => (
+        <div className="flex flex-col">
+          <span className="font-medium">{value || "Unnamed School"}</span>
+          {row.domain && (
+            <span className="text-muted-foreground text-xs">{row.domain}</span>
+          )}
         </div>
-      )
+      ),
     },
-  },
-  {
-    key: "address",
-    title: "Location",
-    filterable: true,
-    render: (value, row) => {
-      if (!value && !row.city) return "-"
-      return (
-        <div className="text-sm">
-          <div className="max-w-[200px] truncate">{value || "-"}</div>
-          {(row.city || row.state) && (
+    {
+      key: "schoolType",
+      title: "Type",
+      sortable: true,
+      filterable: true,
+      render: (value, row) => {
+        if (!value) return "-"
+        return (
+          <Badge variant="outline" className="text-xs">
+            {value}
+          </Badge>
+        )
+      },
+    },
+    {
+      key: "maxStudents",
+      title: "Capacity",
+      sortable: true,
+      render: (value, row) => {
+        if (!value && !row.maxTeachers) return "-"
+        return (
+          <div className="text-sm">
+            <div>{value || 0} students</div>
             <div className="text-muted-foreground">
-              {[row.city, row.state].filter(Boolean).join(", ")}
+              {row.maxTeachers || 0} teachers
             </div>
-          )}
-        </div>
-      )
-    },
-  },
-  {
-    key: "tuitionFee",
-    title: "Tuition",
-    sortable: true,
-    render: (value, row) => {
-      if (!value || !row.currency) return "-"
-      return (
-        <div className="text-sm">
-          <div className="font-medium">
-            {formatCurrency(value, row.currency)}
           </div>
-          {row.paymentSchedule && (
-            <div className="text-muted-foreground text-xs">
-              per {row.paymentSchedule}
+        )
+      },
+    },
+    {
+      key: "address",
+      title: "Location",
+      filterable: true,
+      render: (value, row) => {
+        if (!value && !row.city) return "-"
+        return (
+          <div className="text-sm">
+            <div className="max-w-[200px] truncate">{value || "-"}</div>
+            {(row.city || row.state) && (
+              <div className="text-muted-foreground">
+                {[row.city, row.state].filter(Boolean).join(", ")}
+              </div>
+            )}
+          </div>
+        )
+      },
+    },
+    {
+      key: "tuitionFee",
+      title: "Tuition",
+      sortable: true,
+      render: (value, row) => {
+        if (!value || !row.currency) return "-"
+        return (
+          <div className="text-sm">
+            <div className="font-medium">
+              {formatCurrency(value, row.currency)}
             </div>
-          )}
-        </div>
-      )
+            {row.paymentSchedule && (
+              <div className="text-muted-foreground text-xs">
+                per {row.paymentSchedule}
+              </div>
+            )}
+          </div>
+        )
+      },
     },
-  },
-  {
-    key: "createdAt",
-    title: "Created",
-    sortable: true,
-    render: (value) => {
-      if (!value) return "-"
-      return (
-        <div className="text-sm">{new Date(value).toLocaleDateString()}</div>
-      )
+    {
+      key: "createdAt",
+      title: "Created",
+      sortable: true,
+      render: (value) => {
+        if (!value) return "-"
+        return <div className="text-sm">{formatDate(value, locale)}</div>
+      },
     },
-  },
-]
+  ]
+}
 
 // Action column component for table rows
 interface SchoolActionsProps {
@@ -233,7 +232,10 @@ export function SchoolStatus({
 }
 
 // Utility function to generate CSV export data
-export function generateSchoolsCSV(schools: OnboardingSchoolData[]): string {
+export function generateSchoolsCSV(
+  schools: OnboardingSchoolData[],
+  locale: Locale = "ar"
+): string {
   const headers = [
     "School Name",
     "Type",
@@ -260,8 +262,8 @@ export function generateSchoolsCSV(schools: OnboardingSchoolData[]): string {
     school.maxTeachers || "",
     school.tuitionFee || "",
     school.currency || "",
-    school.createdAt ? new Date(school.createdAt).toLocaleDateString() : "",
-    school.updatedAt ? new Date(school.updatedAt).toLocaleDateString() : "",
+    school.createdAt ? formatDate(school.createdAt, locale) : "",
+    school.updatedAt ? formatDate(school.updatedAt, locale) : "",
   ])
 
   const csvContent = [

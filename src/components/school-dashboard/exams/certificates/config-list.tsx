@@ -5,6 +5,7 @@
 import { useState } from "react"
 import { Edit, MoreHorizontal, Trash2 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { Locale } from "@/components/internationalization/config"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { deleteCertificateConfig } from "./actions"
 import type { CertificateConfigSummary } from "./actions/types"
@@ -32,6 +35,7 @@ export function CertificateConfigList({
   configs: CertificateConfigSummary[]
 }) {
   const { toast } = useToast()
+  const { locale } = useLocale()
   const [loading, setLoading] = useState<string | null>(null)
 
   async function handleDelete(id: string) {
@@ -83,7 +87,7 @@ export function CertificateConfigList({
             <TableCell className="capitalize">{config.templateStyle}</TableCell>
             <TableCell>{config.certificateCount}</TableCell>
             <TableCell>
-              {new Date(config.createdAt).toLocaleDateString()}
+              {formatDate(config.createdAt, locale as Locale)}
             </TableCell>
             <TableCell>
               <DropdownMenu>

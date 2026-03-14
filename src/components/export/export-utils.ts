@@ -3,6 +3,9 @@
 
 import * as XLSX from "xlsx"
 
+import { formatDate } from "@/lib/i18n-format"
+import type { Locale } from "@/components/internationalization/config"
+
 /**
  * Convert data to CSV format
  */
@@ -62,7 +65,8 @@ export function convertToCSV(data: any[], headers: string[]): string {
 export function convertToExcel(
   data: any[],
   headers: string[],
-  sheetName: string = "Sheet1"
+  sheetName: string = "Sheet1",
+  locale: Locale = "ar"
 ): ArrayBuffer {
   if (!data || data.length === 0) {
     data = [{}]
@@ -88,7 +92,7 @@ export function convertToExcel(
 
         // Handle dates
         if (value instanceof Date) {
-          return value.toLocaleDateString()
+          return formatDate(value, locale)
         }
 
         // Handle arrays

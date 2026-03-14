@@ -2,8 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { formatNumber } from "@/lib/i18n-format"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 interface Props {
   title?: string
@@ -35,6 +37,7 @@ export default function StatsSegmented({
   segments = defaultSegments,
   className,
 }: Props) {
+  const { locale } = useLocale()
   const totalValue = total * 1000
   const freeValue = totalValue - used
 
@@ -44,7 +47,7 @@ export default function StatsSegmented({
         <p className="text-muted-foreground mb-4 text-base">
           {title}{" "}
           <span className="text-foreground font-semibold tabular-nums">
-            {used.toLocaleString(undefined, {
+            {formatNumber(used, locale as "en" | "ar", {
               minimumFractionDigits: 0,
               maximumFractionDigits: 2,
             })}{" "}

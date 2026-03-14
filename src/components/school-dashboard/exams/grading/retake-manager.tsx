@@ -23,6 +23,7 @@ import {
   TrendingUp,
 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -47,6 +48,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { applyRetakePenalty } from "./cgpa-calculator"
 import { percentageToLetter } from "./grade-converter"
@@ -102,6 +104,7 @@ export function RetakeManager({
   config,
   dictionary,
 }: RetakeManagerProps) {
+  const { locale } = useLocale()
   const d = dictionary?.retake
 
   // Calculate stats

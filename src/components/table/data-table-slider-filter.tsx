@@ -6,6 +6,7 @@ import * as React from "react"
 import type { Column } from "@tanstack/react-table"
 import { PlusCircle, XCircle } from "lucide-react"
 
+import { formatNumber } from "@/lib/i18n-format"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { Slider } from "@/components/ui/slider"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 interface Range {
   min: number
@@ -44,6 +46,7 @@ function DataTableSliderFilterInner<TData>({
   title,
 }: DataTableSliderFilterProps<TData>) {
   const id = React.useId()
+  const { locale } = useLocale()
 
   const columnFilterValue = getIsValidRange(column.getFilterValue())
     ? (column.getFilterValue() as RangeValue)
@@ -87,9 +90,14 @@ function DataTableSliderFilterInner<TData>({
     return columnFilterValue ?? [min, max]
   }, [columnFilterValue, min, max])
 
-  const formatValue = React.useCallback((value: number) => {
-    return value.toLocaleString(undefined, { maximumFractionDigits: 0 })
-  }, [])
+  const formatValue = React.useCallback(
+    (value: number) => {
+      return formatNumber(value, locale as "en" | "ar", {
+        maximumFractionDigits: 0,
+      })
+    },
+    [locale]
+  )
 
   const onFromInputChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {

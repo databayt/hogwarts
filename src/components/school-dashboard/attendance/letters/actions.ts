@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 
 import {
   letterTemplates,
@@ -125,14 +126,15 @@ export async function generateLetter(
       schoolEmail: school.email || "",
       schoolPhone: school.phoneNumber || "",
       schoolAddress: school.address || "",
-      currentDate: new Date().toLocaleDateString(),
+      currentDate: formatDate(new Date(), "ar"),
       principalName: "School Principal", // Could be fetched from settings
-      meetingDate: new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000
-      ).toLocaleDateString(),
+      meetingDate: formatDate(
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        "ar"
+      ),
       meetingTime: "10:00 AM",
       contractPeriod: "30 days",
-      attendancePeriod: new Date().toLocaleDateString("en-US", {
+      attendancePeriod: formatDate(new Date(), "ar", {
         month: "long",
         year: "numeric",
       }),
@@ -506,19 +508,18 @@ export async function previewLetter(
       schoolEmail: school.email || "",
       schoolPhone: school.phoneNumber || "",
       schoolAddress: school.address || "",
-      currentDate: new Date().toLocaleDateString(
-        locale === "ar" ? "ar-SA" : "en-US"
-      ),
+      currentDate: formatDate(new Date(), locale),
       principalName: "School Principal",
-      meetingDate: new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000
-      ).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US"),
+      meetingDate: formatDate(
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        locale
+      ),
       meetingTime: locale === "ar" ? "10:00 صباحاً" : "10:00 AM",
       contractPeriod: locale === "ar" ? "30 يوم" : "30 days",
-      attendancePeriod: new Date().toLocaleDateString(
-        locale === "ar" ? "ar-SA" : "en-US",
-        { month: "long", year: "numeric" }
-      ),
+      attendancePeriod: formatDate(new Date(), locale, {
+        month: "long",
+        year: "numeric",
+      }),
       previousRate: (absenceRate + 5).toFixed(1),
       improvementPercent: "5",
     }

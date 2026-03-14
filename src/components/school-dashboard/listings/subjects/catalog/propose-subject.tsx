@@ -5,6 +5,7 @@
 import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import type { Locale } from "@/components/internationalization/config"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import {
   getMyProposals,
@@ -188,7 +191,13 @@ function ProposalForm({ onSuccess }: { onSuccess: () => void }) {
 // Proposals list
 // ============================================================================
 
-function ProposalsList({ proposals }: { proposals: ProposalListItem[] }) {
+function ProposalsList({
+  proposals,
+  locale,
+}: {
+  proposals: ProposalListItem[]
+  locale: Locale
+}) {
   if (proposals.length === 0) {
     return (
       <p className="text-muted-foreground text-sm">
@@ -222,7 +231,7 @@ function ProposalsList({ proposals }: { proposals: ProposalListItem[] }) {
                 </p>
               )}
               <p className="text-muted-foreground text-xs">
-                Submitted {new Date(p.createdAt).toLocaleDateString()}
+                Submitted {formatDate(p.createdAt, locale)}
               </p>
               {p.rejectionReason && (
                 <p className="text-sm text-red-600">
@@ -247,6 +256,7 @@ function ProposalsList({ proposals }: { proposals: ProposalListItem[] }) {
 // ============================================================================
 
 export function ProposeSubjectPanel() {
+  const { locale } = useLocale()
   const [proposals, setProposals] = useState<ProposalListItem[]>([])
 
   const loadProposals = async () => {
@@ -266,7 +276,7 @@ export function ProposeSubjectPanel() {
 
       <div className="space-y-3">
         <h3 className="font-semibold">My Proposals</h3>
-        <ProposalsList proposals={proposals} />
+        <ProposalsList proposals={proposals} locale={locale} />
       </div>
     </div>
   )

@@ -79,7 +79,7 @@ export async function ChildGradesView({ studentId, lang = "ar" }: Props) {
                           </TableCell>
                           <TableCell>{result.subjectName}</TableCell>
                           <TableCell>
-                            {new Date(result.examDate).toLocaleDateString()}
+                            {formatDate(result.examDate, lang)}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">{result.examType}</Badge>

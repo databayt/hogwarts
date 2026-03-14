@@ -5,6 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
+import { formatCurrency } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -82,10 +83,7 @@ export default async function BudgetDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {Number(budget.totalAmount).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(Number(budget.totalAmount), lang)}
             </p>
           </CardContent>
         </Card>
@@ -97,10 +95,7 @@ export default async function BudgetDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {totalAllocated.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(totalAllocated, lang)}
             </p>
           </CardContent>
         </Card>
@@ -110,10 +105,7 @@ export default async function BudgetDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              $
-              {totalSpent.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(totalSpent, lang)}
             </p>
           </CardContent>
         </Card>
@@ -148,24 +140,9 @@ export default async function BudgetDetailPage({ params }: Props) {
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-sm">
-                      <span>
-                        Allocated: $
-                        {allocated.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
-                      </span>
-                      <span>
-                        Spent: $
-                        {spent.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
-                      </span>
-                      <span>
-                        Remaining: $
-                        {remaining.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
-                      </span>
+                      <span>Allocated: {formatCurrency(allocated, lang)}</span>
+                      <span>Spent: {formatCurrency(spent, lang)}</span>
+                      <span>Remaining: {formatCurrency(remaining, lang)}</span>
                       <Badge variant={pct > 90 ? "destructive" : "secondary"}>
                         {pct.toFixed(0)}%
                       </Badge>

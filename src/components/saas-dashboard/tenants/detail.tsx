@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
@@ -233,7 +234,7 @@ export function TenantDetail({
                 </div>
                 <div className="font-medium">
                   {billing?.trialEndsAt
-                    ? new Date(billing.trialEndsAt).toLocaleDateString()
+                    ? formatDate(billing.trialEndsAt, "en")
                     : "-"}
                 </div>
               </div>
@@ -243,7 +244,7 @@ export function TenantDetail({
                 </div>
                 <div className="font-medium">
                   {billing?.nextInvoiceDate
-                    ? new Date(billing.nextInvoiceDate).toLocaleDateString()
+                    ? formatDate(billing.nextInvoiceDate, "en")
                     : "-"}
                 </div>
               </div>
@@ -280,7 +281,7 @@ export function TenantDetail({
                         ${(i.amount / 100).toFixed(2)}
                       </td>
                       <td className="px-2 py-1">
-                        {new Date(i.createdAt).toLocaleDateString()}
+                        {formatDate(i.createdAt, "en")}
                       </td>
                     </tr>
                   ))}

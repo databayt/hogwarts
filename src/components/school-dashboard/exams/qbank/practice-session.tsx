@@ -404,7 +404,7 @@ export function PracticeSession({
                         <p className="text-muted-foreground text-xs">
                           {entry.correctCount}/{entry.totalQuestions}{" "}
                           {isAr ? "صحيح" : "correct"} &middot;{" "}
-                          {new Date(entry.completedAt).toLocaleDateString()}
+                          {formatDate(entry.completedAt, lang)}
                         </p>
                       </div>
                     </div>

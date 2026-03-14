@@ -7,7 +7,6 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis, Users } from "lucide-react"
 
 import { formatCurrency } from "@/lib/i18n-format"
-import type { Locale } from "@/components/internationalization/config"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { STATUS_COLORS } from "./config"

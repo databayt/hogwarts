@@ -5,6 +5,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis, Eye } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -178,7 +179,7 @@ export const getTemplateColumns = (
     ),
     cell: ({ getValue }) => (
       <span className="text-muted-foreground text-xs tabular-nums">
-        {new Date(getValue<string>()).toLocaleDateString()}
+        {formatDate(getValue<string>(), "ar")}
       </span>
     ),
     meta: {

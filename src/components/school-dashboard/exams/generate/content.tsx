@@ -152,7 +152,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
             </p>
           </div>
           <Button asChild>
-            <Link href={`/${lang}/exams/generate/template-wizard`}>
+            <Link href={`/${lang}/exams/template/add`}>
               <Wand2 className="me-2 h-4 w-4" />
               {isAr ? "قالب جديد" : "New Template"}
             </Link>
@@ -169,7 +169,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
                   : "No templates yet. Create your first template to get started."}
               </p>
               <Button asChild variant="outline">
-                <Link href={`/${lang}/exams/generate/template-wizard`}>
+                <Link href={`/${lang}/exams/template/add`}>
                   <Plus className="me-2 h-4 w-4" />
                   {isAr ? "إنشاء قالب" : "Create Template"}
                 </Link>
@@ -221,7 +221,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
                         asChild
                       >
                         <Link
-                          href={`/${lang}/exams/generate/template-wizard?configId=${t.id}`}
+                          href={`/${lang}/exams/template/add?configId=${t.id}`}
                         >
                           {isAr ? "تخصيص" : "Customize"}
                         </Link>
@@ -261,7 +261,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
             </p>
           </div>
           <Button asChild variant="secondary">
-            <Link href={`/${lang}/exams/generate/exam-wizard`}>
+            <Link href={`/${lang}/exams/generate/add`}>
               <Sparkles className="me-2 h-4 w-4" />
               {isAr ? "إنشاء اختبار" : "Generate Exam"}
             </Link>
@@ -278,7 +278,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
                   : "No generated exams yet. Create a template first, then generate an exam."}
               </p>
               <Button asChild variant="outline">
-                <Link href={`/${lang}/exams/generate/exam-wizard`}>
+                <Link href={`/${lang}/exams/generate/add`}>
                   <Sparkles className="me-2 h-4 w-4" />
                   {isAr ? "إنشاء اختبار" : "Generate Exam"}
                 </Link>

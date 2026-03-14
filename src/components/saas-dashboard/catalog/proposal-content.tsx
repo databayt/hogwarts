@@ -5,6 +5,7 @@
 import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -127,9 +128,7 @@ function ProposalReviewRow({
             {proposal.status.replace("_", " ")}
           </Badge>
         </TableCell>
-        <TableCell>
-          {new Date(proposal.createdAt).toLocaleDateString()}
-        </TableCell>
+        <TableCell>{formatDate(proposal.createdAt, "en")}</TableCell>
         <TableCell>
           {canReview && (
             <div className="flex items-center gap-2">

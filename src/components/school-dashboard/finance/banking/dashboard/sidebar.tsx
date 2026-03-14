@@ -58,7 +58,7 @@ function UserProfileSection({ user }: UserProfileSectionProps) {
 /**
  * RecentActivityItem - Memoized activity item component
  */
-function RecentActivityItem({ transaction }: RecentActivityItemProps) {
+function RecentActivityItem({ transaction, lang }: RecentActivityItemProps) {
   const amount = Number(transaction.amount)
   const isPositive = amount > 0
   const colorClass = isPositive ? "text-green-600" : "text-red-600"
@@ -69,7 +69,7 @@ function RecentActivityItem({ transaction }: RecentActivityItemProps) {
       <div className="me-4 min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{transaction.name}</p>
         <p className="text-muted-foreground text-xs">
-          {new Date(transaction.date).toLocaleDateString()}
+          {formatDate(transaction.date, (lang as Locale) || "ar")}
         </p>
       </div>
       <p className={`text-sm font-medium whitespace-nowrap ${colorClass}`}>
@@ -150,6 +150,7 @@ export function DashboardSidebar({
                 <RecentActivityItem
                   key={transaction.id}
                   transaction={transaction}
+                  lang={lang}
                 />
               ))}
             </div>

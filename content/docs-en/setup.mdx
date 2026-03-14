@@ -1,0 +1,460 @@
+---
+title: "School Value Chain"
+description: "End-to-end guide from onboarding to attendance — what's auto-provisioned, what needs manual config, gaps found during E2E testing, and how to customize each layer"
+---
+
+## Overview
+
+This document maps the complete journey of a new school on the platform: from signup through onboarding, auto-provisioning, teacher/student import, class generation, timetable, and attendance. It was written from a real E2E test session (March 2026) using `user@databayt.org` creating "Nile Academy" with subdomain `nile-academy`.
+
+### The Chain at a Glance
+
+```
+Onboarding (15 steps)
+  → Auto-Provisioning (async, ~2s)
+    → People Import (teachers + students)
+      → Student Grade Assignment (manual)
+        → Class Generation (manual)
+          → Student Enrollment (manual)
+            → Timetable Generation (semi-auto)
+              → Attendance (daily operation)
+```
+
+Each layer depends on the one above it. Skip a step and downstream features break silently.
+
+---
+
+## Layer 1: Onboarding
+
+### What It Collects
+
+15 steps in 3 groups. Only a few feed into the integration chain:
+
+| Step           | Order | Collects                                             | Feeds Into                            |
+| -------------- | ----- | ---------------------------------------------------- | ------------------------------------- |
+| `about-school` | 1     | School name                                          | Identity                              |
+| `description`  | 2     | `schoolType`, `schoolLevel`                          | Academic structure, catalog filtering |
+| `location`     | 3     | `country`, `city`, `state`                           | Catalog country, timetable structure  |
+| `capacity`     | 5     | `sectionsPerGrade`, `studentsPerSection`, `teachers` | Section provisioning, plan limits     |
+| `schedule`     | 6     | Timetable structure selection                        | Periods, terms, working days          |
+| `import`       | 8     | CSV files (teachers + students)                      | People records                        |
+| `legal`        | 13    | Terms acceptance                                     | Triggers `completeOnboarding()`       |
+| `subdomain`    | 14    | Unique subdomain                                     | Tenant routing                        |
+
+### Steps That Don't Feed Integration
+
+`title`, `stand-out`, `branding`, `finish-setup`, `join`, `visibility`, `price`, `discount` — these affect the school's public profile and billing, not the operational chain.
+
+### The Trigger
+
+When the admin accepts terms on the `legal` step, `completeOnboarding()` fires and triggers four async provisioning jobs via `after()`:
+
+1. `setupDefaultsForSchool()` — YearLevels, Departments, ScoreRanges
+2. `setupCatalogForSchool()` — Academic structure + subject selections
+3. `applyTimetableStructureForNewSchool()` — SchoolYear, Terms, Periods, WeekConfig
+4. Default `ClassroomType` upsert — so the Configure tab works immediately
+
+### What You See After
+
+The congratulations page appears. Navigate to `{subdomain}.localhost:3000` to access the school dashboard.
+
+**Gap found:** Provisioning runs async via `after()`. If you navigate to the dashboard immediately, some data may not exist yet. A page refresh after 2-3 seconds resolves this. There is no loading indicator or polling mechanism.
+
+---
+
+## Layer 2: Auto-Provisioning
+
+Everything below is created automatically after `completeOnboarding()`. The admin does not need to do anything.
+
+### What Gets Auto-Created
+
+| What               | Model                    | Count            | Example                                 |
+| ------------------ | ------------------------ | ---------------- | --------------------------------------- |
+| Academic Levels    | `AcademicLevel`          | Up to 3          | Elementary, Middle, High                |
+| Academic Grades    | `AcademicGrade`          | Up to 12         | Grade 1 through Grade 12                |
+| Academic Streams   | `AcademicStream`         | 2 per high grade | Science, Arts (grades 10-12)            |
+| Subject Selections | `SchoolSubjectSelection` | ~15-30 per grade | Math Grade 7, English Grade 7, etc.     |
+| Year Levels        | `YearLevel`              | Varies           | Filtered by `schoolLevel`               |
+| Departments        | `Department`             | 6                | Sciences, Mathematics, Languages, etc.  |
+| Score Ranges       | `ScoreRange`             | 8                | A+ through F                            |
+| School Year        | `SchoolYear`             | 1                | Sep 1 - Jun 30                          |
+| Terms              | `Term`                   | 2                | Term 1 (Sep-Jan), Term 2 (Feb-Jun)      |
+| Periods            | `Period`                 | 7-8              | Based on timetable structure selection  |
+| Week Config        | `SchoolWeekConfig`       | 1                | Working days (e.g., Sun-Thu or Mon-Fri) |
+| Classroom Type     | `ClassroomType`          | 1                | Default "Classroom" type                |
+
+### What Gets Auto-Created: Classrooms + Sections
+
+`autoProvisionSections()` also runs and creates:
+
+| What       | Model       | Count                     | Example                        |
+| ---------- | ----------- | ------------------------- | ------------------------------ |
+| Classrooms | `Classroom` | grades × sectionsPerGrade | "Grade 7-A", "Grade 7-B"       |
+| Sections   | `Section`   | grades × sectionsPerGrade | Section A, Section B per grade |
+
+These are physical rooms paired with student groups. If `sectionsPerGrade=2` and 12 grades exist, you get 24 classrooms and 24 sections.
+
+### What Is NOT Auto-Created
+
+| What                     | Why Not                                                 | When to Create                           |
+| ------------------------ | ------------------------------------------------------- | ---------------------------------------- |
+| Teachers                 | Imported via CSV or created manually                    | During onboarding (import step) or after |
+| Students                 | Imported via CSV or created manually                    | During onboarding (import step) or after |
+| Subjects (school-scoped) | Created from catalog selections during class generation | When generating classes                  |
+| Classes                  | Require teacher + subject + term + room                 | After teachers exist                     |
+| StudentClass enrollments | Require students in grades + classes                    | After classes + student grades           |
+| TeacherSubjectExpertise  | Maps teachers to subjects they can teach                | Before timetable generation              |
+| Timetable slots          | Generated by algorithm or manual                        | After everything above                   |
+| Attendance records       | Daily operation                                         | During school operation                  |
+
+### How to Customize Auto-Provisioned Data
+
+#### Academic Structure
+
+- **Grades**: Cannot add/remove grades individually yet. The system creates all grades for the selected school level.
+- **Streams**: Auto-created for grades 10-12. Toggle via admin settings.
+- **Levels**: Determined by `schoolLevel` choice during onboarding. Change requires re-provisioning.
+
+#### Subject Selections
+
+- **Browse full catalog**: Subjects > Catalog tab to add subjects from other curricula
+- **Hide subjects**: Toggle `isActive` on any `SchoolSubjectSelection`
+- **Rename**: Set `customName` on the selection record
+- **Set period count**: `weeklyPeriods` controls how many periods per week in timetable
+
+#### Timetable Structure
+
+- **Periods**: Timetable > Settings to add/remove/rename periods, change duration
+- **Working days**: Timetable > Settings to toggle days
+- **Terms**: School > Settings to adjust term dates, activate/deactivate
+
+#### Classrooms + Sections
+
+- **Add more sections**: Classrooms > Configure tab, increase section count per grade
+- **Room types**: Classrooms > Settings to create lab, library, sports types
+- **Capacity**: Edit individual classroom capacity or section maxCapacity
+- **Homeroom teacher**: Assign via section edit
+
+---
+
+## Layer 3: People Import
+
+### During Onboarding
+
+The `import` step accepts CSV files for both teachers and students.
+
+#### Teachers CSV
+
+```csv
+name,email,employeeId,department,subjects
+Ahmed Hassan,ahmed.h@school.local,TCH001,Sciences,"Physics,Chemistry"
+```
+
+**Result**: 5 teachers created with user accounts (role: TEACHER). Department and subject fields are stored but not yet linked to formal `Department` or `Subject` records.
+
+**Gap found:** CSV import does not auto-create `TeacherSubjectExpertise` records. The `subjects` column in the CSV is informational only. Teachers are imported as user records but have no formal subject-teaching qualification in the database. This must be configured manually before timetable generation.
+
+#### Students CSV
+
+```csv
+name,email,studentId,yearLevel,gender,dateOfBirth,guardianName,guardianEmail,guardianPhone
+Ali Mohammed,ali.m@school.local,STD001,Grade 7,male,2012-03-15,Khalid Mohammed,khalid@parent.local,+249912345001
+```
+
+**Result**: 10 students created with user accounts (role: STUDENT). Guardian records created and linked.
+
+**Gap found:** Students imported during onboarding have **no `academicGradeId`**. The `yearLevel` column (e.g., "Grade 7") is stored as text but not mapped to an `AcademicGrade` record — because `AcademicGrade` records don't exist yet at import time (they're created by async provisioning after `completeOnboarding()`). This is the most significant gap in the onboarding flow.
+
+### After Onboarding
+
+Re-import via School > Settings > Bulk Import. At this point `AcademicGrade` records exist, so the `yearLevel` column can be mapped to actual grade IDs.
+
+### Fixing Student Grades Post-Import
+
+Three options:
+
+| Method             | Path                                | Effort                                                  |
+| ------------------ | ----------------------------------- | ------------------------------------------------------- |
+| **Bulk re-import** | School > Bulk Import > Students tab | Upload same CSV, grades now map correctly               |
+| **Manual edit**    | Students > Edit each student        | Set grade via dropdown                                  |
+| **SQL**            | Direct database update              | `UPDATE students SET "academicGradeId" = ... WHERE ...` |
+
+**Gap found:** There is no bulk "assign grade" action in the students listing. You must either re-import or edit one by one. A bulk grade assignment action would save significant time.
+
+---
+
+## Layer 4: Class Generation
+
+### Terminology Clarification
+
+| Term          | Model       | What It Actually Is                                             |
+| ------------- | ----------- | --------------------------------------------------------------- |
+| **Classroom** | `Classroom` | A physical room (e.g., "Room 7-A", capacity 30)                 |
+| **Section**   | `Section`   | A student group within a grade (e.g., "Grade 7-A", "Grade 7-B") |
+| **Class**     | `Class`     | A subject offering = Subject + Teacher + Term + Room + Grade    |
+
+A **Class** is NOT a classroom. It's closer to a "course" or "subject offering." Example: "Math taught by Ahmed Hassan in Room 7-A during Term 2 for Grade 7."
+
+### How to Generate Classes
+
+**Path**: Classrooms > Configure tab > "Generate Classes from Catalog"
+
+**Prerequisites**:
+
+- Active term must exist (auto-provisioned)
+- `SchoolSubjectSelection` records must exist (auto-provisioned)
+- At least 1 teacher must exist
+- At least 1 classroom must exist per grade
+
+**What it does**: For each grade, reads `SchoolSubjectSelection` records and creates:
+
+1. A school-scoped `Subject` record (linked to `CatalogSubject`)
+2. A `Class` record with default teacher, room, and period assignment
+
+**Gap found (critical):** The `generateClassesForGrade()` server action executes without errors but **silently creates 0 records**. This appears to be caused by the `$extends()` + `as unknown as PrismaClient` cast in `src/lib/db.ts` breaking `$transaction()` on the extended Prisma client. All server actions that use `db.$transaction()` are affected. Workaround: create records via direct SQL.
+
+### How to Enroll Students
+
+**Path**: Classrooms > Configure tab > "Enroll Students for All Grades"
+
+**Prerequisites**:
+
+- Students must have `academicGradeId` assigned
+- Classes must exist for those grades
+
+**What it does**: Creates `StudentClass` records for each student x class pair in their grade.
+
+**Same gap**: `bulkEnrollStudentsInClasses()` also uses `$transaction()` and silently fails.
+
+---
+
+## Layer 5: Timetable
+
+### Prerequisites (All Must Exist)
+
+| Prerequisite              | Source            | Auto?     |
+| ------------------------- | ----------------- | --------- |
+| Terms                     | Auto-provisioning | Yes       |
+| Periods                   | Auto-provisioning | Yes       |
+| Working days              | Auto-provisioning | Yes       |
+| Teachers                  | CSV import        | Semi-auto |
+| Subjects (school-scoped)  | Class generation  | Manual    |
+| Classes                   | Class generation  | Manual    |
+| Classrooms                | Auto-provisioning | Yes       |
+| `TeacherSubjectExpertise` | Manual config     | **No**    |
+
+### The Missing Link: Teacher Expertise
+
+The timetable algorithm requires `TeacherSubjectExpertise` records to know which teachers can teach which subjects. Without these, the algorithm places **0 slots**.
+
+**How it works**: The algorithm's `placeClassGreedy()` function reads `preferredTeacherIds` from `TeacherSubjectExpertise`. If no teachers are qualified for a subject, it returns 0 — the class is simply skipped.
+
+**Gap found:** There is no UI to manage `TeacherSubjectExpertise`. These records must be created via:
+
+- Direct SQL: `INSERT INTO teacher_subject_expertise (id, "schoolId", "teacherId", "subjectId", "expertiseLevel", ...) VALUES (...)`
+- Or a future "Teacher Qualifications" UI
+
+### Generation Flow
+
+**Path**: Timetable > Generate tab
+
+1. Select active term
+2. Configure constraints (max periods per day, consecutive limits)
+3. Click "Generate"
+4. Preview the generated timetable
+5. Click "Apply" to save
+
+### Algorithm
+
+Three-phase process:
+
+1. **Greedy Assignment** — places classes one by one, checking teacher/room/period availability
+2. **Constraint Satisfaction** — resolves conflicts and applies soft constraints
+3. **Optimization** — swaps slots to improve distribution
+
+### Results from E2E Test
+
+| Metric                   | Value                                                   |
+| ------------------------ | ------------------------------------------------------- |
+| Total classes            | 10 (5 subjects x 2 grades)                              |
+| Hours per week per class | 3 (default from `SchoolSubjectSelection.weeklyPeriods`) |
+| Total slots needed       | ~38                                                     |
+| Slots placed             | 30/38 (79%)                                             |
+| Unplaced                 | 8 (Science classes — see below)                         |
+
+### Known Issue: `requiresLab` Blocking
+
+The algorithm sets `requiresLab: true` for any class whose subject name contains "science". These classes can only be placed in rooms with type "lab". If no lab rooms exist (common for newly provisioned schools), Science classes get 0 slots.
+
+**Fix**: Either create a classroom with type "lab", or remove the `requiresLab` logic for schools without labs.
+
+### Gap: "Replace All" Silent Failure
+
+The timetable "Replace All" action (which saves generated timetable to database) also uses `$transaction()` and **silently fails** — same root cause as class generation. The UI shows success but 0 records are written.
+
+**Workaround**: Create timetable slots via direct SQL:
+
+```sql
+INSERT INTO timetables (id, "schoolId", "termId", "dayOfWeek", "periodId", "classId", "teacherId", "classroomId", "weekOffset", "createdAt", "updatedAt")
+VALUES ('tt_1', 'school_id', 'term_id', 1, 'period_id', 'class_id', 'teacher_id', 'room_id', 0, NOW(), NOW())
+```
+
+---
+
+## Layer 6: Attendance
+
+### Prerequisites
+
+| Prerequisite                 | Source               |
+| ---------------------------- | -------------------- |
+| Classes                      | Class generation     |
+| Students enrolled in classes | Student enrollment   |
+| Timetable slots (optional)   | Timetable generation |
+
+Timetable slots are optional but enhance UX — the manual attendance page auto-selects the current class based on timetable.
+
+### Manual Attendance Flow
+
+**Path**: Attendance > Manual tab
+
+1. **Class selector** — dropdown of all classes. Auto-selects based on current day/period from timetable.
+2. **Date** — defaults to today
+3. **Student list** — shows all enrolled students with status dropdowns
+4. **Status options**: Present (default), Absent, Late
+5. **Bulk actions**: "All Present", "All Absent", "All Late"
+6. **Save** — persists changed records
+
+### Storage Design
+
+Only **deviations from Present** are stored. If all 5 students are marked Present, 0 records are created. If 1 is Absent and 1 is Late, 2 records are created. This is efficient — the absence of a record means "Present."
+
+### E2E Test Results
+
+| Student      | Status     | Record Created |
+| ------------ | ---------- | -------------- |
+| Ali Mohammed | Present    | No (default)   |
+| Sara Ahmed   | **Absent** | Yes            |
+| Musa Omer    | Present    | No (default)   |
+| Huda Salim   | Present    | No (default)   |
+| Tariq Nour   | **Late**   | Yes            |
+
+**This was the only server action write that worked correctly.** The attendance save does not use `$transaction()`, confirming the `$transaction` + `$extends` issue is the root cause of silent failures elsewhere.
+
+---
+
+## Gaps Summary
+
+### Critical
+
+| Gap                                  | Impact                                                                                      | Workaround                                   |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| **`$transaction()` silent failures** | All bulk operations (class generation, enrollment, timetable save) silently write 0 records | Direct SQL via Neon                          |
+| **Students imported without grade**  | Students have no `academicGradeId` after onboarding import                                  | Re-import after provisioning, or manual edit |
+| **No TeacherSubjectExpertise UI**    | Timetable algorithm places 0 slots without expertise records                                | Direct SQL                                   |
+
+### Moderate
+
+| Gap                                  | Impact                                                      | Suggestion                                                               |
+| ------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **No bulk grade assignment**         | Must edit students one by one or re-import CSV              | Add bulk action to students listing                                      |
+| **No provisioning status indicator** | Admin may see empty dashboard right after onboarding        | Add loading state or polling                                             |
+| **`requiresLab` blocks Science**     | Science classes get 0 timetable slots if no lab room exists | Make lab requirement configurable or create lab room during provisioning |
+| **Classroom vs Class confusion**     | Admins confuse physical rooms with subject offerings        | Rename "Class" to "Course" or move class generation to its own page      |
+
+### Minor
+
+| Gap                         | Impact                                                                          | Suggestion                                     |
+| --------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **CSV subjects not linked** | Teacher CSV `subjects` column is informational only                             | Auto-create `TeacherSubjectExpertise` from CSV |
+| **Page 1 of -1**            | Pagination shows incorrect total in attendance table                            | Fix page count calculation                     |
+| **Term auto-activation**    | Term 2 is created with `isActive: false` but should auto-activate based on date | Add date-based auto-activation                 |
+
+---
+
+## Quick Reference: What to Do After Onboarding
+
+For a school admin who just completed onboarding, here is the minimum path to a working timetable and attendance:
+
+### Step 1: Verify Auto-Provisioning (0 effort)
+
+Navigate to the school dashboard. Check:
+
+- Grades listing shows grades (e.g., Grade 1-12)
+- Subjects listing shows catalog subjects assigned
+- Classrooms listing shows rooms + sections
+- Timetable > Settings shows periods and working days
+
+If empty, refresh after 3 seconds.
+
+### Step 2: Import People (if not done during onboarding)
+
+- Teachers: School > Bulk Import > Teachers CSV
+- Students: School > Bulk Import > Students CSV
+
+### Step 3: Assign Student Grades
+
+Students need `academicGradeId` to be enrolled in classes.
+
+- **If imported during onboarding**: Re-import via Bulk Import (grades now map correctly)
+- **If imported after provisioning**: Grades should map automatically from `yearLevel` column
+
+### Step 4: Generate Classes
+
+Classrooms > Configure tab:
+
+1. Verify sections exist per grade (should be auto-provisioned)
+2. Select active term
+3. Click "Generate Classes for All Grades"
+4. Click "Enroll Students for All Grades"
+
+**Note**: If these actions silently fail (see gaps), use direct SQL as workaround.
+
+### Step 5: Set Up Teacher Expertise
+
+Before timetable generation, each teacher needs `TeacherSubjectExpertise` records linking them to subjects they can teach. Currently requires direct SQL or a future UI.
+
+### Step 6: Generate Timetable
+
+Timetable > Generate tab:
+
+1. Select active term
+2. Configure constraints
+3. Generate > Preview > Apply
+
+### Step 7: Take Attendance
+
+Attendance > Manual tab. Class auto-selects from timetable. Mark status and save.
+
+---
+
+## Data Model Summary
+
+```
+School (onboarding)
+  |
+  +-- AcademicLevel (auto)         -- Elementary, Middle, High
+  |     +-- AcademicGrade (auto)   -- Grade 1-12
+  |           +-- Section (auto)   -- Student groups (7-A, 7-B)
+  |           +-- Classroom (auto) -- Physical rooms
+  |
+  +-- SchoolSubjectSelection (auto) -- Catalog bridge
+  |
+  +-- Term (auto)                   -- Academic terms
+  +-- Period (auto)                 -- Daily time slots
+  +-- SchoolWeekConfig (auto)       -- Working days
+  |
+  +-- Teacher (import)              -- From CSV or manual
+  |     +-- TeacherSubjectExpertise (manual) -- What they can teach
+  |
+  +-- Student (import)              -- From CSV or manual
+  |     +-- academicGradeId (manual fix)     -- Grade assignment
+  |
+  +-- Subject (class generation)    -- School-scoped from catalog
+  +-- Class (class generation)      -- Subject + Teacher + Term + Room
+  |     +-- StudentClass (enrollment) -- Student x Class
+  |
+  +-- Timetable (generation)        -- Day x Period x Class x Teacher x Room
+  +-- Attendance (daily)            -- Status deviations from Present
+```
+
+**Legend**: `(auto)` = created by auto-provisioning, `(import)` = from CSV, `(manual)` = requires admin action, `(generation)` = created by algorithm/bulk action, `(daily)` = ongoing operation.

@@ -19,6 +19,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,6 +31,8 @@ import {
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
+import type { Locale } from "@/components/internationalization/config"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { OnboardingProgress, OnboardingSchoolData } from "./types"
 import { formatCapacity, formatCurrency, formatSchoolType } from "./util"
@@ -49,6 +52,7 @@ export default function SchoolDetail({
   onContinueSetup,
   showActions = true,
 }: SchoolDetailProps) {
+  const { locale } = useLocale()
   const isCompleted = progress && progress.completionPercentage >= 100
   const canContinue = progress && progress.nextStep
 
@@ -191,7 +195,7 @@ export default function SchoolDetail({
                 <p className="text-muted-foreground font-medium">Created</p>
                 <p>
                   {school.createdAt
-                    ? new Date(school.createdAt).toLocaleDateString()
+                    ? formatDate(school.createdAt, locale as Locale)
                     : "Unknown"}
                 </p>
               </div>
@@ -201,7 +205,7 @@ export default function SchoolDetail({
                 </p>
                 <p>
                   {school.updatedAt
-                    ? new Date(school.updatedAt).toLocaleDateString()
+                    ? formatDate(school.updatedAt, locale as Locale)
                     : "Unknown"}
                 </p>
               </div>
