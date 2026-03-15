@@ -1,0 +1,27 @@
+# Keep Vercel build cache warm to prevent cold-build OOM on Hobby plan (8GB)
+# Cold builds of 421 routes exceed 8GB; cached builds complete in ~9 min.
+# This pushes an empty commit every 12 hours to trigger a Vercel build.
+name: Keep Vercel Cache Warm
+
+on:
+  schedule:
+    # Every 12 hours (Vercel Hobby cache expires after ~24h of inactivity)
+    - cron: "0 */12 * * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  warm-cache:
+    runs-on: ubuntu-latest
+    # Only run on the main repo, not forks
+    if: github.repository == 'databayt/hogwarts'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push empty commit to trigger Vercel build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "chore: keep Vercel build cache warm [skip ci]"
+          git push
