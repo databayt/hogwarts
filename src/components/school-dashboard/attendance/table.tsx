@@ -24,7 +24,11 @@ function AttendanceTableInner({
   columns: ColumnDef<AttendanceRow, unknown>[]
   onChangeStatus?: (studentId: string, status: AttendanceRow["status"]) => void
 }) {
-  const result = useDataTable<AttendanceRow>({ data, columns, pageCount: -1 })
+  const result = useDataTable<AttendanceRow>({
+    data,
+    columns,
+    pageCount: Math.ceil(data.length / 10) || 1,
+  })
   const table = (result as unknown as { table: unknown }).table as any
   ;(table.options as unknown as { meta?: Record<string, unknown> }).meta = {
     ...((table.options as unknown as { meta?: Record<string, unknown> }).meta ??

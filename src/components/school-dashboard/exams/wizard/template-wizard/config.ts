@@ -47,8 +47,13 @@ export const TEMPLATE_WIZARD_CONFIG: WizardConfig = {
     "Distribution",
     "Finalize",
   ],
+  i18nGroupLabels: {
+    ar: ["القالب", "معلومات الاختبار", "تخطيط الورقة", "التوزيع", "إنهاء"],
+    en: ["Preset", "Exam Info", "Paper Layout", "Distribution", "Finalize"],
+  },
   requiredSteps: ["name", "subject", "question-types"],
   finalLabel: "Save Template",
+  i18nFinalLabel: { ar: "حفظ القالب", en: "Save Template" },
   finalDestination: "/exams/generate",
 }
 

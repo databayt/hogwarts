@@ -8,12 +8,15 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { DEFAULT_DECORATIONS } from "../../types"
+import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { PrintForm } from "./form"
 
 export default function PrintContent() {
+  const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
@@ -30,8 +33,8 @@ export default function PrintContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Print Settings"
-          description="Configure page size, orientation, and decorations."
+          title={getStepLabel("print", "title", locale)}
+          description={getStepLabel("print", "description", locale)}
         />
         <PrintForm
           ref={formRef}

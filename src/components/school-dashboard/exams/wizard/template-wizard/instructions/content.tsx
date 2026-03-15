@@ -8,11 +8,14 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { InstructionsForm } from "./form"
 
 export default function InstructionsContent() {
+  const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
@@ -29,8 +32,8 @@ export default function InstructionsContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Instructions"
-          description="Choose how instructions appear on the paper."
+          title={getStepLabel("instructions", "title", locale)}
+          description={getStepLabel("instructions", "description", locale)}
         />
         <InstructionsForm
           ref={formRef}
