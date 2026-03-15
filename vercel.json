@@ -1,4 +1,5 @@
 {
+  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_AUTHOR_LOGIN\" = \"dependabot[bot]\" ]; then echo 'Skipping dependabot' && exit 0; fi; exit 1",
   "crons": [
     {
       "path": "/api/cron/publish-announcements",
