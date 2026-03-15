@@ -40,6 +40,10 @@ scripts/clickview-clone.md
 src/proxy.ts.real
 screenshots/
 
+# Documentation (too many routes for 8GB Vercel Hobby build)
+content/docs-en/
+content/docs-ar/
+
 # Claude plans
 .claude/plans/
 .claude/error.log
