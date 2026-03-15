@@ -11,11 +11,11 @@ import { experienceItemSchema } from "./wizard/experience/validation"
 import { expertiseItemSchema } from "./wizard/expertise/validation"
 import { informationSchema } from "./wizard/information/validation"
 import { photoSchema } from "./wizard/photo/validation"
-import { qualificationSchema } from "./wizard/qualifications/validation"
+import { qualificationsSchema } from "./wizard/qualifications/validation"
 
 // Re-export individual schemas for consumers (CSV import, onboarding, etc.)
 export { phoneNumberSchema } from "./wizard/contact/validation"
-export { qualificationSchema } from "./wizard/qualifications/validation"
+export { qualificationsSchema } from "./wizard/qualifications/validation"
 export { experienceItemSchema as experienceSchema } from "./wizard/experience/validation"
 export { expertiseItemSchema as subjectExpertiseSchema } from "./wizard/expertise/validation"
 
@@ -38,7 +38,7 @@ export const teacherCreateSchema = photoSchema
     contractStartDate: z.coerce.date().optional(),
     contractEndDate: z.coerce.date().optional(),
     // Nested arrays
-    qualifications: z.array(qualificationSchema).optional().default([]),
+    qualifications: z.array(qualificationsSchema).optional().default([]),
     experiences: z.array(experienceItemSchema).optional().default([]),
     subjectExpertise: z.array(expertiseItemSchema).optional().default([]),
   })
@@ -80,7 +80,7 @@ export const teacherUpdateSchema = informationSchema
       .optional(),
     contractStartDate: z.coerce.date().optional(),
     contractEndDate: z.coerce.date().optional(),
-    qualifications: z.array(qualificationSchema).optional(),
+    qualifications: z.array(qualificationsSchema).optional(),
     experiences: z.array(experienceItemSchema).optional(),
     subjectExpertise: z.array(expertiseItemSchema).optional(),
   })
