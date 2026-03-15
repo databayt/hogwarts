@@ -11,8 +11,6 @@ const nextConfig: NextConfig = {
   // Optimize package imports for tree-shaking
   experimental: {
     webpackMemoryOptimizations: true,
-    // Limit webpack to 1 CPU to reduce peak memory on 8GB Vercel Hobby
-    cpus: 1,
     optimizePackageImports: [
       "@assistant-ui/react",
       "@radix-ui/react-icons",
