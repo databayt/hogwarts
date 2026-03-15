@@ -8,7 +8,9 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import { getStepLabel } from "../labels"
 import { useExamGenerateWizard } from "../use-exam-generate-wizard"
 import { TemplateForm } from "./form"
 
@@ -18,6 +20,7 @@ export default function TemplateContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useExamGenerateWizard()
   const [isValid, setIsValid] = useState(false)
+  const { locale } = useLocale()
 
   return (
     <WizardStep
@@ -29,8 +32,8 @@ export default function TemplateContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Select Template"
-          description="Choose an exam template to generate from."
+          title={getStepLabel("template", "title", locale)}
+          description={getStepLabel("template", "description", locale)}
         />
         <TemplateForm
           ref={formRef}

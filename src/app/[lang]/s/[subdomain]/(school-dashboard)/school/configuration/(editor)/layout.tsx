@@ -119,13 +119,29 @@ export default async function EditorLayout({ children, params }: Props) {
         ].filter(Boolean)
         return parts.length > 0 ? parts.join(" · ") : null
       }
-      case "plan":
-        return `${school.planType} · ${school.maxStudents} students`
-      case "capacity":
-        return `${school.maxStudents} students, ${school.maxTeachers} teachers`
+      case "plan": {
+        if (!school.planType && !school.maxStudents) return null
+        const planParts = [
+          school.planType,
+          school.maxStudents ? `${school.maxStudents} students` : null,
+        ].filter(Boolean)
+        return planParts.join(" · ")
+      }
+      case "capacity": {
+        const capParts = [
+          school.maxStudents ? `${school.maxStudents} students` : null,
+          school.maxTeachers ? `${school.maxTeachers} teachers` : null,
+        ].filter(Boolean)
+        return capParts.length > 0 ? capParts.join(", ") : null
+      }
       case "price": {
         if (!school.tuitionFee) return null
-        return `${school.currency} ${Number(school.tuitionFee).toLocaleString()}/${school.paymentSchedule}`
+        const priceParts = [
+          school.currency,
+          Number(school.tuitionFee).toLocaleString(),
+          school.paymentSchedule ? `/${school.paymentSchedule}` : null,
+        ].filter(Boolean)
+        return priceParts.join(" ")
       }
       case "schedule":
         return `${yearCount} ${yearCount === 1 ? "year" : "years"}, ${termCount} ${termCount === 1 ? "term" : "terms"}`
@@ -178,7 +194,7 @@ export default async function EditorLayout({ children, params }: Props) {
           <ConfigSidebar lang={lang} sectionLinks={sectionLinks} />
           <div className="lg:col-span-2 lg:overflow-y-auto">
             <div className="flex h-full items-center justify-center">
-              {children}
+              <div className="w-full max-w-[400px]">{children}</div>
             </div>
           </div>
         </div>

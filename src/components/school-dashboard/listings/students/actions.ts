@@ -82,6 +82,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
+import { syncStudentGrades } from "@/lib/sync-student-grades"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -1869,6 +1870,37 @@ export async function getStudentAccessCodes(input: {
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to fetch access codes",
+    }
+  }
+}
+
+// ============================================================================
+// Bulk Grade Sync
+// ============================================================================
+
+/**
+ * Re-resolve yearLevel → academicGradeId for students imported before grades existed.
+ */
+export async function bulkSyncStudentGrades(): Promise<
+  ActionResponse<{ updated: number }>
+> {
+  try {
+    const session = await auth()
+    if (!session?.user) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const result = await syncStudentGrades(schoolId)
+
+    revalidatePath(STUDENTS_PATH)
+
+    return { success: true, data: result }
+  } catch (error) {
+    console.error("[bulkSyncStudentGrades] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to sync grades",
     }
   }
 }

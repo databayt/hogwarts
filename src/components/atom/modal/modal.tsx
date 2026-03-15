@@ -4,7 +4,9 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { useModal } from "@/components/atom/modal/context"
+import { Icons } from "@/components/icons"
 
 // Custom hook for managing body scroll
 function useBodyScroll(open: boolean) {
@@ -64,6 +66,17 @@ function Modal({ content, sm = false }: Props) {
                   : "flex h-screen w-full flex-col"
               }`}
             >
+              {/* Close button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute end-4 top-4 z-50 h-8 w-8 rounded-full"
+                onClick={closeModal}
+                aria-label="Close"
+              >
+                <Icons.x className="h-4 w-4" />
+              </Button>
+
               {/* Main content area - vertically centered with footer spacing */}
               <main
                 className={`${

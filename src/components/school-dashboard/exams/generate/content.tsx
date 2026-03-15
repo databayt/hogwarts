@@ -3,6 +3,7 @@
 
 import Link from "next/link"
 import {
+  AlertCircle,
   Clock,
   FileText,
   Hash,
@@ -15,6 +16,7 @@ import {
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -35,9 +37,14 @@ import { calculateTotalQuestions } from "./utils"
 interface Props {
   dictionary: Dictionary
   lang: Locale
+  error?: string
 }
 
-export default async function GenerateContent({ dictionary, lang }: Props) {
+export default async function GenerateContent({
+  dictionary,
+  lang,
+  error,
+}: Props) {
   const { schoolId } = await getTenantContext()
 
   let templates: {
@@ -138,6 +145,13 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-8">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       {/* Section 1: Templates Grid */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">

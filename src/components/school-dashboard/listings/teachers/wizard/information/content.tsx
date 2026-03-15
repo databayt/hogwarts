@@ -31,7 +31,7 @@ export default function InformationContent() {
   return (
     <WizardStep
       entityId={teacherId}
-      nextStep={`/teachers/add/${teacherId}/contact`}
+      nextStep={`/teachers/add/${teacherId}/expertise`}
       isValid={isValid}
       formRef={formRef}
       isLoading={isLoading}

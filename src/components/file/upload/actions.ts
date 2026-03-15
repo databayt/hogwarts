@@ -86,7 +86,17 @@ export async function uploadFile(
       where: { id: userId },
       select: { schoolId: true },
     })
-    const schoolId = user?.schoolId ?? undefined
+    let schoolId = user?.schoolId ?? undefined
+
+    // During onboarding, user.schoolId may not be set yet — fall back to
+    // looking up the school they created (createdByUserId is immutable/unique)
+    if (!schoolId) {
+      const ownedSchool = await db.school.findFirst({
+        where: { createdByUserId: userId },
+        select: { id: true },
+      })
+      schoolId = ownedSchool?.id
+    }
 
     if (!schoolId) {
       return {

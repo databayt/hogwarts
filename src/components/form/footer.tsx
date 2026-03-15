@@ -226,7 +226,7 @@ export function FormFooter({
     if (currentStepIndex > 0) {
       const prevStep = config.steps[currentStepIndex - 1]
       onStepChange?.(prevStep)
-      router.push(`${basePath}/${entityId}/${prevStep}`)
+      router.push(`/${locale}${basePath}/${entityId}/${prevStep}`)
     }
   }
 
@@ -242,14 +242,18 @@ export function FormFooter({
     }
 
     if (isLastStep) {
-      router.push(finalDestination)
+      // finalDestination may already include locale prefix (from wizard-layout)
+      const dest = finalDestination.startsWith(`/${locale}`)
+        ? finalDestination
+        : `/${locale}${finalDestination}`
+      router.push(dest)
       return
     }
 
     if (currentStepIndex < config.steps.length - 1) {
       const nextStep = config.steps[currentStepIndex + 1]
       onStepChange?.(nextStep)
-      router.push(`${basePath}/${entityId}/${nextStep}`)
+      router.push(`/${locale}${basePath}/${entityId}/${nextStep}`)
     }
   }
 

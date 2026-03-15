@@ -4,30 +4,27 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useState,
   useTransition,
 } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Plus, Trash2 } from "lucide-react"
-import { useFieldArray, useForm } from "react-hook-form"
 
-import { Button } from "@/components/ui/button"
-import { Form } from "@/components/ui/form"
+import { cn } from "@/lib/utils"
 import { ErrorToast } from "@/components/atom/toast"
-import { SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
-import { EXPERTISE_LEVEL_OPTIONS } from "@/components/school-dashboard/listings/teachers/config"
 
 import { getSubjectsForExpertise, updateTeacherExpertise } from "./actions"
-import { expertiseSchema, type ExpertiseFormData } from "./validation"
+import type { ExpertiseFormData } from "./validation"
 
 interface SubjectOption {
   id: string
   subjectName: string
   department: { id: string; departmentName: string } | null
 }
+
+type ExpertiseLevel = "PRIMARY" | "SECONDARY" | null
 
 interface ExpertiseFormProps {
   teacherId: string
@@ -39,19 +36,21 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
   ({ teacherId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const [subjects, setSubjects] = useState<SubjectOption[]>([])
+    // Map: subjectId → "PRIMARY" | "SECONDARY" | null (not selected)
+    const [selections, setSelections] = useState<
+      Record<string, ExpertiseLevel>
+    >({})
 
-    const form = useForm<ExpertiseFormData>({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(expertiseSchema) as any,
-      defaultValues: {
-        subjectExpertise: initialData?.subjectExpertise || [],
-      },
-    })
-
-    const { fields, append, remove } = useFieldArray({
-      control: form.control,
-      name: "subjectExpertise",
-    })
+    // Initialize from initialData
+    useEffect(() => {
+      if (initialData?.subjectExpertise) {
+        const init: Record<string, ExpertiseLevel> = {}
+        for (const item of initialData.subjectExpertise) {
+          init[item.subjectId] = item.expertiseLevel as ExpertiseLevel
+        }
+        setSelections(init)
+      }
+    }, [initialData])
 
     // Fetch subjects on mount
     useEffect(() => {
@@ -69,18 +68,36 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
       onValidChange?.(true)
     }, [onValidChange])
 
+    const toggleSubject = useCallback(
+      (subjectId: string, level: "PRIMARY" | "SECONDARY") => {
+        setSelections((prev) => {
+          const current = prev[subjectId]
+          if (current === level) {
+            // Deselect
+            const next = { ...prev }
+            delete next[subjectId]
+            return next
+          }
+          return { ...prev, [subjectId]: level }
+        })
+      },
+      []
+    )
+
     useImperativeHandle(ref, () => ({
       saveAndNext: () =>
         new Promise<void>((resolve, reject) => {
           startTransition(async () => {
             try {
-              const valid = await form.trigger()
-              if (!valid) {
-                reject(new Error("Validation failed"))
-                return
-              }
-              const data = form.getValues()
-              const result = await updateTeacherExpertise(teacherId, data)
+              const subjectExpertise = Object.entries(selections)
+                .filter(([, level]) => level !== null)
+                .map(([subjectId, expertiseLevel]) => ({
+                  subjectId,
+                  expertiseLevel: expertiseLevel as "PRIMARY" | "SECONDARY",
+                }))
+              const result = await updateTeacherExpertise(teacherId, {
+                subjectExpertise,
+              })
               if (!result.success) {
                 ErrorToast(result.error || "Failed to save")
                 reject(new Error(result.error))
@@ -96,67 +113,61 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
         }),
     }))
 
-    const subjectOptions = subjects.map((s) => ({
-      label: s.subjectName,
-      value: s.id,
-    }))
-
     return (
-      <Form {...form}>
-        <form className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium">Subject Expertise</h4>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({
-                    subjectId: "",
-                    expertiseLevel: "PRIMARY",
-                  })
-                }
-                disabled={isPending}
-              >
-                <Plus className="me-1 h-4 w-4" />
-                Add Subject
-              </Button>
-            </div>
-
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="bg-muted/50 space-y-4 rounded-lg border p-4"
-              >
-                <div className="flex items-start justify-between">
-                  <SelectField
-                    name={`subjectExpertise.${index}.subjectId`}
-                    label="Subject"
-                    options={subjectOptions}
-                    disabled={isPending}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => remove(index)}
-                    disabled={isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                <SelectField
-                  name={`subjectExpertise.${index}.expertiseLevel`}
-                  label="Expertise Level"
-                  options={[...EXPERTISE_LEVEL_OPTIONS]}
+      <div className="space-y-4">
+        {subjects.length === 0 && !isPending && (
+          <p className="text-muted-foreground text-sm">
+            No subjects found. Add subjects to your school first.
+          </p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          {subjects.map((subject) => {
+            const level = selections[subject.id]
+            return (
+              <div key={subject.id} className="flex gap-1">
+                <button
+                  type="button"
                   disabled={isPending}
-                />
+                  onClick={() => toggleSubject(subject.id, "PRIMARY")}
+                  className={cn(
+                    "rounded-s-full border px-3 py-1.5 text-sm transition-colors",
+                    level === "PRIMARY"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "hover:bg-muted border-border"
+                  )}
+                >
+                  {subject.subjectName}
+                </button>
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => toggleSubject(subject.id, "SECONDARY")}
+                  className={cn(
+                    "rounded-e-full border px-3 py-1.5 text-sm transition-colors",
+                    level === "SECONDARY"
+                      ? "bg-secondary text-secondary-foreground border-secondary"
+                      : "hover:bg-muted border-border"
+                  )}
+                >
+                  2nd
+                </button>
               </div>
-            ))}
+            )
+          })}
+        </div>
+        {subjects.length > 0 && (
+          <div className="text-muted-foreground flex gap-4 text-xs">
+            <span className="flex items-center gap-1">
+              <span className="bg-primary inline-block h-2 w-2 rounded-full" />
+              Primary
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="bg-secondary inline-block h-2 w-2 rounded-full" />
+              Secondary
+            </span>
           </div>
-        </form>
-      </Form>
+        )}
+      </div>
     )
   }
 )

@@ -8,7 +8,9 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import { getStepLabel } from "../labels"
 import { useExamGenerateWizard } from "../use-exam-generate-wizard"
 import { PaperConfigForm } from "./form"
 
@@ -18,6 +20,7 @@ export default function PaperConfigContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useExamGenerateWizard()
   const [isValid, setIsValid] = useState(true) // Optional step
+  const { locale } = useLocale()
 
   return (
     <WizardStep
@@ -29,8 +32,8 @@ export default function PaperConfigContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Paper Configuration"
-          description="Configure the exam paper template, layout, and print settings."
+          title={getStepLabel("paper-config", "title", locale)}
+          description={getStepLabel("paper-config", "description", locale)}
         />
         <PaperConfigForm
           ref={formRef}

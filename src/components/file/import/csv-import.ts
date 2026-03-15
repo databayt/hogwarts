@@ -459,6 +459,7 @@ class CsvImportService {
                     : new Date(),
                   academicGradeId: academicGradeId || undefined,
                   sectionId: sectionId || undefined,
+                  yearLevel: r.validated.yearLevel || undefined,
                   lang: detectedLang,
                   wizardStep,
                 }

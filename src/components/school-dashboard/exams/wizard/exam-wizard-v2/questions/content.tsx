@@ -8,7 +8,9 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import { getStepLabel } from "../labels"
 import { useExamGenerateWizard } from "../use-exam-generate-wizard"
 import { QuestionsForm } from "./form"
 
@@ -18,6 +20,7 @@ export default function QuestionsContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useExamGenerateWizard()
   const [isValid, setIsValid] = useState(false)
+  const { locale } = useLocale()
 
   return (
     <WizardStep
@@ -29,8 +32,8 @@ export default function QuestionsContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Select Questions"
-          description="Choose questions from the question bank to include in the exam."
+          title={getStepLabel("questions", "title", locale)}
+          description={getStepLabel("questions", "description", locale)}
         />
         <QuestionsForm
           ref={formRef}

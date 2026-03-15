@@ -26,7 +26,6 @@ export default function ExamGenerateWizardLayout({
       onStepChange={(entityId, step) => {
         updateExamGenerateWizardStep(entityId, step)
       }}
-      finalLabel="Generate Exam"
     >
       {children}
     </WizardLayout>

@@ -20,6 +20,11 @@ export interface TeacherWizardData {
   employmentType: string
   contractStartDate: Date | null
   contractEndDate: Date | null
+  currentAddress: string | null
+  city: string | null
+  state: string | null
+  postalCode: string | null
+  country: string | null
   wizardStep: string | null
   phoneNumbers: {
     id: string

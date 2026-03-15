@@ -33,7 +33,7 @@ export default function ContactContent() {
   return (
     <WizardStep
       entityId={teacherId}
-      nextStep={`/teachers/add/${teacherId}/employment`}
+      nextStep={`/teachers/add/${teacherId}/location`}
       isValid={isValid}
       formRef={formRef}
       isLoading={isLoading}
@@ -52,15 +52,8 @@ export default function ContactContent() {
                   emailAddress: data.emailAddress.endsWith("@draft.internal")
                     ? ""
                     : data.emailAddress,
-                  phoneNumbers: data.phoneNumbers.map((p) => ({
-                    phoneType: p.phoneType as
-                      | "mobile"
-                      | "home"
-                      | "work"
-                      | "emergency",
-                    phoneNumber: p.phoneNumber,
-                    isPrimary: p.isPrimary,
-                  })),
+                  phone1: data.phoneNumbers[0]?.phoneNumber || "",
+                  phone2: data.phoneNumbers[1]?.phoneNumber || "",
                 }
               : undefined
           }

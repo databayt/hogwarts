@@ -34,11 +34,8 @@ export async function getTeacherContact(
         emailAddress: teacher.emailAddress.endsWith("@draft.internal")
           ? ""
           : teacher.emailAddress,
-        phoneNumbers: teacher.phoneNumbers.map((p) => ({
-          phoneType: p.phoneType as "mobile" | "home" | "work" | "emergency",
-          phoneNumber: p.phoneNumber,
-          isPrimary: p.isPrimary,
-        })),
+        phone1: teacher.phoneNumbers[0]?.phoneNumber || "",
+        phone2: teacher.phoneNumbers[1]?.phoneNumber || "",
       },
     }
   } catch (error) {
@@ -74,28 +71,42 @@ export async function updateTeacherContact(
       }
     }
 
+    const phoneData: {
+      teacherId: string
+      schoolId: string
+      phoneType: string
+      phoneNumber: string
+      isPrimary: boolean
+    }[] = []
+    if (parsed.phone1) {
+      phoneData.push({
+        teacherId,
+        schoolId,
+        phoneType: "mobile",
+        phoneNumber: parsed.phone1,
+        isPrimary: true,
+      })
+    }
+    if (parsed.phone2) {
+      phoneData.push({
+        teacherId,
+        schoolId,
+        phoneType: "mobile",
+        phoneNumber: parsed.phone2,
+        isPrimary: false,
+      })
+    }
+
     await db.$transaction([
-      // Update email
       db.teacher.updateMany({
         where: { id: teacherId, schoolId },
         data: { emailAddress: parsed.emailAddress },
       }),
-      // Delete + recreate phone numbers
       db.teacherPhoneNumber.deleteMany({
         where: { teacherId, schoolId },
       }),
-      ...(parsed.phoneNumbers.length > 0
-        ? [
-            db.teacherPhoneNumber.createMany({
-              data: parsed.phoneNumbers.map((p) => ({
-                teacherId,
-                schoolId,
-                phoneType: p.phoneType,
-                phoneNumber: p.phoneNumber,
-                isPrimary: p.isPrimary,
-              })),
-            }),
-          ]
+      ...(phoneData.length > 0
+        ? [db.teacherPhoneNumber.createMany({ data: phoneData })]
         : []),
     ])
 

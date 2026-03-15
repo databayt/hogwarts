@@ -3669,10 +3669,7 @@ export async function generateTimetablePreview(input: {
       subjectName,
       hoursPerWeek,
       preferredTeacherIds: subjectTeachers.get(c.subjectId || "") || [],
-      requiresLab:
-        subjectName.toLowerCase().includes("lab") ||
-        subjectName.toLowerCase().includes("science") ||
-        false,
+      requiresLab: subjectName.toLowerCase().includes("lab"),
       yearLevelId: "",
       studentCount: c._count.studentClasses,
     }

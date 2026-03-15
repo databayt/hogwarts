@@ -11,13 +11,16 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { WizardStep } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { FullPaperMockup } from "../../atoms"
 import { saveTemplate } from "../actions"
+import { getStepLabel, QUESTION_TYPE_LABELS, t } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { completeTemplateWizard } from "../wizard-actions"
 
 export default function PreviewContent() {
+  const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
   const router = useRouter()
@@ -106,9 +109,11 @@ export default function PreviewContent() {
     >
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Review & Preview</h1>
+          <h1 className="text-3xl font-bold">
+            {getStepLabel("preview", "title", locale)}
+          </h1>
           <p className="text-muted-foreground text-sm">
-            Review your template settings before saving.
+            {getStepLabel("preview", "description", locale)}
           </p>
         </div>
 
@@ -119,24 +124,34 @@ export default function PreviewContent() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Basic Info
+                    {t("basicInfo", locale)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Name</span>
+                    <span className="text-muted-foreground">
+                      {t("name", locale)}
+                    </span>
                     <span className="font-medium">{data.name || "—"}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Duration</span>
-                    <span>{data.duration} min</span>
+                    <span className="text-muted-foreground">
+                      {t("duration", locale)}
+                    </span>
+                    <span>
+                      {data.duration} {t("min", locale)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Marks</span>
+                    <span className="text-muted-foreground">
+                      {t("marks", locale)}
+                    </span>
                     <span>{data.totalMarks}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Questions</span>
+                    <span className="text-muted-foreground">
+                      {t("questions", locale)}
+                    </span>
                     <span>{totalQuestions}</span>
                   </div>
                 </CardContent>
@@ -145,30 +160,38 @@ export default function PreviewContent() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Paper Layout
+                    {t("paperLayout", locale)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Header</span>
+                    <span className="text-muted-foreground">
+                      {t("header", locale)}
+                    </span>
                     <Badge variant="secondary" className="text-xs">
                       {data.headerVariant}
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Footer</span>
+                    <span className="text-muted-foreground">
+                      {t("footer", locale)}
+                    </span>
                     <Badge variant="secondary" className="text-xs">
                       {data.footerVariant}
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Student Info</span>
+                    <span className="text-muted-foreground">
+                      {t("studentInfo", locale)}
+                    </span>
                     <Badge variant="secondary" className="text-xs">
                       {data.studentInfoVariant}
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Instructions</span>
+                    <span className="text-muted-foreground">
+                      {t("instructions", locale)}
+                    </span>
                     <Badge variant="secondary" className="text-xs">
                       {data.instructionsVariant}
                     </Badge>
@@ -178,15 +201,21 @@ export default function PreviewContent() {
 
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Scoring</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    {t("scoring", locale)}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Passing</span>
+                    <span className="text-muted-foreground">
+                      {t("passing", locale)}
+                    </span>
                     <span>{data.passingScore}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Grades</span>
+                    <span className="text-muted-foreground">
+                      {t("grades", locale)}
+                    </span>
                     <span>{data.gradeBoundaries.length}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
@@ -207,22 +236,28 @@ export default function PreviewContent() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Print Settings
+                    {t("printSettings", locale)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Size</span>
+                    <span className="text-muted-foreground">
+                      {t("size", locale)}
+                    </span>
                     <span>{data.pageSize}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Orientation</span>
+                    <span className="text-muted-foreground">
+                      {t("orientation", locale)}
+                    </span>
                     <Badge variant="secondary" className="text-xs">
                       {data.orientation}
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Layout</span>
+                    <span className="text-muted-foreground">
+                      {t("layout", locale)}
+                    </span>
                     <Badge variant="secondary" className="text-xs">
                       {data.layout.replace(/_/g, " ")}
                     </Badge>
@@ -235,7 +270,7 @@ export default function PreviewContent() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Question Distribution
+                  {t("questionDistribution", locale)}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -245,7 +280,11 @@ export default function PreviewContent() {
                       key={qt.type}
                       className="flex items-center justify-between text-sm"
                     >
-                      <span>{qt.type.replace(/_/g, " ")}</span>
+                      <span>
+                        {QUESTION_TYPE_LABELS[qt.type]?.[
+                          locale === "ar" ? "ar" : "en"
+                        ] || qt.type.replace(/_/g, " ")}
+                      </span>
                       <div className="flex gap-2">
                         <Badge variant="outline" className="text-xs">
                           E:{qt.difficulty.EASY}
@@ -267,7 +306,9 @@ export default function PreviewContent() {
 
           {/* Paper mockup */}
           <div className="hidden lg:block">
-            <p className="text-muted-foreground mb-2 text-xs">Preview</p>
+            <p className="text-muted-foreground mb-2 text-xs">
+              {t("preview", locale)}
+            </p>
             <FullPaperMockup
               headerVariant={data.headerVariant}
               studentInfoVariant={data.studentInfoVariant}
@@ -286,7 +327,7 @@ export default function PreviewContent() {
           ) : (
             <Check className="me-2 h-4 w-4" />
           )}
-          Save Template
+          {t("saveTemplate", locale)}
         </Button>
       </div>
     </WizardStep>

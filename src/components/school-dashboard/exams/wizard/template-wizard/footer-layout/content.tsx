@@ -8,11 +8,14 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { FooterLayoutForm } from "./form"
 
 export default function FooterLayoutContent() {
+  const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
@@ -29,8 +32,8 @@ export default function FooterLayoutContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Footer"
-          description="Choose a footer design for your exam paper."
+          title={getStepLabel("footer-layout", "title", locale)}
+          description={getStepLabel("footer-layout", "description", locale)}
         />
         <FooterLayoutForm
           ref={formRef}

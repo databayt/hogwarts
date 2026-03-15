@@ -8,19 +8,11 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import { getStepLabel, QUESTION_TYPE_LABELS } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { DifficultyForm } from "./form"
-
-const QUESTION_TYPE_LABELS: Record<string, string> = {
-  MULTIPLE_CHOICE: "Multiple Choice",
-  TRUE_FALSE: "True / False",
-  SHORT_ANSWER: "Short Answer",
-  ESSAY: "Essay",
-  FILL_BLANK: "Fill in the Blank",
-  MATCHING: "Matching",
-  ORDERING: "Ordering",
-}
 
 /**
  * Convert slug form ("multiple-choice") back to enum form ("MULTIPLE_CHOICE").
@@ -37,6 +29,7 @@ function enumToSlug(enumVal: string): string {
 }
 
 export default function DifficultyContent() {
+  const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
   const questionTypeSlug = params.questionType as string
@@ -67,7 +60,9 @@ export default function DifficultyContent() {
     return `/exams/template/add/${templateId}/scoring`
   }, [data, questionType, templateId])
 
-  const typeLabel = QUESTION_TYPE_LABELS[questionType] || questionType
+  const typeLabel =
+    QUESTION_TYPE_LABELS[questionType]?.[locale === "ar" ? "ar" : "en"] ||
+    questionType
   const totalCount = qtConfig?.count ?? 0
   const initialDifficulty = useMemo(() => {
     if (data?.distribution?.[questionType]) {
@@ -93,8 +88,8 @@ export default function DifficultyContent() {
     >
       <FormLayout>
         <FormHeading
-          title={`${typeLabel} Difficulty`}
-          description="Set the difficulty distribution for this question type."
+          title={`${typeLabel} ${getStepLabel("difficulty", "title", locale)}`}
+          description={getStepLabel("difficulty", "description", locale)}
         />
         <DifficultyForm
           ref={formRef}

@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
+import { usePlatformView } from "@/hooks/use-platform-view"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
 import {
@@ -43,6 +44,7 @@ function ClassroomsTableInner({
   const { openModal } = useModal()
   const [isPending, startTransition] = useTransition()
   const [searchValue, setSearchValue] = useState("")
+  const { view, toggleView } = usePlatformView({ defaultView: "table" })
   const { dictionary } = useDictionary()
   const d = dictionary?.school?.classrooms as Record<string, string> | undefined
 
@@ -117,8 +119,8 @@ function ClassroomsTableInner({
     <>
       <PlatformToolbar
         table={table}
-        view="table"
-        onToggleView={() => {}}
+        view={view}
+        onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={d?.search || "Search rooms..."}

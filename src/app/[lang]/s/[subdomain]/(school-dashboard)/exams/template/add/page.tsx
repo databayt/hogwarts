@@ -13,7 +13,10 @@ export default async function ExamTemplateAddPage({
   const result = await createDraftTemplate()
 
   if (!result.success || !result.data) {
-    redirect(`/${lang}/exams/generate`)
+    const error = encodeURIComponent(
+      result.error || "Failed to create template"
+    )
+    redirect(`/${lang}/exams/generate?error=${error}`)
   }
 
   redirect(`/${lang}/exams/template/add/${result.data.id}/gallery`)

@@ -26,7 +26,8 @@ export default async function Page({ params }: Props) {
   const result = await createDraftGeneratedExam()
 
   if (!result.success || !result.data) {
-    redirect(`/${lang}/exams/generate`)
+    const error = encodeURIComponent(result.error || "Failed to create exam")
+    redirect(`/${lang}/exams/generate?error=${error}`)
   }
 
   redirect(`/${lang}/exams/generate/add/${result.data.id}/template`)

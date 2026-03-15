@@ -43,11 +43,9 @@ export function ConfigSidebar({ lang, sectionLinks }: ConfigSidebarProps) {
                 <CardTitle className="text-sm capitalize">
                   {link.title}
                 </CardTitle>
-                {link.description && (
-                  <p className="text-muted-foreground text-xs">
-                    {link.description}
-                  </p>
-                )}
+                <p className="text-muted-foreground text-xs">
+                  {link.description || "Not set"}
+                </p>
               </CardHeader>
             </Card>
           )

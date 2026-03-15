@@ -31,7 +31,7 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
       defaultValues: {
         givenName: initialData?.givenName || "",
         surname: initialData?.surname || "",
-        gender: initialData?.gender,
+        gender: initialData?.gender || "MALE",
         birthDate: initialData?.birthDate,
         profilePhotoUrl: initialData?.profilePhotoUrl,
       },
@@ -89,17 +89,19 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
             required
             disabled={isPending}
           />
-          <SelectField
-            name="gender"
-            label="Gender"
-            options={[...GENDER_OPTIONS]}
-            disabled={isPending}
-          />
-          <DateField
-            name="birthDate"
-            label="Date of Birth"
-            disabled={isPending}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <SelectField
+              name="gender"
+              label="Gender"
+              options={[...GENDER_OPTIONS]}
+              disabled={isPending}
+            />
+            <DateField
+              name="birthDate"
+              label="Date of Birth"
+              disabled={isPending}
+            />
+          </div>
         </form>
       </Form>
     )

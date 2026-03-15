@@ -17,6 +17,7 @@ import {
 } from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
 import { generateUniqueJoinCode } from "@/lib/join-code"
+import { syncStudentGrades } from "@/lib/sync-student-grades"
 
 import { requireSchoolOwnership } from "../auth-helpers"
 
@@ -180,6 +181,20 @@ async function provisionSchoolDefaults(
       where: { id: schoolId },
       data: { joinCode },
     })
+  }
+
+  // Re-resolve student grades now that AcademicGrade records exist
+  const syncResult = await syncStudentGrades(schoolId).catch((err) => {
+    console.error(
+      `[provisionSchoolDefaults] Grade sync failed for ${schoolId}:`,
+      err
+    )
+    return { updated: 0 }
+  })
+  if (syncResult.updated > 0) {
+    console.log(
+      `[provisionSchoolDefaults] Synced grades for ${syncResult.updated} students`
+    )
   }
 
   console.log(

@@ -106,7 +106,7 @@ export async function createDraftTeacher(): Promise<
         givenName: "",
         surname: "",
         emailAddress: draftEmail,
-        wizardStep: "photo",
+        wizardStep: "attachments",
       },
     })
 

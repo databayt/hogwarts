@@ -89,18 +89,22 @@ export const EmploymentForm = forwardRef<WizardFormRef, EmploymentFormProps>(
             label="Joining Date"
             disabled={isPending}
           />
-          <SelectField
-            name="employmentStatus"
-            label="Employment Status"
-            options={[...EMPLOYMENT_STATUS_OPTIONS]}
-            disabled={isPending}
-          />
-          <SelectField
-            name="employmentType"
-            label="Employment Type"
-            options={[...EMPLOYMENT_TYPE_OPTIONS]}
-            disabled={isPending}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <SelectField
+              name="employmentStatus"
+              label="Employment Status"
+              options={[...EMPLOYMENT_STATUS_OPTIONS]}
+              disabled={isPending}
+              className="w-full"
+            />
+            <SelectField
+              name="employmentType"
+              label="Employment Type"
+              options={[...EMPLOYMENT_TYPE_OPTIONS]}
+              disabled={isPending}
+              className="w-full"
+            />
+          </div>
           {employmentType === "CONTRACT" && (
             <>
               <DateField

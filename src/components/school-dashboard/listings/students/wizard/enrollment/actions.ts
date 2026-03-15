@@ -9,6 +9,56 @@ import { getTenantContext } from "@/lib/tenant-context"
 
 import { enrollmentSchema, type EnrollmentFormData } from "./validation"
 
+export async function getGradeOptions(): Promise<
+  ActionResponse<{ value: string; label: string }[]>
+> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return { success: false, error: "Missing school context" }
+
+    const grades = await db.academicGrade.findMany({
+      where: { schoolId },
+      select: { id: true, name: true },
+      orderBy: { gradeNumber: "asc" },
+    })
+
+    return {
+      success: true,
+      data: grades.map((g) => ({ value: g.id, label: g.name })),
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load grades",
+    }
+  }
+}
+
+export async function getSectionOptions(
+  gradeId: string
+): Promise<ActionResponse<{ value: string; label: string }[]>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return { success: false, error: "Missing school context" }
+
+    const sections = await db.section.findMany({
+      where: { schoolId, gradeId },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    })
+
+    return {
+      success: true,
+      data: sections.map((s) => ({ value: s.id, label: s.name })),
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load sections",
+    }
+  }
+}
+
 export async function getStudentEnrollment(
   studentId: string
 ): Promise<ActionResponse<EnrollmentFormData>> {

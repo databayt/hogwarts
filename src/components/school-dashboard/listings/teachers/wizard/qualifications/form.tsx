@@ -4,18 +4,32 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Plus, Trash2 } from "lucide-react"
-import { useFieldArray, useForm } from "react-hook-form"
+import {
+  Award,
+  FileText,
+  FolderOpen,
+  GraduationCap,
+  IdCard,
+  ScrollText,
+} from "lucide-react"
+import { useForm } from "react-hook-form"
 
-import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import { DateField, InputField, SelectField } from "@/components/form"
+import { InputField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
-import { QUALIFICATION_TYPE_OPTIONS } from "@/components/school-dashboard/listings/teachers/config"
 
 import { updateTeacherQualifications } from "./actions"
 import { qualificationsSchema, type QualificationsFormData } from "./validation"
+
+const DOCUMENT_CATEGORIES = [
+  { key: "degrees", label: "Degrees", icon: GraduationCap },
+  { key: "certifications", label: "Certifications", icon: Award },
+  { key: "cv", label: "CV", icon: FileText },
+  { key: "id", label: "ID", icon: IdCard },
+  { key: "licenses", label: "Licenses", icon: ScrollText },
+  { key: "other", label: "Other", icon: FolderOpen },
+] as const
 
 interface QualificationsFormProps {
   teacherId: string
@@ -33,13 +47,13 @@ export const QualificationsForm = forwardRef<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(qualificationsSchema) as any,
     defaultValues: {
-      qualifications: initialData?.qualifications || [],
+      degrees: initialData?.degrees || "",
+      certifications: initialData?.certifications || "",
+      cv: initialData?.cv || "",
+      id: initialData?.id || "",
+      licenses: initialData?.licenses || "",
+      other: initialData?.other || "",
     },
-  })
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "qualifications",
   })
 
   // Qualifications step is optional, always valid
@@ -76,87 +90,22 @@ export const QualificationsForm = forwardRef<
 
   return (
     <Form {...form}>
-      <form className="space-y-6">
-        {fields.map((field, index) => (
+      <form className="grid grid-cols-3 gap-4">
+        {DOCUMENT_CATEGORIES.map(({ key, label, icon: Icon }) => (
           <div
-            key={field.id}
-            className="relative space-y-4 rounded-lg border p-4"
+            key={key}
+            className="flex flex-col items-center gap-2 rounded-lg border p-4"
           >
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Qualification {index + 1}</p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => remove(index)}
-                disabled={isPending}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-            <SelectField
-              name={`qualifications.${index}.qualificationType`}
-              label="Type"
-              options={[...QUALIFICATION_TYPE_OPTIONS]}
-              disabled={isPending}
-            />
+            <Icon className="text-muted-foreground h-8 w-8" />
+            <p className="text-sm font-medium">{label}</p>
             <InputField
-              name={`qualifications.${index}.name`}
-              label="Qualification Name"
-              placeholder="e.g., Bachelor of Science"
-              disabled={isPending}
-            />
-            <InputField
-              name={`qualifications.${index}.institution`}
-              label="Institution"
-              placeholder="e.g., University of Khartoum"
-              disabled={isPending}
-            />
-            <InputField
-              name={`qualifications.${index}.major`}
-              label="Major / Field of Study"
-              placeholder="e.g., Mathematics"
-              disabled={isPending}
-            />
-            <DateField
-              name={`qualifications.${index}.dateObtained`}
-              label="Date Obtained"
-              disabled={isPending}
-            />
-            <DateField
-              name={`qualifications.${index}.expiryDate`}
-              label="Expiry Date"
-              disabled={isPending}
-            />
-            <InputField
-              name={`qualifications.${index}.licenseNumber`}
-              label="License Number"
-              placeholder="e.g., LIC-12345"
+              name={key}
+              label=""
+              placeholder="Upload or enter URL"
               disabled={isPending}
             />
           </div>
         ))}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() =>
-            append({
-              qualificationType: "DEGREE",
-              name: "",
-              institution: "",
-              major: "",
-              dateObtained: undefined,
-              expiryDate: undefined,
-              licenseNumber: "",
-              documentUrl: "",
-            })
-          }
-          disabled={isPending}
-          className="w-full"
-        >
-          <Plus className="me-2 h-4 w-4" />
-          Add Qualification
-        </Button>
       </form>
     </Form>
   )

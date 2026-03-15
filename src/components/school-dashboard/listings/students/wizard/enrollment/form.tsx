@@ -2,7 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useImperativeHandle, useTransition } from "react"
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+  useTransition,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -12,7 +18,11 @@ import { DateField, InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { updateStudentEnrollment } from "./actions"
+import {
+  getGradeOptions,
+  getSectionOptions,
+  updateStudentEnrollment,
+} from "./actions"
 import { enrollmentSchema, type EnrollmentFormData } from "./validation"
 
 interface EnrollmentFormProps {
@@ -54,6 +64,13 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
       { label: t?.typeOptions?.exchange || "Exchange", value: "EXCHANGE" },
     ]
 
+    const [gradeOptions, setGradeOptions] = useState<
+      { value: string; label: string }[]
+    >([])
+    const [sectionOptions, setSectionOptions] = useState<
+      { value: string; label: string }[]
+    >([])
+
     const form = useForm<EnrollmentFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       resolver: zodResolver(enrollmentSchema) as any,
@@ -67,6 +84,35 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
         sectionId: initialData?.sectionId || "",
       },
     })
+
+    const selectedGradeId = form.watch("academicGradeId")
+
+    // Fetch grades on mount
+    useEffect(() => {
+      getGradeOptions().then((res) => {
+        if (res.success && res.data) setGradeOptions(res.data)
+      })
+    }, [])
+
+    // Fetch sections when grade changes (cascading)
+    useEffect(() => {
+      if (!selectedGradeId) {
+        setSectionOptions([])
+        return
+      }
+      getSectionOptions(selectedGradeId).then((res) => {
+        if (res.success && res.data) setSectionOptions(res.data)
+      })
+    }, [selectedGradeId])
+
+    // Reset sectionId when grade changes (skip on initial mount)
+    const gradeRef = React.useRef(initialData?.academicGradeId)
+    useEffect(() => {
+      if (gradeRef.current !== selectedGradeId) {
+        form.setValue("sectionId", "")
+      }
+      gradeRef.current = selectedGradeId
+    }, [selectedGradeId, form])
 
     // Enrollment step is always valid (all fields optional)
     React.useEffect(() => {
@@ -141,19 +187,17 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
             placeholder={t?.categoryPlaceholder || "Enter category"}
             disabled={isPending}
           />
-          <InputField
+          <SelectField
             name="academicGradeId"
-            label={t?.academicGradeId || "Academic Grade ID"}
-            placeholder={
-              t?.academicGradeIdPlaceholder || "Enter academic grade ID"
-            }
+            label={t?.academicGradeId || "Grade"}
+            options={gradeOptions}
             disabled={isPending}
           />
-          <InputField
+          <SelectField
             name="sectionId"
-            label={t?.sectionId || "Section ID"}
-            placeholder={t?.sectionIdPlaceholder || "Enter section ID"}
-            disabled={isPending}
+            label={t?.sectionId || "Section"}
+            options={sectionOptions}
+            disabled={isPending || !selectedGradeId}
           />
         </form>
       </Form>

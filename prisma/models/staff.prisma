@@ -20,6 +20,13 @@ model Teacher {
   profilePhotoUrl   String?
   wizardStep        String? // null = complete, non-null = current wizard step slug
 
+  // Location fields
+  currentAddress String?
+  city           String?
+  state          String?
+  postalCode     String?
+  country        String?
+
   school             School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classes            Class[]
   homeroomSections   Section[]            @relation("HomeroomTeacher")

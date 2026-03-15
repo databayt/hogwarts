@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import { Button } from "@/components/ui/button"
 import { SeeMore } from "@/components/atom/see-more"
 import {
   confirmDeleteDialog,
@@ -27,7 +28,12 @@ import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { AccessCodeDialog } from "./access-code-dialog"
-import { deleteStudent, getStudents, getStudentsCSV } from "./actions"
+import {
+  bulkSyncStudentGrades,
+  deleteStudent,
+  getStudents,
+  getStudentsCSV,
+} from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
 import { createDraftStudent } from "./wizard/actions"
 
@@ -221,11 +227,37 @@ function StudentsTableInner({
     [optimisticRemove, refresh, lang]
   )
 
+  // Sync grades for students with yearLevel but no academicGradeId
+  const [isSyncing, setIsSyncing] = useState(false)
+  const hasUnassigned = data.some((s) => s.status === "unassigned")
+
+  const handleSyncGrades = useCallback(async () => {
+    setIsSyncing(true)
+    try {
+      const result = await bulkSyncStudentGrades()
+      if (result.success && result.data) {
+        const count = result.data.updated
+        if (count > 0) {
+          refresh()
+        }
+      } else {
+        ErrorToast(
+          ("error" in result ? result.error : undefined) ||
+            "Failed to sync grades"
+        )
+      }
+    } catch {
+      ErrorToast("Failed to sync grades")
+    } finally {
+      setIsSyncing(false)
+    }
+  }, [refresh])
+
   // Handle create via wizard
   const handleCreate = useCallback(async () => {
     const result = await createDraftStudent()
     if (result.success && result.data) {
-      router.push(`/${lang}/students/add/${result.data.id}/personal`)
+      router.push(`/${lang}/students/add/${result.data.id}/attachments`)
     } else {
       ErrorToast(
         result.error ||
@@ -238,7 +270,7 @@ function StudentsTableInner({
   // Handle edit
   const handleEdit = useCallback(
     (id: string) => {
-      router.push(`/${lang}/students/add/${id}/personal`)
+      router.push(`/${lang}/students/add/${id}/attachments`)
     },
     [router, lang]
   )
@@ -294,6 +326,18 @@ function StudentsTableInner({
         getCSV={handleExportCSV}
         entityName="students"
         translations={toolbarTranslations}
+        additionalActions={
+          hasUnassigned ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncGrades}
+              disabled={isSyncing}
+            >
+              {isSyncing ? "Syncing..." : "Sync Grades"}
+            </Button>
+          ) : undefined
+        }
       />
 
       {view === "table" ? (

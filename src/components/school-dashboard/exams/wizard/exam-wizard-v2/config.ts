@@ -12,6 +12,11 @@ export const EXAM_GENERATE_WIZARD_CONFIG: WizardConfig = {
     3: ["paper-config", "preview"],
   },
   groupLabels: ["Setup", "Questions", "Finalize"],
+  i18nGroupLabels: {
+    ar: ["الإعداد", "الأسئلة", "إنهاء"],
+    en: ["Setup", "Questions", "Finalize"],
+  },
   requiredSteps: ["template", "exam", "questions"],
   finalLabel: "Generate Exam",
+  i18nFinalLabel: { ar: "إنشاء الاختبار", en: "Generate Exam" },
 }

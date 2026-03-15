@@ -152,6 +152,7 @@ model Student {
   // Academic grade (catalog integration)
   academicGradeId String?
   academicGrade   AcademicGrade? @relation(fields: [academicGradeId], references: [id], onDelete: SetNull)
+  yearLevel       String? // Raw yearLevel from CSV import, used for deferred grade resolution
 
   // Exam certificates
   examCertificates ExamCertificate[]

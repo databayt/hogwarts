@@ -212,7 +212,7 @@ function DropZone({
             <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
           </div>
         ) : hasResult ? (
-          <div className="space-y-2 p-4">
+          <div className="flex min-h-[140px] flex-col items-center justify-center space-y-2 p-4">
             {/* Results */}
             {state.result && (
               <div className="space-y-2 text-sm">

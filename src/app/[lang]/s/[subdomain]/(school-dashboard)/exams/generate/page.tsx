@@ -13,10 +13,15 @@ interface PageProps {
     lang: Locale
     subdomain: string
   }>
+  searchParams: Promise<{ error?: string }>
 }
 
-export default async function GeneratePage({ params }: PageProps) {
+export default async function GeneratePage({
+  params,
+  searchParams,
+}: PageProps) {
   const { lang } = await params
+  const { error } = await searchParams
 
   const session = await auth()
   if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
@@ -25,5 +30,5 @@ export default async function GeneratePage({ params }: PageProps) {
 
   const dictionary = await getDictionary(lang)
 
-  return <GenerateContent dictionary={dictionary} lang={lang} />
+  return <GenerateContent dictionary={dictionary} lang={lang} error={error} />
 }

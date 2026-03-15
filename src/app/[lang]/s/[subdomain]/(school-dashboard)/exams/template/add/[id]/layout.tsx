@@ -26,7 +26,6 @@ export default function TemplateWizardLayout({
       onStepChange={(entityId, step) => {
         updateTemplateWizardStep(entityId, step)
       }}
-      finalLabel="Save Template"
       finalDestination="/exams/generate"
     >
       {children}

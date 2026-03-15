@@ -6,7 +6,7 @@ import type { WizardConfig } from "@/components/form/wizard"
 export const STUDENT_WIZARD_CONFIG: WizardConfig = {
   id: "student",
   steps: [
-    "photo",
+    "attachments",
     "personal",
     "enrollment",
     "contact",
@@ -15,7 +15,7 @@ export const STUDENT_WIZARD_CONFIG: WizardConfig = {
     "previous-education",
   ],
   groups: {
-    1: ["photo", "personal", "enrollment"],
+    1: ["attachments", "personal", "enrollment"],
     2: ["contact", "location"],
     3: ["health", "previous-education"],
   },

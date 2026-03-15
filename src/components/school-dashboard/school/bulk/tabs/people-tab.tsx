@@ -46,6 +46,7 @@ interface ImportResult {
 interface Props {
   dictionary: Dictionary
   lang: Locale
+  activeCard?: string
 }
 
 function downloadTemplate(content: string, filename: string) {
@@ -280,11 +281,11 @@ function ImportCard({
   )
 }
 
-export function PeopleTab({ dictionary, lang }: Props) {
+export function PeopleTab({ dictionary, lang, activeCard }: Props) {
   const isArabic = lang === "ar"
 
-  return (
-    <div className="space-y-4">
+  const cards = {
+    students: (
       <ImportCard
         icon={GraduationCap}
         title={isArabic ? "استيراد الطلاب" : "Import Students"}
@@ -298,7 +299,8 @@ export function PeopleTab({ dictionary, lang }: Props) {
         importAction={bulkImportStudents}
         isArabic={isArabic}
       />
-
+    ),
+    teachers: (
       <ImportCard
         icon={UserCheck}
         title={isArabic ? "استيراد المعلمين" : "Import Teachers"}
@@ -312,7 +314,8 @@ export function PeopleTab({ dictionary, lang }: Props) {
         importAction={bulkImportTeachers}
         isArabic={isArabic}
       />
-
+    ),
+    staff: (
       <ImportCard
         icon={Users}
         title={isArabic ? "استيراد الموظفين" : "Import Staff"}
@@ -326,7 +329,8 @@ export function PeopleTab({ dictionary, lang }: Props) {
         importAction={bulkImportStaff}
         isArabic={isArabic}
       />
-
+    ),
+    guardians: (
       <ImportCard
         icon={Shield}
         title={isArabic ? "استيراد أولياء الأمور" : "Import Guardians"}
@@ -340,6 +344,12 @@ export function PeopleTab({ dictionary, lang }: Props) {
         importAction={bulkImportGuardians}
         isArabic={isArabic}
       />
-    </div>
-  )
+    ),
+  }
+
+  if (activeCard && activeCard in cards) {
+    return cards[activeCard as keyof typeof cards]
+  }
+
+  return <div className="space-y-4">{Object.values(cards)}</div>
 }

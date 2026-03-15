@@ -112,35 +112,40 @@ export const ExperienceForm = forwardRef<WizardFormRef, ExperienceFormProps>(
                   className="bg-muted/50 space-y-4 rounded-lg border p-4"
                 >
                   <div className="flex items-start justify-between">
-                    <InputField
-                      name={`experiences.${index}.institution`}
-                      label="Institution"
-                      placeholder="Previous school or organization"
-                      required
-                      disabled={isPending}
-                    />
+                    <div className="flex-1">
+                      <div className="grid grid-cols-3 gap-4">
+                        <InputField
+                          name={`experiences.${index}.institution`}
+                          label="Institution"
+                          placeholder="Previous school or organization"
+                          required
+                          disabled={isPending}
+                        />
+                        <InputField
+                          name={`experiences.${index}.position`}
+                          label="Position"
+                          placeholder="Job title or role"
+                          required
+                          disabled={isPending}
+                        />
+                        <DateField
+                          name={`experiences.${index}.startDate`}
+                          label="Start Date"
+                          disabled={isPending}
+                        />
+                      </div>
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => remove(index)}
                       disabled={isPending}
+                      className="ms-2 mt-6"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <InputField
-                    name={`experiences.${index}.position`}
-                    label="Position"
-                    placeholder="Job title or role"
-                    required
-                    disabled={isPending}
-                  />
-                  <DateField
-                    name={`experiences.${index}.startDate`}
-                    label="Start Date"
-                    disabled={isPending}
-                  />
                   <CheckboxField
                     name={`experiences.${index}.isCurrent`}
                     label="Current Position"

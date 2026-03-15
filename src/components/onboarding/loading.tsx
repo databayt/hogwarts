@@ -38,7 +38,11 @@ export function TitleSkeleton() {
 export function DescriptionSkeleton() {
   return (
     <OnboardingFormSkeleton>
-      <Skeleton className="h-32 w-full rounded-md" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-[120px] w-full rounded-lg" />
+        ))}
+      </div>
     </OnboardingFormSkeleton>
   )
 }
@@ -272,19 +276,42 @@ export function OnboardingEntrySkeleton() {
 
 export function OnboardingOverviewSkeleton() {
   return (
-    <div className="mx-auto max-w-4xl space-y-8 p-8">
-      <Skeleton className="h-12 w-48" />
-      <Skeleton className="h-6 w-80" />
-      <div className="grid gap-6 sm:grid-cols-2">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="space-y-4 rounded-lg border p-6">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
+    <div className="mx-auto flex h-full w-full max-w-5xl flex-col pb-24">
+      <div className="flex flex-1 items-center">
+        <div className="w-full">
+          <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
+            {/* Left Side - Title */}
+            <div>
+              <Skeleton className="h-10 w-64" />
+              <Skeleton className="mt-2 h-10 w-48" />
+            </div>
+
+            {/* Right Side - Steps */}
+            <div className="space-y-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-start justify-between gap-6">
+                  <div className="flex flex-1 gap-3">
+                    <Skeleton className="h-6 w-5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <Skeleton className="mb-1 h-6 w-40" />
+                      <Skeleton className="h-4 w-full" />
+                    </div>
+                  </div>
+                  <Skeleton className="hidden h-14 w-14 flex-shrink-0 md:block" />
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
+        </div>
       </div>
+
+      {/* Fixed footer */}
+      <footer className="bg-background fixed start-0 end-0 bottom-0 px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20">
+        <Skeleton className="mx-auto mb-3 h-px w-full max-w-5xl sm:mb-4" />
+        <div className="mx-auto flex w-full max-w-5xl justify-end">
+          <Skeleton className="h-9 w-28" />
+        </div>
+      </footer>
     </div>
   )
 }

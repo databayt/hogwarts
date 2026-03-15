@@ -38,7 +38,7 @@ export function getClassroomColumns(
   dictionary?: Record<string, string>
 ): ColumnDef<ClassroomRow>[] {
   const t = {
-    roomName: dictionary?.roomName || "Room Name",
+    roomName: dictionary?.roomName || "Room",
     type: dictionary?.type || "Type",
     grade: dictionary?.grade || "Grade",
     capacity: dictionary?.capacity || "Capacity",
@@ -77,7 +77,10 @@ export function getClassroomColumns(
     },
     {
       accessorKey: "capacity",
-      header: t.capacity,
+      header: () => <div className="text-center">{t.capacity}</div>,
+      cell: ({ row }) => (
+        <div className="text-center">{row.original.capacity}</div>
+      ),
     },
     {
       accessorKey: "classCount",

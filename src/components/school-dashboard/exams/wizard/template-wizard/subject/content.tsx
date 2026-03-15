@@ -8,12 +8,15 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { getSubjectOptions } from "./actions"
 import { SubjectForm } from "./form"
 
 export default function SubjectContent() {
+  const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
@@ -53,8 +56,8 @@ export default function SubjectContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Subject"
-          description="Select the subject for this template."
+          title={getStepLabel("subject", "title", locale)}
+          description={getStepLabel("subject", "description", locale)}
         />
         <SubjectForm
           ref={formRef}

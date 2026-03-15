@@ -44,7 +44,7 @@ interface ClassroomFormProps {
 }
 
 export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
-  const { modal } = useModal()
+  const { modal, closeModal } = useModal()
   const isEdit = !!modal.id
   const [isPending, startTransition] = useTransition()
   const [types, setTypes] = useState<{ id: string; name: string }[]>([])
@@ -92,6 +92,7 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
         : await createClassroom(data)
 
       if (result.success) {
+        closeModal()
         onSuccess?.()
       } else {
         ErrorToast(result.error || "Failed to save classroom")

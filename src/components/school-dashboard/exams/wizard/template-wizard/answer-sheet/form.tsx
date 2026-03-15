@@ -12,10 +12,11 @@ import React, {
 
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { VARIANT_REGISTRY } from "../../../templates/composition/registry"
 import type { SlotName } from "../../../templates/composition/types"
-import { MiniPaperMockup, VariantThumbnail } from "../../atoms"
+import { SectionCard } from "../../atoms"
 import { updateTemplateAnswerSheet } from "./actions"
 
 const SLOT: SlotName = "answerSheet"
@@ -30,6 +31,8 @@ export const AnswerSheetForm = forwardRef<WizardFormRef, AnswerSheetFormProps>(
   ({ templateId, initialVariant = "standard", onValidChange }, ref) => {
     const [selected, setSelected] = useState(initialVariant)
     const [, startTransition] = useTransition()
+    const { locale } = useLocale()
+    const lang = locale === "ar" ? "ar" : "en"
 
     useEffect(() => {
       onValidChange?.(true)
@@ -66,27 +69,18 @@ export const AnswerSheetForm = forwardRef<WizardFormRef, AnswerSheetFormProps>(
     const variants = Object.entries(VARIANT_REGISTRY[SLOT])
 
     return (
-      <div className="space-y-3">
-        <div className="flex flex-wrap gap-3">
-          {variants.map(([key, entry]) => (
-            <div
-              key={key}
-              className="flex shrink-0 flex-col items-center gap-1"
-            >
-              <VariantThumbnail
-                state={selected === key ? "selected" : "idle"}
-                size="md"
-                label={entry.label.en}
-                onClick={() => setSelected(key)}
-              >
-                <MiniPaperMockup slot={SLOT} variant={key} />
-              </VariantThumbnail>
-              <p className="text-muted-foreground max-w-20 text-center text-[9px] leading-tight">
-                {entry.description.en}
-              </p>
-            </div>
-          ))}
-        </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {variants.map(([key, entry]) => (
+          <SectionCard
+            key={key}
+            slot={SLOT}
+            variant={key}
+            label={entry.label[lang]}
+            description={entry.description[lang]}
+            selected={selected === key}
+            onClick={() => setSelected(key)}
+          />
+        ))}
       </div>
     )
   }
