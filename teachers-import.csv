@@ -1,0 +1,6 @@
+name,email,employeeId,department,subjects
+Ahmed Hassan,ahmed.h@school.local,TCH001,Sciences,"Physics,Chemistry"
+Fatima Ali,fatima.a@school.local,TCH002,Mathematics,"Math,Algebra"
+Omar Khalid,omar.k@school.local,TCH003,Languages,"English,Arabic"
+Mona Ibrahim,mona.i@school.local,TCH004,Humanities,"History,Geography"
+Yusuf Osman,yusuf.o@school.local,TCH005,Arts & Sports,"Physical Education,Arts"
