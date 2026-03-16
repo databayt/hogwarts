@@ -3,19 +3,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ColumnDef } from "@tanstack/react-table"
-import { Ellipsis, Eye } from "lucide-react"
+import { Eye } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -213,32 +209,27 @@ export const getTemplateColumns = (
       }
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <Ellipsis className="h-4 w-4" />
-              <span className="sr-only">
-                {dictionary?.generate?.columns?.openMenu || "Open menu"}
-              </span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>
-              {dictionary?.generate?.columns?.actions || "Actions"}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>
-              <Eye className="me-2 h-4 w-4" />
-              {dictionary?.generate?.columns?.view || "View"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>
-              {dictionary?.generate?.columns?.edit || "Pencil"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onUseTemplate}>
-              {dictionary?.generate?.columns?.useTemplate || "Use Template"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ActionMenu
+          srLabel={dictionary?.generate?.columns?.openMenu || "Open menu"}
+        >
+          <DropdownMenuLabel>
+            {dictionary?.generate?.columns?.actions || "Actions"}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <ActionMenuItem
+            icon={Eye}
+            label={dictionary?.generate?.columns?.view || "View"}
+            onClick={onView}
+          />
+          <ActionMenuItem
+            label={dictionary?.generate?.columns?.edit || "Pencil"}
+            onClick={onEdit}
+          />
+          <ActionMenuItem
+            label={dictionary?.generate?.columns?.useTemplate || "Use Template"}
+            onClick={onUseTemplate}
+          />
+        </ActionMenu>
       )
     },
     enableSorting: false,

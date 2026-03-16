@@ -89,6 +89,8 @@ interface FileUploadFieldProps {
   showFileList?: boolean
   /** Placeholder text */
   placeholder?: string
+  /** Custom placeholder image src for avatar variant */
+  placeholderImage?: string
   /** Enable client-side image optimization before upload */
   optimizeImages?: boolean
   /** Custom image optimization settings */
@@ -137,6 +139,7 @@ export function FileUploadField({
   showPreview = true,
   showFileList = true,
   placeholder,
+  placeholderImage,
   optimizeImages,
   imageOptimization,
   chunkThreshold,
@@ -174,6 +177,7 @@ export function FileUploadField({
               showPreview={showPreview}
               showFileList={showFileList}
               placeholder={placeholder}
+              placeholderImage={placeholderImage}
               optimizeImages={optimizeImages}
               imageOptimization={imageOptimization}
               chunkThreshold={chunkThreshold}

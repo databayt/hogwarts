@@ -4,19 +4,15 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { Ellipsis, Eye, Pencil, Trash2 } from "lucide-react"
+import { Eye, Pencil, Trash2 } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -166,32 +162,26 @@ export const getInvoiceColumns = (
       }
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <Ellipsis className="h-4 w-4" />
-              <span className="sr-only">{ic?.openMenu || "Open menu"}</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{ic?.actions || "Actions"}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href={`/${lang}/finance/invoice/${invoice.id}`}>
-                <Eye className="me-2 h-4 w-4" />
-                {ic?.view || "View"}
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>
-              <Pencil className="me-2 h-4 w-4" />
-              {ic?.edit || "Edit"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete} className="text-red-600">
-              <Trash2 className="me-2 h-4 w-4" />
-              {ic?.delete || "Delete"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ActionMenu srLabel={ic?.openMenu || "Open menu"}>
+          <DropdownMenuLabel>{ic?.actions || "Actions"}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <ActionMenuItem
+            icon={Eye}
+            label={ic?.view || "View"}
+            href={`/${lang}/finance/invoice/${invoice.id}`}
+          />
+          <ActionMenuItem
+            icon={Pencil}
+            label={ic?.edit || "Edit"}
+            onClick={onEdit}
+          />
+          <ActionMenuItem
+            icon={Trash2}
+            label={ic?.delete || "Delete"}
+            onClick={onDelete}
+            variant="destructive"
+          />
+        </ActionMenu>
       )
     },
     enableSorting: false,

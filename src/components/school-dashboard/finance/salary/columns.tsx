@@ -4,19 +4,14 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { Ellipsis } from "lucide-react"
 
 import { formatCurrency } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
@@ -236,30 +231,18 @@ export const getSalaryStructureColumns = (
       cell: ({ row }) => {
         const salary = row.original
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">{t.actions}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align={isAr ? "start" : "end"}>
-              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={`/${lang}/finance/salary/structures/${salary.id}`}>
-                  {t.view}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/${lang}/finance/salary/structures/${salary.id}/edit`}
-                >
-                  {t.edit}
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ActionMenu align={isAr ? "start" : "end"}>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.view}
+              href={`/${lang}/finance/salary/structures/${salary.id}`}
+            />
+            <ActionMenuItem
+              label={t.edit}
+              href={`/${lang}/finance/salary/structures/${salary.id}/edit`}
+            />
+          </ActionMenu>
         )
       },
       enableSorting: false,

@@ -2,6 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { cookies } from "next/headers"
+
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -22,7 +24,7 @@ export async function getTeacherInformation(
         surname: true,
         gender: true,
         birthDate: true,
-        profilePhotoUrl: true,
+        nationality: true,
       },
     })
 
@@ -35,7 +37,7 @@ export async function getTeacherInformation(
         surname: teacher.surname,
         gender: teacher.gender as "male" | "female" | undefined,
         birthDate: teacher.birthDate ?? undefined,
-        profilePhotoUrl: teacher.profilePhotoUrl ?? undefined,
+        nationality: teacher.nationality ?? undefined,
       },
     }
   } catch (error) {
@@ -56,6 +58,10 @@ export async function updateTeacherInformation(
 
     const parsed = informationSchema.parse(input)
 
+    // Detect the language the name was entered in (from current locale)
+    const cookieStore = await cookies()
+    const lang = cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar"
+
     await db.teacher.updateMany({
       where: { id: teacherId, schoolId },
       data: {
@@ -63,7 +69,8 @@ export async function updateTeacherInformation(
         surname: parsed.surname,
         gender: parsed.gender ?? null,
         birthDate: parsed.birthDate ?? null,
-        profilePhotoUrl: parsed.profilePhotoUrl ?? null,
+        nationality: parsed.nationality ?? null,
+        lang,
       },
     })
 

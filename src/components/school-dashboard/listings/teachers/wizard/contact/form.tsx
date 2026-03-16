@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form"
 
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import { InputField, SelectField } from "@/components/form"
+import { InputField, PhoneField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 
 import { updateTeacherContact } from "./actions"
@@ -78,13 +78,13 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
             disabled={isPending}
           />
 
-          <InputField
+          <PhoneField
             name="phone1"
             label="Phone 1"
             placeholder="+1234567890"
             disabled={isPending}
           />
-          <InputField
+          <PhoneField
             name="phone2"
             label="Phone 2"
             placeholder="+1234567890"

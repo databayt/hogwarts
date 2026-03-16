@@ -23,16 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { CountryDropdown } from "@/components/atom/country-dropdown"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import { savePersonalStep } from "./actions"
-import {
-  CATEGORY_OPTIONS,
-  GENDER_OPTIONS,
-  NATIONALITY_OPTIONS,
-  RELIGION_OPTIONS,
-} from "./config"
+import { CATEGORY_OPTIONS, GENDER_OPTIONS, RELIGION_OPTIONS } from "./config"
 import type { PersonalFormProps, PersonalFormRef } from "./types"
 import { personalSchema, type PersonalSchemaType } from "./validation"
 
@@ -213,24 +209,15 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{dict.nationality || "Nationality"} *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            dict.selectNationality || "Select nationality"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {NATIONALITY_OPTIONS(isRTL).map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <CountryDropdown
+                      value={field.value}
+                      onChange={(isoCode) => field.onChange(isoCode)}
+                      placeholder={
+                        dict.selectNationality || "Select nationality"
+                      }
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

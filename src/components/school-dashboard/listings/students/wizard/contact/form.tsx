@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form"
 
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import { InputField } from "@/components/form"
+import { InputField, PhoneField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardTabs, type WizardTab } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -102,13 +102,13 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
                     type="email"
                     disabled={isPending}
                   />
-                  <InputField
+                  <PhoneField
                     name="mobileNumber"
                     label={t?.mobile || "Mobile Number"}
                     placeholder={t?.mobilePlaceholder || "Enter mobile number"}
                     disabled={isPending}
                   />
-                  <InputField
+                  <PhoneField
                     name="alternatePhone"
                     label={t?.alternatePhone || "Alternate Phone"}
                     placeholder={
@@ -128,7 +128,7 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
                     }
                     disabled={isPending}
                   />
-                  <InputField
+                  <PhoneField
                     name="emergencyContactPhone"
                     label={t?.emergencyPhone || "Emergency Contact Phone"}
                     placeholder={

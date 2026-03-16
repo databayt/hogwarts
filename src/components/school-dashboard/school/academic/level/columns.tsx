@@ -3,17 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ColumnDef } from "@tanstack/react-table"
-import { Ellipsis, GraduationCap, Users } from "lucide-react"
+import { GraduationCap, Users } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -147,26 +143,17 @@ export const getYearLevelColumns = (
         }
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={onDelete}
-                className="text-destructive focus:text-destructive"
-              >
-                {t.delete}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ActionMenu>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem label={t.edit} onClick={onEdit} />
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.delete}
+              onClick={onDelete}
+              variant="destructive"
+            />
+          </ActionMenu>
         )
       },
       enableSorting: false,

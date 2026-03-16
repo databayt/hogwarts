@@ -2,21 +2,15 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { Ellipsis } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -165,28 +159,20 @@ export const getAnnouncementColumns = (
           callbacks?.onDelete?.(announcement)
         }
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">{t.openMenu}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={`/${locale}/announcements/${announcement.id}`}>
-                  {t.view}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
-              <DropdownMenuItem onClick={onToggle}>
-                {announcement.published ? t.unpublish : t.publish}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ActionMenu srLabel={t.openMenu}>
+            <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.view}
+              href={`/${locale}/announcements/${announcement.id}`}
+            />
+            <ActionMenuItem label={t.edit} onClick={onEdit} />
+            <ActionMenuItem
+              label={announcement.published ? t.unpublish : t.publish}
+              onClick={onToggle}
+            />
+            <ActionMenuItem label={t.delete} onClick={onDelete} />
+          </ActionMenu>
         )
       },
       enableSorting: false,

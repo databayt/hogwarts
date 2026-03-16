@@ -23,7 +23,8 @@ export default async function SchoolLayout({ children, params }: Props) {
     { name: n?.overview || "Overview", href: `/${lang}/school` },
     {
       name: n?.configuration || "Configuration",
-      href: `/${lang}/school/configuration`,
+      href: `/${lang}/school/configuration/title`,
+      matchPrefix: `/${lang}/school/configuration`,
     },
     { name: n?.membership || "Membership", href: `/${lang}/school/membership` },
     {

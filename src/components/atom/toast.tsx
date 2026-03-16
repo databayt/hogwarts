@@ -69,8 +69,8 @@ export const ErrorToast = (message: string) => {
     duration: CONFIG.duration.error,
     position: CONFIG.position,
     style: {
-      background: "hsl(var(--destructive))",
-      color: "hsl(var(--destructive-foreground))",
+      background: "var(--destructive)",
+      color: "var(--destructive-foreground)",
       border: "none",
       width: "220px",
       maxWidth: "220px",
@@ -83,8 +83,8 @@ export const InfoToast = (message: string) => {
     duration: CONFIG.duration.info,
     position: CONFIG.position,
     style: {
-      background: "hsl(var(--primary))",
-      color: "hsl(var(--primary-foreground))",
+      background: "var(--primary)",
+      color: "var(--primary-foreground)",
       border: "none",
       width: "220px",
       maxWidth: "220px",
@@ -97,8 +97,8 @@ export const DeleteToast = (message: string = "Deleted") => {
     duration: CONFIG.duration.delete,
     position: CONFIG.position,
     style: {
-      background: "hsl(var(--destructive))",
-      color: "hsl(var(--destructive-foreground))",
+      background: "var(--destructive)",
+      color: "var(--destructive-foreground)",
       border: "none",
       width: "220px",
       maxWidth: "220px",

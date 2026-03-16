@@ -11,6 +11,7 @@ export interface TeacherWizardData {
   givenName: string
   surname: string
   gender: string | null
+  nationality: string | null
   emailAddress: string
   birthDate: Date | null
   profilePhotoUrl: string | null

@@ -4,19 +4,15 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { Ellipsis } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { useModal } from "@/components/atom/modal/context"
 import {
   confirmDeleteDialog,
@@ -333,60 +329,44 @@ export const getStudentColumns = (
           }
         }
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">{t.actions}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={`/${lang}/profile/${student.userId || student.id}`}>
-                  {t.view}
-                </Link>
-              </DropdownMenuItem>
-              {student.wizardStep ? (
-                <DropdownMenuItem asChild>
-                  <Link
-                    href={`/${lang}/students/add/${student.id}/${student.wizardStep}`}
-                  >
-                    {t.edit} ({t.incomplete})
-                  </Link>
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={`/${lang}/grades?studentId=${student.id}`}>
-                  {t.viewGrades}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/${lang}/attendance?studentId=${student.id}`}>
-                  {t.viewAttendance}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/${lang}/classrooms?studentId=${student.id}`}>
-                  {t.viewClasses}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() =>
-                  options?.onGenerateAccessCode?.(student.id, student.name)
-                }
-              >
-                {t.generateAccessCode}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ActionMenu srLabel={t.actions}>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.view}
+              href={`/${lang}/profile/${student.userId || student.id}`}
+            />
+            {student.wizardStep ? (
+              <ActionMenuItem
+                label={`${t.edit} (${t.incomplete})`}
+                href={`/${lang}/students/add/${student.id}/${student.wizardStep}`}
+              />
+            ) : (
+              <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.viewGrades}
+              href={`/${lang}/grades?studentId=${student.id}`}
+            />
+            <ActionMenuItem
+              label={t.viewAttendance}
+              href={`/${lang}/attendance?studentId=${student.id}`}
+            />
+            <ActionMenuItem
+              label={t.viewClasses}
+              href={`/${lang}/classrooms?studentId=${student.id}`}
+            />
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.generateAccessCode}
+              onClick={() =>
+                options?.onGenerateAccessCode?.(student.id, student.name)
+              }
+            />
+            <DropdownMenuSeparator />
+            <ActionMenuItem label={t.delete} onClick={onDelete} />
+          </ActionMenu>
         )
       },
       enableSorting: false,

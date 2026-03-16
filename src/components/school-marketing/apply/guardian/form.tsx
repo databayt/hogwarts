@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useLocale } from "@/components/internationalization/use-locale"
+import { PhoneInput } from "@/components/atom/phone-input"
 
 import { useApplySession } from "../application-context"
 import { saveGuardianStep } from "./actions"
@@ -35,8 +35,6 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
     const params = useParams()
     const subdomain = params.subdomain as string
-    const { locale: lang } = useLocale()
-    const isRTL = lang === "ar"
     const { session, updateStepData } = useApplySession()
 
     const form = useForm<GuardianSchemaType>({
@@ -138,9 +136,9 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                   <FormItem>
                     <FormLabel>{dict.phone || "Phone"}</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
+                      <PhoneInput
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
                         placeholder="+249 XXX XXX XXXX"
                       />
                     </FormControl>
@@ -217,9 +215,9 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                   <FormItem>
                     <FormLabel>{dict.phone || "Phone"}</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
+                      <PhoneInput
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
                         placeholder="+249 XXX XXX XXXX"
                       />
                     </FormControl>
@@ -306,9 +304,9 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                   <FormItem>
                     <FormLabel>{dict.phone || "Phone"}</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
+                      <PhoneInput
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
                         placeholder="+249 XXX XXX XXXX"
                       />
                     </FormControl>

@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
+import { cn } from "@/lib/utils"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,7 @@ import {
   DeleteToast,
   ErrorToast,
 } from "@/components/atom/toast"
+import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
@@ -330,11 +332,16 @@ function StudentsTableInner({
           hasUnassigned ? (
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-9 w-9 rounded-full"
               onClick={handleSyncGrades}
               disabled={isSyncing}
+              aria-label="Sync Grades"
+              title="Sync Grades"
             >
-              {isSyncing ? "Syncing..." : "Sync Grades"}
+              <Icons.refresh
+                className={cn("h-4 w-4", isSyncing && "animate-spin")}
+              />
             </Button>
           ) : undefined
         }

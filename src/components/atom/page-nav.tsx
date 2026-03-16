@@ -13,6 +13,7 @@ export interface PageNavItem {
   href: string
   hidden?: boolean
   exact?: boolean
+  matchPrefix?: string
 }
 
 interface PageNavProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -39,6 +40,17 @@ export function PageNav({
 
     // If exact is set, only use exact match (no sub-path matching)
     if (page.exact) return false
+
+    // matchPrefix: match any path starting with this prefix (e.g. /en/school/configuration)
+    if (page.matchPrefix) {
+      const normalizedPrefix = page.matchPrefix.replace(/\/$/, "")
+      if (
+        normalizedPath === normalizedPrefix ||
+        normalizedPath.startsWith(normalizedPrefix + "/")
+      ) {
+        return true
+      }
+    }
 
     // Sub-path match only for deep links (e.g. /school/configuration matches /school/configuration/identity)
     // Skip for shallow hrefs like /school (would falsely match /school/configuration)

@@ -170,6 +170,7 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
               }}
               disabled={isPending}
               placeholder="Photo"
+              placeholderImage="/image.png"
             />
           </div>
 

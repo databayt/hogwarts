@@ -7,24 +7,31 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useState,
   useTransition,
 } from "react"
+import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
 
-import { getSubjectsForExpertise, updateTeacherExpertise } from "./actions"
+import {
+  getGradesAndSubjects,
+  updateTeacherExpertise,
+  type GradeWithSubjects,
+  type SubjectWithDept,
+} from "./actions"
 import type { ExpertiseFormData } from "./validation"
-
-interface SubjectOption {
-  id: string
-  name: string
-  department: string | null
-}
-
-type ExpertiseLevel = "PRIMARY" | "SECONDARY" | null
 
 interface ExpertiseFormProps {
   teacherId: string
@@ -35,53 +42,136 @@ interface ExpertiseFormProps {
 export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
   ({ teacherId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
-    const [subjects, setSubjects] = useState<SubjectOption[]>([])
-    // Map: subjectId → "PRIMARY" | "SECONDARY" | null (not selected)
-    const [selections, setSelections] = useState<
-      Record<string, ExpertiseLevel>
-    >({})
+    const [grades, setGrades] = useState<GradeWithSubjects[]>([])
+    const [selectedGradeIds, setSelectedGradeIds] = useState<Set<string>>(
+      new Set()
+    )
+    const [primarySubjects, setPrimarySubjects] = useState<Set<string>>(
+      new Set()
+    )
+    const [secondarySubjects, setSecondarySubjects] = useState<Set<string>>(
+      new Set()
+    )
 
-    // Initialize from initialData
     useEffect(() => {
-      if (initialData?.subjectExpertise) {
-        const init: Record<string, ExpertiseLevel> = {}
-        for (const item of initialData.subjectExpertise) {
-          init[item.subjectId] = item.expertiseLevel as ExpertiseLevel
-        }
-        setSelections(init)
-      }
-    }, [initialData])
-
-    // Fetch subjects on mount
-    useEffect(() => {
-      async function loadSubjects() {
-        const result = await getSubjectsForExpertise()
+      async function load() {
+        const result = await getGradesAndSubjects()
         if (result.success && result.data) {
-          setSubjects(result.data)
+          setGrades(result.data)
         }
       }
-      loadSubjects()
+      load()
     }, [])
 
-    // Optional step, always valid
+    useEffect(() => {
+      if (initialData?.subjectExpertise && grades.length > 0) {
+        const primary = new Set<string>()
+        const secondary = new Set<string>()
+        const gradeIds = new Set<string>()
+
+        for (const item of initialData.subjectExpertise) {
+          if (item.expertiseLevel === "PRIMARY") {
+            primary.add(item.subjectId)
+          } else {
+            secondary.add(item.subjectId)
+          }
+        }
+
+        const allSelected = new Set([...primary, ...secondary])
+        for (const grade of grades) {
+          if (grade.subjects.some((s) => allSelected.has(s.id))) {
+            gradeIds.add(grade.id)
+          }
+        }
+
+        setPrimarySubjects(primary)
+        setSecondarySubjects(secondary)
+        setSelectedGradeIds(gradeIds)
+      }
+    }, [initialData, grades])
+
     useEffect(() => {
       onValidChange?.(true)
     }, [onValidChange])
 
-    const toggleSubject = useCallback(
-      (subjectId: string, level: "PRIMARY" | "SECONDARY") => {
-        setSelections((prev) => {
-          const current = prev[subjectId]
-          if (current === level) {
-            // Deselect
-            const next = { ...prev }
-            delete next[subjectId]
-            return next
+    // Subjects from selected grades (deduplicated)
+    const filteredSubjects = useMemo(() => {
+      const map = new Map<string, SubjectWithDept>()
+      for (const grade of grades) {
+        if (selectedGradeIds.size === 0 || selectedGradeIds.has(grade.id)) {
+          for (const subject of grade.subjects) {
+            map.set(subject.id, subject)
           }
-          return { ...prev, [subjectId]: level }
-        })
+        }
+      }
+      return Array.from(map.values()).sort((a, b) =>
+        a.name.localeCompare(b.name)
+      )
+    }, [grades, selectedGradeIds])
+
+    const primaryOptions = useMemo(
+      () => filteredSubjects.filter((s) => !secondarySubjects.has(s.id)),
+      [filteredSubjects, secondarySubjects]
+    )
+
+    const secondaryOptions = useMemo(
+      () => filteredSubjects.filter((s) => !primarySubjects.has(s.id)),
+      [filteredSubjects, primarySubjects]
+    )
+
+    const toggleGrade = useCallback((gradeId: string) => {
+      setSelectedGradeIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(gradeId)) next.delete(gradeId)
+        else next.add(gradeId)
+        return next
+      })
+    }, [])
+
+    const addPrimary = useCallback((subjectId: string) => {
+      setPrimarySubjects((prev) => new Set(prev).add(subjectId))
+      setSecondarySubjects((prev) => {
+        const next = new Set(prev)
+        next.delete(subjectId)
+        return next
+      })
+    }, [])
+
+    const addSecondary = useCallback((subjectId: string) => {
+      setSecondarySubjects((prev) => new Set(prev).add(subjectId))
+      setPrimarySubjects((prev) => {
+        const next = new Set(prev)
+        next.delete(subjectId)
+        return next
+      })
+    }, [])
+
+    const removePrimary = useCallback((subjectId: string) => {
+      setPrimarySubjects((prev) => {
+        const next = new Set(prev)
+        next.delete(subjectId)
+        return next
+      })
+    }, [])
+
+    const removeSecondary = useCallback((subjectId: string) => {
+      setSecondarySubjects((prev) => {
+        const next = new Set(prev)
+        next.delete(subjectId)
+        return next
+      })
+    }, [])
+
+    const subjectName = useCallback(
+      (id: string) => {
+        for (const grade of grades) {
+          for (const s of grade.subjects) {
+            if (s.id === id) return s.name
+          }
+        }
+        return id
       },
-      []
+      [grades]
     )
 
     useImperativeHandle(ref, () => ({
@@ -89,12 +179,16 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
         new Promise<void>((resolve, reject) => {
           startTransition(async () => {
             try {
-              const subjectExpertise = Object.entries(selections)
-                .filter(([, level]) => level !== null)
-                .map(([subjectId, expertiseLevel]) => ({
+              const subjectExpertise = [
+                ...Array.from(primarySubjects).map((subjectId) => ({
                   subjectId,
-                  expertiseLevel: expertiseLevel as "PRIMARY" | "SECONDARY",
-                }))
+                  expertiseLevel: "PRIMARY" as const,
+                })),
+                ...Array.from(secondarySubjects).map((subjectId) => ({
+                  subjectId,
+                  expertiseLevel: "SECONDARY" as const,
+                })),
+              ]
               const result = await updateTeacherExpertise(teacherId, {
                 subjectExpertise,
               })
@@ -114,59 +208,107 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
     }))
 
     return (
-      <div className="space-y-4">
-        {subjects.length === 0 && !isPending && (
-          <p className="text-muted-foreground text-sm">
-            No subjects found. Add subjects to your school first.
-          </p>
-        )}
-        <div className="flex flex-wrap gap-2">
-          {subjects.map((subject) => {
-            const level = selections[subject.id]
-            return (
-              <div key={subject.id} className="flex gap-1">
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => toggleSubject(subject.id, "PRIMARY")}
-                  className={cn(
-                    "rounded-s-full border px-3 py-1.5 text-sm transition-colors",
-                    level === "PRIMARY"
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "hover:bg-muted border-border"
-                  )}
-                >
-                  {subject.name}
-                </button>
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => toggleSubject(subject.id, "SECONDARY")}
-                  className={cn(
-                    "rounded-e-full border px-3 py-1.5 text-sm transition-colors",
-                    level === "SECONDARY"
-                      ? "bg-secondary text-secondary-foreground border-secondary"
-                      : "hover:bg-muted border-border"
-                  )}
-                >
-                  2nd
-                </button>
-              </div>
-            )
-          })}
-        </div>
-        {subjects.length > 0 && (
-          <div className="text-muted-foreground flex gap-4 text-xs">
-            <span className="flex items-center gap-1">
-              <span className="bg-primary inline-block h-2 w-2 rounded-full" />
-              Primary
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="bg-secondary inline-block h-2 w-2 rounded-full" />
-              Secondary
-            </span>
+      <div className="space-y-6">
+        {/* Grade filter — simple number badges */}
+        <div className="space-y-2">
+          <span className="text-muted-foreground text-xs font-medium">
+            Grades
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {grades.map((grade) => (
+              <button
+                key={grade.id}
+                type="button"
+                onClick={() => toggleGrade(grade.id)}
+                disabled={isPending}
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full border text-sm font-medium transition-colors",
+                  selectedGradeIds.has(grade.id)
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "hover:bg-muted border-border"
+                )}
+              >
+                {grade.gradeNumber}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
+
+        {/* Primary subjects */}
+        <div className="space-y-3">
+          <Select
+            disabled={isPending || filteredSubjects.length === 0}
+            onValueChange={addPrimary}
+            value=""
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Primary Subjects" />
+            </SelectTrigger>
+            <SelectContent>
+              {primaryOptions.map((s) => (
+                <SelectItem
+                  key={s.id}
+                  value={s.id}
+                  disabled={primarySubjects.has(s.id)}
+                >
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from(primarySubjects).map((id) => (
+              <Badge key={id} variant="default" className="gap-1">
+                {subjectName(id)}
+                <button
+                  type="button"
+                  onClick={() => removePrimary(id)}
+                  className="hover:bg-primary-foreground/20 rounded-full"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Secondary subjects */}
+        <div className="space-y-3">
+          <Select
+            disabled={isPending || filteredSubjects.length === 0}
+            onValueChange={addSecondary}
+            value=""
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Secondary Subjects" />
+            </SelectTrigger>
+            <SelectContent>
+              {secondaryOptions.map((s) => (
+                <SelectItem
+                  key={s.id}
+                  value={s.id}
+                  disabled={secondarySubjects.has(s.id)}
+                >
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from(secondarySubjects).map((id) => (
+              <Badge key={id} variant="secondary" className="gap-1">
+                {subjectName(id)}
+                <button
+                  type="button"
+                  onClick={() => removeSecondary(id)}
+                  className="hover:bg-secondary-foreground/20 rounded-full"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }

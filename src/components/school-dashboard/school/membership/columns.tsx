@@ -3,19 +3,17 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { Check, Copy, Ellipsis, Eye } from "lucide-react"
+import { Check, Copy, Eye } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import type { UnifiedMember } from "./types"
@@ -270,55 +268,41 @@ export const getMemberColumns = (
       cell: ({ row }) => {
         const member = row.original
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">{t.actions || "Actions"}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t.actions || "Actions"}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/${options.lang || "en"}/profile/${member.id}`}
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  {t.viewProfile || "View Profile"}
-                </Link>
+          <ActionMenu srLabel={t.actions || "Actions"}>
+            <DropdownMenuLabel>{t.actions || "Actions"}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              icon={Eye}
+              label={t.viewProfile || "View Profile"}
+              href={`/${options.lang || "en"}/profile/${member.id}`}
+            />
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.changeRole || "Change Role"}
+              onClick={() => options.onChangeRole?.(member)}
+            />
+            {member.role === "STUDENT" && (
+              <DropdownMenuItem onClick={() => options.onAssignGrade?.(member)}>
+                {t.assignGrade || "Assign Grade"}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => options.onChangeRole?.(member)}>
-                {t.changeRole || "Change Role"}
+            )}
+            <DropdownMenuSeparator />
+            {member.memberStatus === "suspended" ? (
+              <DropdownMenuItem onClick={() => options.onActivate?.(member)}>
+                {t.activate || "Activate"}
               </DropdownMenuItem>
-              {member.role === "STUDENT" && (
-                <DropdownMenuItem
-                  onClick={() => options.onAssignGrade?.(member)}
-                >
-                  {t.assignGrade || "Assign Grade"}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              {member.memberStatus === "suspended" ? (
-                <DropdownMenuItem onClick={() => options.onActivate?.(member)}>
-                  {t.activate || "Activate"}
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => options.onSuspend?.(member)}>
-                  {t.suspend || "Suspend"}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => options.onRemove?.(member)}
-                className="text-destructive"
-              >
-                {t.remove || "Remove"}
+            ) : (
+              <DropdownMenuItem onClick={() => options.onSuspend?.(member)}>
+                {t.suspend || "Suspend"}
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.remove || "Remove"}
+              variant="destructive"
+              onClick={() => options.onRemove?.(member)}
+            />
+          </ActionMenu>
         )
       },
       enableSorting: false,

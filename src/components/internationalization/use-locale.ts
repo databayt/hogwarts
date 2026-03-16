@@ -33,7 +33,18 @@ export function useSwitchLocaleHref() {
 
 export function useLocale() {
   const params = useParams()
-  const locale = (params?.lang as Locale) || i18n.defaultLocale
+  const pathname = usePathname()
+
+  // Primary: route params. Fallback: extract from pathname (handles middleware
+  // rewrites in dev where useParams().lang can briefly be undefined).
+  let locale = params?.lang as Locale
+  if (!locale && pathname) {
+    const seg = pathname.split("/")[1]
+    if (seg && i18n.locales.includes(seg as Locale)) {
+      locale = seg as Locale
+    }
+  }
+  locale = locale || i18n.defaultLocale
 
   return {
     locale,

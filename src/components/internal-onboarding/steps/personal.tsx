@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { CountryDropdown } from "@/components/atom/country-dropdown"
 import { FormHeading } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -198,7 +199,11 @@ export function PersonalStep() {
               <FormItem>
                 <FormLabel>Nationality</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter nationality" />
+                  <CountryDropdown
+                    value={field.value}
+                    onChange={(isoCode) => field.onChange(isoCode)}
+                    placeholder="Select nationality"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

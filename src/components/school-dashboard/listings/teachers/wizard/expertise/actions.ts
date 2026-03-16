@@ -29,10 +29,7 @@ export async function getTeacherExpertise(
       data: {
         subjectExpertise: expertise.map((e) => ({
           subjectId: e.subjectId,
-          expertiseLevel: e.expertiseLevel as
-            | "PRIMARY"
-            | "SECONDARY"
-            | "CERTIFIED",
+          expertiseLevel: e.expertiseLevel as "PRIMARY" | "SECONDARY",
         })),
       },
     }
@@ -55,12 +52,10 @@ export async function updateTeacherExpertise(
     const parsed = expertiseSchema.parse(input)
 
     await db.$transaction(async (tx) => {
-      // Delete existing expertise records
       await tx.teacherSubjectExpertise.deleteMany({
         where: { teacherId, schoolId },
       })
 
-      // Recreate from form data
       if (parsed.subjectExpertise.length > 0) {
         await tx.teacherSubjectExpertise.createMany({
           data: parsed.subjectExpertise.map((item) => ({
@@ -82,34 +77,56 @@ export async function updateTeacherExpertise(
   }
 }
 
-export async function getSubjectsForExpertise(): Promise<
-  ActionResponse<
-    {
-      id: string
-      name: string
-      department: string | null
-    }[]
-  >
+export interface SubjectWithDept {
+  id: string
+  name: string
+  department: string
+}
+
+export interface GradeWithSubjects {
+  id: string
+  name: string
+  gradeNumber: number
+  subjects: SubjectWithDept[]
+}
+
+export async function getGradesAndSubjects(): Promise<
+  ActionResponse<GradeWithSubjects[]>
 > {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
-    const { getSchoolSubjects } = await import("@/lib/school-subjects")
-    const subjects = await getSchoolSubjects(schoolId)
+    const grades = await db.academicGrade.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        name: true,
+        gradeNumber: true,
+        subjectSelections: {
+          where: { isActive: true },
+          select: {
+            subject: { select: { id: true, name: true, department: true } },
+          },
+          distinct: ["catalogSubjectId"],
+        },
+      },
+      orderBy: { gradeNumber: "asc" },
+    })
 
     return {
       success: true,
-      data: subjects.map((s) => ({
-        id: s.id,
-        name: s.name,
-        department: s.department,
+      data: grades.map((g) => ({
+        id: g.id,
+        name: g.name,
+        gradeNumber: g.gradeNumber,
+        subjects: g.subjectSelections.map((s) => s.subject),
       })),
     }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to load subjects",
+      error: error instanceof Error ? error.message : "Failed to load grades",
     }
   }
 }

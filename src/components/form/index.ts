@@ -87,6 +87,8 @@ export { SwitchField } from "./atoms/switch"
 export { RadioGroupField } from "./atoms/radio-group"
 export { ComboboxField } from "./atoms/combobox"
 export { FileUploadField } from "./atoms/file-upload"
+export { PhoneField } from "./atoms/phone"
+export { CountryField } from "./atoms/country"
 
 // =============================================================================
 // TEMPLATE (Composed Components)
@@ -95,7 +97,6 @@ export { FileUploadField } from "./atoms/file-upload"
 // Composed fields (molecules)
 export { FieldArray } from "./template/field-array"
 export { PasswordField } from "./template/password-field"
-export { PhoneField } from "./template/phone-field"
 
 // Multi-step form provider
 export { MultiStepFormProvider } from "./template/provider"

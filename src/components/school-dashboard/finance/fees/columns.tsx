@@ -4,19 +4,15 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { Ellipsis, Users } from "lucide-react"
+import { Users } from "lucide-react"
 
 import { formatCurrency } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
@@ -185,28 +181,18 @@ export const getFeeStructureColumns = (
       cell: ({ row }) => {
         const fee = row.original
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">{t.actions}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align={isAr ? "start" : "end"}>
-              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={`/${lang}/finance/fees/structures/${fee.id}`}>
-                  {t.view}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/${lang}/finance/fees/structures/${fee.id}/edit`}>
-                  {t.edit}
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ActionMenu align={isAr ? "start" : "end"}>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.view}
+              href={`/${lang}/finance/fees/structures/${fee.id}`}
+            />
+            <ActionMenuItem
+              label={t.edit}
+              href={`/${lang}/finance/fees/structures/${fee.id}/edit`}
+            />
+          </ActionMenu>
         )
       },
       enableSorting: false,

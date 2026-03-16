@@ -23,6 +23,8 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { CountryDropdown } from "@/components/atom/country-dropdown"
+import { PhoneInput } from "@/components/atom/phone-input"
 import { FormHeading } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -240,7 +242,11 @@ export function ContactStep() {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input {...field} type="tel" placeholder="+1234567890" />
+                  <PhoneInput
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    placeholder="+1234567890"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -295,7 +301,11 @@ export function ContactStep() {
                 <FormItem>
                   <FormLabel>Country</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Country" />
+                    <CountryDropdown
+                      value={field.value}
+                      onChange={(isoCode) => field.onChange(isoCode)}
+                      placeholder="Select country"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -327,7 +337,11 @@ export function ContactStep() {
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input {...field} type="tel" placeholder="Phone" />
+                      <PhoneInput
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        placeholder="+1234567890"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

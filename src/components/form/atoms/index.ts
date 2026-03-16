@@ -21,7 +21,9 @@ export { TextareaField } from "./textarea"
 export { CheckboxField } from "./checkbox"
 export { DateField } from "./date"
 
-// Extended fields (new)
+// Extended fields
 export { SwitchField } from "./switch"
 export { RadioGroupField } from "./radio-group"
 export { ComboboxField } from "./combobox"
+export { PhoneField } from "./phone"
+export { CountryField } from "./country"

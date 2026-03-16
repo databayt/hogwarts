@@ -8,7 +8,12 @@ import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
 import { SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
-import { PlatformToolbar } from "@/components/school-dashboard/shared"
+import {
+  GridCard,
+  GridContainer,
+  GridEmptyState,
+  PlatformToolbar,
+} from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
   type BulkAction,
@@ -279,12 +284,45 @@ export function MembershipTable({
         }}
       />
 
-      {/* DataTable */}
-      <DataTable
-        table={table}
-        isLoading={isPending}
-        paginationMode="load-more"
-      />
+      {/* Table / Grid View */}
+      {view === "grid" ? (
+        visibleData.length > 0 ? (
+          <GridContainer columns={4}>
+            {visibleData.map((member) => (
+              <GridCard
+                key={member.id}
+                avatar={{
+                  src: member.image,
+                  fallback: member.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase(),
+                }}
+                title={member.name}
+                description={member.role}
+                subtitle={member.email || undefined}
+                href={`/${lang}/profile/${member.id}`}
+              />
+            ))}
+          </GridContainer>
+        ) : (
+          <GridEmptyState
+            title={t.noMembers || "No members found"}
+            description={
+              t.noMembersDescription || "Try adjusting your search or filters"
+            }
+          />
+        )
+      ) : (
+        <DataTable
+          table={table}
+          isLoading={isPending}
+          paginationMode="load-more"
+        />
+      )}
 
       {hasMore && (
         <div className="flex justify-center py-2">

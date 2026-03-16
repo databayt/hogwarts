@@ -51,7 +51,7 @@ export default function InformationContent() {
                   surname: data.surname,
                   gender: data.gender as "male" | "female" | undefined,
                   birthDate: data.birthDate ?? undefined,
-                  profilePhotoUrl: data.profilePhotoUrl ?? undefined,
+                  nationality: data.nationality ?? undefined,
                 }
               : undefined
           }

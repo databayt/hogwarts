@@ -4,18 +4,14 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { type ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { getEmploymentStatusColor, getEmploymentTypeColor } from "./config"
@@ -209,37 +205,28 @@ export function getStaffColumns(
         const staff = row.original
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">{t.openMenu}</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align={isAr ? "start" : "end"}>
-              {actions?.onView && (
-                <DropdownMenuItem onClick={() => actions.onView?.(staff)}>
-                  {t.view}
-                </DropdownMenuItem>
-              )}
-              {actions?.onEdit && (
-                <DropdownMenuItem onClick={() => actions.onEdit?.(staff)}>
-                  {t.edit}
-                </DropdownMenuItem>
-              )}
-              {actions?.onDelete && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onClick={() => actions.onDelete?.(staff)}
-                  >
-                    {t.delete}
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ActionMenu align={isAr ? "start" : "end"} srLabel={t.openMenu}>
+            {actions?.onView && (
+              <DropdownMenuItem onClick={() => actions.onView?.(staff)}>
+                {t.view}
+              </DropdownMenuItem>
+            )}
+            {actions?.onEdit && (
+              <DropdownMenuItem onClick={() => actions.onEdit?.(staff)}>
+                {t.edit}
+              </DropdownMenuItem>
+            )}
+            {actions?.onDelete && (
+              <>
+                <DropdownMenuSeparator />
+                <ActionMenuItem
+                  label={t.delete}
+                  variant="destructive"
+                  onClick={() => actions.onDelete?.(staff)}
+                />
+              </>
+            )}
+          </ActionMenu>
         )
       },
     },

@@ -4,19 +4,16 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { CheckCircle, Ellipsis, XCircle } from "lucide-react"
+import { CheckCircle, XCircle } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -384,54 +381,44 @@ export const getTeacherColumns = (
         const teacher = row.original
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">{t.actions}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align={isRtl ? "start" : "end"}>
-              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+          <ActionMenu align={isRtl ? "start" : "end"} srLabel={t.actions}>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
 
-              <DropdownMenuItem asChild>
-                <Link href={`/${lang}/profile/${teacher.userId || teacher.id}`}>
-                  {t.view}
-                </Link>
+            <ActionMenuItem
+              label={t.view}
+              href={`/${lang}/profile/${teacher.userId || teacher.id}`}
+            />
+
+            {teacher.wizardStep ? (
+              <ActionMenuItem
+                label={t.completeProfile || "Complete Profile"}
+                href={`/${lang}/teachers/add/${teacher.id}/${teacher.wizardStep}`}
+              />
+            ) : (
+              <DropdownMenuItem onClick={() => callbacks?.onEdit?.(teacher)}>
+                {t.edit}
               </DropdownMenuItem>
+            )}
 
-              {teacher.wizardStep ? (
-                <DropdownMenuItem asChild>
-                  <Link
-                    href={`/${lang}/teachers/add/${teacher.id}/${teacher.wizardStep}`}
-                  >
-                    {t.completeProfile || "Complete Profile"}
-                  </Link>
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => callbacks?.onEdit?.(teacher)}>
-                  {t.edit}
-                </DropdownMenuItem>
-              )}
+            <DropdownMenuSeparator />
 
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem
-                onClick={() => callbacks?.onToggleStatus?.(teacher)}
-              >
-                {teacher.employmentStatus === "ACTIVE"
+            <ActionMenuItem
+              label={
+                teacher.employmentStatus === "ACTIVE"
                   ? t.deactivate
-                  : t.activate}
-              </DropdownMenuItem>
+                  : t.activate
+              }
+              onClick={() => callbacks?.onToggleStatus?.(teacher)}
+            />
 
-              <DropdownMenuSeparator />
+            <DropdownMenuSeparator />
 
-              <DropdownMenuItem onClick={() => callbacks?.onDelete?.(teacher)}>
-                {t.delete}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <ActionMenuItem
+              label={t.delete}
+              onClick={() => callbacks?.onDelete?.(teacher)}
+            />
+          </ActionMenu>
         )
       },
       enableSorting: false,

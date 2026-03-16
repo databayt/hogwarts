@@ -16,18 +16,11 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { useLocale } from "@/components/internationalization/use-locale"
+import { CountryDropdown } from "@/components/atom/country-dropdown"
+import { PhoneInput } from "@/components/atom/phone-input"
 
 import { useApplySession } from "../application-context"
 import { saveContactStep } from "./actions"
-import { COUNTRY_OPTIONS } from "./config"
 import type { ContactFormProps, ContactFormRef } from "./types"
 import { contactSchema, type ContactSchemaType } from "./validation"
 
@@ -35,8 +28,6 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
     const params = useParams()
     const subdomain = params.subdomain as string
-    const { locale: lang } = useLocale()
-    const isRTL = lang === "ar"
     const { session, updateStepData } = useApplySession()
 
     const form = useForm<ContactSchemaType>({
@@ -112,9 +103,9 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
                 <FormItem>
                   <FormLabel>{dict.phone || "Phone"} *</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      type="tel"
+                    <PhoneInput
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
                       placeholder={dict.phonePlaceholder || "+249 XXX XXX XXXX"}
                     />
                   </FormControl>
@@ -134,9 +125,9 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
                   {dict.alternatePhone || "Alternate Phone"}
                 </FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    type="tel"
+                  <PhoneInput
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
                     placeholder={
                       dict.alternatePhonePlaceholder || "+249 XXX XXX XXXX"
                     }
@@ -227,22 +218,13 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{dict.country || "Country"} *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={dict.selectCountry || "Select country"}
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {COUNTRY_OPTIONS(isRTL).map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <CountryDropdown
+                      value={field.value}
+                      onChange={(isoCode) => field.onChange(isoCode)}
+                      placeholder={dict.selectCountry || "Select country"}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

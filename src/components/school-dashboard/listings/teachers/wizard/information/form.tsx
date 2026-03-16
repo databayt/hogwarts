@@ -6,9 +6,17 @@ import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { Form } from "@/components/ui/form"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import { ErrorToast } from "@/components/atom/toast"
-import { DateField, InputField, SelectField } from "@/components/form"
+import { CountryField, DateField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { GENDER_OPTIONS } from "@/components/school-dashboard/listings/teachers/config"
 
@@ -31,9 +39,9 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
       defaultValues: {
         givenName: initialData?.givenName || "",
         surname: initialData?.surname || "",
-        gender: initialData?.gender || "MALE",
+        gender: initialData?.gender || "male",
         birthDate: initialData?.birthDate,
-        profilePhotoUrl: initialData?.profilePhotoUrl,
+        nationality: initialData?.nationality || "",
       },
     })
 
@@ -75,33 +83,74 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <InputField
-            name="givenName"
-            label="Given Name"
-            placeholder="Enter given name"
-            required
-            disabled={isPending}
-          />
-          <InputField
-            name="surname"
-            label="Surname"
-            placeholder="Enter surname"
-            required
-            disabled={isPending}
-          />
-          <div className="grid grid-cols-2 gap-4">
+          <FieldGroup className="grid grid-cols-2">
+            <FormField
+              control={form.control}
+              name="givenName"
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel htmlFor="givenName">
+                    Given Name
+                    <span className="text-destructive ms-1">*</span>
+                  </FieldLabel>
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        id="givenName"
+                        placeholder="Enter given name"
+                        disabled={isPending}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                </Field>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="surname"
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel htmlFor="surname">
+                    Surname
+                    <span className="text-destructive ms-1">*</span>
+                  </FieldLabel>
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        id="surname"
+                        placeholder="Enter surname"
+                        disabled={isPending}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                </Field>
+              )}
+            />
+          </FieldGroup>
+          <div className="grid grid-cols-2 gap-7">
+            <DateField
+              name="birthDate"
+              label="Date of Birth"
+              disabled={isPending}
+            />
             <SelectField
               name="gender"
               label="Gender"
               options={[...GENDER_OPTIONS]}
               disabled={isPending}
             />
-            <DateField
-              name="birthDate"
-              label="Date of Birth"
-              disabled={isPending}
-            />
           </div>
+          <CountryField
+            name="nationality"
+            label="Nationality"
+            placeholder="Select nationality"
+            disabled={isPending}
+            className="max-w-xs"
+          />
         </form>
       </Form>
     )

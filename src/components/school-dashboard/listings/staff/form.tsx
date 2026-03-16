@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { PhoneInput } from "@/components/atom/phone-input"
 import { uploadFile } from "@/components/file"
 
 import { createStaff, updateStaff } from "./actions"
@@ -347,7 +348,11 @@ export function StaffForm({
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter phone number" {...field} />
+                  <PhoneInput
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    placeholder="Enter phone number"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -390,7 +395,11 @@ export function StaffForm({
               <FormItem>
                 <FormLabel>Emergency Contact Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter phone" {...field} />
+                  <PhoneInput
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    placeholder="Enter phone"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

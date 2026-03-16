@@ -11,7 +11,12 @@ import { useFieldArray, useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import { CheckboxField, InputField, SelectField } from "@/components/form"
+import {
+  CheckboxField,
+  InputField,
+  PhoneField,
+  SelectField,
+} from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 
 import { completeParentWizard } from "../actions"
@@ -140,7 +145,7 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-                <InputField
+                <PhoneField
                   name={`phoneNumbers.${index}.phoneNumber`}
                   label="Phone Number"
                   placeholder="+1234567890"

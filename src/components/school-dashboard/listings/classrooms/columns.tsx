@@ -4,16 +4,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { type ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 
 export type ClassroomRow = {
   id: string
@@ -90,28 +84,19 @@ export function getClassroomColumns(
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => callbacks.onEdit?.(row.original.id)}
-            >
-              <Pencil className="me-2 h-4 w-4" />
-              {t.edit}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => callbacks.onDelete?.(row.original)}
-              className="text-destructive"
-            >
-              <Trash2 className="me-2 h-4 w-4" />
-              {t.delete}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ActionMenu>
+          <ActionMenuItem
+            icon={Pencil}
+            label={t.edit}
+            onClick={() => callbacks.onEdit?.(row.original.id)}
+          />
+          <ActionMenuItem
+            icon={Trash2}
+            label={t.delete}
+            variant="destructive"
+            onClick={() => callbacks.onDelete?.(row.original)}
+          />
+        </ActionMenu>
       ),
     },
   ]

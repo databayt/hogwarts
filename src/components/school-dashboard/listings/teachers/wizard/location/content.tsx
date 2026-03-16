@@ -38,11 +38,11 @@ export default function LocationContent() {
           initialData={
             data
               ? {
-                  currentAddress: (data as any).currentAddress ?? undefined,
-                  city: (data as any).city ?? undefined,
-                  state: (data as any).state ?? undefined,
-                  postalCode: (data as any).postalCode ?? undefined,
-                  country: (data as any).country ?? undefined,
+                  currentAddress: data.currentAddress ?? undefined,
+                  city: data.city ?? undefined,
+                  state: data.state ?? undefined,
+                  postalCode: data.postalCode ?? undefined,
+                  country: data.country ?? undefined,
                 }
               : undefined
           }

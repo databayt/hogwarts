@@ -3,18 +3,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ColumnDef } from "@tanstack/react-table"
-import { Calendar, CheckCircle, Ellipsis } from "lucide-react"
+import { Calendar, CheckCircle } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -163,32 +160,23 @@ export const getTermColumns = (
         }
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
-              {!termItem.isActive && (
-                <DropdownMenuItem onClick={onSetActive}>
-                  <CheckCircle className="me-2 h-4 w-4" />
-                  {t.setActive}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={onDelete}
-                className="text-destructive focus:text-destructive"
-              >
-                {t.delete}
+          <ActionMenu>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem label={t.edit} onClick={onEdit} />
+            {!termItem.isActive && (
+              <DropdownMenuItem onClick={onSetActive}>
+                <CheckCircle className="me-2 h-4 w-4" />
+                {t.setActive}
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.delete}
+              onClick={onDelete}
+              variant="destructive"
+            />
+          </ActionMenu>
         )
       },
       enableSorting: false,

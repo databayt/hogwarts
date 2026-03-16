@@ -8,6 +8,7 @@ model Teacher {
   surname      String
   lang         String  @default("ar")
   gender       String?
+  nationality  String?
   emailAddress String
 
   // New profile fields

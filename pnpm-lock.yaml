@@ -262,6 +262,9 @@ importers:
       cookies-next:
         specifier: ^6.1.0
         version: 6.1.0(next@16.1.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
+      country-data-list:
+        specifier: ^1.6.0
+        version: 1.6.0
       country-state-city:
         specifier: ^3.2.1
         version: 3.2.1
@@ -328,6 +331,9 @@ importers:
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
+      libphonenumber-js:
+        specifier: ^1.12.40
+        version: 1.12.40
       lottie-react:
         specifier: ^2.4.1
         version: 2.4.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -400,6 +406,9 @@ importers:
       react-chartjs-2:
         specifier: ^5.3.0
         version: 5.3.0(chart.js@4.5.1)(react@19.2.0)
+      react-circle-flags:
+        specifier: ^0.0.27
+        version: 0.0.27(react@19.2.0)
       react-colorful:
         specifier: ^5.6.1
         version: 5.6.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -413,8 +422,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react-day-picker:
-        specifier: ^9.12.0
-        version: 9.12.0(react@19.2.0)
+        specifier: ^9.14.0
+        version: 9.14.0(react@19.2.0)
       react-dnd:
         specifier: ^16.0.1
         version: 16.0.1(@types/node@20.19.9)(@types/react@19.2.6)(react@19.2.0)
@@ -6206,6 +6215,13 @@ packages:
       zod:
         optional: true
 
+  "@tabby_ai/hijri-converter@1.0.5":
+    resolution:
+      {
+        integrity: sha512-r5bClKrcIusDoo049dSL8CawnHR6mRdDwhlQuIgZRNty68q0x8k3Lf1BtPAMxRf/GgnHBnIO4ujd3+GQdLWzxQ==,
+      }
+    engines: { node: ">=16.0.0" }
+
   "@tabler/icons-react@3.34.1":
     resolution:
       {
@@ -8729,6 +8745,12 @@ packages:
     resolution:
       {
         integrity: sha512-AzlgcsCbUMymkADOJtQm3wO9S3ltPfYOFD5033keQn9NJzIbtnZj+UdBJe7DYml/8TdbtHJW3j58SOnKhWY/5g==,
+      }
+
+  country-data-list@1.6.0:
+    resolution:
+      {
+        integrity: sha512-KG1flNkUHtde7q9zw1/NcH5fFgDxU6gRt4f7jhBm2ucNXrSO8UBWv/w8UyueOhJGabzzjHJ7fTyRVLrKruWpUw==,
       }
 
   country-state-city@3.2.1:
@@ -11881,6 +11903,12 @@ packages:
       }
     engines: { node: ">= 0.8.0" }
 
+  libphonenumber-js@1.12.40:
+    resolution:
+      {
+        integrity: sha512-HKGs7GowShNls3Zh+7DTr6wYpPk5jC78l508yQQY3e8ZgJChM3A9JZghmMJZuK+5bogSfuTafpjksGSR3aMIEg==,
+      }
+
   lie@3.3.0:
     resolution:
       {
@@ -14204,6 +14232,15 @@ packages:
       chart.js: ^4.1.1
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
+  react-circle-flags@0.0.27:
+    resolution:
+      {
+        integrity: sha512-34WtRgFX74DtmL4UiOZk+i+OmX5lHXevaRelF7zEUIBCrUAPyfJ1P3Oi8ebxcfysn8Z4+EZPKGvKcS9hqp5fCw==,
+      }
+    engines: { node: ">=10" }
+    peerDependencies:
+      react: ^16.0.0 || 17.x || 18.x || 19.x
+
   react-colorful@5.6.1:
     resolution:
       {
@@ -14238,10 +14275,10 @@ packages:
       react: ^16.8.0 || ^17.0.0-0 || ^18.0.0-0
       react-dom: ^16.8.0 || ^17.0.0-0 || ^18.0.0-0
 
-  react-day-picker@9.12.0:
+  react-day-picker@9.14.0:
     resolution:
       {
-        integrity: sha512-t8OvG/Zrciso5CQJu5b1A7yzEmebvST+S3pOVQJWxwjjVngyG/CA2htN/D15dLI4uTEuLLkbZyS4YYt480FAtA==,
+        integrity: sha512-tBaoDWjPwe0M5pGrum4H0SR6Lyk+BO9oHnp9JbKpGKW2mlraNPgP9BMfsg5pWpwrssARmeqk7YBl2oXutZTaHA==,
       }
     engines: { node: ">=18" }
     peerDependencies:
@@ -21237,6 +21274,8 @@ snapshots:
       valibot: 1.2.0(typescript@5.8.3)
       zod: 4.0.14
 
+  "@tabby_ai/hijri-converter@1.0.5": {}
+
   "@tabler/icons-react@3.34.1(react@19.2.0)":
     dependencies:
       "@tabler/icons": 3.34.1
@@ -22765,6 +22804,8 @@ snapshots:
   cose-base@2.2.0:
     dependencies:
       layout-base: 2.0.1
+
+  country-data-list@1.6.0: {}
 
   country-state-city@3.2.1: {}
 
@@ -24941,6 +24982,8 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
+  libphonenumber-js@1.12.40: {}
+
   lie@3.3.0:
     dependencies:
       immediate: 3.0.6
@@ -26570,6 +26613,10 @@ snapshots:
       chart.js: 4.5.1
       react: 19.2.0
 
+  react-circle-flags@0.0.27(react@19.2.0):
+    dependencies:
+      react: 19.2.0
+
   react-colorful@5.6.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
       react: 19.2.0
@@ -26596,9 +26643,10 @@ snapshots:
       react-fast-compare: 3.2.2
       react-faux-dom: 4.5.0(react@19.2.0)
 
-  react-day-picker@9.12.0(react@19.2.0):
+  react-day-picker@9.14.0(react@19.2.0):
     dependencies:
       "@date-fns/tz": 1.4.1
+      "@tabby_ai/hijri-converter": 1.0.5
       date-fns: 4.1.0
       date-fns-jalali: 4.1.0-0
       react: 19.2.0

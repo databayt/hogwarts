@@ -3,19 +3,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ColumnDef } from "@tanstack/react-table"
-import { Building2, Ellipsis, Mail, Phone, Star } from "lucide-react"
+import { Building2, Mail, Phone, Star } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { useModal } from "@/components/atom/modal/context"
 import {
   confirmDeleteDialog,
@@ -287,21 +283,13 @@ export const getLeadColumns = (
         }
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">{t.actions}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ActionMenu srLabel={t.actions}>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem label={t.view} onClick={onView} />
+            <ActionMenuItem label={t.edit} onClick={onEdit} />
+            <ActionMenuItem label={t.delete} onClick={onDelete} />
+          </ActionMenu>
         )
       },
       enableSorting: false,

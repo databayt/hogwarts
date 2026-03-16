@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { PhoneInput } from "@/components/atom/phone-input"
 
 import { VISIT_PURPOSES } from "../config"
 import type { VisitFormData } from "../validation"
@@ -65,7 +66,11 @@ export function InfoStep() {
             <FormItem>
               <FormLabel>Phone (Optional)</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="+1 (555) 123-4567" {...field} />
+                <PhoneInput
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  placeholder="+1 (555) 123-4567"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

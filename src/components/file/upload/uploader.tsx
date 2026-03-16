@@ -58,6 +58,8 @@ interface UploaderProps {
   showFileList?: boolean
   variant?: "default" | "compact" | "avatar" | "banner"
   placeholder?: string
+  /** Custom placeholder image src for avatar variant (replaces Upload icon) */
+  placeholderImage?: string
   accept?: Record<string, string[]>
   /** Enable client-side image optimization (WebP conversion, resize) before upload */
   optimizeImages?: boolean
@@ -126,6 +128,7 @@ export function Uploader({
   showFileList = true,
   variant = "default",
   placeholder,
+  placeholderImage,
   accept,
   optimizeImages,
   imageOptimization,
@@ -277,6 +280,12 @@ export function Uploader({
               src={uploadedFiles[0].url}
               alt="Avatar"
               className="h-full w-full rounded-full object-cover"
+            />
+          ) : placeholderImage ? (
+            <img
+              src={placeholderImage}
+              alt={placeholder || "Upload"}
+              className="h-10 w-10 object-contain"
             />
           ) : (
             <Upload className="text-muted-foreground h-8 w-8" />

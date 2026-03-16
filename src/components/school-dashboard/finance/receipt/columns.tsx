@@ -8,21 +8,17 @@
 
 "use client"
 
-import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
-import { Ellipsis, Eye, RefreshCw, Trash2 } from "lucide-react"
+import { Eye, RefreshCw, Trash2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 
 import { ExpenseReceipt } from "./types"
 
@@ -124,49 +120,39 @@ export function getColumns(
         const receipt = row.original
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">{rp?.openMenu || "Open menu"}</span>
-                <Ellipsis className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{fd?.actions || "Actions"}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+          <ActionMenu srLabel={rp?.openMenu || "Open menu"}>
+            <DropdownMenuLabel>{fd?.actions || "Actions"}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              icon={Eye}
+              label={rp?.viewDetails || "View Details"}
+              onClick={() => {
+                // View details - will be handled by parent component
+                window.location.href = `/receipts/${receipt.id}`
+              }}
+            />
+            {receipt.status === "error" && (
               <DropdownMenuItem
                 onClick={() => {
-                  // View details - will be handled by parent component
-                  window.location.href = `/receipts/${receipt.id}`
+                  // Handle retry - this would call retryReceiptExtraction
+                  console.log("Retry extraction for:", receipt.id)
                 }}
               >
-                <Eye className="me-2 h-4 w-4" />
-                {rp?.viewDetails || "View Details"}
+                <RefreshCw className="me-2 h-4 w-4" />
+                {rp?.retryExtraction || "Retry Extraction"}
               </DropdownMenuItem>
-              {receipt.status === "error" && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    // Handle retry - this would call retryReceiptExtraction
-                    console.log("Retry extraction for:", receipt.id)
-                  }}
-                >
-                  <RefreshCw className="me-2 h-4 w-4" />
-                  {rp?.retryExtraction || "Retry Extraction"}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => {
-                  // Handle delete - this would call deleteReceipt
-                  console.log("Delete receipt:", receipt.id)
-                }}
-              >
-                <Trash2 className="me-2 h-4 w-4" />
-                {fd?.delete || "Delete"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              icon={Trash2}
+              label={fd?.delete || "Delete"}
+              onClick={() => {
+                // Handle delete - this would call deleteReceipt
+                console.log("Delete receipt:", receipt.id)
+              }}
+              variant="destructive"
+            />
+          </ActionMenu>
         )
       },
     },
