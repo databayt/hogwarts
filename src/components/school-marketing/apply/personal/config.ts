@@ -17,7 +17,6 @@ export const GENDER_OPTIONS = (isRTL: boolean) =>
   [
     { value: "MALE", label: isRTL ? "ذكر" : "Male" },
     { value: "FEMALE", label: isRTL ? "أنثى" : "Female" },
-    { value: "OTHER", label: isRTL ? "أخرى" : "Other" },
   ] as const
 
 export const NATIONALITY_OPTIONS = (isRTL: boolean) =>

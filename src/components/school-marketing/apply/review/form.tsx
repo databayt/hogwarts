@@ -35,7 +35,7 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
         }
       )?.school?.admission?.formSteps ?? {}
 
-    const { personal, contact, guardian, academic, documents } =
+    const { personal, contact, location, guardian, academic, documents } =
       session.formData
 
     const submitApplication = async () => {
@@ -48,6 +48,7 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
         campaignId,
         ...personal,
         ...contact,
+        ...location,
         ...guardian,
         ...academic,
         ...documents,
@@ -150,11 +151,15 @@ export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
                 formDict.alternatePhone || "Alternate Phone",
                 contact.alternatePhone
               )}
-            <Separator className="my-2" />
-            {renderField(formDict.address || "Address", contact?.address)}
-            {renderField(formDict.city || "City", contact?.city)}
-            {renderField(formDict.stateProvince || "State", contact?.state)}
-            {renderField(formDict.country || "Country", contact?.country)}
+            {location && (
+              <>
+                <Separator className="my-2" />
+                {renderField(formDict.address || "Address", location.address)}
+                {renderField(formDict.city || "City", location.city)}
+                {renderField(formDict.stateProvince || "State", location.state)}
+                {renderField(formDict.country || "Country", location.country)}
+              </>
+            )}
           </CardContent>
         </Card>
 

@@ -110,7 +110,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
     sessionToken: initialSessionToken || null,
     campaignId: initialCampaignId || null,
     formData: {},
-    currentStep: "personal",
+    currentStep: "attachments",
     lastSaved: null,
     isDirty: false,
     isLoading: false,
@@ -144,7 +144,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
             ...prev,
             campaignId,
             formData: {},
-            currentStep: "personal",
+            currentStep: "attachments",
             isLoading: false,
           }))
         }
@@ -235,8 +235,10 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
       // Flatten form data for server (ApplicationFormData is flat)
       const flatFormData: Partial<ApplicationFormData> = {
         campaignId: session.campaignId,
+        ...session.formData.attachments,
         ...session.formData.personal,
         ...session.formData.contact,
+        ...session.formData.location,
         ...session.formData.guardian,
         ...session.formData.academic,
         photoUrl: session.formData.documents?.photoUrl,

@@ -30,7 +30,12 @@ function ActionMenu({
           <span className="sr-only">{srLabel}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={align}>{children}</DropdownMenuContent>
+      <DropdownMenuContent
+        align={align}
+        className="rounded-lg p-2 [&_[data-slot=dropdown-menu-separator]]:mx-2"
+      >
+        {children}
+      </DropdownMenuContent>
     </DropdownMenu>
   )
 }
@@ -53,7 +58,7 @@ function ActionMenuItem({
   const className =
     variant === "destructive"
       ? "text-destructive focus:text-destructive"
-      : undefined
+      : "text-foreground/70"
 
   if (href) {
     return (

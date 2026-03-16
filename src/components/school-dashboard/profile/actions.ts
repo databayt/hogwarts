@@ -456,6 +456,90 @@ export async function getProfileBasicData(userId: string, lang?: string) {
     })
 
     if (!user) {
+      // Fallback: try looking up as a student ID (students created via wizard may not have a User)
+      const student = await db.student.findFirst({
+        where: { id: userId, schoolId },
+        select: {
+          id: true,
+          givenName: true,
+          surname: true,
+          profilePhotoUrl: true,
+          grNumber: true,
+          city: true,
+          enrollmentDate: true,
+          email: true,
+          createdAt: true,
+        },
+      })
+      if (student) {
+        const data: Record<string, unknown> = {
+          id: student.id,
+          givenName: student.givenName || "",
+          surname: student.surname || "",
+          profilePhotoUrl: student.profilePhotoUrl || null,
+          emailAddress: student.email || "",
+          createdAt: student.createdAt.toISOString(),
+          bio: null,
+          grNumber: student.grNumber,
+          city: student.city,
+          enrollmentDate: student.enrollmentDate?.toISOString(),
+          role: "STUDENT",
+        }
+
+        if (lang && lang !== "ar" && schoolId && data.givenName) {
+          const translated = await getDisplayText(
+            data.givenName as string,
+            "ar",
+            lang as "en",
+            schoolId
+          )
+          if (translated) data.givenName = translated
+        }
+
+        return { success: true as const, data }
+      }
+
+      // Fallback: try looking up as a teacher ID (teachers created via wizard may not have a User)
+      const teacher = await db.teacher.findFirst({
+        where: { id: userId, schoolId },
+        select: {
+          id: true,
+          givenName: true,
+          surname: true,
+          profilePhotoUrl: true,
+          employeeId: true,
+          emailAddress: true,
+          joiningDate: true,
+          createdAt: true,
+        },
+      })
+      if (teacher) {
+        const data: Record<string, unknown> = {
+          id: teacher.id,
+          givenName: teacher.givenName || "",
+          surname: teacher.surname || "",
+          profilePhotoUrl: teacher.profilePhotoUrl || null,
+          emailAddress: teacher.emailAddress || "",
+          createdAt: teacher.createdAt.toISOString(),
+          bio: null,
+          employeeId: teacher.employeeId,
+          joiningDate: teacher.joiningDate?.toISOString(),
+          role: "TEACHER",
+        }
+
+        if (lang && lang !== "ar" && schoolId && data.givenName) {
+          const translated = await getDisplayText(
+            data.givenName as string,
+            "ar",
+            lang as "en",
+            schoolId
+          )
+          if (translated) data.givenName = translated
+        }
+
+        return { success: true as const, data }
+      }
+
       return { success: false as const, error: "User not found" }
     }
 

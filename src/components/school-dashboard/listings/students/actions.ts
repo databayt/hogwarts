@@ -75,13 +75,16 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
+import { buildTranslatedSearchConditions } from "@/lib/search-with-translation"
 import { syncStudentGrades } from "@/lib/sync-student-grades"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
@@ -552,27 +555,17 @@ export async function deleteStudent(input: {
 
     // Cascade validation: check for dependencies before deletion
     const [
-      classCount,
       attendanceCount,
       examResultCount,
       feeAssignmentCount,
       submissionCount,
-      timetableRelated,
     ] = await Promise.all([
-      db.studentClass.count({ where: { studentId: id, schoolId } }),
       db.attendance.count({ where: { studentId: id, schoolId } }),
       db.examResult.count({ where: { studentId: id, schoolId } }),
       db.feeAssignment.count({ where: { studentId: id, schoolId } }),
       db.assignmentSubmission.count({ where: { studentId: id, schoolId } }),
-      db.studentYearLevel.count({ where: { studentId: id, schoolId } }),
     ])
 
-    if (classCount > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: student is enrolled in ${classCount} class(es). Unenroll first.`,
-      }
-    }
     if (attendanceCount > 0) {
       return {
         success: false,
@@ -602,11 +595,12 @@ export async function deleteStudent(input: {
     const studentModel = getModelOrThrow("student")
     await db.$transaction(async (tx) => {
       // Clean up non-critical bridge/tracking records
-      if (timetableRelated > 0) {
-        await tx.studentYearLevel.deleteMany({
-          where: { studentId: id, schoolId },
-        })
-      }
+      await tx.studentClass.deleteMany({
+        where: { studentId: id, schoolId },
+      })
+      await tx.studentYearLevel.deleteMany({
+        where: { studentId: id, schoolId },
+      })
       await tx.studentGuardian.deleteMany({
         where: { studentId: id, schoolId },
       })
@@ -739,24 +733,33 @@ export async function getStudent(input: {
  */
 /**
  * Format grade for display:
- * - Arabic name: strip "الصف " prefix → "الثالث"
- * - English: "Grade 3", "KG", "Pre-K" from gradeNumber
+ * - English: "Grade 3", "Kindergarten", "Nursery" from gradeNumber
+ * - Arabic: translated via getDisplayText with overrides
  */
+// Override Google Translate results for grade terms
+const AR_GRADE_OVERRIDES: Record<string, string> = {
+  "رياض الأطفال": "الروضة",
+  حضانة: "الحضانة",
+}
+
+function applyGradeOverrides(translated: string, lang: string): string {
+  if (lang !== "ar") return translated
+  const overridden = AR_GRADE_OVERRIDES[translated] || translated
+  return overridden.replace(/^الصف /, "")
+}
+
 function formatGradeLabel(
   grade: { name?: string | null; gradeNumber?: number | null } | null
 ): string | null {
   if (!grade) return null
-  if (grade.name) {
-    return grade.name
-      .replace(/^الروضة الأولى$/, "أولى روضة")
-      .replace(/^الروضة الثانية$/, "ثانية روضة")
-      .replace(/^الصف /, "")
+  if (grade.gradeNumber != null) {
+    const n = grade.gradeNumber
+    if (n < 0) return "Nursery"
+    if (n === 0) return "Kindergarten"
+    return `Grade ${n}`
   }
-  if (grade.gradeNumber == null) return null
-  const n = grade.gradeNumber
-  if (n < 0) return "Pre-K"
-  if (n === 0) return "KG"
-  return `Grade ${n}`
+  if (grade.name) return grade.name
+  return null
 }
 
 export async function getStudents(
@@ -809,18 +812,36 @@ export async function getStudents(
     // Parse and validate input
     const sp = getStudentsSchema.parse(input ?? {})
 
-    // Build where clause
+    // Build where clause with bilingual search support
+    const cookieStore = await cookies()
+    const displayLang = cookieStore.get("NEXT_LOCALE")?.value || "ar"
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const storageLang = school?.preferredLanguage || "ar"
+
+    let nameFilter = {}
+    if (sp.name) {
+      const nameConditions = await buildTranslatedSearchConditions(
+        sp.name,
+        ["givenName", "surname"],
+        schoolId,
+        storageLang,
+        displayLang
+      )
+      // Also search by studentId directly
+      nameFilter = {
+        OR: [
+          ...nameConditions,
+          { studentId: { contains: sp.name, mode: "insensitive" } },
+        ],
+      }
+    }
+
     const where: any = {
       schoolId,
-      ...(sp.name
-        ? {
-            OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
-              { studentId: { contains: sp.name, mode: "insensitive" } },
-            ],
-          }
-        : {}),
+      ...nameFilter,
       ...(sp.status ? buildStudentStatusFilter(sp.status) : {}),
     }
 
@@ -866,24 +887,59 @@ export async function getStudents(
       studentModel.count({ where }),
     ])
 
+    // Translate grade labels for current locale
+    const gradeTranslations = new Map<string, string>()
+    if (displayLang !== "en") {
+      const uniqueGrades = new Set<string>()
+      for (const s of rows as Array<any>) {
+        const label = formatGradeLabel(s.academicGrade)
+        if (label) uniqueGrades.add(label)
+      }
+      await Promise.all(
+        Array.from(uniqueGrades).map(async (label) => {
+          const translated = await getDisplayText(
+            label,
+            "en",
+            displayLang as "ar",
+            schoolId
+          )
+          gradeTranslations.set(
+            label,
+            applyGradeOverrides(translated, displayLang)
+          )
+        })
+      )
+    }
+
     // Map results
-    const mapped = (rows as Array<any>).map((s) => ({
-      id: s.id as string,
-      userId: s.userId as string | null,
-      name: [s.givenName, s.surname].filter(Boolean).join(" "),
-      studentId: (s.studentId as string | null) || null,
-      classroom: (s.section?.classroom?.roomName as string) || null,
-      gradeName: formatGradeLabel(s.academicGrade),
-      status: deriveStudentDisplayStatus(s),
-      createdAt: (s.createdAt as Date).toISOString(),
-      email: (s.email as string | null) || null,
-      dateOfBirth: s.dateOfBirth ? (s.dateOfBirth as Date).toISOString() : null,
-      enrollmentDate: s.enrollmentDate
-        ? (s.enrollmentDate as Date).toISOString()
-        : null,
-      wizardStep: (s.wizardStep as string | null) || null,
-      profilePhotoUrl: (s.profilePhotoUrl as string | null) || null,
-    }))
+    const mapped = (rows as Array<any>).map((s) => {
+      const enGrade = formatGradeLabel(s.academicGrade)
+      const gradeName = enGrade
+        ? displayLang !== "en"
+          ? gradeTranslations.get(enGrade) || enGrade
+          : enGrade
+        : null
+
+      return {
+        id: s.id as string,
+        userId: s.userId as string | null,
+        name: [s.givenName, s.surname].filter(Boolean).join(" "),
+        studentId: (s.studentId as string | null) || null,
+        classroom: (s.section?.classroom?.roomName as string) || null,
+        gradeName,
+        status: deriveStudentDisplayStatus(s),
+        createdAt: (s.createdAt as Date).toISOString(),
+        email: (s.email as string | null) || null,
+        dateOfBirth: s.dateOfBirth
+          ? (s.dateOfBirth as Date).toISOString()
+          : null,
+        enrollmentDate: s.enrollmentDate
+          ? (s.enrollmentDate as Date).toISOString()
+          : null,
+        wizardStep: (s.wizardStep as string | null) || null,
+        profilePhotoUrl: (s.profilePhotoUrl as string | null) || null,
+      }
+    })
 
     return { success: true, data: { rows: mapped, total: count as number } }
   } catch (error) {

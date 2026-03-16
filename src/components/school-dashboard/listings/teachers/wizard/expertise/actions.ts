@@ -2,11 +2,27 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { cookies } from "next/headers"
+
 import type { ActionResponse } from "@/lib/action-response"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 import { expertiseSchema, type ExpertiseFormData } from "./validation"
+
+async function getDisplayLocale(schoolId: string) {
+  const cookieStore = await cookies()
+  const displayLang =
+    (cookieStore.get("NEXT_LOCALE")?.value as SupportedLanguage) || "ar"
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { preferredLanguage: true },
+  })
+  const contentLang = (school?.preferredLanguage || "ar") as SupportedLanguage
+  return { displayLang, contentLang }
+}
 
 export async function getTeacherExpertise(
   teacherId: string
@@ -114,14 +130,38 @@ export async function getGradesAndSubjects(): Promise<
       orderBy: { gradeNumber: "asc" },
     })
 
+    const { displayLang, contentLang } = await getDisplayLocale(schoolId)
+
+    const data = await Promise.all(
+      grades.map(async (g) => ({
+        id: g.id,
+        name: await getDisplayText(g.name, contentLang, displayLang, schoolId),
+        gradeNumber: g.gradeNumber,
+        subjects: await Promise.all(
+          g.subjectSelections.map(async (s) => ({
+            id: s.subject.id,
+            name: await getDisplayText(
+              s.subject.name,
+              contentLang,
+              displayLang,
+              schoolId
+            ),
+            department: s.subject.department
+              ? await getDisplayText(
+                  s.subject.department,
+                  contentLang,
+                  displayLang,
+                  schoolId
+                )
+              : "",
+          }))
+        ),
+      }))
+    )
+
     return {
       success: true,
-      data: grades.map((g) => ({
-        id: g.id,
-        name: g.name,
-        gradeNumber: g.gradeNumber,
-        subjects: g.subjectSelections.map((s) => s.subject),
-      })),
+      data,
     }
   } catch (error) {
     return {

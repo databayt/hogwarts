@@ -5,11 +5,24 @@
 import { forwardRef, useEffect, useState } from "react"
 import { lookup } from "country-data-list"
 import parsePhoneNumber, { isValidPhoneNumber } from "libphonenumber-js"
-import { GlobeIcon } from "lucide-react"
+import { Check, GlobeIcon } from "lucide-react"
 import { CircleFlag } from "react-circle-flags"
 import { z } from "zod"
 
 import { cn } from "@/lib/utils"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 export const phoneSchema = z.string().refine((value) => {
   if (!value) return true // allow empty
@@ -40,6 +53,9 @@ export type CountryData = {
   status: string
 }
 
+// Build country list once
+const allCountries: CountryData[] = lookup.countries({ status: "assigned" })
+
 interface PhoneInputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
   "onChange"
@@ -67,10 +83,10 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
     },
     ref
   ) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [countryData, setCountryData] = useState<CountryData | undefined>()
     const [displayFlag, setDisplayFlag] = useState<string>("")
     const [hasInitialized, setHasInitialized] = useState(false)
+    const [open, setOpen] = useState(false)
 
     useEffect(() => {
       if (defaultCountry) {
@@ -96,10 +112,28 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
       }
     }, [defaultCountry, onChange, value, hasInitialized])
 
+    const fireChange = (val: string) => {
+      const syntheticEvent = {
+        target: { value: val },
+      } as React.ChangeEvent<HTMLInputElement>
+      onChange?.(syntheticEvent)
+    }
+
+    const handleCountrySelect = (country: CountryData) => {
+      setDisplayFlag(country.alpha2.toLowerCase())
+      setCountryData(country)
+      onCountryChange?.(country)
+      setOpen(false)
+
+      // Set the calling code as the phone value
+      if (country.countryCallingCodes?.[0]) {
+        fireChange(country.countryCallingCodes[0])
+      }
+    }
+
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let newValue = e.target.value
 
-      // Ensure the value starts with "+"
       if (!newValue.startsWith("+")) {
         if (newValue.startsWith("00")) {
           newValue = "+" + newValue.slice(2)
@@ -108,8 +142,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
         }
       }
 
-      // Helper to fire onChange with a specific value
-      const fireChange = (val: string) => {
+      const fireVal = (val: string) => {
         const syntheticEvent = {
           ...e,
           target: { ...e.target, value: val },
@@ -132,15 +165,15 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
           setCountryData(countryInfo)
           onCountryChange?.(countryInfo)
 
-          fireChange(parsed.number as string)
+          fireVal(parsed.number as string)
         } else {
-          fireChange(newValue)
+          fireVal(newValue)
           setDisplayFlag("")
           setCountryData(undefined)
           onCountryChange?.(undefined)
         }
       } catch {
-        fireChange(newValue)
+        fireVal(newValue)
         setDisplayFlag("")
         setCountryData(undefined)
         onCountryChange?.(undefined)
@@ -150,19 +183,67 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
     return (
       <div
         className={cn(
-          "border-input has-[input:focus]:ring-ring flex h-9 items-center gap-2 rounded-md border bg-transparent pl-3 shadow-sm transition-colors [interpolate-size:allow-keywords] disabled:cursor-not-allowed disabled:opacity-50 has-[input:focus]:ring-1 has-[input:focus]:outline-none md:text-sm",
+          "border-input has-[input:focus]:ring-ring relative flex h-9 items-center gap-2 rounded-md border bg-transparent pl-1 text-base shadow-sm transition-colors [interpolate-size:allow-keywords] disabled:cursor-not-allowed disabled:opacity-50 has-[input:focus]:ring-1 has-[input:focus]:outline-none md:text-sm",
           inline && "w-full rounded-l-none",
           className
         )}
       >
         {!inline && (
-          <div className="size-4 shrink-0 rounded-full">
-            {displayFlag ? (
-              <CircleFlag countryCode={displayFlag} height={16} />
-            ) : (
-              <GlobeIcon size={16} />
-            )}
-          </div>
+          <>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="hover:bg-accent flex h-7 w-7 shrink-0 items-center justify-center rounded-sm transition-colors"
+                  aria-label="Select country"
+                >
+                  {displayFlag ? (
+                    <div className="h-4 w-4 shrink-0 rounded-full">
+                      <CircleFlag countryCode={displayFlag} height={16} />
+                    </div>
+                  ) : (
+                    <GlobeIcon size={16} />
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search country..." />
+                  <CommandList>
+                    <CommandEmpty>No country found.</CommandEmpty>
+                    <CommandGroup>
+                      {allCountries.map((country) => (
+                        <CommandItem
+                          key={country.alpha2}
+                          value={country.name}
+                          className="gap-2 px-2"
+                          onSelect={() => handleCountrySelect(country)}
+                        >
+                          <span className="h-4 w-4 shrink-0 overflow-hidden rounded-full">
+                            <CircleFlag
+                              countryCode={country.alpha2.toLowerCase()}
+                              height={16}
+                              width={16}
+                            />
+                          </span>
+                          <span className="truncate text-sm">
+                            {country.name}
+                          </span>
+                          <span className="text-muted-foreground ms-auto text-xs">
+                            {country.countryCallingCodes?.[0]}
+                          </span>
+                          {countryData?.alpha2 === country.alpha2 && (
+                            <Check className="h-3.5 w-3.5 shrink-0" />
+                          )}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            <div className="bg-border h-5 w-px shrink-0" />
+          </>
         )}
         <input
           ref={ref}

@@ -68,12 +68,15 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
+import { buildTranslatedSearchConditions } from "@/lib/search-with-translation"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -761,18 +764,31 @@ export async function getTeachers(
 
     const sp = getTeachersSchema.parse(input ?? {})
 
-    // Build where clause
+    // Build where clause with bilingual search support
+    const cookieStore = await cookies()
+    const displayLang = cookieStore.get("NEXT_LOCALE")?.value || "ar"
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const storageLang = school?.preferredLanguage || "ar"
+
+    let nameFilter = {}
+    if (sp.name) {
+      const nameConditions = await buildTranslatedSearchConditions(
+        sp.name,
+        ["givenName", "surname"],
+        schoolId,
+        storageLang,
+        displayLang
+      )
+      nameFilter = { OR: nameConditions }
+    }
+
     const teacherModel = getModelOrThrow("teacher")
     const where: any = {
       schoolId,
-      ...(sp.name
-        ? {
-            OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
-            ],
-          }
-        : {}),
+      ...nameFilter,
       ...(sp.emailAddress
         ? { emailAddress: { contains: sp.emailAddress, mode: "insensitive" } }
         : {}),
@@ -806,10 +822,23 @@ export async function getTeachers(
       id: t.id as string,
       userId: t.userId as string | null,
       name: [t.givenName, t.surname].filter(Boolean).join(" "),
+      lang: t.lang || "ar",
       emailAddress: t.emailAddress || "-",
       status: t.employmentStatus === "ACTIVE" ? "active" : "inactive",
       createdAt: (t.createdAt as Date).toISOString(),
     }))
+
+    // Translate teacher names when display language differs from content language
+    for (const row of mapped) {
+      if (row.lang !== displayLang && row.name) {
+        row.name = await getDisplayText(
+          row.name,
+          row.lang as "ar" | "en",
+          displayLang as "ar" | "en",
+          schoolId
+        )
+      }
+    }
 
     return { success: true, data: { rows: mapped, total: count as number } }
   } catch (error) {

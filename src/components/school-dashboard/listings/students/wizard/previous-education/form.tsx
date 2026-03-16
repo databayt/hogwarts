@@ -102,23 +102,25 @@ export const PreviousEducationForm = forwardRef<
           }
           disabled={isPending}
         />
-        <InputField
-          name="previousGrade"
-          label={t?.previousGrade || "Previous Grade"}
-          placeholder={
-            t?.previousGradePlaceholder || "Enter previous grade level"
-          }
-          disabled={isPending}
-        />
-        <InputField
-          name="transferCertificateNo"
-          label={t?.transferCertificate || "Transfer Certificate No."}
-          placeholder={
-            t?.transferCertificatePlaceholder ||
-            "Enter transfer certificate number"
-          }
-          disabled={isPending}
-        />
+        <div className="grid grid-cols-2 gap-7">
+          <InputField
+            name="previousGrade"
+            label={t?.previousGrade || "Previous Grade"}
+            placeholder={
+              t?.previousGradePlaceholder || "Enter previous grade level"
+            }
+            disabled={isPending}
+          />
+          <InputField
+            name="transferCertificateNo"
+            label={t?.transferCertificate || "Transfer Certificate No."}
+            placeholder={
+              t?.transferCertificatePlaceholder ||
+              "Enter transfer certificate number"
+            }
+            disabled={isPending}
+          />
+        </div>
         <DateField
           name="transferDate"
           label={t?.transferDate || "Transfer Date"}

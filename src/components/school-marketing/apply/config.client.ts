@@ -2,11 +2,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 // Apply Block - Client Configuration
-// Following onboarding pattern
+// Following student wizard pattern
 
 export type ApplyStep =
+  | "attachments"
   | "personal"
   | "contact"
+  | "location"
   | "guardian"
   | "academic"
   | "documents"
@@ -14,8 +16,10 @@ export type ApplyStep =
 
 // Step order for the application flow
 export const APPLY_STEPS: ApplyStep[] = [
+  "attachments",
   "personal",
   "contact",
+  "location",
   "guardian",
   "academic",
   "documents",
@@ -27,9 +31,11 @@ export const STEP_NAVIGATION: Record<
   ApplyStep,
   { next?: ApplyStep; previous?: ApplyStep }
 > = {
-  personal: { next: "contact" },
-  contact: { next: "guardian", previous: "personal" },
-  guardian: { next: "academic", previous: "contact" },
+  attachments: { next: "personal" },
+  personal: { next: "contact", previous: "attachments" },
+  contact: { next: "location", previous: "personal" },
+  location: { next: "guardian", previous: "contact" },
+  guardian: { next: "academic", previous: "location" },
   academic: { next: "documents", previous: "guardian" },
   documents: { next: "review", previous: "academic" },
   review: { previous: "documents" },
@@ -37,7 +43,7 @@ export const STEP_NAVIGATION: Record<
 
 // Group steps into 3 phases for progress bars
 export const STEP_GROUPS = {
-  1: ["personal", "contact"] as ApplyStep[],
+  1: ["attachments", "personal", "contact", "location"] as ApplyStep[],
   2: ["guardian", "academic"] as ApplyStep[],
   3: ["documents", "review"] as ApplyStep[],
 }
@@ -57,13 +63,21 @@ export const STEP_METADATA: Record<
     description: string
   }
 > = {
+  attachments: {
+    label: "المرفقات",
+    description: "الصورة الشخصية والمستندات",
+  },
   personal: {
     label: "المعلومات الشخصية",
     description: "المعلومات الشخصية للطالب",
   },
   contact: {
     label: "معلومات الاتصال",
-    description: "تفاصيل الاتصال والعنوان",
+    description: "البريد الإلكتروني ورقم الهاتف",
+  },
+  location: {
+    label: "العنوان",
+    description: "عنوان الإقامة",
   },
   guardian: {
     label: "معلومات ولي الأمر",

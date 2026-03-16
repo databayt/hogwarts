@@ -28,7 +28,7 @@
     "systemHealth": "صحة النظام",
     "activeSessions": "الجلسات النشطة",
     "pendingActions": "الإجراءات المعلقة",
-    "teachers": "المعلمون",
+    "teachers": "المعلمين",
     "students": "الطلاب",
     "departments": "الأقسام",
     "classrooms": "الفصول الدراسية",
@@ -36,7 +36,7 @@
     "allSystemsOperational": "جميع الأنظمة تعمل",
     "currentlyLoggedIn": "متصل حاليًا",
     "requiresAttention": "يتطلب الانتباه",
-    "activeTeachers": "المعلمون النشطون",
+    "activeTeachers": "المعلمين النشطون",
     "enrolledStudents": "الطلاب المسجلون",
     "activeDepartments": "الأقسام النشطة",
     "totalClassrooms": "إجمالي الفصول"

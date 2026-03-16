@@ -2,12 +2,28 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { cookies } from "next/headers"
+
 import type { ActionResponse } from "@/lib/action-response"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { getTenantContext } from "@/lib/tenant-context"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 import { enrollmentSchema, type EnrollmentFormData } from "./validation"
+
+async function getDisplayLocale(schoolId: string) {
+  const cookieStore = await cookies()
+  const displayLang =
+    (cookieStore.get("NEXT_LOCALE")?.value as SupportedLanguage) || "ar"
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { preferredLanguage: true },
+  })
+  const contentLang = (school?.preferredLanguage || "ar") as SupportedLanguage
+  return { displayLang, contentLang }
+}
 
 export async function getGradeOptions(): Promise<
   ActionResponse<{ value: string; label: string }[]>
@@ -22,10 +38,16 @@ export async function getGradeOptions(): Promise<
       orderBy: { gradeNumber: "asc" },
     })
 
-    return {
-      success: true,
-      data: grades.map((g) => ({ value: g.id, label: g.name })),
-    }
+    const { displayLang, contentLang } = await getDisplayLocale(schoolId)
+
+    const data = await Promise.all(
+      grades.map(async (g) => ({
+        value: g.id,
+        label: await getDisplayText(g.name, contentLang, displayLang, schoolId),
+      }))
+    )
+
+    return { success: true, data }
   } catch (error) {
     return {
       success: false,
@@ -47,10 +69,16 @@ export async function getSectionOptions(
       orderBy: { name: "asc" },
     })
 
-    return {
-      success: true,
-      data: sections.map((s) => ({ value: s.id, label: s.name })),
-    }
+    const { displayLang, contentLang } = await getDisplayLocale(schoolId)
+
+    const data = await Promise.all(
+      sections.map(async (s) => ({
+        value: s.id,
+        label: await getDisplayText(s.name, contentLang, displayLang, schoolId),
+      }))
+    )
+
+    return { success: true, data }
   } catch (error) {
     return {
       success: false,

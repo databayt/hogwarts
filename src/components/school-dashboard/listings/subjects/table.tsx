@@ -3,10 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { BookOpen } from "lucide-react"
 
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { useModal } from "@/components/atom/modal/context"
@@ -74,7 +75,6 @@ function SubjectsTableInner({
 }: SubjectsTableProps) {
   const router = useRouter()
   const { openModal } = useModal()
-  const [isPending, startTransition] = useTransition()
   const t = dictionary
 
   // Translations with fallbacks
@@ -96,8 +96,8 @@ function SubjectsTableInner({
   // View mode (table/grid) - default to grid for visual subject cards
   const { view, toggleView } = usePlatformView({ defaultView: "grid" })
 
-  // Search state
-  const [searchValue, setSearchValue] = useState("")
+  // Search state (debounced)
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // Data management with optimistic updates
   const {
@@ -119,7 +119,7 @@ function SubjectsTableInner({
       }
       return { rows: result.data.rows, total: result.data.total }
     },
-    filters: searchValue ? { name: searchValue } : undefined,
+    filters: debouncedSearch ? { name: debouncedSearch } : undefined,
   })
 
   // Handle delete with optimistic update (must be before columns useMemo)
@@ -165,6 +165,7 @@ function SubjectsTableInner({
     data,
     columns,
     pageCount: 1,
+    enableClientFiltering: true,
     initialState: {
       pagination: {
         pageIndex: 0,
@@ -181,11 +182,8 @@ function SubjectsTableInner({
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => {
-        router.refresh()
-      })
     },
-    [router]
+    [setSearchValue]
   )
 
   // Handle edit
@@ -217,7 +215,7 @@ function SubjectsTableInner({
   return (
     <>
       <PlatformToolbar
-        table={view === "table" ? table : undefined}
+        table={table}
         view={view}
         onToggleView={toggleView}
         searchValue={searchValue}
@@ -234,7 +232,7 @@ function SubjectsTableInner({
           table={table}
           paginationMode="load-more"
           hasMore={hasMore}
-          isLoading={isLoading || isPending}
+          isLoading={isLoading}
           onLoadMore={loadMore}
         />
       ) : (

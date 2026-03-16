@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form"
 
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import { InputField, TextareaField } from "@/components/form"
+import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardTabs, type WizardTab } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -105,6 +105,7 @@ export const HealthForm = forwardRef<WizardFormRef, HealthFormProps>(
                       t?.medicalConditionsPlaceholder ||
                       "Enter any medical conditions"
                     }
+                    rows={2}
                     disabled={isPending}
                   />
                   <TextareaField
@@ -113,6 +114,7 @@ export const HealthForm = forwardRef<WizardFormRef, HealthFormProps>(
                     placeholder={
                       t?.allergiesPlaceholder || "Enter any allergies"
                     }
+                    rows={2}
                     disabled={isPending}
                   />
                   <TextareaField
@@ -122,12 +124,23 @@ export const HealthForm = forwardRef<WizardFormRef, HealthFormProps>(
                       t?.medicationRequiredPlaceholder ||
                       "Enter any required medication"
                     }
+                    rows={2}
                     disabled={isPending}
                   />
-                  <InputField
+                  <SelectField
                     name="bloodGroup"
                     label={t?.bloodGroup || "Blood Group"}
-                    placeholder={t?.bloodGroupPlaceholder || "e.g. A+, B-, O+"}
+                    className="max-w-[200px]"
+                    options={[
+                      { label: "A+", value: "A+" },
+                      { label: "A-", value: "A-" },
+                      { label: "B+", value: "B+" },
+                      { label: "B-", value: "B-" },
+                      { label: "AB+", value: "AB+" },
+                      { label: "AB-", value: "AB-" },
+                      { label: "O+", value: "O+" },
+                      { label: "O-", value: "O-" },
+                    ]}
                     disabled={isPending}
                   />
                 </div>

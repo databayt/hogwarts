@@ -136,8 +136,8 @@ export function PlatformToolbar<TData>({
           </div>
         )}
 
-        {/* Table column filters (only in table view) */}
-        {view === "table" && table && (
+        {/* Column filters (available in both table and grid views) */}
+        {table && (
           <>
             {table
               .getAllColumns()

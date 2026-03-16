@@ -22,5 +22,5 @@ export const STUDENT_WIZARD_CONFIG: WizardConfig = {
   groupLabels: ["Essentials", "Contact Details", "Health & History"],
   requiredSteps: ["personal"],
   skipToComplete: true,
-  finalLabel: "Complete",
+  finalLabel: "Create",
 }

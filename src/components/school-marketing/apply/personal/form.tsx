@@ -3,42 +3,30 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useEffect, useImperativeHandle } from "react"
-import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { FieldGroup } from "@/components/ui/field"
+import { Form } from "@/components/ui/form"
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { CountryDropdown } from "@/components/atom/country-dropdown"
+  CountryField,
+  DateField,
+  InputField,
+  SelectField,
+} from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import { savePersonalStep } from "./actions"
-import { CATEGORY_OPTIONS, GENDER_OPTIONS, RELIGION_OPTIONS } from "./config"
+import { CATEGORY_OPTIONS, GENDER_OPTIONS } from "./config"
 import type { PersonalFormProps, PersonalFormRef } from "./types"
 import { personalSchema, type PersonalSchemaType } from "./validation"
 
 export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
-    const params = useParams()
-    const subdomain = params.subdomain as string
-    const { locale: lang } = useLocale()
-    const isRTL = lang === "ar"
-    const { session, updateStepData } = useApplySession()
+    const { locale } = useLocale()
+    const isRTL = locale === "ar"
+    const { updateStepData } = useApplySession()
 
     const form = useForm<PersonalSchemaType>({
       resolver: zodResolver(personalSchema),
@@ -57,7 +45,6 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
     const dict = ((dictionary as Record<string, Record<string, string>> | null)
       ?.apply?.personal ?? {}) as Record<string, string>
 
-    // Update context when form values change
     useEffect(() => {
       const subscription = form.watch((value) => {
         updateStepData("personal", value as PersonalSchemaType)
@@ -66,22 +53,14 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
     }, [form, updateStepData])
 
     const saveAndNext = async () => {
-      // Validate form
       const isValid = await form.trigger()
-      if (!isValid) {
-        throw new Error("Form validation failed")
-      }
+      if (!isValid) throw new Error("Form validation failed")
 
       const data = form.getValues()
-
-      // Validate on server
       const result = await savePersonalStep(data)
 
-      if (!result.success) {
-        throw new Error(result.error || "Failed to save")
-      }
+      if (!result.success) throw new Error(result.error || "Failed to save")
 
-      // Update context with validated data
       if (result.data) {
         updateStepData("personal", result.data)
       }
@@ -89,195 +68,60 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
       onSuccess?.()
     }
 
-    // Expose saveAndNext to parent via ref
-    useImperativeHandle(ref, () => ({
-      saveAndNext,
-    }))
+    useImperativeHandle(ref, () => ({ saveAndNext }))
 
     return (
       <Form {...form}>
         <form className="space-y-6">
-          {/* Name Fields */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <FormField
-              control={form.control}
+          <FieldGroup className="grid grid-cols-2">
+            <InputField
               name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dict.firstName || "First Name"} *</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder={
-                        dict.firstNamePlaceholder || "Enter first name"
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label={`${dict.firstName || "First Name"} *`}
+              placeholder={dict.firstNamePlaceholder || "Enter first name"}
             />
-
-            <FormField
-              control={form.control}
-              name="middleName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dict.middleName || "Middle Name"}</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder={
-                        dict.middleNamePlaceholder || "Enter middle name"
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
+            <InputField
               name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dict.lastName || "Last Name"} *</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder={
-                        dict.lastNamePlaceholder || "Enter last name"
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label={`${dict.lastName || "Last Name"} *`}
+              placeholder={dict.lastNamePlaceholder || "Enter last name"}
             />
-          </div>
-
-          {/* Date of Birth and Gender */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="dateOfBirth"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dict.dateOfBirth || "Date of Birth"} *</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="date" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dict.gender || "Gender"} *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={dict.selectGender || "Select gender"}
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {GENDER_OPTIONS(isRTL).map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Nationality and Religion */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="nationality"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dict.nationality || "Nationality"} *</FormLabel>
-                  <FormControl>
-                    <CountryDropdown
-                      value={field.value}
-                      onChange={(isoCode) => field.onChange(isoCode)}
-                      placeholder={
-                        dict.selectNationality || "Select nationality"
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="religion"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dict.religion || "Religion"}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={dict.selectReligion || "Select religion"}
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {RELIGION_OPTIONS(isRTL).map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Category */}
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{dict.category || "Category"}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={dict.selectCategory || "Select category"}
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {CATEGORY_OPTIONS(isRTL).map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+          </FieldGroup>
+          <InputField
+            name="middleName"
+            label={dict.middleName || "Middle Name"}
+            placeholder={dict.middleNamePlaceholder || "Enter middle name"}
+            className="hidden"
           />
+          <div className="grid grid-cols-2 gap-7">
+            <DateField
+              name="dateOfBirth"
+              label={`${dict.dateOfBirth || "Date of Birth"} *`}
+            />
+            <SelectField
+              name="gender"
+              label={`${dict.gender || "Gender"} *`}
+              placeholder={dict.selectGender || "Select gender"}
+              options={GENDER_OPTIONS(isRTL).map((o) => ({
+                value: o.value,
+                label: o.label,
+              }))}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-7">
+            <CountryField
+              name="nationality"
+              label={`${dict.nationality || "Nationality"} *`}
+              placeholder={dict.selectNationality || "Select nationality"}
+            />
+            <SelectField
+              name="category"
+              label={dict.category || "Category"}
+              placeholder={dict.selectCategory || "Select category"}
+              options={CATEGORY_OPTIONS(isRTL).map((o) => ({
+                value: o.value,
+                label: o.label,
+              }))}
+            />
+          </div>
         </form>
       </Form>
     )

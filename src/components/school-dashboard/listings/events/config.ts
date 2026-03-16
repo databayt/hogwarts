@@ -123,7 +123,7 @@ export const getTargetAudiences = (lang?: string) => [
   },
   {
     value: "Teachers Only",
-    label: lang === "ar" ? "المعلمون فقط" : "Teachers Only",
+    label: lang === "ar" ? "المعلمين فقط" : "Teachers Only",
   },
   {
     value: "Parents Only",

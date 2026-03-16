@@ -69,8 +69,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       title: groupsDict.familyEducation || "Family & Education",
       description:
         overviewDict.stage2Desc || "Add guardian info and academic background",
-      illustration:
-        "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg",
+      illustration: "/anthropic/eng-harnesses-long-running-agents.svg",
     },
     {
       number: 3,
@@ -88,7 +87,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
     setIsStarting(true)
 
     try {
-      router.push(`/${lang}/apply/${id}/personal`)
+      router.push(`/${lang}/apply/${id}/attachments`)
     } catch (error) {
       console.error("Navigation error:", error)
     } finally {

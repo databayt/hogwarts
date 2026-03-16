@@ -121,7 +121,7 @@ export const getStudentColumns = (
                   {student.name}
                 </Link>
               </div>
-              <span className="text-muted-foreground text-xs">
+              <span className="text-muted-foreground max-w-[180px] truncate text-xs">
                 {student.email || t.noEmail}
               </span>
             </div>

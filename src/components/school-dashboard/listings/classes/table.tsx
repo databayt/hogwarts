@@ -3,11 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { BookOpen, Users } from "lucide-react"
 
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import {
@@ -51,7 +52,6 @@ function ClassesTableInner({
   perPage = 20,
 }: ClassesTableProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
 
   // Translations with fallbacks
   const t = {
@@ -77,8 +77,8 @@ function ClassesTableInner({
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
-  // Search state
-  const [searchValue, setSearchValue] = useState("")
+  // Search state (debounced)
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // Data management with optimistic updates
   const {
@@ -100,7 +100,7 @@ function ClassesTableInner({
       }
       return { rows: result.data.rows as ClassRow[], total: result.data.total }
     },
-    filters: searchValue ? { name: searchValue } : undefined,
+    filters: debouncedSearch ? { name: debouncedSearch } : undefined,
   })
 
   // Handle delete with optimistic update (must be before columns useMemo)
@@ -148,6 +148,7 @@ function ClassesTableInner({
     data,
     columns,
     pageCount: 1,
+    enableClientFiltering: true,
     initialState: {
       pagination: {
         pageIndex: 0,
@@ -165,11 +166,8 @@ function ClassesTableInner({
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => {
-        router.refresh()
-      })
     },
-    [router]
+    [setSearchValue]
   )
 
   // Handle create via wizard
@@ -223,7 +221,7 @@ function ClassesTableInner({
   return (
     <>
       <PlatformToolbar
-        table={view === "table" ? table : undefined}
+        table={table}
         view={view}
         onToggleView={toggleView}
         searchValue={searchValue}
@@ -240,7 +238,7 @@ function ClassesTableInner({
           table={table}
           paginationMode="load-more"
           hasMore={hasMore}
-          isLoading={isLoading || isPending}
+          isLoading={isLoading}
           onLoadMore={loadMore}
         />
       ) : (

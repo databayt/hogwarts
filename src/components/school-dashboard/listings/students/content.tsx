@@ -76,29 +76,51 @@ function buildStatusFilter(status: string): Record<string, any> {
  * - Arabic: strip "الصف " prefix → "الثالث" (KG keeps full name "الروضة الأولى")
  * - English: "Grade 3", "KG", "Pre-K"
  */
-function formatGradeLabel(
-  grade: { name?: string; lang?: string; gradeNumber?: number | null } | null,
-  targetLang?: string,
-  translations?: Map<string, string>
+// Transliterate Latin letters to Arabic in room codes (Google Translate skips these)
+const LATIN_TO_AR: Record<string, string> = {
+  A: "أ",
+  B: "ب",
+  C: "ج",
+  D: "د",
+  E: "هـ",
+  F: "و",
+  G: "ز",
+  H: "ح",
+}
+
+function transliterateRoomCode(code: string, lang: string): string {
+  if (lang !== "ar") return code
+  return code.replace(/^[A-Z]/g, (ch) => LATIN_TO_AR[ch] || ch)
+}
+
+// Override Google Translate results for grade terms
+const AR_GRADE_OVERRIDES: Record<string, string> = {
+  "رياض الأطفال": "الروضة",
+  حضانة: "الحضانة",
+}
+
+function applyGradeOverrides(translated: string, lang: string): string {
+  if (lang !== "ar") return translated
+  const overridden = AR_GRADE_OVERRIDES[translated] || translated
+  return overridden.replace(/^الصف /, "")
+}
+
+/**
+ * Generate English grade label from gradeNumber.
+ * Translation to target language happens via getDisplayText.
+ */
+function gradeEnglishLabel(
+  grade: { name?: string; lang?: string; gradeNumber?: number | null } | null
 ): string | null {
   if (!grade) return null
-  if (grade.name) {
-    if (targetLang && translations && grade.lang !== targetLang) {
-      return translations.get(grade.name) || grade.name
-    }
-    if (targetLang === "ar") {
-      return grade.name
-        .replace(/^الروضة الأولى$/, "أولى روضة")
-        .replace(/^الروضة الثانية$/, "ثانية روضة")
-        .replace(/^الصف /, "")
-    }
-    return grade.name
+  if (grade.gradeNumber != null) {
+    const n = grade.gradeNumber
+    if (n < 0) return "Nursery"
+    if (n === 0) return "Kindergarten"
+    return `Grade ${n}`
   }
-  if (grade.gradeNumber == null) return null
-  const n = grade.gradeNumber
-  if (n < 0) return "Pre-K"
-  if (n === 0) return "KG"
-  return `Grade ${n}`
+  if (grade.name) return grade.name
+  return null
 }
 
 export default async function StudentsContent({
@@ -172,13 +194,20 @@ export default async function StudentsContent({
     const nameTranslations = new Map<string, string>()
 
     const uniqueClassrooms = new Set<string>()
-    const uniqueGrades = new Set<string>()
+    const uniqueGradeLabels = new Set<string>()
     const uniqueNames = new Map<string, string>()
+    // Detect if a string contains Latin letters (needs translation to Arabic)
+    const hasLatin = (s: string) => /[a-zA-Z]/.test(s)
+
     for (const s of rows as any[]) {
-      if (s.section?.classroom?.roomName && s.section.classroom.lang !== lang)
+      if (
+        s.section?.classroom?.roomName &&
+        (s.section.classroom.lang !== lang ||
+          (lang === "ar" && hasLatin(s.section.classroom.roomName)))
+      )
         uniqueClassrooms.add(s.section.classroom.roomName)
-      if (s.academicGrade?.name && s.academicGrade.lang !== lang)
-        uniqueGrades.add(s.academicGrade.name)
+      const gl = gradeEnglishLabel(s.academicGrade)
+      if (gl) uniqueGradeLabels.add(gl)
       if (s.lang && s.lang !== lang) {
         const rawName = `${s.givenName} ${s.surname}`.trim()
         uniqueNames.set(rawName, s.lang)
@@ -188,22 +217,31 @@ export default async function StudentsContent({
     // Translate unique classroom/grade/name values in parallel
     await Promise.all([
       ...Array.from(uniqueClassrooms).map(async (name) => {
-        const translated = await getDisplayText(
-          name,
-          "ar",
-          lang,
-          effectiveSchoolId!
-        )
-        classroomTranslations.set(name, translated)
+        // Room codes like "B102" — transliterate letters directly
+        // (Google Translate returns them unchanged)
+        if (/^[A-Z]\d/.test(name)) {
+          classroomTranslations.set(name, transliterateRoomCode(name, lang))
+        } else {
+          const sourceLang = hasLatin(name) ? "en" : "ar"
+          const translated = await getDisplayText(
+            name,
+            sourceLang,
+            lang,
+            effectiveSchoolId!
+          )
+          classroomTranslations.set(name, translated)
+        }
       }),
-      ...Array.from(uniqueGrades).map(async (name) => {
-        const translated = await getDisplayText(
-          name,
-          "ar",
-          lang,
-          effectiveSchoolId!
-        )
-        gradeTranslations.set(name, translated)
+      ...Array.from(uniqueGradeLabels).map(async (label) => {
+        if (lang !== "en") {
+          const translated = await getDisplayText(
+            label,
+            "en",
+            lang,
+            effectiveSchoolId!
+          )
+          gradeTranslations.set(label, applyGradeOverrides(translated, lang))
+        }
       }),
       ...Array.from(uniqueNames.entries()).map(async ([name, contentLang]) => {
         const translated = await getDisplayText(
@@ -219,8 +257,11 @@ export default async function StudentsContent({
     // Collect unique grade options for faceted filter
     const gradeSet = new Set<string>()
     for (const s of rows as any[]) {
-      const label = formatGradeLabel(s.academicGrade, lang, gradeTranslations)
-      if (label) gradeSet.add(label)
+      const enLabel = gradeEnglishLabel(s.academicGrade)
+      if (!enLabel) continue
+      const label =
+        lang !== "en" ? gradeTranslations.get(enLabel) || enLabel : enLabel
+      gradeSet.add(label)
     }
     gradeOptions = Array.from(gradeSet).map((g) => ({ label: g, value: g }))
 
@@ -231,18 +272,17 @@ export default async function StudentsContent({
           ? nameTranslations.get(rawName) || rawName
           : rawName
 
-      const classroom = s.section?.classroom?.roomName
-        ? s.section.classroom.lang !== lang
-          ? classroomTranslations.get(s.section.classroom.roomName) ||
-            s.section.classroom.roomName
-          : s.section.classroom.roomName
+      const rawClassroom = s.section?.classroom?.roomName || null
+      const classroom = rawClassroom
+        ? classroomTranslations.get(rawClassroom) || rawClassroom
         : null
 
-      const gradeName = formatGradeLabel(
-        s.academicGrade,
-        lang,
-        gradeTranslations
-      )
+      const enGrade = gradeEnglishLabel(s.academicGrade)
+      const gradeName = enGrade
+        ? lang !== "en"
+          ? gradeTranslations.get(enGrade) || enGrade
+          : enGrade
+        : null
 
       return {
         id: s.id,

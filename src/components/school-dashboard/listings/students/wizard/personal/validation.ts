@@ -7,10 +7,8 @@ export const personalSchema = z.object({
   givenName: z.string().min(1, "Given name is required"),
   middleName: z.string().optional(),
   surname: z.string().min(1, "Surname is required"),
-  dateOfBirth: z.coerce.date({ message: "Date of birth is required" }),
-  gender: z.enum(["male", "female"] as const, {
-    message: "Gender is required",
-  }),
+  dateOfBirth: z.coerce.date().optional(),
+  gender: z.enum(["male", "female"] as const).optional(),
   nationality: z.string().optional(),
   profilePhotoUrl: z.string().optional(),
 })

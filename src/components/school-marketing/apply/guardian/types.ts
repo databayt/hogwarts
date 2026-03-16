@@ -1,8 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Guardian Step Types
-
 export interface GuardianFormData {
   fatherName: string
   fatherOccupation?: string
@@ -27,4 +25,5 @@ export interface GuardianFormProps {
   initialData?: Partial<GuardianFormData>
   onSuccess?: () => void
   dictionary?: Record<string, unknown>
+  onTabChange?: (tabId: string) => void
 }

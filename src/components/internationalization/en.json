@@ -1771,5 +1771,64 @@
     "openInV0": "Open in v0",
     "openInChatGPT": "Open in ChatGPT",
     "openInClaude": "Open in Claude"
+  },
+  "dream": {
+    "title": "FIND YOUR BOOST",
+    "titleAr": "اكتشف حلمك",
+    "subtitle": "Discover features you love",
+    "tags": {
+      "admission": "Admission",
+      "course": "Courses",
+      "exam": "Exams",
+      "gradebook": "Gradebook",
+      "assignment": "Assignments",
+      "lms": "LMS",
+      "timetable": "Timetable",
+      "quiz": "Quizzes",
+      "digital-library": "Digital Library",
+      "student": "Students",
+      "faculty": "Faculty",
+      "attendance": "Attendance",
+      "classroom": "Classroom",
+      "transportation": "Transport",
+      "events": "Events",
+      "helpdesk": "Helpdesk",
+      "parent-login": "Parent Portal",
+      "leave-request": "Leave Request",
+      "financial": "Financial",
+      "payment": "Payments",
+      "accounting": "Accounting",
+      "payroll": "Payroll",
+      "expense": "Expenses",
+      "dashboard": "Dashboard",
+      "multi-organization": "Multi-Campus",
+      "open-source": "Open Source",
+      "ai-powered": "AI Powered",
+      "mobile-application": "Mobile App",
+      "biometric": "Biometric",
+      "multi-lingual": "Multi-Language",
+      "reporting": "Reporting",
+      "live-classroom": "Live Class"
+    }
+  },
+  "dreamServices": {
+    "title": "Feature Categories",
+    "subtitle": "Everything you need to run a modern school",
+    "academic": {
+      "title": "Academic",
+      "description": "Courses, exams, gradebook, assignments, and LMS — the core of teaching and learning"
+    },
+    "admin": {
+      "title": "Administration",
+      "description": "Student records, faculty, attendance, classroom management, and campus operations"
+    },
+    "finance": {
+      "title": "Finance",
+      "description": "Fee collection, payroll, accounting, expense tracking, and financial reporting"
+    },
+    "tech": {
+      "title": "Technology",
+      "description": "AI-powered insights, multi-campus support, mobile apps, and open source flexibility"
+    }
   }
 }

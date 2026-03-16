@@ -14,8 +14,8 @@ export const metadata = {
   description: "Start your application process",
 }
 
-// Redirect to the first step (personal information)
+// Redirect to the first step (attachments)
 export default async function ApplicationFormPage({ params }: Props) {
   const { lang, subdomain, id } = await params
-  redirect(`/${lang}/apply/${id}/personal`)
+  redirect(`/${lang}/apply/${id}/attachments`)
 }

@@ -75,7 +75,7 @@ export function CatalogTable({ data, stats }: Props) {
   return (
     <>
       <PlatformToolbar
-        table={view === "table" ? table : undefined}
+        table={table}
         view={view}
         onToggleView={toggleView}
         searchValue={search}

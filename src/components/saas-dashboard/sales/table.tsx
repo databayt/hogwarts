@@ -2,11 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { useModal } from "@/components/atom/modal/context"
@@ -49,7 +50,6 @@ export function OperatorSalesTable({
 }: OperatorSalesTableProps) {
   const router = useRouter()
   const { openModal } = useModal()
-  const [isPending, startTransition] = useTransition()
 
   // Translations
   const t = {
@@ -71,8 +71,8 @@ export function OperatorSalesTable({
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
-  // Search state
-  const [searchValue, setSearchValue] = useState("")
+  // Search state (debounced)
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // Data management with optimistic updates
   const {
@@ -114,7 +114,7 @@ export function OperatorSalesTable({
         total: result.data.total,
       }
     },
-    filters: searchValue ? { search: searchValue } : undefined,
+    filters: debouncedSearch ? { search: debouncedSearch } : undefined,
   })
 
   // Generate columns on the client side
@@ -128,6 +128,7 @@ export function OperatorSalesTable({
     data,
     columns,
     pageCount: 1,
+    enableClientFiltering: true,
     initialState: {
       pagination: {
         pageIndex: 0,
@@ -140,11 +141,8 @@ export function OperatorSalesTable({
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => {
-        router.refresh()
-      })
     },
-    [router]
+    [setSearchValue]
   )
 
   // Handle delete with optimistic update
@@ -217,7 +215,7 @@ export function OperatorSalesTable({
   return (
     <>
       <PlatformToolbar
-        table={view === "table" ? table : undefined}
+        table={table}
         view={view}
         onToggleView={toggleView}
         searchValue={searchValue}

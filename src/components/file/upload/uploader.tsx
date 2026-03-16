@@ -261,7 +261,7 @@ export function Uploader({
         <div
           {...getRootProps()}
           className={cn(
-            "border-border bg-muted/50 relative h-32 w-32 rounded-full border-2 border-dashed",
+            "border-border bg-muted/50 relative h-32 w-32 rounded-full border border-dashed",
             "flex cursor-pointer items-center justify-center transition-colors",
             isDragActive && "border-primary bg-primary/10",
             isDragReject && "border-destructive bg-destructive/10",

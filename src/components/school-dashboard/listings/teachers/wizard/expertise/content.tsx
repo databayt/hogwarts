@@ -10,9 +10,14 @@ import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
 
 import { useTeacherWizard } from "../use-teacher-wizard"
+import type { GradeWithSubjects } from "./actions"
 import { ExpertiseForm } from "./form"
 
-export default function ExpertiseContent() {
+interface ExpertiseContentProps {
+  grades: GradeWithSubjects[]
+}
+
+export default function ExpertiseContent({ grades }: ExpertiseContentProps) {
   const params = useParams()
   const teacherId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
@@ -35,6 +40,7 @@ export default function ExpertiseContent() {
         <ExpertiseForm
           ref={formRef}
           teacherId={teacherId}
+          grades={grades}
           initialData={
             data
               ? {

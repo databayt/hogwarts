@@ -26,7 +26,6 @@ import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
 
 import {
-  getGradesAndSubjects,
   updateTeacherExpertise,
   type GradeWithSubjects,
   type SubjectWithDept,
@@ -35,14 +34,14 @@ import type { ExpertiseFormData } from "./validation"
 
 interface ExpertiseFormProps {
   teacherId: string
+  grades: GradeWithSubjects[]
   initialData?: Partial<ExpertiseFormData>
   onValidChange?: (isValid: boolean) => void
 }
 
 export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
-  ({ teacherId, initialData, onValidChange }, ref) => {
+  ({ teacherId, grades, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
-    const [grades, setGrades] = useState<GradeWithSubjects[]>([])
     const [selectedGradeIds, setSelectedGradeIds] = useState<Set<string>>(
       new Set()
     )
@@ -52,16 +51,6 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
     const [secondarySubjects, setSecondarySubjects] = useState<Set<string>>(
       new Set()
     )
-
-    useEffect(() => {
-      async function load() {
-        const result = await getGradesAndSubjects()
-        if (result.success && result.data) {
-          setGrades(result.data)
-        }
-      }
-      load()
-    }, [])
 
     useEffect(() => {
       if (initialData?.subjectExpertise && grades.length > 0) {
@@ -98,7 +87,7 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
     const filteredSubjects = useMemo(() => {
       const map = new Map<string, SubjectWithDept>()
       for (const grade of grades) {
-        if (selectedGradeIds.size === 0 || selectedGradeIds.has(grade.id)) {
+        if (selectedGradeIds.has(grade.id)) {
           for (const subject of grade.subjects) {
             map.set(subject.id, subject)
           }
@@ -210,27 +199,34 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
     return (
       <div className="space-y-6">
         {/* Grade filter — simple number badges */}
-        <div className="space-y-2">
-          <span className="text-muted-foreground text-xs font-medium">
-            Grades
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {grades.map((grade) => (
-              <button
-                key={grade.id}
-                type="button"
-                onClick={() => toggleGrade(grade.id)}
-                disabled={isPending}
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full border text-sm font-medium transition-colors",
-                  selectedGradeIds.has(grade.id)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "hover:bg-muted border-border"
-                )}
-              >
-                {grade.gradeNumber}
-              </button>
-            ))}
+        <div className="space-y-4">
+          <div>
+            <p className="font-semibold">Grades</p>
+            <p className="text-muted-foreground text-xs">Select one or more</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {grades.map((grade) => {
+              const label =
+                grade.gradeNumber <= 0
+                  ? `K${grade.gradeNumber + 2}`
+                  : `G${grade.gradeNumber}`
+              return (
+                <button
+                  key={grade.id}
+                  type="button"
+                  onClick={() => toggleGrade(grade.id)}
+                  disabled={isPending}
+                  className={cn(
+                    "rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+                    selectedGradeIds.has(grade.id)
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted/50 hover:bg-muted border-border"
+                  )}
+                >
+                  {label}
+                </button>
+              )
+            })}
           </div>
         </div>
 

@@ -44,6 +44,15 @@ export interface ApplyContentProps {
 }
 
 // Per-step data types
+export interface AttachmentsStepData {
+  profilePhotoUrl?: string
+  degreeUrl?: string
+  transcriptUrl?: string
+  idUrl?: string
+  resumeUrl?: string
+  otherUrl?: string
+}
+
 export interface PersonalStepData {
   firstName: string
   middleName?: string
@@ -59,6 +68,9 @@ export interface ContactStepData {
   email: string
   phone: string
   alternatePhone?: string
+}
+
+export interface LocationStepData {
   address: string
   city: string
   state: string
@@ -118,8 +130,10 @@ export interface DocumentsStepData {
 }
 
 export type ApplicationStepData =
+  | AttachmentsStepData
   | PersonalStepData
   | ContactStepData
+  | LocationStepData
   | GuardianStepData
   | AcademicStepData
   | DocumentsStepData
@@ -129,8 +143,10 @@ export interface ApplySessionState {
   sessionToken: string | null
   campaignId: string | null
   formData: Partial<{
+    attachments: AttachmentsStepData
     personal: PersonalStepData
     contact: ContactStepData
+    location: LocationStepData
     guardian: GuardianStepData
     academic: AcademicStepData
     documents: DocumentsStepData

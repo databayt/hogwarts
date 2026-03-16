@@ -161,7 +161,7 @@ export function CampaignsTable({
   return (
     <>
       <PlatformToolbar
-        table={view === "table" ? table : undefined}
+        table={table}
         view={view}
         onToggleView={toggleView}
         searchValue={searchInput}

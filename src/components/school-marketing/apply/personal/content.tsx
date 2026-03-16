@@ -23,7 +23,6 @@ export default function PersonalContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
   const { locale, isRTL } = useLocale()
-  const subdomain = params.subdomain as string
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
@@ -41,13 +40,11 @@ export default function PersonalContent({ dictionary }: Props) {
         console.error("Error saving personal step:", error)
       }
     }
-  }, [locale, subdomain, id, router])
+  }, [locale, id, router])
 
-  // Enable/disable next button based on form validity
   useEffect(() => {
     const personalData = session.formData.personal
 
-    // Check if required fields are filled
     const isValid =
       personalData?.firstName &&
       personalData?.lastName &&
@@ -70,16 +67,11 @@ export default function PersonalContent({ dictionary }: Props) {
     onNext,
   ])
 
-  const dict = ((dictionary as Record<string, Record<string, string>> | null)
-    ?.apply?.personal ?? {}) as Record<string, string>
-
   return (
     <FormLayout>
       <FormHeading
-        title={dict.title || PERSONAL_STEP_CONFIG.label(isRTL)}
-        description={
-          dict.description || PERSONAL_STEP_CONFIG.description(isRTL)
-        }
+        title={PERSONAL_STEP_CONFIG.label(isRTL)}
+        description={PERSONAL_STEP_CONFIG.description(isRTL)}
       />
       <PersonalForm
         ref={personalFormRef}

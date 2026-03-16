@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { CheckCircle, XCircle } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -66,7 +66,7 @@ export const getTeacherColumns = (
     joined: dictionary?.joined || "Joined",
     created: dictionary?.created || "Created",
     actions: dictionary?.actions || "Actions",
-    view: dictionary?.view || "View Profile",
+    view: dictionary?.view || "View",
     edit: dictionary?.edit || "Edit",
     delete: dictionary?.delete || "Delete",
     activate: dictionary?.activate || "Activate",
@@ -92,59 +92,21 @@ export const getTeacherColumns = (
       .toUpperCase()
   }
 
-  const getStatusBadge = (status: string, hasWizardStep: boolean) => {
-    if (hasWizardStep) {
-      return {
-        label: t.incomplete,
-        className: "border-amber-300 bg-amber-50 text-amber-700",
-        icon: XCircle,
-      }
-    }
-    switch (status) {
-      case "ACTIVE":
-        return {
-          label: t.active,
-          className: "bg-green-100 text-green-800",
-          icon: CheckCircle,
-        }
-      case "ON_LEAVE":
-        return {
-          label: (dictionary as any)?.onLeave || "On Leave",
-          className: "bg-yellow-100 text-yellow-800",
-          icon: XCircle,
-        }
-      case "TERMINATED":
-        return {
-          label: (dictionary as any)?.terminated || "Terminated",
-          className: "bg-red-100 text-red-800",
-          icon: XCircle,
-        }
-      case "RETIRED":
-        return {
-          label: (dictionary as any)?.retired || "Retired",
-          className: "bg-gray-100 text-gray-600",
-          icon: XCircle,
-        }
-      default:
-        return {
-          label: status,
-          className: "bg-gray-100 text-gray-600",
-          icon: XCircle,
-        }
-    }
+  const statusVariants: Record<
+    string,
+    "default" | "secondary" | "destructive" | "outline"
+  > = {
+    ACTIVE: "default",
+    ON_LEAVE: "outline",
+    TERMINATED: "destructive",
+    RETIRED: "secondary",
   }
 
-  const getEmploymentTypeBadge = (type: string) => {
-    switch (type) {
-      case "FULL_TIME":
-        return { label: t.fullTime, className: "bg-blue-100 text-blue-800" }
-      case "PART_TIME":
-        return { label: t.partTime, className: "bg-purple-100 text-purple-800" }
-      case "CONTRACT":
-        return { label: t.contract, className: "bg-orange-100 text-orange-800" }
-      default:
-        return { label: type, className: "bg-gray-100 text-gray-600" }
-    }
+  const statusLabels: Record<string, string> = {
+    ACTIVE: t.active,
+    ON_LEAVE: (dictionary as any)?.onLeave || "On Leave",
+    TERMINATED: (dictionary as any)?.terminated || "Terminated",
+    RETIRED: (dictionary as any)?.retired || "Retired",
   }
 
   return [
@@ -259,16 +221,21 @@ export const getTeacherColumns = (
       ),
       cell: ({ row }) => {
         const teacher = row.original
-        const badge = getStatusBadge(
-          teacher.employmentStatus,
-          !!teacher.wizardStep
-        )
-        const Icon = badge.icon
+
+        if (teacher.wizardStep) {
+          return (
+            <Link
+              href={`/${lang}/teachers/add/${teacher.id}/${teacher.wizardStep}`}
+            >
+              <Badge variant="outline">{t.incomplete}</Badge>
+            </Link>
+          )
+        }
+
+        const status = teacher.employmentStatus
+        const label = statusLabels[status] || status
         return (
-          <Badge variant="secondary" className={`gap-1 ${badge.className}`}>
-            <Icon className="h-3 w-3" />
-            {badge.label}
-          </Badge>
+          <Badge variant={statusVariants[status] || "secondary"}>{label}</Badge>
         )
       },
       meta: {

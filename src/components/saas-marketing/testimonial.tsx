@@ -74,7 +74,11 @@ export default function Testimonial({ dictionary, lang }: TestimonialProps) {
       : defaultTestimonials
 
   return (
-    <section id="features" dir={isRTL ? "rtl" : "ltr"}>
+    <section
+      id="features"
+      dir={isRTL ? "rtl" : "ltr"}
+      className="pt-10 md:pt-14"
+    >
       <SectionHeading title={testDict.title} description={testDict.subtitle} />
       <div className="grid justify-center gap-4 sm:grid-cols-2 md:grid-cols-3">
         {testimonials.map((testimonial, index) => (

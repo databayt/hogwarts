@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useCallback, useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Users } from "lucide-react"
 
@@ -15,6 +15,27 @@ import { GUARDIAN_STEP_CONFIG } from "./config"
 import { GuardianForm } from "./form"
 import type { GuardianFormRef } from "./types"
 
+const TAB_HEADINGS = (isRTL: boolean) => ({
+  father: {
+    title: isRTL ? "معلومات الأب" : "Father's Information",
+    description: isRTL
+      ? "أدخل معلومات والد الطالب"
+      : "Enter the student's father details.",
+  },
+  mother: {
+    title: isRTL ? "معلومات الأم" : "Mother's Information",
+    description: isRTL
+      ? "أدخل معلومات والدة الطالب"
+      : "Enter the student's mother details.",
+  },
+  guardian: {
+    title: isRTL ? "ولي الأمر" : "Other Guardian",
+    description: isRTL
+      ? "أدخل معلومات ولي الأمر (اختياري)"
+      : "Enter other guardian details (optional).",
+  },
+})
+
 interface Props {
   dictionary?: Record<string, unknown>
 }
@@ -24,14 +45,20 @@ export default function GuardianContent({ dictionary }: Props) {
   const router = useRouter()
   const { locale } = useLocale()
   const isRTL = locale === "ar"
-  const subdomain = params.subdomain as string
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
   const { session, getStepData } = useApplySession()
   const guardianFormRef = useRef<GuardianFormRef>(null)
 
+  const headings = TAB_HEADINGS(isRTL)
+  const [heading, setHeading] = useState(headings.father)
+
   const initialData = getStepData("guardian")
+
+  const handleTabChange = (tabId: string) => {
+    setHeading(headings[tabId as keyof typeof headings] || headings.father)
+  }
 
   const onNext = useCallback(async () => {
     if (guardianFormRef.current) {
@@ -42,12 +69,11 @@ export default function GuardianContent({ dictionary }: Props) {
         console.error("Error saving guardian step:", error)
       }
     }
-  }, [locale, subdomain, id, router])
+  }, [locale, id, router])
 
   useEffect(() => {
     const guardianData = session.formData.guardian
 
-    // Father and mother names are required
     const isValid = guardianData?.fatherName && guardianData?.motherName
 
     if (isValid) {
@@ -77,10 +103,10 @@ export default function GuardianContent({ dictionary }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {dict.title || GUARDIAN_STEP_CONFIG.label}
+              {dict.title || heading.title}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {dict.description || GUARDIAN_STEP_CONFIG.description}
+              {dict.description || heading.description}
             </p>
           </div>
         </div>
@@ -89,6 +115,7 @@ export default function GuardianContent({ dictionary }: Props) {
           ref={guardianFormRef}
           initialData={initialData as GuardianStepData}
           dictionary={dictionary}
+          onTabChange={handleTabChange}
         />
       </div>
     </div>

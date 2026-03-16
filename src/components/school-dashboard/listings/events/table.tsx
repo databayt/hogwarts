@@ -3,12 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Calendar, MapPin, Users } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
@@ -48,7 +49,6 @@ function EventsTableInner({
   perPage = 20,
 }: EventsTableProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
 
   // Translations with fallbacks
   const t = {
@@ -74,8 +74,8 @@ function EventsTableInner({
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
-  // Search state
-  const [searchValue, setSearchValue] = useState("")
+  // Search state (debounced)
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // Data management with optimistic updates
   const {
@@ -97,18 +97,15 @@ function EventsTableInner({
       }
       return { rows: result.data.rows as EventRow[], total: result.data.total }
     },
-    filters: searchValue ? { title: searchValue } : undefined,
+    filters: debouncedSearch ? { title: debouncedSearch } : undefined,
   })
 
   // Handle search
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => {
-        router.refresh()
-      })
     },
-    [router]
+    [setSearchValue]
   )
 
   // Handle delete with optimistic update (must be before columns useMemo)
@@ -158,6 +155,7 @@ function EventsTableInner({
     data,
     columns,
     pageCount: 1,
+    enableClientFiltering: true,
     initialState: {
       pagination: {
         pageIndex: 0,
@@ -242,7 +240,7 @@ function EventsTableInner({
   return (
     <>
       <PlatformToolbar
-        table={view === "table" ? table : undefined}
+        table={table}
         view={view}
         onToggleView={toggleView}
         searchValue={searchValue}
@@ -259,7 +257,7 @@ function EventsTableInner({
           table={table}
           paginationMode="load-more"
           hasMore={hasMore}
-          isLoading={isLoading || isPending}
+          isLoading={isLoading}
           onLoadMore={loadMore}
         />
       ) : (

@@ -6,6 +6,8 @@ import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 import Boost from "./boost"
+// import Wizard from "@/components/wizard";
+import { DreamSection } from "./dream-section"
 // import Automated from "@/components/automated/featured";
 // import Codebase from "@/components/landing/codebase";
 import FAQs from "./faqs"
@@ -17,7 +19,6 @@ import OpenSource from "./open-source"
 import StorySection from "./story-section"
 // import Stack from "./stack";
 import Testimonial from "./testimonial"
-// import Wizard from "@/components/wizard";
 import Time from "./time"
 
 interface Props {
@@ -42,6 +43,7 @@ export default function HomeContent(props: Props) {
       <Automated />
       <Codebase /> */}
       <Time dictionary={dictionary} lang={lang} />
+      <DreamSection dictionary={dictionary} lang={lang} />
       {/* <Wizard /> */}
       <Testimonial dictionary={dictionary} lang={lang} />
       <LogoCloud dictionary={dictionary} lang={lang} />

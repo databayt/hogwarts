@@ -3,27 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useEffect, useImperativeHandle } from "react"
-import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { PhoneInput } from "@/components/atom/phone-input"
+import { Form } from "@/components/ui/form"
+import { InputField, PhoneField } from "@/components/form"
+import { SelectField } from "@/components/form/atoms/select"
+import { WizardTabs, type WizardTab } from "@/components/form/wizard"
 
 import { useApplySession } from "../application-context"
 import { saveGuardianStep } from "./actions"
@@ -32,10 +18,16 @@ import type { GuardianFormProps, GuardianFormRef } from "./types"
 import { guardianSchema, type GuardianSchemaType } from "./validation"
 
 export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
-  ({ initialData, onSuccess, dictionary }, ref) => {
-    const params = useParams()
-    const subdomain = params.subdomain as string
-    const { session, updateStepData } = useApplySession()
+  ({ initialData, onSuccess, dictionary, onTabChange }, ref) => {
+    const { updateStepData } = useApplySession()
+    const isRTL =
+      (dictionary as Record<string, string> | null)?.locale === "ar" || false
+
+    const tabs: WizardTab[] = [
+      { id: "father", label: isRTL ? "الأب" : "Father" },
+      { id: "mother", label: isRTL ? "الأم" : "Mother" },
+      { id: "guardian", label: isRTL ? "ولي الأمر" : "Guardian" },
+    ]
 
     const form = useForm<GuardianSchemaType>({
       resolver: zodResolver(guardianSchema),
@@ -74,7 +66,6 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
 
       if (!result.success) throw new Error(result.error || "Failed to save")
 
-      // Update context with validated data
       if (result.data) {
         updateStepData("guardian", result.data)
       }
@@ -86,253 +77,92 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
 
     return (
       <Form {...form}>
-        <form className="space-y-8">
-          {/* Father's Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">
-              {dict.fatherInfo || "Father's Information"}
-            </h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="fatherName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {dict.fatherName || "Father's Name"} *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={dict.namePlaceholder || "Enter name"}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="fatherOccupation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.occupation || "Occupation"}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={
-                          dict.occupationPlaceholder || "Enter occupation"
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="fatherPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.phone || "Phone"}</FormLabel>
-                    <FormControl>
-                      <PhoneInput
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        placeholder="+249 XXX XXX XXXX"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="fatherEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.email || "Email"}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="email@example.com"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          {/* Mother's Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">
-              {dict.motherInfo || "Mother's Information"}
-            </h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="motherName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {dict.motherName || "Mother's Name"} *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={dict.namePlaceholder || "Enter name"}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="motherOccupation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.occupation || "Occupation"}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={
-                          dict.occupationPlaceholder || "Enter occupation"
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="motherPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.phone || "Phone"}</FormLabel>
-                    <FormControl>
-                      <PhoneInput
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        placeholder="+249 XXX XXX XXXX"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="motherEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.email || "Email"}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="email@example.com"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          {/* Other Guardian Information (Optional) */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">
-              {dict.guardianInfo || "Other Guardian (Optional)"}
-            </h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="guardianName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {dict.guardianName || "Guardian's Name"}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={dict.namePlaceholder || "Enter name"}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="guardianRelation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.relation || "Relation"}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={
-                              dict.selectRelation || "Select relation"
-                            }
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {GUARDIAN_RELATION_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="guardianPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.phone || "Phone"}</FormLabel>
-                    <FormControl>
-                      <PhoneInput
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        placeholder="+249 XXX XXX XXXX"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="guardianEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.email || "Email"}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="email@example.com"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
+        <form className="space-y-6">
+          <WizardTabs tabs={tabs} onTabChange={onTabChange}>
+            {(activeTab) =>
+              activeTab === "father" ? (
+                <div className="space-y-6">
+                  <InputField
+                    name="fatherName"
+                    label={`${dict.fatherName || "Father's Name"} *`}
+                    placeholder={dict.namePlaceholder || "Enter name"}
+                  />
+                  <InputField
+                    name="fatherOccupation"
+                    label={dict.occupation || "Occupation"}
+                    placeholder={
+                      dict.occupationPlaceholder || "Enter occupation"
+                    }
+                  />
+                  <PhoneField
+                    name="fatherPhone"
+                    label={dict.phone || "Phone"}
+                    placeholder="+249 XXX XXX XXXX"
+                  />
+                  <InputField
+                    name="fatherEmail"
+                    label={dict.email || "Email"}
+                    placeholder="email@example.com"
+                    type="email"
+                  />
+                </div>
+              ) : activeTab === "mother" ? (
+                <div className="space-y-6">
+                  <InputField
+                    name="motherName"
+                    label={`${dict.motherName || "Mother's Name"} *`}
+                    placeholder={dict.namePlaceholder || "Enter name"}
+                  />
+                  <InputField
+                    name="motherOccupation"
+                    label={dict.occupation || "Occupation"}
+                    placeholder={
+                      dict.occupationPlaceholder || "Enter occupation"
+                    }
+                  />
+                  <PhoneField
+                    name="motherPhone"
+                    label={dict.phone || "Phone"}
+                    placeholder="+249 XXX XXX XXXX"
+                  />
+                  <InputField
+                    name="motherEmail"
+                    label={dict.email || "Email"}
+                    placeholder="email@example.com"
+                    type="email"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <InputField
+                    name="guardianName"
+                    label={dict.guardianName || "Guardian's Name"}
+                    placeholder={dict.namePlaceholder || "Enter name"}
+                  />
+                  <SelectField
+                    name="guardianRelation"
+                    label={dict.relation || "Relation"}
+                    placeholder={dict.selectRelation || "Select relation"}
+                    options={GUARDIAN_RELATION_OPTIONS(isRTL).map((o) => ({
+                      value: o.value,
+                      label: o.label,
+                    }))}
+                  />
+                  <PhoneField
+                    name="guardianPhone"
+                    label={dict.phone || "Phone"}
+                    placeholder="+249 XXX XXX XXXX"
+                  />
+                  <InputField
+                    name="guardianEmail"
+                    label={dict.email || "Email"}
+                    placeholder="email@example.com"
+                    type="email"
+                  />
+                </div>
+              )
+            }
+          </WizardTabs>
         </form>
       </Form>
     )

@@ -156,49 +156,56 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <DateField
-            name="enrollmentDate"
-            label={t?.enrollmentDate || "Enrollment Date"}
-            disabled={isPending}
-          />
-          <InputField
-            name="admissionNumber"
-            label={t?.admissionNumber || "Admission Number"}
-            placeholder={
-              t?.admissionNumberPlaceholder || "Enter admission number"
-            }
-            disabled={isPending}
-          />
-          <SelectField
-            name="status"
-            label={t?.status || "Status"}
-            options={statusOptions}
-            disabled={isPending}
-          />
-          <SelectField
-            name="studentType"
-            label={t?.studentType || "Student Type"}
-            options={studentTypeOptions}
-            disabled={isPending}
-          />
+          <div className="grid grid-cols-2 gap-7">
+            <DateField
+              name="enrollmentDate"
+              label={t?.enrollmentDate || "Date"}
+              disabled={isPending}
+            />
+            <InputField
+              name="admissionNumber"
+              label={t?.admissionNumber || "Admission"}
+              placeholder={
+                t?.admissionNumberPlaceholder || "Enter admission number"
+              }
+              disabled={isPending}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-7">
+            <SelectField
+              name="status"
+              label={t?.status || "Status"}
+              options={statusOptions}
+              disabled={isPending}
+            />
+            <SelectField
+              name="studentType"
+              label={t?.studentType || "Type"}
+              options={studentTypeOptions}
+              disabled={isPending}
+            />
+          </div>
           <InputField
             name="category"
             label={t?.category || "Category"}
             placeholder={t?.categoryPlaceholder || "Enter category"}
             disabled={isPending}
+            className="hidden"
           />
-          <SelectField
-            name="academicGradeId"
-            label={t?.academicGradeId || "Grade"}
-            options={gradeOptions}
-            disabled={isPending}
-          />
-          <SelectField
-            name="sectionId"
-            label={t?.sectionId || "Section"}
-            options={sectionOptions}
-            disabled={isPending || !selectedGradeId}
-          />
+          <div className="grid grid-cols-2 gap-7">
+            <SelectField
+              name="academicGradeId"
+              label={t?.academicGradeId || "Grade"}
+              options={gradeOptions}
+              disabled={isPending}
+            />
+            <SelectField
+              name="sectionId"
+              label={t?.sectionId || "Section"}
+              options={sectionOptions}
+              disabled={isPending || !selectedGradeId}
+            />
+          </div>
         </form>
       </Form>
     )

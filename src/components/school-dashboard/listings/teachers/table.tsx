@@ -3,10 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import {
@@ -51,7 +52,6 @@ function TeachersTableInner({
   perPage = 20,
 }: TeachersTableProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
   // Translations with fallbacks
   const t = {
     fullName: dictionary?.fullName || "Name",
@@ -98,8 +98,8 @@ function TeachersTableInner({
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
-  // Search state
-  const [searchValue, setSearchValue] = useState("")
+  // Search state (debounced)
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // Data management with optimistic updates
   const {
@@ -116,13 +116,10 @@ function TeachersTableInner({
     total,
     perPage,
     fetcher: async (params) => {
-      // Note: getTeachers returns simplified format, but initialData from server has full format
-      // For search/filter operations, we refresh from server which has the full data
       const result = await getTeachers(params)
       if (!result.success || !result.data) {
         return { rows: [], total: 0 }
       }
-      // Map old format to new format with defaults
       const rows = result.data.rows.map((r: any) => ({
         ...r,
         givenName: r.givenName || r.name?.split(" ")[0] || "",
@@ -142,18 +139,15 @@ function TeachersTableInner({
       })) as TeacherRow[]
       return { rows, total: result.data.total }
     },
-    filters: searchValue ? { name: searchValue } : undefined,
+    filters: debouncedSearch ? { name: debouncedSearch } : undefined,
   })
 
   // Handle search
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => {
-        router.refresh()
-      })
     },
-    [router]
+    [setSearchValue]
   )
 
   // Handle delete with optimistic update
@@ -173,7 +167,7 @@ function TeachersTableInner({
 
         const result = await deleteTeacher({ id: teacher.id })
         if (result.success) {
-          DeleteToast()
+          DeleteToast((dictionary as any)?.deleted || "Deleted")
         } else {
           // Revert on error
           refresh()
@@ -268,6 +262,7 @@ function TeachersTableInner({
     data,
     columns,
     pageCount: 1,
+    enableClientFiltering: true,
     initialState: {
       pagination: {
         pageIndex: 0,
@@ -331,12 +326,13 @@ function TeachersTableInner({
     export: t.export,
     exportCSV: dictionary?.exportCSV || "Export CSV",
     exporting: dictionary?.exporting || "Exporting...",
+    view: t.view,
   }
 
   return (
     <>
       <PlatformToolbar
-        table={view === "table" ? table : undefined}
+        table={table}
         view={view}
         onToggleView={toggleView}
         searchValue={searchValue}
@@ -353,7 +349,7 @@ function TeachersTableInner({
           table={table}
           paginationMode="load-more"
           hasMore={hasMore}
-          isLoading={isLoading || isPending}
+          isLoading={isLoading}
           onLoadMore={loadMore}
           translations={{
             loadMore: t.loadMore,
